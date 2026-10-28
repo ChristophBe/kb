@@ -3,6 +3,9 @@ name: Chore
 description: Tooling, CI, infrastructure, refactoring or docs work.
 labels: ["type:chore"]
 body:
+  - type: markdown
+    attributes:
+      value: "Check the issue against the [Definition of Ready](https://github.com/ChristophBe/kb/blob/main/CONTRIBUTING.md#definition-of-ready) before submitting it."
 {{template "scope" (args "Label" "Scope" "Options" .Scopes)}}  - type: textarea
     id: context
     attributes:

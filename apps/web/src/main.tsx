@@ -20,5 +20,5 @@ loadConfig().then(
         </KbRuntimeProvider>
       </StrictMode>,
     ),
-  (err: Error) => root.render(<pre className="p-6 text-red-700">{err.message}</pre>),
+  (err: Error) => root.render(<pre className="p-6 text-danger">{err.message}</pre>),
 );

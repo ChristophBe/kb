@@ -14,7 +14,7 @@ export function App({ config }: { config: RuntimeConfig }) {
         children: [
           { index: true, element: <Home modules={modules} /> },
           ...modules.map((m) => ({ path: `m/${m.id}`, children: m.routes })),
-          { path: "*", element: <p className="text-sm text-zinc-500">Page not found.</p> },
+          { path: "*", element: <p className="text-sm text-fg-muted">Page not found.</p> },
         ],
       },
     ]);
@@ -25,7 +25,7 @@ export function App({ config }: { config: RuntimeConfig }) {
 function Shell({ modules }: { modules: KbModule[] }) {
   return (
     <div className="flex min-h-screen">
-      <aside className="flex w-56 shrink-0 flex-col border-r border-zinc-200 bg-white">
+      <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-surface">
         <Link to="/" className="flex items-center gap-2 px-4 py-4 font-semibold">
           <Library className="size-5" /> Knowledge Base
         </Link>
@@ -41,8 +41,8 @@ function Shell({ modules }: { modules: KbModule[] }) {
                   end={!item.path}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-100",
-                      isActive && "bg-zinc-100 font-medium text-zinc-900",
+                      "flex items-center gap-2 rounded-control px-3 py-2 text-sm text-fg-muted hover:bg-surface-muted",
+                      isActive && "bg-surface-muted font-medium text-fg",
                     )
                   }
                 >
@@ -70,8 +70,8 @@ function Home({ modules }: { modules: KbModule[] }) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {modules.map((m) => (
           <Link key={m.id} to={`/m/${m.id}`}>
-            <Card className="flex items-center gap-3 p-4 hover:border-zinc-400">
-              <m.icon className="size-5 text-zinc-500" />
+            <Card className="flex items-center gap-3 p-4 hover:border-border-strong">
+              <m.icon className="size-5 text-fg-muted" />
               <span className="font-medium">{m.title}</span>
             </Card>
           </Link>

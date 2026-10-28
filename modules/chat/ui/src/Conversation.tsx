@@ -86,7 +86,7 @@ export function Conversation() {
           <div ref={bottom} />
         </div>
       </div>
-      <form onSubmit={send} className="border-t border-zinc-200 bg-white px-8 py-4">
+      <form onSubmit={send} className="border-t border-border bg-surface px-8 py-4">
         <div className="mx-auto flex max-w-3xl flex-col gap-2">
           <div className="flex gap-2">
             <Textarea
@@ -102,7 +102,7 @@ export function Conversation() {
               <Send className="size-4" />
             </Button>
           </div>
-          <label className="flex items-center gap-2 text-xs text-zinc-500">
+          <label className="flex items-center gap-2 text-xs text-fg-muted">
             <input
               type="checkbox"
               checked={useKnowledgeBase}
@@ -122,8 +122,8 @@ function Bubble({ role, content, citations }: Pick<ChatMessage, "role" | "conten
     <div className={cn("flex flex-col gap-1", isUser && "items-end")}>
       <div
         className={cn(
-          "max-w-[85%] rounded-lg px-4 py-2 text-sm whitespace-pre-wrap",
-          isUser ? "bg-zinc-900 text-white" : "border border-zinc-200 bg-white",
+          "max-w-[85%] rounded-card px-4 py-2 text-sm whitespace-pre-wrap",
+          isUser ? "bg-accent text-on-accent" : "border border-border bg-surface",
         )}
       >
         {content}
@@ -134,7 +134,7 @@ function Bubble({ role, content, citations }: Pick<ChatMessage, "role" | "conten
             <span
               key={`${c.documentId}-${c.chunkIndex}`}
               title={c.snippet}
-              className="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600"
+              className="rounded-control bg-surface-muted px-2 py-0.5 text-xs text-fg-muted"
             >
               [{i + 1}] {c.documentTitle}
             </span>

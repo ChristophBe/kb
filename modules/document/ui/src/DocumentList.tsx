@@ -43,7 +43,7 @@ export function DocumentList() {
           </EmptyState>
         ) : docs.data?.documents.length ? (
           <table className="w-full text-sm">
-            <thead className="border-b border-zinc-200 text-left text-xs text-zinc-500 uppercase">
+            <thead className="border-b border-border text-left text-xs text-fg-muted uppercase">
               <tr>
                 <th className="px-4 py-2 font-medium">Title</th>
                 <th className="px-4 py-2 font-medium">Status</th>
@@ -57,7 +57,7 @@ export function DocumentList() {
               {docs.data.documents.map((d) => {
                 const [label, tone] = statusLabel[d.status];
                 return (
-                  <tr key={d.id} className="border-b border-zinc-100 last:border-0">
+                  <tr key={d.id} className="border-b border-border last:border-0">
                     <td className="px-4 py-2">
                       <Link to={d.id} className="font-medium hover:underline">
                         {d.title}
@@ -68,7 +68,7 @@ export function DocumentList() {
                     </td>
                     <td className="px-4 py-2">{d.chunkCount}</td>
                     <td className="px-4 py-2">{formatBytes(d.sizeBytes)}</td>
-                    <td className="px-4 py-2 text-zinc-500">{formatTime(d.createTime)}</td>
+                    <td className="px-4 py-2 text-fg-muted">{formatTime(d.createTime)}</td>
                     <td className="px-2 py-1 text-right whitespace-nowrap">
                       <Button variant="ghost" title="Download" onClick={() => download(d.id)}>
                         <Download className="size-4" />

@@ -16,18 +16,18 @@ export function Models() {
       <ErrorMessage error={status.error ?? models.error} />
       {status.data && (
         <Card className="mb-6 grid max-w-2xl grid-cols-2 gap-y-2 p-4 text-sm">
-          <span className="text-zinc-500">Provider</span>
+          <span className="text-fg-muted">Provider</span>
           <span className="flex items-center gap-2">
             {status.data.provider}
             <Badge tone={status.data.healthy ? "success" : "danger"}>
               {status.data.healthy ? "healthy" : "unavailable"}
             </Badge>
           </span>
-          <span className="text-zinc-500">Detail</span>
+          <span className="text-fg-muted">Detail</span>
           <span>{status.data.detail}</span>
-          <span className="text-zinc-500">Chat model</span>
+          <span className="text-fg-muted">Chat model</span>
           <span>{status.data.defaultChatModel}</span>
-          <span className="text-zinc-500">Embedding model</span>
+          <span className="text-fg-muted">Embedding model</span>
           <span>
             {status.data.defaultEmbeddingModel} ({status.data.embeddingDimensions} dims)
           </span>
@@ -39,7 +39,7 @@ export function Models() {
             <Spinner />
           </EmptyState>
         ) : models.data?.models.length ? (
-          <ul className="divide-y divide-zinc-100 text-sm">
+          <ul className="divide-y divide-border text-sm">
             {models.data.models.map((m) => (
               <li key={m.id} className="flex items-center justify-between px-4 py-2">
                 <span className="font-mono">{m.id}</span>

@@ -24,6 +24,17 @@ With Claude Code, the `/issue` skill (`.claude/skills/issue/`) drafts new issues
 
 Work items are planned into delivery phases via [milestones](https://github.com/ChristophBe/kb/milestones); see there for the current phases and their goals. Epics span phases and get no milestone.
 
+## Architecture decisions
+
+Significant decisions are recorded as ADRs in [`docs/adr/`](docs/adr/README.md); the [architecture overview](docs/architecture/overview.md) shows how modules and infrastructure fit together. A PR needs a new ADR (copy `docs/adr/template.md`) when it:
+
+- adds a module,
+- adds infrastructure (a database, broker, external service or deployment component),
+- adds or changes a cross-module contract pattern (a new way modules call each other or exchange events), or
+- deviates from the module architecture or reverses an accepted ADR.
+
+Update the overview diagrams in the same PR when services, ports or gRPC/NATS links change.
+
 ## Pull requests
 
 - Branch from `main` and reference the issue (`Closes #123`).

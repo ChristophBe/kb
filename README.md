@@ -24,7 +24,7 @@ browser ──gRPC-Web──▶ envoy :8080 ──gRPC──▶ document / inges
                                      Postgres + pgvector (one schema per module)
 ```
 
-Each module lives in `modules/<id>/` with its proto contract, generated API packages, backend, migrations, UI, and compose fragment. See [CLAUDE.md](CLAUDE.md) for the conventions.
+Each module lives in `modules/<id>/` with its proto contract, generated API packages, backend, migrations, UI, and compose fragment. See [CLAUDE.md](CLAUDE.md) for the conventions, the [architecture overview](docs/architecture/overview.md) for diagrams of how the pieces fit together, and the [ADRs](docs/adr/README.md) for why.
 
 ## Prerequisites
 

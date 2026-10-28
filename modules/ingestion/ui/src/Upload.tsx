@@ -70,7 +70,7 @@ export function Upload() {
           setDragging(false);
           onFiles(e.dataTransfer.files);
         }}
-        className={`mb-6 flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-10 text-sm text-zinc-500 ${dragging ? "border-zinc-500 bg-zinc-100" : "border-zinc-300 bg-white"}`}
+        className={`mb-6 flex cursor-pointer flex-col items-center gap-2 rounded-card border-2 border-dashed p-10 text-sm text-fg-muted ${dragging ? "border-border-strong bg-surface-muted" : "border-border-strong bg-surface"}`}
       >
         <UploadIcon className="size-6" />
         Drop files here or click to choose (PDF, Markdown, text)
@@ -79,17 +79,17 @@ export function Upload() {
       <ErrorMessage error={error ?? jobs.error} />
       <Card>
         {jobs.data?.jobs.length ? (
-          <ul className="divide-y divide-zinc-100 text-sm">
+          <ul className="divide-y divide-border text-sm">
             {jobs.data.jobs.map((job) => {
               const [label, tone] = statusLabel[job.status];
               return (
                 <li key={job.id} className="flex items-center gap-4 px-4 py-2">
                   <span className="flex-1 truncate font-medium">{job.filename}</span>
                   {job.status === JobStatus.DONE && (
-                    <span className="text-zinc-500">{job.chunkCount} chunks</span>
+                    <span className="text-fg-muted">{job.chunkCount} chunks</span>
                   )}
-                  {job.error && <span className="truncate text-red-600">{job.error}</span>}
-                  <span className="text-zinc-500">{formatTime(job.createTime)}</span>
+                  {job.error && <span className="truncate text-danger">{job.error}</span>}
+                  <span className="text-fg-muted">{formatTime(job.createTime)}</span>
                   <Badge tone={tone}>{label}</Badge>
                 </li>
               );

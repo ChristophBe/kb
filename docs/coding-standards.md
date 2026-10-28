@@ -49,7 +49,7 @@ Conventions for Go, Python and TypeScript in kb. Most of them are enforced by `t
 | Effects | Dependency arrays are exhaustive; an intentional exception gets a `biome-ignore` comment with the reason. |
 | Logging | No `console.log` (`console.warn` / `console.error` allowed). |
 | Tests | Vitest (`*.test.ts(x)` next to the code, root `vitest.config.ts`) with Testing Library for components. |
-| Lint | `biome` (`biome.json`): recommended rules plus the above; formatting with 2-space indent, line width 100. Accessibility rules and checks: see the UX standards. |
+| Lint | `biome` (`biome.json`): recommended rules plus the above; formatting with 2-space indent, line width 100. Accessibility, tokens and UI patterns: see the [UX standards](ux-standards.md). |
 
 ## Quality gates
 

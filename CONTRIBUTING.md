@@ -63,6 +63,7 @@ Update the overview diagrams in the same PR when services, ports or gRPC/NATS li
 
 - Branch from `main` and reference the issue (`Closes #123`).
 - Follow the [coding standards](docs/coding-standards.md).
+- UI work follows the [UX and accessibility standards](docs/ux-standards.md) (WCAG 2.2 AA, design tokens, interaction patterns) and fills in the UI checklist of the PR template.
 - Run `task gen`, `task lint` and `task test` before pushing; the pre-push hook installed by `task setup` runs the fast versions for you.
 
 ### Required checks

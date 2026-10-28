@@ -29,7 +29,7 @@ export function ChatLayout() {
 
   return (
     <div className="-m-8 flex h-screen">
-      <div className="flex w-64 shrink-0 flex-col border-r border-zinc-200 bg-white">
+      <div className="flex w-64 shrink-0 flex-col border-r border-border bg-surface">
         <div className="p-3">
           <Button className="w-full" onClick={() => create.mutate()} disabled={create.isPending}>
             <Plus className="size-4" /> New chat
@@ -43,14 +43,14 @@ export function ChatLayout() {
               to={c.id}
               className={({ isActive }) =>
                 cn(
-                  "group flex items-center justify-between rounded-md px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100",
-                  isActive && "bg-zinc-100 font-medium",
+                  "group flex items-center justify-between rounded-control px-3 py-2 text-sm text-fg hover:bg-surface-muted",
+                  isActive && "bg-surface-muted font-medium",
                 )
               }
             >
               <span className="truncate">{c.title || "New conversation"}</span>
               <Trash2
-                className="size-4 shrink-0 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-red-600"
+                className="size-4 shrink-0 text-fg-muted opacity-0 group-hover:opacity-100 hover:text-danger"
                 onClick={(e) => {
                   e.preventDefault();
                   remove.mutate(c.id);
@@ -69,7 +69,7 @@ export function ChatLayout() {
 
 export function ChatEmpty() {
   return (
-    <div className="flex flex-1 items-center justify-center text-sm text-zinc-500">
+    <div className="flex flex-1 items-center justify-center text-sm text-fg-muted">
       Start a new chat or pick a conversation.
     </div>
   );

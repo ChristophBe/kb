@@ -27,17 +27,17 @@ export function DocumentDetail() {
   ];
   return (
     <div>
-      <Link to=".." relative="path" className="text-sm text-zinc-500 hover:underline">
+      <Link to=".." relative="path" className="text-sm text-fg-muted hover:underline">
         ← Documents
       </Link>
       <div className="mt-2">
         <PageHeader title={d.title} />
       </div>
       <Card className="max-w-2xl">
-        <dl className="divide-y divide-zinc-100 text-sm">
+        <dl className="divide-y divide-border text-sm">
           {rows.map(([k, v]) => (
             <div key={k} className="grid grid-cols-3 gap-4 px-4 py-2">
-              <dt className="text-zinc-500">{k}</dt>
+              <dt className="text-fg-muted">{k}</dt>
               <dd className="col-span-2">{v}</dd>
             </div>
           ))}

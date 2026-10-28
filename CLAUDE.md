@@ -14,8 +14,11 @@ Shared, module-agnostic code lives in `platform/` (`go/`, `python/`, `ui/`, `pro
 - Changing a proto, a `module.yaml`, or SQL queries → `task gen` and commit the output (CI fails on drift).
 - Modules talk to each other only via the other module's generated gRPC client or its events. Never read another module's DB schema, bucket or stream.
 - Only the `llm` module talks to LLM vendors. Add a provider in `modules/llm/service/src/kb_llm/providers/` and register it in `REGISTRY`.
-- Generated / `DO NOT EDIT` files: `modules/*/api/**`, `platform/api/**`, `**/buf.gen.yaml`, `**/internal/store/*.go` (sqlc, except `repo.go`), `compose.yaml`, `deploy/envoy/envoy.yaml`, `apps/web/src/modules.gen.ts`.
+- Generated / `DO NOT EDIT` files: `modules/*/api/**`, `platform/api/**`, `**/buf.gen.yaml`, `**/internal/store/*.go` (sqlc, except `repo.go`), `compose.yaml`, `deploy/envoy/envoy.yaml`, `apps/web/src/modules.gen.ts`, `.github/ISSUE_TEMPLATE/{epic,feature,chore,bug}.yml`.
 - The embedding dimension (768) appears in `modules/document/migrations` and `KB_EMBEDDING_DIMENSIONS`; change both together via a new migration.
+
+## Issues
+Backlog lives in GitHub issues: epics (`type:epic`) per module with sub-issues, phases as GitHub milestones. Conventions in CONTRIBUTING.md.
 
 ## Commands (`task` = `go tool -modfile=tools/go.mod task` if not installed)
 - `task setup` · `task gen` · `task lint` · `task test` · `task ci`

@@ -1,0 +1,12 @@
+{{- /* Shared scope dropdown for all issue forms; options come from module.yaml files + Areas. */ -}}
+{{define "scope"}}  - type: dropdown
+    id: scope
+    attributes:
+      label: {{.Label}}
+      description: The module or area this belongs to (matches the `module:*` / `area:*` labels).
+      options:
+{{- range .Options}}
+        - {{.}}
+{{- end}}
+    validations: { required: true }
+{{end}}

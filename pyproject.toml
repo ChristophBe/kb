@@ -10,6 +10,7 @@ dev = [
     "pyright>=1.1.400",
     "pytest>=9.0",
     "pytest-asyncio>=1.3",
+    "pytest-cov>=7.0",
     "ruff>=0.15",
 ]
 
@@ -32,13 +33,35 @@ target-version = "py313"
 extend-exclude = ["**/api/python/src"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC", "RUF"]
+select = [
+    "E", "F", "I", "UP", "B", "SIM", "ASYNC", "RUF",
+    "N", "C4", "PT", "RET", "PIE", "LOG", "G", "T20", "PERF",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# gRPC servicers (and test fakes of them) implement the generated CamelCase method names.
+"**/server.py" = ["N802"]
+"**/tests/**" = ["N802"]
 
 [tool.pyright]
 include = ["platform/python", "modules/*/service", "modules/*/worker"]
 exclude = ["**/api/python/src", "**/.venv", "**/node_modules"]
 pythonVersion = "3.13"
+# "standard" plus the strict checks that apply to our own code; full strict
+# mode only reports unknown types from untyped dependencies (grpc_health, nats).
 typeCheckingMode = "standard"
+reportMissingParameterType = "error"
+reportMissingTypeArgument = "error"
+reportPrivateUsage = "error"
+reportUnnecessaryCast = "error"
+reportUnnecessaryComparison = "error"
+reportUnnecessaryContains = "error"
+reportUnnecessaryIsInstance = "error"
+reportUnnecessaryTypeIgnoreComment = "error"
+reportUnusedClass = "error"
+reportUnusedFunction = "error"
+reportUnusedImport = "error"
+reportUnusedVariable = "error"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

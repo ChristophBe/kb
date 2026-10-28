@@ -1,5 +1,18 @@
 version: "2"
 linters:
+  # standard (errcheck, govet, ineffassign, staticcheck, unused) plus the set
+  # agreed in docs/coding-standards.md.
+  enable:
+    - bodyclose
+    - errorlint
+    - gocritic
+    - misspell
+    - noctx
+    - nolintlint
+    - sloglint
+    - unconvert
+    - unparam
+    - usestdlibvars
   settings:
     errcheck:
       # Deferred closes of read-side resources have nothing useful to report.
@@ -8,3 +21,16 @@ linters:
         - (io.ReadCloser).Close
         - (*database/sql.DB).Close
         - (*google.golang.org/grpc.ClientConn).Close
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+    sloglint:
+      kv-only: true
+      context: scope
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes: [github.com/christoph/kb]

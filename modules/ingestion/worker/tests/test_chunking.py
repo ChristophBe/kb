@@ -26,5 +26,5 @@ def test_empty_text_yields_no_chunks() -> None:
 
 
 def test_overlap_must_be_smaller_than_size() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="overlap must be smaller"):
         chunk_text("x", size=10, overlap=10)

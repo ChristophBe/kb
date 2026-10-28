@@ -30,6 +30,7 @@ export function Conversation() {
   const [error, setError] = useState<unknown>(null);
   const bottom = useRef<HTMLDivElement>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll down whenever new messages or tokens arrive.
   useEffect(
     () => bottom.current?.scrollIntoView({ behavior: "smooth" }),
     [conversation.data, pending],

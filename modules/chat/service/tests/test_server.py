@@ -102,7 +102,8 @@ async def test_stream_chat_with_knowledge_base(env) -> None:
         )
     ]
     kinds = [e.WhichOneof("event") for e in events]
-    assert kinds[0] == "citations" and kinds[-1] == "message"
+    assert kinds[0] == "citations"
+    assert kinds[-1] == "message"
     assert set(kinds[1:-1]) == {"delta"}
     assert events[0].citations.items[0].document_title == "geo.md"
     assert events[-1].message.content == "Paris is the capital."

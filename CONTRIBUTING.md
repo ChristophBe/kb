@@ -27,4 +27,17 @@ Work items are planned into delivery phases via [milestones](https://github.com/
 ## Pull requests
 
 - Branch from `main` and reference the issue (`Closes #123`).
-- Run `task gen`, `task lint` and `task test` before pushing; CI checks that generated code is committed.
+- Follow the [coding standards](docs/coding-standards.md).
+- Run `task gen`, `task lint` and `task test` before pushing; the pre-push hook installed by `task setup` runs the fast versions for you.
+
+### Required checks
+
+CI must pass on every PR. It fails when any of these fails:
+
+| Check | Command |
+|---|---|
+| Generated code is up to date | `task check-gen` |
+| No breaking proto changes | `buf breaking` against the base branch |
+| Lint and type checks (all languages, no linter optional) | `task lint` |
+| Unit tests | `task test` |
+| Coverage minimum per component | `task test` (see [coding standards](docs/coding-standards.md#coverage)) |

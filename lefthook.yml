@@ -1,0 +1,15 @@
+# Git hooks, installed by `task setup` (`lefthook install`). They run what CI
+# runs, minus coverage. Commit or stash local changes first (check-gen diffs the
+# working tree); skip once with `LEFTHOOK=0 git push`.
+# lefthook itself is pinned in tools/go.mod.
+lefthook: go tool -modfile=tools/go.mod lefthook
+
+pre-push:
+  piped: true
+  jobs:
+    - name: generated code is up to date
+      run: go tool -modfile=tools/go.mod task check-gen
+    - name: lint
+      run: go tool -modfile=tools/go.mod task lint
+    - name: unit tests
+      run: go tool -modfile=tools/go.mod task test:fast

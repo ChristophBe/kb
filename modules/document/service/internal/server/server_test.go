@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	"github.com/christoph/kb/modules/document/service/internal/store"
+	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
 )
 
 // fakeRepo embeds the interface so tests only implement what they use.

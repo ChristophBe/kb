@@ -17,9 +17,9 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	"github.com/christoph/kb/modules/document/service/internal/store"
+	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
 )
 
 const (

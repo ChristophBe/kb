@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	pgxvec "github.com/pgvector/pgvector-go/pgx"
 
@@ -62,9 +61,7 @@ func run() error {
 	// that registers it is opened afterwards.
 	pool.Close()
 	pool, err = postgres.Connect(ctx, cfg.DatabaseURL, func(c *pgxpool.Config) {
-		c.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
-			return pgxvec.RegisterTypes(ctx, conn)
-		}
+		c.AfterConnect = pgxvec.RegisterTypes
 	})
 	if err != nil {
 		return err

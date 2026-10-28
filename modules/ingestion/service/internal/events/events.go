@@ -63,7 +63,7 @@ func Consume(ctx context.Context, js jetstream.JetStream, repo store.Querier, lo
 	}
 	cc, err := cons.Consume(func(msg jetstream.Msg) {
 		if err := apply(ctx, repo, msg.Subject(), msg.Data()); err != nil {
-			log.Error("apply event", "subject", msg.Subject(), "error", err)
+			log.ErrorContext(ctx, "apply event", "subject", msg.Subject(), "error", err)
 			_ = msg.Nak()
 			return
 		}

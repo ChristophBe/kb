@@ -53,7 +53,7 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool, module string, migrations 
 		return fmt.Errorf("migrate %s: %w", module, err)
 	}
 	for _, r := range results {
-		log.Info("applied migration", "module", module, "version", r.Source.Version, "path", r.Source.Path)
+		log.InfoContext(ctx, "applied migration", "module", module, "version", r.Source.Version, "path", r.Source.Path)
 	}
 	return nil
 }

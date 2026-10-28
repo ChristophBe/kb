@@ -39,7 +39,7 @@ func New(log *slog.Logger, opts ...grpc.ServerOption) *Server {
 
 // Run serves on port until ctx is cancelled, then drains gracefully.
 func (s *Server) Run(ctx context.Context, port int) error {
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	lis, err := new(net.ListenConfig).Listen(ctx, "tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return err
 	}
@@ -50,14 +50,14 @@ func (s *Server) Run(ctx context.Context, port int) error {
 
 	errc := make(chan error, 1)
 	go func() { errc <- s.Serve(lis) }()
-	s.log.Info("grpc server listening", "port", port)
+	s.log.InfoContext(ctx, "grpc server listening", "port", port)
 
 	select {
 	case err := <-errc:
 		return err
 	case <-ctx.Done():
 	}
-	s.log.Info("shutting down")
+	s.log.InfoContext(ctx, "shutting down")
 	s.health.Shutdown()
 	stopped := make(chan struct{})
 	go func() { s.GracefulStop(); close(stopped) }()
@@ -108,7 +108,7 @@ func recoverUnary(log *slog.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Error("panic", "method", info.FullMethod, "panic", r, "stack", string(debug.Stack()))
+				log.ErrorContext(ctx, "panic", "method", info.FullMethod, "panic", r, "stack", string(debug.Stack()))
 				err = status.Error(codes.Internal, "internal error")
 			}
 		}()
@@ -120,7 +120,7 @@ func recoverStream(log *slog.Logger) grpc.StreamServerInterceptor {
 	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Error("panic", "method", info.FullMethod, "panic", r, "stack", string(debug.Stack()))
+				log.ErrorContext(ss.Context(), "panic", "method", info.FullMethod, "panic", r, "stack", string(debug.Stack()))
 				err = status.Error(codes.Internal, "internal error")
 			}
 		}()

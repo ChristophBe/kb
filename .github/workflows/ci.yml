@@ -13,9 +13,16 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
+      # Go module + build cache, uv cache and the pnpm store are cached by the setup actions;
+      # the keys hash every lockfile, so tool upgrades invalidate them too.
       - uses: actions/setup-go@v6
-        with: { go-version-file: go.mod }
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            tools/go.sum
       - uses: astral-sh/setup-uv@v7
+        with: { enable-cache: true, cache-dependency-glob: uv.lock }
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with: { node-version: 24, cache: pnpm }

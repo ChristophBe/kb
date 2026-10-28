@@ -1,0 +1,79 @@
+---
+name: issue
+description: Write new GitHub issues or refine existing ones for this repo following CONTRIBUTING.md (epics → sub-issues, scope/type/lang labels, milestones, issue-form body shape). Use when asked to create, file, draft or write an issue, epic, feature, chore or bug, or to refine, tidy, review, split or groom an existing issue.
+---
+
+# Writing and refining issues
+
+CONTRIBUTING.md is the source of truth for labels, epics and milestones; read it first. The issue forms in `.github/ISSUE_TEMPLATE/` define the body sections.
+
+## 1. Gather context
+
+```sh
+gh label list --limit 100
+gh api repos/{owner}/{repo}/milestones --jq '.[] | "\(.title): \(.description)"'
+gh issue list --label type:epic --state open
+```
+
+Look at the code the issue touches so **Changes** can name real file paths (module layout: see CLAUDE.md). Check for duplicates with `gh issue list --search "<keywords>" --state all`.
+
+## 2. Shape
+
+Pick one type and mirror its form's sections as `## ` headings:
+
+| Type | Sections |
+|---|---|
+| `type:epic` | Goal (incl. code locations), Definition of done (checkboxes), then the line "Work items are tracked as sub-issues." |
+| `type:feature` | Context, Changes (per layer: **Proto** / **Backend** / **UI**, with paths), Acceptance criteria, Notes (optional: out of scope, dependencies, open questions) |
+| `type:chore`, `type:docs` | Context, Acceptance criteria |
+| `type:bug` | Steps to reproduce, Expected vs. actual behaviour, Logs (optional) |
+
+Rules:
+- Title: short, imperative or noun phrase, no type prefix (epics: `Epic: <module/area>`).
+- A work item is about one PR. Larger → split into several sub-issues.
+- Acceptance criteria are `- [ ]` checkboxes, each observable or testable.
+- Work items end with `Part of #<epic>`; every work item belongs to exactly one epic (bugs may stand alone).
+- Labels: exactly one type, exactly one scope (`module:*` / `area:*`), a `lang:*` for every stack touched, `api-change` if a `.proto` changes.
+- Milestone: work items get one (match the phase goals); epics get none.
+
+Example work item (title "Global command palette (⌘K) with document search", labels `type:feature area:ui-shell lang:ts`, milestone `M3 – Extended`):
+
+```markdown
+## Context
+
+Navigation and search require several clicks.
+
+## Changes
+
+- Command palette in the shell; modules contribute commands via the SDK; document search results inline
+
+## Acceptance criteria
+
+- [ ] ⌘K opens the palette, typing searches documents and commands
+
+Part of #57
+```
+
+## 3. Refining an existing issue
+
+```sh
+gh issue view <n> --json title,body,labels,milestone,parent,subIssues
+```
+
+Check it against section 2 and report concrete findings: missing sections, vague or untestable criteria, missing file paths, wrong or missing labels, no parent epic, no milestone, too large (propose the split as separate drafts). Then present the proposed title, body and label/milestone changes.
+
+## 4. Apply (only after confirmation)
+
+Always show the full draft (title, labels, milestone, parent, body) and wait for the user's OK before writing to GitHub. Write bodies to a file in the scratchpad and pass `--body-file`.
+
+```sh
+# create
+gh issue create --title "<title>" --label type:feature --label module:chat --label lang:python \
+  --milestone "<milestone>" --body-file <file>
+# edit
+gh issue edit <n> --title "<title>" --body-file <file> --add-label <l> --remove-label <l> --milestone "<milestone>"
+# link as sub-issue of the epic (needs the issue's numeric id, not its number)
+gh api repos/{owner}/{repo}/issues/<epic>/sub_issues -F sub_issue_id=$(gh api repos/{owner}/{repo}/issues/<n> --jq .id)
+```
+
+Finish with the issue URL(s) and, for refinements, a one-line summary of what changed.

@@ -11,6 +11,30 @@ Use the issue forms (Epic / Feature / Chore / Bug); blank issues are disabled. T
 
 With Claude Code, the `/issue` skill (`.claude/skills/issue/`) drafts new issues and refines existing ones following these conventions.
 
+### Definition of Ready
+
+An issue is ready to be picked up when every check for its type holds. Refine it (or ask on the issue) before starting work otherwise; the `/issue` skill runs these checks on drafts and refinements.
+
+**Work items** (`type:feature`, `type:chore`, `type:docs`):
+
+- [ ] The body follows the issue form for its type (Feature: Context, Changes, Acceptance criteria, Notes; Chore / Docs: Context, Acceptance criteria, optionally Changes and Notes).
+- [ ] *Changes* (where present) names real paths per layer (**Proto** / **Backend** / **UI**), e.g. `modules/chat/service/src/kb_chat/server.py`, not just "the chat backend".
+- [ ] Every acceptance criterion is a `- [ ]` checkbox that can be observed or tested (a command, a UI behaviour, a file that exists), not "works well" or "is improved".
+- [ ] It fits in about one PR. Bigger work is split into several sub-issues of the same epic.
+- [ ] Labels are complete: exactly one `type:*`, exactly one scope (`module:*` / `area:*`), a `lang:*` for every stack touched, and `api-change` when a `.proto` changes.
+- [ ] A milestone is set.
+- [ ] It is a sub-issue of exactly one epic and ends with `Part of #<epic>`.
+- [ ] Dependencies and open questions are listed under *Notes* with issue links (`Depends on #n`; also recorded as *blocked by* on GitHub). No open question blocks the work.
+
+**Epics** (`type:epic`):
+
+- [ ] *Goal* says what is true when the epic is done and names the code locations (`modules/<id>/…`, `platform/…`).
+- [ ] *Definition of done* is a list of `- [ ]` checkboxes.
+- [ ] No milestone (epics span phases).
+- [ ] At least one sub-issue.
+
+**Bugs** (`type:bug`): steps reproduce the problem on `main`, expected vs. actual behaviour is stated, labels have one type and one scope (or the scope is still being triaged), and a milestone is set once the fix is planned.
+
 ### Labels
 
 | Group | Labels | Meaning |

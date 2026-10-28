@@ -3,6 +3,9 @@ name: Bug
 description: Something does not work as expected.
 labels: ["type:bug"]
 body:
+  - type: markdown
+    attributes:
+      value: "Check the issue against the [Definition of Ready](https://github.com/ChristophBe/kb/blob/main/CONTRIBUTING.md#definition-of-ready) before submitting it."
   - type: dropdown
     id: scope
     attributes:

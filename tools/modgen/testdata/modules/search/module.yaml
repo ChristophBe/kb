@@ -1,0 +1,5 @@
+id: search
+title: Search
+services:
+  - name: search-worker
+    language: python

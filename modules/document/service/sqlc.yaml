@@ -1,0 +1,26 @@
+version: "2"
+sql:
+  - engine: postgresql
+    schema: ../migrations
+    queries: queries
+    gen:
+      go:
+        package: store
+        out: internal/store
+        sql_package: pgx/v5
+        emit_interface: true
+        emit_empty_slices: true
+        overrides:
+          - db_type: uuid
+            go_type: github.com/google/uuid.UUID
+          - db_type: vector
+            go_type:
+              import: github.com/pgvector/pgvector-go
+              package: pgvector
+              type: Vector
+          - column: document.documents.metadata
+            go_type:
+              type: map[string]string
+          - column: document.chunks.metadata
+            go_type:
+              type: map[string]string

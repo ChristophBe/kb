@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package kb.ingestion.v1;
+
+option go_package = "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1;ingestionv1";
+
+// Events published on NATS JetStream stream "INGESTION". The subject for each
+// message is noted on the message. Payloads are binary-encoded protobuf.
+
+// Subject: kb.ingestion.uploaded
+message DocumentUploaded {
+  string job_id = 1;
+  string document_id = 2;
+  string filename = 3;
+  string content_type = 4;
+}
+
+// Subject: kb.ingestion.started
+message ProcessingStarted {
+  string job_id = 1;
+  string document_id = 2;
+}
+
+// Subject: kb.ingestion.processed
+message DocumentProcessed {
+  string job_id = 1;
+  string document_id = 2;
+  int32 chunk_count = 3;
+}
+
+// Subject: kb.ingestion.failed
+message ProcessingFailed {
+  string job_id = 1;
+  string document_id = 2;
+  string error = 3;
+}

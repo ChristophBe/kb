@@ -1,0 +1,116 @@
+# Single entry point for every workflow. Run `task --list`.
+# Without a global install: go tool -modfile=tools/go.mod task <name>
+version: "3"
+
+vars:
+  GOTOOL: go tool -modfile=tools/go.mod
+  # Python components with their own tests (each is run with its own rootdir).
+  PY_COMPONENTS:
+    sh: for d in platform/python modules/*/service modules/*/worker; do [ -f "$d/pyproject.toml" ] && echo "$d"; done; true
+
+tasks:
+  setup:
+    desc: Install all dependencies (Go, Python, Node).
+    cmds:
+      - go mod download
+      - go -C tools mod download
+      - uv sync --all-packages
+      - pnpm install
+
+  gen:
+    desc: Run all code generation (module wiring, protobuf, SQL).
+    cmds:
+      - task: gen:modules
+      - task: gen:proto
+      - task: gen:sql
+
+  gen:modules:
+    desc: Generate wiring from modules/*/module.yaml.
+    cmds:
+      - go -C tools run ./modgen -root ..
+
+  gen:proto:
+    desc: Generate Go, Python and TypeScript code from protobuf.
+    cmds:
+      - "{{.GOTOOL}} buf lint"
+      - for: { var: TEMPLATES }
+        cmd: "{{.GOTOOL}} buf generate --template {{.ITEM}}"
+    vars:
+      TEMPLATES:
+        sh: ls platform/buf.gen.yaml modules/*/buf.gen.yaml
+
+  gen:sql:
+    desc: Generate typed Go database access with sqlc.
+    cmds:
+      - for: { var: CONFIGS }
+        cmd: cd {{dir .ITEM}} && go tool -modfile={{relPath (dir .ITEM) "tools/go.mod"}} sqlc generate
+    vars:
+      CONFIGS:
+        sh: ls modules/*/service/sqlc.yaml
+
+  lint:
+    desc: Lint and type-check everything.
+    cmds:
+      - "{{.GOTOOL}} buf lint"
+      - go vet ./...
+      - go -C tools vet ./...
+      - if command -v golangci-lint >/dev/null; then golangci-lint run ./...; else echo "golangci-lint not installed, skipping"; fi
+      - uv run ruff check .
+      - uv run ruff format --check .
+      - uv run pyright
+      - pnpm exec biome check .
+      - pnpm -r typecheck
+
+  fmt:
+    desc: Format all code.
+    cmds:
+      - gofmt -w platform modules tools
+      - uv run ruff format .
+      - uv run ruff check --fix .
+      - pnpm exec biome check --write .
+
+  test:
+    desc: Run all unit tests.
+    cmds:
+      - go test ./...
+      - go -C tools test ./...
+      - for: { var: PY_COMPONENTS }
+        cmd: uv run pytest -q --rootdir {{.ITEM}} {{.ITEM}}
+
+  check-gen:
+    desc: Fail if generated code is out of date.
+    cmds:
+      - task: gen
+      - git diff --exit-code -- . ':(exclude)uv.lock' ':(exclude)pnpm-lock.yaml'
+
+  ci:
+    desc: Everything CI runs.
+    cmds:
+      - task: check-gen
+      - task: lint
+      - task: test
+
+  up:
+    desc: Build and start the whole stack (pass compose flags after --, e.g. -- --profile ollama).
+    cmds:
+      - docker compose {{.CLI_ARGS}} up -d --build --wait
+
+  down:
+    desc: Stop the stack (add -- -v to delete volumes).
+    cmds:
+      - docker compose down {{.CLI_ARGS}}
+
+  logs:
+    desc: Follow logs (optionally of one service).
+    cmds:
+      - docker compose logs -f {{.CLI_ARGS}}
+
+  dev:
+    desc: Start the stack with hot reload (docker compose watch).
+    cmds:
+      - docker compose watch
+
+  web:
+    desc: Run the web shell with Vite against the running stack.
+    cmds:
+      - pnpm dev

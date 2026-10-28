@@ -1,0 +1,17 @@
+# Browser-facing entry points: the gRPC-Web gateway and the web shell.
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.36-latest
+    command: ["envoy", "-c", "/etc/envoy/envoy.yaml", "--log-level", "warn"]
+    volumes: [./envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro]
+    ports: ["${KB_GATEWAY_PORT:-8080}:8080"]
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/docker/web.Dockerfile
+    environment:
+      KB_API_BASE_URL: ${KB_API_BASE_URL:-http://localhost:8080}
+      KB_ENABLED_MODULES: ${KB_ENABLED_MODULES:-}
+    ports: ["${KB_WEB_PORT:-3000}:80"]
+    depends_on: [envoy]

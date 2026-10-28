@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package kb.common.v1;
+
+option go_package = "github.com/christoph/kb/platform/api/go/commonv1;commonv1";
+
+// PageRequest is embedded in list requests that support cursor pagination.
+message PageRequest {
+  // Maximum number of items to return. The server applies a default when 0.
+  int32 page_size = 1;
+  // Opaque cursor returned by a previous call; empty for the first page.
+  string page_token = 2;
+}
+
+// PageResponse is embedded in list responses that support cursor pagination.
+message PageResponse {
+  // Cursor for the next page; empty when there are no more results.
+  string next_page_token = 1;
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@kb/module-ingestion",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@kb/ingestion-api": "workspace:*",
+    "@kb/module-sdk": "workspace:*",
+    "@kb/ui": "workspace:*",
+    "lucide-react": "catalog:",
+    "react-router": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:"
+  }
+}

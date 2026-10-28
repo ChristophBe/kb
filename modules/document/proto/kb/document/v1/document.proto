@@ -1,0 +1,166 @@
+syntax = "proto3";
+
+package kb.document.v1;
+
+import "google/protobuf/timestamp.proto";
+import "kb/common/v1/common.proto";
+
+option go_package = "github.com/christoph/kb/modules/document/api/go/documentv1;documentv1";
+
+// DocumentService owns document metadata, raw file storage and the chunk /
+// vector index. Other modules access documents only through this service.
+service DocumentService {
+  // CreateDocument registers a document and returns a presigned URL the
+  // client uploads the raw file to.
+  rpc CreateDocument(CreateDocumentRequest) returns (CreateDocumentResponse);
+  rpc GetDocument(GetDocumentRequest) returns (GetDocumentResponse);
+  rpc ListDocuments(ListDocumentsRequest) returns (ListDocumentsResponse);
+  rpc UpdateDocument(UpdateDocumentRequest) returns (UpdateDocumentResponse);
+  rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
+  rpc SetDocumentStatus(SetDocumentStatusRequest) returns (SetDocumentStatusResponse);
+  // GetDownloadUrl returns a short-lived URL for downloading the raw file.
+  rpc GetDownloadUrl(GetDownloadUrlRequest) returns (GetDownloadUrlResponse);
+  // ReadContent streams the raw file for backend consumers.
+  rpc ReadContent(ReadContentRequest) returns (stream ReadContentResponse);
+  // AddChunks replaces all chunks of a document and marks it ready.
+  rpc AddChunks(AddChunksRequest) returns (AddChunksResponse);
+  rpc SearchChunks(SearchChunksRequest) returns (SearchChunksResponse);
+}
+
+enum DocumentStatus {
+  DOCUMENT_STATUS_UNSPECIFIED = 0;
+  DOCUMENT_STATUS_PENDING_UPLOAD = 1;
+  DOCUMENT_STATUS_UPLOADED = 2;
+  DOCUMENT_STATUS_PROCESSING = 3;
+  DOCUMENT_STATUS_READY = 4;
+  DOCUMENT_STATUS_FAILED = 5;
+}
+
+message Document {
+  string id = 1;
+  string title = 2;
+  string filename = 3;
+  string content_type = 4;
+  int64 size_bytes = 5;
+  DocumentStatus status = 6;
+  string status_detail = 7;
+  int32 chunk_count = 8;
+  map<string, string> metadata = 9;
+  google.protobuf.Timestamp create_time = 10;
+  google.protobuf.Timestamp update_time = 11;
+}
+
+message Chunk {
+  string document_id = 1;
+  int32 index = 2;
+  string text = 3;
+  map<string, string> metadata = 4;
+}
+
+message ScoredChunk {
+  Chunk chunk = 1;
+  string document_title = 2;
+  // Cosine similarity in [-1, 1]; higher is more similar.
+  float score = 3;
+}
+
+message CreateDocumentRequest {
+  string title = 1;
+  string filename = 2;
+  string content_type = 3;
+  int64 size_bytes = 4;
+  map<string, string> metadata = 5;
+}
+
+message CreateDocumentResponse {
+  Document document = 1;
+  string upload_url = 2;
+}
+
+message GetDocumentRequest {
+  string id = 1;
+}
+
+message GetDocumentResponse {
+  Document document = 1;
+}
+
+message ListDocumentsRequest {
+  kb.common.v1.PageRequest page = 1;
+}
+
+message ListDocumentsResponse {
+  repeated Document documents = 1;
+  kb.common.v1.PageResponse page = 2;
+}
+
+message UpdateDocumentRequest {
+  string id = 1;
+  optional string title = 2;
+  // Replaces the metadata map when set_metadata is true.
+  map<string, string> metadata = 3;
+  bool set_metadata = 4;
+}
+
+message UpdateDocumentResponse {
+  Document document = 1;
+}
+
+message DeleteDocumentRequest {
+  string id = 1;
+}
+
+message DeleteDocumentResponse {}
+
+message SetDocumentStatusRequest {
+  string id = 1;
+  DocumentStatus status = 2;
+  string status_detail = 3;
+}
+
+message SetDocumentStatusResponse {
+  Document document = 1;
+}
+
+message GetDownloadUrlRequest {
+  string id = 1;
+}
+
+message GetDownloadUrlResponse {
+  string url = 1;
+}
+
+message ReadContentRequest {
+  string id = 1;
+}
+
+message ReadContentResponse {
+  bytes data = 1;
+}
+
+message ChunkInput {
+  int32 index = 1;
+  string text = 2;
+  repeated float embedding = 3;
+  map<string, string> metadata = 4;
+}
+
+message AddChunksRequest {
+  string document_id = 1;
+  repeated ChunkInput chunks = 2;
+}
+
+message AddChunksResponse {
+  int32 chunk_count = 1;
+}
+
+message SearchChunksRequest {
+  repeated float embedding = 1;
+  int32 limit = 2;
+  // Restricts the search to these documents when non-empty.
+  repeated string document_ids = 3;
+}
+
+message SearchChunksResponse {
+  repeated ScoredChunk results = 1;
+}

@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      TASK: go tool -modfile=tools/go.mod task
+    steps:
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-go@v6
+        with: { go-version-file: go.mod }
+      - uses: astral-sh/setup-uv@v7
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with: { node-version: 24, cache: pnpm }
+      - uses: golangci/golangci-lint-action@v8
+        with: { install-only: true }
+
+      - run: $TASK setup
+      - name: Generated code is up to date
+        run: $TASK check-gen
+      - name: No breaking API changes
+        if: github.event_name == 'pull_request'
+        run: go tool -modfile=tools/go.mod buf breaking --against ".git#branch=origin/${{ github.base_ref }}"
+      - run: $TASK lint
+      - run: $TASK test
+
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker compose build

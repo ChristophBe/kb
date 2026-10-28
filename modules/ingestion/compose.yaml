@@ -1,0 +1,43 @@
+services:
+  ingestion-service:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/go.Dockerfile
+      args: { CMD: ./modules/ingestion/service/cmd/ingestion-service }
+    environment:
+      KB_LOG_LEVEL: ${KB_LOG_LEVEL:-info}
+      KB_DATABASE_URL: postgres://kb:kb@postgres:5432/kb?sslmode=disable
+      KB_NATS_URL: nats://nats:4222
+      KB_DOCUMENT_ADDR: document-service:9001
+    ports: ["9002:9002"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      nats: { condition: service_healthy }
+      document-service: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "/app", "healthcheck"]
+      interval: 2s
+      retries: 30
+    develop:
+      watch:
+        - { action: rebuild, path: ./service }
+        - { action: rebuild, path: ../../platform/go }
+
+  ingestion-worker:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/python.Dockerfile
+      args: { PACKAGE: kb-ingestion-worker }
+    environment:
+      KB_LOG_LEVEL: ${KB_LOG_LEVEL:-INFO}
+      KB_NATS_URL: nats://nats:4222
+      KB_DOCUMENT_ADDR: document-service:9001
+      KB_LLM_ADDR: llm-service:9004
+    depends_on:
+      nats: { condition: service_healthy }
+      document-service: { condition: service_healthy }
+      llm-service: { condition: service_healthy }
+    develop:
+      watch:
+        - { action: sync+restart, path: ./worker/src, target: /app/modules/ingestion/worker/src }
+        - { action: sync+restart, path: ../../platform/python/src, target: /app/platform/python/src }

@@ -1,0 +1,25 @@
+services:
+  chat-service:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/python.Dockerfile
+      args: { PACKAGE: kb-chat-service }
+    environment:
+      KB_LOG_LEVEL: ${KB_LOG_LEVEL:-INFO}
+      KB_DATABASE_URL: postgresql+asyncpg://kb:kb@postgres:5432/kb
+      KB_DOCUMENT_ADDR: document-service:9001
+      KB_LLM_ADDR: llm-service:9004
+    ports: ["9003:9003"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      document-service: { condition: service_healthy }
+      llm-service: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-m", "kb_platform.healthcheck", "9003"]
+      interval: 2s
+      retries: 30
+    develop:
+      watch:
+        - { action: sync+restart, path: ./service/src, target: /app/modules/chat/service/src }
+        - { action: sync+restart, path: ./migrations, target: /app/modules/chat/migrations }
+        - { action: sync+restart, path: ../../platform/python/src, target: /app/platform/python/src }

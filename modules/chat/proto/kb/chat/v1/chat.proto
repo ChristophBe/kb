@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package kb.chat.v1;
+
+import "google/protobuf/timestamp.proto";
+import "kb/common/v1/common.proto";
+
+option go_package = "github.com/christoph/kb/modules/chat/api/go/chatv1;chatv1";
+
+// ChatService manages conversations and answers questions, optionally
+// grounded in the knowledge base (retrieval-augmented generation).
+service ChatService {
+  rpc CreateConversation(CreateConversationRequest) returns (CreateConversationResponse);
+  rpc GetConversation(GetConversationRequest) returns (GetConversationResponse);
+  rpc ListConversations(ListConversationsRequest) returns (ListConversationsResponse);
+  rpc DeleteConversation(DeleteConversationRequest) returns (DeleteConversationResponse);
+  // StreamChat appends a user message and streams the assistant's answer.
+  rpc StreamChat(StreamChatRequest) returns (stream StreamChatResponse);
+}
+
+enum MessageRole {
+  MESSAGE_ROLE_UNSPECIFIED = 0;
+  MESSAGE_ROLE_USER = 1;
+  MESSAGE_ROLE_ASSISTANT = 2;
+}
+
+message Citation {
+  string document_id = 1;
+  string document_title = 2;
+  int32 chunk_index = 3;
+  string snippet = 4;
+  float score = 5;
+}
+
+message ChatMessage {
+  string id = 1;
+  MessageRole role = 2;
+  string content = 3;
+  repeated Citation citations = 4;
+  google.protobuf.Timestamp create_time = 5;
+}
+
+message Conversation {
+  string id = 1;
+  string title = 2;
+  google.protobuf.Timestamp create_time = 3;
+  google.protobuf.Timestamp update_time = 4;
+}
+
+message CreateConversationRequest {
+  string title = 1;
+}
+
+message CreateConversationResponse {
+  Conversation conversation = 1;
+}
+
+message GetConversationRequest {
+  string id = 1;
+}
+
+message GetConversationResponse {
+  Conversation conversation = 1;
+  repeated ChatMessage messages = 2;
+}
+
+message ListConversationsRequest {
+  kb.common.v1.PageRequest page = 1;
+}
+
+message ListConversationsResponse {
+  repeated Conversation conversations = 1;
+  kb.common.v1.PageResponse page = 2;
+}
+
+message DeleteConversationRequest {
+  string id = 1;
+}
+
+message DeleteConversationResponse {}
+
+message StreamChatRequest {
+  string conversation_id = 1;
+  string content = 2;
+  // Ground the answer in the knowledge base.
+  bool use_knowledge_base = 3;
+  // Model id; empty uses the llm module's default.
+  string model = 4;
+}
+
+message StreamChatResponse {
+  oneof event {
+    // Retrieved sources, sent once before the first delta.
+    Citations citations = 1;
+    // A chunk of the answer text.
+    string delta = 2;
+    // The persisted assistant message, sent last.
+    ChatMessage message = 3;
+  }
+}
+
+message Citations {
+  repeated Citation items = 1;
+}

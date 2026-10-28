@@ -1,0 +1,10 @@
+# Module manifest — consumed by tools/modgen (`task gen`).
+id: chat
+title: Chat
+description: Conversations with retrieval-augmented answers over the knowledge base.
+services:
+  - name: chat-service
+    language: python
+    port: 9003
+    grpc_services: [kb.chat.v1.ChatService]
+ui: "@kb/module-chat"

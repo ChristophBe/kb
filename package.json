@@ -1,0 +1,20 @@
+{
+  "name": "kb",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.10.0",
+  "scripts": {
+    "dev": "pnpm --filter @kb/web dev",
+    "build": "pnpm --filter @kb/web build",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@bufbuild/protoc-gen-es": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

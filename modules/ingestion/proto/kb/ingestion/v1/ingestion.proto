@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package kb.ingestion.v1;
+
+import "google/protobuf/timestamp.proto";
+import "kb/common/v1/common.proto";
+
+option go_package = "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1;ingestionv1";
+
+// IngestionService accepts new content and tracks it through processing
+// (extraction, chunking, embedding).
+service IngestionService {
+  // CreateUpload registers an ingestion job and returns a presigned URL the
+  // client uploads the file to.
+  rpc CreateUpload(CreateUploadRequest) returns (CreateUploadResponse);
+  // CompleteUpload confirms the upload finished and queues processing.
+  rpc CompleteUpload(CompleteUploadRequest) returns (CompleteUploadResponse);
+  rpc GetJob(GetJobRequest) returns (GetJobResponse);
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
+  // WatchJob streams the job every time it changes until it is terminal.
+  rpc WatchJob(WatchJobRequest) returns (stream WatchJobResponse);
+}
+
+enum JobStatus {
+  JOB_STATUS_UNSPECIFIED = 0;
+  JOB_STATUS_PENDING_UPLOAD = 1;
+  JOB_STATUS_QUEUED = 2;
+  JOB_STATUS_PROCESSING = 3;
+  JOB_STATUS_DONE = 4;
+  JOB_STATUS_FAILED = 5;
+}
+
+message Job {
+  string id = 1;
+  string document_id = 2;
+  string filename = 3;
+  string content_type = 4;
+  JobStatus status = 5;
+  string error = 6;
+  int32 chunk_count = 7;
+  google.protobuf.Timestamp create_time = 8;
+  google.protobuf.Timestamp update_time = 9;
+}
+
+message CreateUploadRequest {
+  string filename = 1;
+  string content_type = 2;
+  int64 size_bytes = 3;
+  // Defaults to the filename when empty.
+  string title = 4;
+}
+
+message CreateUploadResponse {
+  Job job = 1;
+  string upload_url = 2;
+}
+
+message CompleteUploadRequest {
+  string job_id = 1;
+}
+
+message CompleteUploadResponse {
+  Job job = 1;
+}
+
+message GetJobRequest {
+  string id = 1;
+}
+
+message GetJobResponse {
+  Job job = 1;
+}
+
+message ListJobsRequest {
+  kb.common.v1.PageRequest page = 1;
+}
+
+message ListJobsResponse {
+  repeated Job jobs = 1;
+  kb.common.v1.PageResponse page = 2;
+}
+
+message WatchJobRequest {
+  string id = 1;
+}
+
+message WatchJobResponse {
+  Job job = 1;
+}

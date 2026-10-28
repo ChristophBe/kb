@@ -1,0 +1,44 @@
+# Shared infrastructure. Each module owns its own schema / bucket / stream in
+# these servers; nothing here is module-specific.
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: kb
+      POSTGRES_PASSWORD: kb
+      POSTGRES_DB: kb
+    ports: ["5432:5432"]
+    volumes: [postgres:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "kb"]
+      interval: 2s
+      retries: 30
+
+  # S3-compatible object storage. Browsers upload to it directly through
+  # presigned URLs, so its port must be reachable from the host.
+  s3:
+    image: chrislusf/seaweedfs:4.00
+    command: server -ip.bind=0.0.0.0 -dir=/data -filer -s3 -s3.config=/etc/seaweedfs/s3.json
+    ports: ["8333:8333"]
+    volumes:
+      - s3:/data
+      - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8333/status"]
+      interval: 2s
+      retries: 60
+
+  nats:
+    image: nats:2.12-alpine
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    ports: ["4222:4222"]
+    volumes: [nats:/data]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8222/healthz?js-enabled-only=true"]
+      interval: 2s
+      retries: 30
+
+volumes:
+  postgres:
+  s3:
+  nats:

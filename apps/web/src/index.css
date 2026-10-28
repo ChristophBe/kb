@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+/* Classes used by shared UI packages and module UIs. */
+@source "../../../platform/ui/kit/src";
+@source "../../../modules/*/ui/src";

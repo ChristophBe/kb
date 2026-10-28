@@ -1,0 +1,43 @@
+services:
+  llm-service:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/python.Dockerfile
+      args: { PACKAGE: kb-llm-service }
+    environment:
+      KB_LOG_LEVEL: ${KB_LOG_LEVEL:-INFO}
+      KB_LLM_PROVIDER: ${KB_LLM_PROVIDER:-ollama}
+      KB_OLLAMA_URL: ${KB_OLLAMA_URL:-http://ollama:11434}
+      KB_CHAT_MODEL: ${KB_CHAT_MODEL:-llama3.2}
+      KB_EMBEDDING_MODEL: ${KB_EMBEDDING_MODEL:-nomic-embed-text}
+      KB_EMBEDDING_DIMENSIONS: ${KB_EMBEDDING_DIMENSIONS:-768}
+    ports: ["9004:9004"]
+    depends_on:
+      ollama: { condition: service_started, required: false }
+    healthcheck:
+      test: ["CMD", "python", "-m", "kb_platform.healthcheck", "9004"]
+      interval: 2s
+      retries: 30
+    develop:
+      watch:
+        - { action: sync+restart, path: ./service/src, target: /app/modules/llm/service/src }
+        - { action: sync+restart, path: ../../platform/python/src, target: /app/platform/python/src }
+
+  # Local model server; enable with `--profile ollama`, or point
+  # KB_OLLAMA_URL at an Ollama running on the host (faster on macOS).
+  ollama:
+    image: ollama/ollama:0.12.6
+    profiles: [ollama]
+    volumes: [ollama:/root/.ollama]
+    ports: ["11434:11434"]
+
+  ollama-pull:
+    image: ollama/ollama:0.12.6
+    profiles: [ollama]
+    environment: { OLLAMA_HOST: "ollama:11434" }
+    entrypoint: ["sh", "-c", "ollama pull ${KB_CHAT_MODEL:-llama3.2} && ollama pull ${KB_EMBEDDING_MODEL:-nomic-embed-text}"]
+    depends_on: [ollama]
+    restart: "no"
+
+volumes:
+  ollama:

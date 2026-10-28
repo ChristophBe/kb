@@ -1,0 +1,10 @@
+# Module manifest — consumed by tools/modgen (`task gen`).
+id: document
+title: Documents
+description: Document metadata, raw file storage and the chunk/vector index.
+services:
+  - name: document-service
+    language: go
+    port: 9001
+    grpc_services: [kb.document.v1.DocumentService]
+ui: "@kb/module-document"

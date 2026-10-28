@@ -1,0 +1,14 @@
+# Buf workspace: every module owns its contract under modules/<id>/proto.
+version: v2
+modules:
+  - path: platform/proto
+  - path: modules/chat/proto
+  - path: modules/document/proto
+  - path: modules/ingestion/proto
+  - path: modules/llm/proto
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE

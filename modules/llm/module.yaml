@@ -1,0 +1,10 @@
+# Module manifest — consumed by tools/modgen (`task gen`).
+id: llm
+title: Models
+description: Gateway to LLM providers (generation and embeddings).
+services:
+  - name: llm-service
+    language: python
+    port: 9004
+    grpc_services: [kb.llm.v1.LlmService]
+ui: "@kb/module-llm"

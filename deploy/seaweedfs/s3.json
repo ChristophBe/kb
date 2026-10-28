@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "kb",
+      "credentials": [{ "accessKey": "kb", "secretKey": "kb-secret-key" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

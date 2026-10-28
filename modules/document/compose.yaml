@@ -1,0 +1,23 @@
+services:
+  document-service:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/go.Dockerfile
+      args: { CMD: ./modules/document/service/cmd/document-service }
+    environment:
+      KB_LOG_LEVEL: ${KB_LOG_LEVEL:-info}
+      KB_DATABASE_URL: postgres://kb:kb@postgres:5432/kb?sslmode=disable
+      KB_S3_ENDPOINT: s3:8333
+      KB_S3_PUBLIC_ENDPOINT: ${KB_S3_PUBLIC_ENDPOINT:-localhost:8333}
+    ports: ["9001:9001"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      s3: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "/app", "healthcheck"]
+      interval: 2s
+      retries: 30
+    develop:
+      watch:
+        - { action: rebuild, path: . }
+        - { action: rebuild, path: ../../platform/go }

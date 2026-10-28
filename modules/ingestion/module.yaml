@@ -1,0 +1,12 @@
+# Module manifest — consumed by tools/modgen (`task gen`).
+id: ingestion
+title: Ingestion
+description: Uploads and the extract → chunk → embed processing pipeline.
+services:
+  - name: ingestion-service
+    language: go
+    port: 9002
+    grpc_services: [kb.ingestion.v1.IngestionService]
+  - name: ingestion-worker
+    language: python
+ui: "@kb/module-ingestion"

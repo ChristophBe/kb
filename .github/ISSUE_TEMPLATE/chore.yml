@@ -1,0 +1,21 @@
+name: Chore
+description: Tooling, CI, infrastructure, refactoring or docs work.
+labels: ["type:chore"]
+body:
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options: [document, ingestion, chat, llm, platform, ui-shell, infra]
+    validations: { required: true }
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+    validations: { required: true }
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: "- [ ] "
+    validations: { required: true }

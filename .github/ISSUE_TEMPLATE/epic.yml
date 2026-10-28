@@ -1,0 +1,24 @@
+name: Epic
+description: A module or area-level goal, broken down into sub-issues.
+title: "Epic: "
+labels: ["type:epic"]
+body:
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options: [document, ingestion, chat, llm, platform, ui-shell, infra]
+    validations: { required: true }
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What is true once this epic is done, and why it matters.
+    validations: { required: true }
+  - type: textarea
+    id: done
+    attributes:
+      label: Definition of done
+      description: Checklist that must hold before closing. Work items are added as sub-issues.
+      value: "- [ ] "
+    validations: { required: true }

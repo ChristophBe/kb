@@ -52,3 +52,5 @@ CI must pass on every PR. It fails when any of these fails:
 | Lint and type checks (all languages, no linter optional) | `task lint` |
 | Unit tests | `task test` |
 | Coverage minimum per component | `task test` (see [coding standards](docs/coding-standards.md#coverage)) |
+
+All of these run in the `check` job of `.github/workflows/ci.yml`. Configure it as a required status check for `main` under *Settings → Branches* (or a ruleset): require a pull request, require status check `check`, and require the branch to be up to date. Branch protection on a private repository needs GitHub Pro/Team; until then the rule is enforced by convention.

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"path"
+	"slices"
 	"strings"
 	"text/template"
 )
@@ -12,8 +13,14 @@ import (
 var templateFS embed.FS
 
 var templates = template.Must(template.New("").Funcs(template.FuncMap{
-	"camel": camel,
+	"camel":  camel,
+	"args":   args,
+	"append": func(s []string, v ...string) []string { return append(slices.Clone(s), v...) },
 }).ParseFS(templateFS, "templates/*.tmpl"))
+
+// Areas are scopes for cross-cutting work that belongs to no module. Together
+// with the module ids they form the scope list used by the issue forms.
+var Areas = []string{"platform", "ui-shell", "infra"}
 
 // GoModule is the root Go module path; generated Go code lives below it.
 const GoModule = "github.com/christoph/kb"
@@ -64,17 +71,37 @@ func Render(modules []Module) ([]File, error) {
 		}
 	}
 
-	data := map[string]any{"Modules": modules}
+	scopes := make([]string, 0, len(modules)+len(Areas))
+	for _, m := range modules {
+		scopes = append(scopes, m.ID)
+	}
+	scopes = append(scopes, Areas...)
+
+	data := map[string]any{"Modules": modules, "Scopes": scopes}
 	for _, out := range []struct{ path, tmpl string }{
 		{"deploy/envoy/envoy.yaml", "envoy.yaml.tmpl"},
 		{"compose.yaml", "compose.yaml.tmpl"},
 		{"apps/web/src/modules.gen.ts", "modules.gen.ts.tmpl"},
+		{".github/ISSUE_TEMPLATE/epic.yml", "issue-epic.yml.tmpl"},
+		{".github/ISSUE_TEMPLATE/feature.yml", "issue-feature.yml.tmpl"},
+		{".github/ISSUE_TEMPLATE/chore.yml", "issue-chore.yml.tmpl"},
+		{".github/ISSUE_TEMPLATE/bug.yml", "issue-bug.yml.tmpl"},
 	} {
 		if err := add(out.path, out.tmpl, data); err != nil {
 			return nil, err
 		}
 	}
 	return files, nil
+}
+
+// args builds a map from alternating keys and values, so templates can pass
+// several parameters to a nested template.
+func args(kv ...any) map[string]any {
+	m := make(map[string]any, len(kv)/2)
+	for i := 0; i+1 < len(kv); i += 2 {
+		m[kv[i].(string)] = kv[i+1]
+	}
+	return m
 }
 
 // camel turns "document" or "foo-bar" into "document" / "fooBar".

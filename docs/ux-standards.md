@@ -100,6 +100,10 @@ Tailwind's default breakpoints apply. Design mobile first:
 
 Content stays usable at 320 px and at 200 % zoom; text never truncates without a way to see the full value (tooltip, wrap or detail view).
 
+## M1 screen drafts
+
+Wireframes, flows and keyboard/screen-reader notes for the M1 screens built on these standards: [docs/ux/m1](ux/m1/README.md).
+
 ## Automated checks
 
 These run in `task lint` / `task test` and fail CI:

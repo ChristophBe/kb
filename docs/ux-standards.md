@@ -1,6 +1,6 @@
 # UX and accessibility standards
 
-Rules for every UI in kb: the shell (`apps/web`), the shared kit (`platform/ui/kit`, package `@kb/ui`) and module UIs (`modules/*/ui`). New UI work follows them and reviews check against them, using the UI checklist in the PR template. Code conventions for the TypeScript side are in the [coding standards](coding-standards.md); automated gates (lint rules, axe tests, token contrast checks) are tracked in #73.
+Rules for every UI in kb: the shell (`apps/web`), the shared kit (`platform/ui/kit`, package `@kb/ui`) and module UIs (`modules/*/ui`). New UI work follows them and reviews check against them, using the UI checklist in the PR template. Code conventions for the TypeScript side are in the [coding standards](coding-standards.md); the automated gates are listed under [Automated checks](#automated-checks).
 
 ## Accessibility target
 
@@ -54,7 +54,7 @@ Tokens are Tailwind theme variables defined in [`platform/ui/kit/src/theme.css`]
 | Radius | `rounded-control` (buttons, inputs, nav items, alerts), `rounded-card` (cards, dialogs), `rounded-full` (badges, avatars, spinners). |
 | Focus ring | 2 px solid `--color-focus`, 2 px offset. |
 
-A new token needs a contrast check for every pair it's used in (light and dark) and an entry in both tables.
+A new token needs an entry in both tables and a pair for every combination it's used in, added to `platform/ui/kit/src/theme.test.ts` (light and dark are checked automatically).
 
 ## UX conventions
 
@@ -99,6 +99,20 @@ Tailwind's default breakpoints apply. Design mobile first:
 | `lg` ≥ 1024 px | Wider content area; optional third column (e.g. citations panel). |
 
 Content stays usable at 320 px and at 200 % zoom; text never truncates without a way to see the full value (tooltip, wrap or detail view).
+
+## Automated checks
+
+These run in `task lint` / `task test` and fail CI:
+
+| Check | Where | Catches |
+|---|---|---|
+| Biome `a11y` rules, all as errors | `biome.json`, `task lint` | Missing labels and alt text, interactive handlers on non-interactive elements, invalid ARIA, … A justified exception needs `biome-ignore lint/a11y/<rule>: <reason>`. |
+| axe-core on every kit component | `platform/ui/kit/src/components.test.tsx`, `task test` | Rendered accessibility violations (names, roles, ARIA, structure). |
+| Token contrast | `platform/ui/kit/src/theme.test.ts`, `task test` | Every text/background (4.5:1) and control/focus (3:1) pair in light and dark mode, resolved against Tailwind's palette. |
+
+Module UI tests use the same helper: `import { expectNoAxeViolations } from "@kb/ui/testing"` after rendering. It turns off the page-level `region` rule and `color-contrast`, which jsdom can't compute; contrast is covered by the token check. Full-page scans against the running stack are part of the end-to-end tests (#14).
+
+A new kit component gets an axe test. A new colour token gets pairs in `theme.test.ts`.
 
 ## Review checklist
 

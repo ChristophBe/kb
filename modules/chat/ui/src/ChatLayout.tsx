@@ -38,25 +38,27 @@ export function ChatLayout() {
         <ErrorMessage error={conversations.error ?? create.error} />
         <nav className="flex-1 overflow-y-auto px-2 pb-2">
           {conversations.data?.conversations.map((c) => (
-            <NavLink
+            <div
               key={c.id}
-              to={c.id}
-              className={({ isActive }) =>
-                cn(
-                  "group flex items-center justify-between rounded-control px-3 py-2 text-sm text-fg hover:bg-surface-muted",
-                  isActive && "bg-surface-muted font-medium",
-                )
-              }
+              className="group flex items-center rounded-control text-sm text-fg hover:bg-surface-muted has-[[aria-current=page]]:bg-surface-muted"
             >
-              <span className="truncate">{c.title || "New conversation"}</span>
-              <Trash2
-                className="size-4 shrink-0 text-fg-muted opacity-0 group-hover:opacity-100 hover:text-danger"
-                onClick={(e) => {
-                  e.preventDefault();
-                  remove.mutate(c.id);
-                }}
-              />
-            </NavLink>
+              <NavLink
+                to={c.id}
+                className={({ isActive }) =>
+                  cn("min-w-0 flex-1 truncate px-3 py-2", isActive && "font-medium")
+                }
+              >
+                {c.title || "New conversation"}
+              </NavLink>
+              <button
+                type="button"
+                aria-label={`Delete conversation ${c.title || "New conversation"}`}
+                className="mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-control text-fg-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:text-danger"
+                onClick={() => remove.mutate(c.id)}
+              >
+                <Trash2 className="size-4" aria-hidden />
+              </button>
+            </div>
           ))}
         </nav>
       </div>

@@ -59,6 +59,7 @@ export function Upload() {
         title="Ingestion"
         description="Upload documents to add them to the knowledge base."
       />
+      {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: drag and drop is a pointer shortcut; keyboard users reach the file input inside the label. */}
       <label
         onDragOver={(e) => {
           e.preventDefault();
@@ -70,11 +71,11 @@ export function Upload() {
           setDragging(false);
           onFiles(e.dataTransfer.files);
         }}
-        className={`mb-6 flex cursor-pointer flex-col items-center gap-2 rounded-card border-2 border-dashed p-10 text-sm text-fg-muted ${dragging ? "border-border-strong bg-surface-muted" : "border-border-strong bg-surface"}`}
+        className={`mb-6 flex cursor-pointer flex-col items-center gap-2 rounded-card border-2 border-dashed p-10 text-sm text-fg-muted focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus ${dragging ? "border-border-strong bg-surface-muted" : "border-border-strong bg-surface"}`}
       >
         <UploadIcon className="size-6" />
         Drop files here or click to choose (PDF, Markdown, text)
-        <input type="file" multiple className="hidden" onChange={(e) => onFiles(e.target.files)} />
+        <input type="file" multiple className="sr-only" onChange={(e) => onFiles(e.target.files)} />
       </label>
       <ErrorMessage error={error ?? jobs.error} />
       <Card>

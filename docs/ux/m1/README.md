@@ -9,6 +9,14 @@ Low-fidelity wireframes and flows for every UI area M1 adds or reworks. The M1 i
 | Ingestion: upload progress, per-file errors, retry | [ingestion.md](ingestion.md) | #34, #69 |
 | Chat: Markdown + citations, stop, document scope, rename, stream errors | [chat.md](chat.md) | #41, #42, #44, #45, #46 |
 
+## Clickable prototype
+
+Every screen in this draft can be tried in the running app: start the web shell (`task web`, or `task up` for the whole stack) and open **Preview → M1 prototype** in the sidebar (`/prototype`). It needs no backend, uses mock data, and keeps changes until you reload.
+
+- **Simulate** switches every screen between normal, loading, empty, error and service-unavailable states.
+- Filenames and questions steer failures: an upload named `*fail*` breaks mid-upload, `*scan*` fails processing, other formats than PDF/Markdown/text are rejected; a chat question containing "fail" interrupts the answer.
+- The code lives in `apps/web/src/prototype/` and is loaded only when opened. It is a design artefact: M1 issues implement the real screens in the module UIs, and its dialog, tabs, menu and toast components are candidates for `@kb/ui` (#58). `apps/web/src/prototype/prototype.test.tsx` renders every screen with axe and drives the main flows.
+
 **How to read the wireframes:** boxes are regions, not pixel layouts. `[Button]` is a button, `[_____]` an input, `( )`/`(•)` radio, `[x]` checkbox, `▾` a menu button, `…` truncated text, `░░░` a skeleton. Every wireframe is the `md` (≥ 768 px) layout unless marked *narrow* (< 640 px). Copy in wireframes is the proposed microcopy.
 
 ## Navigation map

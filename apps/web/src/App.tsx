@@ -1,6 +1,6 @@
 import type { KbModule, RuntimeConfig } from "@kb/module-sdk";
 import { Card, cn } from "@kb/ui";
-import { Library } from "lucide-react";
+import { FlaskConical, Library } from "lucide-react";
 import { useMemo } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
 import { activeModules } from "./registry.ts";
@@ -14,6 +14,11 @@ export function App({ config }: { config: RuntimeConfig }) {
         children: [
           { index: true, element: <Home modules={modules} /> },
           ...modules.map((m) => ({ path: `m/${m.id}`, children: m.routes })),
+          // Clickable M1 prototype with mock data (docs/ux/m1), loaded on demand.
+          {
+            path: "prototype/*",
+            lazy: async () => ({ Component: (await import("./prototype/index.tsx")).Prototype }),
+          },
           { path: "*", element: <p className="text-sm text-fg-muted">Page not found.</p> },
         ],
       },
@@ -51,6 +56,23 @@ function Shell({ modules }: { modules: KbModule[] }) {
               );
             }),
           )}
+        </nav>
+        <nav
+          aria-label="Preview"
+          className="mt-6 flex flex-col gap-0.5 border-t border-border px-2 pt-4"
+        >
+          <span className="px-3 pb-1 text-xs font-medium text-fg-muted">Preview</span>
+          <NavLink
+            to="/prototype"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-2 rounded-control px-3 py-2 text-sm text-fg-muted hover:bg-surface-muted",
+                isActive && "bg-surface-muted font-medium text-fg",
+              )
+            }
+          >
+            <FlaskConical className="size-4" aria-hidden="true" /> M1 prototype
+          </NavLink>
         </nav>
       </aside>
       <main className="min-w-0 flex-1 p-8">

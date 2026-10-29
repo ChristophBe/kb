@@ -14,3 +14,4 @@ Significant decisions are recorded here, one file per decision, using [template.
 | [0005](0005-llm-module-is-the-only-vendor-gateway.md) | Only the `llm` module talks to LLM vendors | Accepted |
 | [0006](0006-pgvector-with-768-dimensions.md) | pgvector with 768-dimension embeddings | Accepted |
 | [0007](0007-commit-generated-code.md) | Commit generated code | Accepted |
+| [0008](0008-reference-module-architecture.md) | Reference module architecture | Accepted |

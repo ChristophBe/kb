@@ -3,6 +3,7 @@
 Monorepo organised **by module, not by language**. Read README.md for the overview.
 
 ## Module anatomy (`modules/<id>/`)
+Layers, layouts, runtime conventions and inter-module rules: [docs/architecture/module.md](docs/architecture/module.md) (reference implementations: `document` for Go, `llm` for Python).
 - `module.yaml` — manifest (services, ports, routed gRPC services, UI package). Source of truth for wiring.
 - `proto/kb/<id>/v1/*.proto` — the module's public contract (incl. its NATS event messages).
 - `api/{go,python,ts}` — **generated** bindings (committed). Never edit; run `task gen`.

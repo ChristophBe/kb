@@ -34,7 +34,8 @@
       "style": {
         "useImportType": "error",
         "noNonNullAssertion": "error"
-      }
+      },
+      "a11y": "error"
     }
   },
   "assist": {

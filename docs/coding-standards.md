@@ -57,7 +57,8 @@ Conventions for Go, Python and TypeScript in kb. Most of them are enforced by `t
 |---|---|---|
 | Generated code is committed | `task check-gen` | CI, pre-push |
 | No breaking proto changes | `buf breaking` | CI (PRs) |
-| Lint and type checks | `task lint` (buf, `go vet`, golangci-lint, ruff, pyright, biome, `tsc`) | CI, pre-push |
+| Lint and type checks | `task lint` (buf, `go vet`, golangci-lint, ruff, pyright, biome incl. all `a11y` rules, `tsc`) | CI, pre-push |
+| Accessibility: axe tests of kit components, token contrast | `task test` (Vitest) | CI, pre-push |
 | Unit tests | `task test:fast` | pre-push |
 | Unit tests + coverage minimums | `task test` | CI |
 

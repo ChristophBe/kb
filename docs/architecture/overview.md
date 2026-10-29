@@ -1,6 +1,6 @@
 # Architecture overview
 
-How the modules, the infrastructure and the browser fit together. The diagrams follow `compose.yaml` (and the fragments it includes) and the module manifests in `modules/*/module.yaml`; update them when either changes. The reasons behind the structure are recorded as [ADRs](../adr/README.md).
+How the modules, the infrastructure and the browser fit together. The diagrams follow `compose.yaml` (and the fragments it includes) and the module manifests in `modules/*/module.yaml`; update them when either changes. The reasons behind the structure are recorded as [ADRs](../adr/README.md); the inside of a module is described in [module.md](module.md).
 
 ## System context
 

@@ -123,3 +123,32 @@ async def test_unknown_conversation_is_not_found(env) -> None:
     with pytest.raises(grpc.aio.AioRpcError) as err:
         await stub.GetConversation(chat_pb2.GetConversationRequest(id="nope"))
     assert err.value.code() == grpc.StatusCode.NOT_FOUND
+
+
+class DownLlm(FakeLlm):
+    """An llm client whose service is unreachable."""
+
+    async def Embed(self, request):
+        raise grpc.aio.AioRpcError(
+            grpc.StatusCode.UNAVAILABLE, grpc.aio.Metadata(), grpc.aio.Metadata(), "connect failed"
+        )
+
+
+async def test_stream_chat_without_llm_is_unavailable() -> None:
+    server = grpc.aio.server()
+    chat_pb2_grpc.add_ChatServiceServicer_to_server(
+        ChatServicer(Settings(), MemoryRepo(), FakeDocuments(), DownLlm()),
+        server,  # type: ignore[arg-type]
+    )
+    port = server.add_insecure_port("127.0.0.1:0")
+    await server.start()
+    async with grpc.aio.insecure_channel(f"127.0.0.1:{port}") as ch:
+        stub = chat_pb2_grpc.ChatServiceStub(ch)
+        conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+        request = chat_pb2.StreamChatRequest(
+            conversation_id=conv.id, content="Hi", use_knowledge_base=True
+        )
+        with pytest.raises(grpc.aio.AioRpcError) as err:
+            _ = [e async for e in stub.StreamChat(request)]
+    await server.stop(None)
+    assert err.value.code() == grpc.StatusCode.UNAVAILABLE

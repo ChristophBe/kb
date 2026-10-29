@@ -18,6 +18,29 @@ SUBJECT_STARTED = "kb.ingestion.started"
 SUBJECT_PROCESSED = "kb.ingestion.processed"
 SUBJECT_FAILED = "kb.ingestion.failed"
 
+
+class PeerGate:
+    """Whether the services the worker needs (document, llm) are serving.
+
+    They are soft dependencies: while one is down the worker stops taking jobs,
+    which stay queued in the stream, instead of failing them. Only changes are
+    logged, not every check."""
+
+    def __init__(self, check: Callable[[], Awaitable[bool]]) -> None:
+        self._check = check
+        self._open = True
+
+    async def is_open(self) -> bool:
+        ok = await self._check()
+        if ok != self._open:
+            if ok:
+                log.info("document and llm services available; resuming job intake")
+            else:
+                log.warning("document or llm service unavailable; pausing job intake")
+            self._open = ok
+        return ok
+
+
 # publish(subject, message, dedupe_id)
 Publish = Callable[[str, Message, str], Awaitable[None]]
 

@@ -1,3 +1,6 @@
+import logging
+
+import pytest
 from kb.document.v1 import document_pb2
 from kb.ingestion.v1 import events_pb2
 from kb.llm.v1 import llm_pb2
@@ -6,6 +9,7 @@ from kb_ingestion_worker.worker import (
     SUBJECT_FAILED,
     SUBJECT_PROCESSED,
     SUBJECT_STARTED,
+    PeerGate,
     Processor,
 )
 
@@ -75,3 +79,17 @@ async def test_unsupported_content_marks_failure() -> None:
     assert [s for s, _ in published] == [SUBJECT_STARTED, SUBJECT_FAILED]
     assert "unsupported" in published[-1][1].error
     assert docs.statuses[-1] == document_pb2.DOCUMENT_STATUS_FAILED
+
+
+async def test_peer_gate_follows_peer_health(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO)
+    states = iter([True, False, False, True])
+
+    async def check() -> bool:
+        return next(states)
+
+    gate = PeerGate(check)
+    assert [await gate.is_open() for _ in range(4)] == [True, False, False, True]
+    messages = [r.getMessage() for r in caplog.records]
+    assert sum("pausing" in m for m in messages) == 1
+    assert sum("resuming" in m for m in messages) == 1

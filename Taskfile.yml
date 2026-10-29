@@ -4,6 +4,8 @@ version: "3"
 
 vars:
   GOTOOL: go tool -modfile=tools/go.mod
+  # The same, usable from another working directory.
+  GOTOOL_ABS: go tool -modfile={{.ROOT_DIR}}/tools/go.mod
   # Python components with their own tests (each is run with its own rootdir).
   PY_COMPONENTS:
     sh: for d in platform/python modules/*/service modules/*/worker; do [ -f "$d/pyproject.toml" ] && echo "$d"; done; true
@@ -60,6 +62,7 @@ tasks:
       - uv run ruff check .
       - uv run ruff format --check .
       - uv run pyright
+      - uv run lint-imports
       - pnpm exec biome check .
       - pnpm -r typecheck
 
@@ -77,6 +80,7 @@ tasks:
       - task: test:go
       - task: test:py
       - task: test:ts
+      - task: test:boundaries
 
   test:go:
     desc: Go unit tests with per-component coverage minimums.
@@ -128,6 +132,33 @@ tasks:
     desc: TypeScript unit tests (Vitest) with the coverage thresholds from vitest.config.ts.
     cmds:
       - pnpm exec vitest run --coverage
+
+  test:boundaries:
+    desc: Check that the module-boundary lint rules catch the violations in tools/modgen/testdata/boundaries.
+    vars:
+      FIXTURE: tools/modgen/testdata/boundaries
+    cmds:
+      - |
+        set -e
+        tmp=$(mktemp -d)
+        trap 'rm -rf "$tmp"' EXIT
+        cp -R {{.FIXTURE}}/. "$tmp"
+        go -C tools run ./modgen -root "$tmp" >/dev/null
+        status=0
+        # expect <linter> <files> <output>: the output must name exactly these files (never an ok.* file).
+        expect() {
+          got=$(printf '%s\n' "$3" | grep -oE '[a-z_/]*(bad|ok)\.(go|py|ts)' | sort -u | tr '\n' ' ')
+          if [ "$got" = "$2" ]; then echo "ok   $1 rejects: $got"; else echo "FAIL $1: want $2, got: $got"; printf '%s\n' "$3"; status=1; fi
+        }
+        go_out=$(cd "$tmp" && {{.GOTOOL_ABS}} golangci-lint run --enable-only depguard ./... 2>&1 || true)
+        expect go "modules/search/service/bad/bad.go modules/tags/service/bad/bad.go platform/go/bad/bad.go " "$go_out"
+        py_path=$(ls -d "$tmp"/modules/*/*/src "$tmp"/modules/*/api/python/src "$tmp"/platform/python/src | tr '\n' ':')
+        py_out=$(PYTHONPATH="$py_path" uv run lint-imports --config "$tmp/.importlinter" 2>&1 || true)
+        py_out=$(printf '%s\n' "$py_out" | sed -E 's/kb_(search|tags|platform)\.(bad|ok)/\1\/\2.py/')
+        expect python "platform/bad.py search/bad.py tags/bad.py " "$py_out"
+        ts_out=$(cd "$tmp" && {{.ROOT_DIR}}/node_modules/.bin/biome lint . 2>&1 || true)
+        expect ts "modules/search/ui/src/bad.ts modules/tags/ui/src/bad.ts platform/ui/kit/src/bad.ts " "$ts_out"
+        exit $status
 
   test:fast:
     desc: Unit tests without coverage (pre-push hook).

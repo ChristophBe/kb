@@ -77,7 +77,20 @@ func Render(modules []Module) ([]File, error) {
 	}
 	scopes = append(scopes, Areas...)
 
-	data := map[string]any{"Modules": modules, "Scopes": scopes}
+	bs := boundaries(modules)
+	biome, err := biomeOverrides(bs)
+	if err != nil {
+		return nil, err
+	}
+	data := map[string]any{
+		"Modules":    modules,
+		"Scopes":     scopes,
+		"Boundaries": bs,
+		"Biome":      biome,
+		"PyForbid":   pyPlatformForbidden(modules),
+		"GoModule":   GoModule,
+		"PyPlatform": PlatformPyPackage,
+	}
 	for _, out := range []struct{ path, tmpl string }{
 		{"deploy/envoy/envoy.yaml", "envoy.yaml.tmpl"},
 		{"compose.yaml", "compose.yaml.tmpl"},
@@ -86,6 +99,9 @@ func Render(modules []Module) ([]File, error) {
 		{".github/ISSUE_TEMPLATE/feature.yml", "issue-feature.yml.tmpl"},
 		{".github/ISSUE_TEMPLATE/chore.yml", "issue-chore.yml.tmpl"},
 		{".github/ISSUE_TEMPLATE/bug.yml", "issue-bug.yml.tmpl"},
+		{".golangci.yml", "golangci.yml.tmpl"},
+		{".importlinter", "importlinter.tmpl"},
+		{"biome.modules.jsonc", "biome.modules.jsonc.tmpl"},
 	} {
 		if err := add(out.path, out.tmpl, data); err != nil {
 			return nil, err

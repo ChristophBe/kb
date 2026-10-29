@@ -4,7 +4,7 @@ Monorepo organised **by module, not by language**. Read README.md for the overvi
 
 ## Module anatomy (`modules/<id>/`)
 Layers, layouts, runtime conventions and inter-module rules: [docs/architecture/module.md](docs/architecture/module.md) (reference implementations: `document` for Go, `llm` for Python).
-- `module.yaml` — manifest (services, ports, routed gRPC services, UI package). Source of truth for wiring.
+- `module.yaml` — manifest (services, ports, routed gRPC services, UI package, `depends_on` modules and `consumes` event subjects). Source of truth for wiring and for the import boundaries `task lint` enforces.
 - `proto/kb/<id>/v1/*.proto` — the module's public contract (incl. its NATS event messages).
 - `api/{go,python,ts}` — **generated** bindings (committed). Never edit; run `task gen`.
 - `service/` (Go or Python), `worker/` (optional), `migrations/`, `ui/`, `compose.yaml`.
@@ -13,9 +13,9 @@ Shared, module-agnostic code lives in `platform/` (`go/`, `python/`, `ui/`, `pro
 
 ## Rules
 - Changing a proto, a `module.yaml`, or SQL queries → `task gen` and commit the output (CI fails on drift).
-- Modules talk to each other only via the other module's generated gRPC client or its events. Never read another module's DB schema, bucket or stream.
+- Modules talk to each other only via the other module's generated gRPC client or its events, and only to modules listed in `depends_on`. Never read another module's DB schema, bucket or stream. Peers are soft dependencies: no `depends_on` on other modules' services in compose; return `UNAVAILABLE` while a peer is down.
 - Only the `llm` module talks to LLM vendors. Add a provider in `modules/llm/service/src/kb_llm/providers/` and register it in `REGISTRY`.
-- Generated / `DO NOT EDIT` files: `modules/*/api/**`, `platform/api/**`, `**/buf.gen.yaml`, `**/internal/store/*.go` (sqlc, except `repo.go`), `compose.yaml`, `deploy/envoy/envoy.yaml`, `apps/web/src/modules.gen.ts`, `.github/ISSUE_TEMPLATE/{epic,feature,chore,bug}.yml`.
+- Generated / `DO NOT EDIT` files: `modules/*/api/**`, `platform/api/**`, `**/buf.gen.yaml`, `**/internal/store/*.go` (sqlc, except `repo.go`), `compose.yaml`, `deploy/envoy/envoy.yaml`, `apps/web/src/modules.gen.ts`, `.golangci.yml`, `.importlinter`, `biome.modules.jsonc`, `.github/ISSUE_TEMPLATE/{epic,feature,chore,bug}.yml`.
 - The embedding dimension (768) appears in `modules/document/migrations` and `KB_EMBEDDING_DIMENSIONS`; change both together via a new migration.
 
 ## Issues

@@ -23,7 +23,7 @@ Conventions for Go, Python and TypeScript in kb. Most of them are enforced by `t
 | Logging | `log/slog` with key/value pairs only and the `…Context` variants when a `ctx` is in scope (`sloglint`). Get the logger from `platform/go/logging`. |
 | Interfaces | Declared by the consumer, as small as the consumer needs (`Repository`, `Publisher` in `internal/server`). |
 | Tests | Table-driven where there are several cases; fakes embed the interface and implement only what the test uses. `t.Setenv` for config. |
-| Lint | `golangci-lint` (pinned in `tools/go.mod`, config `.golangci.yml`): standard linters plus `bodyclose`, `errorlint`, `gocritic`, `misspell`, `noctx`, `nolintlint`, `sloglint`, `unconvert`, `unparam`, `usestdlibvars`; `gofmt` + `goimports` with `github.com/christoph/kb` as local prefix. `//nolint` needs a specific linter and a reason. |
+| Lint | `golangci-lint` (pinned in `tools/go.mod`, config generated into `.golangci.yml` from `tools/modgen/templates/golangci.yml.tmpl`): standard linters plus `depguard` (module boundaries), `bodyclose`, `errorlint`, `gocritic`, `misspell`, `noctx`, `nolintlint`, `sloglint`, `unconvert`, `unparam`, `usestdlibvars`; `gofmt` + `goimports` with `github.com/christoph/kb` as local prefix. `//nolint` needs a specific linter and a reason. |
 
 ## Python
 
@@ -57,7 +57,8 @@ Conventions for Go, Python and TypeScript in kb. Most of them are enforced by `t
 |---|---|---|
 | Generated code is committed | `task check-gen` | CI, pre-push |
 | No breaking proto changes | `buf breaking` | CI (PRs) |
-| Lint and type checks | `task lint` (buf, `go vet`, golangci-lint, ruff, pyright, biome incl. all `a11y` rules, `tsc`) | CI, pre-push |
+| Lint and type checks | `task lint` (buf, `go vet`, golangci-lint, ruff, pyright, `lint-imports`, biome incl. all `a11y` rules and module boundaries, `tsc`) | CI, pre-push |
+| Module boundaries rules catch violations | `task test:boundaries` | CI (part of `task test`) |
 | Accessibility: axe tests of kit components, token contrast | `task test` (Vitest) | CI, pre-push |
 | Unit tests | `task test:fast` | pre-push |
 | Unit tests + coverage minimums | `task test` | CI |

@@ -4,10 +4,7 @@ description: A module or area-level goal, broken down into sub-issues.
 title: "Epic: "
 labels: ["type:epic"]
 body:
-  - type: markdown
-    attributes:
-      value: "Check the issue against the [Definition of Ready](https://github.com/ChristophBe/kb/blob/main/CONTRIBUTING.md#definition-of-ready) before submitting it."
-{{template "scope" (args "Label" "Scope" "Options" .Scopes)}}  - type: textarea
+{{template "ready"}}{{template "scope" (args "Label" "Scope" "Options" .Scopes)}}  - type: textarea
     id: goal
     attributes:
       label: Goal

@@ -3,10 +3,7 @@ name: Feature
 description: A PR-sized piece of new functionality. Add it as a sub-issue of an epic.
 labels: ["type:feature"]
 body:
-  - type: markdown
-    attributes:
-      value: "Check the issue against the [Definition of Ready](https://github.com/ChristophBe/kb/blob/main/CONTRIBUTING.md#definition-of-ready) before submitting it."
-{{template "scope" (args "Label" "Scope" "Options" .Scopes)}}  - type: textarea
+{{template "ready"}}{{template "scope" (args "Label" "Scope" "Options" .Scopes)}}  - type: textarea
     id: context
     attributes:
       label: Context

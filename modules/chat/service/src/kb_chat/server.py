@@ -1,5 +1,7 @@
+import logging
 import uuid
 from collections.abc import AsyncIterator
+from typing import NoReturn
 
 import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -10,6 +12,11 @@ from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 
 from .config import Settings
 from .db import ConversationRow, MessageRow, Repository
+
+log = logging.getLogger("kb_chat")
+
+# Peer statuses that mean "try again later" rather than a bug.
+_PEER_UNAVAILABLE = {grpc.StatusCode.UNAVAILABLE, grpc.StatusCode.DEADLINE_EXCEEDED}
 
 DEFAULT_PAGE_SIZE = 50
 MAX_PAGE_SIZE = 200
@@ -82,21 +89,28 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
             await self._repo.set_title(conv.id, content[:TITLE_LENGTH])
 
         citations: list[chat_pb2.Citation] = []
-        if request.use_knowledge_base:
-            citations = await self._retrieve(content)
-            yield chat_pb2.StreamChatResponse(citations=chat_pb2.Citations(items=citations))
-
-        prompt = [llm_pb2.Message(role=llm_pb2.ROLE_SYSTEM, content=self._system_prompt(citations))]
-        prompt += [llm_pb2.Message(role=_LLM_ROLES[m.role], content=m.content) for m in history]
-        prompt.append(llm_pb2.Message(role=llm_pb2.ROLE_USER, content=content))
-
         answer: list[str] = []
-        async for chunk in self._llm.Generate(
-            llm_pb2.GenerateRequest(model=request.model, messages=prompt)
-        ):
-            if chunk.delta:
-                answer.append(chunk.delta)
-                yield chat_pb2.StreamChatResponse(delta=chunk.delta)
+        # The document and llm modules are soft dependencies: while one is down,
+        # the call fails with UNAVAILABLE instead of an unmapped error.
+        try:
+            if request.use_knowledge_base:
+                citations = await self._retrieve(content)
+                yield chat_pb2.StreamChatResponse(citations=chat_pb2.Citations(items=citations))
+
+            prompt = [
+                llm_pb2.Message(role=llm_pb2.ROLE_SYSTEM, content=self._system_prompt(citations))
+            ]
+            prompt += [llm_pb2.Message(role=_LLM_ROLES[m.role], content=m.content) for m in history]
+            prompt.append(llm_pb2.Message(role=llm_pb2.ROLE_USER, content=content))
+
+            async for chunk in self._llm.Generate(
+                llm_pb2.GenerateRequest(model=request.model, messages=prompt)
+            ):
+                if chunk.delta:
+                    answer.append(chunk.delta)
+                    yield chat_pb2.StreamChatResponse(delta=chunk.delta)
+        except grpc.aio.AioRpcError as err:
+            await _abort_peer_error(context, err)
 
         saved = await self._repo.add_message(
             conv.id,
@@ -139,6 +153,16 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
             await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
         assert conv is not None
         return conv
+
+
+async def _abort_peer_error(
+    context: grpc.aio.ServicerContext, err: grpc.aio.AioRpcError
+) -> NoReturn:
+    """Ends the call for a failed peer call; a peer's status is never passed on."""
+    if err.code() in _PEER_UNAVAILABLE:
+        await context.abort(grpc.StatusCode.UNAVAILABLE, "a required service is unavailable")
+    log.error("peer call failed: %s %s", err.code(), err.details())
+    await context.abort(grpc.StatusCode.INTERNAL, "answer generation failed")
 
 
 def _parse_id(raw: str) -> uuid.UUID:

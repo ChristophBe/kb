@@ -10,10 +10,9 @@ services:
       KB_DOCUMENT_ADDR: document-service:9001
       KB_LLM_ADDR: llm-service:9004
     ports: ["9003:9003"]
+    # Infrastructure only: other modules are soft dependencies (docs/architecture/module.md).
     depends_on:
       postgres: { condition: service_healthy }
-      document-service: { condition: service_healthy }
-      llm-service: { condition: service_healthy }
     healthcheck:
       test: ["CMD", "python", "-m", "kb_platform.healthcheck", "9003"]
       interval: 2s

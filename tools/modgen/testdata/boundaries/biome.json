@@ -1,0 +1,4 @@
+{
+  "extends": ["./biome.modules.jsonc"],
+  "linter": { "enabled": true, "rules": { "preset": "none" } }
+}

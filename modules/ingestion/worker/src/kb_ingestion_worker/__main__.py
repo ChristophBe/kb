@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import logging
 import signal
 
@@ -6,13 +7,13 @@ from google.protobuf.message import Message
 from kb.document.v1 import document_pb2_grpc
 from kb.ingestion.v1 import events_pb2
 from kb.llm.v1 import llm_pb2_grpc
-from kb_platform.grpc import channel
+from kb_platform.grpc import channel, is_serving
 from kb_platform.logging import setup_logging
 from kb_platform.nats import connect, ensure_stream
 from nats.js.api import ConsumerConfig
 
 from .config import Settings
-from .worker import STREAM, SUBJECT_UPLOADED, Processor
+from .worker import STREAM, SUBJECT_UPLOADED, PeerGate, Processor
 
 log = logging.getLogger("kb_ingestion_worker")
 
@@ -48,8 +49,16 @@ async def run() -> None:
         for sig in (signal.SIGINT, signal.SIGTERM):
             loop.add_signal_handler(sig, stop.set)
 
+        async def peers_serving() -> bool:
+            return all(await asyncio.gather(is_serving(doc_ch), is_serving(llm_ch)))
+
+        gate = PeerGate(peers_serving)
         log.info("waiting for %s", SUBJECT_UPLOADED)
         while not stop.is_set():
+            if not await gate.is_open():
+                with contextlib.suppress(TimeoutError):
+                    await asyncio.wait_for(stop.wait(), timeout=2)
+                continue
             try:
                 msgs = await sub.fetch(1, timeout=2)
             except TimeoutError:

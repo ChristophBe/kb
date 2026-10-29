@@ -1,12 +1,21 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": ["./biome.modules.jsonc"],
   "vcs": {
     "enabled": true,
     "clientKind": "git",
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!**/api/ts/src", "!**/modules.gen.ts", "!**/dist"]
+    "includes": [
+      "**",
+      "!**/api/ts/src",
+      "!**/modules.gen.ts",
+      "!**/dist",
+      "!biome.modules.jsonc",
+      "!tools/modgen/testdata/boundaries",
+      "!tools/modgen/testdata/golden"
+    ]
   },
   "formatter": {
     "indentStyle": "space",

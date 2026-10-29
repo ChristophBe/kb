@@ -8,3 +8,5 @@ services:
     port: 9003
     grpc_services: [kb.chat.v1.ChatService]
 ui: "@kb/module-chat"
+# Retrieval (SearchChunks) and generation/embeddings.
+depends_on: [document, llm]

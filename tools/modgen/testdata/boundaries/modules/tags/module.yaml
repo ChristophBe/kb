@@ -1,0 +1,7 @@
+id: tags
+title: Tags
+services:
+  - name: tags-service
+    language: python
+    port: 9103
+ui: "@kb/module-tags"

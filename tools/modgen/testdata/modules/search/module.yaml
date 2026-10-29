@@ -3,3 +3,5 @@ title: Search
 services:
   - name: search-worker
     language: python
+depends_on: [notes]
+consumes: [kb.notes.created]

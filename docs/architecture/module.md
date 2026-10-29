@@ -86,7 +86,19 @@ consumes:                         # event subjects this module subscribes to
 
 - `depends_on` names modules, not services. A module may import another module's `api/` package only if it is listed. The graph must be acyclic: if two modules need each other, one of them talks through events.
 - `consumes` lists every subject the module subscribes to (its own included). Each subject must belong to the module itself or to a module in `depends_on`.
-- `tools/modgen` validates both fields and derives the import-boundary rules from them; enforcement and the runtime changes are tracked in #68.
+- `tools/modgen` (`task gen`) validates both fields (unknown or duplicate modules, cycles, subjects of undeclared modules) and generates the import-boundary rules from them.
+
+### Enforcement
+
+`task lint` fails when a module imports anything but its own code, `platform/` and the `api/` of a module in its `depends_on`, or when `platform/` imports a module:
+
+| Language | Tool | Generated config |
+|---|---|---|
+| Go | golangci-lint `depguard` | `.golangci.yml` (from `tools/modgen/templates/golangci.yml.tmpl`) |
+| Python | `lint-imports` (import-linter) | `.importlinter` |
+| TypeScript | biome `noRestrictedImports` overrides | `biome.modules.jsonc`, extended by `biome.json` |
+
+Relative TypeScript imports may go up at most two levels, so they stay inside the package. `task test:boundaries` (part of `task test`) checks that each tool rejects the violations in `tools/modgen/testdata/boundaries` and nothing else.
 
 ## UI package
 
@@ -101,7 +113,6 @@ Gaps between the existing modules and this document, each tracked as an issue un
 
 | Module | Gap | Issue |
 |---|---|---|
-| all | `depends_on` / `consumes` missing from `module.yaml`; boundaries not enforced; compose waits for peer services | #68 |
 | ingestion | Orchestration (`CompleteUpload`, event handling) lives in transport; `server` uses the sqlc `Querier` instead of a consumer-declared port; peer (document) errors are passed through unchanged | #90 |
 | ingestion | Worker fails documents permanently when a peer is unavailable instead of retrying | #33 |
 | chat | Retrieval + prompt + generation orchestration lives in the servicer; the `Repository` port and row types are declared in the `db.py` adapter; servicer methods are untyped | #91 |

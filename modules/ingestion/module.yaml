@@ -10,3 +10,10 @@ services:
   - name: ingestion-worker
     language: python
 ui: "@kb/module-ingestion"
+# Documents are created and filled through the document module; the worker embeds via llm.
+depends_on: [document, llm]
+consumes:
+  - kb.ingestion.uploaded   # ingestion-worker
+  - kb.ingestion.started    # ingestion-service (job status)
+  - kb.ingestion.processed
+  - kb.ingestion.failed

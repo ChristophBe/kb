@@ -1,7 +1,8 @@
 // Command modgen generates the wiring that connects modules to the rest of
 // the system from their module.yaml manifests: per-module buf.gen.yaml and
-// API package manifests, the Envoy gRPC-Web routes, the root compose file and
-// the web shell's module registry.
+// API package manifests, the Envoy gRPC-Web routes, the root compose file,
+// the web shell's module registry, the issue forms and the module-boundary
+// lint configs (depguard, import-linter, biome).
 //
 // Run from the repository root (`task gen` does this):
 //

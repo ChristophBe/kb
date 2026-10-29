@@ -1,0 +1,8 @@
+id: search
+title: Search
+services:
+  - name: search-service
+    language: go
+    port: 9102
+depends_on: [notes]
+ui: "@kb/module-search"

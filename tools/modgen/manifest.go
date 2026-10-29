@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strings"
 
 	"go.yaml.in/yaml/v3"
 )
@@ -18,8 +19,16 @@ type Module struct {
 	Services    []Service `yaml:"services"`
 	// UI is the npm package name of the module's UI, empty when it has none.
 	UI string `yaml:"ui"`
+	// DependsOn lists the modules whose contract (RPCs or events) this module
+	// uses; only their api/ packages may be imported.
+	DependsOn []string `yaml:"depends_on"`
+	// Consumes lists the event subjects this module subscribes to.
+	Consumes []string `yaml:"consumes"`
 	// HasProto is set when the module defines an API under proto/.
 	HasProto bool `yaml:"-"`
+	// PyPackages are the importable Python packages of the module's
+	// components (modules/<id>/*/src/<pkg>), sorted.
+	PyPackages []string `yaml:"-"`
 }
 
 // Service is one deployable component of a module.
@@ -32,7 +41,11 @@ type Service struct {
 	GRPCServices []string `yaml:"grpc_services"`
 }
 
-var idPattern = regexp.MustCompile(`^[a-z][a-z0-9]*$`)
+var (
+	idPattern = regexp.MustCompile(`^[a-z][a-z0-9]*$`)
+	// subjectPattern matches kb.<owning module>.<event>.
+	subjectPattern = regexp.MustCompile(`^kb\.([a-z][a-z0-9]*)\.[a-z][a-z0-9_]*$`)
+)
 
 // LoadModules reads every modules/*/module.yaml, sorted by id.
 func LoadModules(dir string) ([]Module, error) {
@@ -56,6 +69,14 @@ func LoadModules(dir string) ([]Module, error) {
 		if info, err := os.Stat(filepath.Join(filepath.Dir(path), "proto")); err == nil && info.IsDir() {
 			m.HasProto = true
 		}
+		inits, err := filepath.Glob(filepath.Join(filepath.Dir(path), "*", "src", "*", "__init__.py"))
+		if err != nil {
+			return nil, err
+		}
+		for _, init := range inits {
+			m.PyPackages = append(m.PyPackages, filepath.Base(filepath.Dir(init)))
+		}
+		slices.Sort(m.PyPackages)
 		modules = append(modules, m)
 	}
 	slices.SortFunc(modules, func(a, b Module) int { return cmpString(a.ID, b.ID) })
@@ -71,7 +92,78 @@ func LoadModules(dir string) ([]Module, error) {
 			ports[s.Port] = s.Name
 		}
 	}
+	if err := validateDependencies(modules); err != nil {
+		return nil, err
+	}
 	return modules, nil
+}
+
+// validateDependencies checks depends_on and consumes across all modules:
+// dependencies exist and form no cycle, and every consumed subject belongs to
+// the module itself or to one of its dependencies.
+func validateDependencies(modules []Module) error {
+	byID := map[string]Module{}
+	for _, m := range modules {
+		byID[m.ID] = m
+	}
+	for _, m := range modules {
+		seen := map[string]bool{}
+		for _, dep := range m.DependsOn {
+			switch {
+			case dep == m.ID:
+				return fmt.Errorf("module %s: depends on itself", m.ID)
+			case seen[dep]:
+				return fmt.Errorf("module %s: %s listed twice in depends_on", m.ID, dep)
+			}
+			if _, ok := byID[dep]; !ok {
+				return fmt.Errorf("module %s: depends on unknown module %q", m.ID, dep)
+			}
+			seen[dep] = true
+		}
+		for _, subject := range m.Consumes {
+			match := subjectPattern.FindStringSubmatch(subject)
+			if match == nil {
+				return fmt.Errorf("module %s: consumed subject %q is not kb.<module>.<event>", m.ID, subject)
+			}
+			if owner := match[1]; owner != m.ID && !seen[owner] {
+				return fmt.Errorf("module %s: consumes %s, but %s is not in depends_on", m.ID, subject, owner)
+			}
+		}
+	}
+	// Depth-first search; a module on the current path seen again is a cycle.
+	const (
+		visiting = 1
+		done     = 2
+	)
+	state := map[string]int{}
+	var visit func(id string, path []string) error
+	visit = func(id string, path []string) error {
+		switch state[id] {
+		case visiting:
+			return fmt.Errorf("dependency cycle: %s", strings.Join(append(path, id), " -> "))
+		case done:
+			return nil
+		}
+		state[id] = visiting
+		for _, dep := range byID[id].DependsOn {
+			if err := visit(dep, append(path, id)); err != nil {
+				return err
+			}
+		}
+		state[id] = done
+		return nil
+	}
+	for _, m := range modules {
+		if err := visit(m.ID, nil); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Allows reports whether m may use the contract of module dep.
+func (m Module) Allows(dep string) bool {
+	return dep == m.ID || slices.Contains(m.DependsOn, dep)
 }
 
 func (m Module) validate(dirName string) error {

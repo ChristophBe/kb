@@ -54,3 +54,15 @@ async def serve(
 def channel(target: str) -> grpc.aio.Channel:
     """Open an insecure channel to another module's service."""
     return grpc.aio.insecure_channel(target)
+
+
+async def is_serving(ch: grpc.aio.Channel, rpc_timeout: float = 2.0) -> bool:
+    """Whether the server behind `ch` reports SERVING on the standard health
+    service. An unreachable server is not serving; this never raises."""
+    try:
+        resp = await health_pb2_grpc.HealthStub(ch).Check(  # pyright: ignore[reportAttributeAccessIssue]
+            health_pb2.HealthCheckRequest(), timeout=rpc_timeout
+        )
+    except grpc.aio.AioRpcError:
+        return False
+    return resp.status == health_pb2.HealthCheckResponse.SERVING

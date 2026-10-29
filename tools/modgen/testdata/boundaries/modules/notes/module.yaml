@@ -1,0 +1,8 @@
+id: notes
+title: Notes
+services:
+  - name: notes-service
+    language: go
+    port: 9101
+    grpc_services: [kb.notes.v1.NotesService]
+ui: "@kb/module-notes"

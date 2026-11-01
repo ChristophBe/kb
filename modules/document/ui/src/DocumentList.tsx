@@ -4,6 +4,7 @@ import {
   Badge,
   Button,
   Card,
+  ChunkStrip,
   EmptyState,
   ErrorMessage,
   formatBytes,
@@ -34,7 +35,11 @@ export function DocumentList() {
 
   return (
     <div>
-      <PageHeader title="Documents" description="Everything in your knowledge base." />
+      <PageHeader
+        eyebrow="kb / documents"
+        title="Documents"
+        description="Everything in your knowledge base."
+      />
       <ErrorMessage error={docs.error ?? remove.error} />
       <Card>
         {docs.isPending ? (
@@ -66,9 +71,13 @@ export function DocumentList() {
                     <td className="px-4 py-2">
                       <Badge tone={tone}>{label}</Badge>
                     </td>
-                    <td className="px-4 py-2">{d.chunkCount}</td>
-                    <td className="px-4 py-2">{formatBytes(d.sizeBytes)}</td>
-                    <td className="px-4 py-2 text-fg-muted">{formatTime(d.createTime)}</td>
+                    <td className="px-4 py-2">
+                      <ChunkStrip count={d.chunkCount} />
+                    </td>
+                    <td className="px-4 py-2 font-mono tabular-nums">{formatBytes(d.sizeBytes)}</td>
+                    <td className="px-4 py-2 font-mono text-fg-muted tabular-nums">
+                      {formatTime(d.createTime)}
+                    </td>
                     <td className="px-2 py-1 text-right whitespace-nowrap">
                       <Button variant="ghost" title="Download" onClick={() => download(d.id)}>
                         <Download className="size-4" />

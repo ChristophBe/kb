@@ -208,6 +208,7 @@ export function Ingestion() {
   return (
     <div>
       <PageHeader
+        eyebrow="kb / ingestion"
         title="Ingestion"
         description="Upload documents to add them to the knowledge base."
       />
@@ -257,7 +258,7 @@ export function Ingestion() {
             list.length === 0 ? (
               <EmptyState>No uploads yet. Drop files above to add documents.</EmptyState>
             ) : (
-              <ul className="divide-y divide-border text-sm">
+              <ul className="divide-y divide-dotted divide-border text-sm">
                 {list.map((r, i) => (
                   <UploadRow
                     key={r.id}

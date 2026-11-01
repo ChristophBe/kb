@@ -21,6 +21,7 @@ All documents in the knowledge base.
 │ Title                       Status       Size      Added        ▾    │
 ├──────────────────────────────────────────────────────────────────────┤
 │ Quarterly report.pdf        ● Ready      1.2 MB    2 min ago    ▾    │
+│ ||||||||||||||| 42 chunks, 2 cited                                   │
 │ Onboarding notes.md         ● Processing 14 KB     5 min ago    ▾    │
 │ broken-scan.pdf             ● Failed     3.4 MB    1 h ago      ▾    │
 └──────────────────────────────────────────────────────────────────────┘
@@ -28,6 +29,7 @@ All documents in the knowledge base.
 
 - `▾` per row is a menu button ("Actions for Quarterly report.pdf"): Open, Chat about this document, Delete.
 - The title is the row's link; the status is a `Badge` with text, never colour alone.
+- A `ChunkStrip` under the title shows the document as a barcode: one tick per chunk, cited chunks taller and in ink, with the counts as text. The detail page shows it under the metadata line.
 - **Empty:** "No documents yet. Upload documents to get started." + `[Upload documents]` (link to `/m/ingestion`).
 - **Loading:** table skeleton (3 rows). **Error:** inline error with `[Try again]`.
 - *Narrow:* rows become stacked cards: title, then "Ready · 1.2 MB · 2 min ago".

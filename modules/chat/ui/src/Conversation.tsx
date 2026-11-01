@@ -5,7 +5,7 @@ import {
   MessageRole,
 } from "@kb/chat-api/kb/chat/v1/chat_pb";
 import { useClient, useQuery, useQueryClient } from "@kb/module-sdk";
-import { Button, cn, ErrorMessage, Spinner, Textarea } from "@kb/ui";
+import { Button, ErrorMessage, SourceNote, Spinner, Textarea } from "@kb/ui";
 import { Send } from "lucide-react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
@@ -117,30 +117,33 @@ export function Conversation() {
 }
 
 function Bubble({ role, content, citations }: Pick<ChatMessage, "role" | "content" | "citations">) {
-  const isUser = role === MessageRole.USER;
-  return (
-    <div className={cn("flex flex-col gap-1", isUser && "items-end")}>
-      <div
-        className={cn(
-          "max-w-[85%] rounded-card px-4 py-2 text-sm whitespace-pre-wrap",
-          isUser ? "bg-accent text-on-accent" : "border border-border bg-surface",
-        )}
-      >
-        {content}
-      </div>
-      {citations.length > 0 && (
-        <div className="flex max-w-[85%] flex-wrap gap-1">
-          {citations.map((c, i) => (
-            <span
-              key={`${c.documentId}-${c.chunkIndex}`}
-              title={c.snippet}
-              className="rounded-control bg-surface-muted px-2 py-0.5 text-xs text-fg-muted"
-            >
-              [{i + 1}] {c.documentTitle}
-            </span>
-          ))}
+  if (role === MessageRole.USER) {
+    return (
+      <div className="flex justify-end">
+        <div className="max-w-[85%] rounded-card border-l-2 border-accent bg-surface-muted px-4 py-2 text-sm whitespace-pre-wrap">
+          {content}
         </div>
-      )}
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-card border border-border bg-surface px-4 py-2 text-sm @container">
+      <div className="grid gap-x-6 gap-y-3 @xl:grid-cols-[minmax(0,1fr)_13rem]">
+        <div className="min-w-0 whitespace-pre-wrap">{content}</div>
+        {citations.length > 0 && (
+          <ul aria-label="Sources" className="space-y-3">
+            {citations.map((c, i) => (
+              <SourceNote
+                key={`${c.documentId}-${c.chunkIndex}`}
+                n={i + 1}
+                title={c.documentTitle}
+                detail={`chunk ${c.chunkIndex}`}
+                snippet={c.snippet}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

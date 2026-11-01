@@ -1,8 +1,26 @@
-import { Badge, Button, Card, EmptyState, formatBytes, Input, PageHeader, type Tone } from "@kb/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  ChunkStrip,
+  EmptyState,
+  formatBytes,
+  Input,
+  PageHeader,
+  PageTitle,
+  type Tone,
+} from "@kb/ui";
 import { MessageSquare, Search as SearchIcon, Upload } from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
-import { type Doc, type DocStatus, type MetadataField, searchChunks, useStore } from "./store.tsx";
+import {
+  citedChunks,
+  type Doc,
+  type DocStatus,
+  type MetadataField,
+  searchChunks,
+  useStore,
+} from "./store.tsx";
 import {
   Dialog,
   LoadState,
@@ -71,13 +89,14 @@ function useDeleteDocument(onDeleted?: () => void) {
 }
 
 export function DocumentList() {
-  const { docs, createConversation } = useStore();
+  const { docs, conversations, createConversation } = useStore();
   const navigate = useNavigate();
   const state = useMockQuery(docs, [], "The document service");
   const [dialog, confirmDelete] = useDeleteDocument();
   return (
     <div>
       <PageHeader
+        eyebrow="kb / documents"
         title="Documents"
         description="All documents in the knowledge base."
         actions={
@@ -139,11 +158,18 @@ export function DocumentList() {
                           <Link to={d.id} className="font-medium hover:underline">
                             {d.title}
                           </Link>
+                          {d.chunks.length > 0 && (
+                            <ChunkStrip
+                              className="mt-1 flex"
+                              count={d.chunks.length}
+                              marked={citedChunks(conversations, d.id)}
+                            />
+                          )}
                         </td>
                         <td className="px-4 py-2">
                           <StatusBadge status={d.status} />
                         </td>
-                        <td className="hidden px-4 py-2 text-fg-muted sm:table-cell">
+                        <td className="hidden px-4 py-2 font-mono text-fg-muted tabular-nums sm:table-cell">
                           {formatBytes(BigInt(d.sizeBytes))}
                         </td>
                         <td className="hidden px-4 py-2 text-fg-muted sm:table-cell">
@@ -184,7 +210,7 @@ const PAGE_SIZE = 10;
 
 export function DocumentDetail() {
   const { id = "" } = useParams();
-  const { docs, createConversation } = useStore();
+  const { docs, conversations, createConversation } = useStore();
   const navigate = useNavigate();
   const doc = docs.find((d) => d.id === id);
   const state = useMockQuery(doc, doc, "The document service");
@@ -201,7 +227,7 @@ export function DocumentDetail() {
         label="Loading document"
         skeleton={
           <div className="mt-4 space-y-3">
-            <Skeleton className="h-7 w-72" />
+            <Skeleton className="h-10 w-72" />
             <Skeleton className="h-4 w-96" />
             <Skeleton className="h-40" />
           </div>
@@ -210,18 +236,28 @@ export function DocumentDetail() {
         {(d) =>
           !d ? (
             <div className="mt-4">
-              <h1 className="text-xl font-semibold">Document not found</h1>
+              <PageTitle>Document not found</PageTitle>
               <p className="mt-2 text-sm text-fg-muted">It may have been deleted.</p>
             </div>
           ) : (
             <div className="mt-2">
-              <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+              <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
                   <EditableTitle doc={d} />
                   <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-fg-muted">
-                    <StatusBadge status={d.status} /> {formatBytes(BigInt(d.sizeBytes))} ·{" "}
-                    {d.contentType} · added <Time date={d.added} />
+                    <StatusBadge status={d.status} />{" "}
+                    <span className="font-mono tabular-nums">
+                      {formatBytes(BigInt(d.sizeBytes))}
+                    </span>{" "}
+                    · {d.contentType} · added <Time date={d.added} />
                   </p>
+                  {d.chunks.length > 0 && (
+                    <ChunkStrip
+                      className="mt-3 flex"
+                      count={d.chunks.length}
+                      marked={citedChunks(conversations, d.id)}
+                    />
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -284,7 +320,7 @@ function EditableTitle({ doc }: { doc: Doc }) {
   if (!editing) {
     return (
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="text-xl font-semibold">{doc.title}</h1>
+        <PageTitle>{doc.title}</PageTitle>
         <Button
           ref={editButton}
           variant="ghost"
@@ -362,7 +398,7 @@ function Details({ doc }: { doc: Doc }) {
   ];
   return (
     <Card className="max-w-2xl">
-      <dl className="divide-y divide-border text-sm">
+      <dl className="divide-y divide-dotted divide-border text-sm">
         {rows.map(([k, v]) => (
           <div key={k} className="grid grid-cols-[8rem_1fr] gap-4 px-4 py-2">
             <dt className="text-fg-muted">{k}</dt>
@@ -545,7 +581,7 @@ function Chunks({ doc, linked }: { doc: Doc; linked: number }) {
     <div>
       <div
         ref={list}
-        className="divide-y divide-border rounded-card border border-border bg-surface"
+        className="divide-y divide-dotted divide-border rounded-card border border-border bg-surface"
       >
         {visible.map((c) => {
           const open = expanded.has(c.index);
@@ -620,7 +656,11 @@ export function Search() {
   };
   return (
     <div>
-      <PageHeader title="Search" description="Find passages across all documents." />
+      <PageHeader
+        eyebrow="kb / documents / search"
+        title="Search"
+        description="Find passages across all documents."
+      />
       <search className="mb-6 block max-w-2xl">
         <form onSubmit={submit} className="flex flex-wrap gap-2">
           <div className="min-w-0 flex-1">
@@ -655,7 +695,7 @@ export function Search() {
                   : `No passages match "${q}". Try other words.`}
               </p>
               {found.length > 0 && (
-                <ul className="divide-y divide-border rounded-card border border-border bg-surface">
+                <ul className="divide-y divide-dotted divide-border rounded-card border border-border bg-surface">
                   {found.map(({ doc, chunk, score }) => (
                     <li key={`${doc.id}-${chunk.index}`} className="px-4 py-3">
                       <Link

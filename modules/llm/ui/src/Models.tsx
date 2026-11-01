@@ -12,7 +12,11 @@ export function Models() {
 
   return (
     <div>
-      <PageHeader title="Models" description="The LLM provider used by all modules." />
+      <PageHeader
+        eyebrow="kb / llm"
+        title="Models"
+        description="The LLM provider used by all modules."
+      />
       <ErrorMessage error={status.error ?? models.error} />
       {status.data && (
         <Card className="mb-6 grid max-w-2xl grid-cols-2 gap-y-2 p-4 text-sm">
@@ -39,7 +43,7 @@ export function Models() {
             <Spinner />
           </EmptyState>
         ) : models.data?.models.length ? (
-          <ul className="divide-y divide-border text-sm">
+          <ul className="divide-y divide-dotted divide-border text-sm">
             {models.data.models.map((m) => (
               <li key={m.id} className="flex items-center justify-between px-4 py-2">
                 <span className="font-mono">{m.id}</span>

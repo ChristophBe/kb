@@ -1,4 +1,4 @@
-import { Button, cn, EmptyState, Input, Spinner, Textarea } from "@kb/ui";
+import { Button, cn, EmptyState, Input, SourceNote, Spinner, Textarea } from "@kb/ui";
 import { AlertTriangle, Copy, Plus, Square, Trash2, X } from "lucide-react";
 import { type FormEvent, type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate, useParams, useSearchParams } from "react-router";
@@ -476,7 +476,7 @@ function ConversationHeader({ conv }: { conv: Conv }) {
         {scoped.map((d) => (
           <span
             key={d.id}
-            className="inline-flex items-center gap-1 rounded-full bg-neutral-subtle py-0.5 pr-1 pl-3 text-xs text-neutral"
+            className="inline-flex items-center gap-1 rounded-control bg-neutral-subtle py-0.5 pr-1 pl-2 text-xs text-neutral"
           >
             <Link to={`../../documents/${d.id}`} relative="path" className="hover:underline">
               {d.title}
@@ -490,7 +490,7 @@ function ConversationHeader({ conv }: { conv: Conv }) {
                   scope: c.scope.filter((s) => s !== d.id),
                 }))
               }
-              className="inline-flex size-6 items-center justify-center rounded-full hover:bg-surface"
+              className="inline-flex size-6 items-center justify-center rounded-control hover:bg-surface"
             >
               <X className="size-3" aria-hidden="true" />
             </button>
@@ -594,7 +594,7 @@ function MessageView({ message, onRetry }: { message: Message; onRetry: () => vo
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
-        <p className="max-w-[85%] rounded-card bg-accent px-4 py-2 text-base whitespace-pre-wrap text-on-accent">
+        <p className="max-w-[85%] rounded-control border-l-2 border-accent bg-surface-muted px-4 py-2 text-base whitespace-pre-wrap">
           {message.content}
         </p>
       </div>
@@ -605,7 +605,7 @@ function MessageView({ message, onRetry }: { message: Message; onRetry: () => vo
     <article
       aria-busy={message.state === "streaming"}
       aria-label="Answer"
-      className="max-w-[85%] rounded-card border border-border bg-surface px-4 py-3 text-base"
+      className="rounded-card border border-border bg-surface px-4 py-3 text-base"
     >
       {searching ? (
         <span className="inline-flex items-center gap-2 text-sm text-fg-muted">
@@ -615,22 +615,10 @@ function MessageView({ message, onRetry }: { message: Message; onRetry: () => vo
         <Markdown text={message.content} citations={message.citations} />
       )}
       {message.state === "streaming" && !searching && (
-        <span aria-hidden="true" className="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-fg" />
-      )}
-      {message.citations.length > 0 && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-fg-muted">Sources:</span>
-          {message.citations.map((c) => (
-            <Link
-              key={c.n}
-              to={`../../documents/${c.documentId}#chunk-${c.chunkIndex}`}
-              relative="path"
-              className="rounded-full bg-neutral-subtle px-2 py-0.5 text-neutral hover:underline"
-            >
-              {c.n} {c.title}
-            </Link>
-          ))}
-        </div>
+        <span
+          aria-hidden="true"
+          className="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-accent"
+        />
       )}
       {message.state === "stopped" && (
         <p className="mt-2 text-sm text-fg-muted">
@@ -655,9 +643,20 @@ function MessageView({ message, onRetry }: { message: Message; onRetry: () => vo
  * A deliberately small, safe Markdown subset: paragraphs, "- " lists, fenced
  * code, **bold**, `code` and [n] citation links. It builds React elements, so
  * raw HTML in an answer is shown as text, never executed (#41).
+ *
+ * Each block is a row with its sources in the margin: a citation sits beside
+ * the block that first mentions it. In narrow panes the notes drop below it.
  */
 function Markdown({ text, citations }: { text: string; citations: Citation[] }) {
   const toast = useToast();
+  const { docs } = useStore();
+  const [active, setActive] = useState<number | null>(null);
+  const linked = (n: number) => ({
+    onMouseEnter: () => setActive(n),
+    onMouseLeave: () => setActive(null),
+    onFocus: () => setActive(n),
+    onBlur: () => setActive(null),
+  });
   const inline = (s: string, key: string): ReactNode[] =>
     s.split(/(\*\*[^*]+\*\*|`[^`]+`|\[\d+\])/g).map((part, i) => {
       const k = `${key}-${i}`;
@@ -680,7 +679,11 @@ function Markdown({ text, citations }: { text: string; citations: Citation[] }) 
             to={`../../documents/${c.documentId}#chunk-${c.chunkIndex}`}
             relative="path"
             aria-label={`Source ${c.n}: ${c.title}, chunk ${c.chunkIndex}`}
-            className="align-super text-xs font-medium text-info underline"
+            className={cn(
+              "rounded-control align-super font-mono text-xs font-medium underline transition-colors",
+              active === c.n && "bg-accent text-on-accent no-underline",
+            )}
+            {...linked(c.n)}
           >
             [{c.n}]
           </Link>
@@ -690,42 +693,90 @@ function Markdown({ text, citations }: { text: string; citations: Citation[] }) 
     });
 
   const blocks = text.split(/\n{2,}/);
+  const firstMention = new Map<number, number>();
+  blocks.forEach((block, b) => {
+    if (!block.startsWith("```")) {
+      for (const [, n] of block.matchAll(/\[(\d+)\]/g)) {
+        if (!firstMention.has(Number(n))) {
+          firstMention.set(Number(n), b);
+        }
+      }
+    }
+  });
+
+  const renderBlock = (block: string, b: number) => {
+    const key = `b${b}`;
+    if (block.startsWith("```")) {
+      const code = block.replace(/^```\w*\n?/, "").replace(/```$/, "");
+      return (
+        <div className="relative">
+          <pre className="overflow-x-auto rounded-control bg-surface-muted p-3 text-sm">
+            <code>{code}</code>
+          </pre>
+          <button
+            type="button"
+            aria-label="Copy code"
+            className="absolute top-1 right-1 inline-flex size-7 items-center justify-center rounded-control text-fg-muted hover:bg-surface"
+            onClick={() => {
+              navigator.clipboard?.writeText(code);
+              toast("success", "Code copied");
+            }}
+          >
+            <Copy className="size-4" aria-hidden="true" />
+          </button>
+        </div>
+      );
+    }
+    const lines = block.split("\n");
+    if (lines.every((l) => l.startsWith("- "))) {
+      return (
+        <ul className="list-disc space-y-1 pl-5">
+          {lines.map((l, i) => (
+            <li key={i}>{inline(l.slice(2), `${key}-${i}`)}</li>
+          ))}
+        </ul>
+      );
+    }
+    return <p>{inline(block, key)}</p>;
+  };
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-3 @container">
       {blocks.map((block, b) => {
-        const key = `b${b}`;
-        if (block.startsWith("```")) {
-          const code = block.replace(/^```\w*\n?/, "").replace(/```$/, "");
-          return (
-            <div key={key} className="relative">
-              <pre className="overflow-x-auto rounded-control bg-surface-muted p-3 text-sm">
-                <code>{code}</code>
-              </pre>
-              <button
-                type="button"
-                aria-label="Copy code"
-                className="absolute top-1 right-1 inline-flex size-7 items-center justify-center rounded-control text-fg-muted hover:bg-surface"
-                onClick={() => {
-                  navigator.clipboard?.writeText(code);
-                  toast("success", "Code copied");
-                }}
-              >
-                <Copy className="size-4" aria-hidden="true" />
-              </button>
-            </div>
-          );
-        }
-        const lines = block.split("\n");
-        if (lines.every((l) => l.startsWith("- "))) {
-          return (
-            <ul key={key} className="list-disc space-y-1 pl-5">
-              {lines.map((l, i) => (
-                <li key={i}>{inline(l.slice(2), `${key}-${i}`)}</li>
-              ))}
-            </ul>
-          );
-        }
-        return <p key={key}>{inline(block, key)}</p>;
+        const notes = citations.filter((c) => (firstMention.get(c.n) ?? blocks.length - 1) === b);
+        return (
+          <div key={b} className="grid gap-x-6 gap-y-3 @xl:grid-cols-[minmax(0,1fr)_13rem]">
+            <div className="min-w-0">{renderBlock(block, b)}</div>
+            {notes.length > 0 && (
+              <ul aria-label="Sources" className="space-y-3">
+                {notes.map((c) => (
+                  <SourceNote
+                    key={c.n}
+                    n={c.n}
+                    active={active === c.n}
+                    detail={`chunk ${c.chunkIndex}`}
+                    snippet={
+                      docs
+                        .find((d) => d.id === c.documentId)
+                        ?.chunks.find((x) => x.index === c.chunkIndex)?.text
+                    }
+                    title={
+                      <Link
+                        to={`../../documents/${c.documentId}#chunk-${c.chunkIndex}`}
+                        relative="path"
+                        aria-label={`${c.title}, chunk ${c.chunkIndex}`}
+                        className="hover:underline"
+                        {...linked(c.n)}
+                      >
+                        {c.title}
+                      </Link>
+                    }
+                  />
+                ))}
+              </ul>
+            )}
+          </div>
+        );
       })}
     </div>
   );

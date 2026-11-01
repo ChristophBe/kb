@@ -26,6 +26,7 @@ const pairs: [foreground: string, background: string, minimum: number][] = [
   ["on-accent", "accent-hover", TEXT],
   ["accent", "canvas", UI],
   ["accent", "surface", UI],
+  ["accent", "surface-muted", UI], // active nav marker
   ["danger", "surface", TEXT],
   ...tones.map((tone): [string, string, number] => [tone, `${tone}-subtle`, TEXT]),
 ];

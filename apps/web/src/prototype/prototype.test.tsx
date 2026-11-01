@@ -86,6 +86,20 @@ describe("prototype flows", () => {
     expect(await screen.findByRole("link", { name: "Board minutes October" })).toBeTruthy();
   });
 
+  it("puts sources in the margin and links them to their markers", async () => {
+    renderAt("/prototype/chat/c1");
+    const [first] = await screen.findAllByRole("list", { name: "Sources" });
+    const note = within(first as HTMLElement).getByRole("link", {
+      name: "Quarterly report Q3, chunk 1",
+    });
+    expect(note.closest("li")?.className).not.toContain("border-accent");
+    const marker = screen.getAllByRole("link", { name: /^Source 1: / })[0] as HTMLElement;
+    fireEvent.mouseEnter(marker);
+    expect(note.closest("li")?.className).toContain("border-accent");
+    fireEvent.mouseLeave(marker);
+    expect(note.closest("li")?.className).not.toContain("border-accent");
+  });
+
   it("streams a cited answer and can stop one", async () => {
     renderAt("/prototype/chat/c2");
     const composer = await screen.findByRole("textbox", { name: "Ask a question" });

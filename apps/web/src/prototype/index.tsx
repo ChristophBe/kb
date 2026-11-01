@@ -188,6 +188,7 @@ function Overview() {
   return (
     <div>
       <PageHeader
+        eyebrow="kb / prototype"
         title="M1 prototype"
         description="Click through the M1 screens before they are built. Everything runs in the browser with mock data."
       />
@@ -265,6 +266,7 @@ function ShellStates() {
   return (
     <div className="space-y-8">
       <PageHeader
+        eyebrow="kb / prototype / shell"
         title="Shell states"
         description="Building blocks every module uses (#58): toasts, the error boundary, loading."
       />

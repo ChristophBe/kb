@@ -168,7 +168,7 @@ export function Dialog({
       ref={ref}
       aria-labelledby={titleId}
       onClose={onClose}
-      className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-card border border-border bg-surface p-0 text-fg backdrop:bg-black/40"
+      className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-card border border-border bg-surface p-0 text-fg shadow-overlay backdrop:bg-black/40"
     >
       {open && (
         <div className="flex flex-col gap-4 p-5">
@@ -331,7 +331,7 @@ export function MenuButton({ label, items }: { label: string; items: MenuItem[] 
               setOpen(false);
             }
           }}
-          className="absolute right-0 z-10 mt-1 min-w-44 rounded-control border border-border bg-surface py-1 shadow-lg"
+          className="absolute right-0 z-10 mt-1 min-w-44 rounded-control border border-border bg-surface py-1 shadow-overlay"
         >
           {items.map((item, i) => (
             <button
@@ -425,7 +425,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
       className={cn(
-        "pointer-events-auto flex items-start gap-3 rounded-card border border-border bg-surface px-4 py-3 text-sm shadow-lg",
+        "pointer-events-auto flex items-start gap-3 rounded-card border border-border bg-surface px-4 py-3 text-sm shadow-overlay",
         toast.kind === "error" && "text-danger",
       )}
     >
@@ -495,7 +495,11 @@ export function relativeTime(date: Date): string {
 
 export function Time({ date }: { date: Date }) {
   return (
-    <time dateTime={date.toISOString()} title={date.toLocaleString()}>
+    <time
+      dateTime={date.toISOString()}
+      title={date.toLocaleString()}
+      className="font-mono tabular-nums"
+    >
       {relativeTime(date)}
     </time>
   );

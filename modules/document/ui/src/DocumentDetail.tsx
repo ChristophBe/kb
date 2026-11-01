@@ -1,6 +1,15 @@
 import { DocumentService } from "@kb/document-api/kb/document/v1/document_pb";
 import { useClient, useQuery } from "@kb/module-sdk";
-import { Badge, Card, ErrorMessage, formatBytes, formatTime, PageHeader, Spinner } from "@kb/ui";
+import {
+  Badge,
+  Card,
+  ChunkStrip,
+  ErrorMessage,
+  formatBytes,
+  formatTime,
+  PageHeader,
+  Spinner,
+} from "@kb/ui";
 import { Link, useParams } from "react-router";
 import { statusLabel } from "./status.ts";
 
@@ -20,7 +29,7 @@ export function DocumentDetail() {
     ["Filename", d.filename],
     ["Content type", d.contentType],
     ["Size", formatBytes(d.sizeBytes)],
-    ["Chunks", d.chunkCount],
+    ["Chunks", <ChunkStrip count={d.chunkCount} />],
     ["Created", formatTime(d.createTime)],
     ["Updated", formatTime(d.updateTime)],
     ["ID", <code className="text-xs">{d.id}</code>],
@@ -31,10 +40,10 @@ export function DocumentDetail() {
         ← Documents
       </Link>
       <div className="mt-2">
-        <PageHeader title={d.title} />
+        <PageHeader eyebrow="kb / documents" title={d.title} />
       </div>
       <Card className="max-w-2xl">
-        <dl className="divide-y divide-border text-sm">
+        <dl className="divide-y divide-dotted divide-border text-sm">
           {rows.map(([k, v]) => (
             <div key={k} className="grid grid-cols-3 gap-4 px-4 py-2">
               <dt className="text-fg-muted">{k}</dt>

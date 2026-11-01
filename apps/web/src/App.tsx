@@ -1,5 +1,5 @@
 import type { KbModule, RuntimeConfig } from "@kb/module-sdk";
-import { Card, cn } from "@kb/ui";
+import { Card, cn, PageTitle } from "@kb/ui";
 import { FlaskConical, Library } from "lucide-react";
 import { useMemo } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
@@ -27,12 +27,22 @@ export function App({ config }: { config: RuntimeConfig }) {
   return <RouterProvider router={router} />;
 }
 
+/** Nav link; the active item gets an accent marker on its left edge. */
+function navItem(isActive: boolean) {
+  return cn(
+    "flex items-center gap-2 rounded-control border-l-2 border-transparent px-3 py-2 text-sm text-fg-muted hover:bg-surface-muted",
+    isActive && "border-accent bg-surface-muted font-medium text-fg",
+  );
+}
+
 function Shell({ modules }: { modules: KbModule[] }) {
   return (
     <div className="flex min-h-screen">
       <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-surface">
         <Link to="/" className="flex items-center gap-2 px-4 py-4 font-semibold">
-          <Library className="size-5" /> Knowledge Base
+          <Library className="size-5 text-accent" aria-hidden="true" />
+          <span className="font-mono font-medium">kb</span>
+          <span className="text-fg-muted">/</span> Knowledge Base
         </Link>
         <nav className="flex flex-col gap-0.5 px-2">
           {modules.flatMap((m) =>
@@ -44,12 +54,7 @@ function Shell({ modules }: { modules: KbModule[] }) {
                   key={to}
                   to={to}
                   end={!item.path}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-2 rounded-control px-3 py-2 text-sm text-fg-muted hover:bg-surface-muted",
-                      isActive && "bg-surface-muted font-medium text-fg",
-                    )
-                  }
+                  className={({ isActive }) => navItem(isActive)}
                 >
                   <Icon className="size-4" /> {item.label}
                 </NavLink>
@@ -61,16 +66,10 @@ function Shell({ modules }: { modules: KbModule[] }) {
           aria-label="Preview"
           className="mt-6 flex flex-col gap-0.5 border-t border-border px-2 pt-4"
         >
-          <span className="px-3 pb-1 text-xs font-medium text-fg-muted">Preview</span>
-          <NavLink
-            to="/prototype"
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-2 rounded-control px-3 py-2 text-sm text-fg-muted hover:bg-surface-muted",
-                isActive && "bg-surface-muted font-medium text-fg",
-              )
-            }
-          >
+          <span className="px-3 pb-1 font-mono text-xs font-medium tracking-wide text-fg-muted uppercase">
+            Preview
+          </span>
+          <NavLink to="/prototype" className={({ isActive }) => navItem(isActive)}>
             <FlaskConical className="size-4" aria-hidden="true" /> M1 prototype
           </NavLink>
         </nav>
@@ -88,7 +87,7 @@ function Home({ modules }: { modules: KbModule[] }) {
   );
   return (
     <div>
-      <h1 className="mb-6 text-xl font-semibold">Welcome</h1>
+      <PageTitle className="mb-8">Welcome</PageTitle>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {modules.map((m) => (
           <Link key={m.id} to={`/m/${m.id}`}>

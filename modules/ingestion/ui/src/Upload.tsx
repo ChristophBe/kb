@@ -56,6 +56,7 @@ export function Upload() {
   return (
     <div>
       <PageHeader
+        eyebrow="kb / ingestion"
         title="Ingestion"
         description="Upload documents to add them to the knowledge base."
       />
@@ -80,7 +81,7 @@ export function Upload() {
       <ErrorMessage error={error ?? jobs.error} />
       <Card>
         {jobs.data?.jobs.length ? (
-          <ul className="divide-y divide-border text-sm">
+          <ul className="divide-y divide-dotted divide-border text-sm">
             {jobs.data.jobs.map((job) => {
               const [label, tone] = statusLabel[job.status];
               return (
@@ -90,7 +91,9 @@ export function Upload() {
                     <span className="text-fg-muted">{job.chunkCount} chunks</span>
                   )}
                   {job.error && <span className="truncate text-danger">{job.error}</span>}
-                  <span className="text-fg-muted">{formatTime(job.createTime)}</span>
+                  <span className="font-mono text-fg-muted tabular-nums">
+                    {formatTime(job.createTime)}
+                  </span>
                   <Badge tone={tone}>{label}</Badge>
                 </li>
               );

@@ -2,28 +2,38 @@
  * Design tokens for every kb UI (docs/ux-standards.md). Imported once by the
  * shell after tailwindcss. Module UIs use the utilities these generate
  * (bg-surface, text-fg-muted, border-border-strong, rounded-control, …),
- * never raw palette classes such as zinc-500 or dark: variants.
+ * never raw palette classes such as gray-500 or dark: variants.
+ *
+ * Aesthetic: a lab notebook. Cool grey paper, IBM Plex Sans for the
+ * interface and Plex Mono for data, near-square corners, and monochrome ink
+ * as the only accent.
  *
  * Every text/background and UI-component pair below meets WCAG 2.2 AA in
  * light and dark mode (4.5:1 for text, 3:1 for borders and the focus ring).
  */
 
+/* Self-hosted fonts: no requests leave the deployment. */
+@import "@fontsource-variable/ibm-plex-sans/wght.css";
+@import "@fontsource-variable/ibm-plex-sans/wght-italic.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
 @theme {
   /* Colour roles, light mode. Dark mode overrides the same variables below. */
-  --color-canvas: var(--color-zinc-50); /* page background */
+  --color-canvas: var(--color-gray-100); /* page background */
   --color-surface: var(--color-white); /* cards, sidebar, inputs */
-  --color-surface-muted: var(--color-zinc-100); /* hover, selected, subtle fills */
-  --color-fg: var(--color-zinc-900); /* body text, headings */
-  --color-fg-muted: var(--color-zinc-600); /* secondary text, icons */
-  --color-border: var(--color-zinc-200); /* decorative dividers */
-  --color-border-strong: var(--color-zinc-500); /* boundaries that identify a control */
-  --color-accent: var(--color-zinc-900); /* primary actions */
-  --color-accent-hover: var(--color-zinc-700);
+  --color-surface-muted: var(--color-gray-100); /* hover, selected, subtle fills */
+  --color-fg: var(--color-gray-900); /* body text, headings */
+  --color-fg-muted: var(--color-gray-600); /* secondary text, icons */
+  --color-border: var(--color-gray-200); /* decorative dividers */
+  --color-border-strong: var(--color-gray-500); /* boundaries that identify a control */
+  --color-accent: var(--color-gray-900); /* primary actions */
+  --color-accent-hover: var(--color-gray-700);
   --color-on-accent: var(--color-white);
   --color-focus: var(--color-blue-600);
 
-  --color-neutral: var(--color-zinc-700);
-  --color-neutral-subtle: var(--color-zinc-100);
+  --color-neutral: var(--color-gray-700);
+  --color-neutral-subtle: var(--color-gray-100);
   --color-info: var(--color-blue-700);
   --color-info-subtle: var(--color-blue-50);
   --color-success: var(--color-emerald-700);
@@ -46,12 +56,26 @@
   --text-base--line-height: 1.5rem;
   --text-lg: 1.125rem; /* 18px: section headings */
   --text-lg--line-height: 1.75rem;
-  --text-xl: 1.25rem; /* 20px: page titles */
+  --text-xl: 1.25rem; /* 20px: pane and card titles */
   --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem; /* 24px: page titles on small screens */
+  --text-2xl--line-height: 2rem;
+  --text-2xl--letter-spacing: -0.01em;
+  --text-3xl: 2.5rem; /* 40px: page titles */
+  --text-3xl--line-height: 2.75rem;
+  --text-3xl--letter-spacing: -0.02em;
 
-  /* Radius by role. */
-  --radius-control: 0.375rem; /* buttons, inputs, nav items, alerts */
-  --radius-card: 0.5rem; /* cards, dialogs */
+  /* Fonts: sans for the interface, mono for data (sizes, times, IDs, tags). */
+  --font-sans: "IBM Plex Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Radius by role: near-square, like a ruled notebook. */
+  --radius-control: 0.125rem; /* buttons, inputs, nav items, alerts, tags */
+  --radius-card: 0.25rem; /* cards, dialogs */
+
+  /* One shadow, for floating layers only (menus, toasts, dialogs). */
+  --shadow-*: initial;
+  --shadow-overlay: 0 1px 0 0 rgb(0 0 0 / 0.04), 0 8px 20px -8px rgb(0 0 0 / 0.25);
 }
 
 @layer base {
@@ -61,20 +85,20 @@
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --color-canvas: var(--color-zinc-950);
-      --color-surface: var(--color-zinc-900);
-      --color-surface-muted: var(--color-zinc-800);
-      --color-fg: var(--color-zinc-50);
-      --color-fg-muted: var(--color-zinc-400);
-      --color-border: var(--color-zinc-800);
-      --color-border-strong: var(--color-zinc-500);
-      --color-accent: var(--color-zinc-50);
-      --color-accent-hover: var(--color-zinc-300);
-      --color-on-accent: var(--color-zinc-900);
+      --color-canvas: var(--color-gray-950);
+      --color-surface: var(--color-gray-900);
+      --color-surface-muted: var(--color-gray-800);
+      --color-fg: var(--color-gray-50);
+      --color-fg-muted: var(--color-gray-400);
+      --color-border: var(--color-gray-800);
+      --color-border-strong: var(--color-gray-500);
+      --color-accent: var(--color-gray-50);
+      --color-accent-hover: var(--color-gray-300);
+      --color-on-accent: var(--color-gray-950);
       --color-focus: var(--color-blue-400);
 
-      --color-neutral: var(--color-zinc-300);
-      --color-neutral-subtle: var(--color-zinc-800);
+      --color-neutral: var(--color-gray-300);
+      --color-neutral-subtle: var(--color-gray-800);
       --color-info: var(--color-blue-300);
       --color-info-subtle: var(--color-blue-950);
       --color-success: var(--color-emerald-300);

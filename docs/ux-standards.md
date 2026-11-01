@@ -35,7 +35,9 @@ Follow the [WAI-ARIA Authoring Practices (APG)](https://www.w3.org/WAI/ARIA/apg/
 
 ## Design tokens
 
-Tokens are Tailwind theme variables defined in [`platform/ui/kit/src/theme.css`](../platform/ui/kit/src/theme.css), imported once by the shell (`apps/web/src/index.css`). **Module UIs use token utilities only**: no raw palette classes (`zinc-500`, `red-50`, `bg-white`, …), no `dark:` variants, and no arbitrary colour values. Dark mode follows the OS setting (`prefers-color-scheme`) and needs no extra classes, because the tokens switch.
+Tokens are Tailwind theme variables defined in [`platform/ui/kit/src/theme.css`](../platform/ui/kit/src/theme.css), imported once by the shell (`apps/web/src/index.css`). **Module UIs use token utilities only**: no raw palette classes (`gray-500`, `red-50`, `bg-white`, …), no `dark:` variants, and no arbitrary colour values. The one exception is a dialog backdrop (`backdrop:bg-black/40`), which is a dimming layer, not a colour role. Dark mode follows the OS setting (`prefers-color-scheme`) and needs no extra classes, because the tokens switch.
+
+**The aesthetic is a lab notebook**: minimal and precise. Cool grey paper, IBM Plex Sans for the interface and IBM Plex Mono for data, near-square corners, dotted rules between rows, and monochrome ink as the only accent: near-black in light mode, near-white in dark mode. Hue is reserved for status and focus. The accent marks the primary action, the current place (the active nav item), the user's own voice (their chat messages) and a citation while it's linked to its note; use it nowhere else, so it keeps its meaning. Nothing floats except overlays, and depth comes from borders, not shadows.
 
 | Role | Utilities | Use |
 |---|---|---|
@@ -43,16 +45,27 @@ Tokens are Tailwind theme variables defined in [`platform/ui/kit/src/theme.css`]
 | Surface | `bg-surface`, `bg-surface-muted` | Cards, sidebars, inputs; hover/selected rows and subtle fills. |
 | Text | `text-fg`, `text-fg-muted` | Body text and headings; secondary text, meta, icons. |
 | Border | `border-border`, `divide-border`, `border-border-strong` | Decorative dividers; boundaries that identify a control (inputs, secondary buttons) and must reach 3:1. |
-| Accent | `bg-accent`, `hover:bg-accent-hover`, `text-on-accent` | Primary actions, the user's own chat messages. |
+| Accent (ink) | `bg-accent`, `hover:bg-accent-hover`, `text-on-accent`, `border-accent` | Primary actions (filled). A 2 px `border-l-2 border-accent` rule on `bg-surface-muted` for the active nav item and the user's own chat messages. One filled accent element per view at most. |
 | Focus | `--color-focus` (global `:focus-visible` outline) | Never override per component. |
-| Status | `text-{tone}` on `bg-{tone}-subtle` for `neutral`, `info`, `success`, `warning`, `danger` | Badges, alerts, inline errors. Status is never shown by colour alone; add text or an icon with a label. |
+| Status | `text-{tone}` on `bg-{tone}-subtle` for `neutral`, `info`, `success`, `warning`, `danger` | Badges (square mono tags), alerts, inline errors. Status is never shown by colour alone; add text or an icon with a label. |
 
 | Scale | Tokens |
 |---|---|
 | Spacing | Tailwind's 4 px step (`--spacing: 0.25rem`). Prefer 1, 2, 3, 4, 6, 8, 12. |
-| Type | `text-xs` (12 px, badges/meta), `text-sm` (14 px, body and controls), `text-base` (16 px, chat messages, long text), `text-lg` (18 px, section headings), `text-xl` (20 px, page titles). No other sizes exist. |
-| Radius | `rounded-control` (buttons, inputs, nav items, alerts), `rounded-card` (cards, dialogs), `rounded-full` (badges, avatars, spinners). |
+| Type | `text-xs` (12 px, badges/meta), `text-sm` (14 px, body and controls), `text-base` (16 px, chat messages, long text), `text-lg` (18 px, section headings), `text-xl` (20 px, pane and card titles), `text-2xl` (24 px) and `text-3xl` (40 px) for page titles only, through `PageTitle`/`PageHeader`. No other sizes exist. The hierarchy comes from the jump between a large, light title and small mono data, so don't add sizes in between. |
+| Font | `font-sans` (IBM Plex Sans, the default) for all interface text. `font-mono` (IBM Plex Mono) for **data**: sizes, times, counts, IDs, model names, citation markers `[1]`, `Badge` tags and the `PageHeader` eyebrow. Add `tabular-nums` where numbers line up in columns. Both are self-hosted through `@fontsource`; no font CDN. |
+| Case | Write every string in sentence case. `uppercase` (with `tracking-wide`) is a visual style for short mono labels only: `Badge` and section labels such as "Preview". Never for buttons, headings or sentences. |
+| Radius | `rounded-control` (2 px: buttons, inputs, nav items, alerts, tags), `rounded-card` (4 px: cards, dialogs), `rounded-full` (avatars, spinners; never pills). |
+| Rules | Solid `border-border` for structural edges (cards, sidebar). `divide-dotted divide-border` between rows of a list or `<dl>`. |
+| Shadow | `shadow-overlay` only, for layers that float above the page (menus, toasts, dialogs). No other shadows exist. |
 | Focus ring | 2 px solid `--color-focus`, 2 px offset. |
+
+Two components carry kb's own identity. Use them wherever their content appears, rather than a new treatment:
+
+| Component | Use |
+|---|---|
+| `SourceNote` | Citations are margin notes, in a `<ul aria-label="Sources">` beside the text they support, never chips under it. Lay them out with a container query (`@container`, `@xl:grid-cols-[minmax(0,1fr)_13rem]`) so they drop below the text in narrow panes. Hovering or focusing a marker sets `active` on its note. |
+| `ChunkStrip` | A document as a barcode wherever its chunk count appears: one tick per chunk (long documents share ticks, up to 48), cited chunks taller and in ink. The counts are always shown as text too. |
 
 A new token needs an entry in both tables and a pair for every combination it's used in, added to `platform/ui/kit/src/theme.test.ts` (light and dark are checked automatically).
 

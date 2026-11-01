@@ -28,9 +28,10 @@ stateDiagram-v2
 │   New conversation🗑│                    │ How did revenue develop?    ││
 │                    │                    └──────────────────────────────┘│
 │                    │ ┌───────────────────────────────────────────────┐ │
-│                    │ │ Revenue grew by **12 %** in Q3 [1], mainly …  │ │
-│                    │ │ - Product A: +8 % [2]                          │ │
-│                    │ │ Sources: [1 Quarterly report.pdf] [2 Board…]  │ │
+│                    │ │ Revenue grew by **12 %**     │ [1] Quarterly  │ │
+│                    │ │ in Q3 [1], mainly …          │ report.pdf     │ │
+│                    │ │                              │ chunk 3        │ │
+│                    │ │ - Product A: +8 % [2]        │ [2] Board…     │ │
 │                    │ └───────────────────────────────────────────────┘ │
 │                    │───────────────────────────────────────────────────│
 │                    │ [Ask a question…                               ]  │
@@ -74,8 +75,8 @@ stateDiagram-v2
 ## Answers: Markdown and citations (#41)
 
 - Answers render sanitised Markdown (headings, lists, code blocks with a `[Copy code]` button, tables). Raw HTML is never rendered.
-- Inline markers `[1]` are links to `/m/document/:id#chunk-:index` with the accessible name "Source 1: Quarterly report.pdf, chunk 3". The "Sources" row below the answer repeats them as chips with the document title.
-- The user's own messages are plain text (no Markdown), in the accent style, aligned right.
+- Inline markers `[1]` are links to `/m/document/:id#chunk-:index` with the accessible name "Source 1: Quarterly report.pdf, chunk 3". Each source is a margin note (`SourceNote`) beside the block that first mentions it, with the document title, chunk and a short snippet; in narrow panes the notes drop below the block. Hovering or focusing a marker highlights its note, and the other way round.
+- The user's own messages are plain text (no Markdown), on a muted fill with the accent rule on the left (like the active nav item), aligned right.
 
 ## Streaming, stop and errors (#42, #46)
 

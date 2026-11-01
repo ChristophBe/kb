@@ -12,6 +12,8 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
+    "@fontsource-variable/ibm-plex-sans": "catalog:",
+    "@fontsource/ibm-plex-mono": "catalog:",
     "clsx": "catalog:",
     "tailwind-merge": "catalog:"
   },

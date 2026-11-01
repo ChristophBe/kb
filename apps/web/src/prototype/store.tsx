@@ -276,6 +276,15 @@ export function useStore(): Store {
   return store;
 }
 
+/** Zero-based positions of a document's chunks cited in any conversation. */
+export function citedChunks(conversations: Conversation[], documentId: string): number[] {
+  const cited = conversations
+    .flatMap((c) => c.messages.flatMap((m) => m.citations))
+    .filter((c) => c.documentId === documentId)
+    .map((c) => c.chunkIndex - 1);
+  return [...new Set(cited)];
+}
+
 /** Text chunks that mention any word of the query, best match first. */
 export function searchChunks(docs: Doc[], query: string, scope: string[] = []) {
   const words = query

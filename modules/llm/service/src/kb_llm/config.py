@@ -8,5 +8,16 @@ class Settings(PlatformSettings):
     ollama_url: str = "http://localhost:11434"
     chat_model: str = "llama3.2"
     embedding_model: str = "nomic-embed-text"
+    # Seconds. Generous on purpose: a CPU-only Ollama can take minutes to load a model.
+    provider_connect_timeout: float = 5
+    provider_first_token_timeout: float = 120
+    provider_generate_timeout: float = 600
+    provider_embed_timeout: float = 120
+    provider_list_timeout: float = 10
+    # Attempts for idempotent calls (embed, list), doubling the delay after each.
+    provider_attempts: int = 3
+    provider_retry_delay: float = 0.5
+    # Generate and Embed calls in flight per provider, above which calls are rejected.
+    provider_max_concurrency: int = 8
     # Must match the vector column of the document module's chunk index.
     embedding_dimensions: int = 768

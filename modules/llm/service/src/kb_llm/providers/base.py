@@ -4,6 +4,18 @@ from enum import StrEnum
 from typing import Protocol
 
 
+class ProviderError(Exception):
+    """A provider call failed. The message is logged, never sent to callers."""
+
+
+class ProviderUnavailableError(ProviderError):
+    """The provider cannot be reached, is overloaded or timed out; try again later."""
+
+
+class ModelNotFoundError(ProviderError):
+    """The provider does not know the requested model."""
+
+
 class Role(StrEnum):
     SYSTEM = "system"
     USER = "user"
@@ -52,7 +64,8 @@ class Status:
 
 class Provider(Protocol):
     """Adapter for one LLM vendor. Implementations live next to this file and
-    are registered in kb_llm.providers.REGISTRY."""
+    are registered in kb_llm.providers.REGISTRY. Failures are raised as
+    ProviderError, so the server needs no knowledge of a vendor's client."""
 
     name: str
     default_chat_model: str

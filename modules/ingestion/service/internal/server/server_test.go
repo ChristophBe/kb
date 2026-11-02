@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"log/slog"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -14,6 +15,8 @@ import (
 
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	ingestionv1 "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1"
+	"github.com/christoph/kb/modules/ingestion/service/internal/app"
+	"github.com/christoph/kb/modules/ingestion/service/internal/documents"
 	"github.com/christoph/kb/modules/ingestion/service/internal/events"
 	"github.com/christoph/kb/modules/ingestion/service/internal/store"
 )
@@ -80,7 +83,7 @@ func TestUploadFlowQueuesProcessingOnce(t *testing.T) {
 	repo := &fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}
 	docs := &fakeDocuments{}
 	pub := &fakePublisher{}
-	srv := New(repo, docs, pub, slog.New(slog.DiscardHandler))
+	srv := New(app.New(store.NewJobs(repo), documents.New(docs), events.NewPublisher(pub)), slog.New(slog.DiscardHandler))
 
 	created, err := srv.CreateUpload(t.Context(), &ingestionv1.CreateUploadRequest{Filename: "a.md"})
 	if err != nil {
@@ -113,5 +116,62 @@ func TestUploadFlowQueuesProcessingOnce(t *testing.T) {
 	}
 	if len(pub.sent) != 1 {
 		t.Errorf("event published twice")
+	}
+}
+
+// peerFailure fails SetDocumentStatus with a status from the document module.
+type peerFailure struct {
+	fakeDocuments
+	err error
+}
+
+func (f *peerFailure) SetDocumentStatus(context.Context, *documentv1.SetDocumentStatusRequest, ...grpc.CallOption) (*documentv1.SetDocumentStatusResponse, error) {
+	return nil, f.err
+}
+
+func TestCompleteUploadMapsPeerErrors(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		peer codes.Code
+		want codes.Code
+	}{
+		{"peer down", codes.Unavailable, codes.Unavailable},
+		{"peer too slow", codes.DeadlineExceeded, codes.Unavailable},
+		{"file missing", codes.FailedPrecondition, codes.FailedPrecondition},
+		{"peer not found is not our not found", codes.NotFound, codes.Internal},
+		{"peer internal", codes.Internal, codes.Internal},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			id := uuid.New()
+			repo := &fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{
+				id: {ID: id, DocumentID: uuid.New(), Status: int16(ingestionv1.JobStatus_JOB_STATUS_PENDING_UPLOAD)},
+			}}
+			docs := &peerFailure{err: status.Error(tc.peer, "peer detail")}
+			pub := &fakePublisher{}
+			srv := New(app.New(store.NewJobs(repo), documents.New(docs), events.NewPublisher(pub)), slog.New(slog.DiscardHandler))
+
+			_, err := srv.CompleteUpload(t.Context(), &ingestionv1.CompleteUploadRequest{JobId: id.String()})
+			if status.Code(err) != tc.want {
+				t.Fatalf("err = %v, want %v", err, tc.want)
+			}
+			if strings.Contains(status.Convert(err).Message(), "peer detail") {
+				t.Errorf("peer message leaked: %v", err)
+			}
+			if repo.jobs[id].Status != int16(ingestionv1.JobStatus_JOB_STATUS_PENDING_UPLOAD) || len(pub.sent) != 0 {
+				t.Errorf("job moved on: %+v, published %v", repo.jobs[id], pub.sent)
+			}
+		})
+	}
+}
+
+func TestUnknownAndInvalidJobs(t *testing.T) {
+	srv := New(app.New(store.NewJobs(&fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}), documents.New(&fakeDocuments{}), events.NewPublisher(&fakePublisher{})), slog.New(slog.DiscardHandler))
+	_, err := srv.GetJob(t.Context(), &ingestionv1.GetJobRequest{Id: uuid.NewString()})
+	if status.Code(err) != codes.NotFound {
+		t.Errorf("unknown: %v", err)
+	}
+	_, err = srv.CompleteUpload(t.Context(), &ingestionv1.CompleteUploadRequest{JobId: "nope"})
+	if status.Code(err) != codes.InvalidArgument {
+		t.Errorf("invalid: %v", err)
 	}
 }

@@ -14,6 +14,8 @@ import (
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	ingestionv1 "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1"
 	"github.com/christoph/kb/modules/ingestion/migrations"
+	"github.com/christoph/kb/modules/ingestion/service/internal/app"
+	"github.com/christoph/kb/modules/ingestion/service/internal/documents"
 	"github.com/christoph/kb/modules/ingestion/service/internal/events"
 	"github.com/christoph/kb/modules/ingestion/service/internal/server"
 	"github.com/christoph/kb/modules/ingestion/service/internal/store"
@@ -77,14 +79,16 @@ func run() error {
 	}
 	defer conn.Close()
 
-	repo := store.New(pool)
+	service := app.New(
+		store.NewJobs(store.New(pool)),
+		documents.New(documentv1.NewDocumentServiceClient(conn)),
+		events.NewPublisher(events.NewJetStream(js)),
+	)
 	srv := grpcserver.New(log)
-	ingestionv1.RegisterIngestionServiceServer(srv, server.New(
-		repo, documentv1.NewDocumentServiceClient(conn), events.NewPublisher(js), log,
-	))
+	ingestionv1.RegisterIngestionServiceServer(srv, server.New(service, log))
 
 	g, ctx := errgroup.WithContext(ctx)
-	g.Go(func() error { return events.Consume(ctx, js, repo, log) })
+	g.Go(func() error { return events.Consume(ctx, js, service, log) })
 	g.Go(func() error { return srv.Run(ctx, cfg.GRPCPort) })
 	return g.Wait()
 }

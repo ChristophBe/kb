@@ -113,7 +113,6 @@ Gaps between the existing modules and this document, each tracked as an issue un
 
 | Module | Gap | Issue |
 |---|---|---|
-| ingestion | Orchestration (`CompleteUpload`, event handling) lives in transport; `server` uses the sqlc `Querier` instead of a consumer-declared port; peer (document) errors are passed through unchanged | #90 |
 | ingestion | Worker fails documents permanently when a peer is unavailable instead of retrying | #33 |
 | chat | Retrieval + prompt + generation orchestration lives in the servicer; the `Repository` port and row types are declared in the `db.py` adapter | #91 |
 | chat | Peer failures in `StreamChat` surface as `UNKNOWN` instead of a mapped status or stream error | #46 |

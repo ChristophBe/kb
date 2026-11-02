@@ -9,16 +9,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	ingestionv1 "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1"
-	"github.com/christoph/kb/modules/ingestion/service/internal/events"
-	"github.com/christoph/kb/modules/ingestion/service/internal/store"
+	"github.com/christoph/kb/modules/ingestion/service/internal/app"
 	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
 )
 
@@ -27,82 +23,42 @@ const (
 	maxPageSize     = 200
 )
 
-// Publisher publishes module events.
-type Publisher interface {
-	Publish(ctx context.Context, subject string, msg proto.Message, msgID string) error
-}
-
 type Server struct {
 	ingestionv1.UnimplementedIngestionServiceServer
-	repo      store.Querier
-	documents documentv1.DocumentServiceClient
-	publisher Publisher
-	log       *slog.Logger
+	app *app.Service
+	log *slog.Logger
 	// PollInterval controls how often WatchJob checks for changes.
 	PollInterval time.Duration
 }
 
-func New(repo store.Querier, documents documentv1.DocumentServiceClient, publisher Publisher, log *slog.Logger) *Server {
-	return &Server{repo: repo, documents: documents, publisher: publisher, log: log, PollInterval: 500 * time.Millisecond}
+func New(service *app.Service, log *slog.Logger) *Server {
+	return &Server{app: service, log: log, PollInterval: 500 * time.Millisecond}
 }
 
 func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUploadRequest) (*ingestionv1.CreateUploadResponse, error) {
 	if req.GetFilename() == "" {
 		return nil, status.Error(codes.InvalidArgument, "filename is required")
 	}
-	created, err := s.documents.CreateDocument(ctx, &documentv1.CreateDocumentRequest{
+	job, uploadURL, err := s.app.CreateUpload(ctx, app.NewUpload{
 		Title:       req.GetTitle(),
 		Filename:    req.GetFilename(),
 		ContentType: req.GetContentType(),
 		SizeBytes:   req.GetSizeBytes(),
 	})
 	if err != nil {
-		return nil, err
+		return nil, s.toStatus("create upload", err)
 	}
-	doc := created.GetDocument()
-	job, err := s.repo.CreateJob(ctx, store.CreateJobParams{
-		ID:          uuid.New(),
-		DocumentID:  uuid.MustParse(doc.GetId()),
-		Filename:    doc.GetFilename(),
-		ContentType: doc.GetContentType(),
-		Status:      int16(ingestionv1.JobStatus_JOB_STATUS_PENDING_UPLOAD),
-	})
-	if err != nil {
-		return nil, s.internal("create job", err)
-	}
-	return &ingestionv1.CreateUploadResponse{Job: toProto(job), UploadUrl: created.GetUploadUrl()}, nil
+	return &ingestionv1.CreateUploadResponse{Job: toProto(job), UploadUrl: uploadURL}, nil
 }
 
 func (s *Server) CompleteUpload(ctx context.Context, req *ingestionv1.CompleteUploadRequest) (*ingestionv1.CompleteUploadResponse, error) {
-	job, err := s.getJob(ctx, req.GetJobId())
+	id, err := parseID(req.GetJobId())
 	if err != nil {
 		return nil, err
 	}
-	if ingestionv1.JobStatus(job.Status) != ingestionv1.JobStatus_JOB_STATUS_PENDING_UPLOAD {
-		return nil, status.Error(codes.FailedPrecondition, "upload already completed")
-	}
-	if _, err := s.documents.SetDocumentStatus(ctx, &documentv1.SetDocumentStatusRequest{
-		Id: job.DocumentID.String(), Status: documentv1.DocumentStatus_DOCUMENT_STATUS_UPLOADED,
-	}); err != nil {
-		return nil, err
-	}
-	job, err = s.repo.AdvanceJob(ctx, store.AdvanceJobParams{
-		ID: job.ID, Status: int16(ingestionv1.JobStatus_JOB_STATUS_QUEUED),
-	})
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, status.Error(codes.FailedPrecondition, "upload already completed")
-	}
+	job, err := s.app.CompleteUpload(ctx, id)
 	if err != nil {
-		return nil, s.internal("queue job", err)
-	}
-	event := &ingestionv1.DocumentUploaded{
-		JobId:       job.ID.String(),
-		DocumentId:  job.DocumentID.String(),
-		Filename:    job.Filename,
-		ContentType: job.ContentType,
-	}
-	if err := s.publisher.Publish(ctx, events.SubjectUploaded, event, job.ID.String()); err != nil {
-		return nil, s.internal("publish upload event", err)
+		return nil, s.toStatus("complete upload", err)
 	}
 	return &ingestionv1.CompleteUploadResponse{Job: toProto(job)}, nil
 }
@@ -129,9 +85,9 @@ func (s *Server) ListJobs(ctx context.Context, req *ingestionv1.ListJobsRequest)
 		}
 		offset = int32(o)
 	}
-	jobs, err := s.repo.ListJobs(ctx, store.ListJobsParams{Limit: limit + 1, Offset: offset})
+	jobs, err := s.app.ListJobs(ctx, limit+1, offset)
 	if err != nil {
-		return nil, s.internal("list jobs", err)
+		return nil, s.toStatus("list jobs", err)
 	}
 	resp := &ingestionv1.ListJobsResponse{Page: &commonv1.PageResponse{}}
 	if len(jobs) > int(limit) {
@@ -154,13 +110,13 @@ func (s *Server) WatchJob(req *ingestionv1.WatchJobRequest, stream ingestionv1.I
 		if err != nil {
 			return err
 		}
-		if !job.UpdatedAt.Time.Equal(last) {
-			last = job.UpdatedAt.Time
+		if !job.UpdatedAt.Equal(last) {
+			last = job.UpdatedAt
 			if err := stream.Send(&ingestionv1.WatchJobResponse{Job: toProto(job)}); err != nil {
 				return err
 			}
 		}
-		if isTerminal(job.Status) {
+		if job.Terminal() {
 			return nil
 		}
 		select {
@@ -171,40 +127,50 @@ func (s *Server) WatchJob(req *ingestionv1.WatchJobRequest, stream ingestionv1.I
 	}
 }
 
-func (s *Server) getJob(ctx context.Context, raw string) (store.IngestionJob, error) {
-	id, err := uuid.Parse(raw)
+func (s *Server) getJob(ctx context.Context, raw string) (app.Job, error) {
+	id, err := parseID(raw)
 	if err != nil {
-		return store.IngestionJob{}, status.Errorf(codes.InvalidArgument, "invalid job id %q", raw)
+		return app.Job{}, err
 	}
-	job, err := s.repo.GetJob(ctx, id)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return store.IngestionJob{}, status.Error(codes.NotFound, "job not found")
-	}
+	job, err := s.app.GetJob(ctx, id)
 	if err != nil {
-		return store.IngestionJob{}, s.internal("get job", err)
+		return app.Job{}, s.toStatus("get job", err)
 	}
 	return job, nil
 }
 
-func (s *Server) internal(op string, err error) error {
+func parseID(raw string) (uuid.UUID, error) {
+	id, err := uuid.Parse(raw)
+	if err != nil {
+		return uuid.Nil, status.Errorf(codes.InvalidArgument, "invalid job id %q", raw)
+	}
+	return id, nil
+}
+
+func (s *Server) toStatus(op string, err error) error {
+	switch {
+	case errors.Is(err, app.ErrNotFound):
+		return status.Error(codes.NotFound, err.Error())
+	case errors.Is(err, app.ErrAlreadyCompleted), errors.Is(err, app.ErrUploadMissing):
+		return status.Error(codes.FailedPrecondition, err.Error())
+	case errors.Is(err, app.ErrDocumentsUnavailable):
+		s.log.Warn(op, "error", err)
+		return status.Error(codes.Unavailable, app.ErrDocumentsUnavailable.Error())
+	}
 	s.log.Error(op, "error", err)
 	return status.Errorf(codes.Internal, "%s failed", op)
 }
 
-func isTerminal(st int16) bool {
-	return st == int16(ingestionv1.JobStatus_JOB_STATUS_DONE) || st == int16(ingestionv1.JobStatus_JOB_STATUS_FAILED)
-}
-
-func toProto(j store.IngestionJob) *ingestionv1.Job {
+func toProto(j app.Job) *ingestionv1.Job {
 	return &ingestionv1.Job{
 		Id:          j.ID.String(),
 		DocumentId:  j.DocumentID.String(),
 		Filename:    j.Filename,
 		ContentType: j.ContentType,
-		Status:      ingestionv1.JobStatus(j.Status),
+		Status:      j.Status,
 		Error:       j.Error,
 		ChunkCount:  j.ChunkCount,
-		CreateTime:  timestamppb.New(j.CreatedAt.Time),
-		UpdateTime:  timestamppb.New(j.UpdatedAt.Time),
+		CreateTime:  timestamppb.New(j.CreatedAt),
+		UpdateTime:  timestamppb.New(j.UpdatedAt),
 	}
 }

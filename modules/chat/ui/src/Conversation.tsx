@@ -5,10 +5,11 @@ import {
   MessageRole,
 } from "@kb/chat-api/kb/chat/v1/chat_pb";
 import { useClient, useQuery, useQueryClient } from "@kb/module-sdk";
-import { Button, ErrorMessage, SourceNote, Spinner, Textarea } from "@kb/ui";
+import { Button, ErrorMessage, Spinner, Textarea } from "@kb/ui";
 import { Send } from "lucide-react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
+import { Answer } from "./Answer.tsx";
 
 interface Pending {
   question: string;
@@ -31,10 +32,10 @@ export function Conversation() {
   const bottom = useRef<HTMLDivElement>(null);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll down whenever new messages or tokens arrive.
-  useEffect(
-    () => bottom.current?.scrollIntoView({ behavior: "smooth" }),
-    [conversation.data, pending],
-  );
+  useEffect(() => {
+    // Not returned: scrollIntoView gives a Promise in current Chrome, which React would call.
+    bottom.current?.scrollIntoView({ behavior: "smooth" });
+  }, [conversation.data, pending]);
 
   const send = async (e: FormEvent) => {
     e.preventDefault();
@@ -128,22 +129,7 @@ function Bubble({ role, content, citations }: Pick<ChatMessage, "role" | "conten
   }
   return (
     <div className="rounded-card border border-border bg-surface px-4 py-2 text-sm @container">
-      <div className="grid gap-x-6 gap-y-3 @xl:grid-cols-[minmax(0,1fr)_13rem]">
-        <div className="min-w-0 whitespace-pre-wrap">{content}</div>
-        {citations.length > 0 && (
-          <ul aria-label="Sources" className="space-y-3">
-            {citations.map((c, i) => (
-              <SourceNote
-                key={`${c.documentId}-${c.chunkIndex}`}
-                n={i + 1}
-                title={c.documentTitle}
-                detail={`chunk ${c.chunkIndex}`}
-                snippet={c.snippet}
-              />
-            ))}
-          </ul>
-        )}
-      </div>
+      <Answer content={content} citations={citations} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import json
 from collections.abc import AsyncIterator
+from typing import Any
 
 import httpx
 
@@ -19,7 +20,7 @@ class OllamaProvider:
     async def generate(
         self, model: str, messages: list[Message], options: GenerationOptions
     ) -> AsyncIterator[Chunk]:
-        body: dict = {
+        body: dict[str, Any] = {
             "model": model,
             "messages": [{"role": m.role.value, "content": m.content} for m in messages],
             "stream": True,

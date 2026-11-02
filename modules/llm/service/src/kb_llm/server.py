@@ -1,10 +1,13 @@
 from collections.abc import AsyncIterator
+from typing import Any
 
 import grpc
 from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 
 from .config import Settings
 from .providers.base import GenerationOptions, Message, ModelKind, Provider, Role
+
+_Context = grpc.aio.ServicerContext[Any, Any]
 
 _ROLES = {
     llm_pb2.ROLE_SYSTEM: Role.SYSTEM,
@@ -22,7 +25,9 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
         self._provider = provider
         self._settings = settings
 
-    async def ListModels(self, request, context) -> llm_pb2.ListModelsResponse:
+    async def ListModels(
+        self, request: llm_pb2.ListModelsRequest, context: _Context
+    ) -> llm_pb2.ListModelsResponse:
         models = await self._provider.list_models()
         return llm_pb2.ListModelsResponse(
             models=[
@@ -31,7 +36,9 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
             ]
         )
 
-    async def GetProviderStatus(self, request, context) -> llm_pb2.GetProviderStatusResponse:
+    async def GetProviderStatus(
+        self, request: llm_pb2.GetProviderStatusRequest, context: _Context
+    ) -> llm_pb2.GetProviderStatusResponse:
         status = await self._provider.status()
         return llm_pb2.GetProviderStatusResponse(
             provider=self._provider.name,
@@ -43,7 +50,7 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
         )
 
     async def Generate(
-        self, request: llm_pb2.GenerateRequest, context: grpc.aio.ServicerContext
+        self, request: llm_pb2.GenerateRequest, context: _Context
     ) -> AsyncIterator[llm_pb2.GenerateResponse]:
         if not request.messages:
             await context.abort(grpc.StatusCode.INVALID_ARGUMENT, "messages must not be empty")
@@ -68,7 +75,9 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
             elif chunk.delta:
                 yield llm_pb2.GenerateResponse(delta=chunk.delta, model=model)
 
-    async def Embed(self, request: llm_pb2.EmbedRequest, context) -> llm_pb2.EmbedResponse:
+    async def Embed(
+        self, request: llm_pb2.EmbedRequest, context: _Context
+    ) -> llm_pb2.EmbedResponse:
         model = request.model or self._provider.default_embedding_model
         if not request.inputs:
             return llm_pb2.EmbedResponse(

@@ -6,10 +6,11 @@ import pathlib
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Protocol
+from typing import Any, Protocol
 
 from alembic import command
 from alembic.config import Config
+from kb.chat.v1 import chat_pb2
 from sqlalchemy import (
     Column,
     DateTime,
@@ -68,10 +69,10 @@ class ConversationRow:
 class MessageRow:
     id: uuid.UUID
     conversation_id: uuid.UUID
-    role: int  # kb.chat.v1.MessageRole
+    role: chat_pb2.MessageRole
     content: str
     created_at: datetime
-    citations: list[dict] = field(default_factory=list)
+    citations: list[dict[str, Any]] = field(default_factory=list)
 
 
 class Repository(Protocol):
@@ -84,7 +85,11 @@ class Repository(Protocol):
         self, conversation_id: uuid.UUID, limit: int | None = None
     ) -> list[MessageRow]: ...
     async def add_message(
-        self, conversation_id: uuid.UUID, role: int, content: str, citations: list[dict]
+        self,
+        conversation_id: uuid.UUID,
+        role: chat_pb2.MessageRole,
+        content: str,
+        citations: list[dict[str, Any]],
     ) -> MessageRow: ...
 
 
@@ -94,21 +99,17 @@ class SqlRepository:
 
     async def create_conversation(self, title: str) -> ConversationRow:
         async with self._engine.begin() as conn:
-            row = (
-                await conn.execute(
-                    insert(conversations)
-                    .values(id=uuid.uuid4(), title=title)
-                    .returning(conversations)
-                )
-            ).one()
-        return ConversationRow(**row._mapping)
+            result = await conn.execute(
+                insert(conversations).values(id=uuid.uuid4(), title=title).returning(conversations)
+            )
+            row = result.mappings().one()
+        return ConversationRow(**row)
 
     async def get_conversation(self, id: uuid.UUID) -> ConversationRow | None:
         async with self._engine.connect() as conn:
-            row = (
-                await conn.execute(select(conversations).where(conversations.c.id == id))
-            ).first()
-        return ConversationRow(**row._mapping) if row else None
+            result = await conn.execute(select(conversations).where(conversations.c.id == id))
+            row = result.mappings().first()
+        return ConversationRow(**row) if row else None
 
     async def list_conversations(self, limit: int, offset: int) -> list[ConversationRow]:
         query = (
@@ -118,8 +119,8 @@ class SqlRepository:
             .offset(offset)
         )
         async with self._engine.connect() as conn:
-            rows = (await conn.execute(query)).all()
-        return [ConversationRow(**r._mapping) for r in rows]
+            rows = (await conn.execute(query)).mappings().all()
+        return [ConversationRow(**r) for r in rows]
 
     async def delete_conversation(self, id: uuid.UUID) -> bool:
         async with self._engine.begin() as conn:
@@ -143,32 +144,35 @@ class SqlRepository:
         if limit is not None:
             query = query.limit(limit)
         async with self._engine.connect() as conn:
-            rows = (await conn.execute(query)).all()
-        return [MessageRow(**r._mapping) for r in reversed(rows)]
+            rows = (await conn.execute(query)).mappings().all()
+        return [MessageRow(**r) for r in reversed(rows)]
 
     async def add_message(
-        self, conversation_id: uuid.UUID, role: int, content: str, citations: list[dict]
+        self,
+        conversation_id: uuid.UUID,
+        role: chat_pb2.MessageRole,
+        content: str,
+        citations: list[dict[str, Any]],
     ) -> MessageRow:
         async with self._engine.begin() as conn:
-            row = (
-                await conn.execute(
-                    insert(messages)
-                    .values(
-                        id=uuid.uuid4(),
-                        conversation_id=conversation_id,
-                        role=role,
-                        content=content,
-                        citations=citations,
-                    )
-                    .returning(messages)
+            result = await conn.execute(
+                insert(messages)
+                .values(
+                    id=uuid.uuid4(),
+                    conversation_id=conversation_id,
+                    role=role,
+                    content=content,
+                    citations=citations,
                 )
-            ).one()
+                .returning(messages)
+            )
+            row = result.mappings().one()
             await conn.execute(
                 update(conversations)
                 .where(conversations.c.id == conversation_id)
                 .values(updated_at=func.now())
             )
-        return MessageRow(**row._mapping)
+        return MessageRow(**row)
 
 
 def _upgrade(database_url: str) -> None:

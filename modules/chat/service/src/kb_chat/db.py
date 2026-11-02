@@ -4,9 +4,7 @@ DDL is managed by the Alembic migrations in modules/chat/migrations."""
 import asyncio
 import pathlib
 import uuid
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Protocol
+from typing import Any
 
 from alembic import command
 from alembic.config import Config
@@ -28,6 +26,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncEngine
+
+from .repository import ConversationRow, MessageRow
 
 SCHEMA = "chat"
 MIGRATIONS_DIR = pathlib.Path(__file__).resolve().parents[3] / "migrations"
@@ -55,42 +55,6 @@ messages = Table(
     Column("citations", JSONB, nullable=False, server_default="[]"),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
 )
-
-
-@dataclass
-class ConversationRow:
-    id: uuid.UUID
-    title: str
-    created_at: datetime
-    updated_at: datetime
-
-
-@dataclass
-class MessageRow:
-    id: uuid.UUID
-    conversation_id: uuid.UUID
-    role: chat_pb2.MessageRole
-    content: str
-    created_at: datetime
-    citations: list[dict[str, Any]] = field(default_factory=list)
-
-
-class Repository(Protocol):
-    async def create_conversation(self, title: str) -> ConversationRow: ...
-    async def get_conversation(self, id: uuid.UUID) -> ConversationRow | None: ...
-    async def list_conversations(self, limit: int, offset: int) -> list[ConversationRow]: ...
-    async def delete_conversation(self, id: uuid.UUID) -> bool: ...
-    async def set_title(self, id: uuid.UUID, title: str) -> None: ...
-    async def list_messages(
-        self, conversation_id: uuid.UUID, limit: int | None = None
-    ) -> list[MessageRow]: ...
-    async def add_message(
-        self,
-        conversation_id: uuid.UUID,
-        role: chat_pb2.MessageRole,
-        content: str,
-        citations: list[dict[str, Any]],
-    ) -> MessageRow: ...
 
 
 class SqlRepository:

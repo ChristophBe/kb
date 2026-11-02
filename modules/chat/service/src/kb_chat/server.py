@@ -1,7 +1,8 @@
 import logging
 import uuid
 from collections.abc import AsyncIterator
-from typing import NoReturn
+from datetime import datetime
+from typing import Any, NoReturn
 
 import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -14,6 +15,8 @@ from .config import Settings
 from .db import ConversationRow, MessageRow, Repository
 
 log = logging.getLogger("kb_chat")
+
+_Context = grpc.aio.ServicerContext[Any, Any]
 
 # Peer statuses that mean "try again later" rather than a bug.
 _PEER_UNAVAILABLE = {grpc.StatusCode.UNAVAILABLE, grpc.StatusCode.DEADLINE_EXCEEDED}
@@ -47,18 +50,24 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         self._documents = documents
         self._llm = llm
 
-    async def CreateConversation(self, request, context) -> chat_pb2.CreateConversationResponse:
+    async def CreateConversation(
+        self, request: chat_pb2.CreateConversationRequest, context: _Context
+    ) -> chat_pb2.CreateConversationResponse:
         conv = await self._repo.create_conversation(request.title)
         return chat_pb2.CreateConversationResponse(conversation=_conversation(conv))
 
-    async def GetConversation(self, request, context) -> chat_pb2.GetConversationResponse:
+    async def GetConversation(
+        self, request: chat_pb2.GetConversationRequest, context: _Context
+    ) -> chat_pb2.GetConversationResponse:
         conv = await self._get(request.id, context)
         msgs = await self._repo.list_messages(conv.id)
         return chat_pb2.GetConversationResponse(
             conversation=_conversation(conv), messages=[_message(m) for m in msgs]
         )
 
-    async def ListConversations(self, request, context) -> chat_pb2.ListConversationsResponse:
+    async def ListConversations(
+        self, request: chat_pb2.ListConversationsRequest, context: _Context
+    ) -> chat_pb2.ListConversationsResponse:
         limit = min(request.page.page_size or DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE)
         try:
             offset = int(request.page.page_token or 0)
@@ -71,13 +80,15 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
             page=common_pb2.PageResponse(next_page_token=token),
         )
 
-    async def DeleteConversation(self, request, context) -> chat_pb2.DeleteConversationResponse:
+    async def DeleteConversation(
+        self, request: chat_pb2.DeleteConversationRequest, context: _Context
+    ) -> chat_pb2.DeleteConversationResponse:
         if not await self._repo.delete_conversation(_parse_id(request.id)):
             await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
         return chat_pb2.DeleteConversationResponse()
 
     async def StreamChat(
-        self, request: chat_pb2.StreamChatRequest, context: grpc.aio.ServicerContext
+        self, request: chat_pb2.StreamChatRequest, context: _Context
     ) -> AsyncIterator[chat_pb2.StreamChatResponse]:
         content = request.content.strip()
         if not content:
@@ -147,7 +158,7 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         )
         return f"{SYSTEM_PROMPT}\n\n{RAG_PROMPT.format(sources=sources)}"
 
-    async def _get(self, raw_id: str, context) -> ConversationRow:
+    async def _get(self, raw_id: str, context: _Context) -> ConversationRow:
         conv = await self._repo.get_conversation(_parse_id(raw_id))
         if conv is None:
             await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
@@ -155,9 +166,7 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         return conv
 
 
-async def _abort_peer_error(
-    context: grpc.aio.ServicerContext, err: grpc.aio.AioRpcError
-) -> NoReturn:
+async def _abort_peer_error(context: _Context, err: grpc.aio.AioRpcError) -> NoReturn:
     """Ends the call for a failed peer call; a peer's status is never passed on."""
     if err.code() in _PEER_UNAVAILABLE:
         await context.abort(grpc.StatusCode.UNAVAILABLE, "a required service is unavailable")
@@ -173,7 +182,7 @@ def _parse_id(raw: str) -> uuid.UUID:
         return uuid.UUID(int=0)
 
 
-def _ts(value) -> Timestamp:
+def _ts(value: datetime) -> Timestamp:
     ts = Timestamp()
     ts.FromDatetime(value)
     return ts
@@ -188,14 +197,14 @@ def _conversation(c: ConversationRow) -> chat_pb2.Conversation:
 def _message(m: MessageRow) -> chat_pb2.ChatMessage:
     return chat_pb2.ChatMessage(
         id=str(m.id),
-        role=m.role,  # type: ignore[arg-type]
+        role=m.role,
         content=m.content,
         citations=[chat_pb2.Citation(**c) for c in m.citations],
         create_time=_ts(m.created_at),
     )
 
 
-def _citation_to_dict(c: chat_pb2.Citation) -> dict:
+def _citation_to_dict(c: chat_pb2.Citation) -> dict[str, Any]:
     return {
         "document_id": c.document_id,
         "document_title": c.document_title,

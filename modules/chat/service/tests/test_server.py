@@ -1,5 +1,7 @@
 import uuid
+from collections.abc import AsyncIterator
 from datetime import UTC, datetime
+from typing import Any
 
 import grpc
 import pytest
@@ -16,29 +18,35 @@ class MemoryRepo:
         self.conversations: dict[uuid.UUID, ConversationRow] = {}
         self.messages: list[MessageRow] = []
 
-    async def create_conversation(self, title):
+    async def create_conversation(self, title: str):
         now = datetime.now(UTC)
         conv = ConversationRow(id=uuid.uuid4(), title=title, created_at=now, updated_at=now)
         self.conversations[conv.id] = conv
         return conv
 
-    async def get_conversation(self, id):
+    async def get_conversation(self, id: uuid.UUID):
         return self.conversations.get(id)
 
-    async def list_conversations(self, limit, offset):
+    async def list_conversations(self, limit: int, offset: int):
         return list(self.conversations.values())[offset : offset + limit]
 
-    async def delete_conversation(self, id):
+    async def delete_conversation(self, id: uuid.UUID):
         return self.conversations.pop(id, None) is not None
 
-    async def set_title(self, id, title):
+    async def set_title(self, id: uuid.UUID, title: str):
         self.conversations[id].title = title
 
-    async def list_messages(self, conversation_id, limit=None):
+    async def list_messages(self, conversation_id: uuid.UUID, limit: int | None = None):
         msgs = [m for m in self.messages if m.conversation_id == conversation_id]
         return msgs[-limit:] if limit else msgs
 
-    async def add_message(self, conversation_id, role, content, citations):
+    async def add_message(
+        self,
+        conversation_id: uuid.UUID,
+        role: chat_pb2.MessageRole,
+        content: str,
+        citations: list[dict[str, Any]],
+    ):
         msg = MessageRow(uuid.uuid4(), conversation_id, role, content, datetime.now(UTC), citations)
         self.messages.append(msg)
         return msg
@@ -48,7 +56,7 @@ class FakeLlm:
     def __init__(self) -> None:
         self.prompts: list[list[llm_pb2.Message]] = []
 
-    async def Embed(self, request):
+    async def Embed(self, request: llm_pb2.EmbedRequest):
         return llm_pb2.EmbedResponse(embeddings=[llm_pb2.Embedding(values=[0.1, 0.2])])
 
     async def _gen(self):
@@ -56,13 +64,13 @@ class FakeLlm:
             yield llm_pb2.GenerateResponse(delta=word)
         yield llm_pb2.GenerateResponse(done=True)
 
-    def Generate(self, request):
+    def Generate(self, request: llm_pb2.GenerateRequest):
         self.prompts.append(list(request.messages))
         return self._gen()
 
 
 class FakeDocuments:
-    async def SearchChunks(self, request):
+    async def SearchChunks(self, request: document_pb2.SearchChunksRequest):
         return document_pb2.SearchChunksResponse(
             results=[
                 document_pb2.ScoredChunk(
@@ -74,13 +82,16 @@ class FakeDocuments:
         )
 
 
+Env = tuple[chat_pb2_grpc.ChatServiceStub, MemoryRepo, FakeLlm]
+
+
 @pytest.fixture
-async def env():
+async def env() -> AsyncIterator[Env]:
     repo, llm = MemoryRepo(), FakeLlm()
     server = grpc.aio.server()
     chat_pb2_grpc.add_ChatServiceServicer_to_server(
-        ChatServicer(Settings(), repo, FakeDocuments(), llm),
-        server,  # type: ignore[arg-type]
+        ChatServicer(Settings(), repo, FakeDocuments(), llm),  # type: ignore[arg-type]
+        server,
     )
     port = server.add_insecure_port("127.0.0.1:0")
     await server.start()
@@ -89,7 +100,7 @@ async def env():
     await server.stop(None)
 
 
-async def test_stream_chat_with_knowledge_base(env) -> None:
+async def test_stream_chat_with_knowledge_base(env: Env) -> None:
     stub, _repo, llm = env
     conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
 
@@ -118,7 +129,7 @@ async def test_stream_chat_with_knowledge_base(env) -> None:
     ]
 
 
-async def test_unknown_conversation_is_not_found(env) -> None:
+async def test_unknown_conversation_is_not_found(env: Env) -> None:
     stub, _, _ = env
     with pytest.raises(grpc.aio.AioRpcError) as err:
         await stub.GetConversation(chat_pb2.GetConversationRequest(id="nope"))
@@ -128,7 +139,7 @@ async def test_unknown_conversation_is_not_found(env) -> None:
 class DownLlm(FakeLlm):
     """An llm client whose service is unreachable."""
 
-    async def Embed(self, request):
+    async def Embed(self, request: llm_pb2.EmbedRequest):
         raise grpc.aio.AioRpcError(
             grpc.StatusCode.UNAVAILABLE, grpc.aio.Metadata(), grpc.aio.Metadata(), "connect failed"
         )
@@ -137,8 +148,8 @@ class DownLlm(FakeLlm):
 async def test_stream_chat_without_llm_is_unavailable() -> None:
     server = grpc.aio.server()
     chat_pb2_grpc.add_ChatServiceServicer_to_server(
-        ChatServicer(Settings(), MemoryRepo(), FakeDocuments(), DownLlm()),
-        server,  # type: ignore[arg-type]
+        ChatServicer(Settings(), MemoryRepo(), FakeDocuments(), DownLlm()),  # type: ignore[arg-type]
+        server,
     )
     port = server.add_insecure_port("127.0.0.1:0")
     await server.start()

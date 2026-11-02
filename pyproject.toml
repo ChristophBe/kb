@@ -45,7 +45,7 @@ select = [
 "**/tests/**" = ["N802"]
 
 [tool.pyright]
-include = ["platform/python", "modules/*/service", "modules/*/worker"]
+include = ["platform/python", "modules/**/service", "modules/**/worker"]
 exclude = ["**/api/python/src", "**/.venv", "**/node_modules"]
 pythonVersion = "3.13"
 # "standard" plus the strict checks that apply to our own code; full strict

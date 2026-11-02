@@ -1,3 +1,5 @@
+from collections.abc import AsyncIterator
+
 import grpc
 import pytest
 from kb.llm.v1 import llm_pb2, llm_pb2_grpc
@@ -7,7 +9,7 @@ from kb_llm.server import LlmServicer
 
 
 @pytest.fixture
-async def stub():
+async def stub() -> AsyncIterator[llm_pb2_grpc.LlmServiceStub]:
     settings = Settings(llm_provider="fake", embedding_dimensions=16)
     server = grpc.aio.server()
     llm_pb2_grpc.add_LlmServiceServicer_to_server(
@@ -26,7 +28,7 @@ def test_unknown_provider_is_rejected() -> None:
     assert {"ollama", "fake"} <= REGISTRY.keys()
 
 
-async def test_generate_streams_deltas_then_usage(stub) -> None:
+async def test_generate_streams_deltas_then_usage(stub: llm_pb2_grpc.LlmServiceStub) -> None:
     request = llm_pb2.GenerateRequest(
         messages=[llm_pb2.Message(role=llm_pb2.ROLE_USER, content="hello there")]
     )
@@ -37,7 +39,7 @@ async def test_generate_streams_deltas_then_usage(stub) -> None:
     assert responses[-1].usage.output_tokens > 0
 
 
-async def test_embed_is_deterministic_and_sized(stub) -> None:
+async def test_embed_is_deterministic_and_sized(stub: llm_pb2_grpc.LlmServiceStub) -> None:
     resp = await stub.Embed(llm_pb2.EmbedRequest(inputs=["a", "b", "a"]))
     assert resp.dimensions == 16
     vectors = [list(e.values) for e in resp.embeddings]

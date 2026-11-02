@@ -1,6 +1,8 @@
 import logging
+from typing import Any
 
 import pytest
+from google.protobuf.message import Message
 from kb.document.v1 import document_pb2
 from kb.ingestion.v1 import events_pb2
 from kb.llm.v1 import llm_pb2
@@ -23,29 +25,29 @@ class FakeDocuments:
     async def _stream(self):
         yield document_pb2.ReadContentResponse(data=self.content)
 
-    def ReadContent(self, request):
+    def ReadContent(self, request: document_pb2.ReadContentRequest):
         return self._stream()
 
-    async def SetDocumentStatus(self, request):
+    async def SetDocumentStatus(self, request: document_pb2.SetDocumentStatusRequest):
         self.statuses.append(request.status)
         return document_pb2.SetDocumentStatusResponse()
 
-    async def AddChunks(self, request):
+    async def AddChunks(self, request: document_pb2.AddChunksRequest):
         self.chunks = list(request.chunks)
         return document_pb2.AddChunksResponse(chunk_count=len(request.chunks))
 
 
 class FakeLlm:
-    async def Embed(self, request):
+    async def Embed(self, request: llm_pb2.EmbedRequest):
         return llm_pb2.EmbedResponse(
             embeddings=[llm_pb2.Embedding(values=[float(len(t))]) for t in request.inputs]
         )
 
 
-def make(content: bytes, **settings):
-    published: list[tuple[str, object]] = []
+def make(content: bytes, **settings: Any):
+    published: list[tuple[str, Message]] = []
 
-    async def publish(subject, message, dedupe_id):
+    async def publish(subject: str, message: Message, dedupe_id: str) -> None:
         published.append((subject, message))
 
     docs = FakeDocuments(content)
@@ -66,7 +68,9 @@ async def test_processes_text_into_embedded_chunks() -> None:
     await proc.handle(uploaded("notes.md"))
 
     assert [s for s, _ in published] == [SUBJECT_STARTED, SUBJECT_PROCESSED]
-    assert published[-1][1].chunk_count == len(docs.chunks) > 1
+    event = published[-1][1]
+    assert isinstance(event, events_pb2.DocumentProcessed)
+    assert event.chunk_count == len(docs.chunks) > 1
     assert [c.index for c in docs.chunks] == list(range(len(docs.chunks)))
     assert all(c.embedding for c in docs.chunks)
     assert docs.statuses == [document_pb2.DOCUMENT_STATUS_PROCESSING]
@@ -77,7 +81,9 @@ async def test_unsupported_content_marks_failure() -> None:
     await proc.handle(uploaded("image.png", "image/png"))
 
     assert [s for s, _ in published] == [SUBJECT_STARTED, SUBJECT_FAILED]
-    assert "unsupported" in published[-1][1].error
+    event = published[-1][1]
+    assert isinstance(event, events_pb2.ProcessingFailed)
+    assert "unsupported" in event.error
     assert docs.statuses[-1] == document_pb2.DOCUMENT_STATUS_FAILED
 
 

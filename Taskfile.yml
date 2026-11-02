@@ -120,7 +120,7 @@ tasks:
         platform/python          5
         modules/chat/service     60
         modules/llm/service      60
-        modules/ingestion/worker 75
+        modules/ingestion/worker 65
     cmds:
       - for: { var: PY_COMPONENTS }
         cmd: |

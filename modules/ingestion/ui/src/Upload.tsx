@@ -3,7 +3,7 @@ import {
   type Job,
   JobStatus,
 } from "@kb/ingestion-api/kb/ingestion/v1/ingestion_pb";
-import { useClient, useQuery, useQueryClient } from "@kb/module-sdk";
+import { toast, useClient, useQuery, useQueryClient } from "@kb/module-sdk";
 import { Badge, Card, EmptyState, ErrorMessage, formatTime, PageHeader, type Tone } from "@kb/ui";
 import { Upload as UploadIcon } from "lucide-react";
 import { useState } from "react";
@@ -43,9 +43,13 @@ export function Upload() {
     if (!put.ok) throw new Error(`upload of ${file.name} failed: ${put.status}`);
     const completed = await client.completeUpload({ jobId: created.job?.id ?? "" });
     if (completed.job) updateJob(completed.job);
+    let status = completed.job?.status;
     for await (const update of client.watchJob({ id: completed.job?.id ?? "" })) {
       if (update.job) updateJob(update.job);
+      status = update.job?.status ?? status;
     }
+    if (status === JobStatus.DONE) toast.success(`${file.name} added`);
+    if (status === JobStatus.FAILED) toast.error(`Couldn't process ${file.name}`);
   };
 
   const onFiles = (files: FileList | null) => {

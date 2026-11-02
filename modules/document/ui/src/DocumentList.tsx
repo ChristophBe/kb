@@ -1,16 +1,17 @@
 import { DocumentService } from "@kb/document-api/kb/document/v1/document_pb";
-import { useClient, useMutation, useQuery, useQueryClient } from "@kb/module-sdk";
+import { toast, useClient, useMutation, useQuery, useQueryClient } from "@kb/module-sdk";
 import {
   Badge,
   Button,
   Card,
   ChunkStrip,
+  DelayedLoading,
   EmptyState,
   ErrorMessage,
   formatBytes,
   formatTime,
   PageHeader,
-  Spinner,
+  SkeletonRows,
 } from "@kb/ui";
 import { Download, Trash2 } from "lucide-react";
 import { Link } from "react-router";
@@ -26,7 +27,10 @@ export function DocumentList() {
   });
   const remove = useMutation({
     mutationFn: (id: string) => client.deleteDocument({ id }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documents"] }),
+    onSuccess: () => {
+      toast.success("Document deleted");
+      return queryClient.invalidateQueries({ queryKey: ["documents"] });
+    },
   });
   const download = async (id: string) => {
     const { url } = await client.getDownloadUrl({ id });
@@ -43,9 +47,9 @@ export function DocumentList() {
       <ErrorMessage error={docs.error ?? remove.error} />
       <Card>
         {docs.isPending ? (
-          <EmptyState>
-            <Spinner />
-          </EmptyState>
+          <DelayedLoading>
+            <SkeletonRows label="Loading documents" />
+          </DelayedLoading>
         ) : docs.data?.documents.length ? (
           <table className="w-full text-sm">
             <thead className="border-b border-border text-left text-xs text-fg-muted uppercase">

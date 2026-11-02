@@ -3,7 +3,9 @@ import { Card, cn, PageTitle } from "@kb/ui";
 import { FlaskConical, Library } from "lucide-react";
 import { useMemo } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
+import { ModuleBoundary } from "./ModuleBoundary.tsx";
 import { activeModules } from "./registry.ts";
+import { ToastHost } from "./ToastHost.tsx";
 
 export function App({ config }: { config: RuntimeConfig }) {
   const router = useMemo(() => {
@@ -13,7 +15,15 @@ export function App({ config }: { config: RuntimeConfig }) {
         element: <Shell modules={modules} />,
         children: [
           { index: true, element: <Home modules={modules} /> },
-          ...modules.map((m) => ({ path: `m/${m.id}`, children: m.routes })),
+          ...modules.map((m) => ({
+            path: `m/${m.id}`,
+            element: (
+              <ModuleBoundary title={m.title}>
+                <Outlet />
+              </ModuleBoundary>
+            ),
+            children: m.routes,
+          })),
           // Clickable M1 prototype with mock data (docs/ux/m1), loaded on demand.
           {
             path: "prototype/*",
@@ -77,6 +87,7 @@ function Shell({ modules }: { modules: KbModule[] }) {
       <main className="min-w-0 flex-1 p-8">
         <Outlet />
       </main>
+      <ToastHost />
     </div>
   );
 }

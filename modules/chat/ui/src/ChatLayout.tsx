@@ -1,5 +1,5 @@
 import { ChatService } from "@kb/chat-api/kb/chat/v1/chat_pb";
-import { useClient, useMutation, useQuery, useQueryClient } from "@kb/module-sdk";
+import { toast, useClient, useMutation, useQuery, useQueryClient } from "@kb/module-sdk";
 import { Button, cn, ErrorMessage } from "@kb/ui";
 import { Plus, Trash2 } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router";
@@ -22,6 +22,7 @@ export function ChatLayout() {
   const remove = useMutation({
     mutationFn: (id: string) => client.deleteConversation({ id }),
     onSuccess: () => {
+      toast.success("Conversation deleted");
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       navigate("");
     },

@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -86,6 +88,19 @@ func (m *S3) PresignGet(ctx context.Context, key, filename string) (string, erro
 
 func (m *S3) Open(ctx context.Context, key string) (io.ReadCloser, error) {
 	return m.internal.GetObject(ctx, m.bucket, key, minio.GetObjectOptions{})
+}
+
+// Stat returns the size and content type of an object, or an error wrapping
+// fs.ErrNotExist when there is none.
+func (m *S3) Stat(ctx context.Context, key string) (int64, string, error) {
+	info, err := m.internal.StatObject(ctx, m.bucket, key, minio.StatObjectOptions{})
+	if minio.ToErrorResponse(err).StatusCode == http.StatusNotFound {
+		return 0, "", fmt.Errorf("stat %s: %w", key, fs.ErrNotExist)
+	}
+	if err != nil {
+		return 0, "", err
+	}
+	return info.Size, info.ContentType, nil
 }
 
 func (m *S3) Delete(ctx context.Context, key string) error {

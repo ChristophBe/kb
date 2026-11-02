@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/fs"
 	"log/slog"
 	"path"
 	"strconv"
@@ -41,6 +42,9 @@ type ObjectStore interface {
 	PresignPut(ctx context.Context, key string) (string, error)
 	PresignGet(ctx context.Context, key, filename string) (string, error)
 	Open(ctx context.Context, key string) (io.ReadCloser, error)
+	// Stat returns an object's size and content type, or an error wrapping
+	// fs.ErrNotExist when it is missing.
+	Stat(ctx context.Context, key string) (size int64, contentType string, err error)
 	Delete(ctx context.Context, key string) error
 }
 
@@ -160,11 +164,41 @@ func (s *Server) SetDocumentStatus(ctx context.Context, req *documentv1.SetDocum
 	if req.GetStatus() == documentv1.DocumentStatus_DOCUMENT_STATUS_UNSPECIFIED {
 		return nil, status.Error(codes.InvalidArgument, "status is required")
 	}
+	if req.GetStatus() == documentv1.DocumentStatus_DOCUMENT_STATUS_UPLOADED {
+		return s.markUploaded(ctx, id, req)
+	}
 	doc, err := s.repo.SetDocumentStatus(ctx, store.SetDocumentStatusParams{
 		ID: id, Status: int16(req.GetStatus()), StatusDetail: req.GetStatusDetail(),
 	})
 	if err != nil {
 		return nil, s.notFoundOr("set status", err)
+	}
+	return &documentv1.SetDocumentStatusResponse{Document: toProto(doc)}, nil
+}
+
+// markUploaded trusts the bucket, not the client: the object must exist, and
+// its actual size replaces the size declared when the upload was created.
+func (s *Server) markUploaded(ctx context.Context, id uuid.UUID, req *documentv1.SetDocumentStatusRequest) (*documentv1.SetDocumentStatusResponse, error) {
+	doc, err := s.repo.GetDocument(ctx, id)
+	if err != nil {
+		return nil, s.notFoundOr("get document", err)
+	}
+	size, contentType, err := s.objects.Stat(ctx, doc.ObjectKey)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, status.Error(codes.FailedPrecondition, "the file has not been uploaded")
+	}
+	if err != nil {
+		s.log.ErrorContext(ctx, "stat object", "key", doc.ObjectKey, "error", err)
+		return nil, status.Error(codes.Unavailable, "object storage is unavailable")
+	}
+	if isGenericContentType(contentType) {
+		contentType = doc.ContentType
+	}
+	doc, err = s.repo.MarkDocumentUploaded(ctx, store.MarkDocumentUploadedParams{
+		ID: id, Status: int16(req.GetStatus()), StatusDetail: req.GetStatusDetail(), SizeBytes: size, ContentType: contentType,
+	})
+	if err != nil {
+		return nil, s.notFoundOr("mark uploaded", err)
 	}
 	return &documentv1.SetDocumentStatusResponse{Document: toProto(doc)}, nil
 }
@@ -316,6 +350,16 @@ func pageParams(p *commonv1.PageRequest) (limit, offset int32, err error) {
 		offset = int32(o)
 	}
 	return limit, offset, nil
+}
+
+// isGenericContentType reports a type that says nothing about the content:
+// S3 stores one of these when a client uploads without a Content-Type.
+func isGenericContentType(contentType string) bool {
+	switch contentType {
+	case "", "application/octet-stream", "binary/octet-stream":
+		return true
+	}
+	return false
 }
 
 func nonNil(m map[string]string) map[string]string {

@@ -137,6 +137,47 @@ func (q *Queries) ListDocuments(ctx context.Context, arg ListDocumentsParams) ([
 	return items, nil
 }
 
+const markDocumentUploaded = `-- name: MarkDocumentUploaded :one
+UPDATE document.documents
+SET status = $2, status_detail = $3, size_bytes = $4, content_type = $5, updated_at = now()
+WHERE id = $1
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at
+`
+
+type MarkDocumentUploadedParams struct {
+	ID           uuid.UUID
+	Status       int16
+	StatusDetail string
+	SizeBytes    int64
+	ContentType  string
+}
+
+func (q *Queries) MarkDocumentUploaded(ctx context.Context, arg MarkDocumentUploadedParams) (DocumentDocument, error) {
+	row := q.db.QueryRow(ctx, markDocumentUploaded,
+		arg.ID,
+		arg.Status,
+		arg.StatusDetail,
+		arg.SizeBytes,
+		arg.ContentType,
+	)
+	var i DocumentDocument
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Filename,
+		&i.ContentType,
+		&i.SizeBytes,
+		&i.ObjectKey,
+		&i.Status,
+		&i.StatusDetail,
+		&i.ChunkCount,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const setChunkCount = `-- name: SetChunkCount :exec
 UPDATE document.documents
 SET chunk_count = $2, status = $3, status_detail = '', updated_at = now()

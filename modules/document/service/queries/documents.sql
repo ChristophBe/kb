@@ -25,6 +25,12 @@ SET status = $2, status_detail = $3, updated_at = now()
 WHERE id = $1
 RETURNING *;
 
+-- name: MarkDocumentUploaded :one
+UPDATE document.documents
+SET status = $2, status_detail = $3, size_bytes = $4, content_type = $5, updated_at = now()
+WHERE id = $1
+RETURNING *;
+
 -- name: SetChunkCount :exec
 UPDATE document.documents
 SET chunk_count = $2, status = $3, status_detail = '', updated_at = now()

@@ -62,6 +62,7 @@ Conventions for Go, Python and TypeScript in kb. Most of them are enforced by `t
 | Accessibility: axe tests of kit components, token contrast | `task test` (Vitest) | CI, pre-push |
 | Unit tests | `task test:fast` | pre-push |
 | Unit tests + coverage minimums | `task test` | CI |
+| Go integration tests against real Postgres (needs Docker) | `task test:integration` | CI |
 
 Every linter is pinned (`tools/go.mod`, `uv.lock`, `pnpm-lock.yaml`) and mandatory: `task lint` fails if one can't run.
 

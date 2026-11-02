@@ -77,6 +77,7 @@ CI must pass on every PR. It fails when any of these fails:
 | Lint and type checks (all languages, no linter optional) | `task lint` |
 | Unit tests | `task test` |
 | Coverage minimum per component | `task test` (see [coding standards](docs/coding-standards.md#coverage)) |
+| Go store integration tests against real Postgres | `task test:integration` |
 | Accessibility lint (biome `a11y` rules as errors) | `task lint` |
 | No axe violations in kit components | `task test` |
 | WCAG AA contrast of every colour-token pair, light and dark | `task test` (see [UX standards](docs/ux-standards.md#automated-checks)) |

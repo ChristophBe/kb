@@ -35,6 +35,7 @@ jobs:
         run: go tool -modfile=tools/go.mod buf breaking --against ".git#branch=origin/${{ github.base_ref }}"
       - run: $TASK lint
       - run: $TASK test
+      - run: $TASK test:integration
 
   images:
     runs-on: ubuntu-latest

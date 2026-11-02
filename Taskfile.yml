@@ -90,7 +90,7 @@ tasks:
       # Raise a minimum when coverage improves; lowering one needs a reason in the PR.
       MINIMUMS: |
         .     ./platform/go/...              5
-        .     ./modules/document/service/... 20
+        .     ./modules/document/service/... 30
         .     ./modules/ingestion/service/... 15
         tools ./modgen/...                   65
     cmds:

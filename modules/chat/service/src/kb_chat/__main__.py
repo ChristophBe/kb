@@ -8,8 +8,10 @@ from kb_platform.grpc import channel, serve
 from kb_platform.logging import setup_logging
 from sqlalchemy.ext.asyncio import create_async_engine
 
+from .chat import Chat
 from .config import Settings
 from .db import SqlRepository, migrate
+from .peers import PeerGenerator, PeerRetriever
 from .server import ChatServicer
 
 log = logging.getLogger("kb_chat")
@@ -23,12 +25,11 @@ async def run() -> None:
     engine = create_async_engine(settings.database_url, pool_pre_ping=True)
     try:
         async with channel(settings.document_addr) as doc_ch, channel(settings.llm_addr) as llm_ch:
-            servicer = ChatServicer(
-                settings,
-                SqlRepository(engine),
-                document_pb2_grpc.DocumentServiceStub(doc_ch),
-                llm_pb2_grpc.LlmServiceStub(llm_ch),
-            )
+            repo = SqlRepository(engine)
+            documents = document_pb2_grpc.DocumentServiceStub(doc_ch)
+            llm = llm_pb2_grpc.LlmServiceStub(llm_ch)
+            chat = Chat(settings, repo, PeerRetriever(documents, llm), PeerGenerator(llm))
+            servicer = ChatServicer(repo, chat)
             await serve(
                 settings.grpc_port,
                 [lambda s: chat_pb2_grpc.add_ChatServiceServicer_to_server(servicer, s)],

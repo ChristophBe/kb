@@ -2,53 +2,37 @@ import logging
 import uuid
 from collections.abc import AsyncIterator
 from datetime import datetime
-from typing import Any, NoReturn
+from typing import Any
 
 import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
 from kb.chat.v1 import chat_pb2, chat_pb2_grpc
 from kb.common.v1 import common_pb2
-from kb.document.v1 import document_pb2, document_pb2_grpc
-from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 
-from .config import Settings
-from .db import ConversationRow, MessageRow, Repository
+from .chat import (
+    AnswerDelta,
+    AnswerEvent,
+    AnswerSaved,
+    Chat,
+    ConversationNotFoundError,
+    PeerError,
+    PeerUnavailableError,
+    SourcesFound,
+)
+from .repository import ConversationRow, MessageRow, Repository
 
 log = logging.getLogger("kb_chat")
 
 _Context = grpc.aio.ServicerContext[Any, Any]
 
-# Peer statuses that mean "try again later" rather than a bug.
-_PEER_UNAVAILABLE = {grpc.StatusCode.UNAVAILABLE, grpc.StatusCode.DEADLINE_EXCEEDED}
-
 DEFAULT_PAGE_SIZE = 50
 MAX_PAGE_SIZE = 200
-TITLE_LENGTH = 60
-
-SYSTEM_PROMPT = "You are a helpful assistant for a personal knowledge base. Answer concisely."
-RAG_PROMPT = (
-    "Answer using the numbered sources below when they are relevant and cite them like [1]. "
-    "If the sources do not contain the answer, say so.\n\nSources:\n{sources}"
-)
-
-_LLM_ROLES = {
-    chat_pb2.MESSAGE_ROLE_USER: llm_pb2.ROLE_USER,
-    chat_pb2.MESSAGE_ROLE_ASSISTANT: llm_pb2.ROLE_ASSISTANT,
-}
 
 
 class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
-    def __init__(
-        self,
-        settings: Settings,
-        repo: Repository,
-        documents: document_pb2_grpc.DocumentServiceStub,
-        llm: llm_pb2_grpc.LlmServiceStub,
-    ) -> None:
-        self._settings = settings
+    def __init__(self, repo: Repository, chat: Chat) -> None:
         self._repo = repo
-        self._documents = documents
-        self._llm = llm
+        self._chat = chat
 
     async def CreateConversation(
         self, request: chat_pb2.CreateConversationRequest, context: _Context
@@ -93,70 +77,22 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         content = request.content.strip()
         if not content:
             await context.abort(grpc.StatusCode.INVALID_ARGUMENT, "content must not be empty")
-        conv = await self._get(request.conversation_id, context)
-        history = await self._repo.list_messages(conv.id, self._settings.history_limit)
-        await self._repo.add_message(conv.id, chat_pb2.MESSAGE_ROLE_USER, content, [])
-        if not conv.title:
-            await self._repo.set_title(conv.id, content[:TITLE_LENGTH])
-
-        citations: list[chat_pb2.Citation] = []
-        answer: list[str] = []
+        events = self._chat.answer(
+            _parse_id(request.conversation_id), content, request.model, request.use_knowledge_base
+        )
         # The document and llm modules are soft dependencies: while one is down,
         # the call fails with UNAVAILABLE instead of an unmapped error.
         try:
-            if request.use_knowledge_base:
-                citations = await self._retrieve(content)
-                yield chat_pb2.StreamChatResponse(citations=chat_pb2.Citations(items=citations))
-
-            prompt = [
-                llm_pb2.Message(role=llm_pb2.ROLE_SYSTEM, content=self._system_prompt(citations))
-            ]
-            prompt += [llm_pb2.Message(role=_LLM_ROLES[m.role], content=m.content) for m in history]
-            prompt.append(llm_pb2.Message(role=llm_pb2.ROLE_USER, content=content))
-
-            async for chunk in self._llm.Generate(
-                llm_pb2.GenerateRequest(model=request.model, messages=prompt)
-            ):
-                if chunk.delta:
-                    answer.append(chunk.delta)
-                    yield chat_pb2.StreamChatResponse(delta=chunk.delta)
-        except grpc.aio.AioRpcError as err:
-            await _abort_peer_error(context, err)
-
-        saved = await self._repo.add_message(
-            conv.id,
-            chat_pb2.MESSAGE_ROLE_ASSISTANT,
-            "".join(answer),
-            [_citation_to_dict(c) for c in citations],
-        )
-        yield chat_pb2.StreamChatResponse(message=_message(saved))
-
-    async def _retrieve(self, query: str) -> list[chat_pb2.Citation]:
-        embedded = await self._llm.Embed(llm_pb2.EmbedRequest(inputs=[query]))
-        result = await self._documents.SearchChunks(
-            document_pb2.SearchChunksRequest(
-                embedding=embedded.embeddings[0].values, limit=self._settings.rag_top_k
-            )
-        )
-        return [
-            chat_pb2.Citation(
-                document_id=r.chunk.document_id,
-                document_title=r.document_title,
-                chunk_index=r.chunk.index,
-                snippet=r.chunk.text,
-                score=r.score,
-            )
-            for r in result.results
-        ]
-
-    @staticmethod
-    def _system_prompt(citations: list[chat_pb2.Citation]) -> str:
-        if not citations:
-            return SYSTEM_PROMPT
-        sources = "\n\n".join(
-            f"[{i}] {c.document_title}:\n{c.snippet}" for i, c in enumerate(citations, start=1)
-        )
-        return f"{SYSTEM_PROMPT}\n\n{RAG_PROMPT.format(sources=sources)}"
+            async for event in events:
+                yield _response(event)
+        except ConversationNotFoundError:
+            await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
+        except PeerUnavailableError as err:
+            log.warning("peer unavailable: %s", err)
+            await context.abort(grpc.StatusCode.UNAVAILABLE, "a required service is unavailable")
+        except PeerError as err:
+            log.error("peer call failed: %s", err)
+            await context.abort(grpc.StatusCode.INTERNAL, "answer generation failed")
 
     async def _get(self, raw_id: str, context: _Context) -> ConversationRow:
         conv = await self._repo.get_conversation(_parse_id(raw_id))
@@ -164,14 +100,6 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
             await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
         assert conv is not None
         return conv
-
-
-async def _abort_peer_error(context: _Context, err: grpc.aio.AioRpcError) -> NoReturn:
-    """Ends the call for a failed peer call; a peer's status is never passed on."""
-    if err.code() in _PEER_UNAVAILABLE:
-        await context.abort(grpc.StatusCode.UNAVAILABLE, "a required service is unavailable")
-    log.error("peer call failed: %s %s", err.code(), err.details())
-    await context.abort(grpc.StatusCode.INTERNAL, "answer generation failed")
 
 
 def _parse_id(raw: str) -> uuid.UUID:
@@ -204,11 +132,11 @@ def _message(m: MessageRow) -> chat_pb2.ChatMessage:
     )
 
 
-def _citation_to_dict(c: chat_pb2.Citation) -> dict[str, Any]:
-    return {
-        "document_id": c.document_id,
-        "document_title": c.document_title,
-        "chunk_index": c.chunk_index,
-        "snippet": c.snippet,
-        "score": c.score,
-    }
+def _response(event: AnswerEvent) -> chat_pb2.StreamChatResponse:
+    match event:
+        case SourcesFound(citations):
+            return chat_pb2.StreamChatResponse(citations=chat_pb2.Citations(items=citations))
+        case AnswerDelta(text):
+            return chat_pb2.StreamChatResponse(delta=text)
+        case AnswerSaved(message):
+            return chat_pb2.StreamChatResponse(message=_message(message))

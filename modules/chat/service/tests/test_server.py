@@ -8,9 +8,16 @@ import pytest
 from kb.chat.v1 import chat_pb2, chat_pb2_grpc
 from kb.document.v1 import document_pb2
 from kb.llm.v1 import llm_pb2
+from kb_chat.chat import Chat
 from kb_chat.config import Settings
-from kb_chat.db import ConversationRow, MessageRow
+from kb_chat.peers import PeerGenerator, PeerRetriever
+from kb_chat.repository import ConversationRow, MessageRow
 from kb_chat.server import ChatServicer
+
+
+def servicer(repo: Any, documents: Any, llm: Any) -> ChatServicer:
+    chat = Chat(Settings(), repo, PeerRetriever(documents, llm), PeerGenerator(llm))
+    return ChatServicer(repo, chat)
 
 
 class MemoryRepo:
@@ -90,7 +97,7 @@ async def env() -> AsyncIterator[Env]:
     repo, llm = MemoryRepo(), FakeLlm()
     server = grpc.aio.server()
     chat_pb2_grpc.add_ChatServiceServicer_to_server(
-        ChatServicer(Settings(), repo, FakeDocuments(), llm),  # type: ignore[arg-type]
+        servicer(repo, FakeDocuments(), llm),
         server,
     )
     port = server.add_insecure_port("127.0.0.1:0")
@@ -148,7 +155,7 @@ class DownLlm(FakeLlm):
 async def test_stream_chat_without_llm_is_unavailable() -> None:
     server = grpc.aio.server()
     chat_pb2_grpc.add_ChatServiceServicer_to_server(
-        ChatServicer(Settings(), MemoryRepo(), FakeDocuments(), DownLlm()),  # type: ignore[arg-type]
+        servicer(MemoryRepo(), FakeDocuments(), DownLlm()),
         server,
     )
     port = server.add_insecure_port("127.0.0.1:0")
@@ -163,3 +170,55 @@ async def test_stream_chat_without_llm_is_unavailable() -> None:
             _ = [e async for e in stub.StreamChat(request)]
     await server.stop(None)
     assert err.value.code() == grpc.StatusCode.UNAVAILABLE
+
+
+async def test_stream_chat_rejects_empty_content(env: Env) -> None:
+    stub, _, _ = env
+    conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        _ = [
+            e
+            async for e in stub.StreamChat(
+                chat_pb2.StreamChatRequest(conversation_id=conv.id, content="  ")
+            )
+        ]
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+
+
+async def test_stream_chat_unknown_conversation_is_not_found(env: Env) -> None:
+    stub, _, _ = env
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        _ = [
+            e
+            async for e in stub.StreamChat(
+                chat_pb2.StreamChatRequest(conversation_id=str(uuid.uuid4()), content="Hi")
+            )
+        ]
+    assert err.value.code() == grpc.StatusCode.NOT_FOUND
+
+
+class BrokenLlm(FakeLlm):
+    """An llm client that fails for a reason other than availability."""
+
+    def Generate(self, request: llm_pb2.GenerateRequest):
+        raise grpc.aio.AioRpcError(
+            grpc.StatusCode.NOT_FOUND, grpc.aio.Metadata(), grpc.aio.Metadata(), "no such model"
+        )
+
+
+async def test_stream_chat_hides_other_peer_errors() -> None:
+    server = grpc.aio.server()
+    chat_pb2_grpc.add_ChatServiceServicer_to_server(
+        servicer(MemoryRepo(), FakeDocuments(), BrokenLlm()), server
+    )
+    port = server.add_insecure_port("127.0.0.1:0")
+    await server.start()
+    async with grpc.aio.insecure_channel(f"127.0.0.1:{port}") as ch:
+        stub = chat_pb2_grpc.ChatServiceStub(ch)
+        conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+        request = chat_pb2.StreamChatRequest(conversation_id=conv.id, content="Hi")
+        with pytest.raises(grpc.aio.AioRpcError) as err:
+            _ = [e async for e in stub.StreamChat(request)]
+    await server.stop(None)
+    assert err.value.code() == grpc.StatusCode.INTERNAL
+    assert "no such model" not in (err.value.details() or "")

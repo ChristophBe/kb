@@ -115,5 +115,4 @@ Gaps between the existing modules and this document, each tracked as an issue un
 |---|---|---|
 | ingestion | Worker fails documents permanently when a peer is unavailable instead of retrying | #33 |
 | chat | Peer failures in `StreamChat` surface as `UNKNOWN` instead of a mapped status or stream error | #46 |
-| llm | Provider errors surface as `UNKNOWN` instead of `UNAVAILABLE` / `INTERNAL` | #51 |
 | document | None found | — |

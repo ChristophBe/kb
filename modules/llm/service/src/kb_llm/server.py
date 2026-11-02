@@ -1,3 +1,6 @@
+import asyncio
+import contextlib
+import logging
 from collections.abc import AsyncIterator
 from typing import Any
 
@@ -5,7 +8,18 @@ import grpc
 from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 
 from .config import Settings
-from .providers.base import GenerationOptions, Message, ModelKind, Provider, Role
+from .providers.base import (
+    GenerationOptions,
+    Message,
+    ModelKind,
+    ModelNotFoundError,
+    Provider,
+    ProviderError,
+    ProviderUnavailableError,
+    Role,
+)
+
+log = logging.getLogger("kb_llm")
 
 _Context = grpc.aio.ServicerContext[Any, Any]
 
@@ -24,11 +38,13 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
     def __init__(self, provider: Provider, settings: Settings) -> None:
         self._provider = provider
         self._settings = settings
+        self._slots = asyncio.Semaphore(settings.provider_max_concurrency)
 
     async def ListModels(
         self, request: llm_pb2.ListModelsRequest, context: _Context
     ) -> llm_pb2.ListModelsResponse:
-        models = await self._provider.list_models()
+        async with _provider_errors(context):
+            models = await self._provider.list_models()
         return llm_pb2.ListModelsResponse(
             models=[
                 llm_pb2.Model(id=m.id, provider=self._provider.name, kind=_KINDS[m.kind])
@@ -63,17 +79,18 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
             temperature=opts.temperature if opts.HasField("temperature") else None,
             max_tokens=opts.max_tokens if opts.HasField("max_tokens") else None,
         )
-        async for chunk in self._provider.generate(model, messages, options):
-            if chunk.done:
-                yield llm_pb2.GenerateResponse(
-                    done=True,
-                    model=model,
-                    usage=llm_pb2.Usage(
-                        input_tokens=chunk.input_tokens, output_tokens=chunk.output_tokens
-                    ),
-                )
-            elif chunk.delta:
-                yield llm_pb2.GenerateResponse(delta=chunk.delta, model=model)
+        async with self._slot(context), _provider_errors(context):
+            async for chunk in self._provider.generate(model, messages, options):
+                if chunk.done:
+                    yield llm_pb2.GenerateResponse(
+                        done=True,
+                        model=model,
+                        usage=llm_pb2.Usage(
+                            input_tokens=chunk.input_tokens, output_tokens=chunk.output_tokens
+                        ),
+                    )
+                elif chunk.delta:
+                    yield llm_pb2.GenerateResponse(delta=chunk.delta, model=model)
 
     async def Embed(
         self, request: llm_pb2.EmbedRequest, context: _Context
@@ -83,7 +100,8 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
             return llm_pb2.EmbedResponse(
                 model=model, dimensions=self._settings.embedding_dimensions
             )
-        vectors = await self._provider.embed(model, list(request.inputs))
+        async with self._slot(context), _provider_errors(context):
+            vectors = await self._provider.embed(model, list(request.inputs))
         dims = len(vectors[0])
         if dims != self._settings.embedding_dimensions:
             await context.abort(
@@ -96,3 +114,27 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
             dimensions=dims,
             embeddings=[llm_pb2.Embedding(values=v) for v in vectors],
         )
+
+    @contextlib.asynccontextmanager
+    async def _slot(self, context: _Context) -> AsyncIterator[None]:
+        """Holds a concurrency slot. Calls are rejected, not queued, so a slow
+        model can't pile up requests behind it."""
+        if self._slots.locked():
+            await context.abort(grpc.StatusCode.RESOURCE_EXHAUSTED, "too many concurrent requests")
+        async with self._slots:
+            yield
+
+
+@contextlib.asynccontextmanager
+async def _provider_errors(context: _Context) -> AsyncIterator[None]:
+    """Maps provider failures to gRPC statuses; the cause is only logged."""
+    try:
+        yield
+    except ProviderUnavailableError as exc:
+        log.warning("provider unavailable: %s", exc)
+        await context.abort(grpc.StatusCode.UNAVAILABLE, "the model provider is unavailable")
+    except ModelNotFoundError as exc:
+        await context.abort(grpc.StatusCode.NOT_FOUND, str(exc))
+    except ProviderError as exc:
+        log.error("provider call failed: %s", exc)
+        await context.abort(grpc.StatusCode.INTERNAL, "provider call failed")

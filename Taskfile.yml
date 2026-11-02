@@ -120,7 +120,7 @@ tasks:
       MINIMUMS: |
         platform/python          5
         modules/chat/service     60
-        modules/llm/service      60
+        modules/llm/service      80
         modules/ingestion/worker 65
     cmds:
       - for: { var: PY_COMPONENTS }

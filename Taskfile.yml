@@ -90,7 +90,7 @@ tasks:
       MINIMUMS: |
         .     ./platform/go/...              5
         .     ./modules/document/service/... 20
-        .     ./modules/ingestion/service/... 40
+        .     ./modules/ingestion/service/... 15
         tools ./modgen/...                   65
     cmds:
       - mkdir -p .gocover

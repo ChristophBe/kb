@@ -1,4 +1,5 @@
 import logging
+import pathlib
 from typing import Any
 
 import pytest
@@ -74,6 +75,22 @@ async def test_processes_text_into_embedded_chunks() -> None:
     assert [c.index for c in docs.chunks] == list(range(len(docs.chunks)))
     assert all(c.embedding for c in docs.chunks)
     assert docs.statuses == [document_pb2.DOCUMENT_STATUS_PROCESSING]
+
+
+async def test_markdown_chunks_store_their_heading() -> None:
+    proc, docs, _ = make(b"# Title\n\n## Part\n\nSome text.")
+    await proc.handle(uploaded("notes.md"))
+
+    assert [c.text for c in docs.chunks] == ["Title > Part\n\nSome text."]
+    assert [dict(c.metadata) for c in docs.chunks] == [{"heading": "Title > Part"}]
+
+
+async def test_pdf_chunks_store_their_page() -> None:
+    pdf = (pathlib.Path(__file__).parent / "fixtures" / "pages.pdf").read_bytes()
+    proc, docs, _ = make(pdf)
+    await proc.handle(uploaded("pages.pdf", "application/pdf"))
+
+    assert [dict(c.metadata) for c in docs.chunks] == [{"page": "1"}, {"page": "3"}]
 
 
 async def test_unsupported_content_marks_failure() -> None:

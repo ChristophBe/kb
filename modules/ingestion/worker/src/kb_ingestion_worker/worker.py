@@ -6,9 +6,9 @@ from kb.document.v1 import document_pb2, document_pb2_grpc
 from kb.ingestion.v1 import events_pb2
 from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 
-from .chunking import chunk_text
+from .chunking import chunk_markdown, chunk_pages
 from .config import Settings
-from .extract import extract_text
+from .extract import extract_pages, is_markdown
 
 log = logging.getLogger(__name__)
 
@@ -93,19 +93,29 @@ class Processor:
             document_pb2.ReadContentRequest(id=event.document_id)
         ):
             data.extend(part.data)
-        text = extract_text(bytes(data), event.filename, event.content_type)
-        chunks = chunk_text(text, self._settings.chunk_size, self._settings.chunk_overlap)
+        pages = extract_pages(bytes(data), event.filename, event.content_type)
+        size, overlap = self._settings.chunk_size, self._settings.chunk_overlap
+        if is_markdown(event.filename, event.content_type):
+            min_section = self._settings.chunk_min_section_size
+            chunks = chunk_markdown(pages[0].text, size, overlap, min_section)
+        else:
+            chunks = chunk_pages(pages, size, overlap)
         if not chunks:
             raise ValueError("document contains no text")
 
         inputs: list[document_pb2.ChunkInput] = []
         batch = self._settings.embed_batch_size
         for start in range(0, len(chunks), batch):
-            texts = chunks[start : start + batch]
-            resp = await self._llm.Embed(llm_pb2.EmbedRequest(inputs=texts))
-            for offset, (text_, emb) in enumerate(zip(texts, resp.embeddings, strict=True)):
+            group = chunks[start : start + batch]
+            resp = await self._llm.Embed(llm_pb2.EmbedRequest(inputs=[c.text for c in group]))
+            for offset, (chunk, emb) in enumerate(zip(group, resp.embeddings, strict=True)):
                 inputs.append(
-                    document_pb2.ChunkInput(index=start + offset, text=text_, embedding=emb.values)
+                    document_pb2.ChunkInput(
+                        index=start + offset,
+                        text=chunk.text,
+                        metadata=chunk.metadata,
+                        embedding=emb.values,
+                    )
                 )
         resp = await self._documents.AddChunks(
             document_pb2.AddChunksRequest(document_id=event.document_id, chunks=inputs)

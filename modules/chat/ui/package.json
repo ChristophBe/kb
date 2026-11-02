@@ -14,14 +14,22 @@
     "@kb/module-sdk": "workspace:*",
     "@kb/ui": "workspace:*",
     "lucide-react": "catalog:",
-    "react-router": "catalog:"
+    "react-markdown": "catalog:",
+    "react-router": "catalog:",
+    "rehype-sanitize": "catalog:",
+    "remark-gfm": "catalog:"
   },
   "peerDependencies": {
     "react": "catalog:"
   },
   "devDependencies": {
+    "@bufbuild/protobuf": "catalog:",
+    "@testing-library/dom": "catalog:",
+    "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
-    "typescript": "catalog:"
+    "react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

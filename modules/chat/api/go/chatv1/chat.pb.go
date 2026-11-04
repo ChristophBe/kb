@@ -652,6 +652,103 @@ func (*DeleteConversationResponse) Descriptor() ([]byte, []int) {
 	return file_kb_chat_v1_chat_proto_rawDescGZIP(), []int{10}
 }
 
+type UpdateConversationRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Must not be empty or blank when set.
+	Title         *string `protobuf:"bytes,2,opt,name=title,proto3,oneof" json:"title,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateConversationRequest) Reset() {
+	*x = UpdateConversationRequest{}
+	mi := &file_kb_chat_v1_chat_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateConversationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateConversationRequest) ProtoMessage() {}
+
+func (x *UpdateConversationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_kb_chat_v1_chat_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateConversationRequest.ProtoReflect.Descriptor instead.
+func (*UpdateConversationRequest) Descriptor() ([]byte, []int) {
+	return file_kb_chat_v1_chat_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *UpdateConversationRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateConversationRequest) GetTitle() string {
+	if x != nil && x.Title != nil {
+		return *x.Title
+	}
+	return ""
+}
+
+type UpdateConversationResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Conversation  *Conversation          `protobuf:"bytes,1,opt,name=conversation,proto3" json:"conversation,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateConversationResponse) Reset() {
+	*x = UpdateConversationResponse{}
+	mi := &file_kb_chat_v1_chat_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateConversationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateConversationResponse) ProtoMessage() {}
+
+func (x *UpdateConversationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_kb_chat_v1_chat_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateConversationResponse.ProtoReflect.Descriptor instead.
+func (*UpdateConversationResponse) Descriptor() ([]byte, []int) {
+	return file_kb_chat_v1_chat_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *UpdateConversationResponse) GetConversation() *Conversation {
+	if x != nil {
+		return x.Conversation
+	}
+	return nil
+}
+
 type StreamChatRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	ConversationId string                 `protobuf:"bytes,1,opt,name=conversation_id,json=conversationId,proto3" json:"conversation_id,omitempty"`
@@ -666,7 +763,7 @@ type StreamChatRequest struct {
 
 func (x *StreamChatRequest) Reset() {
 	*x = StreamChatRequest{}
-	mi := &file_kb_chat_v1_chat_proto_msgTypes[11]
+	mi := &file_kb_chat_v1_chat_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -678,7 +775,7 @@ func (x *StreamChatRequest) String() string {
 func (*StreamChatRequest) ProtoMessage() {}
 
 func (x *StreamChatRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_chat_v1_chat_proto_msgTypes[11]
+	mi := &file_kb_chat_v1_chat_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -691,7 +788,7 @@ func (x *StreamChatRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamChatRequest.ProtoReflect.Descriptor instead.
 func (*StreamChatRequest) Descriptor() ([]byte, []int) {
-	return file_kb_chat_v1_chat_proto_rawDescGZIP(), []int{11}
+	return file_kb_chat_v1_chat_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *StreamChatRequest) GetConversationId() string {
@@ -736,7 +833,7 @@ type StreamChatResponse struct {
 
 func (x *StreamChatResponse) Reset() {
 	*x = StreamChatResponse{}
-	mi := &file_kb_chat_v1_chat_proto_msgTypes[12]
+	mi := &file_kb_chat_v1_chat_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -748,7 +845,7 @@ func (x *StreamChatResponse) String() string {
 func (*StreamChatResponse) ProtoMessage() {}
 
 func (x *StreamChatResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_chat_v1_chat_proto_msgTypes[12]
+	mi := &file_kb_chat_v1_chat_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -761,7 +858,7 @@ func (x *StreamChatResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamChatResponse.ProtoReflect.Descriptor instead.
 func (*StreamChatResponse) Descriptor() ([]byte, []int) {
-	return file_kb_chat_v1_chat_proto_rawDescGZIP(), []int{12}
+	return file_kb_chat_v1_chat_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *StreamChatResponse) GetEvent() isStreamChatResponse_Event {
@@ -832,7 +929,7 @@ type Citations struct {
 
 func (x *Citations) Reset() {
 	*x = Citations{}
-	mi := &file_kb_chat_v1_chat_proto_msgTypes[13]
+	mi := &file_kb_chat_v1_chat_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -844,7 +941,7 @@ func (x *Citations) String() string {
 func (*Citations) ProtoMessage() {}
 
 func (x *Citations) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_chat_v1_chat_proto_msgTypes[13]
+	mi := &file_kb_chat_v1_chat_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -857,7 +954,7 @@ func (x *Citations) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Citations.ProtoReflect.Descriptor instead.
 func (*Citations) Descriptor() ([]byte, []int) {
-	return file_kb_chat_v1_chat_proto_rawDescGZIP(), []int{13}
+	return file_kb_chat_v1_chat_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *Citations) GetItems() []*Citation {
@@ -911,7 +1008,13 @@ const file_kb_chat_v1_chat_proto_rawDesc = "" +
 	"\x04page\x18\x02 \x01(\v2\x1a.kb.common.v1.PageResponseR\x04page\"+\n" +
 	"\x19DeleteConversationRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x1c\n" +
-	"\x1aDeleteConversationResponse\"\x9a\x01\n" +
+	"\x1aDeleteConversationResponse\"P\n" +
+	"\x19UpdateConversationRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
+	"\x05title\x18\x02 \x01(\tH\x00R\x05title\x88\x01\x01B\b\n" +
+	"\x06_title\"Z\n" +
+	"\x1aUpdateConversationResponse\x12<\n" +
+	"\fconversation\x18\x01 \x01(\v2\x18.kb.chat.v1.ConversationR\fconversation\"\x9a\x01\n" +
 	"\x11StreamChatRequest\x12'\n" +
 	"\x0fconversation_id\x18\x01 \x01(\tR\x0econversationId\x12\x18\n" +
 	"\acontent\x18\x02 \x01(\tR\acontent\x12,\n" +
@@ -927,12 +1030,13 @@ const file_kb_chat_v1_chat_proto_rawDesc = "" +
 	"\vMessageRole\x12\x1c\n" +
 	"\x18MESSAGE_ROLE_UNSPECIFIED\x10\x00\x12\x15\n" +
 	"\x11MESSAGE_ROLE_USER\x10\x01\x12\x1a\n" +
-	"\x16MESSAGE_ROLE_ASSISTANT\x10\x022\xe4\x03\n" +
+	"\x16MESSAGE_ROLE_ASSISTANT\x10\x022\xc9\x04\n" +
 	"\vChatService\x12c\n" +
 	"\x12CreateConversation\x12%.kb.chat.v1.CreateConversationRequest\x1a&.kb.chat.v1.CreateConversationResponse\x12Z\n" +
 	"\x0fGetConversation\x12\".kb.chat.v1.GetConversationRequest\x1a#.kb.chat.v1.GetConversationResponse\x12`\n" +
 	"\x11ListConversations\x12$.kb.chat.v1.ListConversationsRequest\x1a%.kb.chat.v1.ListConversationsResponse\x12c\n" +
-	"\x12DeleteConversation\x12%.kb.chat.v1.DeleteConversationRequest\x1a&.kb.chat.v1.DeleteConversationResponse\x12M\n" +
+	"\x12DeleteConversation\x12%.kb.chat.v1.DeleteConversationRequest\x1a&.kb.chat.v1.DeleteConversationResponse\x12c\n" +
+	"\x12UpdateConversation\x12%.kb.chat.v1.UpdateConversationRequest\x1a&.kb.chat.v1.UpdateConversationResponse\x12M\n" +
 	"\n" +
 	"StreamChat\x12\x1d.kb.chat.v1.StreamChatRequest\x1a\x1e.kb.chat.v1.StreamChatResponse0\x01B;Z9github.com/christoph/kb/modules/chat/api/go/chatv1;chatv1b\x06proto3"
 
@@ -949,7 +1053,7 @@ func file_kb_chat_v1_chat_proto_rawDescGZIP() []byte {
 }
 
 var file_kb_chat_v1_chat_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_kb_chat_v1_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_kb_chat_v1_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_kb_chat_v1_chat_proto_goTypes = []any{
 	(MessageRole)(0),                   // 0: kb.chat.v1.MessageRole
 	(*Citation)(nil),                   // 1: kb.chat.v1.Citation
@@ -963,43 +1067,48 @@ var file_kb_chat_v1_chat_proto_goTypes = []any{
 	(*ListConversationsResponse)(nil),  // 9: kb.chat.v1.ListConversationsResponse
 	(*DeleteConversationRequest)(nil),  // 10: kb.chat.v1.DeleteConversationRequest
 	(*DeleteConversationResponse)(nil), // 11: kb.chat.v1.DeleteConversationResponse
-	(*StreamChatRequest)(nil),          // 12: kb.chat.v1.StreamChatRequest
-	(*StreamChatResponse)(nil),         // 13: kb.chat.v1.StreamChatResponse
-	(*Citations)(nil),                  // 14: kb.chat.v1.Citations
-	(*timestamppb.Timestamp)(nil),      // 15: google.protobuf.Timestamp
-	(*commonv1.PageRequest)(nil),       // 16: kb.common.v1.PageRequest
-	(*commonv1.PageResponse)(nil),      // 17: kb.common.v1.PageResponse
+	(*UpdateConversationRequest)(nil),  // 12: kb.chat.v1.UpdateConversationRequest
+	(*UpdateConversationResponse)(nil), // 13: kb.chat.v1.UpdateConversationResponse
+	(*StreamChatRequest)(nil),          // 14: kb.chat.v1.StreamChatRequest
+	(*StreamChatResponse)(nil),         // 15: kb.chat.v1.StreamChatResponse
+	(*Citations)(nil),                  // 16: kb.chat.v1.Citations
+	(*timestamppb.Timestamp)(nil),      // 17: google.protobuf.Timestamp
+	(*commonv1.PageRequest)(nil),       // 18: kb.common.v1.PageRequest
+	(*commonv1.PageResponse)(nil),      // 19: kb.common.v1.PageResponse
 }
 var file_kb_chat_v1_chat_proto_depIdxs = []int32{
 	0,  // 0: kb.chat.v1.ChatMessage.role:type_name -> kb.chat.v1.MessageRole
 	1,  // 1: kb.chat.v1.ChatMessage.citations:type_name -> kb.chat.v1.Citation
-	15, // 2: kb.chat.v1.ChatMessage.create_time:type_name -> google.protobuf.Timestamp
-	15, // 3: kb.chat.v1.Conversation.create_time:type_name -> google.protobuf.Timestamp
-	15, // 4: kb.chat.v1.Conversation.update_time:type_name -> google.protobuf.Timestamp
+	17, // 2: kb.chat.v1.ChatMessage.create_time:type_name -> google.protobuf.Timestamp
+	17, // 3: kb.chat.v1.Conversation.create_time:type_name -> google.protobuf.Timestamp
+	17, // 4: kb.chat.v1.Conversation.update_time:type_name -> google.protobuf.Timestamp
 	3,  // 5: kb.chat.v1.CreateConversationResponse.conversation:type_name -> kb.chat.v1.Conversation
 	3,  // 6: kb.chat.v1.GetConversationResponse.conversation:type_name -> kb.chat.v1.Conversation
 	2,  // 7: kb.chat.v1.GetConversationResponse.messages:type_name -> kb.chat.v1.ChatMessage
-	16, // 8: kb.chat.v1.ListConversationsRequest.page:type_name -> kb.common.v1.PageRequest
+	18, // 8: kb.chat.v1.ListConversationsRequest.page:type_name -> kb.common.v1.PageRequest
 	3,  // 9: kb.chat.v1.ListConversationsResponse.conversations:type_name -> kb.chat.v1.Conversation
-	17, // 10: kb.chat.v1.ListConversationsResponse.page:type_name -> kb.common.v1.PageResponse
-	14, // 11: kb.chat.v1.StreamChatResponse.citations:type_name -> kb.chat.v1.Citations
-	2,  // 12: kb.chat.v1.StreamChatResponse.message:type_name -> kb.chat.v1.ChatMessage
-	1,  // 13: kb.chat.v1.Citations.items:type_name -> kb.chat.v1.Citation
-	4,  // 14: kb.chat.v1.ChatService.CreateConversation:input_type -> kb.chat.v1.CreateConversationRequest
-	6,  // 15: kb.chat.v1.ChatService.GetConversation:input_type -> kb.chat.v1.GetConversationRequest
-	8,  // 16: kb.chat.v1.ChatService.ListConversations:input_type -> kb.chat.v1.ListConversationsRequest
-	10, // 17: kb.chat.v1.ChatService.DeleteConversation:input_type -> kb.chat.v1.DeleteConversationRequest
-	12, // 18: kb.chat.v1.ChatService.StreamChat:input_type -> kb.chat.v1.StreamChatRequest
-	5,  // 19: kb.chat.v1.ChatService.CreateConversation:output_type -> kb.chat.v1.CreateConversationResponse
-	7,  // 20: kb.chat.v1.ChatService.GetConversation:output_type -> kb.chat.v1.GetConversationResponse
-	9,  // 21: kb.chat.v1.ChatService.ListConversations:output_type -> kb.chat.v1.ListConversationsResponse
-	11, // 22: kb.chat.v1.ChatService.DeleteConversation:output_type -> kb.chat.v1.DeleteConversationResponse
-	13, // 23: kb.chat.v1.ChatService.StreamChat:output_type -> kb.chat.v1.StreamChatResponse
-	19, // [19:24] is the sub-list for method output_type
-	14, // [14:19] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	19, // 10: kb.chat.v1.ListConversationsResponse.page:type_name -> kb.common.v1.PageResponse
+	3,  // 11: kb.chat.v1.UpdateConversationResponse.conversation:type_name -> kb.chat.v1.Conversation
+	16, // 12: kb.chat.v1.StreamChatResponse.citations:type_name -> kb.chat.v1.Citations
+	2,  // 13: kb.chat.v1.StreamChatResponse.message:type_name -> kb.chat.v1.ChatMessage
+	1,  // 14: kb.chat.v1.Citations.items:type_name -> kb.chat.v1.Citation
+	4,  // 15: kb.chat.v1.ChatService.CreateConversation:input_type -> kb.chat.v1.CreateConversationRequest
+	6,  // 16: kb.chat.v1.ChatService.GetConversation:input_type -> kb.chat.v1.GetConversationRequest
+	8,  // 17: kb.chat.v1.ChatService.ListConversations:input_type -> kb.chat.v1.ListConversationsRequest
+	10, // 18: kb.chat.v1.ChatService.DeleteConversation:input_type -> kb.chat.v1.DeleteConversationRequest
+	12, // 19: kb.chat.v1.ChatService.UpdateConversation:input_type -> kb.chat.v1.UpdateConversationRequest
+	14, // 20: kb.chat.v1.ChatService.StreamChat:input_type -> kb.chat.v1.StreamChatRequest
+	5,  // 21: kb.chat.v1.ChatService.CreateConversation:output_type -> kb.chat.v1.CreateConversationResponse
+	7,  // 22: kb.chat.v1.ChatService.GetConversation:output_type -> kb.chat.v1.GetConversationResponse
+	9,  // 23: kb.chat.v1.ChatService.ListConversations:output_type -> kb.chat.v1.ListConversationsResponse
+	11, // 24: kb.chat.v1.ChatService.DeleteConversation:output_type -> kb.chat.v1.DeleteConversationResponse
+	13, // 25: kb.chat.v1.ChatService.UpdateConversation:output_type -> kb.chat.v1.UpdateConversationResponse
+	15, // 26: kb.chat.v1.ChatService.StreamChat:output_type -> kb.chat.v1.StreamChatResponse
+	21, // [21:27] is the sub-list for method output_type
+	15, // [15:21] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_kb_chat_v1_chat_proto_init() }
@@ -1007,7 +1116,8 @@ func file_kb_chat_v1_chat_proto_init() {
 	if File_kb_chat_v1_chat_proto != nil {
 		return
 	}
-	file_kb_chat_v1_chat_proto_msgTypes[12].OneofWrappers = []any{
+	file_kb_chat_v1_chat_proto_msgTypes[11].OneofWrappers = []any{}
+	file_kb_chat_v1_chat_proto_msgTypes[14].OneofWrappers = []any{
 		(*StreamChatResponse_Citations)(nil),
 		(*StreamChatResponse_Delta)(nil),
 		(*StreamChatResponse_Message)(nil),
@@ -1018,7 +1128,7 @@ func file_kb_chat_v1_chat_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kb_chat_v1_chat_proto_rawDesc), len(file_kb_chat_v1_chat_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   14,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

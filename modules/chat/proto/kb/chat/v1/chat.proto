@@ -14,6 +14,8 @@ service ChatService {
   rpc GetConversation(GetConversationRequest) returns (GetConversationResponse);
   rpc ListConversations(ListConversationsRequest) returns (ListConversationsResponse);
   rpc DeleteConversation(DeleteConversationRequest) returns (DeleteConversationResponse);
+  // UpdateConversation changes the fields that are set and keeps the others.
+  rpc UpdateConversation(UpdateConversationRequest) returns (UpdateConversationResponse);
   // StreamChat appends a user message and streams the assistant's answer.
   rpc StreamChat(StreamChatRequest) returns (stream StreamChatResponse);
 }
@@ -78,6 +80,16 @@ message DeleteConversationRequest {
 }
 
 message DeleteConversationResponse {}
+
+message UpdateConversationRequest {
+  string id = 1;
+  // Must not be empty or blank when set.
+  optional string title = 2;
+}
+
+message UpdateConversationResponse {
+  Conversation conversation = 1;
+}
 
 message StreamChatRequest {
   string conversation_id = 1;

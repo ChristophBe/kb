@@ -110,6 +110,20 @@ class DeleteConversationResponse(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 
+class UpdateConversationRequest(_message.Message):
+    __slots__ = ("id", "title")
+    ID_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    id: str
+    title: str
+    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ...) -> None: ...
+
+class UpdateConversationResponse(_message.Message):
+    __slots__ = ("conversation",)
+    CONVERSATION_FIELD_NUMBER: _ClassVar[int]
+    conversation: Conversation
+    def __init__(self, conversation: _Optional[_Union[Conversation, _Mapping]] = ...) -> None: ...
+
 class StreamChatRequest(_message.Message):
     __slots__ = ("conversation_id", "content", "use_knowledge_base", "model")
     CONVERSATION_ID_FIELD_NUMBER: _ClassVar[int]

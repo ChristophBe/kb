@@ -27,6 +27,7 @@ _Context = grpc.aio.ServicerContext[Any, Any]
 
 DEFAULT_PAGE_SIZE = 50
 MAX_PAGE_SIZE = 200
+MAX_TITLE_LENGTH = 200
 
 
 class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
@@ -70,6 +71,26 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         if not await self._repo.delete_conversation(_parse_id(request.id)):
             await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
         return chat_pb2.DeleteConversationResponse()
+
+    async def UpdateConversation(
+        self, request: chat_pb2.UpdateConversationRequest, context: _Context
+    ) -> chat_pb2.UpdateConversationResponse:
+        conv = await self._get(request.id, context)
+        if request.HasField("title"):
+            title = request.title.strip()
+            if not title:
+                await context.abort(grpc.StatusCode.INVALID_ARGUMENT, "title must not be empty")
+            if len(title) > MAX_TITLE_LENGTH:
+                await context.abort(
+                    grpc.StatusCode.INVALID_ARGUMENT,
+                    f"title must not be longer than {MAX_TITLE_LENGTH} characters",
+                )
+            updated = await self._repo.update_conversation(conv.id, title)
+            if updated is None:
+                await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
+            assert updated is not None
+            conv = updated
+        return chat_pb2.UpdateConversationResponse(conversation=_conversation(conv))
 
     async def StreamChat(
         self, request: chat_pb2.StreamChatRequest, context: _Context

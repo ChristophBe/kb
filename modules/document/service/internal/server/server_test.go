@@ -27,6 +27,7 @@ type fakeRepo struct {
 	doc      store.DocumentDocument
 	marked   []store.MarkDocumentUploadedParams
 	statuses []store.SetDocumentStatusParams
+	updated  []store.UpdateDocumentParams
 }
 
 func (f *fakeRepo) CreateDocument(_ context.Context, p store.CreateDocumentParams) (store.DocumentDocument, error) {
@@ -49,6 +50,11 @@ func (f *fakeRepo) GetDocument(context.Context, uuid.UUID) (store.DocumentDocume
 func (f *fakeRepo) MarkDocumentUploaded(_ context.Context, p store.MarkDocumentUploadedParams) (store.DocumentDocument, error) {
 	f.marked = append(f.marked, p)
 	return store.DocumentDocument{ID: p.ID, Status: p.Status, SizeBytes: p.SizeBytes, ContentType: p.ContentType}, nil
+}
+
+func (f *fakeRepo) UpdateDocument(_ context.Context, p store.UpdateDocumentParams) (store.DocumentDocument, error) {
+	f.updated = append(f.updated, p)
+	return store.DocumentDocument{ID: p.ID, Title: p.Title.String, Metadata: p.Metadata}, nil
 }
 
 func (f *fakeRepo) SetDocumentStatus(_ context.Context, p store.SetDocumentStatusParams) (store.DocumentDocument, error) {
@@ -207,5 +213,54 @@ func TestSearchChunksValidates(t *testing.T) {
 	_, err = srv.SearchChunks(t.Context(), &documentv1.SearchChunksRequest{Embedding: []float32{1}, DocumentIds: []string{"nope"}})
 	if status.Code(err) != codes.InvalidArgument {
 		t.Errorf("bad id: err = %v", err)
+	}
+}
+
+func TestUpdateDocumentValidates(t *testing.T) {
+	title := func(s string) *string { return &s }
+	for _, tc := range []struct {
+		name string
+		req  *documentv1.UpdateDocumentRequest
+	}{
+		{"empty title", &documentv1.UpdateDocumentRequest{Title: title("")}},
+		{"blank title", &documentv1.UpdateDocumentRequest{Title: title(" \t ")}},
+		{"empty key", &documentv1.UpdateDocumentRequest{SetMetadata: true, Metadata: map[string]string{"": "x"}}},
+		{"blank key", &documentv1.UpdateDocumentRequest{SetMetadata: true, Metadata: map[string]string{"  ": "x"}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := &fakeRepo{}
+			tc.req.Id = uuid.NewString()
+			_, err := newServer(repo).UpdateDocument(t.Context(), tc.req)
+			if status.Code(err) != codes.InvalidArgument {
+				t.Fatalf("err = %v, want InvalidArgument", err)
+			}
+			if len(repo.updated) != 0 {
+				t.Errorf("document was updated: %+v", repo.updated)
+			}
+		})
+	}
+}
+
+func TestUpdateDocumentTrimsTheTitleAndKeepsMetadata(t *testing.T) {
+	repo := &fakeRepo{}
+	title := "  Quarterly report  "
+	resp, err := newServer(repo).UpdateDocument(t.Context(), &documentv1.UpdateDocumentRequest{
+		Id: uuid.NewString(), Title: &title, SetMetadata: true, Metadata: map[string]string{"year": "2026", "empty value": ""},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := resp.GetDocument(); got.GetTitle() != "Quarterly report" || got.GetMetadata()["year"] != "2026" {
+		t.Errorf("document = %v", got)
+	}
+}
+
+func TestUpdateDocumentWithoutChangesLeavesFieldsAlone(t *testing.T) {
+	repo := &fakeRepo{}
+	if _, err := newServer(repo).UpdateDocument(t.Context(), &documentv1.UpdateDocumentRequest{Id: uuid.NewString()}); err != nil {
+		t.Fatal(err)
+	}
+	if p := repo.updated[0]; p.Title.Valid || p.Metadata != nil {
+		t.Errorf("params = %+v", p)
 	}
 }

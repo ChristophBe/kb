@@ -1,7 +1,7 @@
 """The answer use case: retrieve sources, build the prompt, generate, persist."""
 
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Protocol
@@ -9,6 +9,7 @@ from typing import Any, Protocol
 from kb.chat.v1 import chat_pb2
 
 from .config import Settings
+from .context import ApproximateTokenCounter, TokenCounter, fit
 from .repository import MessageRow, Repository
 
 TITLE_LENGTH = 60
@@ -81,12 +82,18 @@ _PROMPT_ROLES = {
 
 class Chat:
     def __init__(
-        self, settings: Settings, repo: Repository, retriever: Retriever, generator: Generator
+        self,
+        settings: Settings,
+        repo: Repository,
+        retriever: Retriever,
+        generator: Generator,
+        counter: TokenCounter | None = None,
     ) -> None:
         self._settings = settings
         self._repo = repo
         self._retriever = retriever
         self._generator = generator
+        self._counter = counter or ApproximateTokenCounter()
 
     async def answer(
         self, conversation_id: uuid.UUID, content: str, model: str, use_knowledge_base: bool
@@ -101,13 +108,19 @@ class Chat:
         if not conv.title:
             await self._repo.set_title(conv.id, content[:TITLE_LENGTH])
 
-        citations: list[chat_pb2.Citation] = []
+        retrieved: list[chat_pb2.Citation] = []
         if use_knowledge_base:
-            citations = await self._retriever.retrieve(content, self._settings.rag_top_k)
+            retrieved = await self._retriever.retrieve(content, self._settings.rag_top_k)
+        budget = self._settings.context_tokens - self._settings.answer_reserve_tokens
+        context = fit(budget, self._counter, _system_prompt, retrieved, history, content)
+        # Only the sources that made it into the prompt are cited, numbered as there.
+        citations = context.sources
+        if use_knowledge_base:
             yield SourcesFound(citations)
 
         answer: list[str] = []
-        async for delta in self._generator.generate(model, _prompt(citations, history, content)):
+        prompt = _prompt(citations, context.history, content)
+        async for delta in self._generator.generate(model, prompt):
             answer.append(delta)
             yield AnswerDelta(delta)
 
@@ -130,7 +143,7 @@ def _prompt(
     ]
 
 
-def _system_prompt(citations: list[chat_pb2.Citation]) -> str:
+def _system_prompt(citations: Sequence[chat_pb2.Citation]) -> str:
     if not citations:
         return SYSTEM_PROMPT
     sources = "\n\n".join(

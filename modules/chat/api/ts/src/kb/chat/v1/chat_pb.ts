@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file kb/chat/v1/chat.proto.
  */
 export const file_kb_chat_v1_chat: GenFile = /*@__PURE__*/
-  fileDesc("ChVrYi9jaGF0L3YxL2NoYXQucHJvdG8SCmtiLmNoYXQudjEibAoIQ2l0YXRpb24SEwoLZG9jdW1lbnRfaWQYASABKAkSFgoOZG9jdW1lbnRfdGl0bGUYAiABKAkSEwoLY2h1bmtfaW5kZXgYAyABKAUSDwoHc25pcHBldBgEIAEoCRINCgVzY29yZRgFIAEoAiKrAQoLQ2hhdE1lc3NhZ2USCgoCaWQYASABKAkSJQoEcm9sZRgCIAEoDjIXLmtiLmNoYXQudjEuTWVzc2FnZVJvbGUSDwoHY29udGVudBgDIAEoCRInCgljaXRhdGlvbnMYBCADKAsyFC5rYi5jaGF0LnYxLkNpdGF0aW9uEi8KC2NyZWF0ZV90aW1lGAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKLAQoMQ29udmVyc2F0aW9uEgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEi8KC2NyZWF0ZV90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIvCgt1cGRhdGVfdGltZRgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiKgoZQ3JlYXRlQ29udmVyc2F0aW9uUmVxdWVzdBINCgV0aXRsZRgBIAEoCSJMChpDcmVhdGVDb252ZXJzYXRpb25SZXNwb25zZRIuCgxjb252ZXJzYXRpb24YASABKAsyGC5rYi5jaGF0LnYxLkNvbnZlcnNhdGlvbiIkChZHZXRDb252ZXJzYXRpb25SZXF1ZXN0EgoKAmlkGAEgASgJInQKF0dldENvbnZlcnNhdGlvblJlc3BvbnNlEi4KDGNvbnZlcnNhdGlvbhgBIAEoCzIYLmtiLmNoYXQudjEuQ29udmVyc2F0aW9uEikKCG1lc3NhZ2VzGAIgAygLMhcua2IuY2hhdC52MS5DaGF0TWVzc2FnZSJDChhMaXN0Q29udmVyc2F0aW9uc1JlcXVlc3QSJwoEcGFnZRgBIAEoCzIZLmtiLmNvbW1vbi52MS5QYWdlUmVxdWVzdCJ2ChlMaXN0Q29udmVyc2F0aW9uc1Jlc3BvbnNlEi8KDWNvbnZlcnNhdGlvbnMYASADKAsyGC5rYi5jaGF0LnYxLkNvbnZlcnNhdGlvbhIoCgRwYWdlGAIgASgLMhoua2IuY29tbW9uLnYxLlBhZ2VSZXNwb25zZSInChlEZWxldGVDb252ZXJzYXRpb25SZXF1ZXN0EgoKAmlkGAEgASgJIhwKGkRlbGV0ZUNvbnZlcnNhdGlvblJlc3BvbnNlImgKEVN0cmVhbUNoYXRSZXF1ZXN0EhcKD2NvbnZlcnNhdGlvbl9pZBgBIAEoCRIPCgdjb250ZW50GAIgASgJEhoKEnVzZV9rbm93bGVkZ2VfYmFzZRgDIAEoCBINCgVtb2RlbBgEIAEoCSKGAQoSU3RyZWFtQ2hhdFJlc3BvbnNlEioKCWNpdGF0aW9ucxgBIAEoCzIVLmtiLmNoYXQudjEuQ2l0YXRpb25zSAASDwoFZGVsdGEYAiABKAlIABIqCgdtZXNzYWdlGAMgASgLMhcua2IuY2hhdC52MS5DaGF0TWVzc2FnZUgAQgcKBWV2ZW50IjAKCUNpdGF0aW9ucxIjCgVpdGVtcxgBIAMoCzIULmtiLmNoYXQudjEuQ2l0YXRpb24qXgoLTWVzc2FnZVJvbGUSHAoYTUVTU0FHRV9ST0xFX1VOU1BFQ0lGSUVEEAASFQoRTUVTU0FHRV9ST0xFX1VTRVIQARIaChZNRVNTQUdFX1JPTEVfQVNTSVNUQU5UEAIy5AMKC0NoYXRTZXJ2aWNlEmMKEkNyZWF0ZUNvbnZlcnNhdGlvbhIlLmtiLmNoYXQudjEuQ3JlYXRlQ29udmVyc2F0aW9uUmVxdWVzdBomLmtiLmNoYXQudjEuQ3JlYXRlQ29udmVyc2F0aW9uUmVzcG9uc2USWgoPR2V0Q29udmVyc2F0aW9uEiIua2IuY2hhdC52MS5HZXRDb252ZXJzYXRpb25SZXF1ZXN0GiMua2IuY2hhdC52MS5HZXRDb252ZXJzYXRpb25SZXNwb25zZRJgChFMaXN0Q29udmVyc2F0aW9ucxIkLmtiLmNoYXQudjEuTGlzdENvbnZlcnNhdGlvbnNSZXF1ZXN0GiUua2IuY2hhdC52MS5MaXN0Q29udmVyc2F0aW9uc1Jlc3BvbnNlEmMKEkRlbGV0ZUNvbnZlcnNhdGlvbhIlLmtiLmNoYXQudjEuRGVsZXRlQ29udmVyc2F0aW9uUmVxdWVzdBomLmtiLmNoYXQudjEuRGVsZXRlQ29udmVyc2F0aW9uUmVzcG9uc2USTQoKU3RyZWFtQ2hhdBIdLmtiLmNoYXQudjEuU3RyZWFtQ2hhdFJlcXVlc3QaHi5rYi5jaGF0LnYxLlN0cmVhbUNoYXRSZXNwb25zZTABQjtaOWdpdGh1Yi5jb20vY2hyaXN0b3BoL2tiL21vZHVsZXMvY2hhdC9hcGkvZ28vY2hhdHYxO2NoYXR2MWIGcHJvdG8z", [file_google_protobuf_timestamp, file_kb_common_v1_common]);
+  fileDesc("ChVrYi9jaGF0L3YxL2NoYXQucHJvdG8SCmtiLmNoYXQudjEibAoIQ2l0YXRpb24SEwoLZG9jdW1lbnRfaWQYASABKAkSFgoOZG9jdW1lbnRfdGl0bGUYAiABKAkSEwoLY2h1bmtfaW5kZXgYAyABKAUSDwoHc25pcHBldBgEIAEoCRINCgVzY29yZRgFIAEoAiKrAQoLQ2hhdE1lc3NhZ2USCgoCaWQYASABKAkSJQoEcm9sZRgCIAEoDjIXLmtiLmNoYXQudjEuTWVzc2FnZVJvbGUSDwoHY29udGVudBgDIAEoCRInCgljaXRhdGlvbnMYBCADKAsyFC5rYi5jaGF0LnYxLkNpdGF0aW9uEi8KC2NyZWF0ZV90aW1lGAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKLAQoMQ29udmVyc2F0aW9uEgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEi8KC2NyZWF0ZV90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIvCgt1cGRhdGVfdGltZRgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiKgoZQ3JlYXRlQ29udmVyc2F0aW9uUmVxdWVzdBINCgV0aXRsZRgBIAEoCSJMChpDcmVhdGVDb252ZXJzYXRpb25SZXNwb25zZRIuCgxjb252ZXJzYXRpb24YASABKAsyGC5rYi5jaGF0LnYxLkNvbnZlcnNhdGlvbiIkChZHZXRDb252ZXJzYXRpb25SZXF1ZXN0EgoKAmlkGAEgASgJInQKF0dldENvbnZlcnNhdGlvblJlc3BvbnNlEi4KDGNvbnZlcnNhdGlvbhgBIAEoCzIYLmtiLmNoYXQudjEuQ29udmVyc2F0aW9uEikKCG1lc3NhZ2VzGAIgAygLMhcua2IuY2hhdC52MS5DaGF0TWVzc2FnZSJDChhMaXN0Q29udmVyc2F0aW9uc1JlcXVlc3QSJwoEcGFnZRgBIAEoCzIZLmtiLmNvbW1vbi52MS5QYWdlUmVxdWVzdCJ2ChlMaXN0Q29udmVyc2F0aW9uc1Jlc3BvbnNlEi8KDWNvbnZlcnNhdGlvbnMYASADKAsyGC5rYi5jaGF0LnYxLkNvbnZlcnNhdGlvbhIoCgRwYWdlGAIgASgLMhoua2IuY29tbW9uLnYxLlBhZ2VSZXNwb25zZSInChlEZWxldGVDb252ZXJzYXRpb25SZXF1ZXN0EgoKAmlkGAEgASgJIhwKGkRlbGV0ZUNvbnZlcnNhdGlvblJlc3BvbnNlIkUKGVVwZGF0ZUNvbnZlcnNhdGlvblJlcXVlc3QSCgoCaWQYASABKAkSEgoFdGl0bGUYAiABKAlIAIgBAUIICgZfdGl0bGUiTAoaVXBkYXRlQ29udmVyc2F0aW9uUmVzcG9uc2USLgoMY29udmVyc2F0aW9uGAEgASgLMhgua2IuY2hhdC52MS5Db252ZXJzYXRpb24iaAoRU3RyZWFtQ2hhdFJlcXVlc3QSFwoPY29udmVyc2F0aW9uX2lkGAEgASgJEg8KB2NvbnRlbnQYAiABKAkSGgoSdXNlX2tub3dsZWRnZV9iYXNlGAMgASgIEg0KBW1vZGVsGAQgASgJIoYBChJTdHJlYW1DaGF0UmVzcG9uc2USKgoJY2l0YXRpb25zGAEgASgLMhUua2IuY2hhdC52MS5DaXRhdGlvbnNIABIPCgVkZWx0YRgCIAEoCUgAEioKB21lc3NhZ2UYAyABKAsyFy5rYi5jaGF0LnYxLkNoYXRNZXNzYWdlSABCBwoFZXZlbnQiMAoJQ2l0YXRpb25zEiMKBWl0ZW1zGAEgAygLMhQua2IuY2hhdC52MS5DaXRhdGlvbipeCgtNZXNzYWdlUm9sZRIcChhNRVNTQUdFX1JPTEVfVU5TUEVDSUZJRUQQABIVChFNRVNTQUdFX1JPTEVfVVNFUhABEhoKFk1FU1NBR0VfUk9MRV9BU1NJU1RBTlQQAjLJBAoLQ2hhdFNlcnZpY2USYwoSQ3JlYXRlQ29udmVyc2F0aW9uEiUua2IuY2hhdC52MS5DcmVhdGVDb252ZXJzYXRpb25SZXF1ZXN0GiYua2IuY2hhdC52MS5DcmVhdGVDb252ZXJzYXRpb25SZXNwb25zZRJaCg9HZXRDb252ZXJzYXRpb24SIi5rYi5jaGF0LnYxLkdldENvbnZlcnNhdGlvblJlcXVlc3QaIy5rYi5jaGF0LnYxLkdldENvbnZlcnNhdGlvblJlc3BvbnNlEmAKEUxpc3RDb252ZXJzYXRpb25zEiQua2IuY2hhdC52MS5MaXN0Q29udmVyc2F0aW9uc1JlcXVlc3QaJS5rYi5jaGF0LnYxLkxpc3RDb252ZXJzYXRpb25zUmVzcG9uc2USYwoSRGVsZXRlQ29udmVyc2F0aW9uEiUua2IuY2hhdC52MS5EZWxldGVDb252ZXJzYXRpb25SZXF1ZXN0GiYua2IuY2hhdC52MS5EZWxldGVDb252ZXJzYXRpb25SZXNwb25zZRJjChJVcGRhdGVDb252ZXJzYXRpb24SJS5rYi5jaGF0LnYxLlVwZGF0ZUNvbnZlcnNhdGlvblJlcXVlc3QaJi5rYi5jaGF0LnYxLlVwZGF0ZUNvbnZlcnNhdGlvblJlc3BvbnNlEk0KClN0cmVhbUNoYXQSHS5rYi5jaGF0LnYxLlN0cmVhbUNoYXRSZXF1ZXN0Gh4ua2IuY2hhdC52MS5TdHJlYW1DaGF0UmVzcG9uc2UwAUI7WjlnaXRodWIuY29tL2NocmlzdG9waC9rYi9tb2R1bGVzL2NoYXQvYXBpL2dvL2NoYXR2MTtjaGF0djFiBnByb3RvMw", [file_google_protobuf_timestamp, file_kb_common_v1_common]);
 
 /**
  * @generated from message kb.chat.v1.Citation
@@ -265,6 +265,47 @@ export const DeleteConversationResponseSchema: GenMessage<DeleteConversationResp
   messageDesc(file_kb_chat_v1_chat, 10);
 
 /**
+ * @generated from message kb.chat.v1.UpdateConversationRequest
+ */
+export type UpdateConversationRequest = Message<"kb.chat.v1.UpdateConversationRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * Must not be empty or blank when set.
+   *
+   * @generated from field: optional string title = 2;
+   */
+  title?: string | undefined;
+};
+
+/**
+ * Describes the message kb.chat.v1.UpdateConversationRequest.
+ * Use `create(UpdateConversationRequestSchema)` to create a new message.
+ */
+export const UpdateConversationRequestSchema: GenMessage<UpdateConversationRequest> = /*@__PURE__*/
+  messageDesc(file_kb_chat_v1_chat, 11);
+
+/**
+ * @generated from message kb.chat.v1.UpdateConversationResponse
+ */
+export type UpdateConversationResponse = Message<"kb.chat.v1.UpdateConversationResponse"> & {
+  /**
+   * @generated from field: kb.chat.v1.Conversation conversation = 1;
+   */
+  conversation?: Conversation | undefined;
+};
+
+/**
+ * Describes the message kb.chat.v1.UpdateConversationResponse.
+ * Use `create(UpdateConversationResponseSchema)` to create a new message.
+ */
+export const UpdateConversationResponseSchema: GenMessage<UpdateConversationResponse> = /*@__PURE__*/
+  messageDesc(file_kb_chat_v1_chat, 12);
+
+/**
  * @generated from message kb.chat.v1.StreamChatRequest
  */
 export type StreamChatRequest = Message<"kb.chat.v1.StreamChatRequest"> & {
@@ -298,7 +339,7 @@ export type StreamChatRequest = Message<"kb.chat.v1.StreamChatRequest"> & {
  * Use `create(StreamChatRequestSchema)` to create a new message.
  */
 export const StreamChatRequestSchema: GenMessage<StreamChatRequest> = /*@__PURE__*/
-  messageDesc(file_kb_chat_v1_chat, 11);
+  messageDesc(file_kb_chat_v1_chat, 13);
 
 /**
  * @generated from message kb.chat.v1.StreamChatResponse
@@ -339,7 +380,7 @@ export type StreamChatResponse = Message<"kb.chat.v1.StreamChatResponse"> & {
  * Use `create(StreamChatResponseSchema)` to create a new message.
  */
 export const StreamChatResponseSchema: GenMessage<StreamChatResponse> = /*@__PURE__*/
-  messageDesc(file_kb_chat_v1_chat, 12);
+  messageDesc(file_kb_chat_v1_chat, 14);
 
 /**
  * @generated from message kb.chat.v1.Citations
@@ -356,7 +397,7 @@ export type Citations = Message<"kb.chat.v1.Citations"> & {
  * Use `create(CitationsSchema)` to create a new message.
  */
 export const CitationsSchema: GenMessage<Citations> = /*@__PURE__*/
-  messageDesc(file_kb_chat_v1_chat, 13);
+  messageDesc(file_kb_chat_v1_chat, 15);
 
 /**
  * @generated from enum kb.chat.v1.MessageRole
@@ -422,6 +463,16 @@ export const ChatService: GenService<{
     methodKind: "unary";
     input: typeof DeleteConversationRequestSchema;
     output: typeof DeleteConversationResponseSchema;
+  },
+  /**
+   * UpdateConversation changes the fields that are set and keeps the others.
+   *
+   * @generated from rpc kb.chat.v1.ChatService.UpdateConversation
+   */
+  updateConversation: {
+    methodKind: "unary";
+    input: typeof UpdateConversationRequestSchema;
+    output: typeof UpdateConversationResponseSchema;
   },
   /**
    * StreamChat appends a user message and streams the assistant's answer.

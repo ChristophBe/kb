@@ -10,6 +10,7 @@ import { Send } from "lucide-react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { Answer } from "./Answer.tsx";
+import { ConversationHeader } from "./ConversationHeader.tsx";
 
 interface Pending {
   question: string;
@@ -67,6 +68,9 @@ export function Conversation() {
   const messages = conversation.data?.messages ?? [];
   return (
     <>
+      {conversation.data?.conversation && (
+        <ConversationHeader conversation={conversation.data.conversation} />
+      )}
       <div className="flex-1 overflow-y-auto px-8 py-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           {conversation.isPending && <Spinner />}

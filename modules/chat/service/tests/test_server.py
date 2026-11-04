@@ -43,6 +43,12 @@ class MemoryRepo:
     async def set_title(self, id: uuid.UUID, title: str):
         self.conversations[id].title = title
 
+    async def update_conversation(self, id: uuid.UUID, title: str):
+        conv = self.conversations.get(id)
+        if conv is not None:
+            conv.title = title
+        return conv
+
     async def list_messages(self, conversation_id: uuid.UUID, limit: int | None = None):
         msgs = [m for m in self.messages if m.conversation_id == conversation_id]
         return msgs[-limit:] if limit else msgs
@@ -222,3 +228,46 @@ async def test_stream_chat_hides_other_peer_errors() -> None:
     await server.stop(None)
     assert err.value.code() == grpc.StatusCode.INTERNAL
     assert "no such model" not in (err.value.details() or "")
+
+
+async def test_rename_persists_and_shows_in_the_list(env: Env) -> None:
+    stub, _, _ = env
+    conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+
+    resp = await stub.UpdateConversation(
+        chat_pb2.UpdateConversationRequest(id=conv.id, title="  Q3 revenue  ")
+    )
+
+    assert resp.conversation.title == "Q3 revenue"
+    listed = await stub.ListConversations(chat_pb2.ListConversationsRequest())
+    assert [c.title for c in listed.conversations] == ["Q3 revenue"]
+
+
+async def test_update_without_a_title_keeps_it(env: Env) -> None:
+    stub, _, _ = env
+    request = chat_pb2.CreateConversationRequest(title="Keep me")
+    conv = (await stub.CreateConversation(request)).conversation
+    resp = await stub.UpdateConversation(chat_pb2.UpdateConversationRequest(id=conv.id))
+    assert resp.conversation.title == "Keep me"
+
+
+@pytest.mark.parametrize("title", ["", "   ", "x" * 201])
+async def test_rename_rejects_invalid_titles(env: Env, title: str) -> None:
+    stub, _, _ = env
+    request = chat_pb2.CreateConversationRequest(title="Old")
+    conv = (await stub.CreateConversation(request)).conversation
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.UpdateConversation(chat_pb2.UpdateConversationRequest(id=conv.id, title=title))
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    got = await stub.GetConversation(chat_pb2.GetConversationRequest(id=conv.id))
+    assert got.conversation.title == "Old"
+
+
+@pytest.mark.parametrize("conversation_id", [str(uuid.uuid4()), "not-a-uuid"])
+async def test_rename_unknown_conversation_is_not_found(env: Env, conversation_id: str) -> None:
+    stub, _, _ = env
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.UpdateConversation(
+            chat_pb2.UpdateConversationRequest(id=conversation_id, title="New")
+        )
+    assert err.value.code() == grpc.StatusCode.NOT_FOUND

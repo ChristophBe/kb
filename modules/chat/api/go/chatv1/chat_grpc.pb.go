@@ -23,6 +23,7 @@ const (
 	ChatService_GetConversation_FullMethodName    = "/kb.chat.v1.ChatService/GetConversation"
 	ChatService_ListConversations_FullMethodName  = "/kb.chat.v1.ChatService/ListConversations"
 	ChatService_DeleteConversation_FullMethodName = "/kb.chat.v1.ChatService/DeleteConversation"
+	ChatService_UpdateConversation_FullMethodName = "/kb.chat.v1.ChatService/UpdateConversation"
 	ChatService_StreamChat_FullMethodName         = "/kb.chat.v1.ChatService/StreamChat"
 )
 
@@ -37,6 +38,8 @@ type ChatServiceClient interface {
 	GetConversation(ctx context.Context, in *GetConversationRequest, opts ...grpc.CallOption) (*GetConversationResponse, error)
 	ListConversations(ctx context.Context, in *ListConversationsRequest, opts ...grpc.CallOption) (*ListConversationsResponse, error)
 	DeleteConversation(ctx context.Context, in *DeleteConversationRequest, opts ...grpc.CallOption) (*DeleteConversationResponse, error)
+	// UpdateConversation changes the fields that are set and keeps the others.
+	UpdateConversation(ctx context.Context, in *UpdateConversationRequest, opts ...grpc.CallOption) (*UpdateConversationResponse, error)
 	// StreamChat appends a user message and streams the assistant's answer.
 	StreamChat(ctx context.Context, in *StreamChatRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamChatResponse], error)
 }
@@ -89,6 +92,16 @@ func (c *chatServiceClient) DeleteConversation(ctx context.Context, in *DeleteCo
 	return out, nil
 }
 
+func (c *chatServiceClient) UpdateConversation(ctx context.Context, in *UpdateConversationRequest, opts ...grpc.CallOption) (*UpdateConversationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateConversationResponse)
+	err := c.cc.Invoke(ctx, ChatService_UpdateConversation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *chatServiceClient) StreamChat(ctx context.Context, in *StreamChatRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamChatResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &ChatService_ServiceDesc.Streams[0], ChatService_StreamChat_FullMethodName, cOpts...)
@@ -119,6 +132,8 @@ type ChatServiceServer interface {
 	GetConversation(context.Context, *GetConversationRequest) (*GetConversationResponse, error)
 	ListConversations(context.Context, *ListConversationsRequest) (*ListConversationsResponse, error)
 	DeleteConversation(context.Context, *DeleteConversationRequest) (*DeleteConversationResponse, error)
+	// UpdateConversation changes the fields that are set and keeps the others.
+	UpdateConversation(context.Context, *UpdateConversationRequest) (*UpdateConversationResponse, error)
 	// StreamChat appends a user message and streams the assistant's answer.
 	StreamChat(*StreamChatRequest, grpc.ServerStreamingServer[StreamChatResponse]) error
 	mustEmbedUnimplementedChatServiceServer()
@@ -142,6 +157,9 @@ func (UnimplementedChatServiceServer) ListConversations(context.Context, *ListCo
 }
 func (UnimplementedChatServiceServer) DeleteConversation(context.Context, *DeleteConversationRequest) (*DeleteConversationResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteConversation not implemented")
+}
+func (UnimplementedChatServiceServer) UpdateConversation(context.Context, *UpdateConversationRequest) (*UpdateConversationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateConversation not implemented")
 }
 func (UnimplementedChatServiceServer) StreamChat(*StreamChatRequest, grpc.ServerStreamingServer[StreamChatResponse]) error {
 	return status.Error(codes.Unimplemented, "method StreamChat not implemented")
@@ -239,6 +257,24 @@ func _ChatService_DeleteConversation_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChatService_UpdateConversation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateConversationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).UpdateConversation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_UpdateConversation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).UpdateConversation(ctx, req.(*UpdateConversationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ChatService_StreamChat_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(StreamChatRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -272,6 +308,10 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteConversation",
 			Handler:    _ChatService_DeleteConversation_Handler,
+		},
+		{
+			MethodName: "UpdateConversation",
+			Handler:    _ChatService_UpdateConversation_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

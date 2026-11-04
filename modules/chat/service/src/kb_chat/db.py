@@ -97,6 +97,17 @@ class SqlRepository:
                 update(conversations).where(conversations.c.id == id).values(title=title)
             )
 
+    async def update_conversation(self, id: uuid.UUID, title: str) -> ConversationRow | None:
+        async with self._engine.begin() as conn:
+            result = await conn.execute(
+                update(conversations)
+                .where(conversations.c.id == id)
+                .values(title=title, updated_at=func.now())
+                .returning(conversations)
+            )
+            row = result.mappings().first()
+        return ConversationRow(**row) if row else None
+
     async def list_messages(
         self, conversation_id: uuid.UUID, limit: int | None = None
     ) -> list[MessageRow]:

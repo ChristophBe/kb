@@ -3,6 +3,7 @@ import { toast, useClient, useMutation, useQuery, useQueryClient } from "@kb/mod
 import { Button, cn, ErrorMessage } from "@kb/ui";
 import { Plus, Trash2 } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router";
+import { UNTITLED } from "./ConversationHeader.tsx";
 
 export function ChatLayout() {
   const client = useClient(ChatService);
@@ -49,11 +50,11 @@ export function ChatLayout() {
                   cn("min-w-0 flex-1 truncate px-3 py-2", isActive && "font-medium")
                 }
               >
-                {c.title || "New conversation"}
+                {c.title || UNTITLED}
               </NavLink>
               <button
                 type="button"
-                aria-label={`Delete conversation ${c.title || "New conversation"}`}
+                aria-label={`Delete conversation ${c.title || UNTITLED}`}
                 className="mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-control text-fg-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:text-danger"
                 onClick={() => remove.mutate(c.id)}
               >

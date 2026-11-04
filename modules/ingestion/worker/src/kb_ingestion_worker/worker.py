@@ -1,6 +1,8 @@
 import logging
 from collections.abc import Awaitable, Callable
+from typing import Protocol
 
+import grpc
 from google.protobuf.message import Message
 from kb.document.v1 import document_pb2, document_pb2_grpc
 from kb.ingestion.v1 import events_pb2
@@ -44,6 +46,24 @@ class PeerGate:
 # publish(subject, message, dedupe_id)
 Publish = Callable[[str, Message, str], Awaitable[None]]
 
+# Peer statuses worth waiting for: the peer is down, too slow or overloaded.
+_TRANSIENT_CODES = {
+    grpc.StatusCode.UNAVAILABLE,
+    grpc.StatusCode.DEADLINE_EXCEEDED,
+    grpc.StatusCode.RESOURCE_EXHAUSTED,
+}
+
+
+def is_transient(exc: BaseException) -> bool:
+    """Whether a later attempt may succeed. Anything unrecognised is permanent,
+    so that a bug fails the document instead of being retried over and over."""
+    if isinstance(exc, grpc.aio.AioRpcError):
+        # gRPC also reports an oversized message as RESOURCE_EXHAUSTED; that never gets better.
+        if "larger than max" in (exc.details() or ""):
+            return False
+        return exc.code() in _TRANSIENT_CODES
+    return isinstance(exc, TimeoutError | ConnectionError)
+
 
 class Processor:
     """Processes one DocumentUploaded event end to end."""
@@ -60,7 +80,12 @@ class Processor:
         self._llm = llm
         self._publish = publish
 
-    async def handle(self, event: events_pb2.DocumentUploaded) -> None:
+    async def handle(
+        self, event: events_pb2.DocumentUploaded, attempt: int = 1, last: bool = True
+    ) -> float | None:
+        """Processes the upload. Returns the delay before the next attempt when a
+        transient error should be retried, or None when the upload is finished,
+        successfully or not. On the last attempt every error is final."""
         job, doc_id = event.job_id, event.document_id
         await self._publish(
             SUBJECT_STARTED,
@@ -71,21 +96,38 @@ class Processor:
             await self._set_status(doc_id, document_pb2.DOCUMENT_STATUS_PROCESSING)
             count = await self._process(event)
         except Exception as exc:
+            error = _describe(exc)
+            if is_transient(exc) and not last:
+                delay = self._retry_delay(attempt)
+                log.warning(
+                    "attempt %d for document %s failed, retrying in %.0fs: %s",
+                    attempt,
+                    doc_id,
+                    delay,
+                    error,
+                )
+                return delay
             log.exception("processing failed for document %s", doc_id)
-            error = str(exc) or type(exc).__name__
+            if is_transient(exc):
+                error = f"gave up after {attempt} attempts: {error}"
             await self._set_status(doc_id, document_pb2.DOCUMENT_STATUS_FAILED, error)
             await self._publish(
                 SUBJECT_FAILED,
                 events_pb2.ProcessingFailed(job_id=job, document_id=doc_id, error=error),
                 f"{job}:failed",
             )
-            return
+            return None
         log.info("processed document %s into %d chunks", doc_id, count)
         await self._publish(
             SUBJECT_PROCESSED,
             events_pb2.DocumentProcessed(job_id=job, document_id=doc_id, chunk_count=count),
             f"{job}:processed",
         )
+        return None
+
+    def _retry_delay(self, attempt: int) -> float:
+        delay = self._settings.retry_delay * 2 ** (attempt - 1)
+        return min(delay, self._settings.retry_max_delay)
 
     async def _process(self, event: events_pb2.DocumentUploaded) -> int:
         data = bytearray()
@@ -126,3 +168,34 @@ class Processor:
         await self._documents.SetDocumentStatus(
             document_pb2.SetDocumentStatusRequest(id=doc_id, status=status, status_detail=detail)  # type: ignore[arg-type]
         )
+
+
+def _describe(exc: BaseException) -> str:
+    if isinstance(exc, grpc.aio.AioRpcError):
+        return f"{exc.code().name}: {exc.details()}"
+    return str(exc) or type(exc).__name__
+
+
+class Delivery(Protocol):
+    """The part of a JetStream message the worker uses."""
+
+    data: bytes
+
+    @property
+    def num_delivered(self) -> int: ...
+
+    async def ack(self) -> None: ...
+
+    async def nak(self, delay: float | None = None) -> None: ...
+
+
+async def deliver(processor: Processor, msg: Delivery, max_deliver: int) -> None:
+    """Handles one delivery: ack when done, NAK with a delay to retry. The
+    consumer redelivers at most max_deliver times, so that delivery is the last."""
+    event = events_pb2.DocumentUploaded.FromString(msg.data)
+    attempt = msg.num_delivered
+    retry_in = await processor.handle(event, attempt, last=attempt >= max_deliver)
+    if retry_in is None:
+        await msg.ack()
+    else:
+        await msg.nak(delay=retry_in)

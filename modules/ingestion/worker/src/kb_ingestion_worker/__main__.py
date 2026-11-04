@@ -5,15 +5,18 @@ import signal
 
 from google.protobuf.message import Message
 from kb.document.v1 import document_pb2_grpc
-from kb.ingestion.v1 import events_pb2
 from kb.llm.v1 import llm_pb2_grpc
 from kb_platform.grpc import channel, is_serving
 from kb_platform.logging import setup_logging
 from kb_platform.nats import connect, ensure_stream
-from nats.js.api import ConsumerConfig
+from nats.aio.msg import Msg
+from nats.js.api import AckPolicy, ConsumerConfig
+from nats.js.errors import Error as JetStreamError
 
 from .config import Settings
-from .worker import STREAM, SUBJECT_UPLOADED, PeerGate, Processor
+from .worker import STREAM, SUBJECT_UPLOADED, PeerGate, Processor, deliver
+
+CONSUMER = "ingestion-worker"
 
 log = logging.getLogger("kb_ingestion_worker")
 
@@ -36,13 +39,25 @@ async def run() -> None:
             llm_pb2_grpc.LlmServiceStub(llm_ch),
             publish,
         )
-        sub = await js.pull_subscribe(
-            SUBJECT_UPLOADED,
-            durable="ingestion-worker",
-            stream=STREAM,
+        config = ConsumerConfig(
+            name=CONSUMER,
+            durable_name=CONSUMER,
+            filter_subject=SUBJECT_UPLOADED,
+            ack_policy=AckPolicy.EXPLICIT,
             # Embedding large documents can take a while on CPU-only Ollama.
-            config=ConsumerConfig(ack_wait=600, max_deliver=3),
+            ack_wait=600,
+            max_deliver=settings.max_deliver,
         )
+        # Creates the consumer, or updates one made by an earlier version (which
+        # pull_subscribe would reuse unchanged). The server's value is the one
+        # that decides which delivery is the last.
+        try:
+            await js.add_consumer(STREAM, config)
+        except JetStreamError as err:
+            log.warning("could not update consumer %s: %s", CONSUMER, err)
+        info = await js.consumer_info(STREAM, CONSUMER)
+        max_deliver = info.config.max_deliver or settings.max_deliver
+        sub = await js.pull_subscribe_bind(durable=CONSUMER, stream=STREAM)
 
         stop = asyncio.Event()
         loop = asyncio.get_running_loop()
@@ -64,11 +79,27 @@ async def run() -> None:
             except TimeoutError:
                 continue
             for msg in msgs:
-                event = events_pb2.DocumentUploaded.FromString(msg.data)
-                await processor.handle(event)
-                await msg.ack()
+                await deliver(processor, _Delivery(msg), max_deliver)
 
     await nc.drain()
+
+
+class _Delivery:
+    """Adapts a JetStream message to worker.Delivery."""
+
+    def __init__(self, msg: Msg) -> None:
+        self._msg = msg
+        self.data = msg.data
+
+    @property
+    def num_delivered(self) -> int:
+        return self._msg.metadata.num_delivered or 1
+
+    async def ack(self) -> None:
+        await self._msg.ack()
+
+    async def nak(self, delay: float | None = None) -> None:
+        await self._msg.nak(delay=delay)
 
 
 def main() -> None:

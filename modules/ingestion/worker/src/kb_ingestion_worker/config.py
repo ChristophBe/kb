@@ -10,3 +10,9 @@ class Settings(PlatformSettings):
     # at the same level, so that a heading with a line of text isn't a chunk of its own.
     chunk_min_section_size: int = 200
     embed_batch_size: int = 32
+    # Deliveries of one upload before it fails for good. Transient errors (a peer
+    # unavailable or overloaded) are retried after retry_delay seconds, doubling
+    # up to retry_max_delay; other errors fail the document at once.
+    max_deliver: int = 5
+    retry_delay: float = 5
+    retry_max_delay: float = 300

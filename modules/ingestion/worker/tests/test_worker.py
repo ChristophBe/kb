@@ -1,7 +1,9 @@
 import logging
 import pathlib
+from collections.abc import Sequence
 from typing import Any
 
+import grpc
 import pytest
 from google.protobuf.message import Message
 from kb.document.v1 import document_pb2
@@ -14,6 +16,8 @@ from kb_ingestion_worker.worker import (
     SUBJECT_STARTED,
     PeerGate,
     Processor,
+    deliver,
+    is_transient,
 )
 
 
@@ -39,21 +43,44 @@ class FakeDocuments:
 
 
 class FakeLlm:
+    def __init__(self, failures: Sequence[BaseException] = ()) -> None:
+        self.failures = list(failures)
+
     async def Embed(self, request: llm_pb2.EmbedRequest):
+        if self.failures:
+            raise self.failures.pop(0)
         return llm_pb2.EmbedResponse(
             embeddings=[llm_pb2.Embedding(values=[float(len(t))]) for t in request.inputs]
         )
 
 
-def make(content: bytes, **settings: Any):
+def make(content: bytes, llm: FakeLlm | None = None, **settings: Any):
     published: list[tuple[str, Message]] = []
 
     async def publish(subject: str, message: Message, dedupe_id: str) -> None:
         published.append((subject, message))
 
     docs = FakeDocuments(content)
-    proc = Processor(Settings(**settings), docs, FakeLlm(), publish)  # type: ignore[arg-type]
+    proc = Processor(Settings(**settings), docs, llm or FakeLlm(), publish)  # type: ignore[arg-type]
     return proc, docs, published
+
+
+def rpc_error(code: grpc.StatusCode, details: str = "peer detail") -> grpc.aio.AioRpcError:
+    return grpc.aio.AioRpcError(code, grpc.aio.Metadata(), grpc.aio.Metadata(), details)
+
+
+class FakeMsg:
+    def __init__(self, event: events_pb2.DocumentUploaded, num_delivered: int) -> None:
+        self.data = event.SerializeToString()
+        self.num_delivered = num_delivered
+        self.acked = False
+        self.nak_delay: float | None = None
+
+    async def ack(self) -> None:
+        self.acked = True
+
+    async def nak(self, delay: float | None = None) -> None:
+        self.nak_delay = delay
 
 
 def uploaded(filename: str, content_type: str = "text/markdown") -> events_pb2.DocumentUploaded:
@@ -116,3 +143,96 @@ async def test_peer_gate_follows_peer_health(caplog: pytest.LogCaptureFixture) -
     messages = [r.getMessage() for r in caplog.records]
     assert sum("pausing" in m for m in messages) == 1
     assert sum("resuming" in m for m in messages) == 1
+
+
+@pytest.mark.parametrize(
+    ("exc", "transient"),
+    [
+        (rpc_error(grpc.StatusCode.UNAVAILABLE), True),
+        (rpc_error(grpc.StatusCode.DEADLINE_EXCEEDED), True),
+        (rpc_error(grpc.StatusCode.RESOURCE_EXHAUSTED), True),
+        (TimeoutError(), True),
+        (ConnectionResetError(), True),
+        (
+            rpc_error(
+                grpc.StatusCode.RESOURCE_EXHAUSTED,
+                "grpc: received message larger than max (15390798 vs. 4194304)",
+            ),
+            False,
+        ),
+        (rpc_error(grpc.StatusCode.INVALID_ARGUMENT), False),
+        (rpc_error(grpc.StatusCode.INTERNAL), False),
+        (ValueError("document contains no text"), False),
+        (RuntimeError("bug"), False),
+    ],
+)
+def test_error_classification(exc: BaseException, transient: bool) -> None:
+    assert is_transient(exc) is transient
+
+
+async def test_a_transient_error_is_retried_with_backoff() -> None:
+    llm = FakeLlm([rpc_error(grpc.StatusCode.UNAVAILABLE)] * 3)
+    proc, docs, published = make(b"text", llm, retry_delay=2, retry_max_delay=5)
+    event = uploaded("notes.md")
+
+    delays = [await proc.handle(event, attempt, last=False) for attempt in (1, 2, 3)]
+
+    assert delays == [2, 4, 5]
+    assert SUBJECT_FAILED not in [s for s, _ in published]
+    assert document_pb2.DOCUMENT_STATUS_FAILED not in docs.statuses
+
+
+async def test_processing_succeeds_once_the_peer_is_back() -> None:
+    llm = FakeLlm([rpc_error(grpc.StatusCode.UNAVAILABLE)])
+    proc, docs, published = make(b"text", llm)
+    event = uploaded("notes.md")
+
+    assert await proc.handle(event, 1, last=False) is not None
+    assert await proc.handle(event, 2, last=False) is None
+
+    assert [s for s, _ in published][-1] == SUBJECT_PROCESSED
+    assert docs.chunks
+
+
+async def test_the_last_attempt_fails_the_document_with_the_reason() -> None:
+    llm = FakeLlm([rpc_error(grpc.StatusCode.UNAVAILABLE)])
+    proc, docs, published = make(b"text", llm)
+
+    assert await proc.handle(uploaded("notes.md"), 5, last=True) is None
+
+    event = published[-1][1]
+    assert isinstance(event, events_pb2.ProcessingFailed)
+    assert event.error == "gave up after 5 attempts: UNAVAILABLE: peer detail"
+    assert docs.statuses[-1] == document_pb2.DOCUMENT_STATUS_FAILED
+
+
+async def test_permanent_errors_fail_at_once_without_retries() -> None:
+    proc, docs, published = make(b"\x00\x01")
+    assert await proc.handle(uploaded("image.png", "image/png"), 1, last=False) is None
+    assert [s for s, _ in published] == [SUBJECT_STARTED, SUBJECT_FAILED]
+    assert docs.statuses[-1] == document_pb2.DOCUMENT_STATUS_FAILED
+
+
+async def test_deliver_naks_a_retry_and_acks_otherwise() -> None:
+    llm = FakeLlm([rpc_error(grpc.StatusCode.UNAVAILABLE)])
+    proc, _, _ = make(b"text", llm, retry_delay=3)
+    event = uploaded("notes.md")
+
+    first = FakeMsg(event, num_delivered=1)
+    await deliver(proc, first, max_deliver=5)
+    assert (first.acked, first.nak_delay) == (False, 3)
+
+    second = FakeMsg(event, num_delivered=2)
+    await deliver(proc, second, max_deliver=5)
+    assert (second.acked, second.nak_delay) == (True, None)
+
+
+async def test_deliver_treats_the_consumer_limit_as_the_last_attempt() -> None:
+    llm = FakeLlm([rpc_error(grpc.StatusCode.UNAVAILABLE)])
+    proc, _, published = make(b"text", llm)
+    msg = FakeMsg(uploaded("notes.md"), num_delivered=3)
+
+    await deliver(proc, msg, max_deliver=3)
+
+    assert msg.acked
+    assert [s for s, _ in published][-1] == SUBJECT_FAILED

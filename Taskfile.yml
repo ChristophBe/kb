@@ -91,7 +91,7 @@ tasks:
       MINIMUMS: |
         .     ./platform/go/...              5
         .     ./modules/document/service/... 30
-        .     ./modules/ingestion/service/... 15
+        .     ./modules/ingestion/service/... 40
         tools ./modgen/...                   65
     cmds:
       - mkdir -p .gocover
@@ -121,7 +121,7 @@ tasks:
         platform/python          5
         modules/chat/service     60
         modules/llm/service      80
-        modules/ingestion/worker 65
+        modules/ingestion/worker 75
     cmds:
       - for: { var: PY_COMPONENTS }
         cmd: |

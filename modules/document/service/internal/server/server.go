@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"path"
 	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -128,9 +129,18 @@ func (s *Server) UpdateDocument(ctx context.Context, req *documentv1.UpdateDocum
 	}
 	params := store.UpdateDocumentParams{ID: id}
 	if req.Title != nil {
-		params.Title = pgtype.Text{String: req.GetTitle(), Valid: true}
+		title := strings.TrimSpace(req.GetTitle())
+		if title == "" {
+			return nil, status.Error(codes.InvalidArgument, "title must not be empty")
+		}
+		params.Title = pgtype.Text{String: title, Valid: true}
 	}
 	if req.GetSetMetadata() {
+		for key := range req.GetMetadata() {
+			if strings.TrimSpace(key) == "" {
+				return nil, status.Error(codes.InvalidArgument, "metadata keys must not be empty")
+			}
+		}
 		params.Metadata = nonNil(req.GetMetadata())
 	}
 	doc, err := s.repo.UpdateDocument(ctx, params)

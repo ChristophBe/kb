@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./theme.css": "./src/theme.css",
-    "./testing": "./src/testing/axe.ts"
+    "./testing": "./src/testing/axe.ts",
+    "./testing/dialog": "./src/testing/dialog.ts"
   },
   "scripts": {
     "typecheck": "tsc -p ."

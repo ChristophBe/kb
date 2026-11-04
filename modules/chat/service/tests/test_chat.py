@@ -242,3 +242,34 @@ async def test_peer_statuses_become_application_errors(
         _ = [d async for d in PeerGenerator(llm).generate("m", [])]
     assert type(retrieved.value) is expected
     assert type(generated.value) is expected
+
+
+class WordCounter:
+    def count(self, text: str) -> int:
+        return len(text.split())
+
+
+async def test_only_the_sources_that_fit_are_cited() -> None:
+    class TwoSources(FakeRetriever):
+        async def retrieve(self, query: str, limit: int) -> list[chat_pb2.Citation]:
+            return [
+                chat_pb2.Citation(document_id="best", snippet="best " * 5, score=0.9),
+                chat_pb2.Citation(document_id="worse", snippet="worse " * 500, score=0.4),
+            ]
+
+    repo, retriever, generator = FakeRepo(), TwoSources(), FakeGenerator()
+    port: Any = repo
+    settings = Settings(context_tokens=300, answer_reserve_tokens=100)
+    chat = Chat(settings, port, retriever, generator, WordCounter())
+
+    events = await collect(chat, repo)
+
+    found = events[0]
+    assert isinstance(found, SourcesFound)
+    assert [c.document_id for c in found.citations] == ["best"]
+    system = generator.calls[0][1][0].content
+    assert "[1] " in system
+    assert "[2] " not in system
+    saved = events[-1]
+    assert isinstance(saved, AnswerSaved)
+    assert [c["document_id"] for c in saved.message.citations] == ["best"]

@@ -1,5 +1,6 @@
 export { cn } from "./cn.ts";
 export {
+  Area,
   Badge,
   Button,
   Card,
@@ -9,7 +10,6 @@ export {
   Input,
   PageHeader,
   PageTitle,
-  Panel,
   SourceNote,
   Spinner,
   Textarea,

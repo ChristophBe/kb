@@ -5,8 +5,8 @@
  * never raw palette classes such as zinc-500 or dark: variants.
  *
  * Aesthetic: a frosted instrument. Calm zinc neutrals on a softly lit canvas,
- * translucent glass chrome that blurs the content beneath it, soft concentric
- * corners, and one blue accent for action and place. IBM Plex Sans for the
+ * frosted layout areas divided by hairlines, floating glass only for what
+ * floats (the composer, overlays), soft concentric corners, and one blue accent for action and place. IBM Plex Sans for the
  * interface, Plex Mono for data.
  *
  * Every colour role is `light-dark(<light>, <dark>)`; the mode follows
@@ -114,6 +114,12 @@
 }
 
 /* Liquid glass: blur and saturate what's behind, with a light rim on top. */
+/* A frosted region of the layout (sidebar, list pane): edge to edge, no float. */
+@utility glass-area {
+  background-color: var(--color-glass);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
 @utility glass {
   background-color: var(--color-glass);
   border: 1px solid var(--color-glass-edge);

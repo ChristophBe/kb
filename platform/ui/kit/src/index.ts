@@ -18,6 +18,8 @@ export {
   Spinner,
   Textarea,
   type Tone,
+  type Variant,
+  WidgetCard,
 } from "./components.tsx";
 export { ConfirmDialog } from "./confirm-dialog.tsx";
 export { Dialog } from "./dialog.tsx";

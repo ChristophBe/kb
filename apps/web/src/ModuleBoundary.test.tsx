@@ -96,6 +96,26 @@ describe("ModuleBoundary", () => {
     );
     expect(screen.getByText("count 1")).toBeTruthy();
   });
+  it("keeps a failing home widget contained, without taking focus", () => {
+    const router = createMemoryRouter([
+      {
+        path: "/",
+        element: (
+          <>
+            <h1>Home</h1>
+            <ModuleBoundary title="Chat" widget>
+              <Flaky />
+            </ModuleBoundary>
+          </>
+        ),
+      },
+    ]);
+    render(<RouterProvider router={router} />);
+    const heading = screen.getByRole("heading", { name: "Something went wrong in Chat." });
+    expect(heading.tagName).toBe("H3");
+    expect(document.activeElement).not.toBe(heading);
+    expect(screen.queryByRole("link", { name: "Go to home" })).toBeNull();
+  });
 });
 
 function ModuleBoundaryInRouter({ children }: { children: React.ReactNode }) {

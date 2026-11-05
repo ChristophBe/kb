@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatRelativeTime } from "./format.ts";
+import { formatBytes, formatRelativeTime } from "./format.ts";
 
 const now = Date.UTC(2026, 10, 6, 12, 0, 0);
 const ago = (seconds: number) => ({ seconds: BigInt(now / 1000 - seconds) });
@@ -26,4 +26,9 @@ describe("formatRelativeTime", () => {
   it("formats a missing timestamp as empty", () => {
     expect(formatRelativeTime(undefined, now)).toBe("");
   });
+});
+
+it("formats sizes", () => {
+  expect(formatBytes(512)).toBe("512 B");
+  expect(formatBytes(1536n)).toBe("1.5 KB");
 });

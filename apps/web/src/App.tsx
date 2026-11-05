@@ -1,8 +1,9 @@
 import type { KbModule, RuntimeConfig } from "@kb/module-sdk";
-import { Area, Card, navItemClass, PageTitle } from "@kb/ui";
+import { Area, navItemClass } from "@kb/ui";
 import { CircleHelp, FlaskConical, Library } from "lucide-react";
 import { useMemo } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
+import { Home } from "./Home.tsx";
 import { HelpIndex, HelpPage } from "./help/Help.tsx";
 import { ModuleBoundary } from "./ModuleBoundary.tsx";
 import { activeModules, navEntries } from "./registry.ts";
@@ -86,28 +87,6 @@ function Shell({ modules }: { modules: KbModule[] }) {
         <Outlet />
       </main>
       <ToastHost />
-    </div>
-  );
-}
-
-export function Home({ modules }: { modules: KbModule[] }) {
-  const widgets = modules.flatMap((m) =>
-    Object.entries(m.widgets ?? {}).map(([name, Widget]) => <Widget key={`${m.id}.${name}`} />),
-  );
-  return (
-    <div>
-      <PageTitle className="mb-8">Welcome</PageTitle>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {navEntries(modules).map(({ to, label, icon: Icon }) => (
-          <Link key={to} to={to}>
-            <Card className="flex items-center gap-3 p-5 transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-glass">
-              <Icon className="size-5 text-fg-muted" />
-              <span className="font-medium">{label}</span>
-            </Card>
-          </Link>
-        ))}
-      </div>
-      {widgets.length > 0 && <div className="mt-8 grid gap-4 lg:grid-cols-2">{widgets}</div>}
     </div>
   );
 }

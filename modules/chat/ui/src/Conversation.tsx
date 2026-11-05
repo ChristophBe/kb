@@ -156,8 +156,9 @@ export function Conversation() {
       {conversation.data?.conversation && (
         <ConversationHeader conversation={conversation.data.conversation} />
       )}
-      <div className="flex-1 overflow-y-auto px-8 py-6">
-        <div className="mx-auto flex max-w-3xl flex-col gap-4">
+      {/* The composer floats over the messages; scroll padding keeps focus clear of it (WCAG 2.4.11). */}
+      <div className="flex flex-1 scroll-pb-48 flex-col overflow-y-auto px-8 pt-6">
+        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4">
           {conversation.isPending && <Spinner />}
           <ErrorMessage error={conversation.error ? readableError(conversation.error) : error} />
           {messages.map((m) => (
@@ -199,59 +200,62 @@ export function Conversation() {
         <p role="status" className="sr-only">
           {status}
         </p>
-      </div>
-      <form onSubmit={send} className="border-t border-border bg-surface px-8 py-4">
-        <div className="mx-auto flex max-w-3xl flex-col gap-2">
-          <div className="flex gap-2">
-            <Textarea
-              ref={composer}
-              rows={2}
-              value={input}
-              placeholder="Ask something…"
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) send(e);
-                if (e.key === "Escape" && pending) stop();
-              }}
-            />
-            {pending && (
-              <Button
-                type="button"
-                variant="secondary"
-                title="Stop the answer (Esc)"
-                onClick={stop}
-              >
-                <Square className="size-3 fill-current" aria-hidden="true" />
-                Stop
-              </Button>
-            )}
-            <Button
-              type="submit"
-              aria-label="Send"
-              aria-describedby={pending ? SEND_HINT : undefined}
-              disabled={!input.trim() || pending !== null}
-            >
-              <Send className="size-4" aria-hidden="true" />
-            </Button>
-            <span id={SEND_HINT} hidden>
-              Wait for the answer or stop it (Esc).
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <label className="flex items-center gap-2 text-xs text-fg-muted">
-              <input
-                type="checkbox"
-                checked={useKnowledgeBase}
-                onChange={(e) => setUseKnowledgeBase(e.target.checked)}
+        <form
+          onSubmit={send}
+          className="glass sticky bottom-4 mx-auto mt-6 mb-4 w-full max-w-3xl rounded-panel p-3"
+        >
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <Textarea
+                ref={composer}
+                rows={2}
+                value={input}
+                placeholder="Ask something…"
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) send(e);
+                  if (e.key === "Escape" && pending) stop();
+                }}
               />
-              Answer from the knowledge base
-            </label>
-            {conversation.data?.conversation && useKnowledgeBase && (
-              <DocumentPicker conversation={conversation.data.conversation} />
-            )}
+              {pending && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  title="Stop the answer (Esc)"
+                  onClick={stop}
+                >
+                  <Square className="size-3 fill-current" aria-hidden="true" />
+                  Stop
+                </Button>
+              )}
+              <Button
+                type="submit"
+                aria-label="Send"
+                aria-describedby={pending ? SEND_HINT : undefined}
+                disabled={!input.trim() || pending !== null}
+              >
+                <Send className="size-4" aria-hidden="true" />
+              </Button>
+              <span id={SEND_HINT} hidden>
+                Wait for the answer or stop it (Esc).
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <label className="flex items-center gap-2 text-xs text-fg-muted">
+                <input
+                  type="checkbox"
+                  checked={useKnowledgeBase}
+                  onChange={(e) => setUseKnowledgeBase(e.target.checked)}
+                />
+                Answer from the knowledge base
+              </label>
+              {conversation.data?.conversation && useKnowledgeBase && (
+                <DocumentPicker conversation={conversation.data.conversation} />
+              )}
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </>
   );
 }
@@ -276,7 +280,7 @@ function Bubble({
   if (role === MessageRole.USER) {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] rounded-card border-l-2 border-accent bg-surface-muted px-4 py-2 text-sm whitespace-pre-wrap">
+        <div className="max-w-[85%] rounded-card bg-accent-subtle px-4 py-2 text-sm whitespace-pre-wrap">
           {content}
         </div>
       </div>

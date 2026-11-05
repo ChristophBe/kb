@@ -19,6 +19,8 @@ Shell-level building blocks that every module UI uses: a route-level error bound
 └──────────────┴──────────────────────────────────────────────────────┘
 ```
 
+The sidebar is a floating glass panel (`Panel`), inset 12 px from the viewport, with the theme switch (System / Light / Dark, a radio group) at its bottom. Toasts are `glass-strong` and float over the content.
+
 *Narrow (< 768 px):* the sidebar collapses into a top bar with `[☰ Menu]`, which opens the nav as a modal dialog (`Esc` closes, focus returns to the button). Toasts span the width at the bottom.
 
 ## Error boundary (per module route)

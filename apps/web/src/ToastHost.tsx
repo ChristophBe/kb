@@ -50,7 +50,7 @@ function ToastItem({ toast }: { toast: Toast }) {
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
       className={cn(
-        "pointer-events-auto flex items-start gap-3 rounded-card border border-border bg-surface px-4 py-3 text-sm shadow-overlay",
+        "pointer-events-auto flex items-start gap-3 glass-strong rounded-card px-4 py-3 text-sm",
         toast.kind === "error" && "text-danger",
       )}
     >

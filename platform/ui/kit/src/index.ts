@@ -9,6 +9,7 @@ export {
   Input,
   PageHeader,
   PageTitle,
+  Panel,
   SourceNote,
   Spinner,
   Textarea,

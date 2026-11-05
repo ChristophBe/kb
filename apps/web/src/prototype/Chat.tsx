@@ -594,7 +594,7 @@ function MessageView({ message, onRetry }: { message: Message; onRetry: () => vo
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
-        <p className="max-w-[85%] rounded-control border-l-2 border-accent bg-surface-muted px-4 py-2 text-base whitespace-pre-wrap">
+        <p className="max-w-[85%] rounded-card bg-accent-subtle px-4 py-2 text-base whitespace-pre-wrap">
           {message.content}
         </p>
       </div>

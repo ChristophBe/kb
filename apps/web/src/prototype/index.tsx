@@ -115,7 +115,7 @@ function PrototypeLayout() {
               className={({ isActive }) =>
                 cn(
                   "rounded-control px-3 py-1.5 text-sm text-fg-muted hover:bg-surface-muted",
-                  isActive && "bg-surface-muted font-medium text-fg",
+                  isActive && "bg-accent-subtle font-medium text-accent hover:bg-accent-subtle",
                 )
               }
             >

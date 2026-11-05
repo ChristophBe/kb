@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Knowledge Base</title>
+    <script>
+      // Applies the saved theme (src/theme.ts) before first paint, so a pinned theme doesn't flash.
+      try {
+        const theme = localStorage.getItem("kb.theme");
+        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
   </head>
   <body class="bg-canvas text-fg antialiased">
     <div id="root"></div>

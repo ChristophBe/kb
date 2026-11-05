@@ -1,15 +1,20 @@
 /*
  * Design tokens for every kb UI (docs/ux-standards.md). Imported once by the
  * shell after tailwindcss. Module UIs use the utilities these generate
- * (bg-surface, text-fg-muted, border-border-strong, rounded-control, …),
- * never raw palette classes such as gray-500 or dark: variants.
+ * (bg-surface, text-fg-muted, border-border-strong, rounded-control, glass, …),
+ * never raw palette classes such as zinc-500 or dark: variants.
  *
- * Aesthetic: a lab notebook. Cool grey paper, IBM Plex Sans for the
- * interface and Plex Mono for data, near-square corners, and monochrome ink
- * as the only accent.
+ * Aesthetic: a frosted instrument. Calm zinc neutrals on a softly lit canvas,
+ * translucent glass chrome that blurs the content beneath it, soft concentric
+ * corners, and one blue accent for action and place. IBM Plex Sans for the
+ * interface, Plex Mono for data.
+ *
+ * Every colour role is `light-dark(<light>, <dark>)`; the mode follows
+ * `color-scheme`, which the OS sets unless `<html data-theme>` overrides it.
  *
  * Every text/background and UI-component pair below meets WCAG 2.2 AA in
- * light and dark mode (4.5:1 for text, 3:1 for borders and the focus ring).
+ * light and dark mode (4.5:1 for text, 3:1 for borders and the focus ring),
+ * glass included (theme.test.ts composites it over what it floats above).
  */
 
 /* Self-hosted fonts: no requests leave the deployment. */
@@ -19,29 +24,57 @@
 @import "@fontsource/ibm-plex-mono/500.css";
 
 @theme {
-  /* Colour roles, light mode. Dark mode overrides the same variables below. */
-  --color-canvas: var(--color-gray-100); /* page background */
-  --color-surface: var(--color-white); /* cards, sidebar, inputs */
-  --color-surface-muted: var(--color-gray-100); /* hover, selected, subtle fills */
-  --color-fg: var(--color-gray-900); /* body text, headings */
-  --color-fg-muted: var(--color-gray-600); /* secondary text, icons */
-  --color-border: var(--color-gray-200); /* decorative dividers */
-  --color-border-strong: var(--color-gray-500); /* boundaries that identify a control */
-  --color-accent: var(--color-gray-900); /* primary actions */
-  --color-accent-hover: var(--color-gray-700);
-  --color-on-accent: var(--color-white);
-  --color-focus: var(--color-blue-600);
+  /* Colour roles: light-dark(light mode, dark mode). */
+  --color-canvas: light-dark(var(--color-zinc-100), var(--color-zinc-950)); /* page background */
+  --color-surface: light-dark(var(--color-white), var(--color-zinc-900)); /* cards, inputs */
+  --color-surface-muted: light-dark(
+    var(--color-zinc-100),
+    var(--color-zinc-800)
+  ); /* hover, subtle fills */
+  --color-fg: light-dark(var(--color-zinc-900), var(--color-zinc-50)); /* body text, headings */
+  --color-fg-muted: light-dark(
+    var(--color-zinc-600),
+    var(--color-zinc-400)
+  ); /* secondary text, icons */
+  --color-border: light-dark(
+    var(--color-zinc-200),
+    var(--color-zinc-800)
+  ); /* decorative dividers */
+  --color-border-strong: light-dark(
+    var(--color-zinc-500),
+    var(--color-zinc-500)
+  ); /* control boundaries */
+  --color-accent: light-dark(
+    var(--color-blue-600),
+    var(--color-blue-400)
+  ); /* primary action, current place */
+  --color-accent-hover: light-dark(var(--color-blue-700), var(--color-blue-300));
+  --color-on-accent: light-dark(var(--color-white), var(--color-zinc-950));
+  --color-accent-subtle: light-dark(
+    var(--color-blue-50),
+    var(--color-blue-950)
+  ); /* selected, own messages */
+  --color-focus: light-dark(var(--color-blue-600), var(--color-blue-400));
 
-  --color-neutral: var(--color-gray-700);
-  --color-neutral-subtle: var(--color-gray-100);
-  --color-info: var(--color-blue-700);
-  --color-info-subtle: var(--color-blue-50);
-  --color-success: var(--color-emerald-700);
-  --color-success-subtle: var(--color-emerald-50);
-  --color-warning: var(--color-amber-800);
-  --color-warning-subtle: var(--color-amber-50);
-  --color-danger: var(--color-red-700);
-  --color-danger-subtle: var(--color-red-50);
+  --color-neutral: light-dark(var(--color-zinc-700), var(--color-zinc-300));
+  --color-neutral-subtle: light-dark(var(--color-zinc-100), var(--color-zinc-800));
+  --color-info: light-dark(var(--color-blue-700), var(--color-blue-300));
+  --color-info-subtle: light-dark(var(--color-blue-50), var(--color-blue-950));
+  --color-success: light-dark(var(--color-emerald-700), var(--color-emerald-300));
+  --color-success-subtle: light-dark(var(--color-emerald-50), var(--color-emerald-950));
+  --color-warning: light-dark(var(--color-amber-800), var(--color-amber-300));
+  --color-warning-subtle: light-dark(var(--color-amber-50), var(--color-amber-950));
+  --color-danger: light-dark(var(--color-red-700), var(--color-red-300));
+  --color-danger-subtle: light-dark(var(--color-red-50), var(--color-red-950));
+
+  /* Glass: translucent fills for chrome (glass) and overlays (glass-strong). */
+  --color-glass: light-dark(rgb(255 255 255 / 0.72), rgb(24 24 27 / 0.72));
+  --color-glass-strong: light-dark(rgb(255 255 255 / 0.86), rgb(24 24 27 / 0.86));
+  --color-glass-edge: light-dark(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.1)); /* specular rim */
+
+  /* Soft light behind the glass, so it has something to refract. */
+  --color-glow-1: light-dark(rgb(59 130 246 / 0.12), rgb(59 130 246 / 0.16));
+  --color-glow-2: light-dark(rgb(161 161 170 / 0.25), rgb(113 113 122 / 0.14));
 
   /* Spacing: one 4px step (p-1 = 4px, p-4 = 16px). */
   --spacing: 0.25rem;
@@ -69,44 +102,65 @@
   --font-sans: "IBM Plex Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-  /* Radius by role: near-square, like a ruled notebook. */
-  --radius-control: 0.125rem; /* buttons, inputs, nav items, alerts, tags */
-  --radius-card: 0.25rem; /* cards, dialogs */
+  /* Radius by role, concentric: a control inside a card inside a panel. */
+  --radius-control: 0.625rem; /* 10px: buttons, inputs, nav items, alerts */
+  --radius-card: 1rem; /* 16px: cards, toasts, messages */
+  --radius-panel: 1.5rem; /* 24px: glass panels, dialogs */
 
-  /* One shadow, for floating layers only (menus, toasts, dialogs). */
+  /* Shadows: only for things that float (glass chrome, overlays). */
   --shadow-*: initial;
-  --shadow-overlay: 0 1px 0 0 rgb(0 0 0 / 0.04), 0 8px 20px -8px rgb(0 0 0 / 0.25);
+  --shadow-glass: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 32px -12px rgb(0 0 0 / 0.18);
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / 0.06), 0 24px 48px -16px rgb(0 0 0 / 0.35);
+}
+
+/* Liquid glass: blur and saturate what's behind, with a light rim on top. */
+@utility glass {
+  background-color: var(--color-glass);
+  border: 1px solid var(--color-glass-edge);
+  box-shadow:
+    inset 0 1px 0 0 var(--color-glass-edge),
+    var(--shadow-glass);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+@utility glass-strong {
+  background-color: var(--color-glass-strong);
+  border: 1px solid var(--color-glass-edge);
+  box-shadow:
+    inset 0 1px 0 0 var(--color-glass-edge),
+    var(--shadow-overlay);
+  backdrop-filter: blur(32px) saturate(180%);
 }
 
 @layer base {
   :root {
     color-scheme: light dark;
   }
+  :root[data-theme="light"] {
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+  }
 
-  @media (prefers-color-scheme: dark) {
+  body {
+    background-image:
+      radial-gradient(60rem 40rem at 85% -10%, var(--color-glow-1), transparent 70%),
+      radial-gradient(50rem 40rem at -10% 110%, var(--color-glow-2), transparent 70%);
+    background-attachment: fixed;
+  }
+
+  /* Glass falls back to an opaque surface where it can't blur or isn't wanted. */
+  @supports not (backdrop-filter: blur(1px)) {
     :root {
-      --color-canvas: var(--color-gray-950);
-      --color-surface: var(--color-gray-900);
-      --color-surface-muted: var(--color-gray-800);
-      --color-fg: var(--color-gray-50);
-      --color-fg-muted: var(--color-gray-400);
-      --color-border: var(--color-gray-800);
-      --color-border-strong: var(--color-gray-500);
-      --color-accent: var(--color-gray-50);
-      --color-accent-hover: var(--color-gray-300);
-      --color-on-accent: var(--color-gray-950);
-      --color-focus: var(--color-blue-400);
-
-      --color-neutral: var(--color-gray-300);
-      --color-neutral-subtle: var(--color-gray-800);
-      --color-info: var(--color-blue-300);
-      --color-info-subtle: var(--color-blue-950);
-      --color-success: var(--color-emerald-300);
-      --color-success-subtle: var(--color-emerald-950);
-      --color-warning: var(--color-amber-300);
-      --color-warning-subtle: var(--color-amber-950);
-      --color-danger: var(--color-red-300);
-      --color-danger-subtle: var(--color-red-950);
+      --color-glass: var(--color-surface);
+      --color-glass-strong: var(--color-surface);
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    :root {
+      --color-glass: var(--color-surface);
+      --color-glass-strong: var(--color-surface);
     }
   }
 

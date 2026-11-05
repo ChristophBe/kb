@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1ckb/ingestion/v1/events.proto\x12\x0fkb.ingestion.v1\"\x89\x01\n\x10\x44ocumentUploaded\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x1a\n\x08\x66ilename\x18\x03 \x01(\tR\x08\x66ilename\x12!\n\x0c\x63ontent_type\x18\x04 \x01(\tR\x0b\x63ontentType\"K\n\x11ProcessingStarted\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\"l\n\x11\x44ocumentProcessed\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x1f\n\x0b\x63hunk_count\x18\x03 \x01(\x05R\nchunkCount\"`\n\x10ProcessingFailed\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x14\n\x05\x65rror\x18\x03 \x01(\tR\x05\x65rrorBJZHgithub.com/christoph/kb/modules/ingestion/api/go/ingestionv1;ingestionv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1ckb/ingestion/v1/events.proto\x12\x0fkb.ingestion.v1\"\x9b\x01\n\x10\x44ocumentUploaded\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x1a\n\x08\x66ilename\x18\x03 \x01(\tR\x08\x66ilename\x12!\n\x0c\x63ontent_type\x18\x04 \x01(\tR\x0b\x63ontentType\x12\x10\n\x03run\x18\x05 \x01(\x05R\x03run\"]\n\x11ProcessingStarted\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x10\n\x03run\x18\x03 \x01(\x05R\x03run\"~\n\x11\x44ocumentProcessed\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x1f\n\x0b\x63hunk_count\x18\x03 \x01(\x05R\nchunkCount\x12\x10\n\x03run\x18\x04 \x01(\x05R\x03run\"r\n\x10ProcessingFailed\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x14\n\x05\x65rror\x18\x03 \x01(\tR\x05\x65rror\x12\x10\n\x03run\x18\x04 \x01(\x05R\x03runBJZHgithub.com/christoph/kb/modules/ingestion/api/go/ingestionv1;ingestionv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,11 +33,11 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'ZHgithub.com/christoph/kb/modules/ingestion/api/go/ingestionv1;ingestionv1'
   _globals['_DOCUMENTUPLOADED']._serialized_start=50
-  _globals['_DOCUMENTUPLOADED']._serialized_end=187
-  _globals['_PROCESSINGSTARTED']._serialized_start=189
-  _globals['_PROCESSINGSTARTED']._serialized_end=264
-  _globals['_DOCUMENTPROCESSED']._serialized_start=266
-  _globals['_DOCUMENTPROCESSED']._serialized_end=374
-  _globals['_PROCESSINGFAILED']._serialized_start=376
-  _globals['_PROCESSINGFAILED']._serialized_end=472
+  _globals['_DOCUMENTUPLOADED']._serialized_end=205
+  _globals['_PROCESSINGSTARTED']._serialized_start=207
+  _globals['_PROCESSINGSTARTED']._serialized_end=300
+  _globals['_DOCUMENTPROCESSED']._serialized_start=302
+  _globals['_DOCUMENTPROCESSED']._serialized_end=428
+  _globals['_PROCESSINGFAILED']._serialized_start=430
+  _globals['_PROCESSINGFAILED']._serialized_end=544
 # @@protoc_insertion_point(module_scope)

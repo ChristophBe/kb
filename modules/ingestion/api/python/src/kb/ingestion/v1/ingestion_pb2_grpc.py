@@ -61,6 +61,11 @@ class IngestionServiceStub:
                 request_serializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.WatchJobRequest.SerializeToString,
                 response_deserializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.WatchJobResponse.FromString,
                 _registered_method=True)
+        self.ReprocessJob = channel.unary_unary(
+                '/kb.ingestion.v1.IngestionService/ReprocessJob',
+                request_serializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.ReprocessJobRequest.SerializeToString,
+                response_deserializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.ReprocessJobResponse.FromString,
+                _registered_method=True)
 
 
 class IngestionServiceServicer:
@@ -102,6 +107,15 @@ class IngestionServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ReprocessJob(self, request, context):
+        """ReprocessJob queues a FAILED or DONE job again: the worker extracts,
+        chunks and embeds the uploaded file anew and replaces the document's
+        chunks. Other jobs fail with FAILED_PRECONDITION.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_IngestionServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -129,6 +143,11 @@ def add_IngestionServiceServicer_to_server(servicer, server):
                     servicer.WatchJob,
                     request_deserializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.WatchJobRequest.FromString,
                     response_serializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.WatchJobResponse.SerializeToString,
+            ),
+            'ReprocessJob': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReprocessJob,
+                    request_deserializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.ReprocessJobRequest.FromString,
+                    response_serializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.ReprocessJobResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -268,6 +287,33 @@ class IngestionService:
             '/kb.ingestion.v1.IngestionService/WatchJob',
             kb_dot_ingestion_dot_v1_dot_ingestion__pb2.WatchJobRequest.SerializeToString,
             kb_dot_ingestion_dot_v1_dot_ingestion__pb2.WatchJobResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReprocessJob(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/kb.ingestion.v1.IngestionService/ReprocessJob',
+            kb_dot_ingestion_dot_v1_dot_ingestion__pb2.ReprocessJobRequest.SerializeToString,
+            kb_dot_ingestion_dot_v1_dot_ingestion__pb2.ReprocessJobResponse.FromString,
             options,
             channel_credentials,
             insecure,

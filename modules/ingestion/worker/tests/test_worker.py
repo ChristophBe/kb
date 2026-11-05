@@ -104,6 +104,31 @@ async def test_processes_text_into_embedded_chunks() -> None:
     assert docs.statuses == [document_pb2.DOCUMENT_STATUS_PROCESSING]
 
 
+async def test_events_carry_the_run_and_a_message_id_per_run() -> None:
+    sent: list[tuple[str, Message, str]] = []
+
+    async def publish(subject: str, message: Message, dedupe_id: str) -> None:
+        sent.append((subject, message, dedupe_id))
+
+    docs = FakeDocuments(b"# Title\n\nsome text")
+    proc = Processor(Settings(), docs, FakeLlm(), publish)  # type: ignore[arg-type]
+    first = uploaded("notes.md")
+    await proc.handle(first)
+    first_chunks = list(docs.chunks)
+    second = uploaded("notes.md")
+    second.run = 2
+    await proc.handle(second)
+
+    assert [(m.run, i) for _, m, i in sent] == [  # type: ignore[attr-defined]
+        (1, "j1:1:started"),
+        (1, "j1:1:processed"),
+        (2, "j1:2:started"),
+        (2, "j1:2:processed"),
+    ]
+    # AddChunks replaces the document's chunks, so a second run doesn't add to them.
+    assert docs.chunks == first_chunks
+
+
 async def test_markdown_chunks_store_their_heading() -> None:
     proc, docs, _ = make(b"# Title\n\n## Part\n\nSome text.")
     await proc.handle(uploaded("notes.md"))

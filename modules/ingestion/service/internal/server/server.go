@@ -127,6 +127,18 @@ func (s *Server) WatchJob(req *ingestionv1.WatchJobRequest, stream ingestionv1.I
 	}
 }
 
+func (s *Server) ReprocessJob(ctx context.Context, req *ingestionv1.ReprocessJobRequest) (*ingestionv1.ReprocessJobResponse, error) {
+	id, err := parseID(req.GetId())
+	if err != nil {
+		return nil, err
+	}
+	job, err := s.app.ReprocessJob(ctx, id)
+	if err != nil {
+		return nil, s.toStatus("reprocess job", err)
+	}
+	return &ingestionv1.ReprocessJobResponse{Job: toProto(job)}, nil
+}
+
 func (s *Server) getJob(ctx context.Context, raw string) (app.Job, error) {
 	id, err := parseID(raw)
 	if err != nil {
@@ -151,7 +163,8 @@ func (s *Server) toStatus(op string, err error) error {
 	switch {
 	case errors.Is(err, app.ErrNotFound):
 		return status.Error(codes.NotFound, err.Error())
-	case errors.Is(err, app.ErrAlreadyCompleted), errors.Is(err, app.ErrUploadMissing):
+	case errors.Is(err, app.ErrAlreadyCompleted), errors.Is(err, app.ErrUploadMissing),
+		errors.Is(err, app.ErrNotReprocessable):
 		return status.Error(codes.FailedPrecondition, err.Error())
 	case errors.Is(err, app.ErrDocumentsUnavailable):
 		s.log.Warn(op, "error", err)

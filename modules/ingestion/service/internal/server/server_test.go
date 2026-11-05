@@ -27,7 +27,7 @@ type fakeRepo struct {
 }
 
 func (f *fakeRepo) CreateJob(_ context.Context, p store.CreateJobParams) (store.IngestionJob, error) {
-	j := store.IngestionJob{ID: p.ID, DocumentID: p.DocumentID, Filename: p.Filename, Status: p.Status}
+	j := store.IngestionJob{ID: p.ID, DocumentID: p.DocumentID, Filename: p.Filename, Status: p.Status, Run: 1}
 	f.jobs[p.ID] = j
 	return j, nil
 }
@@ -42,11 +42,21 @@ func (f *fakeRepo) GetJob(_ context.Context, id uuid.UUID) (store.IngestionJob, 
 
 func (f *fakeRepo) AdvanceJob(_ context.Context, p store.AdvanceJobParams) (store.IngestionJob, error) {
 	j, ok := f.jobs[p.ID]
-	if !ok || j.Status >= 4 || j.Status >= p.Status {
+	if !ok || j.Run != p.Run || j.Status >= 4 || j.Status >= p.Status {
 		return j, pgx.ErrNoRows
 	}
 	j.Status = p.Status
 	f.jobs[p.ID] = j
+	return j, nil
+}
+
+func (f *fakeRepo) ReprocessJob(_ context.Context, id uuid.UUID) (store.IngestionJob, error) {
+	j, ok := f.jobs[id]
+	if !ok || j.Status < 4 {
+		return j, pgx.ErrNoRows
+	}
+	j.Status, j.Error, j.ChunkCount, j.Run = int16(ingestionv1.JobStatus_JOB_STATUS_QUEUED), "", 0, j.Run+1
+	f.jobs[id] = j
 	return j, nil
 }
 
@@ -70,12 +80,13 @@ func (f *fakeDocuments) SetDocumentStatus(_ context.Context, req *documentv1.Set
 type published struct {
 	subject string
 	msg     proto.Message
+	id      string
 }
 
 type fakePublisher struct{ sent []published }
 
-func (f *fakePublisher) Publish(_ context.Context, subject string, msg proto.Message, _ string) error {
-	f.sent = append(f.sent, published{subject, msg})
+func (f *fakePublisher) Publish(_ context.Context, subject string, msg proto.Message, id string) error {
+	f.sent = append(f.sent, published{subject, msg, id})
 	return nil
 }
 
@@ -173,5 +184,68 @@ func TestUnknownAndInvalidJobs(t *testing.T) {
 	_, err = srv.CompleteUpload(t.Context(), &ingestionv1.CompleteUploadRequest{JobId: "nope"})
 	if status.Code(err) != codes.InvalidArgument {
 		t.Errorf("invalid: %v", err)
+	}
+}
+
+func TestReprocessJob(t *testing.T) {
+	ids := map[ingestionv1.JobStatus]uuid.UUID{}
+	repo := &fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}
+	for _, st := range []ingestionv1.JobStatus{
+		ingestionv1.JobStatus_JOB_STATUS_PENDING_UPLOAD, ingestionv1.JobStatus_JOB_STATUS_QUEUED,
+		ingestionv1.JobStatus_JOB_STATUS_PROCESSING, ingestionv1.JobStatus_JOB_STATUS_DONE,
+		ingestionv1.JobStatus_JOB_STATUS_FAILED,
+	} {
+		id := uuid.New()
+		ids[st] = id
+		repo.jobs[id] = store.IngestionJob{ID: id, DocumentID: uuid.New(), Status: int16(st), Error: "no text", ChunkCount: 4, Run: 1}
+	}
+	pub := &fakePublisher{}
+	srv := New(app.New(store.NewJobs(repo), documents.New(&fakeDocuments{}), events.NewPublisher(pub)), slog.New(slog.DiscardHandler))
+
+	for _, tc := range []struct {
+		name string
+		id   string
+		want codes.Code
+	}{
+		{"pending upload", ids[ingestionv1.JobStatus_JOB_STATUS_PENDING_UPLOAD].String(), codes.FailedPrecondition},
+		{"queued", ids[ingestionv1.JobStatus_JOB_STATUS_QUEUED].String(), codes.FailedPrecondition},
+		{"processing", ids[ingestionv1.JobStatus_JOB_STATUS_PROCESSING].String(), codes.FailedPrecondition},
+		{"unknown", uuid.NewString(), codes.NotFound},
+		{"malformed", "nope", codes.InvalidArgument},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := srv.ReprocessJob(t.Context(), &ingestionv1.ReprocessJobRequest{Id: tc.id})
+			if status.Code(err) != tc.want {
+				t.Fatalf("err = %v, want %v", err, tc.want)
+			}
+		})
+	}
+	if len(pub.sent) != 0 {
+		t.Fatalf("published = %v", pub.sent)
+	}
+
+	for i, st := range []ingestionv1.JobStatus{ingestionv1.JobStatus_JOB_STATUS_FAILED, ingestionv1.JobStatus_JOB_STATUS_DONE} {
+		t.Run(st.String(), func(t *testing.T) {
+			id := ids[st]
+			resp, err := srv.ReprocessJob(t.Context(), &ingestionv1.ReprocessJobRequest{Id: id.String()})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if job := resp.GetJob(); job.GetStatus() != ingestionv1.JobStatus_JOB_STATUS_QUEUED || job.GetError() != "" || job.GetChunkCount() != 0 {
+				t.Errorf("job = %v", job)
+			}
+			if len(pub.sent) != i+1 {
+				t.Fatalf("published = %v", pub.sent)
+			}
+			sent := pub.sent[i]
+			ev, ok := sent.msg.(*ingestionv1.DocumentUploaded)
+			if sent.subject != events.SubjectUploaded || !ok || ev.GetJobId() != id.String() || ev.GetRun() != 2 {
+				t.Errorf("published %q %v", sent.subject, sent.msg)
+			}
+			// A fresh message id per run: JetStream would drop a repeated one.
+			if sent.id != id.String()+":2" {
+				t.Errorf("message id = %q", sent.id)
+			}
+		})
 	}
 }

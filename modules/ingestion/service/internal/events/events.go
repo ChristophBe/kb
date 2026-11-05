@@ -58,7 +58,8 @@ func (p *Publisher) PublishUploaded(ctx context.Context, job app.Job) error {
 		DocumentId:  job.DocumentID.String(),
 		Filename:    job.Filename,
 		ContentType: job.ContentType,
-	}, job.ID.String())
+		Run:         job.Run,
+	}, fmt.Sprintf("%s:%d", job.ID, job.Run))
 }
 
 // EnsureStream creates the module's stream.
@@ -69,9 +70,9 @@ func EnsureStream(ctx context.Context, js jetstream.JetStream) error {
 
 // Jobs receives the processing events.
 type Jobs interface {
-	ApplyStarted(ctx context.Context, id uuid.UUID) error
-	ApplyProcessed(ctx context.Context, id uuid.UUID, chunkCount int32) error
-	ApplyFailed(ctx context.Context, id uuid.UUID, reason string) error
+	ApplyStarted(ctx context.Context, id uuid.UUID, run int32) error
+	ApplyProcessed(ctx context.Context, id uuid.UUID, run, chunkCount int32) error
+	ApplyFailed(ctx context.Context, id uuid.UUID, run int32, reason string) error
 }
 
 // Consume applies started/processed/failed events to jobs until ctx ends.
@@ -111,7 +112,7 @@ func apply(ctx context.Context, jobs Jobs, subject string, data []byte) error {
 		if err != nil {
 			return nil //nolint:nilerr // malformed events can never succeed; drop them
 		}
-		return jobs.ApplyStarted(ctx, id)
+		return jobs.ApplyStarted(ctx, id, ev.GetRun())
 	case SubjectProcessed:
 		var ev ingestionv1.DocumentProcessed
 		if err := proto.Unmarshal(data, &ev); err != nil {
@@ -121,7 +122,7 @@ func apply(ctx context.Context, jobs Jobs, subject string, data []byte) error {
 		if err != nil {
 			return nil //nolint:nilerr // malformed events can never succeed; drop them
 		}
-		return jobs.ApplyProcessed(ctx, id, ev.GetChunkCount())
+		return jobs.ApplyProcessed(ctx, id, ev.GetRun(), ev.GetChunkCount())
 	case SubjectFailed:
 		var ev ingestionv1.ProcessingFailed
 		if err := proto.Unmarshal(data, &ev); err != nil {
@@ -131,7 +132,7 @@ func apply(ctx context.Context, jobs Jobs, subject string, data []byte) error {
 		if err != nil {
 			return nil //nolint:nilerr // malformed events can never succeed; drop them
 		}
-		return jobs.ApplyFailed(ctx, id, ev.GetError())
+		return jobs.ApplyFailed(ctx, id, ev.GetRun(), ev.GetError())
 	default:
 		return fmt.Errorf("unexpected subject %q", subject)
 	}

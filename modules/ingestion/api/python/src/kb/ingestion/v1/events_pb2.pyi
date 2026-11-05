@@ -5,41 +5,49 @@ from typing import ClassVar as _ClassVar, Optional as _Optional
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class DocumentUploaded(_message.Message):
-    __slots__ = ("job_id", "document_id", "filename", "content_type")
+    __slots__ = ("job_id", "document_id", "filename", "content_type", "run")
     JOB_ID_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
     FILENAME_FIELD_NUMBER: _ClassVar[int]
     CONTENT_TYPE_FIELD_NUMBER: _ClassVar[int]
+    RUN_FIELD_NUMBER: _ClassVar[int]
     job_id: str
     document_id: str
     filename: str
     content_type: str
-    def __init__(self, job_id: _Optional[str] = ..., document_id: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ...) -> None: ...
+    run: int
+    def __init__(self, job_id: _Optional[str] = ..., document_id: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., run: _Optional[int] = ...) -> None: ...
 
 class ProcessingStarted(_message.Message):
-    __slots__ = ("job_id", "document_id")
+    __slots__ = ("job_id", "document_id", "run")
     JOB_ID_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
+    RUN_FIELD_NUMBER: _ClassVar[int]
     job_id: str
     document_id: str
-    def __init__(self, job_id: _Optional[str] = ..., document_id: _Optional[str] = ...) -> None: ...
+    run: int
+    def __init__(self, job_id: _Optional[str] = ..., document_id: _Optional[str] = ..., run: _Optional[int] = ...) -> None: ...
 
 class DocumentProcessed(_message.Message):
-    __slots__ = ("job_id", "document_id", "chunk_count")
+    __slots__ = ("job_id", "document_id", "chunk_count", "run")
     JOB_ID_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
     CHUNK_COUNT_FIELD_NUMBER: _ClassVar[int]
+    RUN_FIELD_NUMBER: _ClassVar[int]
     job_id: str
     document_id: str
     chunk_count: int
-    def __init__(self, job_id: _Optional[str] = ..., document_id: _Optional[str] = ..., chunk_count: _Optional[int] = ...) -> None: ...
+    run: int
+    def __init__(self, job_id: _Optional[str] = ..., document_id: _Optional[str] = ..., chunk_count: _Optional[int] = ..., run: _Optional[int] = ...) -> None: ...
 
 class ProcessingFailed(_message.Message):
-    __slots__ = ("job_id", "document_id", "error")
+    __slots__ = ("job_id", "document_id", "error", "run")
     JOB_ID_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
     ERROR_FIELD_NUMBER: _ClassVar[int]
+    RUN_FIELD_NUMBER: _ClassVar[int]
     job_id: str
     document_id: str
     error: str
-    def __init__(self, job_id: _Optional[str] = ..., document_id: _Optional[str] = ..., error: _Optional[str] = ...) -> None: ...
+    run: int
+    def __init__(self, job_id: _Optional[str] = ..., document_id: _Optional[str] = ..., error: _Optional[str] = ..., run: _Optional[int] = ...) -> None: ...

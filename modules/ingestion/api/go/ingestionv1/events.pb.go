@@ -28,6 +28,7 @@ type DocumentUploaded struct {
 	DocumentId    string                 `protobuf:"bytes,2,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
 	Filename      string                 `protobuf:"bytes,3,opt,name=filename,proto3" json:"filename,omitempty"`
 	ContentType   string                 `protobuf:"bytes,4,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	Run           int32                  `protobuf:"varint,5,opt,name=run,proto3" json:"run,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -90,11 +91,19 @@ func (x *DocumentUploaded) GetContentType() string {
 	return ""
 }
 
+func (x *DocumentUploaded) GetRun() int32 {
+	if x != nil {
+		return x.Run
+	}
+	return 0
+}
+
 // Subject: kb.ingestion.started
 type ProcessingStarted struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	DocumentId    string                 `protobuf:"bytes,2,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
+	Run           int32                  `protobuf:"varint,3,opt,name=run,proto3" json:"run,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -143,12 +152,20 @@ func (x *ProcessingStarted) GetDocumentId() string {
 	return ""
 }
 
+func (x *ProcessingStarted) GetRun() int32 {
+	if x != nil {
+		return x.Run
+	}
+	return 0
+}
+
 // Subject: kb.ingestion.processed
 type DocumentProcessed struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	DocumentId    string                 `protobuf:"bytes,2,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
 	ChunkCount    int32                  `protobuf:"varint,3,opt,name=chunk_count,json=chunkCount,proto3" json:"chunk_count,omitempty"`
+	Run           int32                  `protobuf:"varint,4,opt,name=run,proto3" json:"run,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -204,12 +221,20 @@ func (x *DocumentProcessed) GetChunkCount() int32 {
 	return 0
 }
 
+func (x *DocumentProcessed) GetRun() int32 {
+	if x != nil {
+		return x.Run
+	}
+	return 0
+}
+
 // Subject: kb.ingestion.failed
 type ProcessingFailed struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	DocumentId    string                 `protobuf:"bytes,2,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
 	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	Run           int32                  `protobuf:"varint,4,opt,name=run,proto3" json:"run,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -265,32 +290,43 @@ func (x *ProcessingFailed) GetError() string {
 	return ""
 }
 
+func (x *ProcessingFailed) GetRun() int32 {
+	if x != nil {
+		return x.Run
+	}
+	return 0
+}
+
 var File_kb_ingestion_v1_events_proto protoreflect.FileDescriptor
 
 const file_kb_ingestion_v1_events_proto_rawDesc = "" +
 	"\n" +
-	"\x1ckb/ingestion/v1/events.proto\x12\x0fkb.ingestion.v1\"\x89\x01\n" +
+	"\x1ckb/ingestion/v1/events.proto\x12\x0fkb.ingestion.v1\"\x9b\x01\n" +
 	"\x10DocumentUploaded\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n" +
 	"\vdocument_id\x18\x02 \x01(\tR\n" +
 	"documentId\x12\x1a\n" +
 	"\bfilename\x18\x03 \x01(\tR\bfilename\x12!\n" +
-	"\fcontent_type\x18\x04 \x01(\tR\vcontentType\"K\n" +
+	"\fcontent_type\x18\x04 \x01(\tR\vcontentType\x12\x10\n" +
+	"\x03run\x18\x05 \x01(\x05R\x03run\"]\n" +
 	"\x11ProcessingStarted\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n" +
 	"\vdocument_id\x18\x02 \x01(\tR\n" +
-	"documentId\"l\n" +
+	"documentId\x12\x10\n" +
+	"\x03run\x18\x03 \x01(\x05R\x03run\"~\n" +
 	"\x11DocumentProcessed\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n" +
 	"\vdocument_id\x18\x02 \x01(\tR\n" +
 	"documentId\x12\x1f\n" +
 	"\vchunk_count\x18\x03 \x01(\x05R\n" +
-	"chunkCount\"`\n" +
+	"chunkCount\x12\x10\n" +
+	"\x03run\x18\x04 \x01(\x05R\x03run\"r\n" +
 	"\x10ProcessingFailed\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n" +
 	"\vdocument_id\x18\x02 \x01(\tR\n" +
 	"documentId\x12\x14\n" +
-	"\x05error\x18\x03 \x01(\tR\x05errorBJZHgithub.com/christoph/kb/modules/ingestion/api/go/ingestionv1;ingestionv1b\x06proto3"
+	"\x05error\x18\x03 \x01(\tR\x05error\x12\x10\n" +
+	"\x03run\x18\x04 \x01(\x05R\x03runBJZHgithub.com/christoph/kb/modules/ingestion/api/go/ingestionv1;ingestionv1b\x06proto3"
 
 var (
 	file_kb_ingestion_v1_events_proto_rawDescOnce sync.Once

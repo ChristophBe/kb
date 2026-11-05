@@ -19,6 +19,10 @@ service IngestionService {
   rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
   // WatchJob streams the job every time it changes until it is terminal.
   rpc WatchJob(WatchJobRequest) returns (stream WatchJobResponse);
+  // ReprocessJob queues a FAILED or DONE job again: the worker extracts,
+  // chunks and embeds the uploaded file anew and replaces the document's
+  // chunks. Other jobs fail with FAILED_PRECONDITION.
+  rpc ReprocessJob(ReprocessJobRequest) returns (ReprocessJobResponse);
 }
 
 enum JobStatus {
@@ -85,5 +89,13 @@ message WatchJobRequest {
 }
 
 message WatchJobResponse {
+  Job job = 1;
+}
+
+message ReprocessJobRequest {
+  string id = 1;
+}
+
+message ReprocessJobResponse {
   Job job = 1;
 }

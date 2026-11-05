@@ -14,8 +14,8 @@ import (
 const advanceJob = `-- name: AdvanceJob :one
 UPDATE ingestion.jobs
 SET status = $1, error = $2, chunk_count = $3, updated_at = now()
-WHERE id = $4 AND status < 4 AND status < $1
-RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at
+WHERE id = $4 AND run = $5 AND status < 4 AND status < $1
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run
 `
 
 type AdvanceJobParams struct {
@@ -23,17 +23,20 @@ type AdvanceJobParams struct {
 	Error      string
 	ChunkCount int32
 	ID         uuid.UUID
+	Run        int32
 }
 
-// AdvanceJob moves a job forward. Status values are ordered, so a stale or
-// duplicate event can never move a job backwards, and terminal jobs
-// (DONE=4, FAILED=5) never change.
+// AdvanceJob moves a job forward within its current run. Status values are
+// ordered, so a stale or duplicate event can never move a job backwards,
+// terminal jobs (DONE=4, FAILED=5) never change, and events of an earlier run
+// are ignored. The only way back is ReprocessJob.
 func (q *Queries) AdvanceJob(ctx context.Context, arg AdvanceJobParams) (IngestionJob, error) {
 	row := q.db.QueryRow(ctx, advanceJob,
 		arg.Status,
 		arg.Error,
 		arg.ChunkCount,
 		arg.ID,
+		arg.Run,
 	)
 	var i IngestionJob
 	err := row.Scan(
@@ -46,6 +49,7 @@ func (q *Queries) AdvanceJob(ctx context.Context, arg AdvanceJobParams) (Ingesti
 		&i.ChunkCount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Run,
 	)
 	return i, err
 }
@@ -53,7 +57,7 @@ func (q *Queries) AdvanceJob(ctx context.Context, arg AdvanceJobParams) (Ingesti
 const createJob = `-- name: CreateJob :one
 INSERT INTO ingestion.jobs (id, document_id, filename, content_type, status)
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run
 `
 
 type CreateJobParams struct {
@@ -83,12 +87,13 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (Ingestion
 		&i.ChunkCount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Run,
 	)
 	return i, err
 }
 
 const getJob = `-- name: GetJob :one
-SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at FROM ingestion.jobs WHERE id = $1
+SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run FROM ingestion.jobs WHERE id = $1
 `
 
 func (q *Queries) GetJob(ctx context.Context, id uuid.UUID) (IngestionJob, error) {
@@ -104,12 +109,13 @@ func (q *Queries) GetJob(ctx context.Context, id uuid.UUID) (IngestionJob, error
 		&i.ChunkCount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Run,
 	)
 	return i, err
 }
 
 const listJobs = `-- name: ListJobs :many
-SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at FROM ingestion.jobs
+SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run FROM ingestion.jobs
 ORDER BY created_at DESC, id DESC
 LIMIT $1 OFFSET $2
 `
@@ -138,6 +144,7 @@ func (q *Queries) ListJobs(ctx context.Context, arg ListJobsParams) ([]Ingestion
 			&i.ChunkCount,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Run,
 		); err != nil {
 			return nil, err
 		}
@@ -147,4 +154,32 @@ func (q *Queries) ListJobs(ctx context.Context, arg ListJobsParams) ([]Ingestion
 		return nil, err
 	}
 	return items, nil
+}
+
+const reprocessJob = `-- name: ReprocessJob :one
+UPDATE ingestion.jobs
+SET status = 2, error = '', chunk_count = 0, run = run + 1, updated_at = now()
+WHERE id = $1 AND status IN (4, 5)
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run
+`
+
+// ReprocessJob is the one transition back: it queues a terminal job
+// (DONE=4, FAILED=5) again (QUEUED=2) as a new run, clearing the result of
+// the previous one.
+func (q *Queries) ReprocessJob(ctx context.Context, id uuid.UUID) (IngestionJob, error) {
+	row := q.db.QueryRow(ctx, reprocessJob, id)
+	var i IngestionJob
+	err := row.Scan(
+		&i.ID,
+		&i.DocumentID,
+		&i.Filename,
+		&i.ContentType,
+		&i.Status,
+		&i.Error,
+		&i.ChunkCount,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Run,
+	)
+	return i, err
 }

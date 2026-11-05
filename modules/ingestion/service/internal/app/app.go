@@ -23,8 +23,12 @@ var (
 	ErrUploadMissing = errors.New("the file has not been uploaded")
 	// ErrDocumentsUnavailable means the document module cannot be reached right now.
 	ErrDocumentsUnavailable = errors.New("the document service is unavailable")
+	// ErrNotReprocessable means the job is not FAILED or DONE.
+	ErrNotReprocessable = errors.New("only failed or done jobs can be reprocessed")
 	// ErrNotAdvanced is returned by Jobs.Advance when the transition does not
-	// apply: the job is unknown, terminal or already past the requested status.
+	// apply: the job is unknown, terminal, in another run or already past the
+	// requested status. Jobs.Reprocess returns it when the job is unknown or
+	// not terminal.
 	ErrNotAdvanced = errors.New("job not advanced")
 )
 
@@ -37,8 +41,11 @@ type Job struct {
 	Status      ingestionv1.JobStatus
 	Error       string
 	ChunkCount  int32
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	// Run counts the processing runs: 1 for the upload, incremented by every
+	// reprocess. Events name the run they belong to.
+	Run       int32
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // Terminal reports whether the job can no longer change.
@@ -46,21 +53,26 @@ func (j Job) Terminal() bool {
 	return j.Status == ingestionv1.JobStatus_JOB_STATUS_DONE || j.Status == ingestionv1.JobStatus_JOB_STATUS_FAILED
 }
 
-// Transition moves a job to Status, recording Error and ChunkCount.
+// Transition moves a job to Status within run Run, recording Error and
+// ChunkCount. Jobs only ever move forward; Jobs.Reprocess is the one way back.
 type Transition struct {
 	ID         uuid.UUID
+	Run        int32
 	Status     ingestionv1.JobStatus
 	Error      string
 	ChunkCount int32
 }
 
 // Jobs persists jobs. Get returns ErrNotFound for an unknown job, Advance
-// returns ErrNotAdvanced when the transition does not apply.
+// returns ErrNotAdvanced when the transition does not apply. Reprocess queues
+// a FAILED or DONE job again as its next run, and returns ErrNotAdvanced for
+// any other job.
 type Jobs interface {
 	Create(ctx context.Context, job Job) (Job, error)
 	Get(ctx context.Context, id uuid.UUID) (Job, error)
 	List(ctx context.Context, limit, offset int32) ([]Job, error)
 	Advance(ctx context.Context, t Transition) (Job, error)
+	Reprocess(ctx context.Context, id uuid.UUID) (Job, error)
 }
 
 // NewUpload describes a file about to be uploaded.
@@ -87,7 +99,7 @@ type Documents interface {
 	MarkUploaded(ctx context.Context, id uuid.UUID) error
 }
 
-// Publisher announces jobs to the worker.
+// Publisher announces jobs to the worker, once per run.
 type Publisher interface {
 	PublishUploaded(ctx context.Context, job Job) error
 }
@@ -135,7 +147,7 @@ func (s *Service) CompleteUpload(ctx context.Context, id uuid.UUID) (Job, error)
 	if err := s.documents.MarkUploaded(ctx, job.DocumentID); err != nil {
 		return Job{}, err
 	}
-	job, err = s.jobs.Advance(ctx, Transition{ID: id, Status: ingestionv1.JobStatus_JOB_STATUS_QUEUED})
+	job, err = s.jobs.Advance(ctx, Transition{ID: id, Run: job.Run, Status: ingestionv1.JobStatus_JOB_STATUS_QUEUED})
 	if errors.Is(err, ErrNotAdvanced) {
 		return Job{}, ErrAlreadyCompleted
 	}
@@ -143,6 +155,31 @@ func (s *Service) CompleteUpload(ctx context.Context, id uuid.UUID) (Job, error)
 		return Job{}, fmt.Errorf("queue job: %w", err)
 	}
 	if err := s.publisher.PublishUploaded(ctx, job); err != nil {
+		return Job{}, fmt.Errorf("publish upload event: %w", err)
+	}
+	return job, nil
+}
+
+// ReprocessJob queues a FAILED or DONE job again as a new run. The worker
+// replaces the document's chunks, so they are not duplicated.
+func (s *Service) ReprocessJob(ctx context.Context, id uuid.UUID) (Job, error) {
+	job, err := s.jobs.Reprocess(ctx, id)
+	if errors.Is(err, ErrNotAdvanced) {
+		if _, err := s.jobs.Get(ctx, id); err != nil {
+			return Job{}, err
+		}
+		return Job{}, ErrNotReprocessable
+	}
+	if err != nil {
+		return Job{}, fmt.Errorf("reprocess job: %w", err)
+	}
+	if err := s.publisher.PublishUploaded(ctx, job); err != nil {
+		// Without the event the job would stay queued for good, and a queued
+		// job can't be reprocessed: fail it so that it can be retried.
+		_ = s.apply(ctx, Transition{
+			ID: id, Run: job.Run, Status: ingestionv1.JobStatus_JOB_STATUS_FAILED,
+			Error: "could not queue the job, try again",
+		})
 		return Job{}, fmt.Errorf("publish upload event: %w", err)
 	}
 	return job, nil
@@ -158,24 +195,30 @@ func (s *Service) ListJobs(ctx context.Context, limit, offset int32) ([]Job, err
 	return s.jobs.List(ctx, limit, offset)
 }
 
-// ApplyStarted records that the worker picked up a job.
-func (s *Service) ApplyStarted(ctx context.Context, id uuid.UUID) error {
-	return s.apply(ctx, Transition{ID: id, Status: ingestionv1.JobStatus_JOB_STATUS_PROCESSING})
+// ApplyStarted records that the worker picked up run run of a job.
+func (s *Service) ApplyStarted(ctx context.Context, id uuid.UUID, run int32) error {
+	return s.apply(ctx, Transition{ID: id, Run: run, Status: ingestionv1.JobStatus_JOB_STATUS_PROCESSING})
 }
 
-// ApplyProcessed records that the worker finished a job.
-func (s *Service) ApplyProcessed(ctx context.Context, id uuid.UUID, chunkCount int32) error {
-	return s.apply(ctx, Transition{ID: id, Status: ingestionv1.JobStatus_JOB_STATUS_DONE, ChunkCount: chunkCount})
+// ApplyProcessed records that the worker finished run run of a job.
+func (s *Service) ApplyProcessed(ctx context.Context, id uuid.UUID, run, chunkCount int32) error {
+	return s.apply(ctx, Transition{
+		ID: id, Run: run, Status: ingestionv1.JobStatus_JOB_STATUS_DONE, ChunkCount: chunkCount,
+	})
 }
 
-// ApplyFailed records that the worker gave up on a job.
-func (s *Service) ApplyFailed(ctx context.Context, id uuid.UUID, reason string) error {
-	return s.apply(ctx, Transition{ID: id, Status: ingestionv1.JobStatus_JOB_STATUS_FAILED, Error: reason})
+// ApplyFailed records that the worker gave up on run run of a job.
+func (s *Service) ApplyFailed(ctx context.Context, id uuid.UUID, run int32, reason string) error {
+	return s.apply(ctx, Transition{ID: id, Run: run, Status: ingestionv1.JobStatus_JOB_STATUS_FAILED, Error: reason})
 }
 
 // apply ignores transitions that don't apply: delivery is at-least-once, so
-// stale and duplicate events are normal.
+// stale and duplicate events are normal. Run 0 comes from events published
+// before jobs had runs and means the first run.
 func (s *Service) apply(ctx context.Context, t Transition) error {
+	if t.Run == 0 {
+		t.Run = 1
+	}
 	if _, err := s.jobs.Advance(ctx, t); err != nil && !errors.Is(err, ErrNotAdvanced) {
 		return err
 	}

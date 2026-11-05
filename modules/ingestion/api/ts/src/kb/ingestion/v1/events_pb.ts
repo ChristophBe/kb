@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file kb/ingestion/v1/events.proto.
  */
 export const file_kb_ingestion_v1_events: GenFile = /*@__PURE__*/
-  fileDesc("ChxrYi9pbmdlc3Rpb24vdjEvZXZlbnRzLnByb3RvEg9rYi5pbmdlc3Rpb24udjEiXwoQRG9jdW1lbnRVcGxvYWRlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSEAoIZmlsZW5hbWUYAyABKAkSFAoMY29udGVudF90eXBlGAQgASgJIjgKEVByb2Nlc3NpbmdTdGFydGVkEg4KBmpvYl9pZBgBIAEoCRITCgtkb2N1bWVudF9pZBgCIAEoCSJNChFEb2N1bWVudFByb2Nlc3NlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSEwoLY2h1bmtfY291bnQYAyABKAUiRgoQUHJvY2Vzc2luZ0ZhaWxlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSDQoFZXJyb3IYAyABKAlCSlpIZ2l0aHViLmNvbS9jaHJpc3RvcGgva2IvbW9kdWxlcy9pbmdlc3Rpb24vYXBpL2dvL2luZ2VzdGlvbnYxO2luZ2VzdGlvbnYxYgZwcm90bzM");
+  fileDesc("ChxrYi9pbmdlc3Rpb24vdjEvZXZlbnRzLnByb3RvEg9rYi5pbmdlc3Rpb24udjEibAoQRG9jdW1lbnRVcGxvYWRlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSEAoIZmlsZW5hbWUYAyABKAkSFAoMY29udGVudF90eXBlGAQgASgJEgsKA3J1bhgFIAEoBSJFChFQcm9jZXNzaW5nU3RhcnRlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSCwoDcnVuGAMgASgFIloKEURvY3VtZW50UHJvY2Vzc2VkEg4KBmpvYl9pZBgBIAEoCRITCgtkb2N1bWVudF9pZBgCIAEoCRITCgtjaHVua19jb3VudBgDIAEoBRILCgNydW4YBCABKAUiUwoQUHJvY2Vzc2luZ0ZhaWxlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSDQoFZXJyb3IYAyABKAkSCwoDcnVuGAQgASgFQkpaSGdpdGh1Yi5jb20vY2hyaXN0b3BoL2tiL21vZHVsZXMvaW5nZXN0aW9uL2FwaS9nby9pbmdlc3Rpb252MTtpbmdlc3Rpb252MWIGcHJvdG8z");
 
 /**
  * Subject: kb.ingestion.uploaded
@@ -37,6 +37,11 @@ export type DocumentUploaded = Message<"kb.ingestion.v1.DocumentUploaded"> & {
    * @generated from field: string content_type = 4;
    */
   contentType: string;
+
+  /**
+   * @generated from field: int32 run = 5;
+   */
+  run: number;
 };
 
 /**
@@ -61,6 +66,11 @@ export type ProcessingStarted = Message<"kb.ingestion.v1.ProcessingStarted"> & {
    * @generated from field: string document_id = 2;
    */
   documentId: string;
+
+  /**
+   * @generated from field: int32 run = 3;
+   */
+  run: number;
 };
 
 /**
@@ -90,6 +100,11 @@ export type DocumentProcessed = Message<"kb.ingestion.v1.DocumentProcessed"> & {
    * @generated from field: int32 chunk_count = 3;
    */
   chunkCount: number;
+
+  /**
+   * @generated from field: int32 run = 4;
+   */
+  run: number;
 };
 
 /**
@@ -119,6 +134,11 @@ export type ProcessingFailed = Message<"kb.ingestion.v1.ProcessingFailed"> & {
    * @generated from field: string error = 3;
    */
   error: string;
+
+  /**
+   * @generated from field: int32 run = 4;
+   */
+  run: number;
 };
 
 /**

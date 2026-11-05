@@ -117,3 +117,15 @@ class WatchJobResponse(_message.Message):
     JOB_FIELD_NUMBER: _ClassVar[int]
     job: Job
     def __init__(self, job: _Optional[_Union[Job, _Mapping]] = ...) -> None: ...
+
+class ReprocessJobRequest(_message.Message):
+    __slots__ = ("id",)
+    ID_FIELD_NUMBER: _ClassVar[int]
+    id: str
+    def __init__(self, id: _Optional[str] = ...) -> None: ...
+
+class ReprocessJobResponse(_message.Message):
+    __slots__ = ("job",)
+    JOB_FIELD_NUMBER: _ClassVar[int]
+    job: Job
+    def __init__(self, job: _Optional[_Union[Job, _Mapping]] = ...) -> None: ...

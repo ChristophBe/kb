@@ -1,6 +1,6 @@
 import { DocumentStatus } from "@kb/document-api/kb/document/v1/document_pb";
 import { KbRuntimeProvider } from "@kb/module-sdk";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CHUNK_PAGE_SIZE, ChunkList } from "./ChunkList.tsx";
 
@@ -30,7 +30,12 @@ function page(from: number, count: number, nextPageToken = "") {
 let documentId = "";
 let renders = 0;
 
-function renderList(chunkCount: number, status = DocumentStatus.READY, statusDetail = "") {
+function renderList(
+  chunkCount: number,
+  status = DocumentStatus.READY,
+  statusDetail = "",
+  focusIndex?: number,
+) {
   documentId = `d${++renders}`;
   render(
     <KbRuntimeProvider config={{ apiBaseUrl: "http://test" }}>
@@ -39,6 +44,7 @@ function renderList(chunkCount: number, status = DocumentStatus.READY, statusDet
         chunkCount={chunkCount}
         status={status}
         statusDetail={statusDetail}
+        focusIndex={focusIndex}
       />
     </KbRuntimeProvider>,
   );
@@ -96,6 +102,26 @@ describe("ChunkList", () => {
     });
     expect(await screen.findByRole("heading", { name: "Chunk 1" })).toBeTruthy();
     expect(screen.getByRole("status").textContent).toBe(`Showing 1–${CHUNK_PAGE_SIZE} of ${total}`);
+  });
+
+  it("opens a deep-linked chunk on its page, focused and highlighted", async () => {
+    const total = CHUNK_PAGE_SIZE + 2;
+    listChunks.mockImplementation(({ page: { pageToken } }) =>
+      Promise.resolve(
+        pageToken === "t2" ? page(CHUNK_PAGE_SIZE, 2) : page(0, CHUNK_PAGE_SIZE, "t2"),
+      ),
+    );
+    renderList(total, DocumentStatus.READY, "", CHUNK_PAGE_SIZE + 1);
+    const heading = await screen.findByRole("heading", { name: `Chunk ${CHUNK_PAGE_SIZE + 2}` });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+    expect(heading.closest("article")?.getAttribute("data-highlighted")).toBe("true");
+    expect(screen.getByRole("status").textContent).toBe(
+      `Showing ${CHUNK_PAGE_SIZE + 1}–${total} of ${total}`,
+    );
+    // The pages walked to get there are kept, so Previous goes to page 1.
+    expect((screen.getByRole("button", { name: "Previous" }) as HTMLButtonElement).disabled).toBe(
+      false,
+    );
   });
 
   it("collapses long chunks behind Show full chunk", async () => {

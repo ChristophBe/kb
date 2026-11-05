@@ -1,7 +1,7 @@
 import { DocumentService } from "@kb/document-api/kb/document/v1/document_pb";
 import { useClient, useQuery } from "@kb/module-sdk";
 import { Badge, Card, ChunkStrip, ErrorMessage, formatBytes, formatTime, Spinner } from "@kb/ui";
-import { Link, useParams } from "react-router";
+import { Link, useLocation, useParams } from "react-router";
 import { ChunkList } from "./ChunkList.tsx";
 import { MetadataEditor } from "./MetadataEditor.tsx";
 import { statusLabel } from "./status.ts";
@@ -11,6 +11,8 @@ export function DocumentDetail() {
   const { id = "" } = useParams();
   const client = useClient(DocumentService);
   const doc = useQuery({ queryKey: ["documents", id], queryFn: () => client.getDocument({ id }) });
+  // A link to #chunk-<index> (e.g. from search) opens the list at that chunk.
+  const target = /^#chunk-(\d+)$/.exec(useLocation().hash)?.[1];
 
   if (doc.isPending) return <Spinner />;
   if (doc.error) return <ErrorMessage error={doc.error} />;
@@ -51,6 +53,7 @@ export function DocumentDetail() {
         chunkCount={d.chunkCount}
         status={d.status}
         statusDetail={d.statusDetail}
+        focusIndex={target === undefined ? undefined : Number(target)}
       />
     </div>
   );

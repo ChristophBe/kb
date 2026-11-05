@@ -278,6 +278,9 @@ importers:
         specifier: 'catalog:'
         version: 8.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
     devDependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.16.0
       '@connectrpc/connect':
         specifier: 'catalog:'
         version: 2.2.0(@bufbuild/protobuf@2.16.0)

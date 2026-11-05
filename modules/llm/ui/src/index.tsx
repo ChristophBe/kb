@@ -6,5 +6,11 @@ export default defineModule({
   id: "llm",
   title: "Models",
   icon: Cpu,
+  feature: {
+    headline: "See what powers answers",
+    description:
+      "Check the provider's health and which models write answers and index your documents.",
+    cta: { label: "View models", path: "" },
+  },
   routes: [{ index: true, element: <Models /> }],
 });

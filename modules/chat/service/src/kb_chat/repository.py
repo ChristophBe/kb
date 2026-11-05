@@ -24,6 +24,7 @@ class MessageRow:
     content: str
     created_at: datetime
     citations: list[dict[str, Any]] = field(default_factory=list)
+    status: chat_pb2.MessageStatus = chat_pb2.MESSAGE_STATUS_COMPLETE
 
 
 class Repository(Protocol):
@@ -42,4 +43,5 @@ class Repository(Protocol):
         role: chat_pb2.MessageRole,
         content: str,
         citations: list[dict[str, Any]],
+        status: chat_pb2.MessageStatus = chat_pb2.MESSAGE_STATUS_COMPLETE,
     ) -> MessageRow: ...

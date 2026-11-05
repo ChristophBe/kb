@@ -12,9 +12,11 @@ from kb.common.v1 import common_pb2
 from .chat import (
     AnswerDelta,
     AnswerEvent,
+    AnswerFailed,
     AnswerSaved,
     Chat,
     ConversationNotFoundError,
+    Peer,
     PeerError,
     PeerUnavailableError,
     SourcesFound,
@@ -28,6 +30,9 @@ _Context = grpc.aio.ServicerContext[Any, Any]
 DEFAULT_PAGE_SIZE = 50
 MAX_PAGE_SIZE = 200
 MAX_TITLE_LENGTH = 200
+
+# The peers' titles in the UI (their module.yaml), for error messages.
+_PEER_TITLES = {Peer.DOCUMENT: "Documents", Peer.LLM: "Models"}
 
 
 class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
@@ -101,19 +106,13 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         events = self._chat.answer(
             _parse_id(request.conversation_id), content, request.model, request.use_knowledge_base
         )
-        # The document and llm modules are soft dependencies: while one is down,
-        # the call fails with UNAVAILABLE instead of an unmapped error.
+        # The document and llm modules are soft dependencies: when one fails, the
+        # stream ends with an error event and the answer so far, not a gRPC error.
         try:
             async for event in events:
                 yield _response(event)
         except ConversationNotFoundError:
             await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
-        except PeerUnavailableError as err:
-            log.warning("peer unavailable: %s", err)
-            await context.abort(grpc.StatusCode.UNAVAILABLE, "a required service is unavailable")
-        except PeerError as err:
-            log.error("peer call failed: %s", err)
-            await context.abort(grpc.StatusCode.INTERNAL, "answer generation failed")
 
     async def _get(self, raw_id: str, context: _Context) -> ConversationRow:
         conv = await self._repo.get_conversation(_parse_id(raw_id))
@@ -150,6 +149,7 @@ def _message(m: MessageRow) -> chat_pb2.ChatMessage:
         content=m.content,
         citations=[chat_pb2.Citation(**c) for c in m.citations],
         create_time=_ts(m.created_at),
+        status=m.status,
     )
 
 
@@ -159,5 +159,22 @@ def _response(event: AnswerEvent) -> chat_pb2.StreamChatResponse:
             return chat_pb2.StreamChatResponse(citations=chat_pb2.Citations(items=citations))
         case AnswerDelta(text):
             return chat_pb2.StreamChatResponse(delta=text)
+        case AnswerFailed(error):
+            return chat_pb2.StreamChatResponse(error=_error(error))
         case AnswerSaved(message):
             return chat_pb2.StreamChatResponse(message=_message(message))
+
+
+def _error(err: PeerError) -> chat_pb2.ChatError:
+    title = _PEER_TITLES[err.peer]
+    if isinstance(err, PeerUnavailableError):
+        log.warning("peer unavailable: %s", err)
+        return chat_pb2.ChatError(
+            code=chat_pb2.CHAT_ERROR_CODE_UNAVAILABLE,
+            message=f"The {title} service isn't available. Try again in a moment.",
+        )
+    log.error("peer call failed: %s", err)
+    return chat_pb2.ChatError(
+        code=chat_pb2.CHAT_ERROR_CODE_INTERNAL,
+        message=f"The {title} service couldn't complete the answer.",
+    )

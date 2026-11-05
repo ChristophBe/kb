@@ -9,7 +9,7 @@ from kb.chat.v1 import chat_pb2
 from kb.document.v1 import document_pb2, document_pb2_grpc
 from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 
-from .chat import PeerError, PeerUnavailableError, PromptMessage, PromptRole
+from .chat import Peer, PeerError, PeerUnavailableError, PromptMessage, PromptRole
 
 # Peer statuses that mean "try again later" rather than a bug.
 _PEER_UNAVAILABLE = {grpc.StatusCode.UNAVAILABLE, grpc.StatusCode.DEADLINE_EXCEEDED}
@@ -22,14 +22,14 @@ _LLM_ROLES = {
 
 
 @contextlib.contextmanager
-def _peer_errors() -> Iterator[None]:
+def _peer_errors(peer: Peer) -> Iterator[None]:
     try:
         yield
     except grpc.aio.AioRpcError as err:
         message = f"{err.code()} {err.details()}"
         if err.code() in _PEER_UNAVAILABLE:
-            raise PeerUnavailableError(message) from err
-        raise PeerError(message) from err
+            raise PeerUnavailableError(peer, message) from err
+        raise PeerError(peer, message) from err
 
 
 class PeerRetriever:
@@ -40,8 +40,9 @@ class PeerRetriever:
         self._llm = llm
 
     async def retrieve(self, query: str, limit: int) -> list[chat_pb2.Citation]:
-        with _peer_errors():
+        with _peer_errors(Peer.LLM):
             embedded = await self._llm.Embed(llm_pb2.EmbedRequest(inputs=[query]))
+        with _peer_errors(Peer.DOCUMENT):
             result = await self._documents.SearchChunks(
                 document_pb2.SearchChunksRequest(
                     embedding=embedded.embeddings[0].values, limit=limit
@@ -65,7 +66,7 @@ class PeerGenerator:
 
     async def generate(self, model: str, prompt: list[PromptMessage]) -> AsyncIterator[str]:
         messages = [llm_pb2.Message(role=_LLM_ROLES[m.role], content=m.content) for m in prompt]
-        with _peer_errors():
+        with _peer_errors(Peer.LLM):
             async for chunk in self._llm.Generate(
                 llm_pb2.GenerateRequest(model=model, messages=messages)
             ):

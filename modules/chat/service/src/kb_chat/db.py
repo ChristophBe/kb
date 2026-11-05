@@ -54,6 +54,8 @@ messages = Table(
     Column("content", Text, nullable=False),
     Column("citations", JSONB, nullable=False, server_default="[]"),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    # kb.chat.v1.MessageStatus
+    Column("status", SmallInteger, nullable=False, server_default="1"),
 )
 
 
@@ -128,6 +130,7 @@ class SqlRepository:
         role: chat_pb2.MessageRole,
         content: str,
         citations: list[dict[str, Any]],
+        status: chat_pb2.MessageStatus = chat_pb2.MESSAGE_STATUS_COMPLETE,
     ) -> MessageRow:
         async with self._engine.begin() as conn:
             result = await conn.execute(
@@ -138,6 +141,7 @@ class SqlRepository:
                     role=role,
                     content=content,
                     citations=citations,
+                    status=status,
                 )
                 .returning(messages)
             )

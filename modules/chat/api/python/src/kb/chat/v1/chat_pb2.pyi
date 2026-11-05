@@ -16,9 +16,29 @@ class MessageRole(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     MESSAGE_ROLE_UNSPECIFIED: _ClassVar[MessageRole]
     MESSAGE_ROLE_USER: _ClassVar[MessageRole]
     MESSAGE_ROLE_ASSISTANT: _ClassVar[MessageRole]
+
+class MessageStatus(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    MESSAGE_STATUS_UNSPECIFIED: _ClassVar[MessageStatus]
+    MESSAGE_STATUS_COMPLETE: _ClassVar[MessageStatus]
+    MESSAGE_STATUS_STOPPED: _ClassVar[MessageStatus]
+    MESSAGE_STATUS_FAILED: _ClassVar[MessageStatus]
+
+class ChatErrorCode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    CHAT_ERROR_CODE_UNSPECIFIED: _ClassVar[ChatErrorCode]
+    CHAT_ERROR_CODE_UNAVAILABLE: _ClassVar[ChatErrorCode]
+    CHAT_ERROR_CODE_INTERNAL: _ClassVar[ChatErrorCode]
 MESSAGE_ROLE_UNSPECIFIED: MessageRole
 MESSAGE_ROLE_USER: MessageRole
 MESSAGE_ROLE_ASSISTANT: MessageRole
+MESSAGE_STATUS_UNSPECIFIED: MessageStatus
+MESSAGE_STATUS_COMPLETE: MessageStatus
+MESSAGE_STATUS_STOPPED: MessageStatus
+MESSAGE_STATUS_FAILED: MessageStatus
+CHAT_ERROR_CODE_UNSPECIFIED: ChatErrorCode
+CHAT_ERROR_CODE_UNAVAILABLE: ChatErrorCode
+CHAT_ERROR_CODE_INTERNAL: ChatErrorCode
 
 class Citation(_message.Message):
     __slots__ = ("document_id", "document_title", "chunk_index", "snippet", "score")
@@ -35,18 +55,20 @@ class Citation(_message.Message):
     def __init__(self, document_id: _Optional[str] = ..., document_title: _Optional[str] = ..., chunk_index: _Optional[int] = ..., snippet: _Optional[str] = ..., score: _Optional[float] = ...) -> None: ...
 
 class ChatMessage(_message.Message):
-    __slots__ = ("id", "role", "content", "citations", "create_time")
+    __slots__ = ("id", "role", "content", "citations", "create_time", "status")
     ID_FIELD_NUMBER: _ClassVar[int]
     ROLE_FIELD_NUMBER: _ClassVar[int]
     CONTENT_FIELD_NUMBER: _ClassVar[int]
     CITATIONS_FIELD_NUMBER: _ClassVar[int]
     CREATE_TIME_FIELD_NUMBER: _ClassVar[int]
+    STATUS_FIELD_NUMBER: _ClassVar[int]
     id: str
     role: MessageRole
     content: str
     citations: _containers.RepeatedCompositeFieldContainer[Citation]
     create_time: _timestamp_pb2.Timestamp
-    def __init__(self, id: _Optional[str] = ..., role: _Optional[_Union[MessageRole, str]] = ..., content: _Optional[str] = ..., citations: _Optional[_Iterable[_Union[Citation, _Mapping]]] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+    status: MessageStatus
+    def __init__(self, id: _Optional[str] = ..., role: _Optional[_Union[MessageRole, str]] = ..., content: _Optional[str] = ..., citations: _Optional[_Iterable[_Union[Citation, _Mapping]]] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., status: _Optional[_Union[MessageStatus, str]] = ...) -> None: ...
 
 class Conversation(_message.Message):
     __slots__ = ("id", "title", "create_time", "update_time")
@@ -137,14 +159,24 @@ class StreamChatRequest(_message.Message):
     def __init__(self, conversation_id: _Optional[str] = ..., content: _Optional[str] = ..., use_knowledge_base: _Optional[bool] = ..., model: _Optional[str] = ...) -> None: ...
 
 class StreamChatResponse(_message.Message):
-    __slots__ = ("citations", "delta", "message")
+    __slots__ = ("citations", "delta", "message", "error")
     CITATIONS_FIELD_NUMBER: _ClassVar[int]
     DELTA_FIELD_NUMBER: _ClassVar[int]
     MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    ERROR_FIELD_NUMBER: _ClassVar[int]
     citations: Citations
     delta: str
     message: ChatMessage
-    def __init__(self, citations: _Optional[_Union[Citations, _Mapping]] = ..., delta: _Optional[str] = ..., message: _Optional[_Union[ChatMessage, _Mapping]] = ...) -> None: ...
+    error: ChatError
+    def __init__(self, citations: _Optional[_Union[Citations, _Mapping]] = ..., delta: _Optional[str] = ..., message: _Optional[_Union[ChatMessage, _Mapping]] = ..., error: _Optional[_Union[ChatError, _Mapping]] = ...) -> None: ...
+
+class ChatError(_message.Message):
+    __slots__ = ("code", "message")
+    CODE_FIELD_NUMBER: _ClassVar[int]
+    MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    code: ChatErrorCode
+    message: str
+    def __init__(self, code: _Optional[_Union[ChatErrorCode, str]] = ..., message: _Optional[str] = ...) -> None: ...
 
 class Citations(_message.Message):
     __slots__ = ("items",)

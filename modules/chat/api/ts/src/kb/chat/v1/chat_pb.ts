@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file kb/chat/v1/chat.proto.
  */
 export const file_kb_chat_v1_chat: GenFile = /*@__PURE__*/
-  fileDesc("ChVrYi9jaGF0L3YxL2NoYXQucHJvdG8SCmtiLmNoYXQudjEibAoIQ2l0YXRpb24SEwoLZG9jdW1lbnRfaWQYASABKAkSFgoOZG9jdW1lbnRfdGl0bGUYAiABKAkSEwoLY2h1bmtfaW5kZXgYAyABKAUSDwoHc25pcHBldBgEIAEoCRINCgVzY29yZRgFIAEoAiKrAQoLQ2hhdE1lc3NhZ2USCgoCaWQYASABKAkSJQoEcm9sZRgCIAEoDjIXLmtiLmNoYXQudjEuTWVzc2FnZVJvbGUSDwoHY29udGVudBgDIAEoCRInCgljaXRhdGlvbnMYBCADKAsyFC5rYi5jaGF0LnYxLkNpdGF0aW9uEi8KC2NyZWF0ZV90aW1lGAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKLAQoMQ29udmVyc2F0aW9uEgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEi8KC2NyZWF0ZV90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIvCgt1cGRhdGVfdGltZRgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiKgoZQ3JlYXRlQ29udmVyc2F0aW9uUmVxdWVzdBINCgV0aXRsZRgBIAEoCSJMChpDcmVhdGVDb252ZXJzYXRpb25SZXNwb25zZRIuCgxjb252ZXJzYXRpb24YASABKAsyGC5rYi5jaGF0LnYxLkNvbnZlcnNhdGlvbiIkChZHZXRDb252ZXJzYXRpb25SZXF1ZXN0EgoKAmlkGAEgASgJInQKF0dldENvbnZlcnNhdGlvblJlc3BvbnNlEi4KDGNvbnZlcnNhdGlvbhgBIAEoCzIYLmtiLmNoYXQudjEuQ29udmVyc2F0aW9uEikKCG1lc3NhZ2VzGAIgAygLMhcua2IuY2hhdC52MS5DaGF0TWVzc2FnZSJDChhMaXN0Q29udmVyc2F0aW9uc1JlcXVlc3QSJwoEcGFnZRgBIAEoCzIZLmtiLmNvbW1vbi52MS5QYWdlUmVxdWVzdCJ2ChlMaXN0Q29udmVyc2F0aW9uc1Jlc3BvbnNlEi8KDWNvbnZlcnNhdGlvbnMYASADKAsyGC5rYi5jaGF0LnYxLkNvbnZlcnNhdGlvbhIoCgRwYWdlGAIgASgLMhoua2IuY29tbW9uLnYxLlBhZ2VSZXNwb25zZSInChlEZWxldGVDb252ZXJzYXRpb25SZXF1ZXN0EgoKAmlkGAEgASgJIhwKGkRlbGV0ZUNvbnZlcnNhdGlvblJlc3BvbnNlIkUKGVVwZGF0ZUNvbnZlcnNhdGlvblJlcXVlc3QSCgoCaWQYASABKAkSEgoFdGl0bGUYAiABKAlIAIgBAUIICgZfdGl0bGUiTAoaVXBkYXRlQ29udmVyc2F0aW9uUmVzcG9uc2USLgoMY29udmVyc2F0aW9uGAEgASgLMhgua2IuY2hhdC52MS5Db252ZXJzYXRpb24iaAoRU3RyZWFtQ2hhdFJlcXVlc3QSFwoPY29udmVyc2F0aW9uX2lkGAEgASgJEg8KB2NvbnRlbnQYAiABKAkSGgoSdXNlX2tub3dsZWRnZV9iYXNlGAMgASgIEg0KBW1vZGVsGAQgASgJIoYBChJTdHJlYW1DaGF0UmVzcG9uc2USKgoJY2l0YXRpb25zGAEgASgLMhUua2IuY2hhdC52MS5DaXRhdGlvbnNIABIPCgVkZWx0YRgCIAEoCUgAEioKB21lc3NhZ2UYAyABKAsyFy5rYi5jaGF0LnYxLkNoYXRNZXNzYWdlSABCBwoFZXZlbnQiMAoJQ2l0YXRpb25zEiMKBWl0ZW1zGAEgAygLMhQua2IuY2hhdC52MS5DaXRhdGlvbipeCgtNZXNzYWdlUm9sZRIcChhNRVNTQUdFX1JPTEVfVU5TUEVDSUZJRUQQABIVChFNRVNTQUdFX1JPTEVfVVNFUhABEhoKFk1FU1NBR0VfUk9MRV9BU1NJU1RBTlQQAjLJBAoLQ2hhdFNlcnZpY2USYwoSQ3JlYXRlQ29udmVyc2F0aW9uEiUua2IuY2hhdC52MS5DcmVhdGVDb252ZXJzYXRpb25SZXF1ZXN0GiYua2IuY2hhdC52MS5DcmVhdGVDb252ZXJzYXRpb25SZXNwb25zZRJaCg9HZXRDb252ZXJzYXRpb24SIi5rYi5jaGF0LnYxLkdldENvbnZlcnNhdGlvblJlcXVlc3QaIy5rYi5jaGF0LnYxLkdldENvbnZlcnNhdGlvblJlc3BvbnNlEmAKEUxpc3RDb252ZXJzYXRpb25zEiQua2IuY2hhdC52MS5MaXN0Q29udmVyc2F0aW9uc1JlcXVlc3QaJS5rYi5jaGF0LnYxLkxpc3RDb252ZXJzYXRpb25zUmVzcG9uc2USYwoSRGVsZXRlQ29udmVyc2F0aW9uEiUua2IuY2hhdC52MS5EZWxldGVDb252ZXJzYXRpb25SZXF1ZXN0GiYua2IuY2hhdC52MS5EZWxldGVDb252ZXJzYXRpb25SZXNwb25zZRJjChJVcGRhdGVDb252ZXJzYXRpb24SJS5rYi5jaGF0LnYxLlVwZGF0ZUNvbnZlcnNhdGlvblJlcXVlc3QaJi5rYi5jaGF0LnYxLlVwZGF0ZUNvbnZlcnNhdGlvblJlc3BvbnNlEk0KClN0cmVhbUNoYXQSHS5rYi5jaGF0LnYxLlN0cmVhbUNoYXRSZXF1ZXN0Gh4ua2IuY2hhdC52MS5TdHJlYW1DaGF0UmVzcG9uc2UwAUI7WjlnaXRodWIuY29tL2NocmlzdG9waC9rYi9tb2R1bGVzL2NoYXQvYXBpL2dvL2NoYXR2MTtjaGF0djFiBnByb3RvMw", [file_google_protobuf_timestamp, file_kb_common_v1_common]);
+  fileDesc("ChVrYi9jaGF0L3YxL2NoYXQucHJvdG8SCmtiLmNoYXQudjEibAoIQ2l0YXRpb24SEwoLZG9jdW1lbnRfaWQYASABKAkSFgoOZG9jdW1lbnRfdGl0bGUYAiABKAkSEwoLY2h1bmtfaW5kZXgYAyABKAUSDwoHc25pcHBldBgEIAEoCRINCgVzY29yZRgFIAEoAiLWAQoLQ2hhdE1lc3NhZ2USCgoCaWQYASABKAkSJQoEcm9sZRgCIAEoDjIXLmtiLmNoYXQudjEuTWVzc2FnZVJvbGUSDwoHY29udGVudBgDIAEoCRInCgljaXRhdGlvbnMYBCADKAsyFC5rYi5jaGF0LnYxLkNpdGF0aW9uEi8KC2NyZWF0ZV90aW1lGAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIpCgZzdGF0dXMYBiABKA4yGS5rYi5jaGF0LnYxLk1lc3NhZ2VTdGF0dXMiiwEKDENvbnZlcnNhdGlvbhIKCgJpZBgBIAEoCRINCgV0aXRsZRgCIAEoCRIvCgtjcmVhdGVfdGltZRgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLwoLdXBkYXRlX3RpbWUYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIioKGUNyZWF0ZUNvbnZlcnNhdGlvblJlcXVlc3QSDQoFdGl0bGUYASABKAkiTAoaQ3JlYXRlQ29udmVyc2F0aW9uUmVzcG9uc2USLgoMY29udmVyc2F0aW9uGAEgASgLMhgua2IuY2hhdC52MS5Db252ZXJzYXRpb24iJAoWR2V0Q29udmVyc2F0aW9uUmVxdWVzdBIKCgJpZBgBIAEoCSJ0ChdHZXRDb252ZXJzYXRpb25SZXNwb25zZRIuCgxjb252ZXJzYXRpb24YASABKAsyGC5rYi5jaGF0LnYxLkNvbnZlcnNhdGlvbhIpCghtZXNzYWdlcxgCIAMoCzIXLmtiLmNoYXQudjEuQ2hhdE1lc3NhZ2UiQwoYTGlzdENvbnZlcnNhdGlvbnNSZXF1ZXN0EicKBHBhZ2UYASABKAsyGS5rYi5jb21tb24udjEuUGFnZVJlcXVlc3QidgoZTGlzdENvbnZlcnNhdGlvbnNSZXNwb25zZRIvCg1jb252ZXJzYXRpb25zGAEgAygLMhgua2IuY2hhdC52MS5Db252ZXJzYXRpb24SKAoEcGFnZRgCIAEoCzIaLmtiLmNvbW1vbi52MS5QYWdlUmVzcG9uc2UiJwoZRGVsZXRlQ29udmVyc2F0aW9uUmVxdWVzdBIKCgJpZBgBIAEoCSIcChpEZWxldGVDb252ZXJzYXRpb25SZXNwb25zZSJFChlVcGRhdGVDb252ZXJzYXRpb25SZXF1ZXN0EgoKAmlkGAEgASgJEhIKBXRpdGxlGAIgASgJSACIAQFCCAoGX3RpdGxlIkwKGlVwZGF0ZUNvbnZlcnNhdGlvblJlc3BvbnNlEi4KDGNvbnZlcnNhdGlvbhgBIAEoCzIYLmtiLmNoYXQudjEuQ29udmVyc2F0aW9uImgKEVN0cmVhbUNoYXRSZXF1ZXN0EhcKD2NvbnZlcnNhdGlvbl9pZBgBIAEoCRIPCgdjb250ZW50GAIgASgJEhoKEnVzZV9rbm93bGVkZ2VfYmFzZRgDIAEoCBINCgVtb2RlbBgEIAEoCSKuAQoSU3RyZWFtQ2hhdFJlc3BvbnNlEioKCWNpdGF0aW9ucxgBIAEoCzIVLmtiLmNoYXQudjEuQ2l0YXRpb25zSAASDwoFZGVsdGEYAiABKAlIABIqCgdtZXNzYWdlGAMgASgLMhcua2IuY2hhdC52MS5DaGF0TWVzc2FnZUgAEiYKBWVycm9yGAQgASgLMhUua2IuY2hhdC52MS5DaGF0RXJyb3JIAEIHCgVldmVudCJFCglDaGF0RXJyb3ISJwoEY29kZRgBIAEoDjIZLmtiLmNoYXQudjEuQ2hhdEVycm9yQ29kZRIPCgdtZXNzYWdlGAIgASgJIjAKCUNpdGF0aW9ucxIjCgVpdGVtcxgBIAMoCzIULmtiLmNoYXQudjEuQ2l0YXRpb24qXgoLTWVzc2FnZVJvbGUSHAoYTUVTU0FHRV9ST0xFX1VOU1BFQ0lGSUVEEAASFQoRTUVTU0FHRV9ST0xFX1VTRVIQARIaChZNRVNTQUdFX1JPTEVfQVNTSVNUQU5UEAIqgwEKDU1lc3NhZ2VTdGF0dXMSHgoaTUVTU0FHRV9TVEFUVVNfVU5TUEVDSUZJRUQQABIbChdNRVNTQUdFX1NUQVRVU19DT01QTEVURRABEhoKFk1FU1NBR0VfU1RBVFVTX1NUT1BQRUQQAhIZChVNRVNTQUdFX1NUQVRVU19GQUlMRUQQAypvCg1DaGF0RXJyb3JDb2RlEh8KG0NIQVRfRVJST1JfQ09ERV9VTlNQRUNJRklFRBAAEh8KG0NIQVRfRVJST1JfQ09ERV9VTkFWQUlMQUJMRRABEhwKGENIQVRfRVJST1JfQ09ERV9JTlRFUk5BTBACMskECgtDaGF0U2VydmljZRJjChJDcmVhdGVDb252ZXJzYXRpb24SJS5rYi5jaGF0LnYxLkNyZWF0ZUNvbnZlcnNhdGlvblJlcXVlc3QaJi5rYi5jaGF0LnYxLkNyZWF0ZUNvbnZlcnNhdGlvblJlc3BvbnNlEloKD0dldENvbnZlcnNhdGlvbhIiLmtiLmNoYXQudjEuR2V0Q29udmVyc2F0aW9uUmVxdWVzdBojLmtiLmNoYXQudjEuR2V0Q29udmVyc2F0aW9uUmVzcG9uc2USYAoRTGlzdENvbnZlcnNhdGlvbnMSJC5rYi5jaGF0LnYxLkxpc3RDb252ZXJzYXRpb25zUmVxdWVzdBolLmtiLmNoYXQudjEuTGlzdENvbnZlcnNhdGlvbnNSZXNwb25zZRJjChJEZWxldGVDb252ZXJzYXRpb24SJS5rYi5jaGF0LnYxLkRlbGV0ZUNvbnZlcnNhdGlvblJlcXVlc3QaJi5rYi5jaGF0LnYxLkRlbGV0ZUNvbnZlcnNhdGlvblJlc3BvbnNlEmMKElVwZGF0ZUNvbnZlcnNhdGlvbhIlLmtiLmNoYXQudjEuVXBkYXRlQ29udmVyc2F0aW9uUmVxdWVzdBomLmtiLmNoYXQudjEuVXBkYXRlQ29udmVyc2F0aW9uUmVzcG9uc2USTQoKU3RyZWFtQ2hhdBIdLmtiLmNoYXQudjEuU3RyZWFtQ2hhdFJlcXVlc3QaHi5rYi5jaGF0LnYxLlN0cmVhbUNoYXRSZXNwb25zZTABQjtaOWdpdGh1Yi5jb20vY2hyaXN0b3BoL2tiL21vZHVsZXMvY2hhdC9hcGkvZ28vY2hhdHYxO2NoYXR2MWIGcHJvdG8z", [file_google_protobuf_timestamp, file_kb_common_v1_common]);
 
 /**
  * @generated from message kb.chat.v1.Citation
@@ -81,6 +81,11 @@ export type ChatMessage = Message<"kb.chat.v1.ChatMessage"> & {
    * @generated from field: google.protobuf.Timestamp create_time = 5;
    */
   createTime?: Timestamp | undefined;
+
+  /**
+   * @generated from field: kb.chat.v1.MessageStatus status = 6;
+   */
+  status: MessageStatus;
 };
 
 /**
@@ -366,12 +371,21 @@ export type StreamChatResponse = Message<"kb.chat.v1.StreamChatResponse"> & {
     case: "delta";
   } | {
     /**
-     * The persisted assistant message, sent last.
+     * The persisted assistant message, sent last. Its status says how the
+     * answer ended.
      *
      * @generated from field: kb.chat.v1.ChatMessage message = 3;
      */
     value: ChatMessage;
     case: "message";
+  } | {
+    /**
+     * The answer failed. Sent once, before the message with the failed status.
+     *
+     * @generated from field: kb.chat.v1.ChatError error = 4;
+     */
+    value: ChatError;
+    case: "error";
   } | { case: undefined; value?: undefined };
 };
 
@@ -381,6 +395,30 @@ export type StreamChatResponse = Message<"kb.chat.v1.StreamChatResponse"> & {
  */
 export const StreamChatResponseSchema: GenMessage<StreamChatResponse> = /*@__PURE__*/
   messageDesc(file_kb_chat_v1_chat, 14);
+
+/**
+ * @generated from message kb.chat.v1.ChatError
+ */
+export type ChatError = Message<"kb.chat.v1.ChatError"> & {
+  /**
+   * @generated from field: kb.chat.v1.ChatErrorCode code = 1;
+   */
+  code: ChatErrorCode;
+
+  /**
+   * A readable reason to show to the user, without technical details.
+   *
+   * @generated from field: string message = 2;
+   */
+  message: string;
+};
+
+/**
+ * Describes the message kb.chat.v1.ChatError.
+ * Use `create(ChatErrorSchema)` to create a new message.
+ */
+export const ChatErrorSchema: GenMessage<ChatError> = /*@__PURE__*/
+  messageDesc(file_kb_chat_v1_chat, 15);
 
 /**
  * @generated from message kb.chat.v1.Citations
@@ -397,7 +435,7 @@ export type Citations = Message<"kb.chat.v1.Citations"> & {
  * Use `create(CitationsSchema)` to create a new message.
  */
 export const CitationsSchema: GenMessage<Citations> = /*@__PURE__*/
-  messageDesc(file_kb_chat_v1_chat, 15);
+  messageDesc(file_kb_chat_v1_chat, 16);
 
 /**
  * @generated from enum kb.chat.v1.MessageRole
@@ -424,6 +462,75 @@ export enum MessageRole {
  */
 export const MessageRoleSchema: GenEnum<MessageRole> = /*@__PURE__*/
   enumDesc(file_kb_chat_v1_chat, 0);
+
+/**
+ * How an answer ended. User messages are always complete.
+ *
+ * @generated from enum kb.chat.v1.MessageStatus
+ */
+export enum MessageStatus {
+  /**
+   * @generated from enum value: MESSAGE_STATUS_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: MESSAGE_STATUS_COMPLETE = 1;
+   */
+  COMPLETE = 1,
+
+  /**
+   * The user stopped the answer; the text so far is kept.
+   *
+   * @generated from enum value: MESSAGE_STATUS_STOPPED = 2;
+   */
+  STOPPED = 2,
+
+  /**
+   * A required service failed; the text so far is kept.
+   *
+   * @generated from enum value: MESSAGE_STATUS_FAILED = 3;
+   */
+  FAILED = 3,
+}
+
+/**
+ * Describes the enum kb.chat.v1.MessageStatus.
+ */
+export const MessageStatusSchema: GenEnum<MessageStatus> = /*@__PURE__*/
+  enumDesc(file_kb_chat_v1_chat, 1);
+
+/**
+ * Why an answer failed.
+ *
+ * @generated from enum kb.chat.v1.ChatErrorCode
+ */
+export enum ChatErrorCode {
+  /**
+   * @generated from enum value: CHAT_ERROR_CODE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * A required service is unavailable; retrying later may succeed.
+   *
+   * @generated from enum value: CHAT_ERROR_CODE_UNAVAILABLE = 1;
+   */
+  UNAVAILABLE = 1,
+
+  /**
+   * A required service failed for another reason.
+   *
+   * @generated from enum value: CHAT_ERROR_CODE_INTERNAL = 2;
+   */
+  INTERNAL = 2,
+}
+
+/**
+ * Describes the enum kb.chat.v1.ChatErrorCode.
+ */
+export const ChatErrorCodeSchema: GenEnum<ChatErrorCode> = /*@__PURE__*/
+  enumDesc(file_kb_chat_v1_chat, 2);
 
 /**
  * ChatService manages conversations and answers questions, optionally

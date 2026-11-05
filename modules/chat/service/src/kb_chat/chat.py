@@ -25,8 +25,19 @@ class ConversationNotFoundError(Exception):
     """The conversation does not exist."""
 
 
+class Peer(StrEnum):
+    """The modules the answer use case depends on."""
+
+    DOCUMENT = "document"
+    LLM = "llm"
+
+
 class PeerError(Exception):
     """A peer module failed. The message is logged, never sent to callers."""
+
+    def __init__(self, peer: Peer, message: str) -> None:
+        super().__init__(f"{peer}: {message}")
+        self.peer = peer
 
 
 class PeerUnavailableError(PeerError):
@@ -68,11 +79,18 @@ class AnswerDelta:
 
 
 @dataclass(frozen=True)
+class AnswerFailed:
+    """A peer failed; the answer so far follows as a failed AnswerSaved."""
+
+    error: PeerError
+
+
+@dataclass(frozen=True)
 class AnswerSaved:
     message: MessageRow
 
 
-AnswerEvent = SourcesFound | AnswerDelta | AnswerSaved
+AnswerEvent = SourcesFound | AnswerDelta | AnswerFailed | AnswerSaved
 
 _PROMPT_ROLES = {
     chat_pb2.MESSAGE_ROLE_USER: PromptRole.USER,
@@ -99,36 +117,46 @@ class Chat:
         self, conversation_id: uuid.UUID, content: str, model: str, use_knowledge_base: bool
     ) -> AsyncIterator[AnswerEvent]:
         """Answers a question in a conversation. The question is saved first, so
-        it stays in the conversation even when no answer can be generated."""
+        it stays in the conversation even when no answer can be generated. When a
+        peer fails, the answer so far is saved as failed after an AnswerFailed."""
         conv = await self._repo.get_conversation(conversation_id)
         if conv is None:
             raise ConversationNotFoundError(str(conversation_id))
         history = await self._repo.list_messages(conv.id, self._settings.history_limit)
+        # A failed answer is cut off or empty; the model is better off without it.
+        history = [m for m in history if m.status != chat_pb2.MESSAGE_STATUS_FAILED]
         await self._repo.add_message(conv.id, chat_pb2.MESSAGE_ROLE_USER, content, [])
         if not conv.title:
             await self._repo.set_title(conv.id, content[:TITLE_LENGTH])
 
-        retrieved: list[chat_pb2.Citation] = []
-        if use_knowledge_base:
-            retrieved = await self._retriever.retrieve(content, self._settings.rag_top_k)
-        budget = self._settings.context_tokens - self._settings.answer_reserve_tokens
-        context = fit(budget, self._counter, _system_prompt, retrieved, history, content)
-        # Only the sources that made it into the prompt are cited, numbered as there.
-        citations = context.sources
-        if use_knowledge_base:
-            yield SourcesFound(citations)
-
         answer: list[str] = []
-        prompt = _prompt(citations, context.history, content)
-        async for delta in self._generator.generate(model, prompt):
-            answer.append(delta)
-            yield AnswerDelta(delta)
+        citations: list[chat_pb2.Citation] = []
+        status = chat_pb2.MESSAGE_STATUS_COMPLETE
+        try:
+            retrieved: list[chat_pb2.Citation] = []
+            if use_knowledge_base:
+                retrieved = await self._retriever.retrieve(content, self._settings.rag_top_k)
+            budget = self._settings.context_tokens - self._settings.answer_reserve_tokens
+            context = fit(budget, self._counter, _system_prompt, retrieved, history, content)
+            # Only the sources that made it into the prompt are cited, numbered as there.
+            citations = context.sources
+            if use_knowledge_base:
+                yield SourcesFound(citations)
+
+            prompt = _prompt(citations, context.history, content)
+            async for delta in self._generator.generate(model, prompt):
+                answer.append(delta)
+                yield AnswerDelta(delta)
+        except PeerError as err:
+            status = chat_pb2.MESSAGE_STATUS_FAILED
+            yield AnswerFailed(err)
 
         saved = await self._repo.add_message(
             conv.id,
             chat_pb2.MESSAGE_ROLE_ASSISTANT,
             "".join(answer),
             [_citation_to_dict(c) for c in citations],
+            status,
         )
         yield AnswerSaved(saved)
 

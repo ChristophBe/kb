@@ -29,6 +29,52 @@ type InsertChunksParams struct {
 	Embedding  pgvector.Vector
 }
 
+const listChunks = `-- name: ListChunks :many
+SELECT document_id, idx, text, metadata
+FROM document.chunks
+WHERE document_id = $1 AND idx > $2
+ORDER BY idx
+LIMIT $3
+`
+
+type ListChunksParams struct {
+	DocumentID uuid.UUID
+	AfterIdx   int32
+	MaxResults int32
+}
+
+type ListChunksRow struct {
+	DocumentID uuid.UUID
+	Idx        int32
+	Text       string
+	Metadata   map[string]string
+}
+
+func (q *Queries) ListChunks(ctx context.Context, arg ListChunksParams) ([]ListChunksRow, error) {
+	rows, err := q.db.Query(ctx, listChunks, arg.DocumentID, arg.AfterIdx, arg.MaxResults)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListChunksRow{}
+	for rows.Next() {
+		var i ListChunksRow
+		if err := rows.Scan(
+			&i.DocumentID,
+			&i.Idx,
+			&i.Text,
+			&i.Metadata,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchChunks = `-- name: SearchChunks :many
 SELECT c.document_id, c.idx, c.text, c.metadata, d.title AS document_title,
        (1 - (c.embedding <=> $1::vector))::real AS score

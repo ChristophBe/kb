@@ -3,6 +3,7 @@ package server
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"io"
 	"io/fs"
@@ -278,6 +279,39 @@ func (s *Server) AddChunks(ctx context.Context, req *documentv1.AddChunksRequest
 	return &documentv1.AddChunksResponse{ChunkCount: n}, nil
 }
 
+// ListChunks pages through a document's chunks by index. The page token is
+// the last index of the previous page, so pages stay stable while the client
+// pages; a document re-processed in between simply continues after that index.
+func (s *Server) ListChunks(ctx context.Context, req *documentv1.ListChunksRequest) (*documentv1.ListChunksResponse, error) {
+	id, err := parseID(req.GetDocumentId())
+	if err != nil {
+		return nil, err
+	}
+	after, err := decodeChunkToken(req.GetPage().GetPageToken())
+	if err != nil {
+		return nil, err
+	}
+	limit := pageSize(req.GetPage())
+	if _, err := s.repo.GetDocument(ctx, id); err != nil {
+		return nil, s.notFoundOr("get document", err)
+	}
+	rows, err := s.repo.ListChunks(ctx, store.ListChunksParams{DocumentID: id, AfterIdx: after, MaxResults: limit + 1})
+	if err != nil {
+		return nil, s.internal("list chunks", err)
+	}
+	resp := &documentv1.ListChunksResponse{Page: &commonv1.PageResponse{}}
+	if len(rows) > int(limit) {
+		rows = rows[:limit]
+		resp.Page.NextPageToken = encodeChunkToken(rows[len(rows)-1].Idx)
+	}
+	for _, r := range rows {
+		resp.Chunks = append(resp.Chunks, &documentv1.Chunk{
+			DocumentId: r.DocumentID.String(), Index: r.Idx, Text: r.Text, Metadata: r.Metadata,
+		})
+	}
+	return resp, nil
+}
+
 func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksRequest) (*documentv1.SearchChunksResponse, error) {
 	if len(req.GetEmbedding()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "embedding is required")
@@ -346,12 +380,15 @@ func parseID(raw string) (uuid.UUID, error) {
 	return id, nil
 }
 
-func pageParams(p *commonv1.PageRequest) (limit, offset int32, err error) {
-	limit = p.GetPageSize()
-	if limit <= 0 {
-		limit = defaultPageSize
+func pageSize(p *commonv1.PageRequest) int32 {
+	if n := p.GetPageSize(); n > 0 {
+		return min(n, maxPageSize)
 	}
-	limit = min(limit, maxPageSize)
+	return defaultPageSize
+}
+
+func pageParams(p *commonv1.PageRequest) (limit, offset int32, err error) {
+	limit = pageSize(p)
 	if tok := p.GetPageToken(); tok != "" {
 		o, perr := strconv.Atoi(tok)
 		if perr != nil || o < 0 {
@@ -360,6 +397,27 @@ func pageParams(p *commonv1.PageRequest) (limit, offset int32, err error) {
 		offset = int32(o)
 	}
 	return limit, offset, nil
+}
+
+// encodeChunkToken makes the last index of a page an opaque cursor.
+func encodeChunkToken(idx int32) string {
+	return base64.RawURLEncoding.EncodeToString([]byte(strconv.Itoa(int(idx))))
+}
+
+// decodeChunkToken returns the index to continue after; -1 for the first page.
+func decodeChunkToken(tok string) (int32, error) {
+	if tok == "" {
+		return -1, nil
+	}
+	raw, err := base64.RawURLEncoding.DecodeString(tok)
+	if err != nil {
+		return 0, status.Error(codes.InvalidArgument, "invalid page token")
+	}
+	idx, err := strconv.ParseInt(string(raw), 10, 32)
+	if err != nil || idx < 0 {
+		return 0, status.Error(codes.InvalidArgument, "invalid page token")
+	}
+	return int32(idx), nil
 }
 
 // isGenericContentType reports a type that says nothing about the content:

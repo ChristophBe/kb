@@ -28,6 +28,7 @@ const (
 	DocumentService_GetDownloadUrl_FullMethodName    = "/kb.document.v1.DocumentService/GetDownloadUrl"
 	DocumentService_ReadContent_FullMethodName       = "/kb.document.v1.DocumentService/ReadContent"
 	DocumentService_AddChunks_FullMethodName         = "/kb.document.v1.DocumentService/AddChunks"
+	DocumentService_ListChunks_FullMethodName        = "/kb.document.v1.DocumentService/ListChunks"
 	DocumentService_SearchChunks_FullMethodName      = "/kb.document.v1.DocumentService/SearchChunks"
 )
 
@@ -52,6 +53,8 @@ type DocumentServiceClient interface {
 	ReadContent(ctx context.Context, in *ReadContentRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ReadContentResponse], error)
 	// AddChunks replaces all chunks of a document and marks it ready.
 	AddChunks(ctx context.Context, in *AddChunksRequest, opts ...grpc.CallOption) (*AddChunksResponse, error)
+	// ListChunks returns a document's chunks in index order.
+	ListChunks(ctx context.Context, in *ListChunksRequest, opts ...grpc.CallOption) (*ListChunksResponse, error)
 	SearchChunks(ctx context.Context, in *SearchChunksRequest, opts ...grpc.CallOption) (*SearchChunksResponse, error)
 }
 
@@ -162,6 +165,16 @@ func (c *documentServiceClient) AddChunks(ctx context.Context, in *AddChunksRequ
 	return out, nil
 }
 
+func (c *documentServiceClient) ListChunks(ctx context.Context, in *ListChunksRequest, opts ...grpc.CallOption) (*ListChunksResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListChunksResponse)
+	err := c.cc.Invoke(ctx, DocumentService_ListChunks_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *documentServiceClient) SearchChunks(ctx context.Context, in *SearchChunksRequest, opts ...grpc.CallOption) (*SearchChunksResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SearchChunksResponse)
@@ -193,6 +206,8 @@ type DocumentServiceServer interface {
 	ReadContent(*ReadContentRequest, grpc.ServerStreamingServer[ReadContentResponse]) error
 	// AddChunks replaces all chunks of a document and marks it ready.
 	AddChunks(context.Context, *AddChunksRequest) (*AddChunksResponse, error)
+	// ListChunks returns a document's chunks in index order.
+	ListChunks(context.Context, *ListChunksRequest) (*ListChunksResponse, error)
 	SearchChunks(context.Context, *SearchChunksRequest) (*SearchChunksResponse, error)
 	mustEmbedUnimplementedDocumentServiceServer()
 }
@@ -230,6 +245,9 @@ func (UnimplementedDocumentServiceServer) ReadContent(*ReadContentRequest, grpc.
 }
 func (UnimplementedDocumentServiceServer) AddChunks(context.Context, *AddChunksRequest) (*AddChunksResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AddChunks not implemented")
+}
+func (UnimplementedDocumentServiceServer) ListChunks(context.Context, *ListChunksRequest) (*ListChunksResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListChunks not implemented")
 }
 func (UnimplementedDocumentServiceServer) SearchChunks(context.Context, *SearchChunksRequest) (*SearchChunksResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SearchChunks not implemented")
@@ -410,6 +428,24 @@ func _DocumentService_AddChunks_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DocumentService_ListChunks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListChunksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DocumentServiceServer).ListChunks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DocumentService_ListChunks_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DocumentServiceServer).ListChunks(ctx, req.(*ListChunksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _DocumentService_SearchChunks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SearchChunksRequest)
 	if err := dec(in); err != nil {
@@ -466,6 +502,10 @@ var DocumentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddChunks",
 			Handler:    _DocumentService_AddChunks_Handler,
+		},
+		{
+			MethodName: "ListChunks",
+			Handler:    _DocumentService_ListChunks_Handler,
 		},
 		{
 			MethodName: "SearchChunks",

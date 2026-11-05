@@ -81,6 +81,11 @@ class DocumentServiceStub:
                 request_serializer=kb_dot_document_dot_v1_dot_document__pb2.AddChunksRequest.SerializeToString,
                 response_deserializer=kb_dot_document_dot_v1_dot_document__pb2.AddChunksResponse.FromString,
                 _registered_method=True)
+        self.ListChunks = channel.unary_unary(
+                '/kb.document.v1.DocumentService/ListChunks',
+                request_serializer=kb_dot_document_dot_v1_dot_document__pb2.ListChunksRequest.SerializeToString,
+                response_deserializer=kb_dot_document_dot_v1_dot_document__pb2.ListChunksResponse.FromString,
+                _registered_method=True)
         self.SearchChunks = channel.unary_unary(
                 '/kb.document.v1.DocumentService/SearchChunks',
                 request_serializer=kb_dot_document_dot_v1_dot_document__pb2.SearchChunksRequest.SerializeToString,
@@ -152,6 +157,13 @@ class DocumentServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ListChunks(self, request, context):
+        """ListChunks returns a document's chunks in index order.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def SearchChunks(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -205,6 +217,11 @@ def add_DocumentServiceServicer_to_server(servicer, server):
                     servicer.AddChunks,
                     request_deserializer=kb_dot_document_dot_v1_dot_document__pb2.AddChunksRequest.FromString,
                     response_serializer=kb_dot_document_dot_v1_dot_document__pb2.AddChunksResponse.SerializeToString,
+            ),
+            'ListChunks': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListChunks,
+                    request_deserializer=kb_dot_document_dot_v1_dot_document__pb2.ListChunksRequest.FromString,
+                    response_serializer=kb_dot_document_dot_v1_dot_document__pb2.ListChunksResponse.SerializeToString,
             ),
             'SearchChunks': grpc.unary_unary_rpc_method_handler(
                     servicer.SearchChunks,
@@ -457,6 +474,33 @@ class DocumentService:
             '/kb.document.v1.DocumentService/AddChunks',
             kb_dot_document_dot_v1_dot_document__pb2.AddChunksRequest.SerializeToString,
             kb_dot_document_dot_v1_dot_document__pb2.AddChunksResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListChunks(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/kb.document.v1.DocumentService/ListChunks',
+            kb_dot_document_dot_v1_dot_document__pb2.ListChunksRequest.SerializeToString,
+            kb_dot_document_dot_v1_dot_document__pb2.ListChunksResponse.FromString,
             options,
             channel_credentials,
             insecure,

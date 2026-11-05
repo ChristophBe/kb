@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -28,6 +29,8 @@ type fakeRepo struct {
 	marked   []store.MarkDocumentUploadedParams
 	statuses []store.SetDocumentStatusParams
 	updated  []store.UpdateDocumentParams
+	chunks   []store.ListChunksRow
+	chunkReq []store.ListChunksParams
 }
 
 func (f *fakeRepo) CreateDocument(_ context.Context, p store.CreateDocumentParams) (store.DocumentDocument, error) {
@@ -60,6 +63,18 @@ func (f *fakeRepo) UpdateDocument(_ context.Context, p store.UpdateDocumentParam
 func (f *fakeRepo) SetDocumentStatus(_ context.Context, p store.SetDocumentStatusParams) (store.DocumentDocument, error) {
 	f.statuses = append(f.statuses, p)
 	return store.DocumentDocument{ID: p.ID, Status: p.Status}, nil
+}
+
+// ListChunks behaves like the query: chunks after AfterIdx, in index order.
+func (f *fakeRepo) ListChunks(_ context.Context, p store.ListChunksParams) ([]store.ListChunksRow, error) {
+	f.chunkReq = append(f.chunkReq, p)
+	rows := []store.ListChunksRow{}
+	for _, c := range f.chunks {
+		if c.DocumentID == p.DocumentID && c.Idx > p.AfterIdx && len(rows) < int(p.MaxResults) {
+			rows = append(rows, c)
+		}
+	}
+	return rows, nil
 }
 
 type fakeObjects struct {
@@ -264,3 +279,99 @@ func TestUpdateDocumentWithoutChangesLeavesFieldsAlone(t *testing.T) {
 		t.Errorf("params = %+v", p)
 	}
 }
+
+func TestListChunksPaginatesInIndexOrder(t *testing.T) {
+	repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New()}}
+	for i := range 5 {
+		repo.chunks = append(repo.chunks, store.ListChunksRow{
+			DocumentID: repo.doc.ID, Idx: int32(i), Text: fmt.Sprintf("chunk %d", i), Metadata: map[string]string{"page": "1"},
+		})
+	}
+	srv := newServer(repo)
+	var got []int32
+	token := ""
+	for range 3 {
+		resp, err := srv.ListChunks(t.Context(), &documentv1.ListChunksRequest{
+			DocumentId: repo.doc.ID.String(), Page: &commonv1.PageRequest{PageSize: 2, PageToken: token},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, c := range resp.GetChunks() {
+			if c.GetDocumentId() != repo.doc.ID.String() || c.GetText() != fmt.Sprintf("chunk %d", c.GetIndex()) || c.GetMetadata()["page"] != "1" {
+				t.Errorf("chunk = %v", c)
+			}
+			got = append(got, c.GetIndex())
+		}
+		token = resp.GetPage().GetNextPageToken()
+		if token == "" {
+			break
+		}
+	}
+	if fmt.Sprint(got) != "[0 1 2 3 4]" || token != "" {
+		t.Fatalf("indices %v, last token %q; want [0 1 2 3 4] and no token", got, token)
+	}
+}
+
+func TestListChunksDefaultsAndCapsThePageSize(t *testing.T) {
+	for _, tc := range []struct {
+		size, want int32
+	}{{0, defaultPageSize}, {-3, defaultPageSize}, {maxPageSize + 1, maxPageSize}} {
+		repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New()}}
+		_, err := newServer(repo).ListChunks(t.Context(), &documentv1.ListChunksRequest{
+			DocumentId: repo.doc.ID.String(), Page: &commonv1.PageRequest{PageSize: tc.size},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if p := repo.chunkReq[0]; p.MaxResults != tc.want+1 || p.AfterIdx != -1 {
+			t.Errorf("size %d: params = %+v", tc.size, p)
+		}
+	}
+}
+
+func TestListChunksEmptyDocument(t *testing.T) {
+	repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New()}}
+	resp, err := newServer(repo).ListChunks(t.Context(), &documentv1.ListChunksRequest{DocumentId: repo.doc.ID.String()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.GetChunks()) != 0 || resp.GetPage().GetNextPageToken() != "" {
+		t.Errorf("resp = %v", resp)
+	}
+}
+
+func TestListChunksUnknownDocument(t *testing.T) {
+	_, err := newServer(&fakeRepo{}).ListChunks(t.Context(), &documentv1.ListChunksRequest{DocumentId: uuid.NewString()})
+	if status.Code(err) != codes.NotFound {
+		t.Fatalf("err = %v, want NotFound", err)
+	}
+}
+
+func TestListChunksValidates(t *testing.T) {
+	id := uuid.New()
+	for _, tc := range []struct {
+		name, id, token string
+	}{
+		{"missing id", "", ""},
+		{"malformed id", "nope", ""},
+		{"token not base64", id.String(), "!!"},
+		{"token not a number", id.String(), encode("x")},
+		{"negative token", id.String(), encode("-1")},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := &fakeRepo{doc: store.DocumentDocument{ID: id}}
+			_, err := newServer(repo).ListChunks(t.Context(), &documentv1.ListChunksRequest{
+				DocumentId: tc.id, Page: &commonv1.PageRequest{PageToken: tc.token},
+			})
+			if status.Code(err) != codes.InvalidArgument {
+				t.Fatalf("err = %v, want InvalidArgument", err)
+			}
+			if len(repo.chunkReq) != 0 {
+				t.Errorf("chunks were queried: %+v", repo.chunkReq)
+			}
+		})
+	}
+}
+
+func encode(s string) string { return base64.RawURLEncoding.EncodeToString([]byte(s)) }

@@ -1283,6 +1283,110 @@ func (x *AddChunksResponse) GetChunkCount() int32 {
 	return 0
 }
 
+type ListChunksRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DocumentId    string                 `protobuf:"bytes,1,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
+	Page          *commonv1.PageRequest  `protobuf:"bytes,2,opt,name=page,proto3" json:"page,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListChunksRequest) Reset() {
+	*x = ListChunksRequest{}
+	mi := &file_kb_document_v1_document_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListChunksRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListChunksRequest) ProtoMessage() {}
+
+func (x *ListChunksRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_kb_document_v1_document_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListChunksRequest.ProtoReflect.Descriptor instead.
+func (*ListChunksRequest) Descriptor() ([]byte, []int) {
+	return file_kb_document_v1_document_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ListChunksRequest) GetDocumentId() string {
+	if x != nil {
+		return x.DocumentId
+	}
+	return ""
+}
+
+func (x *ListChunksRequest) GetPage() *commonv1.PageRequest {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
+type ListChunksResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Chunks        []*Chunk               `protobuf:"bytes,1,rep,name=chunks,proto3" json:"chunks,omitempty"`
+	Page          *commonv1.PageResponse `protobuf:"bytes,2,opt,name=page,proto3" json:"page,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListChunksResponse) Reset() {
+	*x = ListChunksResponse{}
+	mi := &file_kb_document_v1_document_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListChunksResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListChunksResponse) ProtoMessage() {}
+
+func (x *ListChunksResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_kb_document_v1_document_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListChunksResponse.ProtoReflect.Descriptor instead.
+func (*ListChunksResponse) Descriptor() ([]byte, []int) {
+	return file_kb_document_v1_document_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *ListChunksResponse) GetChunks() []*Chunk {
+	if x != nil {
+		return x.Chunks
+	}
+	return nil
+}
+
+func (x *ListChunksResponse) GetPage() *commonv1.PageResponse {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
 type SearchChunksRequest struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	Embedding []float32              `protobuf:"fixed32,1,rep,packed,name=embedding,proto3" json:"embedding,omitempty"`
@@ -1295,7 +1399,7 @@ type SearchChunksRequest struct {
 
 func (x *SearchChunksRequest) Reset() {
 	*x = SearchChunksRequest{}
-	mi := &file_kb_document_v1_document_proto_msgTypes[22]
+	mi := &file_kb_document_v1_document_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1307,7 +1411,7 @@ func (x *SearchChunksRequest) String() string {
 func (*SearchChunksRequest) ProtoMessage() {}
 
 func (x *SearchChunksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_document_v1_document_proto_msgTypes[22]
+	mi := &file_kb_document_v1_document_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1320,7 +1424,7 @@ func (x *SearchChunksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchChunksRequest.ProtoReflect.Descriptor instead.
 func (*SearchChunksRequest) Descriptor() ([]byte, []int) {
-	return file_kb_document_v1_document_proto_rawDescGZIP(), []int{22}
+	return file_kb_document_v1_document_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *SearchChunksRequest) GetEmbedding() []float32 {
@@ -1353,7 +1457,7 @@ type SearchChunksResponse struct {
 
 func (x *SearchChunksResponse) Reset() {
 	*x = SearchChunksResponse{}
-	mi := &file_kb_document_v1_document_proto_msgTypes[23]
+	mi := &file_kb_document_v1_document_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1365,7 +1469,7 @@ func (x *SearchChunksResponse) String() string {
 func (*SearchChunksResponse) ProtoMessage() {}
 
 func (x *SearchChunksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_document_v1_document_proto_msgTypes[23]
+	mi := &file_kb_document_v1_document_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1378,7 +1482,7 @@ func (x *SearchChunksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchChunksResponse.ProtoReflect.Descriptor instead.
 func (*SearchChunksResponse) Descriptor() ([]byte, []int) {
-	return file_kb_document_v1_document_proto_rawDescGZIP(), []int{23}
+	return file_kb_document_v1_document_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *SearchChunksResponse) GetResults() []*ScoredChunk {
@@ -1492,7 +1596,14 @@ const file_kb_document_v1_document_proto_rawDesc = "" +
 	"\x06chunks\x18\x02 \x03(\v2\x1a.kb.document.v1.ChunkInputR\x06chunks\"4\n" +
 	"\x11AddChunksResponse\x12\x1f\n" +
 	"\vchunk_count\x18\x01 \x01(\x05R\n" +
-	"chunkCount\"l\n" +
+	"chunkCount\"c\n" +
+	"\x11ListChunksRequest\x12\x1f\n" +
+	"\vdocument_id\x18\x01 \x01(\tR\n" +
+	"documentId\x12-\n" +
+	"\x04page\x18\x02 \x01(\v2\x19.kb.common.v1.PageRequestR\x04page\"s\n" +
+	"\x12ListChunksResponse\x12-\n" +
+	"\x06chunks\x18\x01 \x03(\v2\x15.kb.document.v1.ChunkR\x06chunks\x12.\n" +
+	"\x04page\x18\x02 \x01(\v2\x1a.kb.common.v1.PageResponseR\x04page\"l\n" +
 	"\x13SearchChunksRequest\x12\x1c\n" +
 	"\tembedding\x18\x01 \x03(\x02R\tembedding\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12!\n" +
@@ -1505,7 +1616,7 @@ const file_kb_document_v1_document_proto_rawDesc = "" +
 	"\x18DOCUMENT_STATUS_UPLOADED\x10\x02\x12\x1e\n" +
 	"\x1aDOCUMENT_STATUS_PROCESSING\x10\x03\x12\x19\n" +
 	"\x15DOCUMENT_STATUS_READY\x10\x04\x12\x1a\n" +
-	"\x16DOCUMENT_STATUS_FAILED\x10\x052\xbc\a\n" +
+	"\x16DOCUMENT_STATUS_FAILED\x10\x052\x91\b\n" +
 	"\x0fDocumentService\x12_\n" +
 	"\x0eCreateDocument\x12%.kb.document.v1.CreateDocumentRequest\x1a&.kb.document.v1.CreateDocumentResponse\x12V\n" +
 	"\vGetDocument\x12\".kb.document.v1.GetDocumentRequest\x1a#.kb.document.v1.GetDocumentResponse\x12\\\n" +
@@ -1515,7 +1626,9 @@ const file_kb_document_v1_document_proto_rawDesc = "" +
 	"\x11SetDocumentStatus\x12(.kb.document.v1.SetDocumentStatusRequest\x1a).kb.document.v1.SetDocumentStatusResponse\x12_\n" +
 	"\x0eGetDownloadUrl\x12%.kb.document.v1.GetDownloadUrlRequest\x1a&.kb.document.v1.GetDownloadUrlResponse\x12X\n" +
 	"\vReadContent\x12\".kb.document.v1.ReadContentRequest\x1a#.kb.document.v1.ReadContentResponse0\x01\x12P\n" +
-	"\tAddChunks\x12 .kb.document.v1.AddChunksRequest\x1a!.kb.document.v1.AddChunksResponse\x12Y\n" +
+	"\tAddChunks\x12 .kb.document.v1.AddChunksRequest\x1a!.kb.document.v1.AddChunksResponse\x12S\n" +
+	"\n" +
+	"ListChunks\x12!.kb.document.v1.ListChunksRequest\x1a\".kb.document.v1.ListChunksResponse\x12Y\n" +
 	"\fSearchChunks\x12#.kb.document.v1.SearchChunksRequest\x1a$.kb.document.v1.SearchChunksResponseBGZEgithub.com/christoph/kb/modules/document/api/go/documentv1;documentv1b\x06proto3"
 
 var (
@@ -1531,7 +1644,7 @@ func file_kb_document_v1_document_proto_rawDescGZIP() []byte {
 }
 
 var file_kb_document_v1_document_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_kb_document_v1_document_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
+var file_kb_document_v1_document_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
 var file_kb_document_v1_document_proto_goTypes = []any{
 	(DocumentStatus)(0),               // 0: kb.document.v1.DocumentStatus
 	(*Document)(nil),                  // 1: kb.document.v1.Document
@@ -1556,62 +1669,69 @@ var file_kb_document_v1_document_proto_goTypes = []any{
 	(*ChunkInput)(nil),                // 20: kb.document.v1.ChunkInput
 	(*AddChunksRequest)(nil),          // 21: kb.document.v1.AddChunksRequest
 	(*AddChunksResponse)(nil),         // 22: kb.document.v1.AddChunksResponse
-	(*SearchChunksRequest)(nil),       // 23: kb.document.v1.SearchChunksRequest
-	(*SearchChunksResponse)(nil),      // 24: kb.document.v1.SearchChunksResponse
-	nil,                               // 25: kb.document.v1.Document.MetadataEntry
-	nil,                               // 26: kb.document.v1.Chunk.MetadataEntry
-	nil,                               // 27: kb.document.v1.CreateDocumentRequest.MetadataEntry
-	nil,                               // 28: kb.document.v1.UpdateDocumentRequest.MetadataEntry
-	nil,                               // 29: kb.document.v1.ChunkInput.MetadataEntry
-	(*timestamppb.Timestamp)(nil),     // 30: google.protobuf.Timestamp
-	(*commonv1.PageRequest)(nil),      // 31: kb.common.v1.PageRequest
-	(*commonv1.PageResponse)(nil),     // 32: kb.common.v1.PageResponse
+	(*ListChunksRequest)(nil),         // 23: kb.document.v1.ListChunksRequest
+	(*ListChunksResponse)(nil),        // 24: kb.document.v1.ListChunksResponse
+	(*SearchChunksRequest)(nil),       // 25: kb.document.v1.SearchChunksRequest
+	(*SearchChunksResponse)(nil),      // 26: kb.document.v1.SearchChunksResponse
+	nil,                               // 27: kb.document.v1.Document.MetadataEntry
+	nil,                               // 28: kb.document.v1.Chunk.MetadataEntry
+	nil,                               // 29: kb.document.v1.CreateDocumentRequest.MetadataEntry
+	nil,                               // 30: kb.document.v1.UpdateDocumentRequest.MetadataEntry
+	nil,                               // 31: kb.document.v1.ChunkInput.MetadataEntry
+	(*timestamppb.Timestamp)(nil),     // 32: google.protobuf.Timestamp
+	(*commonv1.PageRequest)(nil),      // 33: kb.common.v1.PageRequest
+	(*commonv1.PageResponse)(nil),     // 34: kb.common.v1.PageResponse
 }
 var file_kb_document_v1_document_proto_depIdxs = []int32{
 	0,  // 0: kb.document.v1.Document.status:type_name -> kb.document.v1.DocumentStatus
-	25, // 1: kb.document.v1.Document.metadata:type_name -> kb.document.v1.Document.MetadataEntry
-	30, // 2: kb.document.v1.Document.create_time:type_name -> google.protobuf.Timestamp
-	30, // 3: kb.document.v1.Document.update_time:type_name -> google.protobuf.Timestamp
-	26, // 4: kb.document.v1.Chunk.metadata:type_name -> kb.document.v1.Chunk.MetadataEntry
+	27, // 1: kb.document.v1.Document.metadata:type_name -> kb.document.v1.Document.MetadataEntry
+	32, // 2: kb.document.v1.Document.create_time:type_name -> google.protobuf.Timestamp
+	32, // 3: kb.document.v1.Document.update_time:type_name -> google.protobuf.Timestamp
+	28, // 4: kb.document.v1.Chunk.metadata:type_name -> kb.document.v1.Chunk.MetadataEntry
 	2,  // 5: kb.document.v1.ScoredChunk.chunk:type_name -> kb.document.v1.Chunk
-	27, // 6: kb.document.v1.CreateDocumentRequest.metadata:type_name -> kb.document.v1.CreateDocumentRequest.MetadataEntry
+	29, // 6: kb.document.v1.CreateDocumentRequest.metadata:type_name -> kb.document.v1.CreateDocumentRequest.MetadataEntry
 	1,  // 7: kb.document.v1.CreateDocumentResponse.document:type_name -> kb.document.v1.Document
 	1,  // 8: kb.document.v1.GetDocumentResponse.document:type_name -> kb.document.v1.Document
-	31, // 9: kb.document.v1.ListDocumentsRequest.page:type_name -> kb.common.v1.PageRequest
+	33, // 9: kb.document.v1.ListDocumentsRequest.page:type_name -> kb.common.v1.PageRequest
 	1,  // 10: kb.document.v1.ListDocumentsResponse.documents:type_name -> kb.document.v1.Document
-	32, // 11: kb.document.v1.ListDocumentsResponse.page:type_name -> kb.common.v1.PageResponse
-	28, // 12: kb.document.v1.UpdateDocumentRequest.metadata:type_name -> kb.document.v1.UpdateDocumentRequest.MetadataEntry
+	34, // 11: kb.document.v1.ListDocumentsResponse.page:type_name -> kb.common.v1.PageResponse
+	30, // 12: kb.document.v1.UpdateDocumentRequest.metadata:type_name -> kb.document.v1.UpdateDocumentRequest.MetadataEntry
 	1,  // 13: kb.document.v1.UpdateDocumentResponse.document:type_name -> kb.document.v1.Document
 	0,  // 14: kb.document.v1.SetDocumentStatusRequest.status:type_name -> kb.document.v1.DocumentStatus
 	1,  // 15: kb.document.v1.SetDocumentStatusResponse.document:type_name -> kb.document.v1.Document
-	29, // 16: kb.document.v1.ChunkInput.metadata:type_name -> kb.document.v1.ChunkInput.MetadataEntry
+	31, // 16: kb.document.v1.ChunkInput.metadata:type_name -> kb.document.v1.ChunkInput.MetadataEntry
 	20, // 17: kb.document.v1.AddChunksRequest.chunks:type_name -> kb.document.v1.ChunkInput
-	3,  // 18: kb.document.v1.SearchChunksResponse.results:type_name -> kb.document.v1.ScoredChunk
-	4,  // 19: kb.document.v1.DocumentService.CreateDocument:input_type -> kb.document.v1.CreateDocumentRequest
-	6,  // 20: kb.document.v1.DocumentService.GetDocument:input_type -> kb.document.v1.GetDocumentRequest
-	8,  // 21: kb.document.v1.DocumentService.ListDocuments:input_type -> kb.document.v1.ListDocumentsRequest
-	10, // 22: kb.document.v1.DocumentService.UpdateDocument:input_type -> kb.document.v1.UpdateDocumentRequest
-	12, // 23: kb.document.v1.DocumentService.DeleteDocument:input_type -> kb.document.v1.DeleteDocumentRequest
-	14, // 24: kb.document.v1.DocumentService.SetDocumentStatus:input_type -> kb.document.v1.SetDocumentStatusRequest
-	16, // 25: kb.document.v1.DocumentService.GetDownloadUrl:input_type -> kb.document.v1.GetDownloadUrlRequest
-	18, // 26: kb.document.v1.DocumentService.ReadContent:input_type -> kb.document.v1.ReadContentRequest
-	21, // 27: kb.document.v1.DocumentService.AddChunks:input_type -> kb.document.v1.AddChunksRequest
-	23, // 28: kb.document.v1.DocumentService.SearchChunks:input_type -> kb.document.v1.SearchChunksRequest
-	5,  // 29: kb.document.v1.DocumentService.CreateDocument:output_type -> kb.document.v1.CreateDocumentResponse
-	7,  // 30: kb.document.v1.DocumentService.GetDocument:output_type -> kb.document.v1.GetDocumentResponse
-	9,  // 31: kb.document.v1.DocumentService.ListDocuments:output_type -> kb.document.v1.ListDocumentsResponse
-	11, // 32: kb.document.v1.DocumentService.UpdateDocument:output_type -> kb.document.v1.UpdateDocumentResponse
-	13, // 33: kb.document.v1.DocumentService.DeleteDocument:output_type -> kb.document.v1.DeleteDocumentResponse
-	15, // 34: kb.document.v1.DocumentService.SetDocumentStatus:output_type -> kb.document.v1.SetDocumentStatusResponse
-	17, // 35: kb.document.v1.DocumentService.GetDownloadUrl:output_type -> kb.document.v1.GetDownloadUrlResponse
-	19, // 36: kb.document.v1.DocumentService.ReadContent:output_type -> kb.document.v1.ReadContentResponse
-	22, // 37: kb.document.v1.DocumentService.AddChunks:output_type -> kb.document.v1.AddChunksResponse
-	24, // 38: kb.document.v1.DocumentService.SearchChunks:output_type -> kb.document.v1.SearchChunksResponse
-	29, // [29:39] is the sub-list for method output_type
-	19, // [19:29] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	33, // 18: kb.document.v1.ListChunksRequest.page:type_name -> kb.common.v1.PageRequest
+	2,  // 19: kb.document.v1.ListChunksResponse.chunks:type_name -> kb.document.v1.Chunk
+	34, // 20: kb.document.v1.ListChunksResponse.page:type_name -> kb.common.v1.PageResponse
+	3,  // 21: kb.document.v1.SearchChunksResponse.results:type_name -> kb.document.v1.ScoredChunk
+	4,  // 22: kb.document.v1.DocumentService.CreateDocument:input_type -> kb.document.v1.CreateDocumentRequest
+	6,  // 23: kb.document.v1.DocumentService.GetDocument:input_type -> kb.document.v1.GetDocumentRequest
+	8,  // 24: kb.document.v1.DocumentService.ListDocuments:input_type -> kb.document.v1.ListDocumentsRequest
+	10, // 25: kb.document.v1.DocumentService.UpdateDocument:input_type -> kb.document.v1.UpdateDocumentRequest
+	12, // 26: kb.document.v1.DocumentService.DeleteDocument:input_type -> kb.document.v1.DeleteDocumentRequest
+	14, // 27: kb.document.v1.DocumentService.SetDocumentStatus:input_type -> kb.document.v1.SetDocumentStatusRequest
+	16, // 28: kb.document.v1.DocumentService.GetDownloadUrl:input_type -> kb.document.v1.GetDownloadUrlRequest
+	18, // 29: kb.document.v1.DocumentService.ReadContent:input_type -> kb.document.v1.ReadContentRequest
+	21, // 30: kb.document.v1.DocumentService.AddChunks:input_type -> kb.document.v1.AddChunksRequest
+	23, // 31: kb.document.v1.DocumentService.ListChunks:input_type -> kb.document.v1.ListChunksRequest
+	25, // 32: kb.document.v1.DocumentService.SearchChunks:input_type -> kb.document.v1.SearchChunksRequest
+	5,  // 33: kb.document.v1.DocumentService.CreateDocument:output_type -> kb.document.v1.CreateDocumentResponse
+	7,  // 34: kb.document.v1.DocumentService.GetDocument:output_type -> kb.document.v1.GetDocumentResponse
+	9,  // 35: kb.document.v1.DocumentService.ListDocuments:output_type -> kb.document.v1.ListDocumentsResponse
+	11, // 36: kb.document.v1.DocumentService.UpdateDocument:output_type -> kb.document.v1.UpdateDocumentResponse
+	13, // 37: kb.document.v1.DocumentService.DeleteDocument:output_type -> kb.document.v1.DeleteDocumentResponse
+	15, // 38: kb.document.v1.DocumentService.SetDocumentStatus:output_type -> kb.document.v1.SetDocumentStatusResponse
+	17, // 39: kb.document.v1.DocumentService.GetDownloadUrl:output_type -> kb.document.v1.GetDownloadUrlResponse
+	19, // 40: kb.document.v1.DocumentService.ReadContent:output_type -> kb.document.v1.ReadContentResponse
+	22, // 41: kb.document.v1.DocumentService.AddChunks:output_type -> kb.document.v1.AddChunksResponse
+	24, // 42: kb.document.v1.DocumentService.ListChunks:output_type -> kb.document.v1.ListChunksResponse
+	26, // 43: kb.document.v1.DocumentService.SearchChunks:output_type -> kb.document.v1.SearchChunksResponse
+	33, // [33:44] is the sub-list for method output_type
+	22, // [22:33] is the sub-list for method input_type
+	22, // [22:22] is the sub-list for extension type_name
+	22, // [22:22] is the sub-list for extension extendee
+	0,  // [0:22] is the sub-list for field type_name
 }
 
 func init() { file_kb_document_v1_document_proto_init() }
@@ -1626,7 +1746,7 @@ func file_kb_document_v1_document_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kb_document_v1_document_proto_rawDesc), len(file_kb_document_v1_document_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   29,
+			NumMessages:   31,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

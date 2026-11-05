@@ -175,3 +175,38 @@ func TestSearchChunksCanBeLimitedToDocuments(t *testing.T) {
 		t.Errorf("filtered: %+v", rows)
 	}
 }
+
+func TestListChunksPagesInIndexOrderWithinADocument(t *testing.T) {
+	r := newRepo(t)
+	ctx := t.Context()
+	doc, other := newDocument(t, r, "a"), newDocument(t, r, "b")
+	// Inserted out of order, so the result order comes from the query.
+	if _, err := r.ReplaceChunks(ctx, doc, []InsertChunksParams{
+		chunk(doc, 2, "two", axis(2)), chunk(doc, 0, "zero", axis(0)), chunk(doc, 1, "one", axis(1)),
+	}, readyStatus); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.ReplaceChunks(ctx, other, []InsertChunksParams{chunk(other, 0, "elsewhere", axis(3))}, readyStatus); err != nil {
+		t.Fatal(err)
+	}
+	texts := func(after, limit int32) []string {
+		rows, err := r.ListChunks(ctx, ListChunksParams{DocumentID: doc, AfterIdx: after, MaxResults: limit})
+		if err != nil {
+			t.Fatal(err)
+		}
+		out := []string{}
+		for _, row := range rows {
+			if row.Metadata["heading"] != row.Text {
+				t.Errorf("metadata = %v", row.Metadata)
+			}
+			out = append(out, row.Text)
+		}
+		return out
+	}
+	if got := texts(-1, 2); len(got) != 2 || got[0] != "zero" || got[1] != "one" {
+		t.Errorf("first page = %v", got)
+	}
+	if got := texts(1, 2); len(got) != 1 || got[0] != "two" {
+		t.Errorf("second page = %v", got)
+	}
+}

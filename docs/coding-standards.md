@@ -63,6 +63,7 @@ Conventions for Go, Python and TypeScript in kb. Most of them are enforced by `t
 | Unit tests | `task test:fast` | pre-push |
 | Unit tests + coverage minimums | `task test` | CI |
 | Go integration tests against real Postgres (needs Docker) | `task test:integration` | CI |
+| End-to-end smoke test: upload → processing → RAG chat over gRPC-Web, own compose project `kb-e2e` on ports 21xxx (needs Docker) | `task e2e` | CI |
 
 Every linter is pinned (`tools/go.mod`, `uv.lock`, `pnpm-lock.yaml`) and mandatory: `task lint` fails if one can't run.
 

@@ -1,0 +1,24 @@
+# Override for the end-to-end smoke test (tests/e2e), applied on top of the
+# generated compose.yaml under its own project name (kb-e2e by default), so it
+# runs next to a developer's `kb` stack. Only the gateway and S3 (presigned
+# uploads) are published, on ports outside the defaults; everything else is
+# reached through Envoy.
+services:
+  envoy:
+    ports: !override ["${KB_GATEWAY_PORT:-21080}:8080"]
+  s3:
+    ports: !override ["${KB_E2E_S3_PORT:-21333}:8333"]
+  web:
+    ports: !override ["${KB_WEB_PORT:-21300}:80"]
+  postgres:
+    ports: !reset []
+  nats:
+    ports: !reset []
+  chat-service:
+    ports: !reset []
+  document-service:
+    ports: !reset []
+  ingestion-service:
+    ports: !reset []
+  llm-service:
+    ports: !reset []

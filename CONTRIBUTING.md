@@ -78,8 +78,9 @@ CI must pass on every PR. It fails when any of these fails:
 | Unit tests | `task test` |
 | Coverage minimum per component | `task test` (see [coding standards](docs/coding-standards.md#coverage)) |
 | Go store integration tests against real Postgres | `task test:integration` |
+| End-to-end smoke test: upload, processing and RAG chat against the composed stack | `task e2e` |
 | Accessibility lint (biome `a11y` rules as errors) | `task lint` |
 | No axe violations in kit components | `task test` |
 | WCAG AA contrast of every colour-token pair, light and dark | `task test` (see [UX standards](docs/ux-standards.md#automated-checks)) |
 
-All of these run in the `check` job of `.github/workflows/ci.yml`. Configure it as a required status check for `main` under *Settings → Branches* (or a ruleset): require a pull request, require status check `check`, and require the branch to be up to date. Branch protection on a private repository needs GitHub Pro/Team; until then the rule is enforced by convention.
+All of these except the end-to-end smoke test (job `e2e`) run in the `check` job of `.github/workflows/ci.yml`. Configure it as a required status check for `main` under *Settings → Branches* (or a ruleset): require a pull request, require status check `check`, and require the branch to be up to date. Branch protection on a private repository needs GitHub Pro/Team; until then the rule is enforced by convention.

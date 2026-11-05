@@ -25,18 +25,27 @@ const queryClient = new QueryClient({
 
 export function KbRuntimeProvider({
   config,
+  transport,
+  client = queryClient,
   children,
 }: {
   config: RuntimeConfig;
+  /** Replaces the gRPC-Web transport, e.g. with an in-memory one in tests. */
+  transport?: Transport;
+  /** Replaces the shared query cache, e.g. with a fresh one per test. */
+  client?: QueryClient;
   children: ReactNode;
 }) {
   const runtime = useMemo<Runtime>(
-    () => ({ config, transport: createGrpcWebTransport({ baseUrl: config.apiBaseUrl }) }),
-    [config],
+    () => ({
+      config,
+      transport: transport ?? createGrpcWebTransport({ baseUrl: config.apiBaseUrl }),
+    }),
+    [config, transport],
   );
   return (
     <RuntimeContext.Provider value={runtime}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
     </RuntimeContext.Provider>
   );
 }

@@ -14,7 +14,7 @@ export default defineConfig({
       include: ["{apps,platform,modules}/**/src/**/*.{ts,tsx}"],
       exclude: ["**/api/ts/**", "**/*.gen.ts", "**/*.test.{ts,tsx}", "**/testing/**"],
       reporter: ["text-summary"],
-      thresholds: { lines: 5 },
+      thresholds: { lines: 70 },
     },
   },
 });

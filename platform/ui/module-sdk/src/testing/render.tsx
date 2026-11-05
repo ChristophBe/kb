@@ -1,6 +1,7 @@
 import type { Transport } from "@connectrpc/connect";
 import { QueryClient } from "@tanstack/react-query";
 import { render } from "@testing-library/react";
+import type { ComponentType } from "react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { KbRuntimeProvider } from "../runtime.tsx";
 import type { KbModule } from "../types.ts";
@@ -17,5 +18,13 @@ export function renderModule(module: KbModule, transport: Transport, path = "/")
     <KbRuntimeProvider config={{ apiBaseUrl: "http://test" }} transport={transport} client={client}>
       <RouterProvider router={router} />
     </KbRuntimeProvider>,
+  );
+}
+
+/** Renders a home-page widget at `/` against `transport`, like `renderModule`. */
+export function renderWidget(Widget: ComponentType, transport: Transport) {
+  return renderModule(
+    { id: "widget", title: "", icon: () => null, routes: [{ path: "*", element: <Widget /> }] },
+    transport,
   );
 }

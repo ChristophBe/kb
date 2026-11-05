@@ -1,7 +1,8 @@
-import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
+import type { ComponentProps, ComponentType, HTMLAttributes, ReactNode } from "react";
 import { cn } from "./cn.ts";
+import { formatRelativeTime, formatTime } from "./format.ts";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger";
+export type Variant = "primary" | "secondary" | "ghost" | "danger";
 
 const variants: Record<Variant, string> = {
   primary: "bg-accent text-on-accent hover:bg-accent-hover",
@@ -10,27 +11,75 @@ const variants: Record<Variant, string> = {
   danger: "text-danger hover:bg-danger-subtle",
 };
 
+/** Button styling, for links that act as calls to action. */
+export function buttonClass(variant: Variant = "primary", className?: string) {
+  return cn(
+    "inline-flex items-center justify-center gap-2 rounded-control px-3.5 py-1.5 text-sm font-medium transition-[background-color,transform] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
+    variants[variant],
+    className,
+  );
+}
+
 export function Button({
   variant = "primary",
   className,
   ...props
 }: ComponentProps<"button"> & { variant?: Variant }) {
-  return (
-    <button
-      type="button"
-      className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-control px-3.5 py-1.5 text-sm font-medium transition-[background-color,transform] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
-        variants[variant],
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <button type="button" className={buttonClass(variant, className)} {...props} />;
 }
 
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={cn("rounded-card border border-border bg-surface", className)} {...props} />
+  );
+}
+
+/** A protobuf Timestamp as "5 min. ago", with the absolute time on hover and for machines. */
+export function RelativeTime({
+  ts,
+  className,
+}: {
+  ts: { seconds: bigint } | undefined;
+  className?: string;
+}) {
+  if (!ts) return null;
+  return (
+    <time
+      dateTime={new Date(Number(ts.seconds) * 1000).toISOString()}
+      title={formatTime(ts)}
+      className={cn("font-mono text-xs text-fg-muted tabular-nums", className)}
+    >
+      {formatRelativeTime(ts)}
+    </time>
+  );
+}
+
+/**
+ * A home-page widget: a card with an icon, an `h3` title, an optional link in
+ * the header (e.g. "All documents") and its content below a hairline.
+ */
+export function WidgetCard({
+  title,
+  icon: Icon,
+  action,
+  children,
+}: {
+  title: string;
+  icon: ComponentType<{ className?: string }>;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Card className="flex flex-col">
+      <div className="flex items-center gap-3 border-b border-border px-5 py-4">
+        <span className="inline-flex size-8 items-center justify-center rounded-control bg-accent-subtle text-accent">
+          <Icon className="size-4" aria-hidden="true" />
+        </span>
+        <h3 className="flex-1 font-medium">{title}</h3>
+        {action && <div className="text-sm">{action}</div>}
+      </div>
+      <div className="flex-1">{children}</div>
+    </Card>
   );
 }
 

@@ -3,6 +3,7 @@ export {
   Area,
   Badge,
   Button,
+  buttonClass,
   Card,
   ChunkStrip,
   EmptyState,
@@ -10,11 +11,14 @@ export {
   Input,
   PageHeader,
   PageTitle,
+  RelativeTime,
   SourceNote,
   Spinner,
   Textarea,
   type Tone,
+  type Variant,
+  WidgetCard,
 } from "./components.tsx";
 export { Dialog } from "./dialog.tsx";
-export { formatBytes, formatTime } from "./format.ts";
+export { formatBytes, formatRelativeTime, formatTime } from "./format.ts";
 export { DelayedLoading, Skeleton, SkeletonRows } from "./loading.tsx";

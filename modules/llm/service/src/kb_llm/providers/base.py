@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
@@ -73,7 +73,7 @@ class Provider(Protocol):
 
     def generate(
         self, model: str, messages: list[Message], options: GenerationOptions
-    ) -> AsyncIterator[Chunk]: ...
+    ) -> AsyncGenerator[Chunk]: ...
 
     async def embed(self, model: str, inputs: list[str]) -> list[list[float]]: ...
 

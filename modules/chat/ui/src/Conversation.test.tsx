@@ -14,7 +14,7 @@ import {
   StreamChatResponseSchema,
 } from "@kb/chat-api/kb/chat/v1/chat_pb";
 import { KbRuntimeProvider } from "@kb/module-sdk";
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Conversation } from "./Conversation.tsx";
@@ -64,6 +64,17 @@ function completeStream(answer: string) {
     const done = message(MessageRole.ASSISTANT, answer);
     saved.push(done);
     yield event({ case: "message", value: done });
+  };
+}
+
+/** A stream that sends `deltas`, then waits until it is aborted and saves the answer as stopped. */
+function stoppableStream(deltas: string[]) {
+  return async function* (req: StreamChatRequest, opts: { signal: AbortSignal }) {
+    saved.push(message(MessageRole.USER, req.content));
+    for (const delta of deltas) yield event({ case: "delta", value: delta });
+    await new Promise((resolve) => opts.signal.addEventListener("abort", resolve));
+    saved.push(message(MessageRole.ASSISTANT, deltas.join(""), MessageStatus.STOPPED));
+    throw new ConnectError("the operation was aborted", Code.Canceled);
   };
 }
 
@@ -144,6 +155,73 @@ describe("Conversation", () => {
     expect(retry).toHaveLength(1);
     const newest = notes[1]?.closest(".rounded-card") as HTMLElement;
     expect(within(newest).getByRole("button", { name: "Retry" })).toBe(retry[0]);
+  });
+
+  it("stops a streaming answer and keeps it as stopped", async () => {
+    streamChat.mockImplementation(stoppableStream(["Revenue grew"]));
+    await renderConversation();
+    const send = screen.getByRole("button", { name: "Send" });
+    expect(screen.queryByRole("button", { name: "Stop" })).toBeNull();
+    await ask("How did revenue develop?");
+
+    expect(await screen.findByText("Revenue grew")).toBeTruthy();
+    expect(send.hasAttribute("disabled")).toBe(true);
+    expect(send.getAttribute("aria-describedby")).toBeTruthy();
+    const signal = streamChat.mock.calls[0]?.[1]?.signal as AbortSignal;
+    expect(signal.aborted).toBe(false);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Stop" }));
+    });
+
+    expect(signal.aborted).toBe(true);
+    expect(await screen.findByText("Stopped")).toBeTruthy();
+    expect(screen.getByText("Revenue grew")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Stop" })).toBeNull();
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByRole("status").textContent).toBe("Answer stopped");
+    expect(document.activeElement).toBe(screen.getByPlaceholderText("Ask something…"));
+    // The saved stopped answer replaces the local one; it isn't shown twice.
+    expect(screen.getAllByText("Revenue grew")).toHaveLength(1);
+    expect(saved.at(-1)?.status).toBe(MessageStatus.STOPPED);
+  });
+
+  it("stops the answer with Esc in the composer", async () => {
+    streamChat.mockImplementation(stoppableStream(["Half"]));
+    await renderConversation();
+    await ask("Question?");
+    expect(await screen.findByText("Half")).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.keyDown(screen.getByPlaceholderText("Ask something…"), { key: "Escape" });
+    });
+
+    expect(await screen.findByText("Stopped")).toBeTruthy();
+  });
+
+  it("stops the answer when the conversation is left", async () => {
+    streamChat.mockImplementation(stoppableStream(["Half"]));
+    await renderConversation();
+    await ask("Question?");
+    expect(await screen.findByText("Half")).toBeTruthy();
+    const signal = streamChat.mock.calls[0]?.[1]?.signal as AbortSignal;
+
+    cleanup();
+
+    expect(signal.aborted).toBe(true);
+  });
+
+  it("shows a reloaded stopped answer with its label and without Retry", async () => {
+    saved = [
+      message(MessageRole.USER, "first"),
+      message(MessageRole.ASSISTANT, "partial", MessageStatus.STOPPED),
+    ];
+    await renderConversation();
+
+    expect(await screen.findByText("partial")).toBeTruthy();
+    expect(screen.getByText("Stopped")).toBeTruthy();
+    expect(screen.queryByText("The answer was interrupted.")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
   });
 
   it("offers the document picker only when answering from the knowledge base", async () => {

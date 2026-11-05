@@ -19,5 +19,7 @@ class Settings(PlatformSettings):
     provider_retry_delay: float = 0.5
     # Generate and Embed calls in flight per provider, above which calls are rejected.
     provider_max_concurrency: int = 8
+    # Seconds the fake provider waits before each word; 0 streams at once.
+    fake_token_delay: float = 0
     # Must match the vector column of the document module's chunk index.
     embedding_dimensions: int = 768

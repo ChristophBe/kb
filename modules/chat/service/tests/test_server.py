@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
@@ -79,6 +80,7 @@ class MemoryRepo:
 class FakeLlm:
     def __init__(self) -> None:
         self.prompts: list[list[llm_pb2.Message]] = []
+        self.calls: list[FakeCall] = []
 
     async def Embed(self, request: llm_pb2.EmbedRequest):
         return llm_pb2.EmbedResponse(embeddings=[llm_pb2.Embedding(values=[0.1, 0.2])])
@@ -90,7 +92,23 @@ class FakeLlm:
 
     def Generate(self, request: llm_pb2.GenerateRequest):
         self.prompts.append(list(request.messages))
-        return self._gen()
+        self.calls.append(FakeCall(self._gen()))
+        return self.calls[-1]
+
+
+class FakeCall:
+    """A streaming gRPC call: iterable and cancellable."""
+
+    def __init__(self, responses: AsyncIterator[llm_pb2.GenerateResponse]) -> None:
+        self._responses = responses
+        self.cancelled = False
+
+    def __aiter__(self) -> AsyncIterator[llm_pb2.GenerateResponse]:
+        return self._responses
+
+    def cancel(self) -> bool:
+        self.cancelled = True
+        return True
 
 
 class FakeDocuments:
@@ -187,6 +205,16 @@ class DyingLlm(FakeLlm):
         raise unavailable("connection reset")
 
 
+class SlowLlm(FakeLlm):
+    """An llm client whose answer stalls after the first words."""
+
+    async def _gen(self):
+        yield llm_pb2.GenerateResponse(delta="Paris")
+        yield llm_pb2.GenerateResponse(delta=" is")
+        await asyncio.Event().wait()
+        yield llm_pb2.GenerateResponse(done=True)
+
+
 class DownDocuments(FakeDocuments):
     async def SearchChunks(self, request: document_pb2.SearchChunksRequest):
         raise unavailable("connect failed")
@@ -246,6 +274,48 @@ async def test_an_llm_failure_mid_answer_keeps_the_partial_answer() -> None:
     assert events[-1].message.citations[0].document_id == "d1"
     saved = got.messages[-1]
     assert (saved.content, saved.status) == ("Paris is", chat_pb2.MESSAGE_STATUS_FAILED)
+
+
+async def test_a_cancelled_stream_stops_generation_and_keeps_the_answer_as_stopped() -> None:
+    class WatchedRepo(MemoryRepo):
+        def __init__(self) -> None:
+            super().__init__()
+            self.answered = asyncio.Event()
+
+        async def add_message(self, *args: Any, **kwargs: Any):
+            msg = await super().add_message(*args, **kwargs)
+            if msg.role == chat_pb2.MESSAGE_ROLE_ASSISTANT:
+                self.answered.set()
+            return msg
+
+    repo, llm = WatchedRepo(), SlowLlm()
+    server = grpc.aio.server()
+    chat_pb2_grpc.add_ChatServiceServicer_to_server(servicer(repo, FakeDocuments(), llm), server)
+    port = server.add_insecure_port("127.0.0.1:0")
+    await server.start()
+    async with grpc.aio.insecure_channel(f"127.0.0.1:{port}") as ch:
+        stub = chat_pb2_grpc.ChatServiceStub(ch)
+        conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+        call = stub.StreamChat(
+            chat_pb2.StreamChatRequest(
+                conversation_id=conv.id, content="Hi", use_knowledge_base=True
+            )
+        )
+        kinds = [(await call.read()).WhichOneof("event") for _ in range(3)]
+        assert kinds == ["citations", "delta", "delta"]
+        call.cancel()  # what the browser's abort (Stop, a closed tab) becomes
+
+        async with asyncio.timeout(1):
+            await repo.answered.wait()
+        got = await stub.GetConversation(chat_pb2.GetConversationRequest(id=conv.id))
+    await server.stop(None)
+
+    assert llm.calls[0].cancelled
+    assert [(m.role, m.content, m.status) for m in got.messages] == [
+        (chat_pb2.MESSAGE_ROLE_USER, "Hi", chat_pb2.MESSAGE_STATUS_COMPLETE),
+        (chat_pb2.MESSAGE_ROLE_ASSISTANT, "Paris is", chat_pb2.MESSAGE_STATUS_STOPPED),
+    ]
+    assert got.messages[1].citations[0].document_id == "d1"
 
 
 async def test_stream_chat_rejects_empty_content(env: Env) -> None:

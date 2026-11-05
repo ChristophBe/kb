@@ -1,7 +1,9 @@
 """The answer use case: retrieve sources, build the prompt, generate, persist."""
 
+import asyncio
+import contextlib
 import uuid
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncGenerator, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Protocol
@@ -66,9 +68,10 @@ class Retriever(Protocol):
 
 
 class Generator(Protocol):
-    """Streams the text of an answer. Failures are raised as PeerError."""
+    """Streams the text of an answer. Failures are raised as PeerError. Closing
+    the stream early (or cancelling the task reading it) stops the generation."""
 
-    def generate(self, model: str, prompt: list[PromptMessage]) -> AsyncIterator[str]: ...
+    def generate(self, model: str, prompt: list[PromptMessage]) -> AsyncGenerator[str]: ...
 
 
 @dataclass(frozen=True)
@@ -118,16 +121,19 @@ class Chat:
 
     async def answer(
         self, conversation_id: uuid.UUID, content: str, model: str, use_knowledge_base: bool
-    ) -> AsyncIterator[AnswerEvent]:
+    ) -> AsyncGenerator[AnswerEvent]:
         """Answers a question in a conversation. The question is saved first, so
         it stays in the conversation even when no answer can be generated. When a
-        peer fails, the answer so far is saved as failed after an AnswerFailed."""
+        peer fails, the answer so far is saved as failed after an AnswerFailed.
+        When the caller goes away (the task is cancelled or the stream closed),
+        generation stops and the answer so far is saved as stopped."""
         conv = await self._repo.get_conversation(conversation_id)
         if conv is None:
             raise ConversationNotFoundError(str(conversation_id))
         history = await self._repo.list_messages(conv.id, self._settings.history_limit)
-        # A failed answer is cut off or empty; the model is better off without it.
-        history = [m for m in history if m.status != chat_pb2.MESSAGE_STATUS_FAILED]
+        # A failed answer is cut off or empty, a stopped one may be empty; the
+        # model is better off without them.
+        history = [m for m in history if m.status != chat_pb2.MESSAGE_STATUS_FAILED and m.content]
         await self._repo.add_message(conv.id, chat_pb2.MESSAGE_ROLE_USER, content, [])
         if not conv.title:
             await self._repo.set_title(conv.id, content[:TITLE_LENGTH])
@@ -149,21 +155,38 @@ class Chat:
                 yield SourcesFound(citations)
 
             prompt = _prompt(citations, context.history, content)
-            async for delta in self._generator.generate(model, prompt):
-                answer.append(delta)
-                yield AnswerDelta(delta)
+            async with contextlib.aclosing(self._generator.generate(model, prompt)) as deltas:
+                async for delta in deltas:
+                    answer.append(delta)
+                    yield AnswerDelta(delta)
         except PeerError as err:
             status = chat_pb2.MESSAGE_STATUS_FAILED
             yield AnswerFailed(err)
+        except (asyncio.CancelledError, GeneratorExit):
+            # The caller stopped the answer or went away (a closed tab): leaving
+            # the generator stream has cancelled the generation. Keep the text so
+            # far; shielded, so a repeated cancel can't lose it halfway.
+            await asyncio.shield(
+                self._save(conv.id, answer, citations, chat_pb2.MESSAGE_STATUS_STOPPED)
+            )
+            raise
 
-        saved = await self._repo.add_message(
-            conv.id,
+        yield AnswerSaved(await asyncio.shield(self._save(conv.id, answer, citations, status)))
+
+    async def _save(
+        self,
+        conversation_id: uuid.UUID,
+        answer: list[str],
+        citations: list[chat_pb2.Citation],
+        status: chat_pb2.MessageStatus,
+    ) -> MessageRow:
+        return await self._repo.add_message(
+            conversation_id,
             chat_pb2.MESSAGE_ROLE_ASSISTANT,
             "".join(answer),
             [_citation_to_dict(c) for c in citations],
             status,
         )
-        yield AnswerSaved(saved)
 
 
 def _prompt(

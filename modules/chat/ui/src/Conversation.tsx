@@ -2,12 +2,13 @@ import {
   type ChatMessage,
   ChatService,
   type Citation,
+  type GetConversationResponse,
   MessageRole,
   MessageStatus,
 } from "@kb/chat-api/kb/chat/v1/chat_pb";
 import { Code, ConnectError, useClient, useQuery, useQueryClient } from "@kb/module-sdk";
 import { Button, ErrorMessage, Spinner, Textarea } from "@kb/ui";
-import { RotateCcw, Send, TriangleAlert } from "lucide-react";
+import { RotateCcw, Send, Square, TriangleAlert } from "lucide-react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { Answer } from "./Answer.tsx";
@@ -22,7 +23,15 @@ interface Pending {
   failure?: string;
 }
 
+/** An answer the user stopped, shown until the refetched conversation has it. */
+interface Stopped extends Pending {
+  conversationId: string;
+  /** The conversation's message count once the stopped answer is saved. */
+  savedCount: number;
+}
+
 const INTERRUPTED = "The answer was interrupted.";
+const SEND_HINT = "send-hint";
 
 /** A readable reason for a call that failed outright, without the raw status. */
 function readableError(err: unknown): string {
@@ -52,25 +61,50 @@ export function Conversation() {
   // Reasons for answers that failed while this page was open, by message id.
   // Reloaded failures only have their status, so they get a generic reason.
   const [failures, setFailures] = useState<Record<string, string>>({});
+  const [stopped, setStopped] = useState<Stopped | null>(null);
+  const [status, setStatus] = useState("");
+  // Aborting the stream cancels the answer on the server, which saves it as stopped.
+  const abort = useRef<AbortController | null>(null);
+  const composer = useRef<HTMLTextAreaElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
+
+  // Leaving the conversation stops its answer, like closing the tab does.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when the conversation changes.
+  useEffect(() => () => abort.current?.abort(), [id]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll down whenever new messages or tokens arrive.
   useEffect(() => {
     // Not returned: scrollIntoView gives a Promise in current Chrome, which React would call.
     bottom.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversation.data, pending]);
+  }, [conversation.data, pending, stopped]);
+
+  /** Refetches until the conversation has `count` messages: the server saves a
+   * stopped answer once it notices the cancel, so the first refetch can miss it. */
+  const refetchUntil = async (count: number) => {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      await queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      const data = queryClient.getQueryData<GetConversationResponse>(["conversations", id]);
+      if ((data?.messages.length ?? 0) >= count) return;
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+  };
 
   const ask = async (question: string) => {
     if (!question || pending) return;
     setError(null);
+    setStopped(null);
+    setStatus("");
     let state: Pending = { question, answer: "", citations: [] };
     setPending(state);
+    const controller = new AbortController();
+    abort.current = controller;
+    const savedCount = (conversation.data?.messages.length ?? 0) + 2;
     try {
-      for await (const res of client.streamChat({
-        conversationId: id,
-        content: question,
-        useKnowledgeBase,
-      })) {
+      const stream = client.streamChat(
+        { conversationId: id, content: question, useKnowledgeBase },
+        { signal: controller.signal },
+      );
+      for await (const res of stream) {
         const event = res.event;
         if (event.case === "citations") state = { ...state, citations: event.value.items };
         if (event.case === "delta") state = { ...state, answer: state.answer + event.value };
@@ -83,10 +117,22 @@ export function Conversation() {
       }
       await queryClient.invalidateQueries({ queryKey: ["conversations"] });
     } catch (err) {
-      setError(readableError(err));
+      if (controller.signal.aborted) {
+        setStopped({ ...state, conversationId: id, savedCount });
+        setStatus("Answer stopped");
+        await refetchUntil(savedCount);
+      } else {
+        setError(readableError(err));
+      }
     } finally {
+      if (abort.current === controller) abort.current = null;
       setPending(null);
     }
+  };
+
+  const stop = () => {
+    abort.current?.abort();
+    composer.current?.focus();
   };
 
   const send = (e: FormEvent) => {
@@ -121,10 +167,22 @@ export function Conversation() {
               content={m.content}
               citations={m.citations}
               failure={m.status === MessageStatus.FAILED ? (failures[m.id] ?? "") : undefined}
+              stopped={m.status === MessageStatus.STOPPED}
               announce={m.id in failures}
               onRetry={m === last ? retry : undefined}
             />
           ))}
+          {stopped && stopped.conversationId === id && messages.length < stopped.savedCount && (
+            <>
+              <Bubble role={MessageRole.USER} content={stopped.question} citations={[]} />
+              <Bubble
+                role={MessageRole.ASSISTANT}
+                content={stopped.answer}
+                citations={stopped.citations}
+                stopped
+              />
+            </>
+          )}
           {pending && (
             <>
               <Bubble role={MessageRole.USER} content={pending.question} citations={[]} />
@@ -138,22 +196,46 @@ export function Conversation() {
           )}
           <div ref={bottom} />
         </div>
+        <p role="status" className="sr-only">
+          {status}
+        </p>
       </div>
       <form onSubmit={send} className="border-t border-border bg-surface px-8 py-4">
         <div className="mx-auto flex max-w-3xl flex-col gap-2">
           <div className="flex gap-2">
             <Textarea
+              ref={composer}
               rows={2}
               value={input}
               placeholder="Ask something…"
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) send(e);
+                if (e.key === "Escape" && pending) stop();
               }}
             />
-            <Button type="submit" disabled={!input.trim() || pending !== null}>
-              <Send className="size-4" />
+            {pending && (
+              <Button
+                type="button"
+                variant="secondary"
+                title="Stop the answer (Esc)"
+                onClick={stop}
+              >
+                <Square className="size-3 fill-current" aria-hidden="true" />
+                Stop
+              </Button>
+            )}
+            <Button
+              type="submit"
+              aria-label="Send"
+              aria-describedby={pending ? SEND_HINT : undefined}
+              disabled={!input.trim() || pending !== null}
+            >
+              <Send className="size-4" aria-hidden="true" />
             </Button>
+            <span id={SEND_HINT} hidden>
+              Wait for the answer or stop it (Esc).
+            </span>
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <label className="flex items-center gap-2 text-xs text-fg-muted">
@@ -179,11 +261,14 @@ function Bubble({
   content,
   citations,
   failure,
+  stopped = false,
   announce = false,
   onRetry,
 }: Pick<ChatMessage, "role" | "content" | "citations"> & {
   /** Set when the answer failed: the reason, or "" when it isn't known. */
   failure?: string;
+  /** The user stopped the answer; its text so far is kept. */
+  stopped?: boolean;
   /** Announces the failure as an alert; only for saved answers that just failed. */
   announce?: boolean;
   onRetry?: () => void;
@@ -200,6 +285,12 @@ function Bubble({
   return (
     <div className="flex flex-col gap-2 rounded-card border border-border bg-surface px-4 py-2 text-sm @container">
       {content && <Answer content={content} citations={citations} />}
+      {stopped && (
+        <p className="flex items-center gap-2 text-xs text-fg-muted">
+          <Square className="size-3 fill-current" aria-hidden="true" />
+          Stopped
+        </p>
+      )}
       {failure !== undefined && (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-danger">
           <p role={announce ? "alert" : undefined} className="flex items-start gap-2">

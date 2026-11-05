@@ -1,28 +1,33 @@
+import asyncio
 import hashlib
 import math
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 
 from .base import Chunk, GenerationOptions, Message, ModelInfo, ModelKind, Status
 
 
 class FakeProvider:
     """Deterministic provider for tests and for running the stack without a
-    model server. Generation echoes the last user message; embeddings are
-    derived from a hash so identical text gets identical vectors."""
+    model server. Generation echoes the last user message, optionally waiting
+    `token_delay` seconds before each word (to watch or stop a stream);
+    embeddings are derived from a hash so identical text gets identical vectors."""
 
     name = "fake"
     default_chat_model = "fake-chat"
     default_embedding_model = "fake-embed"
 
-    def __init__(self, dimensions: int) -> None:
+    def __init__(self, dimensions: int, token_delay: float = 0) -> None:
         self._dimensions = dimensions
+        self._token_delay = token_delay
 
     async def generate(
         self, model: str, messages: list[Message], options: GenerationOptions
-    ) -> AsyncIterator[Chunk]:
+    ) -> AsyncGenerator[Chunk]:
         last = messages[-1].content if messages else ""
         words = f"(fake answer) You said: {last}".split(" ")
         for i, word in enumerate(words):
+            if self._token_delay:
+                await asyncio.sleep(self._token_delay)
             yield Chunk(delta=word if i == 0 else " " + word)
         yield Chunk(
             done=True,

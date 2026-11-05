@@ -3,7 +3,7 @@ gRPC statuses end here: callers only see PeerError."""
 
 import contextlib
 import uuid
-from collections.abc import AsyncIterator, Iterator, Sequence
+from collections.abc import AsyncGenerator, Iterator, Sequence
 
 import grpc
 from kb.chat.v1 import chat_pb2
@@ -69,11 +69,15 @@ class PeerGenerator:
     def __init__(self, llm: llm_pb2_grpc.LlmServiceStub) -> None:
         self._llm = llm
 
-    async def generate(self, model: str, prompt: list[PromptMessage]) -> AsyncIterator[str]:
+    async def generate(self, model: str, prompt: list[PromptMessage]) -> AsyncGenerator[str]:
         messages = [llm_pb2.Message(role=_LLM_ROLES[m.role], content=m.content) for m in prompt]
         with _peer_errors(Peer.LLM):
-            async for chunk in self._llm.Generate(
-                llm_pb2.GenerateRequest(model=model, messages=messages)
-            ):
-                if chunk.delta:
-                    yield chunk.delta
+            call = self._llm.Generate(llm_pb2.GenerateRequest(model=model, messages=messages))
+            try:
+                async for chunk in call:
+                    if chunk.delta:
+                        yield chunk.delta
+            finally:
+                # Closed early (the answer was stopped): the llm stops generating.
+                # A no-op once the call has finished.
+                call.cancel()

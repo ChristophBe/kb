@@ -14,3 +14,10 @@ WHERE cardinality(sqlc.arg('document_ids')::uuid[]) = 0
    OR c.document_id = ANY(sqlc.arg('document_ids')::uuid[])
 ORDER BY c.embedding <=> sqlc.arg('embedding')::vector
 LIMIT sqlc.arg('max_results');
+
+-- name: ListChunks :many
+SELECT document_id, idx, text, metadata
+FROM document.chunks
+WHERE document_id = $1 AND idx > sqlc.arg('after_idx')
+ORDER BY idx
+LIMIT sqlc.arg('max_results');

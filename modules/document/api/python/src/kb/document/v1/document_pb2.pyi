@@ -251,6 +251,22 @@ class AddChunksResponse(_message.Message):
     chunk_count: int
     def __init__(self, chunk_count: _Optional[int] = ...) -> None: ...
 
+class ListChunksRequest(_message.Message):
+    __slots__ = ("document_id", "page")
+    DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
+    PAGE_FIELD_NUMBER: _ClassVar[int]
+    document_id: str
+    page: _common_pb2.PageRequest
+    def __init__(self, document_id: _Optional[str] = ..., page: _Optional[_Union[_common_pb2.PageRequest, _Mapping]] = ...) -> None: ...
+
+class ListChunksResponse(_message.Message):
+    __slots__ = ("chunks", "page")
+    CHUNKS_FIELD_NUMBER: _ClassVar[int]
+    PAGE_FIELD_NUMBER: _ClassVar[int]
+    chunks: _containers.RepeatedCompositeFieldContainer[Chunk]
+    page: _common_pb2.PageResponse
+    def __init__(self, chunks: _Optional[_Iterable[_Union[Chunk, _Mapping]]] = ..., page: _Optional[_Union[_common_pb2.PageResponse, _Mapping]] = ...) -> None: ...
+
 class SearchChunksRequest(_message.Message):
     __slots__ = ("embedding", "limit", "document_ids")
     EMBEDDING_FIELD_NUMBER: _ClassVar[int]

@@ -16,6 +16,7 @@ type Querier interface {
 	DeleteDocument(ctx context.Context, id uuid.UUID) (string, error)
 	GetDocument(ctx context.Context, id uuid.UUID) (DocumentDocument, error)
 	InsertChunks(ctx context.Context, arg []InsertChunksParams) (int64, error)
+	ListChunks(ctx context.Context, arg ListChunksParams) ([]ListChunksRow, error)
 	ListDocuments(ctx context.Context, arg ListDocumentsParams) ([]DocumentDocument, error)
 	MarkDocumentUploaded(ctx context.Context, arg MarkDocumentUploadedParams) (DocumentDocument, error)
 	SearchChunks(ctx context.Context, arg SearchChunksParams) ([]SearchChunksRow, error)

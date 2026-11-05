@@ -24,6 +24,8 @@ service DocumentService {
   rpc ReadContent(ReadContentRequest) returns (stream ReadContentResponse);
   // AddChunks replaces all chunks of a document and marks it ready.
   rpc AddChunks(AddChunksRequest) returns (AddChunksResponse);
+  // ListChunks returns a document's chunks in index order.
+  rpc ListChunks(ListChunksRequest) returns (ListChunksResponse);
   rpc SearchChunks(SearchChunksRequest) returns (SearchChunksResponse);
 }
 
@@ -152,6 +154,16 @@ message AddChunksRequest {
 
 message AddChunksResponse {
   int32 chunk_count = 1;
+}
+
+message ListChunksRequest {
+  string document_id = 1;
+  kb.common.v1.PageRequest page = 2;
+}
+
+message ListChunksResponse {
+  repeated Chunk chunks = 1;
+  kb.common.v1.PageResponse page = 2;
 }
 
 message SearchChunksRequest {

@@ -26,6 +26,25 @@ enum MessageRole {
   MESSAGE_ROLE_ASSISTANT = 2;
 }
 
+// How an answer ended. User messages are always complete.
+enum MessageStatus {
+  MESSAGE_STATUS_UNSPECIFIED = 0;
+  MESSAGE_STATUS_COMPLETE = 1;
+  // The user stopped the answer; the text so far is kept.
+  MESSAGE_STATUS_STOPPED = 2;
+  // A required service failed; the text so far is kept.
+  MESSAGE_STATUS_FAILED = 3;
+}
+
+// Why an answer failed.
+enum ChatErrorCode {
+  CHAT_ERROR_CODE_UNSPECIFIED = 0;
+  // A required service is unavailable; retrying later may succeed.
+  CHAT_ERROR_CODE_UNAVAILABLE = 1;
+  // A required service failed for another reason.
+  CHAT_ERROR_CODE_INTERNAL = 2;
+}
+
 message Citation {
   string document_id = 1;
   string document_title = 2;
@@ -40,6 +59,7 @@ message ChatMessage {
   string content = 3;
   repeated Citation citations = 4;
   google.protobuf.Timestamp create_time = 5;
+  MessageStatus status = 6;
 }
 
 message Conversation {
@@ -106,9 +126,18 @@ message StreamChatResponse {
     Citations citations = 1;
     // A chunk of the answer text.
     string delta = 2;
-    // The persisted assistant message, sent last.
+    // The persisted assistant message, sent last. Its status says how the
+    // answer ended.
     ChatMessage message = 3;
+    // The answer failed. Sent once, before the message with the failed status.
+    ChatError error = 4;
   }
+}
+
+message ChatError {
+  ChatErrorCode code = 1;
+  // A readable reason to show to the user, without technical details.
+  string message = 2;
 }
 
 message Citations {

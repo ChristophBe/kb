@@ -67,6 +67,8 @@ A module with a Go service and a Python worker (ingestion) applies both columns,
 
   A peer's status is never passed through unchanged: a peer's `NOT_FOUND` means something different from this module's `NOT_FOUND`. Map peer `UNAVAILABLE` / `DEADLINE_EXCEEDED` to `UNAVAILABLE`, and everything else to `INTERNAL`, unless the use case defines a better mapping.
 
+  A streaming RPC that has already sent results may instead end with an error event in its stream, using the same codes and a readable message, so the results so far are kept (`ChatService.StreamChat`).
+
 ## Talking to other modules
 
 - Only through the peer's **generated gRPC client** (`modules/<peer>/api/{go,python,ts}`) or by **consuming its events** (stream owned by the peer, messages from its proto package). Never its database schema, bucket, stream configuration or internal packages.
@@ -113,5 +115,5 @@ Gaps between the existing modules and this document, each tracked as an issue un
 
 | Module | Gap | Issue |
 |---|---|---|
-| chat | Peer failures in `StreamChat` surface as `UNKNOWN` instead of a mapped status or stream error | #46 |
+| chat | None found | — |
 | document | None found | — |

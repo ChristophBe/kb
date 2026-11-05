@@ -12,9 +12,11 @@ from kb_chat.chat import (
     TITLE_LENGTH,
     AnswerDelta,
     AnswerEvent,
+    AnswerFailed,
     AnswerSaved,
     Chat,
     ConversationNotFoundError,
+    Peer,
     PeerError,
     PeerUnavailableError,
     PromptMessage,
@@ -27,6 +29,8 @@ from kb_chat.repository import ConversationRow, MessageRow
 
 USER = chat_pb2.MESSAGE_ROLE_USER
 ASSISTANT = chat_pb2.MESSAGE_ROLE_ASSISTANT
+COMPLETE = chat_pb2.MESSAGE_STATUS_COMPLETE
+FAILED = chat_pb2.MESSAGE_STATUS_FAILED
 
 
 class FakeRepo:
@@ -52,8 +56,11 @@ class FakeRepo:
         role: chat_pb2.MessageRole,
         content: str,
         citations: list[dict[str, Any]],
+        status: chat_pb2.MessageStatus = COMPLETE,
     ) -> MessageRow:
-        msg = MessageRow(uuid.uuid4(), conversation_id, role, content, datetime.now(UTC), citations)
+        msg = MessageRow(
+            uuid.uuid4(), conversation_id, role, content, datetime.now(UTC), citations, status
+        )
         self.messages.append(msg)
         return msg
 
@@ -124,9 +131,9 @@ async def test_answer_streams_sources_then_deltas_then_the_saved_message() -> No
     ]
     assert retriever.calls == [("Capital?", 3)]
     assert generator.calls[0][0] == "m1"
-    assert [(m.role, m.content) for m in repo.messages] == [
-        (USER, "Capital?"),
-        (ASSISTANT, "Paris"),
+    assert [(m.role, m.content, m.status) for m in repo.messages] == [
+        (USER, "Capital?", COMPLETE),
+        (ASSISTANT, "Paris", COMPLETE),
     ]
 
 
@@ -188,20 +195,44 @@ async def test_unknown_conversation_raises_and_saves_nothing() -> None:
     assert repo.messages == []
 
 
-@pytest.mark.parametrize("error", [PeerUnavailableError("down"), PeerError("boom")])
-async def test_a_failed_retrieval_keeps_only_the_question(error: PeerError) -> None:
+@pytest.mark.parametrize(
+    "error", [PeerUnavailableError(Peer.DOCUMENT, "down"), PeerError(Peer.LLM, "boom")]
+)
+async def test_a_failed_retrieval_saves_an_empty_failed_answer(error: PeerError) -> None:
     chat, repo, _, generator = make(retriever=FakeRetriever(error))
-    with pytest.raises(type(error)):
-        await collect(chat, repo)
-    assert [m.role for m in repo.messages] == [USER]
+    events = await collect(chat, repo)
+
+    assert events[0] == AnswerFailed(error)
+    assert isinstance(events[1], AnswerSaved)
+    assert [(m.role, m.content, m.status) for m in repo.messages] == [
+        (USER, "Capital?", COMPLETE),
+        (ASSISTANT, "", FAILED),
+    ]
     assert generator.calls == []
 
 
-async def test_a_failure_while_generating_saves_no_answer() -> None:
-    chat, repo, _, _ = make(generator=FakeGenerator(error=PeerUnavailableError("down")))
-    with pytest.raises(PeerUnavailableError):
-        await collect(chat, repo)
-    assert [m.role for m in repo.messages] == [USER]
+async def test_a_failure_while_generating_keeps_the_partial_answer() -> None:
+    error = PeerUnavailableError(Peer.LLM, "down")
+    chat, repo, _, _ = make(generator=FakeGenerator(("Par",), error=error))
+    events = await collect(chat, repo)
+
+    assert isinstance(events[0], SourcesFound)
+    assert events[1:3] == [AnswerDelta("Par"), AnswerFailed(error)]
+    saved = events[3]
+    assert isinstance(saved, AnswerSaved)
+    assert (saved.message.content, saved.message.status) == ("Par", FAILED)
+    assert saved.message.citations[0]["document_id"] == "d1"
+    assert [(m.role, m.status) for m in repo.messages] == [(USER, COMPLETE), (ASSISTANT, FAILED)]
+
+
+async def test_failed_answers_are_left_out_of_the_prompt() -> None:
+    repo = FakeRepo()
+    await repo.add_message(repo.conv.id, USER, "earlier", [])
+    await repo.add_message(repo.conv.id, ASSISTANT, "cut o", [], FAILED)
+    chat, repo, _, generator = make(repo)
+    await collect(chat, repo, use_kb=False)
+
+    assert [m.content for m in generator.calls[0][1][1:]] == ["earlier", "Capital?"]
 
 
 def rpc_error(code: grpc.StatusCode) -> grpc.aio.AioRpcError:
@@ -242,6 +273,7 @@ async def test_peer_statuses_become_application_errors(
         _ = [d async for d in PeerGenerator(llm).generate("m", [])]
     assert type(retrieved.value) is expected
     assert type(generated.value) is expected
+    assert retrieved.value.peer == generated.value.peer == Peer.LLM
 
 
 class WordCounter:

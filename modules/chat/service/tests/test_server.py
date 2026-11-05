@@ -59,8 +59,11 @@ class MemoryRepo:
         role: chat_pb2.MessageRole,
         content: str,
         citations: list[dict[str, Any]],
+        status: chat_pb2.MessageStatus = chat_pb2.MESSAGE_STATUS_COMPLETE,
     ):
-        msg = MessageRow(uuid.uuid4(), conversation_id, role, content, datetime.now(UTC), citations)
+        msg = MessageRow(
+            uuid.uuid4(), conversation_id, role, content, datetime.now(UTC), citations, status
+        )
         self.messages.append(msg)
         return msg
 
@@ -132,13 +135,14 @@ async def test_stream_chat_with_knowledge_base(env: Env) -> None:
     assert events[0].citations.items[0].document_title == "geo.md"
     assert events[-1].message.content == "Paris is the capital."
     assert events[-1].message.citations[0].document_id == "d1"
+    assert events[-1].message.status == chat_pb2.MESSAGE_STATUS_COMPLETE
     assert "Paris is in France." in llm.prompts[0][0].content  # grounded system prompt
 
     got = await stub.GetConversation(chat_pb2.GetConversationRequest(id=conv.id))
     assert got.conversation.title == "Capital of France?"
-    assert [m.role for m in got.messages] == [
-        chat_pb2.MESSAGE_ROLE_USER,
-        chat_pb2.MESSAGE_ROLE_ASSISTANT,
+    assert [(m.role, m.status) for m in got.messages] == [
+        (chat_pb2.MESSAGE_ROLE_USER, chat_pb2.MESSAGE_STATUS_COMPLETE),
+        (chat_pb2.MESSAGE_ROLE_ASSISTANT, chat_pb2.MESSAGE_STATUS_COMPLETE),
     ]
 
 
@@ -149,33 +153,87 @@ async def test_unknown_conversation_is_not_found(env: Env) -> None:
     assert err.value.code() == grpc.StatusCode.NOT_FOUND
 
 
+def unavailable(details: str) -> grpc.aio.AioRpcError:
+    return grpc.aio.AioRpcError(
+        grpc.StatusCode.UNAVAILABLE, grpc.aio.Metadata(), grpc.aio.Metadata(), details
+    )
+
+
 class DownLlm(FakeLlm):
     """An llm client whose service is unreachable."""
 
     async def Embed(self, request: llm_pb2.EmbedRequest):
-        raise grpc.aio.AioRpcError(
-            grpc.StatusCode.UNAVAILABLE, grpc.aio.Metadata(), grpc.aio.Metadata(), "connect failed"
-        )
+        raise unavailable("connect failed")
 
 
-async def test_stream_chat_without_llm_is_unavailable() -> None:
+class DyingLlm(FakeLlm):
+    """An llm client whose service goes away in the middle of an answer."""
+
+    async def _gen(self):
+        yield llm_pb2.GenerateResponse(delta="Paris")
+        yield llm_pb2.GenerateResponse(delta=" is")
+        raise unavailable("connection reset")
+
+
+class DownDocuments(FakeDocuments):
+    async def SearchChunks(self, request: document_pb2.SearchChunksRequest):
+        raise unavailable("connect failed")
+
+
+async def stream_with(
+    documents: Any, llm: Any, use_knowledge_base: bool = True
+) -> tuple[list[chat_pb2.StreamChatResponse], chat_pb2.GetConversationResponse]:
+    """Streams one question and returns the events and the saved conversation."""
     server = grpc.aio.server()
-    chat_pb2_grpc.add_ChatServiceServicer_to_server(
-        servicer(MemoryRepo(), FakeDocuments(), DownLlm()),
-        server,
-    )
+    chat_pb2_grpc.add_ChatServiceServicer_to_server(servicer(MemoryRepo(), documents, llm), server)
     port = server.add_insecure_port("127.0.0.1:0")
     await server.start()
     async with grpc.aio.insecure_channel(f"127.0.0.1:{port}") as ch:
         stub = chat_pb2_grpc.ChatServiceStub(ch)
         conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
         request = chat_pb2.StreamChatRequest(
-            conversation_id=conv.id, content="Hi", use_knowledge_base=True
+            conversation_id=conv.id, content="Hi", use_knowledge_base=use_knowledge_base
         )
-        with pytest.raises(grpc.aio.AioRpcError) as err:
-            _ = [e async for e in stub.StreamChat(request)]
+        events = [e async for e in stub.StreamChat(request)]
+        got = await stub.GetConversation(chat_pb2.GetConversationRequest(id=conv.id))
     await server.stop(None)
-    assert err.value.code() == grpc.StatusCode.UNAVAILABLE
+    return events, got
+
+
+@pytest.mark.parametrize(
+    ("documents", "llm", "service"),
+    [
+        (FakeDocuments(), DownLlm(), "Models"),
+        (DownDocuments(), FakeLlm(), "Documents"),
+    ],
+)
+async def test_an_unavailable_peer_ends_the_stream_with_an_error(
+    documents: Any, llm: Any, service: str
+) -> None:
+    events, got = await stream_with(documents, llm)
+
+    assert [e.WhichOneof("event") for e in events] == ["error", "message"]
+    assert events[0].error.code == chat_pb2.CHAT_ERROR_CODE_UNAVAILABLE
+    assert events[0].error.message == (
+        f"The {service} service isn't available. Try again in a moment."
+    )
+    assert events[1].message.status == chat_pb2.MESSAGE_STATUS_FAILED
+    assert [(m.role, m.content, m.status) for m in got.messages] == [
+        (chat_pb2.MESSAGE_ROLE_USER, "Hi", chat_pb2.MESSAGE_STATUS_COMPLETE),
+        (chat_pb2.MESSAGE_ROLE_ASSISTANT, "", chat_pb2.MESSAGE_STATUS_FAILED),
+    ]
+
+
+async def test_an_llm_failure_mid_answer_keeps_the_partial_answer() -> None:
+    events, got = await stream_with(FakeDocuments(), DyingLlm())
+
+    kinds = [e.WhichOneof("event") for e in events]
+    assert kinds == ["citations", "delta", "delta", "error", "message"]
+    assert events[-1].message.content == "Paris is"
+    assert events[-1].message.status == chat_pb2.MESSAGE_STATUS_FAILED
+    assert events[-1].message.citations[0].document_id == "d1"
+    saved = got.messages[-1]
+    assert (saved.content, saved.status) == ("Paris is", chat_pb2.MESSAGE_STATUS_FAILED)
 
 
 async def test_stream_chat_rejects_empty_content(env: Env) -> None:
@@ -212,22 +270,14 @@ class BrokenLlm(FakeLlm):
         )
 
 
-async def test_stream_chat_hides_other_peer_errors() -> None:
-    server = grpc.aio.server()
-    chat_pb2_grpc.add_ChatServiceServicer_to_server(
-        servicer(MemoryRepo(), FakeDocuments(), BrokenLlm()), server
-    )
-    port = server.add_insecure_port("127.0.0.1:0")
-    await server.start()
-    async with grpc.aio.insecure_channel(f"127.0.0.1:{port}") as ch:
-        stub = chat_pb2_grpc.ChatServiceStub(ch)
-        conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
-        request = chat_pb2.StreamChatRequest(conversation_id=conv.id, content="Hi")
-        with pytest.raises(grpc.aio.AioRpcError) as err:
-            _ = [e async for e in stub.StreamChat(request)]
-    await server.stop(None)
-    assert err.value.code() == grpc.StatusCode.INTERNAL
-    assert "no such model" not in (err.value.details() or "")
+async def test_other_peer_errors_are_hidden_from_the_user() -> None:
+    events, _ = await stream_with(FakeDocuments(), BrokenLlm(), use_knowledge_base=False)
+
+    assert [e.WhichOneof("event") for e in events] == ["error", "message"]
+    assert events[0].error.code == chat_pb2.CHAT_ERROR_CODE_INTERNAL
+    assert events[0].error.message == "The Models service couldn't complete the answer."
+    assert "no such model" not in events[0].error.message
+    assert events[1].message.status == chat_pb2.MESSAGE_STATUS_FAILED
 
 
 async def test_rename_persists_and_shows_in_the_list(env: Env) -> None:

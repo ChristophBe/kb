@@ -1,5 +1,6 @@
+import asyncio
 import uuid
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncGenerator, AsyncIterator, Sequence
 from datetime import UTC, datetime
 from typing import Any
 
@@ -31,6 +32,7 @@ USER = chat_pb2.MESSAGE_ROLE_USER
 ASSISTANT = chat_pb2.MESSAGE_ROLE_ASSISTANT
 COMPLETE = chat_pb2.MESSAGE_STATUS_COMPLETE
 FAILED = chat_pb2.MESSAGE_STATUS_FAILED
+STOPPED = chat_pb2.MESSAGE_STATUS_STOPPED
 
 
 class FakeRepo:
@@ -89,12 +91,30 @@ class FakeGenerator:
         self.error = error
         self.calls: list[tuple[str, list[PromptMessage]]] = []
 
-    async def generate(self, model: str, prompt: list[PromptMessage]) -> AsyncIterator[str]:
+    async def generate(self, model: str, prompt: list[PromptMessage]) -> AsyncGenerator[str]:
         self.calls.append((model, prompt))
         for delta in self.deltas:
             yield delta
         if self.error:
             raise self.error
+
+
+class HangingGenerator(FakeGenerator):
+    """Streams its deltas, then waits for a token that never comes."""
+
+    def __init__(self, deltas: tuple[str, ...] = ("Par",)) -> None:
+        super().__init__(deltas)
+        self.waiting = asyncio.Event()
+        self.closed = False
+
+    async def generate(self, model: str, prompt: list[PromptMessage]) -> AsyncGenerator[str]:
+        try:
+            async for delta in super().generate(model, prompt):
+                yield delta
+            self.waiting.set()
+            await asyncio.Event().wait()
+        finally:
+            self.closed = True
 
 
 def make(
@@ -246,6 +266,55 @@ async def test_failed_answers_are_left_out_of_the_prompt() -> None:
     assert [m.content for m in generator.calls[0][1][1:]] == ["earlier", "Capital?"]
 
 
+async def test_cancelling_the_answer_stops_generation_and_saves_it_as_stopped() -> None:
+    generator = HangingGenerator()
+    chat, repo, _, _ = make(generator=generator)
+    task = asyncio.create_task(collect(chat, repo))
+    await generator.waiting.wait()
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    assert generator.closed
+    assert [(m.role, m.content, m.status) for m in repo.messages] == [
+        (USER, "Capital?", COMPLETE),
+        (ASSISTANT, "Par", STOPPED),
+    ]
+    assert repo.messages[1].citations[0]["document_id"] == "d1"
+
+
+async def test_closing_the_stream_early_stops_generation_and_saves_it_as_stopped() -> None:
+    generator = HangingGenerator(("Par", "is"))
+    chat, repo, _, _ = make(generator=generator)
+    events = chat.answer(repo.conv.id, "Capital?", "m1", False)
+
+    assert await anext(events) == AnswerDelta("Par")
+    await events.aclose()
+
+    assert generator.closed
+    assert [(m.content, m.status) for m in repo.messages] == [
+        ("Capital?", COMPLETE),
+        ("Par", STOPPED),
+    ]
+
+
+async def test_stopped_answers_stay_in_the_prompt_unless_empty() -> None:
+    repo = FakeRepo()
+    await repo.add_message(repo.conv.id, USER, "first", [])
+    await repo.add_message(repo.conv.id, ASSISTANT, "", [], STOPPED)
+    await repo.add_message(repo.conv.id, USER, "second", [])
+    await repo.add_message(repo.conv.id, ASSISTANT, "half", [], STOPPED)
+    chat, repo, _, generator = make(repo)
+    await collect(chat, repo, use_kb=False)
+
+    assert [m.content for m in generator.calls[0][1][1:]] == [
+        "first",
+        "second",
+        "half",
+        "Capital?",
+    ]
+
+
 def rpc_error(code: grpc.StatusCode) -> grpc.aio.AioRpcError:
     return grpc.aio.AioRpcError(code, grpc.aio.Metadata(), grpc.aio.Metadata(), "detail")
 
@@ -261,8 +330,23 @@ class FailingLlm:
         raise rpc_error(self.code)
         yield
 
-    def Generate(self, request: Any) -> AsyncIterator[Any]:
-        return self._gen()
+    def Generate(self, request: Any) -> "FakeCall":
+        return FakeCall(self._gen())
+
+
+class FakeCall:
+    """A streaming gRPC call: iterable and cancellable."""
+
+    def __init__(self, responses: AsyncIterator[Any]) -> None:
+        self._responses = responses
+        self.cancelled = False
+
+    def __aiter__(self) -> AsyncIterator[Any]:
+        return self._responses
+
+    def cancel(self) -> bool:
+        self.cancelled = True
+        return True
 
 
 @pytest.mark.parametrize(
@@ -285,6 +369,29 @@ async def test_peer_statuses_become_application_errors(
     assert type(retrieved.value) is expected
     assert type(generated.value) is expected
     assert retrieved.value.peer == generated.value.peer == Peer.LLM
+
+
+async def test_closing_the_generator_early_cancels_the_llm_call() -> None:
+    class StreamingLlm:
+        def __init__(self) -> None:
+            self.calls: list[FakeCall] = []
+
+        async def _gen(self) -> AsyncIterator[Any]:
+            from kb.llm.v1 import llm_pb2
+
+            for word in ["Par", "is"]:
+                yield llm_pb2.GenerateResponse(delta=word)
+
+        def Generate(self, request: Any) -> FakeCall:
+            self.calls.append(FakeCall(self._gen()))
+            return self.calls[-1]
+
+    llm: Any = StreamingLlm()
+    deltas = PeerGenerator(llm).generate("m", [])
+    assert await anext(deltas) == "Par"
+    assert not llm.calls[0].cancelled
+    await deltas.aclose()
+    assert llm.calls[0].cancelled
 
 
 class WordCounter:

@@ -11,6 +11,7 @@ services:
       KB_CHAT_MODEL: ${KB_CHAT_MODEL:-llama3.2}
       KB_EMBEDDING_MODEL: ${KB_EMBEDDING_MODEL:-nomic-embed-text}
       KB_EMBEDDING_DIMENSIONS: ${KB_EMBEDDING_DIMENSIONS:-768}
+      KB_FAKE_TOKEN_DELAY: ${KB_FAKE_TOKEN_DELAY:-0}
     ports: ["9004:9004"]
     depends_on:
       ollama: { condition: service_started, required: false }

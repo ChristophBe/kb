@@ -1,7 +1,7 @@
 import asyncio
 import json
 import time
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
 
 import grpc
 import httpx
@@ -17,6 +17,7 @@ from kb_llm.providers.base import (
     Provider,
     ProviderError,
     ProviderUnavailableError,
+    Role,
     Status,
 )
 from kb_llm.providers.fake import FakeProvider
@@ -36,7 +37,7 @@ class FailingProvider(FakeProvider):
 
     async def generate(
         self, model: str, messages: list[Message], options: GenerationOptions
-    ) -> AsyncIterator[Chunk]:
+    ) -> AsyncGenerator[Chunk]:
         raise self._error
         yield Chunk()
 
@@ -57,7 +58,7 @@ class SlowProvider(FakeProvider):
 
     async def generate(
         self, model: str, messages: list[Message], options: GenerationOptions
-    ) -> AsyncIterator[Chunk]:
+    ) -> AsyncGenerator[Chunk]:
         self.started.set()
         await self.release.wait()
         yield Chunk(done=True)
@@ -304,3 +305,51 @@ async def test_generate_surfaces_an_error_event_from_the_stream() -> None:
 
     with pytest.raises(ProviderError, match="out of memory"):
         [c async for c in ollama(respond).generate("chat", [], GenerationOptions())]
+
+
+class EndlessProvider(FakeProvider):
+    """Streams words until the stream is closed, and records that it was."""
+
+    def __init__(self) -> None:
+        super().__init__(16)
+        self.streaming = asyncio.Event()
+        self.closed = asyncio.Event()
+
+    async def generate(
+        self, model: str, messages: list[Message], options: GenerationOptions
+    ) -> AsyncGenerator[Chunk]:
+        try:
+            while True:
+                yield Chunk(delta="word ")
+                self.streaming.set()
+                await asyncio.sleep(0.01)
+        finally:
+            self.closed.set()
+
+
+async def test_a_cancelled_generate_closes_the_provider_stream_and_frees_its_slot(
+    serve: Serve, caplog: pytest.LogCaptureFixture
+) -> None:
+    provider = EndlessProvider()
+    stub = await serve(provider)
+    call = stub.Generate(HELLO)
+    assert (await call.read()).delta == "word "
+    await provider.streaming.wait()
+
+    with caplog.at_level("INFO", logger="kb_llm"):
+        call.cancel()
+        async with asyncio.timeout(1):
+            await provider.closed.wait()
+    assert "Generate cancelled by the client" in caplog.text
+    # The only slot (provider_max_concurrency=1) is free again.
+    assert await embed_is_accepted(stub)
+
+
+async def test_the_fake_provider_can_stream_slowly() -> None:
+    provider = FakeProvider(16, token_delay=0.05)
+    started = time.monotonic()
+    chunks = [
+        c async for c in provider.generate("m", [Message(Role.USER, "hi")], GenerationOptions())
+    ]
+    assert time.monotonic() - started >= 0.05 * (len(chunks) - 1)
+    assert chunks[-1].done

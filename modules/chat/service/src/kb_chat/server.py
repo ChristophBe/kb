@@ -1,3 +1,5 @@
+import asyncio
+import contextlib
 import logging
 import uuid
 from collections.abc import AsyncIterator, Sequence
@@ -117,11 +119,20 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         )
         # The document and llm modules are soft dependencies: when one fails, the
         # stream ends with an error event and the answer so far, not a gRPC error.
-        try:
-            async for event in events:
-                yield _response(event)
-        except ConversationNotFoundError:
-            await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
+        # When the client cancels (Stop, a closed tab), gRPC cancels this task or
+        # closes this generator; closing `events` stops the generation and saves
+        # the answer so far as stopped.
+        async with contextlib.aclosing(events):
+            try:
+                async for event in events:
+                    yield _response(event)
+            except ConversationNotFoundError:
+                await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
+            except (asyncio.CancelledError, GeneratorExit):
+                log.info(
+                    "StreamChat cancelled by the client in conversation %s", request.conversation_id
+                )
+                raise
 
     async def _get(self, raw_id: str, context: _Context) -> ConversationRow:
         conv = await self._repo.get_conversation(_parse_id(raw_id))

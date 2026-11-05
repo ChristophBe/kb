@@ -79,8 +79,13 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
             temperature=opts.temperature if opts.HasField("temperature") else None,
             max_tokens=opts.max_tokens if opts.HasField("max_tokens") else None,
         )
-        async with self._slot(context), _provider_errors(context):
-            async for chunk in self._provider.generate(model, messages, options):
+        async with (
+            self._slot(context),
+            _provider_errors(context),
+            contextlib.aclosing(self._provider.generate(model, messages, options)) as chunks,
+            _logged_cancel(model),
+        ):
+            async for chunk in chunks:
                 if chunk.done:
                     yield llm_pb2.GenerateResponse(
                         done=True,
@@ -123,6 +128,17 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
             await context.abort(grpc.StatusCode.RESOURCE_EXHAUSTED, "too many concurrent requests")
         async with self._slots:
             yield
+
+
+@contextlib.asynccontextmanager
+async def _logged_cancel(model: str) -> AsyncIterator[None]:
+    """Logs a Generate call the client cancelled (a stopped answer, a closed
+    tab). Leaving the context closes the provider stream, which stops the model."""
+    try:
+        yield
+    except (asyncio.CancelledError, GeneratorExit):
+        log.info("Generate cancelled by the client (model %s)", model)
+        raise
 
 
 @contextlib.asynccontextmanager

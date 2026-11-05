@@ -1,6 +1,6 @@
 import asyncio
 import json
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from typing import Any
 
@@ -57,7 +57,7 @@ class OllamaProvider:
 
     async def generate(
         self, model: str, messages: list[Message], options: GenerationOptions
-    ) -> AsyncIterator[Chunk]:
+    ) -> AsyncGenerator[Chunk]:
         body: dict[str, Any] = {
             "model": model,
             "messages": [{"role": m.role.value, "content": m.content} for m in messages],

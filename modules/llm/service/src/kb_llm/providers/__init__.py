@@ -21,7 +21,7 @@ REGISTRY: dict[str, Callable[[Settings], Provider]] = {
             retry_delay=s.provider_retry_delay,
         ),
     ),
-    "fake": lambda s: FakeProvider(s.embedding_dimensions),
+    "fake": lambda s: FakeProvider(s.embedding_dimensions, s.fake_token_delay),
 }
 
 

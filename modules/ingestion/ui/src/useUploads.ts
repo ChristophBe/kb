@@ -19,6 +19,7 @@ export interface UploadClient {
   }): Promise<{ job?: Job; uploadUrl: string }>;
   completeUpload(req: { jobId: string }): Promise<{ job?: Job }>;
   watchJob(req: { id: string }): AsyncIterable<{ job?: Job }>;
+  reprocessJob(req: { id: string }): Promise<{ job?: Job }>;
 }
 
 export type UploadStatus = "waiting" | "uploading" | "failed" | "rejected";
@@ -47,6 +48,8 @@ export interface UploadEvents {
   announce(message: string, urgent?: boolean): void;
   /** A finished job, reported after the page was left. */
   notify(message: string, failed: boolean): void;
+  /** A request that failed outside an upload row, e.g. reprocessing a job. */
+  error(message: string): void;
 }
 
 let nextKey = 1;
@@ -68,6 +71,9 @@ export function useUploads(client: UploadClient, put: Put, events: UploadEvents,
   const [uploads, setUploads] = useState<Upload[]>([]);
   // Jobs replaced by a new upload after their URL expired; they would show as stuck.
   const [abandonedJobs, setAbandonedJobs] = useState<ReadonlySet<string>>(new Set());
+  // Jobs whose ReprocessJob request is in flight.
+  const [reprocessing, setReprocessing] = useState<ReadonlySet<string>>(new Set());
+  const inFlight = useRef(new Set<string>());
   const targets = useRef(new Map<number, Target>());
   const controllers = useRef(new Map<number, AbortController>());
   const started = useRef(new Set<number>());
@@ -198,5 +204,32 @@ export function useUploads(client: UploadClient, put: Put, events: UploadEvents,
     setUploads((us) => us.filter((u) => u.key !== key));
   }, []);
 
-  return { uploads, abandonedJobs, add, retry, remove };
+  /**
+   * Queues a failed or done job again; the worker replaces the document's chunks.
+   * Resolves to whether the job was queued. A second call while one is in flight is ignored.
+   */
+  const reprocess = useCallback(
+    async (job: Job) => {
+      const { client, events } = latest.current;
+      if (inFlight.current.has(job.id)) return false;
+      inFlight.current.add(job.id);
+      setReprocessing(new Set(inFlight.current));
+      try {
+        const queued = await client.reprocessJob({ id: job.id });
+        if (queued.job) events.onJob(queued.job);
+        events.announce(`${job.filename} queued for processing`);
+        void finish(job.id, job.filename).catch(() => {});
+        return true;
+      } catch (err) {
+        events.error(`Couldn't reprocess ${job.filename}: ${describe(err)}`);
+        return false;
+      } finally {
+        inFlight.current.delete(job.id);
+        if (mounted.current) setReprocessing(new Set(inFlight.current));
+      }
+    },
+    [finish],
+  );
+
+  return { uploads, abandonedJobs, reprocessing, add, retry, remove, reprocess };
 }

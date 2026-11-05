@@ -29,6 +29,7 @@ function fakeClient(outcome = JobStatus.DONE) {
     watchJob: vi.fn(async function* ({ id }: { id: string }) {
       yield { job: job(id, outcome, outcome === JobStatus.FAILED ? "no text" : "") };
     }),
+    reprocessJob: vi.fn(async ({ id }: { id: string }) => ({ job: job(id, JobStatus.QUEUED) })),
   } satisfies UploadClient;
   return client;
 }
@@ -45,7 +46,12 @@ function controlledPut() {
 }
 
 function setup(client = fakeClient(), put: Put = async () => {}, now = () => 0) {
-  const events = { onJob: vi.fn<(job: Job) => void>(), announce: vi.fn(), notify: vi.fn() };
+  const events = {
+    onJob: vi.fn<(job: Job) => void>(),
+    announce: vi.fn(),
+    notify: vi.fn(),
+    error: vi.fn(),
+  };
   const hook = renderHook(() => useUploads(client, put, events, now));
   return { hook, events, client };
 }
@@ -173,6 +179,78 @@ describe("useUploads", () => {
     hook.unmount();
     await act(async () => calls[0]?.settle());
     await waitFor(() => expect(events.notify).toHaveBeenCalledWith("a.md added", false));
+  });
+});
+
+describe("reprocess", () => {
+  const failedJob = create(JobSchema, {
+    id: "job9",
+    filename: "scan.md",
+    status: JobStatus.FAILED,
+    error: "no text",
+  });
+
+  it("queues the job again and follows it to the end", async () => {
+    const { hook, events, client } = setup();
+    let queued = false;
+    await act(async () => {
+      queued = await hook.result.current.reprocess(failedJob);
+    });
+
+    expect(queued).toBe(true);
+    expect(client.reprocessJob).toHaveBeenCalledWith({ id: "job9" });
+    expect(events.announce).toHaveBeenCalledWith("scan.md queued for processing");
+    await waitFor(() => expect(events.announce).toHaveBeenCalledWith("scan.md is ready", false));
+    expect(events.onJob.mock.calls.map(([j]) => j.status)).toEqual([
+      JobStatus.QUEUED,
+      JobStatus.DONE,
+    ]);
+    expect(hook.result.current.reprocessing.size).toBe(0);
+  });
+
+  it("reports a refused request and leaves the job as it was", async () => {
+    const client = fakeClient();
+    client.reprocessJob.mockRejectedValueOnce(
+      new ConnectError("only failed or done jobs can be reprocessed", Code.FailedPrecondition),
+    );
+    const { hook, events } = setup(client);
+    let queued = true;
+    await act(async () => {
+      queued = await hook.result.current.reprocess(failedJob);
+    });
+
+    expect(queued).toBe(false);
+    expect(events.error).toHaveBeenCalledWith(
+      "Couldn't reprocess scan.md: only failed or done jobs can be reprocessed",
+    );
+    expect(events.onJob).not.toHaveBeenCalled();
+    expect(client.watchJob).not.toHaveBeenCalled();
+  });
+
+  it("ignores a second click while the request is in flight", async () => {
+    const client = fakeClient();
+    let release = () => {};
+    client.reprocessJob.mockImplementationOnce(
+      ({ id }) =>
+        new Promise((resolve) => {
+          release = () => resolve({ job: create(JobSchema, { id, status: JobStatus.QUEUED }) });
+        }),
+    );
+    const { hook } = setup(client);
+    let first: Promise<boolean> = Promise.resolve(false);
+    act(() => {
+      first = hook.result.current.reprocess(failedJob);
+    });
+    expect(hook.result.current.reprocessing.has("job9")).toBe(true);
+    await act(async () => {
+      expect(await hook.result.current.reprocess(failedJob)).toBe(false);
+    });
+    await act(async () => {
+      release();
+      expect(await first).toBe(true);
+    });
+    expect(client.reprocessJob).toHaveBeenCalledTimes(1);
+    expect(hook.result.current.reprocessing.size).toBe(0);
   });
 });
 

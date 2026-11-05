@@ -77,10 +77,11 @@ export function Upload() {
       announce,
       notify: (message: string, failed: boolean) =>
         failed ? toast.error(message) : toast.success(message),
+      error: (message: string) => toast.error(message),
     }),
     [queryClient, announce],
   );
-  const { uploads, abandonedJobs, add, retry, remove } = useUploads(
+  const { uploads, abandonedJobs, reprocessing, add, retry, remove, reprocess } = useUploads(
     client,
     putWithProgress,
     events,
@@ -207,11 +208,31 @@ export function Upload() {
               const [label, tone] = statusLabel[job.status];
               return (
                 <li key={job.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2">
-                  <span className="min-w-0 flex-1 truncate font-medium">{job.filename}</span>
+                  {/* Focus lands here once "Retry processing" has been replaced by the status. */}
+                  <span
+                    tabIndex={-1}
+                    data-focus={`job-${job.id}`}
+                    className="min-w-0 flex-1 truncate font-medium"
+                  >
+                    {job.filename}
+                  </span>
                   {job.status === JobStatus.DONE && (
                     <span className="text-fg-muted">{job.chunkCount} chunks</span>
                   )}
                   {job.error && <span className="truncate text-danger">{job.error}</span>}
+                  {job.status === JobStatus.FAILED && (
+                    // aria-disabled, not disabled: a disabled button would drop focus,
+                    // which stays here when the request fails.
+                    <Button
+                      variant="secondary"
+                      aria-disabled={reprocessing.has(job.id)}
+                      onClick={async () => {
+                        if (await reprocess(job)) setFocusAfter(`job-${job.id}`);
+                      }}
+                    >
+                      Retry processing
+                    </Button>
+                  )}
                   <span className="font-mono text-fg-muted tabular-nums">
                     {formatTime(job.createTime)}
                   </span>

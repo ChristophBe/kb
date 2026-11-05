@@ -3,7 +3,7 @@ import {
   DocumentService,
   DocumentStatus,
 } from "@kb/document-api/kb/document/v1/document_pb";
-import { useClient, useQuery } from "@kb/module-sdk";
+import { useClient, useQuery, useQueryClient } from "@kb/module-sdk";
 import { Button, Card, DelayedLoading, EmptyState, ErrorMessage, SkeletonRows } from "@kb/ui";
 import { useEffect, useRef, useState } from "react";
 
@@ -11,29 +11,39 @@ export const CHUNK_PAGE_SIZE = 20;
 /** Chunks longer than this start collapsed. */
 const PREVIEW_CHARS = 400;
 
-/** A document's chunks in index order, one page at a time. */
+/** How long a chunk opened by a deep link stays highlighted. */
+const HIGHLIGHT_MS = 2000;
+
+/**
+ * A document's chunks in index order, one page at a time. With `focusIndex`
+ * (from a `#chunk-<index>` link) it opens the page holding that chunk, scrolls
+ * to it, highlights it briefly and focuses its heading.
+ */
 export function ChunkList({
   documentId,
   chunkCount,
   status,
   statusDetail,
+  focusIndex,
 }: {
   documentId: string;
   chunkCount: number;
   status: DocumentStatus;
   statusDetail: string;
+  focusIndex?: number;
 }) {
   const client = useClient(DocumentService);
+  const queryClient = useQueryClient();
   // Tokens of the pages visited so far; the last one is the current page.
   const [tokens, setTokens] = useState([""]);
   const page = tokens.length - 1;
   const token = tokens[page] ?? "";
-  const chunks = useQuery({
-    queryKey: ["documents", documentId, "chunks", token],
+  const pageQuery = (pageToken: string) => ({
+    queryKey: ["documents", documentId, "chunks", pageToken],
     queryFn: () =>
-      client.listChunks({ documentId, page: { pageSize: CHUNK_PAGE_SIZE, pageToken: token } }),
-    placeholderData: (previous) => previous,
+      client.listChunks({ documentId, page: { pageSize: CHUNK_PAGE_SIZE, pageToken } }),
   });
+  const chunks = useQuery({ ...pageQuery(token), placeholderData: (previous) => previous });
   const firstHeading = useRef<HTMLHeadingElement>(null);
   // After Previous/Next, focus moves to the first chunk once its page has loaded.
   const focusPage = useRef<string | null>(null);
@@ -48,7 +58,49 @@ export function ChunkList({
     setTokens(next);
   };
 
+  // Page tokens are opaque, so the page holding the target is found by
+  // walking the pages from the start; they stay cached for Previous.
+  const target = useRef<number | null>(null);
+  const [highlighted, setHighlighted] = useState<number | null>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pageQuery only depends on documentId and the client.
+  useEffect(() => {
+    if (focusIndex === undefined) return;
+    let cancelled = false;
+    (async () => {
+      const path = [""];
+      for (;;) {
+        const data = await queryClient.fetchQuery(pageQuery(path.at(-1) ?? ""));
+        const next = data.page?.nextPageToken ?? "";
+        if ((data.chunks.at(-1)?.index ?? -1) >= focusIndex || !next) break;
+        path.push(next);
+      }
+      if (cancelled) return;
+      target.current = focusIndex;
+      setTokens(path);
+    })().catch(() => {
+      // The page query shows the error.
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [focusIndex, documentId, queryClient]);
   const items = chunks.data?.chunks ?? [];
+  useEffect(() => {
+    const index = target.current;
+    if (index === null || chunks.isPlaceholderData || !items.some((c) => c.index === index)) return;
+    target.current = null;
+    const el = document.getElementById(`chunk-${index}`);
+    const smooth = !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    el?.scrollIntoView?.({ block: "center", behavior: smooth ? "smooth" : "auto" });
+    el?.querySelector<HTMLElement>("h3")?.focus({ preventScroll: true });
+    setHighlighted(index);
+  }, [items, chunks.isPlaceholderData]);
+  useEffect(() => {
+    if (highlighted === null) return;
+    const timer = setTimeout(() => setHighlighted(null), HIGHLIGHT_MS);
+    return () => clearTimeout(timer);
+  }, [highlighted]);
+
   const nextToken = chunks.data?.page?.nextPageToken ?? "";
   const first = page * CHUNK_PAGE_SIZE + 1;
   const last = page * CHUNK_PAGE_SIZE + items.length;
@@ -81,7 +133,12 @@ export function ChunkList({
     body = (
       <div className="divide-y divide-dotted divide-border">
         {items.map((c, i) => (
-          <ChunkItem key={c.index} chunk={c} headingRef={i === 0 ? firstHeading : undefined} />
+          <ChunkItem
+            key={c.index}
+            chunk={c}
+            headingRef={i === 0 ? firstHeading : undefined}
+            highlighted={c.index === highlighted}
+          />
         ))}
       </div>
     );
@@ -125,9 +182,11 @@ export function ChunkList({
 function ChunkItem({
   chunk,
   headingRef,
+  highlighted = false,
 }: {
   chunk: Chunk;
   headingRef?: React.Ref<HTMLHeadingElement>;
+  highlighted?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const { page, heading, ...rest } = chunk.metadata;
@@ -140,7 +199,11 @@ function ChunkItem({
   const long = chunk.text.length > PREVIEW_CHARS;
   const textId = `chunk-${chunk.index}-text`;
   return (
-    <article id={`chunk-${chunk.index}`} className="grid grid-cols-[3rem_1fr] gap-2 px-4 py-3">
+    <article
+      id={`chunk-${chunk.index}`}
+      data-highlighted={highlighted || undefined}
+      className={`grid scroll-mt-4 grid-cols-[3rem_1fr] gap-2 px-4 py-3 transition-colors duration-700 ${highlighted ? "bg-info-subtle" : ""}`}
+    >
       <h3 ref={headingRef} tabIndex={-1} className="font-mono text-sm text-fg-muted tabular-nums">
         <span aria-hidden="true">#{chunk.index + 1}</span>
         <span className="sr-only">Chunk {chunk.index + 1}</span>

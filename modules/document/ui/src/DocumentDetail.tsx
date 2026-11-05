@@ -2,6 +2,7 @@ import { DocumentService } from "@kb/document-api/kb/document/v1/document_pb";
 import { useClient, useQuery } from "@kb/module-sdk";
 import { Badge, Card, ChunkStrip, ErrorMessage, formatBytes, formatTime, Spinner } from "@kb/ui";
 import { Link, useParams } from "react-router";
+import { ChunkList } from "./ChunkList.tsx";
 import { MetadataEditor } from "./MetadataEditor.tsx";
 import { statusLabel } from "./status.ts";
 import { TitleEditor } from "./TitleEditor.tsx";
@@ -45,6 +46,12 @@ export function DocumentDetail() {
           ))}
         </dl>
       </Card>
+      <ChunkList
+        documentId={d.id}
+        chunkCount={d.chunkCount}
+        status={d.status}
+        statusDetail={d.statusDetail}
+      />
     </div>
   );
 }

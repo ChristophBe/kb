@@ -19,7 +19,7 @@ export function Button({
     <button
       type="button"
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-control px-3 py-1.5 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex items-center justify-center gap-2 rounded-control px-3.5 py-1.5 text-sm font-medium transition-[background-color,transform] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
         variants[variant],
         className,
       )}
@@ -32,6 +32,11 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={cn("rounded-card border border-border bg-surface", className)} {...props} />
   );
+}
+
+/** Translucent glass chrome (sidebars, composers, sticky bars). Never for dense content. */
+export function Panel({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("glass rounded-panel", className)} {...props} />;
 }
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
@@ -68,15 +73,10 @@ const tones: Record<Tone, string> = {
   danger: "bg-danger-subtle text-danger",
 };
 
-/** A square mono tag. Write the label in sentence case; it renders uppercase. */
+/** A status pill. Write the label in sentence case. */
 export function Badge({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {
   return (
-    <span
-      className={cn(
-        "inline-flex rounded-control px-1.5 py-0.5 font-mono text-xs font-medium tracking-wide uppercase",
-        tones[tone],
-      )}
-    >
+    <span className={cn("inline-flex rounded-full px-2 py-0.5 text-xs font-medium", tones[tone])}>
       {children}
     </span>
   );
@@ -168,7 +168,7 @@ const MAX_TICKS = 48;
 /**
  * A document as a barcode: one tick per chunk, so length shows at a glance,
  * with `marked` chunks (zero-based positions, e.g. cited ones) taller and in
- * ink. The text next to it carries the same information for screen readers.
+ * the accent. The text next to it carries the same information for screen readers.
  */
 export function ChunkStrip({
   count,
@@ -190,7 +190,7 @@ export function ChunkStrip({
             <span
               key={i}
               data-marked={hits.has(i) || undefined}
-              className={cn("w-0.5", hits.has(i) ? "h-3 bg-fg" : "h-2 bg-border-strong")}
+              className={cn("w-0.5", hits.has(i) ? "h-3 bg-accent" : "h-2 bg-border-strong")}
             />
           ))}
         </span>
@@ -209,7 +209,7 @@ export function Spinner({ className, label = "Loading" }: { className?: string; 
       role="status"
       aria-label={label}
       className={cn(
-        "inline-block size-4 animate-spin rounded-full border-2 border-border border-t-fg",
+        "inline-block size-4 animate-spin rounded-full border-2 border-border border-t-accent",
         className,
       )}
     />

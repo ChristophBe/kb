@@ -30,10 +30,10 @@ export function Dialog({
       ref={ref}
       aria-labelledby={titleId}
       onClose={onClose}
-      className="m-auto w-[min(36rem,calc(100vw-2rem))] rounded-card border border-border bg-surface p-0 text-fg shadow-overlay backdrop:bg-black/40"
+      className="m-auto w-[min(36rem,calc(100vw-2rem))] glass-strong rounded-panel p-0 text-fg backdrop:bg-black/30 backdrop:backdrop-blur-sm"
     >
       {open && (
-        <div className="flex flex-col gap-4 p-5">
+        <div className="flex flex-col gap-4 p-6">
           <h2 id={titleId} className="text-lg font-semibold">
             {title}
           </h2>

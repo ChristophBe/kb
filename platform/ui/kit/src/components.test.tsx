@@ -9,6 +9,7 @@ import {
   ErrorMessage,
   Input,
   PageHeader,
+  Panel,
   SourceNote,
   Spinner,
   Textarea,
@@ -39,6 +40,15 @@ describe("kit components have no axe violations", () => {
       <Card>
         <p>Content</p>
       </Card>,
+    );
+    await expectNoAxeViolations(container);
+  });
+
+  it("Panel", async () => {
+    const { container } = render(
+      <Panel>
+        <nav aria-label="Sections">Content</nav>
+      </Panel>,
     );
     await expectNoAxeViolations(container);
   });

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -22,6 +23,7 @@ import (
 
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	"github.com/christoph/kb/modules/document/service/internal/store"
+	llmv1 "github.com/christoph/kb/modules/llm/api/go/llmv1"
 	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
 )
 
@@ -54,11 +56,14 @@ type Server struct {
 	documentv1.UnimplementedDocumentServiceServer
 	repo    Repository
 	objects ObjectStore
+	llm     llmv1.LlmServiceClient
 	log     *slog.Logger
 }
 
-func New(repo Repository, objects ObjectStore, log *slog.Logger) *Server {
-	return &Server{repo: repo, objects: objects, log: log}
+// New builds the server. llm is the llm module's client, used only by
+// SearchDocuments; it may point at a service that is down.
+func New(repo Repository, objects ObjectStore, llm llmv1.LlmServiceClient, log *slog.Logger) *Server {
+	return &Server{repo: repo, objects: objects, llm: llm, log: log}
 }
 
 func (s *Server) CreateDocument(ctx context.Context, req *documentv1.CreateDocumentRequest) (*documentv1.CreateDocumentResponse, error) {
@@ -316,28 +321,63 @@ func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksR
 	if len(req.GetEmbedding()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "embedding is required")
 	}
-	limit := req.GetLimit()
+	ids, err := parseIDs(req.GetDocumentIds())
+	if err != nil {
+		return nil, err
+	}
+	results, err := s.search(ctx, req.GetEmbedding(), req.GetLimit(), ids)
+	if err != nil {
+		return nil, err
+	}
+	return &documentv1.SearchChunksResponse{Results: results}, nil
+}
+
+// SearchDocuments embeds the query through the llm module, then runs the same
+// vector search as SearchChunks. Only this RPC needs llm: while it is down,
+// this fails with UNAVAILABLE and every other RPC keeps working.
+func (s *Server) SearchDocuments(ctx context.Context, req *documentv1.SearchDocumentsRequest) (*documentv1.SearchDocumentsResponse, error) {
+	query := strings.TrimSpace(req.GetQuery())
+	if query == "" {
+		return nil, status.Error(codes.InvalidArgument, "query is required")
+	}
+	ids, err := parseIDs(req.GetDocumentIds())
+	if err != nil {
+		return nil, err
+	}
+	embedded, err := s.llm.Embed(ctx, &llmv1.EmbedRequest{Inputs: []string{query}})
+	if err != nil {
+		// llm's own statuses mean something else here; only its availability
+		// is passed on.
+		if code := status.Code(err); code == codes.Unavailable || code == codes.DeadlineExceeded {
+			s.log.WarnContext(ctx, "embed query", "error", err)
+			return nil, status.Error(codes.Unavailable, "the llm service is unavailable")
+		}
+		return nil, s.internal("embed query", err)
+	}
+	if len(embedded.GetEmbeddings()) != 1 || len(embedded.GetEmbeddings()[0].GetValues()) == 0 {
+		return nil, s.internal("embed query", fmt.Errorf("got %d embeddings for 1 input", len(embedded.GetEmbeddings())))
+	}
+	results, err := s.search(ctx, embedded.GetEmbeddings()[0].GetValues(), req.GetLimit(), ids)
+	if err != nil {
+		return nil, err
+	}
+	return &documentv1.SearchDocumentsResponse{Results: results}, nil
+}
+
+func (s *Server) search(ctx context.Context, embedding []float32, limit int32, ids []uuid.UUID) ([]*documentv1.ScoredChunk, error) {
 	if limit <= 0 {
 		limit = defaultLimit
 	}
 	limit = min(limit, maxLimit)
-	ids := make([]uuid.UUID, 0, len(req.GetDocumentIds()))
-	for _, raw := range req.GetDocumentIds() {
-		id, err := parseID(raw)
-		if err != nil {
-			return nil, err
-		}
-		ids = append(ids, id)
-	}
 	rows, err := s.repo.SearchChunks(ctx, store.SearchChunksParams{
-		Embedding: pgvector.NewVector(req.GetEmbedding()), DocumentIds: ids, MaxResults: limit,
+		Embedding: pgvector.NewVector(embedding), DocumentIds: ids, MaxResults: limit,
 	})
 	if err != nil {
 		return nil, s.internal("search chunks", err)
 	}
-	resp := &documentv1.SearchChunksResponse{}
+	results := make([]*documentv1.ScoredChunk, 0, len(rows))
 	for _, r := range rows {
-		resp.Results = append(resp.Results, &documentv1.ScoredChunk{
+		results = append(results, &documentv1.ScoredChunk{
 			Chunk: &documentv1.Chunk{
 				DocumentId: r.DocumentID.String(), Index: r.Idx, Text: r.Text, Metadata: r.Metadata,
 			},
@@ -345,7 +385,7 @@ func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksR
 			Score:         r.Score,
 		})
 	}
-	return resp, nil
+	return results, nil
 }
 
 func (s *Server) get(ctx context.Context, rawID string) (store.DocumentDocument, error) {
@@ -378,6 +418,18 @@ func parseID(raw string) (uuid.UUID, error) {
 		return uuid.Nil, status.Errorf(codes.InvalidArgument, "invalid id %q", raw)
 	}
 	return id, nil
+}
+
+func parseIDs(raw []string) ([]uuid.UUID, error) {
+	ids := make([]uuid.UUID, 0, len(raw))
+	for _, r := range raw {
+		id, err := parseID(r)
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
 }
 
 func pageSize(p *commonv1.PageRequest) int32 {

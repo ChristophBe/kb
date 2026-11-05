@@ -117,7 +117,9 @@
                       "!@kb/common-api",
                       "!@kb/common-api/**",
                       "!@kb/document-api",
-                      "!@kb/document-api/**"
+                      "!@kb/document-api/**",
+                      "!@kb/llm-api",
+                      "!@kb/llm-api/**"
                     ],
                     "message": "Only the API packages of modules in depends_on (module.yaml) may be imported."
                   },

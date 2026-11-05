@@ -16,6 +16,7 @@ import (
 	"github.com/christoph/kb/modules/document/service/internal/server"
 	"github.com/christoph/kb/modules/document/service/internal/storage"
 	"github.com/christoph/kb/modules/document/service/internal/store"
+	llmv1 "github.com/christoph/kb/modules/llm/api/go/llmv1"
 	"github.com/christoph/kb/platform/go/config"
 	"github.com/christoph/kb/platform/go/grpcserver"
 	"github.com/christoph/kb/platform/go/logging"
@@ -26,6 +27,8 @@ type Config struct {
 	config.Base
 	DatabaseURL string         `env:"DATABASE_URL" envDefault:"postgres://kb:kb@localhost:5432/kb?sslmode=disable"`
 	Storage     storage.Config `envPrefix:"S3_"`
+	// LLMAddr is the llm module, needed only by SearchDocuments.
+	LLMAddr string `env:"LLM_ADDR" envDefault:"localhost:9004"`
 }
 
 func main() {
@@ -73,7 +76,14 @@ func run() error {
 		return err
 	}
 
+	// The connection is lazy: the service starts and serves while llm is down.
+	llmConn, err := grpcserver.Dial(cfg.LLMAddr)
+	if err != nil {
+		return err
+	}
+	defer llmConn.Close()
+
 	srv := grpcserver.New(log)
-	documentv1.RegisterDocumentServiceServer(srv, server.New(store.NewRepo(pool), objects, log))
+	documentv1.RegisterDocumentServiceServer(srv, server.New(store.NewRepo(pool), objects, llmv1.NewLlmServiceClient(llmConn), log))
 	return srv.Run(ctx, cfg.GRPCPort)
 }

@@ -65,6 +65,7 @@ flowchart TB
     ingworker -- "Embed" --> llmsvc
     chatsvc -- "SearchChunks" --> docsvc
     chatsvc -- "Generate, Embed" --> llmsvc
+    docsvc -- "Embed (SearchDocuments)" --> llmsvc
     llmsvc -- "HTTP" --> ollama
 
     ingsvc -- "pub kb.ingestion.uploaded<br/>sub started / processed / failed" --> nats
@@ -78,7 +79,7 @@ flowchart TB
 
 | Container | Module | Owns | Calls (gRPC) | Events (stream `INGESTION`) |
 |---|---|---|---|---|
-| `document-service` | document | schema `document` (documents, chunks + `vector(768)`), S3 bucket | — | — |
+| `document-service` | document | schema `document` (documents, chunks + `vector(768)`), S3 bucket | llm (only `SearchDocuments`) | — |
 | `ingestion-service` | ingestion | schema `ingestion` (jobs), stream `INGESTION` | document | publishes `uploaded`; consumes `started`, `processed`, `failed` |
 | `ingestion-worker` | ingestion | — | document, llm | consumes `uploaded`; publishes `started`, `processed`, `failed` |
 | `chat-service` | chat | schema `chat` (conversations, messages) | document, llm | — |

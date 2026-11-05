@@ -27,6 +27,9 @@ service DocumentService {
   // ListChunks returns a document's chunks in index order.
   rpc ListChunks(ListChunksRequest) returns (ListChunksResponse);
   rpc SearchChunks(SearchChunksRequest) returns (SearchChunksResponse);
+  // SearchDocuments embeds a text query through the llm module and returns
+  // the most similar chunks. It fails with UNAVAILABLE while llm is down.
+  rpc SearchDocuments(SearchDocumentsRequest) returns (SearchDocumentsResponse);
 }
 
 enum DocumentStatus {
@@ -174,5 +177,18 @@ message SearchChunksRequest {
 }
 
 message SearchChunksResponse {
+  repeated ScoredChunk results = 1;
+}
+
+message SearchDocumentsRequest {
+  // The text to search for; must not be blank.
+  string query = 1;
+  int32 limit = 2;
+  // Restricts the search to these documents when non-empty.
+  repeated string document_ids = 3;
+}
+
+message SearchDocumentsResponse {
+  // Most similar first.
   repeated ScoredChunk results = 1;
 }

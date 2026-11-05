@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import {
+  Area,
   Badge,
   Button,
   Card,
@@ -9,7 +10,6 @@ import {
   ErrorMessage,
   Input,
   PageHeader,
-  Panel,
   SourceNote,
   Spinner,
   Textarea,
@@ -44,11 +44,11 @@ describe("kit components have no axe violations", () => {
     await expectNoAxeViolations(container);
   });
 
-  it("Panel", async () => {
+  it("Area", async () => {
     const { container } = render(
-      <Panel>
+      <Area>
         <nav aria-label="Sections">Content</nav>
-      </Panel>,
+      </Area>,
     );
     await expectNoAxeViolations(container);
   });

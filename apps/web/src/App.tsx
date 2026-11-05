@@ -1,5 +1,5 @@
 import type { KbModule, RuntimeConfig } from "@kb/module-sdk";
-import { Card, cn, PageTitle, Panel } from "@kb/ui";
+import { Area, Card, cn, PageTitle } from "@kb/ui";
 import { FlaskConical, Library } from "lucide-react";
 import { useMemo } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
@@ -49,7 +49,7 @@ function navItem(isActive: boolean) {
 function Shell({ modules }: { modules: KbModule[] }) {
   return (
     <div className="flex min-h-screen">
-      <Panel className="sticky top-3 m-3 flex h-[calc(100vh-1.5rem)] w-60 shrink-0 flex-col overflow-y-auto">
+      <Area className="sticky top-0 w-60 shrink-0 overflow-y-auto border-r">
         <Link to="/" className="flex items-center gap-2 px-5 py-5 font-semibold">
           <Library className="size-5 text-accent" aria-hidden="true" />
           <span className="font-mono font-medium">kb</span>
@@ -87,8 +87,8 @@ function Shell({ modules }: { modules: KbModule[] }) {
         <div className="mt-auto p-3 pt-6">
           <ThemeToggle />
         </div>
-      </Panel>
-      <main className="min-w-0 flex-1 py-8 pr-8 pl-5">
+      </Area>
+      <main className="min-w-0 flex-1 p-8">
         <Outlet />
       </main>
       <ToastHost />

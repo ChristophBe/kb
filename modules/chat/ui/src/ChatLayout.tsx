@@ -1,6 +1,6 @@
 import { ChatService } from "@kb/chat-api/kb/chat/v1/chat_pb";
 import { toast, useClient, useMutation, useQuery, useQueryClient } from "@kb/module-sdk";
-import { Button, cn, ErrorMessage, Panel } from "@kb/ui";
+import { Area, Button, cn, ErrorMessage } from "@kb/ui";
 import { Plus, Trash2 } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import { UNTITLED } from "./ConversationHeader.tsx";
@@ -30,9 +30,8 @@ export function ChatLayout() {
   });
 
   return (
-    // Fills the shell's main area edge to edge; the list is a glass pane inset like the sidebar.
-    <div className="-my-8 -mr-8 -ml-5 flex h-screen gap-3 py-3">
-      <Panel className="flex w-64 shrink-0 flex-col overflow-hidden">
+    <div className="-m-8 flex h-screen">
+      <Area className="w-64 shrink-0 border-r">
         <div className="p-3">
           <Button className="w-full" onClick={() => create.mutate()} disabled={create.isPending}>
             <Plus className="size-4" /> New chat
@@ -64,7 +63,7 @@ export function ChatLayout() {
             </div>
           ))}
         </nav>
-      </Panel>
+      </Area>
       <div className="flex min-w-0 flex-1 flex-col">
         <Outlet />
       </div>

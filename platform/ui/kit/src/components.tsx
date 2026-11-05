@@ -34,9 +34,14 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   );
 }
 
-/** Translucent glass chrome (sidebars, composers, sticky bars). Never for dense content. */
-export function Panel({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("glass rounded-panel", className)} {...props} />;
+/**
+ * A frosted, full-height region of the layout (the sidebar, a list pane),
+ * flush with its neighbours and divided from them by a hairline.
+ */
+export function Area({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={cn("glass-area flex h-screen flex-col border-border", className)} {...props} />
+  );
 }
 
 export function Input({ className, ...props }: ComponentProps<"input">) {

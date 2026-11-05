@@ -8,3 +8,5 @@ services:
     port: 9001
     grpc_services: [kb.document.v1.DocumentService]
 ui: "@kb/module-document"
+# SearchDocuments embeds queries through llm; everything else works without it.
+depends_on: [llm]

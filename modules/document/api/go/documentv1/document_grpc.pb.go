@@ -30,6 +30,7 @@ const (
 	DocumentService_AddChunks_FullMethodName         = "/kb.document.v1.DocumentService/AddChunks"
 	DocumentService_ListChunks_FullMethodName        = "/kb.document.v1.DocumentService/ListChunks"
 	DocumentService_SearchChunks_FullMethodName      = "/kb.document.v1.DocumentService/SearchChunks"
+	DocumentService_SearchDocuments_FullMethodName   = "/kb.document.v1.DocumentService/SearchDocuments"
 )
 
 // DocumentServiceClient is the client API for DocumentService service.
@@ -56,6 +57,9 @@ type DocumentServiceClient interface {
 	// ListChunks returns a document's chunks in index order.
 	ListChunks(ctx context.Context, in *ListChunksRequest, opts ...grpc.CallOption) (*ListChunksResponse, error)
 	SearchChunks(ctx context.Context, in *SearchChunksRequest, opts ...grpc.CallOption) (*SearchChunksResponse, error)
+	// SearchDocuments embeds a text query through the llm module and returns
+	// the most similar chunks. It fails with UNAVAILABLE while llm is down.
+	SearchDocuments(ctx context.Context, in *SearchDocumentsRequest, opts ...grpc.CallOption) (*SearchDocumentsResponse, error)
 }
 
 type documentServiceClient struct {
@@ -185,6 +189,16 @@ func (c *documentServiceClient) SearchChunks(ctx context.Context, in *SearchChun
 	return out, nil
 }
 
+func (c *documentServiceClient) SearchDocuments(ctx context.Context, in *SearchDocumentsRequest, opts ...grpc.CallOption) (*SearchDocumentsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchDocumentsResponse)
+	err := c.cc.Invoke(ctx, DocumentService_SearchDocuments_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DocumentServiceServer is the server API for DocumentService service.
 // All implementations must embed UnimplementedDocumentServiceServer
 // for forward compatibility.
@@ -209,6 +223,9 @@ type DocumentServiceServer interface {
 	// ListChunks returns a document's chunks in index order.
 	ListChunks(context.Context, *ListChunksRequest) (*ListChunksResponse, error)
 	SearchChunks(context.Context, *SearchChunksRequest) (*SearchChunksResponse, error)
+	// SearchDocuments embeds a text query through the llm module and returns
+	// the most similar chunks. It fails with UNAVAILABLE while llm is down.
+	SearchDocuments(context.Context, *SearchDocumentsRequest) (*SearchDocumentsResponse, error)
 	mustEmbedUnimplementedDocumentServiceServer()
 }
 
@@ -251,6 +268,9 @@ func (UnimplementedDocumentServiceServer) ListChunks(context.Context, *ListChunk
 }
 func (UnimplementedDocumentServiceServer) SearchChunks(context.Context, *SearchChunksRequest) (*SearchChunksResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SearchChunks not implemented")
+}
+func (UnimplementedDocumentServiceServer) SearchDocuments(context.Context, *SearchDocumentsRequest) (*SearchDocumentsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SearchDocuments not implemented")
 }
 func (UnimplementedDocumentServiceServer) mustEmbedUnimplementedDocumentServiceServer() {}
 func (UnimplementedDocumentServiceServer) testEmbeddedByValue()                         {}
@@ -464,6 +484,24 @@ func _DocumentService_SearchChunks_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DocumentService_SearchDocuments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchDocumentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DocumentServiceServer).SearchDocuments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DocumentService_SearchDocuments_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DocumentServiceServer).SearchDocuments(ctx, req.(*SearchDocumentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DocumentService_ServiceDesc is the grpc.ServiceDesc for DocumentService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -510,6 +548,10 @@ var DocumentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SearchChunks",
 			Handler:    _DocumentService_SearchChunks_Handler,
+		},
+		{
+			MethodName: "SearchDocuments",
+			Handler:    _DocumentService_SearchDocuments_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

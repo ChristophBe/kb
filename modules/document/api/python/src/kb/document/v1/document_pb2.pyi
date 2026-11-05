@@ -282,3 +282,19 @@ class SearchChunksResponse(_message.Message):
     RESULTS_FIELD_NUMBER: _ClassVar[int]
     results: _containers.RepeatedCompositeFieldContainer[ScoredChunk]
     def __init__(self, results: _Optional[_Iterable[_Union[ScoredChunk, _Mapping]]] = ...) -> None: ...
+
+class SearchDocumentsRequest(_message.Message):
+    __slots__ = ("query", "limit", "document_ids")
+    QUERY_FIELD_NUMBER: _ClassVar[int]
+    LIMIT_FIELD_NUMBER: _ClassVar[int]
+    DOCUMENT_IDS_FIELD_NUMBER: _ClassVar[int]
+    query: str
+    limit: int
+    document_ids: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, query: _Optional[str] = ..., limit: _Optional[int] = ..., document_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class SearchDocumentsResponse(_message.Message):
+    __slots__ = ("results",)
+    RESULTS_FIELD_NUMBER: _ClassVar[int]
+    results: _containers.RepeatedCompositeFieldContainer[ScoredChunk]
+    def __init__(self, results: _Optional[_Iterable[_Union[ScoredChunk, _Mapping]]] = ...) -> None: ...

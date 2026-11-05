@@ -91,6 +91,11 @@ class DocumentServiceStub:
                 request_serializer=kb_dot_document_dot_v1_dot_document__pb2.SearchChunksRequest.SerializeToString,
                 response_deserializer=kb_dot_document_dot_v1_dot_document__pb2.SearchChunksResponse.FromString,
                 _registered_method=True)
+        self.SearchDocuments = channel.unary_unary(
+                '/kb.document.v1.DocumentService/SearchDocuments',
+                request_serializer=kb_dot_document_dot_v1_dot_document__pb2.SearchDocumentsRequest.SerializeToString,
+                response_deserializer=kb_dot_document_dot_v1_dot_document__pb2.SearchDocumentsResponse.FromString,
+                _registered_method=True)
 
 
 class DocumentServiceServicer:
@@ -170,6 +175,14 @@ class DocumentServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SearchDocuments(self, request, context):
+        """SearchDocuments embeds a text query through the llm module and returns
+        the most similar chunks. It fails with UNAVAILABLE while llm is down.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DocumentServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -227,6 +240,11 @@ def add_DocumentServiceServicer_to_server(servicer, server):
                     servicer.SearchChunks,
                     request_deserializer=kb_dot_document_dot_v1_dot_document__pb2.SearchChunksRequest.FromString,
                     response_serializer=kb_dot_document_dot_v1_dot_document__pb2.SearchChunksResponse.SerializeToString,
+            ),
+            'SearchDocuments': grpc.unary_unary_rpc_method_handler(
+                    servicer.SearchDocuments,
+                    request_deserializer=kb_dot_document_dot_v1_dot_document__pb2.SearchDocumentsRequest.FromString,
+                    response_serializer=kb_dot_document_dot_v1_dot_document__pb2.SearchDocumentsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -528,6 +546,33 @@ class DocumentService:
             '/kb.document.v1.DocumentService/SearchChunks',
             kb_dot_document_dot_v1_dot_document__pb2.SearchChunksRequest.SerializeToString,
             kb_dot_document_dot_v1_dot_document__pb2.SearchChunksResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SearchDocuments(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/kb.document.v1.DocumentService/SearchDocuments',
+            kb_dot_document_dot_v1_dot_document__pb2.SearchDocumentsRequest.SerializeToString,
+            kb_dot_document_dot_v1_dot_document__pb2.SearchDocumentsResponse.FromString,
             options,
             channel_credentials,
             insecure,

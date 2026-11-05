@@ -8,16 +8,21 @@ import (
 	"io"
 	"io/fs"
 	"log/slog"
+	"net"
+	"slices"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	"github.com/christoph/kb/modules/document/service/internal/store"
+	llmv1 "github.com/christoph/kb/modules/llm/api/go/llmv1"
 	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
+	"github.com/christoph/kb/platform/go/grpcserver"
 )
 
 // fakeRepo embeds the interface so tests only implement what they use.
@@ -31,6 +36,8 @@ type fakeRepo struct {
 	updated  []store.UpdateDocumentParams
 	chunks   []store.ListChunksRow
 	chunkReq []store.ListChunksParams
+	found    []store.SearchChunksRow
+	searches []store.SearchChunksParams
 }
 
 func (f *fakeRepo) CreateDocument(_ context.Context, p store.CreateDocumentParams) (store.DocumentDocument, error) {
@@ -77,6 +84,31 @@ func (f *fakeRepo) ListChunks(_ context.Context, p store.ListChunksParams) ([]st
 	return rows, nil
 }
 
+func (f *fakeRepo) SearchChunks(_ context.Context, p store.SearchChunksParams) ([]store.SearchChunksRow, error) {
+	f.searches = append(f.searches, p)
+	return f.found, nil
+}
+
+// fakeLLM answers Embed with one fixed vector per input, or fails with err.
+type fakeLLM struct {
+	llmv1.LlmServiceClient
+	err    error
+	calls  []*llmv1.EmbedRequest
+	vector []float32
+}
+
+func (f *fakeLLM) Embed(_ context.Context, req *llmv1.EmbedRequest, _ ...grpc.CallOption) (*llmv1.EmbedResponse, error) {
+	f.calls = append(f.calls, req)
+	if f.err != nil {
+		return nil, f.err
+	}
+	resp := &llmv1.EmbedResponse{}
+	for range req.GetInputs() {
+		resp.Embeddings = append(resp.Embeddings, &llmv1.Embedding{Values: f.vector})
+	}
+	return resp, nil
+}
+
 type fakeObjects struct {
 	ObjectStore
 	size        int64
@@ -95,7 +127,7 @@ func (f fakeObjects) Stat(context.Context, string) (int64, string, error) {
 }
 
 func newServer(repo *fakeRepo) *Server {
-	return New(repo, fakeObjects{}, slog.New(slog.DiscardHandler))
+	return New(repo, fakeObjects{}, &fakeLLM{vector: []float32{1, 0}}, slog.New(slog.DiscardHandler))
 }
 
 func TestCreateDocumentDefaultsTitleAndPresigns(t *testing.T) {
@@ -159,7 +191,7 @@ func TestSetUploadedRecordsTheActualObject(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New(), ObjectKey: "k", SizeBytes: 1, ContentType: "application/pdf"}}
-			srv := New(repo, fakeObjects{size: 42, contentType: tc.stored}, slog.New(slog.DiscardHandler))
+			srv := New(repo, fakeObjects{size: 42, contentType: tc.stored}, &fakeLLM{}, slog.New(slog.DiscardHandler))
 			resp, err := srv.SetDocumentStatus(t.Context(), uploadedRequest(repo.doc.ID))
 			if err != nil {
 				t.Fatal(err)
@@ -182,7 +214,7 @@ func TestSetUploadedFailsWithoutAnObject(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New(), ObjectKey: "k"}}
-			srv := New(repo, fakeObjects{statErr: tc.statErr}, slog.New(slog.DiscardHandler))
+			srv := New(repo, fakeObjects{statErr: tc.statErr}, &fakeLLM{}, slog.New(slog.DiscardHandler))
 			_, err := srv.SetDocumentStatus(t.Context(), uploadedRequest(repo.doc.ID))
 			if status.Code(err) != tc.want {
 				t.Fatalf("err = %v, want %v", err, tc.want)
@@ -203,7 +235,7 @@ func TestSetUploadedUnknownDocument(t *testing.T) {
 
 func TestOtherStatusesDoNotCheckTheObject(t *testing.T) {
 	repo := &fakeRepo{}
-	srv := New(repo, fakeObjects{statErr: fs.ErrNotExist}, slog.New(slog.DiscardHandler))
+	srv := New(repo, fakeObjects{statErr: fs.ErrNotExist}, &fakeLLM{}, slog.New(slog.DiscardHandler))
 	_, err := srv.SetDocumentStatus(t.Context(), &documentv1.SetDocumentStatusRequest{
 		Id: uuid.NewString(), Status: documentv1.DocumentStatus_DOCUMENT_STATUS_PROCESSING,
 	})
@@ -228,6 +260,135 @@ func TestSearchChunksValidates(t *testing.T) {
 	_, err = srv.SearchChunks(t.Context(), &documentv1.SearchChunksRequest{Embedding: []float32{1}, DocumentIds: []string{"nope"}})
 	if status.Code(err) != codes.InvalidArgument {
 		t.Errorf("bad id: err = %v", err)
+	}
+}
+
+func TestSearchDocumentsEmbedsTheQueryAndSearches(t *testing.T) {
+	docID := uuid.New()
+	repo := &fakeRepo{found: []store.SearchChunksRow{{
+		DocumentID: docID, Idx: 3, Text: "Revenue grew.", Metadata: map[string]string{"page": "2"},
+		DocumentTitle: "Quarterly report", Score: 0.82,
+	}}}
+	llm := &fakeLLM{vector: []float32{0.5, 0.25}}
+	srv := New(repo, fakeObjects{}, llm, slog.New(slog.DiscardHandler))
+	resp, err := srv.SearchDocuments(t.Context(), &documentv1.SearchDocumentsRequest{
+		Query: "  revenue growth ", DocumentIds: []string{docID.String()},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(llm.calls) != 1 || !slices.Equal(llm.calls[0].GetInputs(), []string{"revenue growth"}) {
+		t.Fatalf("embed calls = %v, want the trimmed query once", llm.calls)
+	}
+	search := repo.searches[0]
+	if !slices.Equal(search.Embedding.Slice(), llm.vector) {
+		t.Errorf("searched with %v, want the query's embedding", search.Embedding.Slice())
+	}
+	if search.MaxResults != defaultLimit || !slices.Equal(search.DocumentIds, []uuid.UUID{docID}) {
+		t.Errorf("search params = %+v", search)
+	}
+	if len(resp.GetResults()) != 1 {
+		t.Fatalf("results = %v", resp.GetResults())
+	}
+	got := resp.GetResults()[0]
+	if got.GetChunk().GetDocumentId() != docID.String() || got.GetChunk().GetIndex() != 3 ||
+		got.GetDocumentTitle() != "Quarterly report" || got.GetScore() != float32(0.82) {
+		t.Errorf("result = %v", got)
+	}
+}
+
+func TestSearchDocumentsCapsTheLimit(t *testing.T) {
+	repo := &fakeRepo{}
+	if _, err := newServer(repo).SearchDocuments(t.Context(), &documentv1.SearchDocumentsRequest{Query: "q", Limit: 1000}); err != nil {
+		t.Fatal(err)
+	}
+	if repo.searches[0].MaxResults != maxLimit {
+		t.Errorf("limit = %d, want %d", repo.searches[0].MaxResults, maxLimit)
+	}
+}
+
+func TestSearchDocumentsValidatesBeforeEmbedding(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		req  *documentv1.SearchDocumentsRequest
+	}{
+		{"empty query", &documentv1.SearchDocumentsRequest{}},
+		{"blank query", &documentv1.SearchDocumentsRequest{Query: " \t\n"}},
+		{"bad document id", &documentv1.SearchDocumentsRequest{Query: "q", DocumentIds: []string{"nope"}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			llm := &fakeLLM{}
+			_, err := New(&fakeRepo{}, fakeObjects{}, llm, slog.New(slog.DiscardHandler)).SearchDocuments(t.Context(), tc.req)
+			if status.Code(err) != codes.InvalidArgument {
+				t.Errorf("err = %v, want InvalidArgument", err)
+			}
+			if len(llm.calls) != 0 {
+				t.Errorf("llm was called: %v", llm.calls)
+			}
+		})
+	}
+}
+
+func TestSearchDocumentsMapsLLMErrors(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		err  error
+		want codes.Code
+	}{
+		{"llm down", status.Error(codes.Unavailable, "down"), codes.Unavailable},
+		{"llm too slow", status.Error(codes.DeadlineExceeded, "slow"), codes.Unavailable},
+		// llm's own NOT_FOUND (an unknown model) is not a missing document.
+		{"llm rejects", status.Error(codes.NotFound, "no such model"), codes.Internal},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := &fakeRepo{}
+			srv := New(repo, fakeObjects{}, &fakeLLM{err: tc.err}, slog.New(slog.DiscardHandler))
+			_, err := srv.SearchDocuments(t.Context(), &documentv1.SearchDocumentsRequest{Query: "q"})
+			if status.Code(err) != tc.want {
+				t.Errorf("err = %v, want %v", err, tc.want)
+			}
+			if len(repo.searches) != 0 {
+				t.Errorf("searched without an embedding")
+			}
+		})
+	}
+}
+
+func TestSearchDocumentsRejectsAnEmptyEmbedding(t *testing.T) {
+	srv := New(&fakeRepo{}, fakeObjects{}, &fakeLLM{}, slog.New(slog.DiscardHandler))
+	_, err := srv.SearchDocuments(t.Context(), &documentv1.SearchDocumentsRequest{Query: "q"})
+	if status.Code(err) != codes.Internal {
+		t.Errorf("err = %v, want Internal", err)
+	}
+}
+
+// With a real, lazily dialled client and nothing listening, search fails with
+// UNAVAILABLE and the RPCs that don't need llm still work.
+func TestSearchDocumentsWithLLMDown(t *testing.T) {
+	var lc net.ListenConfig
+	lis, err := lc.Listen(t.Context(), "tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	addr := lis.Addr().String()
+	if err := lis.Close(); err != nil {
+		t.Fatal(err)
+	}
+	conn, err := grpcserver.Dial(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	repo := &fakeRepo{list: []store.DocumentDocument{{ID: uuid.New()}}}
+	srv := New(repo, fakeObjects{}, llmv1.NewLlmServiceClient(conn), slog.New(slog.DiscardHandler))
+
+	_, err = srv.SearchDocuments(t.Context(), &documentv1.SearchDocumentsRequest{Query: "q"})
+	if status.Code(err) != codes.Unavailable {
+		t.Errorf("search: err = %v, want Unavailable", err)
+	}
+	resp, err := srv.ListDocuments(t.Context(), &documentv1.ListDocumentsRequest{})
+	if err != nil || len(resp.GetDocuments()) != 1 {
+		t.Errorf("list: %v, %v", resp, err)
 	}
 }
 

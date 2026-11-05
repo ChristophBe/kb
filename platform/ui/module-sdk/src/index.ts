@@ -9,4 +9,4 @@ export {
   toast,
   useToasts,
 } from "./toast.ts";
-export { defineModule, type KbModule, type NavItem } from "./types.ts";
+export { defineModule, type Feature, type KbModule, type NavItem } from "./types.ts";

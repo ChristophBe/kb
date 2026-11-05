@@ -42,3 +42,17 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: docker compose build
+
+  # Upload → processing → RAG chat against the composed stack (fake LLM provider).
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            tools/go.sum
+      - run: go tool -modfile=tools/go.mod task e2e

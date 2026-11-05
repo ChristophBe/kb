@@ -166,6 +166,18 @@ tasks:
     cmds:
       - go test -tags integration -count=1 ./modules/document/service/internal/store/... ./modules/ingestion/service/internal/store/...
 
+  e2e:
+    desc: >-
+      End-to-end smoke test (needs Docker; not part of `test`): builds and starts the stack as
+      compose project kb-e2e on ports 21xxx, uploads a file and chats about it, tears it down.
+    vars:
+      PROJECT: '{{.KB_E2E_PROJECT | default "kb-e2e"}}'
+    cmds:
+      # The test tears the stack down itself; this also covers a killed test binary.
+      - defer: docker compose -p {{.PROJECT}} -f compose.yaml -f tests/e2e/compose.e2e.yaml down --volumes --remove-orphans --timeout 10 >/dev/null 2>&1 || true
+      - go vet -tags e2e ./tests/e2e/...
+      - go test -tags e2e -count=1 -timeout 15m -v ./tests/e2e/... {{.CLI_ARGS}}
+
   test:fast:
     desc: Unit tests without coverage (pre-push hook).
     cmds:

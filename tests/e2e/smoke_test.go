@@ -42,25 +42,88 @@ func TestUploadAndChat(t *testing.T) {
 	c := newClients(kb.gateway)
 	waitReady(ctx, t, c)
 
-	// Upload.
-	const filename = "aurora-smoke.md"
 	const title = "Aurora smoke test"
+	documentID := upload(ctx, t, c, "aurora-smoke.md", title, document)
+
+	// RAG chat.
+	conv, err := c.createConversation.CallUnary(ctx, connect.NewRequest(&chatv1.CreateConversationRequest{}))
+	if err != nil {
+		t.Fatalf("CreateConversation: %v", err)
+	}
+	sources, answer := ask(ctx, t, c, conv.Msg.GetConversation().GetId(), "When does the aurora borealis appear?")
+	if !cites(sources, documentID, title) {
+		t.Errorf("streamed sources do not cite document %s %q: %v", documentID, title, sources)
+	}
+	if !cites(answer.GetCitations(), documentID, title) {
+		t.Errorf("saved answer does not cite document %s %q: %v", documentID, title, answer.GetCitations())
+	}
+}
+
+// TestScopedChat restricts a conversation to one of two documents: answers
+// cite only that one, the scope is kept, and clearing it searches everything.
+func TestScopedChat(t *testing.T) {
+	ctx, cancel := context.WithTimeout(t.Context(), testTimeout)
+	defer cancel()
+	c := newClients(kb.gateway)
+	waitReady(ctx, t, c)
+
+	const tidesTitle, moonTitle = "Tides scope test", "Moon scope test"
+	tides := upload(ctx, t, c, "tides-scope.md", tidesTitle, "# Tides\n\nTides rise and fall twice a day because of the moon's gravity.\n")
+	moon := upload(ctx, t, c, "moon-scope.md", moonTitle, "# Moon\n\nThe moon orbits the earth about once every 27 days.\n")
+
+	created, err := c.createConversation.CallUnary(ctx, connect.NewRequest(&chatv1.CreateConversationRequest{DocumentIds: []string{moon}}))
+	if err != nil {
+		t.Fatalf("CreateConversation: %v", err)
+	}
+	id := created.Msg.GetConversation().GetId()
+	const question = "Why do tides rise and fall?"
+	sources, answer := ask(ctx, t, c, id, question)
+	if len(sources) == 0 || !cites(sources, moon, moonTitle) {
+		t.Errorf("scoped sources do not cite the scoped document %s: %v", moon, sources)
+	}
+	for _, cit := range append(sources, answer.GetCitations()...) {
+		if cit.GetDocumentId() != moon {
+			t.Errorf("scoped answer cites document %s %q outside the scope", cit.GetDocumentId(), cit.GetDocumentTitle())
+		}
+	}
+
+	got, err := c.getConversation.CallUnary(ctx, connect.NewRequest(&chatv1.GetConversationRequest{Id: id}))
+	if err != nil {
+		t.Fatalf("GetConversation: %v", err)
+	}
+	if ids := got.Msg.GetConversation().GetDocumentIds(); len(ids) != 1 || ids[0] != moon {
+		t.Errorf("reloaded scope = %v, want [%s]", ids, moon)
+	}
+
+	// An empty scope means all documents.
+	if _, err := c.updateConversation.CallUnary(ctx, connect.NewRequest(&chatv1.UpdateConversationRequest{Id: id, DocumentIds: &chatv1.DocumentIds{}})); err != nil {
+		t.Fatalf("UpdateConversation: %v", err)
+	}
+	sources, _ = ask(ctx, t, c, id, question)
+	if !cites(sources, tides, tidesTitle) {
+		t.Errorf("unscoped sources do not cite document %s %q: %v", tides, tidesTitle, sources)
+	}
+}
+
+// upload uploads a file through its presigned URL, waits until it is processed
+// and returns the id of its document.
+func upload(ctx context.Context, t *testing.T, c *clients, filename, title, body string) string {
+	t.Helper()
 	created, err := c.createUpload.CallUnary(ctx, connect.NewRequest(&ingestionv1.CreateUploadRequest{
 		Filename:    filename,
 		ContentType: "text/markdown",
-		SizeBytes:   int64(len(document)),
+		SizeBytes:   int64(len(body)),
 		Title:       title,
 	}))
 	if err != nil {
 		t.Fatalf("CreateUpload: %v", err)
 	}
 	job := created.Msg.GetJob()
-	put(ctx, t, created.Msg.GetUploadUrl(), []byte(document))
+	put(ctx, t, created.Msg.GetUploadUrl(), []byte(body))
 	if _, err := c.completeUpload.CallUnary(ctx, connect.NewRequest(&ingestionv1.CompleteUploadRequest{JobId: job.GetId()})); err != nil {
 		t.Fatalf("CompleteUpload: %v", err)
 	}
 
-	// Processing.
 	job = watchUntilTerminal(ctx, t, c, job.GetId())
 	if job.GetStatus() != ingestionv1.JobStatus_JOB_STATUS_DONE {
 		t.Fatalf("job %s ended as %s: %q", job.GetId(), job.GetStatus(), job.GetError())
@@ -69,15 +132,16 @@ func TestUploadAndChat(t *testing.T) {
 		t.Fatalf("job %s is done without chunks", job.GetId())
 	}
 	t.Logf("job %s done: document %s, %d chunks", job.GetId(), job.GetDocumentId(), job.GetChunkCount())
+	return job.GetDocumentId()
+}
 
-	// RAG chat.
-	conv, err := c.createConversation.CallUnary(ctx, connect.NewRequest(&chatv1.CreateConversationRequest{}))
-	if err != nil {
-		t.Fatalf("CreateConversation: %v", err)
-	}
+// ask streams a question grounded in the knowledge base and returns the
+// streamed sources and the saved answer.
+func ask(ctx context.Context, t *testing.T, c *clients, conversationID, question string) ([]*chatv1.Citation, *chatv1.ChatMessage) {
+	t.Helper()
 	stream, err := c.streamChat.CallServerStream(ctx, connect.NewRequest(&chatv1.StreamChatRequest{
-		ConversationId:   conv.Msg.GetConversation().GetId(),
-		Content:          "When does the aurora borealis appear?",
+		ConversationId:   conversationID,
+		Content:          question,
 		UseKnowledgeBase: true,
 	}))
 	if err != nil {
@@ -109,12 +173,7 @@ func TestUploadAndChat(t *testing.T) {
 		t.Errorf("saved answer %q does not match the streamed deltas %q", answer.GetContent(), deltas.String())
 	}
 	t.Logf("answer: %q", answer.GetContent())
-	if !cites(sources, job.GetDocumentId(), title) {
-		t.Errorf("streamed sources do not cite document %s %q: %v", job.GetDocumentId(), title, sources)
-	}
-	if !cites(answer.GetCitations(), job.GetDocumentId(), title) {
-		t.Errorf("saved answer does not cite document %s %q: %v", job.GetDocumentId(), title, answer.GetCitations())
-	}
+	return sources, answer
 }
 
 // clients calls the services over gRPC-Web through Envoy, like the browser.
@@ -126,6 +185,8 @@ type clients struct {
 	listDocuments      *connect.Client[documentv1.ListDocumentsRequest, documentv1.ListDocumentsResponse]
 	providerStatus     *connect.Client[llmv1.GetProviderStatusRequest, llmv1.GetProviderStatusResponse]
 	createConversation *connect.Client[chatv1.CreateConversationRequest, chatv1.CreateConversationResponse]
+	getConversation    *connect.Client[chatv1.GetConversationRequest, chatv1.GetConversationResponse]
+	updateConversation *connect.Client[chatv1.UpdateConversationRequest, chatv1.UpdateConversationResponse]
 	listConversations  *connect.Client[chatv1.ListConversationsRequest, chatv1.ListConversationsResponse]
 	streamChat         *connect.Client[chatv1.StreamChatRequest, chatv1.StreamChatResponse]
 }
@@ -143,6 +204,8 @@ func newClients(gateway string) *clients {
 		listDocuments:      connect.NewClient[documentv1.ListDocumentsRequest, documentv1.ListDocumentsResponse](h, gateway+documentv1.DocumentService_ListDocuments_FullMethodName, opt),
 		providerStatus:     connect.NewClient[llmv1.GetProviderStatusRequest, llmv1.GetProviderStatusResponse](h, gateway+llmv1.LlmService_GetProviderStatus_FullMethodName, opt),
 		createConversation: connect.NewClient[chatv1.CreateConversationRequest, chatv1.CreateConversationResponse](h, gateway+chatv1.ChatService_CreateConversation_FullMethodName, opt),
+		getConversation:    connect.NewClient[chatv1.GetConversationRequest, chatv1.GetConversationResponse](h, gateway+chatv1.ChatService_GetConversation_FullMethodName, opt),
+		updateConversation: connect.NewClient[chatv1.UpdateConversationRequest, chatv1.UpdateConversationResponse](h, gateway+chatv1.ChatService_UpdateConversation_FullMethodName, opt),
 		listConversations:  connect.NewClient[chatv1.ListConversationsRequest, chatv1.ListConversationsResponse](h, gateway+chatv1.ChatService_ListConversations_FullMethodName, opt),
 		streamChat:         connect.NewClient[chatv1.StreamChatRequest, chatv1.StreamChatResponse](h, gateway+chatv1.ChatService_StreamChat_FullMethodName, opt),
 	}

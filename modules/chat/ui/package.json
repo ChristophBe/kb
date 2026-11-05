@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@kb/chat-api": "workspace:*",
+    "@kb/document-api": "workspace:*",
     "@kb/module-sdk": "workspace:*",
     "@kb/ui": "workspace:*",
     "lucide-react": "catalog:",

@@ -12,6 +12,7 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { Answer } from "./Answer.tsx";
 import { ConversationHeader } from "./ConversationHeader.tsx";
+import { DocumentPicker } from "./scope.tsx";
 
 interface Pending {
   question: string;
@@ -154,14 +155,19 @@ export function Conversation() {
               <Send className="size-4" />
             </Button>
           </div>
-          <label className="flex items-center gap-2 text-xs text-fg-muted">
-            <input
-              type="checkbox"
-              checked={useKnowledgeBase}
-              onChange={(e) => setUseKnowledgeBase(e.target.checked)}
-            />
-            Answer from the knowledge base
-          </label>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <label className="flex items-center gap-2 text-xs text-fg-muted">
+              <input
+                type="checkbox"
+                checked={useKnowledgeBase}
+                onChange={(e) => setUseKnowledgeBase(e.target.checked)}
+              />
+              Answer from the knowledge base
+            </label>
+            {conversation.data?.conversation && useKnowledgeBase && (
+              <DocumentPicker conversation={conversation.data.conversation} />
+            )}
+          </div>
         </div>
       </form>
     </>

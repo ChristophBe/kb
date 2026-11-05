@@ -1,5 +1,5 @@
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from datetime import UTC, datetime
 from typing import Any
 
@@ -68,10 +68,12 @@ class FakeRepo:
 class FakeRetriever:
     def __init__(self, error: Exception | None = None) -> None:
         self.error = error
-        self.calls: list[tuple[str, int]] = []
+        self.calls: list[tuple[str, int, list[uuid.UUID]]] = []
 
-    async def retrieve(self, query: str, limit: int) -> list[chat_pb2.Citation]:
-        self.calls.append((query, limit))
+    async def retrieve(
+        self, query: str, limit: int, document_ids: Sequence[uuid.UUID]
+    ) -> list[chat_pb2.Citation]:
+        self.calls.append((query, limit, list(document_ids)))
         if self.error:
             raise self.error
         return [
@@ -129,12 +131,21 @@ async def test_answer_streams_sources_then_deltas_then_the_saved_message() -> No
             "score": pytest.approx(0.9),
         }
     ]
-    assert retriever.calls == [("Capital?", 3)]
+    assert retriever.calls == [("Capital?", 3, [])]
     assert generator.calls[0][0] == "m1"
     assert [(m.role, m.content, m.status) for m in repo.messages] == [
         (USER, "Capital?", COMPLETE),
         (ASSISTANT, "Paris", COMPLETE),
     ]
+
+
+async def test_retrieval_is_limited_to_the_conversation_scope() -> None:
+    scope = [uuid.uuid4(), uuid.uuid4()]
+    repo = FakeRepo()
+    repo.conv.document_ids = scope
+    chat, repo, retriever, _ = make(repo, rag_top_k=3)
+    await collect(chat, repo)
+    assert retriever.calls == [("Capital?", 3, scope)]
 
 
 async def test_without_the_knowledge_base_nothing_is_retrieved() -> None:
@@ -268,7 +279,7 @@ async def test_peer_statuses_become_application_errors(
 ) -> None:
     llm: Any = FailingLlm(code)
     with pytest.raises(PeerError) as retrieved:
-        await PeerRetriever(None, llm).retrieve("q", 1)  # type: ignore[arg-type]
+        await PeerRetriever(None, llm).retrieve("q", 1, [])  # type: ignore[arg-type]
     with pytest.raises(PeerError) as generated:
         _ = [d async for d in PeerGenerator(llm).generate("m", [])]
     assert type(retrieved.value) is expected
@@ -283,7 +294,9 @@ class WordCounter:
 
 async def test_only_the_sources_that_fit_are_cited() -> None:
     class TwoSources(FakeRetriever):
-        async def retrieve(self, query: str, limit: int) -> list[chat_pb2.Citation]:
+        async def retrieve(
+            self, query: str, limit: int, document_ids: Sequence[uuid.UUID]
+        ) -> list[chat_pb2.Citation]:
             return [
                 chat_pb2.Citation(document_id="best", snippet="best " * 5, score=0.9),
                 chat_pb2.Citation(document_id="worse", snippet="worse " * 500, score=0.4),

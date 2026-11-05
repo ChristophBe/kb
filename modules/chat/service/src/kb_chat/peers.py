@@ -2,7 +2,8 @@
 gRPC statuses end here: callers only see PeerError."""
 
 import contextlib
-from collections.abc import AsyncIterator, Iterator
+import uuid
+from collections.abc import AsyncIterator, Iterator, Sequence
 
 import grpc
 from kb.chat.v1 import chat_pb2
@@ -39,13 +40,17 @@ class PeerRetriever:
         self._documents = documents
         self._llm = llm
 
-    async def retrieve(self, query: str, limit: int) -> list[chat_pb2.Citation]:
+    async def retrieve(
+        self, query: str, limit: int, document_ids: Sequence[uuid.UUID]
+    ) -> list[chat_pb2.Citation]:
         with _peer_errors(Peer.LLM):
             embedded = await self._llm.Embed(llm_pb2.EmbedRequest(inputs=[query]))
         with _peer_errors(Peer.DOCUMENT):
             result = await self._documents.SearchChunks(
                 document_pb2.SearchChunksRequest(
-                    embedding=embedded.embeddings[0].values, limit=limit
+                    embedding=embedded.embeddings[0].values,
+                    limit=limit,
+                    document_ids=[str(i) for i in document_ids],
                 )
             )
         return [

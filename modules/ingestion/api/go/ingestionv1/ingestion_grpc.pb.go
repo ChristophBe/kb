@@ -24,6 +24,7 @@ const (
 	IngestionService_GetJob_FullMethodName         = "/kb.ingestion.v1.IngestionService/GetJob"
 	IngestionService_ListJobs_FullMethodName       = "/kb.ingestion.v1.IngestionService/ListJobs"
 	IngestionService_WatchJob_FullMethodName       = "/kb.ingestion.v1.IngestionService/WatchJob"
+	IngestionService_ReprocessJob_FullMethodName   = "/kb.ingestion.v1.IngestionService/ReprocessJob"
 )
 
 // IngestionServiceClient is the client API for IngestionService service.
@@ -42,6 +43,10 @@ type IngestionServiceClient interface {
 	ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
 	// WatchJob streams the job every time it changes until it is terminal.
 	WatchJob(ctx context.Context, in *WatchJobRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[WatchJobResponse], error)
+	// ReprocessJob queues a FAILED or DONE job again: the worker extracts,
+	// chunks and embeds the uploaded file anew and replaces the document's
+	// chunks. Other jobs fail with FAILED_PRECONDITION.
+	ReprocessJob(ctx context.Context, in *ReprocessJobRequest, opts ...grpc.CallOption) (*ReprocessJobResponse, error)
 }
 
 type ingestionServiceClient struct {
@@ -111,6 +116,16 @@ func (c *ingestionServiceClient) WatchJob(ctx context.Context, in *WatchJobReque
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type IngestionService_WatchJobClient = grpc.ServerStreamingClient[WatchJobResponse]
 
+func (c *ingestionServiceClient) ReprocessJob(ctx context.Context, in *ReprocessJobRequest, opts ...grpc.CallOption) (*ReprocessJobResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReprocessJobResponse)
+	err := c.cc.Invoke(ctx, IngestionService_ReprocessJob_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IngestionServiceServer is the server API for IngestionService service.
 // All implementations must embed UnimplementedIngestionServiceServer
 // for forward compatibility.
@@ -127,6 +142,10 @@ type IngestionServiceServer interface {
 	ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
 	// WatchJob streams the job every time it changes until it is terminal.
 	WatchJob(*WatchJobRequest, grpc.ServerStreamingServer[WatchJobResponse]) error
+	// ReprocessJob queues a FAILED or DONE job again: the worker extracts,
+	// chunks and embeds the uploaded file anew and replaces the document's
+	// chunks. Other jobs fail with FAILED_PRECONDITION.
+	ReprocessJob(context.Context, *ReprocessJobRequest) (*ReprocessJobResponse, error)
 	mustEmbedUnimplementedIngestionServiceServer()
 }
 
@@ -151,6 +170,9 @@ func (UnimplementedIngestionServiceServer) ListJobs(context.Context, *ListJobsRe
 }
 func (UnimplementedIngestionServiceServer) WatchJob(*WatchJobRequest, grpc.ServerStreamingServer[WatchJobResponse]) error {
 	return status.Error(codes.Unimplemented, "method WatchJob not implemented")
+}
+func (UnimplementedIngestionServiceServer) ReprocessJob(context.Context, *ReprocessJobRequest) (*ReprocessJobResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReprocessJob not implemented")
 }
 func (UnimplementedIngestionServiceServer) mustEmbedUnimplementedIngestionServiceServer() {}
 func (UnimplementedIngestionServiceServer) testEmbeddedByValue()                          {}
@@ -256,6 +278,24 @@ func _IngestionService_WatchJob_Handler(srv interface{}, stream grpc.ServerStrea
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type IngestionService_WatchJobServer = grpc.ServerStreamingServer[WatchJobResponse]
 
+func _IngestionService_ReprocessJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReprocessJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IngestionServiceServer).ReprocessJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IngestionService_ReprocessJob_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IngestionServiceServer).ReprocessJob(ctx, req.(*ReprocessJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // IngestionService_ServiceDesc is the grpc.ServiceDesc for IngestionService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -278,6 +318,10 @@ var IngestionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListJobs",
 			Handler:    _IngestionService_ListJobs_Handler,
+		},
+		{
+			MethodName: "ReprocessJob",
+			Handler:    _IngestionService_ReprocessJob_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

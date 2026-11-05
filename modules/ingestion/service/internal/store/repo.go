@@ -59,8 +59,19 @@ func (j *Jobs) List(ctx context.Context, limit, offset int32) ([]app.Job, error)
 
 func (j *Jobs) Advance(ctx context.Context, t app.Transition) (app.Job, error) {
 	row, err := j.q.AdvanceJob(ctx, AdvanceJobParams{
-		ID: t.ID, Status: int16(t.Status), Error: t.Error, ChunkCount: t.ChunkCount,
+		ID: t.ID, Run: t.Run, Status: int16(t.Status), Error: t.Error, ChunkCount: t.ChunkCount,
 	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return app.Job{}, app.ErrNotAdvanced
+	}
+	if err != nil {
+		return app.Job{}, err
+	}
+	return toJob(row), nil
+}
+
+func (j *Jobs) Reprocess(ctx context.Context, id uuid.UUID) (app.Job, error) {
+	row, err := j.q.ReprocessJob(ctx, id)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return app.Job{}, app.ErrNotAdvanced
 	}
@@ -79,6 +90,7 @@ func toJob(row IngestionJob) app.Job {
 		Status:      ingestionv1.JobStatus(row.Status),
 		Error:       row.Error,
 		ChunkCount:  row.ChunkCount,
+		Run:         row.Run,
 		CreatedAt:   row.CreatedAt.Time,
 		UpdatedAt:   row.UpdatedAt.Time,
 	}

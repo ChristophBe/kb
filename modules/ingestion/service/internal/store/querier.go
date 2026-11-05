@@ -11,13 +11,18 @@ import (
 )
 
 type Querier interface {
-	// AdvanceJob moves a job forward. Status values are ordered, so a stale or
-	// duplicate event can never move a job backwards, and terminal jobs
-	// (DONE=4, FAILED=5) never change.
+	// AdvanceJob moves a job forward within its current run. Status values are
+	// ordered, so a stale or duplicate event can never move a job backwards,
+	// terminal jobs (DONE=4, FAILED=5) never change, and events of an earlier run
+	// are ignored. The only way back is ReprocessJob.
 	AdvanceJob(ctx context.Context, arg AdvanceJobParams) (IngestionJob, error)
 	CreateJob(ctx context.Context, arg CreateJobParams) (IngestionJob, error)
 	GetJob(ctx context.Context, id uuid.UUID) (IngestionJob, error)
 	ListJobs(ctx context.Context, arg ListJobsParams) ([]IngestionJob, error)
+	// ReprocessJob is the one transition back: it queues a terminal job
+	// (DONE=4, FAILED=5) again (QUEUED=2) as a new run, clearing the result of
+	// the previous one.
+	ReprocessJob(ctx context.Context, id uuid.UUID) (IngestionJob, error)
 }
 
 var _ Querier = (*Queries)(nil)

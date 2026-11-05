@@ -18,11 +18,13 @@ const (
 	failed     = ingestionv1.JobStatus_JOB_STATUS_FAILED
 )
 
-// fakeJobs mirrors the AdvanceJob query: forward only, nothing after a terminal status.
+// fakeJobs mirrors the AdvanceJob and ReprocessJob queries: forward only
+// within the current run, nothing after a terminal status until reprocessed.
 type fakeJobs struct {
-	jobs       map[uuid.UUID]Job
-	createErr  error
-	advanceErr error
+	jobs         map[uuid.UUID]Job
+	createErr    error
+	advanceErr   error
+	reprocessErr error
 }
 
 func newFakeJobs(jobs ...Job) *fakeJobs {
@@ -56,11 +58,24 @@ func (f *fakeJobs) Advance(_ context.Context, t Transition) (Job, error) {
 		return Job{}, f.advanceErr
 	}
 	j, ok := f.jobs[t.ID]
-	if !ok || j.Terminal() || j.Status >= t.Status {
+	if !ok || j.Run != t.Run || j.Terminal() || j.Status >= t.Status {
 		return Job{}, ErrNotAdvanced
 	}
 	j.Status, j.Error, j.ChunkCount = t.Status, t.Error, t.ChunkCount
 	f.jobs[t.ID] = j
+	return j, nil
+}
+
+func (f *fakeJobs) Reprocess(_ context.Context, id uuid.UUID) (Job, error) {
+	if f.reprocessErr != nil {
+		return Job{}, f.reprocessErr
+	}
+	j, ok := f.jobs[id]
+	if !ok || !j.Terminal() {
+		return Job{}, ErrNotAdvanced
+	}
+	j.Status, j.Error, j.ChunkCount, j.Run = queued, "", 0, j.Run+1
+	f.jobs[id] = j
 	return j, nil
 }
 
@@ -91,7 +106,7 @@ func (f *fakePublisher) PublishUploaded(_ context.Context, job Job) error {
 }
 
 func pendingJob() Job {
-	return Job{ID: uuid.New(), DocumentID: uuid.New(), Status: pending}
+	return Job{ID: uuid.New(), DocumentID: uuid.New(), Status: pending, Run: 1}
 }
 
 func TestCreateUploadStoresAPendingJob(t *testing.T) {
@@ -219,13 +234,13 @@ func TestProcessingEventsMoveTheJobForward(t *testing.T) {
 	jobs := newFakeJobs(job)
 	s := New(jobs, &fakeDocuments{}, &fakePublisher{})
 
-	if err := s.ApplyStarted(t.Context(), job.ID); err != nil {
+	if err := s.ApplyStarted(t.Context(), job.ID, 1); err != nil {
 		t.Fatal(err)
 	}
 	if got := jobs.jobs[job.ID].Status; got != processing {
 		t.Fatalf("after started: %v", got)
 	}
-	if err := s.ApplyProcessed(t.Context(), job.ID, 7); err != nil {
+	if err := s.ApplyProcessed(t.Context(), job.ID, 1, 7); err != nil {
 		t.Fatal(err)
 	}
 	if got := jobs.jobs[job.ID]; got.Status != done || got.ChunkCount != 7 {
@@ -237,7 +252,7 @@ func TestFailedEventRecordsTheReason(t *testing.T) {
 	job := pendingJob()
 	job.Status = processing
 	jobs := newFakeJobs(job)
-	if err := New(jobs, &fakeDocuments{}, &fakePublisher{}).ApplyFailed(t.Context(), job.ID, "no text"); err != nil {
+	if err := New(jobs, &fakeDocuments{}, &fakePublisher{}).ApplyFailed(t.Context(), job.ID, 1, "no text"); err != nil {
 		t.Fatal(err)
 	}
 	if got := jobs.jobs[job.ID]; got.Status != failed || got.Error != "no text" {
@@ -251,13 +266,13 @@ func TestStaleEventsAreIgnored(t *testing.T) {
 	jobs := newFakeJobs(job)
 	s := New(jobs, &fakeDocuments{}, &fakePublisher{})
 
-	if err := s.ApplyStarted(t.Context(), job.ID); err != nil {
+	if err := s.ApplyStarted(t.Context(), job.ID, 1); err != nil {
 		t.Fatalf("stale event: %v", err)
 	}
-	if err := s.ApplyFailed(t.Context(), job.ID, "late"); err != nil {
+	if err := s.ApplyFailed(t.Context(), job.ID, 1, "late"); err != nil {
 		t.Fatalf("stale event: %v", err)
 	}
-	if err := s.ApplyStarted(t.Context(), uuid.New()); err != nil {
+	if err := s.ApplyStarted(t.Context(), uuid.New(), 1); err != nil {
 		t.Fatalf("unknown job: %v", err)
 	}
 	if got := jobs.jobs[job.ID]; got.Status != done || got.Error != "" {
@@ -268,7 +283,108 @@ func TestStaleEventsAreIgnored(t *testing.T) {
 func TestApplyReportsStoreFailures(t *testing.T) {
 	jobs := newFakeJobs()
 	jobs.advanceErr = errors.New("database down")
-	if err := New(jobs, &fakeDocuments{}, &fakePublisher{}).ApplyStarted(t.Context(), uuid.New()); !errors.Is(err, jobs.advanceErr) {
+	if err := New(jobs, &fakeDocuments{}, &fakePublisher{}).ApplyStarted(t.Context(), uuid.New(), 1); !errors.Is(err, jobs.advanceErr) {
 		t.Fatalf("err = %v, want retry", err)
+	}
+}
+
+func TestEventsWithoutARunBelongToTheFirstRun(t *testing.T) {
+	job := pendingJob()
+	job.Status = queued
+	jobs := newFakeJobs(job)
+	if err := New(jobs, &fakeDocuments{}, &fakePublisher{}).ApplyStarted(t.Context(), job.ID, 0); err != nil {
+		t.Fatal(err)
+	}
+	if got := jobs.jobs[job.ID].Status; got != processing {
+		t.Errorf("status = %v, want PROCESSING", got)
+	}
+}
+
+func TestReprocessQueuesATerminalJobAsANewRun(t *testing.T) {
+	for _, from := range []ingestionv1.JobStatus{failed, done} {
+		t.Run(from.String(), func(t *testing.T) {
+			job := pendingJob()
+			job.Status, job.Error, job.ChunkCount = from, "no text", 7
+			jobs, pub := newFakeJobs(job), &fakePublisher{}
+			got, err := New(jobs, &fakeDocuments{}, pub).ReprocessJob(t.Context(), job.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.Status != queued || got.Run != 2 || got.Error != "" || got.ChunkCount != 0 {
+				t.Errorf("job = %+v", got)
+			}
+			if len(pub.sent) != 1 || pub.sent[0].ID != job.ID || pub.sent[0].Run != 2 {
+				t.Errorf("published = %+v", pub.sent)
+			}
+		})
+	}
+}
+
+func TestReprocessedJobIgnoresEventsOfTheEarlierRun(t *testing.T) {
+	job := pendingJob()
+	job.Status = failed
+	jobs := newFakeJobs(job)
+	s := New(jobs, &fakeDocuments{}, &fakePublisher{})
+	if _, err := s.ReprocessJob(t.Context(), job.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.ApplyFailed(t.Context(), job.ID, 1, "late"); err != nil {
+		t.Fatal(err)
+	}
+	if got := jobs.jobs[job.ID]; got.Status != queued {
+		t.Fatalf("late event of run 1 applied: %+v", got)
+	}
+	if err := s.ApplyProcessed(t.Context(), job.ID, 2, 3); err != nil {
+		t.Fatal(err)
+	}
+	if got := jobs.jobs[job.ID]; got.Status != done || got.ChunkCount != 3 {
+		t.Errorf("run 2 not applied: %+v", got)
+	}
+}
+
+func TestReprocessRejectsJobsThatAreNotTerminal(t *testing.T) {
+	for _, from := range []ingestionv1.JobStatus{pending, queued, processing} {
+		t.Run(from.String(), func(t *testing.T) {
+			job := pendingJob()
+			job.Status = from
+			jobs, pub := newFakeJobs(job), &fakePublisher{}
+			_, err := New(jobs, &fakeDocuments{}, pub).ReprocessJob(t.Context(), job.ID)
+			if !errors.Is(err, ErrNotReprocessable) {
+				t.Fatalf("err = %v, want ErrNotReprocessable", err)
+			}
+			if jobs.jobs[job.ID].Status != from || len(pub.sent) != 0 {
+				t.Errorf("job changed: %+v, published %v", jobs.jobs[job.ID], pub.sent)
+			}
+		})
+	}
+}
+
+func TestReprocessUnknownJob(t *testing.T) {
+	_, err := New(newFakeJobs(), &fakeDocuments{}, &fakePublisher{}).ReprocessJob(t.Context(), uuid.New())
+	if !errors.Is(err, ErrNotFound) {
+		t.Fatalf("err = %v, want ErrNotFound", err)
+	}
+}
+
+func TestReprocessStoreFailure(t *testing.T) {
+	jobs := newFakeJobs()
+	jobs.reprocessErr = errors.New("database down")
+	_, err := New(jobs, &fakeDocuments{}, &fakePublisher{}).ReprocessJob(t.Context(), uuid.New())
+	if !errors.Is(err, jobs.reprocessErr) {
+		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestReprocessPublishFailureFailsTheJobAgain(t *testing.T) {
+	job := pendingJob()
+	job.Status = failed
+	jobs := newFakeJobs(job)
+	broken := errors.New("nats down")
+	_, err := New(jobs, &fakeDocuments{}, &fakePublisher{err: broken}).ReprocessJob(t.Context(), job.ID)
+	if !errors.Is(err, broken) {
+		t.Fatalf("err = %v", err)
+	}
+	if got := jobs.jobs[job.ID]; got.Status != failed || got.Run != 2 || got.Error == "" {
+		t.Errorf("job = %+v, want FAILED in run 2 so it can be retried", got)
 	}
 }

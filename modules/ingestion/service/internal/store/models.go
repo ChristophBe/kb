@@ -19,4 +19,5 @@ type IngestionJob struct {
 	ChunkCount  int32
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
+	Run         int32
 }

@@ -85,12 +85,17 @@ class Processor:
     ) -> float | None:
         """Processes the upload. Returns the delay before the next attempt when a
         transient error should be retried, or None when the upload is finished,
-        successfully or not. On the last attempt every error is final."""
-        job, doc_id = event.job_id, event.document_id
+        successfully or not. On the last attempt every error is final.
+
+        Every event names the job's processing run (0 from older publishers
+        means the first), and its message id is unique per run, so that the
+        events of a reprocessed job aren't deduplicated away. The document's
+        chunks are replaced, not appended to (AddChunks)."""
+        job, doc_id, run = event.job_id, event.document_id, event.run or 1
         await self._publish(
             SUBJECT_STARTED,
-            events_pb2.ProcessingStarted(job_id=job, document_id=doc_id),
-            f"{job}:started",
+            events_pb2.ProcessingStarted(job_id=job, document_id=doc_id, run=run),
+            f"{job}:{run}:started",
         )
         try:
             await self._set_status(doc_id, document_pb2.DOCUMENT_STATUS_PROCESSING)
@@ -113,15 +118,17 @@ class Processor:
             await self._set_status(doc_id, document_pb2.DOCUMENT_STATUS_FAILED, error)
             await self._publish(
                 SUBJECT_FAILED,
-                events_pb2.ProcessingFailed(job_id=job, document_id=doc_id, error=error),
-                f"{job}:failed",
+                events_pb2.ProcessingFailed(job_id=job, document_id=doc_id, error=error, run=run),
+                f"{job}:{run}:failed",
             )
             return None
         log.info("processed document %s into %d chunks", doc_id, count)
         await self._publish(
             SUBJECT_PROCESSED,
-            events_pb2.DocumentProcessed(job_id=job, document_id=doc_id, chunk_count=count),
-            f"{job}:processed",
+            events_pb2.DocumentProcessed(
+                job_id=job, document_id=doc_id, chunk_count=count, run=run
+            ),
+            f"{job}:{run}:processed",
         )
         return None
 

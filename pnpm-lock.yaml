@@ -201,6 +201,9 @@ importers:
       '@kb/chat-api':
         specifier: workspace:*
         version: link:../api/ts
+      '@kb/document-api':
+        specifier: workspace:*
+        version: link:../../document/api/ts
       '@kb/module-sdk':
         specifier: workspace:*
         version: link:../../../platform/ui/module-sdk

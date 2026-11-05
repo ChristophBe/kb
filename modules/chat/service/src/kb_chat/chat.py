@@ -57,9 +57,12 @@ class PromptMessage:
 
 
 class Retriever(Protocol):
-    """Finds the passages most relevant to a question. Failures are raised as PeerError."""
+    """Finds the passages most relevant to a question, only in `document_ids`
+    unless it is empty. Failures are raised as PeerError."""
 
-    async def retrieve(self, query: str, limit: int) -> list[chat_pb2.Citation]: ...
+    async def retrieve(
+        self, query: str, limit: int, document_ids: Sequence[uuid.UUID]
+    ) -> list[chat_pb2.Citation]: ...
 
 
 class Generator(Protocol):
@@ -135,7 +138,9 @@ class Chat:
         try:
             retrieved: list[chat_pb2.Citation] = []
             if use_knowledge_base:
-                retrieved = await self._retriever.retrieve(content, self._settings.rag_top_k)
+                retrieved = await self._retriever.retrieve(
+                    content, self._settings.rag_top_k, conv.document_ids
+                )
             budget = self._settings.context_tokens - self._settings.answer_reserve_tokens
             context = fit(budget, self._counter, _system_prompt, retrieved, history, content)
             # Only the sources that made it into the prompt are cited, numbered as there.

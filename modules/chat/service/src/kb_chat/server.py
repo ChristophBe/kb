@@ -1,6 +1,6 @@
 import logging
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from datetime import datetime
 from typing import Any
 
@@ -30,6 +30,7 @@ _Context = grpc.aio.ServicerContext[Any, Any]
 DEFAULT_PAGE_SIZE = 50
 MAX_PAGE_SIZE = 200
 MAX_TITLE_LENGTH = 200
+MAX_SCOPE_DOCUMENTS = 100
 
 # The peers' titles in the UI (their module.yaml), for error messages.
 _PEER_TITLES = {Peer.DOCUMENT: "Documents", Peer.LLM: "Models"}
@@ -43,7 +44,8 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
     async def CreateConversation(
         self, request: chat_pb2.CreateConversationRequest, context: _Context
     ) -> chat_pb2.CreateConversationResponse:
-        conv = await self._repo.create_conversation(request.title)
+        document_ids = await _scope(request.document_ids, context)
+        conv = await self._repo.create_conversation(request.title, document_ids)
         return chat_pb2.CreateConversationResponse(conversation=_conversation(conv))
 
     async def GetConversation(
@@ -81,6 +83,7 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         self, request: chat_pb2.UpdateConversationRequest, context: _Context
     ) -> chat_pb2.UpdateConversationResponse:
         conv = await self._get(request.id, context)
+        title: str | None = None
         if request.HasField("title"):
             title = request.title.strip()
             if not title:
@@ -90,7 +93,13 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
                     grpc.StatusCode.INVALID_ARGUMENT,
                     f"title must not be longer than {MAX_TITLE_LENGTH} characters",
                 )
-            updated = await self._repo.update_conversation(conv.id, title)
+        document_ids: list[uuid.UUID] | None = None
+        if request.HasField("document_ids"):
+            document_ids = await _scope(request.document_ids.ids, context)
+        if title is not None or document_ids is not None:
+            updated = await self._repo.update_conversation(
+                conv.id, title=title, document_ids=document_ids
+            )
             if updated is None:
                 await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
             assert updated is not None
@@ -130,6 +139,24 @@ def _parse_id(raw: str) -> uuid.UUID:
         return uuid.UUID(int=0)
 
 
+async def _scope(raw: Sequence[str], context: _Context) -> list[uuid.UUID]:
+    """Parses a document scope; duplicates are dropped, the order is kept."""
+    ids: list[uuid.UUID] = []
+    for value in raw:
+        try:
+            parsed = uuid.UUID(value)
+        except ValueError:
+            await context.abort(grpc.StatusCode.INVALID_ARGUMENT, f"invalid document id {value!r}")
+        if parsed not in ids:
+            ids.append(parsed)
+    if len(ids) > MAX_SCOPE_DOCUMENTS:
+        await context.abort(
+            grpc.StatusCode.INVALID_ARGUMENT,
+            f"a conversation can be limited to at most {MAX_SCOPE_DOCUMENTS} documents",
+        )
+    return ids
+
+
 def _ts(value: datetime) -> Timestamp:
     ts = Timestamp()
     ts.FromDatetime(value)
@@ -138,7 +165,11 @@ def _ts(value: datetime) -> Timestamp:
 
 def _conversation(c: ConversationRow) -> chat_pb2.Conversation:
     return chat_pb2.Conversation(
-        id=str(c.id), title=c.title, create_time=_ts(c.created_at), update_time=_ts(c.updated_at)
+        id=str(c.id),
+        title=c.title,
+        create_time=_ts(c.created_at),
+        update_time=_ts(c.updated_at),
+        document_ids=[str(i) for i in c.document_ids],
     )
 
 

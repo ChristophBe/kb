@@ -25,9 +25,9 @@ class MemoryRepo:
         self.conversations: dict[uuid.UUID, ConversationRow] = {}
         self.messages: list[MessageRow] = []
 
-    async def create_conversation(self, title: str):
+    async def create_conversation(self, title: str, document_ids: list[uuid.UUID]):
         now = datetime.now(UTC)
-        conv = ConversationRow(id=uuid.uuid4(), title=title, created_at=now, updated_at=now)
+        conv = ConversationRow(uuid.uuid4(), title, now, now, document_ids)
         self.conversations[conv.id] = conv
         return conv
 
@@ -43,10 +43,18 @@ class MemoryRepo:
     async def set_title(self, id: uuid.UUID, title: str):
         self.conversations[id].title = title
 
-    async def update_conversation(self, id: uuid.UUID, title: str):
+    async def update_conversation(
+        self,
+        id: uuid.UUID,
+        *,
+        title: str | None = None,
+        document_ids: list[uuid.UUID] | None = None,
+    ):
         conv = self.conversations.get(id)
-        if conv is not None:
+        if conv is not None and title is not None:
             conv.title = title
+        if conv is not None and document_ids is not None:
+            conv.document_ids = document_ids
         return conv
 
     async def list_messages(self, conversation_id: uuid.UUID, limit: int | None = None):
@@ -86,7 +94,11 @@ class FakeLlm:
 
 
 class FakeDocuments:
+    def __init__(self) -> None:
+        self.searches: list[document_pb2.SearchChunksRequest] = []
+
     async def SearchChunks(self, request: document_pb2.SearchChunksRequest):
+        self.searches.append(request)
         return document_pb2.SearchChunksResponse(
             results=[
                 document_pb2.ScoredChunk(
@@ -98,26 +110,26 @@ class FakeDocuments:
         )
 
 
-Env = tuple[chat_pb2_grpc.ChatServiceStub, MemoryRepo, FakeLlm]
+Env = tuple[chat_pb2_grpc.ChatServiceStub, MemoryRepo, FakeLlm, FakeDocuments]
 
 
 @pytest.fixture
 async def env() -> AsyncIterator[Env]:
-    repo, llm = MemoryRepo(), FakeLlm()
+    repo, llm, documents = MemoryRepo(), FakeLlm(), FakeDocuments()
     server = grpc.aio.server()
     chat_pb2_grpc.add_ChatServiceServicer_to_server(
-        servicer(repo, FakeDocuments(), llm),
+        servicer(repo, documents, llm),
         server,
     )
     port = server.add_insecure_port("127.0.0.1:0")
     await server.start()
     async with grpc.aio.insecure_channel(f"127.0.0.1:{port}") as ch:
-        yield chat_pb2_grpc.ChatServiceStub(ch), repo, llm
+        yield chat_pb2_grpc.ChatServiceStub(ch), repo, llm, documents
     await server.stop(None)
 
 
 async def test_stream_chat_with_knowledge_base(env: Env) -> None:
-    stub, _repo, llm = env
+    stub, _repo, llm, _documents = env
     conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
 
     events = [
@@ -147,7 +159,7 @@ async def test_stream_chat_with_knowledge_base(env: Env) -> None:
 
 
 async def test_unknown_conversation_is_not_found(env: Env) -> None:
-    stub, _, _ = env
+    stub, *_ = env
     with pytest.raises(grpc.aio.AioRpcError) as err:
         await stub.GetConversation(chat_pb2.GetConversationRequest(id="nope"))
     assert err.value.code() == grpc.StatusCode.NOT_FOUND
@@ -237,7 +249,7 @@ async def test_an_llm_failure_mid_answer_keeps_the_partial_answer() -> None:
 
 
 async def test_stream_chat_rejects_empty_content(env: Env) -> None:
-    stub, _, _ = env
+    stub, *_ = env
     conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
     with pytest.raises(grpc.aio.AioRpcError) as err:
         _ = [
@@ -250,7 +262,7 @@ async def test_stream_chat_rejects_empty_content(env: Env) -> None:
 
 
 async def test_stream_chat_unknown_conversation_is_not_found(env: Env) -> None:
-    stub, _, _ = env
+    stub, *_ = env
     with pytest.raises(grpc.aio.AioRpcError) as err:
         _ = [
             e
@@ -281,7 +293,7 @@ async def test_other_peer_errors_are_hidden_from_the_user() -> None:
 
 
 async def test_rename_persists_and_shows_in_the_list(env: Env) -> None:
-    stub, _, _ = env
+    stub, *_ = env
     conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
 
     resp = await stub.UpdateConversation(
@@ -294,7 +306,7 @@ async def test_rename_persists_and_shows_in_the_list(env: Env) -> None:
 
 
 async def test_update_without_a_title_keeps_it(env: Env) -> None:
-    stub, _, _ = env
+    stub, *_ = env
     request = chat_pb2.CreateConversationRequest(title="Keep me")
     conv = (await stub.CreateConversation(request)).conversation
     resp = await stub.UpdateConversation(chat_pb2.UpdateConversationRequest(id=conv.id))
@@ -303,7 +315,7 @@ async def test_update_without_a_title_keeps_it(env: Env) -> None:
 
 @pytest.mark.parametrize("title", ["", "   ", "x" * 201])
 async def test_rename_rejects_invalid_titles(env: Env, title: str) -> None:
-    stub, _, _ = env
+    stub, *_ = env
     request = chat_pb2.CreateConversationRequest(title="Old")
     conv = (await stub.CreateConversation(request)).conversation
     with pytest.raises(grpc.aio.AioRpcError) as err:
@@ -315,9 +327,91 @@ async def test_rename_rejects_invalid_titles(env: Env, title: str) -> None:
 
 @pytest.mark.parametrize("conversation_id", [str(uuid.uuid4()), "not-a-uuid"])
 async def test_rename_unknown_conversation_is_not_found(env: Env, conversation_id: str) -> None:
-    stub, _, _ = env
+    stub, *_ = env
     with pytest.raises(grpc.aio.AioRpcError) as err:
         await stub.UpdateConversation(
             chat_pb2.UpdateConversationRequest(id=conversation_id, title="New")
         )
     assert err.value.code() == grpc.StatusCode.NOT_FOUND
+
+
+D1, D2 = str(uuid.uuid4()), str(uuid.uuid4())
+
+
+async def ask(stub: chat_pb2_grpc.ChatServiceStub, conversation_id: str) -> None:
+    request = chat_pb2.StreamChatRequest(
+        conversation_id=conversation_id, content="Capital?", use_knowledge_base=True
+    )
+    _ = [e async for e in stub.StreamChat(request)]
+
+
+async def test_a_scoped_conversation_searches_only_its_documents(env: Env) -> None:
+    stub, _, _, documents = env
+    request = chat_pb2.CreateConversationRequest(document_ids=[D1, D2, D1])
+    conv = (await stub.CreateConversation(request)).conversation
+    assert list(conv.document_ids) == [D1, D2]  # duplicates dropped, order kept
+
+    await ask(stub, conv.id)
+
+    assert list(documents.searches[0].document_ids) == [D1, D2]
+    got = await stub.GetConversation(chat_pb2.GetConversationRequest(id=conv.id))
+    assert list(got.conversation.document_ids) == [D1, D2]
+
+
+async def test_an_empty_scope_searches_all_documents(env: Env) -> None:
+    stub, _, _, documents = env
+    conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+    await ask(stub, conv.id)
+    assert list(documents.searches[0].document_ids) == []
+
+
+async def test_update_replaces_the_scope_and_keeps_the_title(env: Env) -> None:
+    stub, _, _, documents = env
+    request = chat_pb2.CreateConversationRequest(title="Q3", document_ids=[D1])
+    conv = (await stub.CreateConversation(request)).conversation
+
+    resp = await stub.UpdateConversation(
+        chat_pb2.UpdateConversationRequest(id=conv.id, document_ids=chat_pb2.DocumentIds(ids=[D2]))
+    )
+    assert resp.conversation.title == "Q3"
+    assert list(resp.conversation.document_ids) == [D2]
+
+    await ask(stub, conv.id)
+    assert list(documents.searches[0].document_ids) == [D2]
+
+
+async def test_rename_keeps_the_scope(env: Env) -> None:
+    stub, *_ = env
+    request = chat_pb2.CreateConversationRequest(document_ids=[D1])
+    conv = (await stub.CreateConversation(request)).conversation
+    resp = await stub.UpdateConversation(
+        chat_pb2.UpdateConversationRequest(id=conv.id, title="New")
+    )
+    assert list(resp.conversation.document_ids) == [D1]
+
+
+async def test_an_empty_update_clears_the_scope(env: Env) -> None:
+    stub, *_ = env
+    request = chat_pb2.CreateConversationRequest(document_ids=[D1])
+    conv = (await stub.CreateConversation(request)).conversation
+    resp = await stub.UpdateConversation(
+        chat_pb2.UpdateConversationRequest(id=conv.id, document_ids=chat_pb2.DocumentIds())
+    )
+    assert list(resp.conversation.document_ids) == []
+
+
+@pytest.mark.parametrize("ids", [["not-a-uuid"], [str(uuid.uuid4()) for _ in range(101)]])
+async def test_invalid_scopes_are_rejected(env: Env, ids: list[str]) -> None:
+    stub, *_ = env
+    with pytest.raises(grpc.aio.AioRpcError) as created:
+        await stub.CreateConversation(chat_pb2.CreateConversationRequest(document_ids=ids))
+    assert created.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+
+    conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+    with pytest.raises(grpc.aio.AioRpcError) as updated:
+        await stub.UpdateConversation(
+            chat_pb2.UpdateConversationRequest(
+                id=conv.id, document_ids=chat_pb2.DocumentIds(ids=ids)
+            )
+        )
+    assert updated.value.code() == grpc.StatusCode.INVALID_ARGUMENT

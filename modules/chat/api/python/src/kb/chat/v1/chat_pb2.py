@@ -26,7 +26,7 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from kb.common.v1 import common_pb2 as kb_dot_common_dot_v1_dot_common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15kb/chat/v1/chat.proto\x12\nkb.chat.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19kb/common/v1/common.proto\"\xa3\x01\n\x08\x43itation\x12\x1f\n\x0b\x64ocument_id\x18\x01 \x01(\tR\ndocumentId\x12%\n\x0e\x64ocument_title\x18\x02 \x01(\tR\rdocumentTitle\x12\x1f\n\x0b\x63hunk_index\x18\x03 \x01(\x05R\nchunkIndex\x12\x18\n\x07snippet\x18\x04 \x01(\tR\x07snippet\x12\x14\n\x05score\x18\x05 \x01(\x02R\x05score\"\x88\x02\n\x0b\x43hatMessage\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12+\n\x04role\x18\x02 \x01(\x0e\x32\x17.kb.chat.v1.MessageRoleR\x04role\x12\x18\n\x07\x63ontent\x18\x03 \x01(\tR\x07\x63ontent\x12\x32\n\tcitations\x18\x04 \x03(\x0b\x32\x14.kb.chat.v1.CitationR\tcitations\x12;\n\x0b\x63reate_time\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreateTime\x12\x31\n\x06status\x18\x06 \x01(\x0e\x32\x19.kb.chat.v1.MessageStatusR\x06status\"\xae\x01\n\x0c\x43onversation\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n\x05title\x18\x02 \x01(\tR\x05title\x12;\n\x0b\x63reate_time\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreateTime\x12;\n\x0bupdate_time\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdateTime\"1\n\x19\x43reateConversationRequest\x12\x14\n\x05title\x18\x01 \x01(\tR\x05title\"Z\n\x1a\x43reateConversationResponse\x12<\n\x0c\x63onversation\x18\x01 \x01(\x0b\x32\x18.kb.chat.v1.ConversationR\x0c\x63onversation\"(\n\x16GetConversationRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"\x8c\x01\n\x17GetConversationResponse\x12<\n\x0c\x63onversation\x18\x01 \x01(\x0b\x32\x18.kb.chat.v1.ConversationR\x0c\x63onversation\x12\x33\n\x08messages\x18\x02 \x03(\x0b\x32\x17.kb.chat.v1.ChatMessageR\x08messages\"I\n\x18ListConversationsRequest\x12-\n\x04page\x18\x01 \x01(\x0b\x32\x19.kb.common.v1.PageRequestR\x04page\"\x8b\x01\n\x19ListConversationsResponse\x12>\n\rconversations\x18\x01 \x03(\x0b\x32\x18.kb.chat.v1.ConversationR\rconversations\x12.\n\x04page\x18\x02 \x01(\x0b\x32\x1a.kb.common.v1.PageResponseR\x04page\"+\n\x19\x44\x65leteConversationRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"\x1c\n\x1a\x44\x65leteConversationResponse\"P\n\x19UpdateConversationRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n\x05title\x18\x02 \x01(\tH\x00R\x05title\x88\x01\x01\x42\x08\n\x06_title\"Z\n\x1aUpdateConversationResponse\x12<\n\x0c\x63onversation\x18\x01 \x01(\x0b\x32\x18.kb.chat.v1.ConversationR\x0c\x63onversation\"\x9a\x01\n\x11StreamChatRequest\x12\'\n\x0f\x63onversation_id\x18\x01 \x01(\tR\x0e\x63onversationId\x12\x18\n\x07\x63ontent\x18\x02 \x01(\tR\x07\x63ontent\x12,\n\x12use_knowledge_base\x18\x03 \x01(\x08R\x10useKnowledgeBase\x12\x14\n\x05model\x18\x04 \x01(\tR\x05model\"\xd0\x01\n\x12StreamChatResponse\x12\x35\n\tcitations\x18\x01 \x01(\x0b\x32\x15.kb.chat.v1.CitationsH\x00R\tcitations\x12\x16\n\x05\x64\x65lta\x18\x02 \x01(\tH\x00R\x05\x64\x65lta\x12\x33\n\x07message\x18\x03 \x01(\x0b\x32\x17.kb.chat.v1.ChatMessageH\x00R\x07message\x12-\n\x05\x65rror\x18\x04 \x01(\x0b\x32\x15.kb.chat.v1.ChatErrorH\x00R\x05\x65rrorB\x07\n\x05\x65vent\"T\n\tChatError\x12-\n\x04\x63ode\x18\x01 \x01(\x0e\x32\x19.kb.chat.v1.ChatErrorCodeR\x04\x63ode\x12\x18\n\x07message\x18\x02 \x01(\tR\x07message\"7\n\tCitations\x12*\n\x05items\x18\x01 \x03(\x0b\x32\x14.kb.chat.v1.CitationR\x05items*^\n\x0bMessageRole\x12\x1c\n\x18MESSAGE_ROLE_UNSPECIFIED\x10\x00\x12\x15\n\x11MESSAGE_ROLE_USER\x10\x01\x12\x1a\n\x16MESSAGE_ROLE_ASSISTANT\x10\x02*\x83\x01\n\rMessageStatus\x12\x1e\n\x1aMESSAGE_STATUS_UNSPECIFIED\x10\x00\x12\x1b\n\x17MESSAGE_STATUS_COMPLETE\x10\x01\x12\x1a\n\x16MESSAGE_STATUS_STOPPED\x10\x02\x12\x19\n\x15MESSAGE_STATUS_FAILED\x10\x03*o\n\rChatErrorCode\x12\x1f\n\x1b\x43HAT_ERROR_CODE_UNSPECIFIED\x10\x00\x12\x1f\n\x1b\x43HAT_ERROR_CODE_UNAVAILABLE\x10\x01\x12\x1c\n\x18\x43HAT_ERROR_CODE_INTERNAL\x10\x02\x32\xc9\x04\n\x0b\x43hatService\x12\x63\n\x12\x43reateConversation\x12%.kb.chat.v1.CreateConversationRequest\x1a&.kb.chat.v1.CreateConversationResponse\x12Z\n\x0fGetConversation\x12\".kb.chat.v1.GetConversationRequest\x1a#.kb.chat.v1.GetConversationResponse\x12`\n\x11ListConversations\x12$.kb.chat.v1.ListConversationsRequest\x1a%.kb.chat.v1.ListConversationsResponse\x12\x63\n\x12\x44\x65leteConversation\x12%.kb.chat.v1.DeleteConversationRequest\x1a&.kb.chat.v1.DeleteConversationResponse\x12\x63\n\x12UpdateConversation\x12%.kb.chat.v1.UpdateConversationRequest\x1a&.kb.chat.v1.UpdateConversationResponse\x12M\n\nStreamChat\x12\x1d.kb.chat.v1.StreamChatRequest\x1a\x1e.kb.chat.v1.StreamChatResponse0\x01\x42;Z9github.com/christoph/kb/modules/chat/api/go/chatv1;chatv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15kb/chat/v1/chat.proto\x12\nkb.chat.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19kb/common/v1/common.proto\"\xa3\x01\n\x08\x43itation\x12\x1f\n\x0b\x64ocument_id\x18\x01 \x01(\tR\ndocumentId\x12%\n\x0e\x64ocument_title\x18\x02 \x01(\tR\rdocumentTitle\x12\x1f\n\x0b\x63hunk_index\x18\x03 \x01(\x05R\nchunkIndex\x12\x18\n\x07snippet\x18\x04 \x01(\tR\x07snippet\x12\x14\n\x05score\x18\x05 \x01(\x02R\x05score\"\x88\x02\n\x0b\x43hatMessage\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12+\n\x04role\x18\x02 \x01(\x0e\x32\x17.kb.chat.v1.MessageRoleR\x04role\x12\x18\n\x07\x63ontent\x18\x03 \x01(\tR\x07\x63ontent\x12\x32\n\tcitations\x18\x04 \x03(\x0b\x32\x14.kb.chat.v1.CitationR\tcitations\x12;\n\x0b\x63reate_time\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreateTime\x12\x31\n\x06status\x18\x06 \x01(\x0e\x32\x19.kb.chat.v1.MessageStatusR\x06status\"\xd1\x01\n\x0c\x43onversation\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n\x05title\x18\x02 \x01(\tR\x05title\x12;\n\x0b\x63reate_time\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreateTime\x12;\n\x0bupdate_time\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdateTime\x12!\n\x0c\x64ocument_ids\x18\x05 \x03(\tR\x0b\x64ocumentIds\"\x1f\n\x0b\x44ocumentIds\x12\x10\n\x03ids\x18\x01 \x03(\tR\x03ids\"T\n\x19\x43reateConversationRequest\x12\x14\n\x05title\x18\x01 \x01(\tR\x05title\x12!\n\x0c\x64ocument_ids\x18\x02 \x03(\tR\x0b\x64ocumentIds\"Z\n\x1a\x43reateConversationResponse\x12<\n\x0c\x63onversation\x18\x01 \x01(\x0b\x32\x18.kb.chat.v1.ConversationR\x0c\x63onversation\"(\n\x16GetConversationRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"\x8c\x01\n\x17GetConversationResponse\x12<\n\x0c\x63onversation\x18\x01 \x01(\x0b\x32\x18.kb.chat.v1.ConversationR\x0c\x63onversation\x12\x33\n\x08messages\x18\x02 \x03(\x0b\x32\x17.kb.chat.v1.ChatMessageR\x08messages\"I\n\x18ListConversationsRequest\x12-\n\x04page\x18\x01 \x01(\x0b\x32\x19.kb.common.v1.PageRequestR\x04page\"\x8b\x01\n\x19ListConversationsResponse\x12>\n\rconversations\x18\x01 \x03(\x0b\x32\x18.kb.chat.v1.ConversationR\rconversations\x12.\n\x04page\x18\x02 \x01(\x0b\x32\x1a.kb.common.v1.PageResponseR\x04page\"+\n\x19\x44\x65leteConversationRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"\x1c\n\x1a\x44\x65leteConversationResponse\"\x8c\x01\n\x19UpdateConversationRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n\x05title\x18\x02 \x01(\tH\x00R\x05title\x88\x01\x01\x12:\n\x0c\x64ocument_ids\x18\x03 \x01(\x0b\x32\x17.kb.chat.v1.DocumentIdsR\x0b\x64ocumentIdsB\x08\n\x06_title\"Z\n\x1aUpdateConversationResponse\x12<\n\x0c\x63onversation\x18\x01 \x01(\x0b\x32\x18.kb.chat.v1.ConversationR\x0c\x63onversation\"\x9a\x01\n\x11StreamChatRequest\x12\'\n\x0f\x63onversation_id\x18\x01 \x01(\tR\x0e\x63onversationId\x12\x18\n\x07\x63ontent\x18\x02 \x01(\tR\x07\x63ontent\x12,\n\x12use_knowledge_base\x18\x03 \x01(\x08R\x10useKnowledgeBase\x12\x14\n\x05model\x18\x04 \x01(\tR\x05model\"\xd0\x01\n\x12StreamChatResponse\x12\x35\n\tcitations\x18\x01 \x01(\x0b\x32\x15.kb.chat.v1.CitationsH\x00R\tcitations\x12\x16\n\x05\x64\x65lta\x18\x02 \x01(\tH\x00R\x05\x64\x65lta\x12\x33\n\x07message\x18\x03 \x01(\x0b\x32\x17.kb.chat.v1.ChatMessageH\x00R\x07message\x12-\n\x05\x65rror\x18\x04 \x01(\x0b\x32\x15.kb.chat.v1.ChatErrorH\x00R\x05\x65rrorB\x07\n\x05\x65vent\"T\n\tChatError\x12-\n\x04\x63ode\x18\x01 \x01(\x0e\x32\x19.kb.chat.v1.ChatErrorCodeR\x04\x63ode\x12\x18\n\x07message\x18\x02 \x01(\tR\x07message\"7\n\tCitations\x12*\n\x05items\x18\x01 \x03(\x0b\x32\x14.kb.chat.v1.CitationR\x05items*^\n\x0bMessageRole\x12\x1c\n\x18MESSAGE_ROLE_UNSPECIFIED\x10\x00\x12\x15\n\x11MESSAGE_ROLE_USER\x10\x01\x12\x1a\n\x16MESSAGE_ROLE_ASSISTANT\x10\x02*\x83\x01\n\rMessageStatus\x12\x1e\n\x1aMESSAGE_STATUS_UNSPECIFIED\x10\x00\x12\x1b\n\x17MESSAGE_STATUS_COMPLETE\x10\x01\x12\x1a\n\x16MESSAGE_STATUS_STOPPED\x10\x02\x12\x19\n\x15MESSAGE_STATUS_FAILED\x10\x03*o\n\rChatErrorCode\x12\x1f\n\x1b\x43HAT_ERROR_CODE_UNSPECIFIED\x10\x00\x12\x1f\n\x1b\x43HAT_ERROR_CODE_UNAVAILABLE\x10\x01\x12\x1c\n\x18\x43HAT_ERROR_CODE_INTERNAL\x10\x02\x32\xc9\x04\n\x0b\x43hatService\x12\x63\n\x12\x43reateConversation\x12%.kb.chat.v1.CreateConversationRequest\x1a&.kb.chat.v1.CreateConversationResponse\x12Z\n\x0fGetConversation\x12\".kb.chat.v1.GetConversationRequest\x1a#.kb.chat.v1.GetConversationResponse\x12`\n\x11ListConversations\x12$.kb.chat.v1.ListConversationsRequest\x1a%.kb.chat.v1.ListConversationsResponse\x12\x63\n\x12\x44\x65leteConversation\x12%.kb.chat.v1.DeleteConversationRequest\x1a&.kb.chat.v1.DeleteConversationResponse\x12\x63\n\x12UpdateConversation\x12%.kb.chat.v1.UpdateConversationRequest\x1a&.kb.chat.v1.UpdateConversationResponse\x12M\n\nStreamChat\x12\x1d.kb.chat.v1.StreamChatRequest\x1a\x1e.kb.chat.v1.StreamChatResponse0\x01\x42;Z9github.com/christoph/kb/modules/chat/api/go/chatv1;chatv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,46 +34,48 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'kb.chat.v1.chat_pb2', _glob
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z9github.com/christoph/kb/modules/chat/api/go/chatv1;chatv1'
-  _globals['_MESSAGEROLE']._serialized_start=2012
-  _globals['_MESSAGEROLE']._serialized_end=2106
-  _globals['_MESSAGESTATUS']._serialized_start=2109
-  _globals['_MESSAGESTATUS']._serialized_end=2240
-  _globals['_CHATERRORCODE']._serialized_start=2242
-  _globals['_CHATERRORCODE']._serialized_end=2353
+  _globals['_MESSAGEROLE']._serialized_start=2176
+  _globals['_MESSAGEROLE']._serialized_end=2270
+  _globals['_MESSAGESTATUS']._serialized_start=2273
+  _globals['_MESSAGESTATUS']._serialized_end=2404
+  _globals['_CHATERRORCODE']._serialized_start=2406
+  _globals['_CHATERRORCODE']._serialized_end=2517
   _globals['_CITATION']._serialized_start=98
   _globals['_CITATION']._serialized_end=261
   _globals['_CHATMESSAGE']._serialized_start=264
   _globals['_CHATMESSAGE']._serialized_end=528
   _globals['_CONVERSATION']._serialized_start=531
-  _globals['_CONVERSATION']._serialized_end=705
-  _globals['_CREATECONVERSATIONREQUEST']._serialized_start=707
-  _globals['_CREATECONVERSATIONREQUEST']._serialized_end=756
-  _globals['_CREATECONVERSATIONRESPONSE']._serialized_start=758
-  _globals['_CREATECONVERSATIONRESPONSE']._serialized_end=848
-  _globals['_GETCONVERSATIONREQUEST']._serialized_start=850
-  _globals['_GETCONVERSATIONREQUEST']._serialized_end=890
-  _globals['_GETCONVERSATIONRESPONSE']._serialized_start=893
-  _globals['_GETCONVERSATIONRESPONSE']._serialized_end=1033
-  _globals['_LISTCONVERSATIONSREQUEST']._serialized_start=1035
-  _globals['_LISTCONVERSATIONSREQUEST']._serialized_end=1108
-  _globals['_LISTCONVERSATIONSRESPONSE']._serialized_start=1111
-  _globals['_LISTCONVERSATIONSRESPONSE']._serialized_end=1250
-  _globals['_DELETECONVERSATIONREQUEST']._serialized_start=1252
-  _globals['_DELETECONVERSATIONREQUEST']._serialized_end=1295
-  _globals['_DELETECONVERSATIONRESPONSE']._serialized_start=1297
-  _globals['_DELETECONVERSATIONRESPONSE']._serialized_end=1325
-  _globals['_UPDATECONVERSATIONREQUEST']._serialized_start=1327
-  _globals['_UPDATECONVERSATIONREQUEST']._serialized_end=1407
-  _globals['_UPDATECONVERSATIONRESPONSE']._serialized_start=1409
-  _globals['_UPDATECONVERSATIONRESPONSE']._serialized_end=1499
-  _globals['_STREAMCHATREQUEST']._serialized_start=1502
-  _globals['_STREAMCHATREQUEST']._serialized_end=1656
-  _globals['_STREAMCHATRESPONSE']._serialized_start=1659
-  _globals['_STREAMCHATRESPONSE']._serialized_end=1867
-  _globals['_CHATERROR']._serialized_start=1869
-  _globals['_CHATERROR']._serialized_end=1953
-  _globals['_CITATIONS']._serialized_start=1955
-  _globals['_CITATIONS']._serialized_end=2010
-  _globals['_CHATSERVICE']._serialized_start=2356
-  _globals['_CHATSERVICE']._serialized_end=2941
+  _globals['_CONVERSATION']._serialized_end=740
+  _globals['_DOCUMENTIDS']._serialized_start=742
+  _globals['_DOCUMENTIDS']._serialized_end=773
+  _globals['_CREATECONVERSATIONREQUEST']._serialized_start=775
+  _globals['_CREATECONVERSATIONREQUEST']._serialized_end=859
+  _globals['_CREATECONVERSATIONRESPONSE']._serialized_start=861
+  _globals['_CREATECONVERSATIONRESPONSE']._serialized_end=951
+  _globals['_GETCONVERSATIONREQUEST']._serialized_start=953
+  _globals['_GETCONVERSATIONREQUEST']._serialized_end=993
+  _globals['_GETCONVERSATIONRESPONSE']._serialized_start=996
+  _globals['_GETCONVERSATIONRESPONSE']._serialized_end=1136
+  _globals['_LISTCONVERSATIONSREQUEST']._serialized_start=1138
+  _globals['_LISTCONVERSATIONSREQUEST']._serialized_end=1211
+  _globals['_LISTCONVERSATIONSRESPONSE']._serialized_start=1214
+  _globals['_LISTCONVERSATIONSRESPONSE']._serialized_end=1353
+  _globals['_DELETECONVERSATIONREQUEST']._serialized_start=1355
+  _globals['_DELETECONVERSATIONREQUEST']._serialized_end=1398
+  _globals['_DELETECONVERSATIONRESPONSE']._serialized_start=1400
+  _globals['_DELETECONVERSATIONRESPONSE']._serialized_end=1428
+  _globals['_UPDATECONVERSATIONREQUEST']._serialized_start=1431
+  _globals['_UPDATECONVERSATIONREQUEST']._serialized_end=1571
+  _globals['_UPDATECONVERSATIONRESPONSE']._serialized_start=1573
+  _globals['_UPDATECONVERSATIONRESPONSE']._serialized_end=1663
+  _globals['_STREAMCHATREQUEST']._serialized_start=1666
+  _globals['_STREAMCHATREQUEST']._serialized_end=1820
+  _globals['_STREAMCHATRESPONSE']._serialized_start=1823
+  _globals['_STREAMCHATRESPONSE']._serialized_end=2031
+  _globals['_CHATERROR']._serialized_start=2033
+  _globals['_CHATERROR']._serialized_end=2117
+  _globals['_CITATIONS']._serialized_start=2119
+  _globals['_CITATIONS']._serialized_end=2174
+  _globals['_CHATSERVICE']._serialized_start=2520
+  _globals['_CHATSERVICE']._serialized_end=3105
 # @@protoc_insertion_point(module_scope)

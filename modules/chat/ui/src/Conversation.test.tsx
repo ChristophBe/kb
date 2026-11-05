@@ -146,6 +146,15 @@ describe("Conversation", () => {
     expect(within(newest).getByRole("button", { name: "Retry" })).toBe(retry[0]);
   });
 
+  it("offers the document picker only when answering from the knowledge base", async () => {
+    await renderConversation();
+    expect(screen.getByText("all documents")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Choose documents" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Answer from the knowledge base" }));
+    expect(screen.queryByRole("button", { name: "Choose documents" })).toBeNull();
+  });
+
   it("shows a readable error when the chat service can't be reached", async () => {
     streamChat.mockImplementation(async function* () {
       yield* [];

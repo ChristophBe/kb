@@ -24,7 +24,7 @@ from sqlalchemy import (
     select,
     update,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from .repository import ConversationRow, MessageRow
@@ -41,6 +41,7 @@ conversations = Table(
     Column("title", Text, nullable=False, server_default=""),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
     Column("updated_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    Column("document_ids", ARRAY(Uuid), nullable=False, server_default="{}"),
 )
 
 messages = Table(
@@ -63,10 +64,14 @@ class SqlRepository:
     def __init__(self, engine: AsyncEngine) -> None:
         self._engine = engine
 
-    async def create_conversation(self, title: str) -> ConversationRow:
+    async def create_conversation(
+        self, title: str, document_ids: list[uuid.UUID]
+    ) -> ConversationRow:
         async with self._engine.begin() as conn:
             result = await conn.execute(
-                insert(conversations).values(id=uuid.uuid4(), title=title).returning(conversations)
+                insert(conversations)
+                .values(id=uuid.uuid4(), title=title, document_ids=document_ids)
+                .returning(conversations)
             )
             row = result.mappings().one()
         return ConversationRow(**row)
@@ -99,12 +104,23 @@ class SqlRepository:
                 update(conversations).where(conversations.c.id == id).values(title=title)
             )
 
-    async def update_conversation(self, id: uuid.UUID, title: str) -> ConversationRow | None:
+    async def update_conversation(
+        self,
+        id: uuid.UUID,
+        *,
+        title: str | None = None,
+        document_ids: list[uuid.UUID] | None = None,
+    ) -> ConversationRow | None:
+        values: dict[str, Any] = {"updated_at": func.now()}
+        if title is not None:
+            values["title"] = title
+        if document_ids is not None:
+            values["document_ids"] = document_ids
         async with self._engine.begin() as conn:
             result = await conn.execute(
                 update(conversations)
                 .where(conversations.c.id == id)
-                .values(title=title, updated_at=func.now())
+                .values(**values)
                 .returning(conversations)
             )
             row = result.mappings().first()

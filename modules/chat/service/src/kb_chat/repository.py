@@ -14,6 +14,8 @@ class ConversationRow:
     title: str
     created_at: datetime
     updated_at: datetime
+    # The documents answers are grounded in; empty means all documents.
+    document_ids: list[uuid.UUID] = field(default_factory=list)
 
 
 @dataclass
@@ -28,12 +30,23 @@ class MessageRow:
 
 
 class Repository(Protocol):
-    async def create_conversation(self, title: str) -> ConversationRow: ...
+    async def create_conversation(
+        self, title: str, document_ids: list[uuid.UUID]
+    ) -> ConversationRow: ...
     async def get_conversation(self, id: uuid.UUID) -> ConversationRow | None: ...
     async def list_conversations(self, limit: int, offset: int) -> list[ConversationRow]: ...
     async def delete_conversation(self, id: uuid.UUID) -> bool: ...
     async def set_title(self, id: uuid.UUID, title: str) -> None: ...
-    async def update_conversation(self, id: uuid.UUID, title: str) -> ConversationRow | None: ...
+    async def update_conversation(
+        self,
+        id: uuid.UUID,
+        *,
+        title: str | None = None,
+        document_ids: list[uuid.UUID] | None = None,
+    ) -> ConversationRow | None:
+        """Changes the fields that are not None and keeps the others."""
+        ...
+
     async def list_messages(
         self, conversation_id: uuid.UUID, limit: int | None = None
     ) -> list[MessageRow]: ...

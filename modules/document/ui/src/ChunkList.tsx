@@ -102,14 +102,14 @@ export function ChunkList({
             <div className="flex gap-2">
               <Button
                 variant="secondary"
-                disabled={page === 0 || chunks.isFetching}
+                disabled={page === 0 || chunks.isPlaceholderData}
                 onClick={() => go(tokens.slice(0, -1))}
               >
                 Previous
               </Button>
               <Button
                 variant="secondary"
-                disabled={!nextToken || chunks.isFetching}
+                disabled={!nextToken || chunks.isPlaceholderData}
                 onClick={() => go([...tokens, nextToken])}
               >
                 Next

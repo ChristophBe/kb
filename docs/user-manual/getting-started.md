@@ -13,7 +13,7 @@ The sidebar on the left leads to every area:
 - **Models**: check that the language model behind search and chat is available. See [Models](models.md).
 - **Help**, at the bottom of the sidebar: this manual, one page per area.
 
-**kb / Knowledge Base** at the top of the sidebar takes you to the **Welcome** page, which has a card for each page in the sidebar: **Chat**, **Documents**, **Search**, **Ingestion** and **Models**.
+**kb / Knowledge Base** at the top of the sidebar takes you to the home page. Type a question into its box and press Enter to start a new chat with it. Below the box are shortcuts to **Search documents** and **Upload documents**, and cards that lead to chatting, searching, uploading and the models.
 
 ## Add your first documents
 
@@ -34,7 +34,3 @@ More in [Ask a question](chat.md#ask-a-question).
 ## Switch between light and dark mode
 
 The switch at the bottom of the sidebar has three options: **System** (follow your computer's setting), **Light** and **Dark**. kb remembers your choice in this browser.
-
-## Look at the design preview
-
-**M1 prototype**, under **Preview** in the sidebar, is a clickable design draft filled with sample data. Nothing you do there changes your knowledge base, and your own documents don't appear in it.

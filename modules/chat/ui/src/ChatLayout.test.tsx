@@ -7,7 +7,8 @@ import {
   MessageRole,
 } from "@kb/chat-api/kb/chat/v1/chat_pb";
 import { renderModule } from "@kb/module-sdk/testing";
-import { fireEvent, screen, within } from "@testing-library/react";
+import { polyfillDialog } from "@kb/ui/testing/dialog";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import chat from "./index.tsx";
 
@@ -15,11 +16,14 @@ import chat from "./index.tsx";
 beforeAll(() => {
   Element.prototype.scrollIntoView = () => {};
 });
+beforeAll(polyfillDialog);
 
 const conversation = (id: string, title: string) => create(ConversationSchema, { id, title });
 
 /** A chat service backed by an in-memory list of conversations. */
-function chatService(initial: Conversation[]) {
+// `listDelay` slows the list down, as a real network does, so a redirect from a
+// stale list shows.
+function chatService(initial: Conversation[], listDelay = 0) {
   let conversations = initial;
   const deleteConversation = vi.fn(({ id }: { id: string }) => {
     conversations = conversations.filter((c) => c.id !== id);
@@ -27,7 +31,10 @@ function chatService(initial: Conversation[]) {
   });
   const transport = createRouterTransport(({ service }) =>
     service(ChatService, {
-      listConversations: () => ({ conversations }),
+      listConversations: async () => {
+        await new Promise((resolve) => setTimeout(resolve, listDelay));
+        return { conversations };
+      },
       createConversation: () => {
         const created = conversation("c9", "");
         conversations = [created, ...conversations];
@@ -46,7 +53,15 @@ function chatService(initial: Conversation[]) {
   return { transport, deleteConversation };
 }
 
-const sidebar = () => within(screen.getByRole("navigation"));
+const sidebar = () => within(screen.getByRole("navigation", { name: "Conversations" }));
+
+/** Opens the delete confirmation from the entry's button, as a user would. */
+async function askToDelete(title: string) {
+  const button = await screen.findByRole("button", { name: `Delete conversation ${title}` });
+  button.focus();
+  fireEvent.click(button);
+  return button;
+}
 
 describe("ChatLayout", () => {
   it("lists the conversations, untitled ones as new", async () => {
@@ -123,18 +138,49 @@ describe("ChatLayout", () => {
     expect(created.getAttribute("aria-current")).toBe("page");
   });
 
-  it("deletes a conversation and opens the next most recent", async () => {
-    const { transport, deleteConversation } = chatService([
+  it("deletes a conversation after confirming and opens the next most recent", async () => {
+    const { transport, deleteConversation } = chatService(
+      [conversation("c1", "Q3 revenue"), conversation("c2", "Hiring plan")],
+      20,
+    );
+    renderModule(chat, transport, "/c1");
+    await screen.findByText("How did revenue develop?");
+    await askToDelete("Q3 revenue");
+    const dialog = within(screen.getByRole("dialog", { name: "Delete conversation?" }));
+    expect(dialog.getByText(/“Q3 revenue” and all its messages will be deleted/)).toBeTruthy();
+    expect(deleteConversation).not.toHaveBeenCalled();
+    fireEvent.click(dialog.getByRole("button", { name: "Delete" }));
+    const next = await sidebar().findByRole("link", { name: "Hiring plan", current: "page" });
+    expect(next).toBeTruthy();
+    expect(deleteConversation.mock.calls[0]?.[0].id).toBe("c1");
+    expect(screen.queryByRole("link", { name: "Q3 revenue" })).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole("navigation", { name: "Conversations" }));
+  });
+
+  it("stays on the open conversation when deleting another one", async () => {
+    const { transport } = chatService([
       conversation("c1", "Q3 revenue"),
       conversation("c2", "Hiring plan"),
     ]);
     renderModule(chat, transport, "/c1");
     await screen.findByText("How did revenue develop?");
-    fireEvent.click(screen.getByRole("button", { name: "Delete conversation Q3 revenue" }));
-    const next = await sidebar().findByRole("link", { name: "Hiring plan", current: "page" });
-    expect(next).toBeTruthy();
-    expect(deleteConversation.mock.calls[0]?.[0].id).toBe("c1");
-    expect(screen.queryByRole("link", { name: "Q3 revenue" })).toBeNull();
+    await askToDelete("Hiring plan");
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    await waitFor(() => expect(screen.queryByRole("link", { name: "Hiring plan" })).toBeNull());
+    expect(sidebar().getByRole("link", { name: "Q3 revenue", current: "page" })).toBeTruthy();
+  });
+
+  it("keeps the conversation when the deletion is cancelled", async () => {
+    const { transport, deleteConversation } = chatService([conversation("c1", "Q3 revenue")]);
+    renderModule(chat, transport, "/c1");
+    await screen.findByText("How did revenue develop?");
+    const button = await askToDelete("Q3 revenue");
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.activeElement).toBe(button);
+    expect(deleteConversation).not.toHaveBeenCalled();
+    expect(sidebar().getByRole("link", { name: "Q3 revenue" })).toBeTruthy();
   });
 
   it("shows why the conversations can't be loaded", async () => {

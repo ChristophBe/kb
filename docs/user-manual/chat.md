@@ -86,4 +86,7 @@ Select **Cancel** or press Escape to keep the old title. The title can't be empt
 
 ## Delete a conversation
 
-Point at the conversation in the list, or move to it with the Tab key, and select the delete button (the bin) that appears. The conversation and all its messages are deleted at once, without asking for confirmation, and a notification says "Conversation deleted". This can't be undone.
+1. Point at the conversation in the list, or move to it with the Tab key, and select the delete button (the bin) that appears.
+2. Check the conversation's title in the question **Delete conversation?** and select **Delete**. Select **Cancel** or press Escape to keep it.
+
+The conversation and all its messages are deleted, and a notification says "Conversation deleted". This can't be undone. If it was the open conversation, the next most recent one opens.

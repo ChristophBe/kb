@@ -61,7 +61,7 @@ Every colour role is written once as `light-dark(<light>, <dark>)`. The mode fol
 | Case | Write every string in sentence case. `uppercase` (with `tracking-wide`) is a visual style for short mono section labels such as "Preview" and table headers only. Never for buttons, badges, headings or sentences. |
 | Radius | Concentric, growing with the container: `rounded-control` (10 px: buttons, inputs, nav items, alerts), `rounded-card` (16 px: cards, messages, toasts, menus), `rounded-panel` (24 px: the chat composer, dialogs; layout areas stay square), `rounded-full` (pills: badges, segmented controls; avatars, spinners). |
 | Rules | Solid `border-border` for structural edges inside content (cards, table heads). `divide-dotted divide-border` between rows of a list or `<dl>`. |
-| Shadow | `shadow-glass` for chrome that floats and lifted cards on hover; `shadow-overlay` for overlays (built into `glass-strong`). No other shadows exist. |
+| Shadow | `shadow-glass` for chrome that floats; `shadow-overlay` for overlays (built into `glass-strong`). No other shadows exist. |
 | Motion | `animate-rise` (entrance, staggered with `animation-delay`) and `animate-glow` (the drifting halo) on the home page only; nothing else animates beyond hover and state transitions. Reduced motion stills both. |
 | Focus ring | 2 px solid `--color-focus`, 2 px offset. |
 

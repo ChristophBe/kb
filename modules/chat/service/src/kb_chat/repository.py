@@ -16,6 +16,9 @@ class ConversationRow:
     updated_at: datetime
     # The documents answers are grounded in; empty means all documents.
     document_ids: list[uuid.UUID] = field(default_factory=list)
+    # None while the conversation has no messages.
+    last_message_time: datetime | None = None
+    last_message_preview: str = ""
 
 
 @dataclass
@@ -34,7 +37,11 @@ class Repository(Protocol):
         self, title: str, document_ids: list[uuid.UUID]
     ) -> ConversationRow: ...
     async def get_conversation(self, id: uuid.UUID) -> ConversationRow | None: ...
-    async def list_conversations(self, limit: int, offset: int) -> list[ConversationRow]: ...
+    async def list_conversations(self, limit: int, offset: int) -> list[ConversationRow]:
+        """Newest latest message first; a conversation without messages counts
+        from its creation."""
+        ...
+
     async def delete_conversation(self, id: uuid.UUID) -> bool: ...
     async def set_title(self, id: uuid.UUID, title: str) -> None: ...
     async def update_conversation(

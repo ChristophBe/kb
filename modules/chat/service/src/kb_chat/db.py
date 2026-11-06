@@ -22,11 +22,13 @@ from sqlalchemy import (
     func,
     insert,
     select,
+    true,
     update,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from .preview import preview
 from .repository import ConversationRow, MessageRow
 
 SCHEMA = "chat"
@@ -60,6 +62,31 @@ messages = Table(
 )
 
 
+# The latest message of each conversation. Ties on created_at (one transaction)
+# go to the higher id, as in list_conversations.
+_last_message = (
+    select(
+        messages.c.created_at.label("last_message_time"),
+        # Enough text for a preview even after Markdown is removed.
+        func.left(messages.c.content, 1000).label("last_message_content"),
+    )
+    .where(messages.c.conversation_id == conversations.c.id)
+    .order_by(messages.c.created_at.desc(), messages.c.id.desc())
+    .limit(1)
+    .lateral("last_message")
+)
+
+_conversations_with_last_message = select(
+    conversations, _last_message.c.last_message_time, _last_message.c.last_message_content
+).select_from(conversations.outerjoin(_last_message, true()))
+
+
+def _conversation(row: Any) -> ConversationRow:
+    values = dict(row)
+    content = values.pop("last_message_content", None)
+    return ConversationRow(**values, last_message_preview=preview(content or ""))
+
+
 class SqlRepository:
     def __init__(self, engine: AsyncEngine) -> None:
         self._engine = engine
@@ -78,20 +105,24 @@ class SqlRepository:
 
     async def get_conversation(self, id: uuid.UUID) -> ConversationRow | None:
         async with self._engine.connect() as conn:
-            result = await conn.execute(select(conversations).where(conversations.c.id == id))
+            result = await conn.execute(
+                _conversations_with_last_message.where(conversations.c.id == id)
+            )
             row = result.mappings().first()
-        return ConversationRow(**row) if row else None
+        return _conversation(row) if row else None
 
     async def list_conversations(self, limit: int, offset: int) -> list[ConversationRow]:
         query = (
-            select(conversations)
-            .order_by(conversations.c.updated_at.desc(), conversations.c.id.desc())
+            _conversations_with_last_message.order_by(
+                func.coalesce(_last_message.c.last_message_time, conversations.c.created_at).desc(),
+                conversations.c.id.desc(),
+            )
             .limit(limit)
             .offset(offset)
         )
         async with self._engine.connect() as conn:
             rows = (await conn.execute(query)).mappings().all()
-        return [ConversationRow(**r) for r in rows]
+        return [_conversation(r) for r in rows]
 
     async def delete_conversation(self, id: uuid.UUID) -> bool:
         async with self._engine.begin() as conn:
@@ -117,14 +148,14 @@ class SqlRepository:
         if document_ids is not None:
             values["document_ids"] = document_ids
         async with self._engine.begin() as conn:
+            await conn.execute(
+                update(conversations).where(conversations.c.id == id).values(**values)
+            )
             result = await conn.execute(
-                update(conversations)
-                .where(conversations.c.id == id)
-                .values(**values)
-                .returning(conversations)
+                _conversations_with_last_message.where(conversations.c.id == id)
             )
             row = result.mappings().first()
-        return ConversationRow(**row) if row else None
+        return _conversation(row) if row else None
 
     async def list_messages(
         self, conversation_id: uuid.UUID, limit: int | None = None

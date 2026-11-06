@@ -12,6 +12,7 @@ from kb.llm.v1 import llm_pb2
 from kb_chat.chat import Chat
 from kb_chat.config import Settings
 from kb_chat.peers import PeerGenerator, PeerRetriever
+from kb_chat.preview import preview
 from kb_chat.repository import ConversationRow, MessageRow
 from kb_chat.server import ChatServicer
 
@@ -36,7 +37,12 @@ class MemoryRepo:
         return self.conversations.get(id)
 
     async def list_conversations(self, limit: int, offset: int):
-        return list(self.conversations.values())[offset : offset + limit]
+        convs = sorted(
+            self.conversations.values(),
+            key=lambda c: c.last_message_time or c.created_at,
+            reverse=True,
+        )
+        return convs[offset : offset + limit]
 
     async def delete_conversation(self, id: uuid.UUID):
         return self.conversations.pop(id, None) is not None
@@ -74,6 +80,8 @@ class MemoryRepo:
             uuid.uuid4(), conversation_id, role, content, datetime.now(UTC), citations, status
         )
         self.messages.append(msg)
+        conv = self.conversations[conversation_id]
+        conv.last_message_time, conv.last_message_preview = msg.created_at, preview(content)
         return msg
 
 
@@ -373,6 +381,26 @@ async def test_rename_persists_and_shows_in_the_list(env: Env) -> None:
     assert resp.conversation.title == "Q3 revenue"
     listed = await stub.ListConversations(chat_pb2.ListConversationsRequest())
     assert [c.title for c in listed.conversations] == ["Q3 revenue"]
+
+
+async def test_list_shows_the_latest_message_and_sorts_by_it(env: Env) -> None:
+    stub, *_ = env
+    older = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+    newer = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+    empty = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+    async for _ in stub.StreamChat(
+        chat_pb2.StreamChatRequest(conversation_id=older.id, content="Capital of France?")
+    ):
+        pass
+
+    listed = (await stub.ListConversations(chat_pb2.ListConversationsRequest())).conversations
+
+    # The answered conversation moves up; the two without messages keep creation order.
+    assert [c.id for c in listed] == [older.id, empty.id, newer.id]
+    assert listed[0].last_message_preview == "Paris is the capital."
+    assert listed[0].HasField("last_message_time")
+    assert listed[1].last_message_preview == ""
+    assert not listed[1].HasField("last_message_time")
 
 
 async def test_update_without_a_title_keeps_it(env: Env) -> None:

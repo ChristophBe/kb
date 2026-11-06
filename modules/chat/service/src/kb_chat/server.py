@@ -181,6 +181,8 @@ def _conversation(c: ConversationRow) -> chat_pb2.Conversation:
         create_time=_ts(c.created_at),
         update_time=_ts(c.updated_at),
         document_ids=[str(i) for i in c.document_ids],
+        last_message_time=_ts(c.last_message_time) if c.last_message_time else None,
+        last_message_preview=c.last_message_preview,
     )
 
 

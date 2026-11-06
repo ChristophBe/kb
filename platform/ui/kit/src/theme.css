@@ -56,6 +56,8 @@
     var(--color-blue-950)
   ); /* selected, own messages */
   --color-focus: light-dark(var(--color-blue-600), var(--color-blue-400));
+  /* Second stop of the hero gradient (text-gradient, the home glow); never for controls or status. */
+  --color-accent-2: light-dark(var(--color-sky-600), var(--color-sky-300));
 
   --color-neutral: light-dark(var(--color-zinc-700), var(--color-zinc-300));
   --color-neutral-subtle: light-dark(var(--color-zinc-100), var(--color-zinc-800));
@@ -112,6 +114,36 @@
   --shadow-*: initial;
   --shadow-glass: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 32px -12px rgb(0 0 0 / 0.18);
   --shadow-overlay: 0 1px 2px rgb(0 0 0 / 0.06), 0 24px 48px -16px rgb(0 0 0 / 0.35);
+
+  /* Motion: the home page's entrance and its decorative halo only. Reduced motion stills both (below). */
+  --animate-rise: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-glow: glow 14s ease-in-out infinite alternate;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      translate: 0 12px;
+    }
+  }
+  @keyframes glow {
+    from {
+      transform: translate(-6%, -4%) scale(0.95);
+    }
+    to {
+      transform: translate(6%, 4%) scale(1.08);
+    }
+  }
+}
+
+/* The hero's accent word: a blue gradient through the text; plain text in forced colours. */
+@utility text-gradient {
+  background-image: linear-gradient(100deg, var(--color-accent), var(--color-accent-2));
+  background-clip: text;
+  color: transparent;
+  @media (forced-colors: active) {
+    background-image: none;
+    color: CanvasText;
+  }
 }
 
 /* Liquid glass: blur and saturate what's behind, with a light rim on top. */

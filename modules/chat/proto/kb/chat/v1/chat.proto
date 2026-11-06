@@ -69,6 +69,11 @@ message Conversation {
   google.protobuf.Timestamp update_time = 4;
   // The documents answers are grounded in; empty means all documents.
   repeated string document_ids = 5;
+  // When the latest message was added; not set while there are no messages.
+  google.protobuf.Timestamp last_message_time = 6;
+  // The start of the latest message as plain text (Markdown removed), at most
+  // 120 characters; empty while there are no messages.
+  string last_message_preview = 7;
 }
 
 // A list of document ids, wrapped so that an update can tell "keep the scope"
@@ -96,6 +101,9 @@ message GetConversationResponse {
   repeated ChatMessage messages = 2;
 }
 
+// Conversations come newest first by their latest message; a conversation
+// without messages counts from its creation. Renaming or rescoping one does not
+// move it.
 message ListConversationsRequest {
   kb.common.v1.PageRequest page = 1;
 }

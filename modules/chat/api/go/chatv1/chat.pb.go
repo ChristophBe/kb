@@ -346,9 +346,14 @@ type Conversation struct {
 	CreateTime *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
 	UpdateTime *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`
 	// The documents answers are grounded in; empty means all documents.
-	DocumentIds   []string `protobuf:"bytes,5,rep,name=document_ids,json=documentIds,proto3" json:"document_ids,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	DocumentIds []string `protobuf:"bytes,5,rep,name=document_ids,json=documentIds,proto3" json:"document_ids,omitempty"`
+	// When the latest message was added; not set while there are no messages.
+	LastMessageTime *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=last_message_time,json=lastMessageTime,proto3" json:"last_message_time,omitempty"`
+	// The start of the latest message as plain text (Markdown removed), at most
+	// 120 characters; empty while there are no messages.
+	LastMessagePreview string `protobuf:"bytes,7,opt,name=last_message_preview,json=lastMessagePreview,proto3" json:"last_message_preview,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *Conversation) Reset() {
@@ -414,6 +419,20 @@ func (x *Conversation) GetDocumentIds() []string {
 		return x.DocumentIds
 	}
 	return nil
+}
+
+func (x *Conversation) GetLastMessageTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastMessageTime
+	}
+	return nil
+}
+
+func (x *Conversation) GetLastMessagePreview() string {
+	if x != nil {
+		return x.LastMessagePreview
+	}
+	return ""
 }
 
 // A list of document ids, wrapped so that an update can tell "keep the scope"
@@ -655,6 +674,9 @@ func (x *GetConversationResponse) GetMessages() []*ChatMessage {
 	return nil
 }
 
+// Conversations come newest first by their latest message; a conversation
+// without messages counts from its creation. Renaming or rescoping one does not
+// move it.
 type ListConversationsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Page          *commonv1.PageRequest  `protobuf:"bytes,1,opt,name=page,proto3" json:"page,omitempty"`
@@ -1244,7 +1266,7 @@ const file_kb_chat_v1_chat_proto_rawDesc = "" +
 	"\tcitations\x18\x04 \x03(\v2\x14.kb.chat.v1.CitationR\tcitations\x12;\n" +
 	"\vcreate_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"createTime\x121\n" +
-	"\x06status\x18\x06 \x01(\x0e2\x19.kb.chat.v1.MessageStatusR\x06status\"\xd1\x01\n" +
+	"\x06status\x18\x06 \x01(\x0e2\x19.kb.chat.v1.MessageStatusR\x06status\"\xcb\x02\n" +
 	"\fConversation\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12;\n" +
@@ -1252,7 +1274,9 @@ const file_kb_chat_v1_chat_proto_rawDesc = "" +
 	"createTime\x12;\n" +
 	"\vupdate_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"updateTime\x12!\n" +
-	"\fdocument_ids\x18\x05 \x03(\tR\vdocumentIds\"\x1f\n" +
+	"\fdocument_ids\x18\x05 \x03(\tR\vdocumentIds\x12F\n" +
+	"\x11last_message_time\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x0flastMessageTime\x120\n" +
+	"\x14last_message_preview\x18\a \x01(\tR\x12lastMessagePreview\"\x1f\n" +
 	"\vDocumentIds\x12\x10\n" +
 	"\x03ids\x18\x01 \x03(\tR\x03ids\"T\n" +
 	"\x19CreateConversationRequest\x12\x14\n" +
@@ -1365,36 +1389,37 @@ var file_kb_chat_v1_chat_proto_depIdxs = []int32{
 	1,  // 3: kb.chat.v1.ChatMessage.status:type_name -> kb.chat.v1.MessageStatus
 	21, // 4: kb.chat.v1.Conversation.create_time:type_name -> google.protobuf.Timestamp
 	21, // 5: kb.chat.v1.Conversation.update_time:type_name -> google.protobuf.Timestamp
-	5,  // 6: kb.chat.v1.CreateConversationResponse.conversation:type_name -> kb.chat.v1.Conversation
-	5,  // 7: kb.chat.v1.GetConversationResponse.conversation:type_name -> kb.chat.v1.Conversation
-	4,  // 8: kb.chat.v1.GetConversationResponse.messages:type_name -> kb.chat.v1.ChatMessage
-	22, // 9: kb.chat.v1.ListConversationsRequest.page:type_name -> kb.common.v1.PageRequest
-	5,  // 10: kb.chat.v1.ListConversationsResponse.conversations:type_name -> kb.chat.v1.Conversation
-	23, // 11: kb.chat.v1.ListConversationsResponse.page:type_name -> kb.common.v1.PageResponse
-	6,  // 12: kb.chat.v1.UpdateConversationRequest.document_ids:type_name -> kb.chat.v1.DocumentIds
-	5,  // 13: kb.chat.v1.UpdateConversationResponse.conversation:type_name -> kb.chat.v1.Conversation
-	20, // 14: kb.chat.v1.StreamChatResponse.citations:type_name -> kb.chat.v1.Citations
-	4,  // 15: kb.chat.v1.StreamChatResponse.message:type_name -> kb.chat.v1.ChatMessage
-	19, // 16: kb.chat.v1.StreamChatResponse.error:type_name -> kb.chat.v1.ChatError
-	2,  // 17: kb.chat.v1.ChatError.code:type_name -> kb.chat.v1.ChatErrorCode
-	3,  // 18: kb.chat.v1.Citations.items:type_name -> kb.chat.v1.Citation
-	7,  // 19: kb.chat.v1.ChatService.CreateConversation:input_type -> kb.chat.v1.CreateConversationRequest
-	9,  // 20: kb.chat.v1.ChatService.GetConversation:input_type -> kb.chat.v1.GetConversationRequest
-	11, // 21: kb.chat.v1.ChatService.ListConversations:input_type -> kb.chat.v1.ListConversationsRequest
-	13, // 22: kb.chat.v1.ChatService.DeleteConversation:input_type -> kb.chat.v1.DeleteConversationRequest
-	15, // 23: kb.chat.v1.ChatService.UpdateConversation:input_type -> kb.chat.v1.UpdateConversationRequest
-	17, // 24: kb.chat.v1.ChatService.StreamChat:input_type -> kb.chat.v1.StreamChatRequest
-	8,  // 25: kb.chat.v1.ChatService.CreateConversation:output_type -> kb.chat.v1.CreateConversationResponse
-	10, // 26: kb.chat.v1.ChatService.GetConversation:output_type -> kb.chat.v1.GetConversationResponse
-	12, // 27: kb.chat.v1.ChatService.ListConversations:output_type -> kb.chat.v1.ListConversationsResponse
-	14, // 28: kb.chat.v1.ChatService.DeleteConversation:output_type -> kb.chat.v1.DeleteConversationResponse
-	16, // 29: kb.chat.v1.ChatService.UpdateConversation:output_type -> kb.chat.v1.UpdateConversationResponse
-	18, // 30: kb.chat.v1.ChatService.StreamChat:output_type -> kb.chat.v1.StreamChatResponse
-	25, // [25:31] is the sub-list for method output_type
-	19, // [19:25] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	21, // 6: kb.chat.v1.Conversation.last_message_time:type_name -> google.protobuf.Timestamp
+	5,  // 7: kb.chat.v1.CreateConversationResponse.conversation:type_name -> kb.chat.v1.Conversation
+	5,  // 8: kb.chat.v1.GetConversationResponse.conversation:type_name -> kb.chat.v1.Conversation
+	4,  // 9: kb.chat.v1.GetConversationResponse.messages:type_name -> kb.chat.v1.ChatMessage
+	22, // 10: kb.chat.v1.ListConversationsRequest.page:type_name -> kb.common.v1.PageRequest
+	5,  // 11: kb.chat.v1.ListConversationsResponse.conversations:type_name -> kb.chat.v1.Conversation
+	23, // 12: kb.chat.v1.ListConversationsResponse.page:type_name -> kb.common.v1.PageResponse
+	6,  // 13: kb.chat.v1.UpdateConversationRequest.document_ids:type_name -> kb.chat.v1.DocumentIds
+	5,  // 14: kb.chat.v1.UpdateConversationResponse.conversation:type_name -> kb.chat.v1.Conversation
+	20, // 15: kb.chat.v1.StreamChatResponse.citations:type_name -> kb.chat.v1.Citations
+	4,  // 16: kb.chat.v1.StreamChatResponse.message:type_name -> kb.chat.v1.ChatMessage
+	19, // 17: kb.chat.v1.StreamChatResponse.error:type_name -> kb.chat.v1.ChatError
+	2,  // 18: kb.chat.v1.ChatError.code:type_name -> kb.chat.v1.ChatErrorCode
+	3,  // 19: kb.chat.v1.Citations.items:type_name -> kb.chat.v1.Citation
+	7,  // 20: kb.chat.v1.ChatService.CreateConversation:input_type -> kb.chat.v1.CreateConversationRequest
+	9,  // 21: kb.chat.v1.ChatService.GetConversation:input_type -> kb.chat.v1.GetConversationRequest
+	11, // 22: kb.chat.v1.ChatService.ListConversations:input_type -> kb.chat.v1.ListConversationsRequest
+	13, // 23: kb.chat.v1.ChatService.DeleteConversation:input_type -> kb.chat.v1.DeleteConversationRequest
+	15, // 24: kb.chat.v1.ChatService.UpdateConversation:input_type -> kb.chat.v1.UpdateConversationRequest
+	17, // 25: kb.chat.v1.ChatService.StreamChat:input_type -> kb.chat.v1.StreamChatRequest
+	8,  // 26: kb.chat.v1.ChatService.CreateConversation:output_type -> kb.chat.v1.CreateConversationResponse
+	10, // 27: kb.chat.v1.ChatService.GetConversation:output_type -> kb.chat.v1.GetConversationResponse
+	12, // 28: kb.chat.v1.ChatService.ListConversations:output_type -> kb.chat.v1.ListConversationsResponse
+	14, // 29: kb.chat.v1.ChatService.DeleteConversation:output_type -> kb.chat.v1.DeleteConversationResponse
+	16, // 30: kb.chat.v1.ChatService.UpdateConversation:output_type -> kb.chat.v1.UpdateConversationResponse
+	18, // 31: kb.chat.v1.ChatService.StreamChat:output_type -> kb.chat.v1.StreamChatResponse
+	26, // [26:32] is the sub-list for method output_type
+	20, // [20:26] is the sub-list for method input_type
+	20, // [20:20] is the sub-list for extension type_name
+	20, // [20:20] is the sub-list for extension extendee
+	0,  // [0:20] is the sub-list for field type_name
 }
 
 func init() { file_kb_chat_v1_chat_proto_init() }

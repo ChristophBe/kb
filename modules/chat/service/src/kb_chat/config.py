@@ -11,8 +11,13 @@ class Settings(PlatformSettings):
     database_url: str = "postgresql+asyncpg://kb:kb@localhost:5432/kb"
     document_addr: str = "localhost:9001"
     llm_addr: str = "localhost:9004"
-    # Number of chunks retrieved for grounding an answer.
+    # Number of chunks retrieved for grounding an answer, and the cosine
+    # similarity a chunk needs to count as related to the question. Measured with
+    # nomic-embed-text: the passage answering a question scores about 0.67-0.84,
+    # the best chunk for an unrelated question at most 0.44. Tune it together
+    # with the embedding model.
     rag_top_k: int = 5
+    rag_min_score: float = 0.5
     # Previous messages loaded as context; the token budget below may drop the oldest.
     history_limit: int = 20
     # Context window of the chat model in tokens, and the part of it kept free for

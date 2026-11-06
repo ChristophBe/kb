@@ -46,17 +46,20 @@ class PeerEmbedder:
 
 class PeerRetriever:
     """Finds document passages and, with a manual, the manual sections that
-    match the question; the question is embedded once for both."""
+    match the question; the question is embedded once for both. Passages
+    scoring below `min_score` are unrelated to the question and left out."""
 
     def __init__(
         self,
         documents: document_pb2_grpc.DocumentServiceStub,
         llm: llm_pb2_grpc.LlmServiceStub,
         manual: Manual | None = None,
+        min_score: float = 0.0,
     ) -> None:
         self._documents = documents
         self._embedder = PeerEmbedder(llm)
         self._manual = manual
+        self._min_score = min_score
 
     async def retrieve(
         self, query: str, limit: int, document_ids: Sequence[uuid.UUID]
@@ -79,6 +82,7 @@ class PeerRetriever:
                 score=r.score,
             )
             for r in result.results
+            if r.score >= self._min_score
         ]
         manual = self._manual.search(embedding) if self._manual else []
         return merge_sources(documents, manual)

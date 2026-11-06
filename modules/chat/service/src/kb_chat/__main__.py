@@ -37,7 +37,7 @@ async def run() -> None:
             # In the background: chat answers without the manual until the llm
             # module has embedded it.
             loading = asyncio.create_task(manual.load(PeerEmbedder(llm)))
-            retriever = PeerRetriever(documents, llm, manual)
+            retriever = PeerRetriever(documents, llm, manual, settings.rag_min_score)
             chat = Chat(settings, repo, retriever, PeerGenerator(llm))
             servicer = ChatServicer(repo, chat)
             try:

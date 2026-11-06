@@ -219,3 +219,32 @@ async def test_the_retriever_works_without_a_manual() -> None:
     sources = await retriever.retrieve("q", 5, [])
 
     assert [s.document_id for s in sources] == ["d1"]
+
+
+class ScoredDocuments:
+    async def SearchChunks(self, request: Any) -> Any:
+        def result(index: int, score: float) -> Any:
+            chunk = SimpleNamespace(document_id="d1", index=index, text="passage")
+            return SimpleNamespace(chunk=chunk, document_title="Report", score=score)
+
+        return SimpleNamespace(results=[result(0, 0.7), result(1, 0.5), result(2, 0.49)])
+
+
+async def test_the_retriever_leaves_out_passages_below_the_minimum_score() -> None:
+    retriever = PeerRetriever(ScoredDocuments(), FakeLlm(), min_score=0.5)  # type: ignore[arg-type]
+
+    sources = await retriever.retrieve("q", 5, [])
+
+    assert [s.chunk_index for s in sources] == [0, 1]
+
+
+async def test_the_retriever_keeps_every_passage_without_a_minimum_score() -> None:
+    retriever = PeerRetriever(ScoredDocuments(), FakeLlm())  # type: ignore[arg-type]
+
+    assert len(await retriever.retrieve("q", 5, [])) == 3
+
+
+def test_the_minimum_score_is_a_setting(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("KB_RAG_MIN_SCORE", "0.42")
+
+    assert Settings().rag_min_score == 0.42

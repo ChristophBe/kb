@@ -8,6 +8,7 @@ import grpc
 import pytest
 from kb.chat.v1 import chat_pb2
 from kb_chat.chat import (
+    NO_SOURCES_PROMPT,
     RAG_PROMPT,
     SYSTEM_PROMPT,
     TITLE_LENGTH,
@@ -68,8 +69,11 @@ class FakeRepo:
 
 
 class FakeRetriever:
-    def __init__(self, error: Exception | None = None) -> None:
+    def __init__(
+        self, error: Exception | None = None, results: list[chat_pb2.Citation] | None = None
+    ) -> None:
         self.error = error
+        self.results = results
         self.calls: list[tuple[str, int, list[uuid.UUID]]] = []
 
     async def retrieve(
@@ -78,6 +82,8 @@ class FakeRetriever:
         self.calls.append((query, limit, list(document_ids)))
         if self.error:
             raise self.error
+        if self.results is not None:
+            return self.results
         return [
             chat_pb2.Citation(
                 document_id="d1", document_title="geo.md", chunk_index=2, snippet="Paris", score=0.9
@@ -178,6 +184,16 @@ async def test_without_the_knowledge_base_nothing_is_retrieved() -> None:
     assert not any(isinstance(e, SourcesFound) for e in events)
     system = generator.calls[0][1][0]
     assert system == PromptMessage(PromptRole.SYSTEM, SYSTEM_PROMPT)
+
+
+async def test_without_related_passages_the_answer_has_no_sources() -> None:
+    chat, repo, _, generator = make(retriever=FakeRetriever(results=[]))
+    events = await collect(chat, repo)
+
+    assert events[0] == SourcesFound([])
+    system = generator.calls[0][1][0]
+    assert system == PromptMessage(PromptRole.SYSTEM, f"{SYSTEM_PROMPT}\n\n{NO_SOURCES_PROMPT}")
+    assert repo.messages[-1].citations == []
 
 
 async def test_prompt_numbers_sources_and_keeps_the_history_in_order() -> None:

@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+import functools
 import uuid
 from collections.abc import AsyncGenerator, Sequence
 from dataclasses import dataclass
@@ -21,6 +22,10 @@ RAG_PROMPT = (
     "Answer using the numbered sources below when they are relevant and cite them like [1]. "
     "Sources from the user manual explain how to use this knowledge base tool. "
     "If the sources do not contain the answer, say so.\n\nSources:\n{sources}"
+)
+NO_SOURCES_PROMPT = (
+    "Nothing in the knowledge base is related to this question. Say so before "
+    "answering from general knowledge, and don't cite sources."
 )
 
 
@@ -149,13 +154,14 @@ class Chat:
                     content, self._settings.rag_top_k, conv.document_ids
                 )
             budget = self._settings.context_tokens - self._settings.answer_reserve_tokens
-            context = fit(budget, self._counter, _system_prompt, retrieved, history, content)
+            system_prompt = functools.partial(_system_prompt, use_knowledge_base)
+            context = fit(budget, self._counter, system_prompt, retrieved, history, content)
             # Only the sources that made it into the prompt are cited, numbered as there.
             citations = context.sources
             if use_knowledge_base:
                 yield SourcesFound(citations)
 
-            prompt = _prompt(citations, context.history, content)
+            prompt = _prompt(system_prompt(citations), context.history, content)
             async with contextlib.aclosing(self._generator.generate(model, prompt)) as deltas:
                 async for delta in deltas:
                     answer.append(delta)
@@ -190,19 +196,18 @@ class Chat:
         )
 
 
-def _prompt(
-    citations: list[chat_pb2.Citation], history: list[MessageRow], content: str
-) -> list[PromptMessage]:
+def _prompt(system: str, history: list[MessageRow], content: str) -> list[PromptMessage]:
     return [
-        PromptMessage(PromptRole.SYSTEM, _system_prompt(citations)),
+        PromptMessage(PromptRole.SYSTEM, system),
         *(PromptMessage(_PROMPT_ROLES[m.role], m.content) for m in history),
         PromptMessage(PromptRole.USER, content),
     ]
 
 
-def _system_prompt(citations: Sequence[chat_pb2.Citation]) -> str:
+def _system_prompt(use_knowledge_base: bool, citations: Sequence[chat_pb2.Citation]) -> str:
     if not citations:
-        return SYSTEM_PROMPT
+        # Asked to use the knowledge base, but no passage was related enough.
+        return f"{SYSTEM_PROMPT}\n\n{NO_SOURCES_PROMPT}" if use_knowledge_base else SYSTEM_PROMPT
     sources = "\n\n".join(
         f"[{i}] {_source_name(c)}:\n{c.snippet}" for i, c in enumerate(citations, start=1)
     )

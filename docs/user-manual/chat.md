@@ -27,7 +27,7 @@ Answers from the knowledge base contain numbers like [1] and [2]. Each number po
 - Point at or focus a number to highlight its source, and the other way round.
 - Select a number or a source's title to open the document at that passage. The passage is scrolled into view and briefly highlighted.
 
-The sources are the passages that matched your question best; the answer doesn't have to use all of them. When they don't contain the answer, the answer is meant to say so, but check the sources before relying on it.
+The sources are the passages that matched your question best; the answer doesn't have to use all of them. Passages that aren't related to your question are left out, so an answer can have fewer sources, or none. An answer without sources comes from the language model's general knowledge, and is meant to say first that nothing in your documents relates to the question. When the sources don't contain the answer, the answer is meant to say so, but check the sources before relying on it.
 
 ## Answer without the knowledge base
 

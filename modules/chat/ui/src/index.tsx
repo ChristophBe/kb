@@ -1,6 +1,6 @@
 import { defineModule } from "@kb/module-sdk";
 import { MessageSquare } from "lucide-react";
-import { ChatEmpty, ChatLayout } from "./ChatLayout.tsx";
+import { ChatIndex, ChatLayout } from "./ChatLayout.tsx";
 import { Conversation } from "./Conversation.tsx";
 
 export default defineModule({
@@ -11,7 +11,7 @@ export default defineModule({
     {
       element: <ChatLayout />,
       children: [
-        { index: true, element: <ChatEmpty /> },
+        { index: true, element: <ChatIndex /> },
         { path: ":id", element: <Conversation /> },
       ],
     },

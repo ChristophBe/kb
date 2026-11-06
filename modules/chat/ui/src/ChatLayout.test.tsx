@@ -57,7 +57,27 @@ describe("ChatLayout", () => {
     expect(sidebar().getByRole("link", { name: "New conversation" }).getAttribute("href")).toBe(
       "/c2",
     );
-    expect(screen.getByText("Start a new chat or pick a conversation.")).toBeTruthy();
+  });
+
+  it("opens the most recent conversation in place of the start page", async () => {
+    const { transport } = chatService([
+      conversation("c1", "Q3 revenue"),
+      conversation("c2", "Hiring plan"),
+    ]);
+    const { router } = renderModule(chat, transport);
+    expect(await screen.findByText("How did revenue develop?")).toBeTruthy();
+    expect(sidebar().getByRole("link", { name: "Q3 revenue" }).getAttribute("aria-current")).toBe(
+      "page",
+    );
+    expect(router.state.location.pathname).toBe("/c1");
+    expect(router.state.historyAction).toBe("REPLACE");
+  });
+
+  it("shows the start page when there are no conversations", async () => {
+    const { transport } = chatService([]);
+    const { router } = renderModule(chat, transport);
+    expect(await screen.findByText("Start a new chat.")).toBeTruthy();
+    expect(router.state.location.pathname).toBe("/");
   });
 
   it("shows the last message's preview and age", async () => {
@@ -103,7 +123,7 @@ describe("ChatLayout", () => {
     expect(created.getAttribute("aria-current")).toBe("page");
   });
 
-  it("deletes a conversation", async () => {
+  it("deletes a conversation and opens the next most recent", async () => {
     const { transport, deleteConversation } = chatService([
       conversation("c1", "Q3 revenue"),
       conversation("c2", "Hiring plan"),
@@ -111,10 +131,10 @@ describe("ChatLayout", () => {
     renderModule(chat, transport, "/c1");
     await screen.findByText("How did revenue develop?");
     fireEvent.click(screen.getByRole("button", { name: "Delete conversation Q3 revenue" }));
-    expect(await screen.findByText("Start a new chat or pick a conversation.")).toBeTruthy();
+    const next = await sidebar().findByRole("link", { name: "Hiring plan", current: "page" });
+    expect(next).toBeTruthy();
     expect(deleteConversation.mock.calls[0]?.[0].id).toBe("c1");
     expect(screen.queryByRole("link", { name: "Q3 revenue" })).toBeNull();
-    expect(sidebar().getByRole("link", { name: "Hiring plan" })).toBeTruthy();
   });
 
   it("shows why the conversations can't be loaded", async () => {

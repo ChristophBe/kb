@@ -152,9 +152,18 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.3.0(react@19.3.0)
+      react-markdown:
+        specifier: 'catalog:'
+        version: 10.1.0(@types/react@19.3.0)(react@19.3.0)
       react-router:
         specifier: 'catalog:'
         version: 8.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      rehype-sanitize:
+        specifier: 'catalog:'
+        version: 6.0.0
+      remark-gfm:
+        specifier: 'catalog:'
+        version: 4.0.1
     devDependencies:
       '@tailwindcss/vite':
         specifier: 'catalog:'

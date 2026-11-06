@@ -11,6 +11,7 @@ The sidebar on the left leads to every area:
 - **Search**: find passages across all documents. See [Search](search.md).
 - **Ingestion**: upload files to add them. See [Ingestion](ingestion.md).
 - **Models**: check that the language model behind search and chat is available. See [Models](models.md).
+- **Help**, at the bottom of the sidebar: this manual, one page per area.
 
 **kb / Knowledge Base** at the top of the sidebar takes you to the **Welcome** page, which has cards for **Chat**, **Documents**, **Ingestion** and **Models**.
 

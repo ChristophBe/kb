@@ -1,6 +1,6 @@
 import { ChatService } from "@kb/chat-api/kb/chat/v1/chat_pb";
 import { toast, useClient, useMutation, useQuery, useQueryClient } from "@kb/module-sdk";
-import { Area, Button, ErrorMessage, IconButton, navItemClass } from "@kb/ui";
+import { Area, Button, ErrorMessage, IconButton, navItemClass, RelativeTime } from "@kb/ui";
 import { Plus, Trash2 } from "lucide-react";
 import { NavLink, Outlet, useNavigate, useParams } from "react-router";
 import { UNTITLED } from "./ConversationHeader.tsx";
@@ -42,8 +42,34 @@ export function ChatLayout() {
         <nav className="flex-1 overflow-y-auto px-3 pb-3">
           {conversations.data?.conversations.map((c) => (
             <div key={c.id} className={navItemClass(c.id === openId, "group gap-0 p-0")}>
-              <NavLink to={c.id} className="min-w-0 flex-1 truncate px-3 py-2">
-                {c.title || UNTITLED}
+              <NavLink
+                to={c.id}
+                aria-labelledby={`${c.id}-title`}
+                aria-describedby={
+                  [c.lastMessagePreview && `${c.id}-preview`, c.lastMessageTime && `${c.id}-age`]
+                    .filter(Boolean)
+                    .join(" ") || undefined
+                }
+                className="min-w-0 flex-1 px-3 py-2"
+              >
+                <span className="flex items-baseline gap-2">
+                  <span id={`${c.id}-title`} className="min-w-0 flex-1 truncate">
+                    {c.title || UNTITLED}
+                  </span>
+                  <RelativeTime
+                    id={`${c.id}-age`}
+                    time={c.lastMessageTime}
+                    className="shrink-0 text-xs font-normal text-fg-muted"
+                  />
+                </span>
+                {c.lastMessagePreview && (
+                  <span
+                    id={`${c.id}-preview`}
+                    className="block truncate text-xs font-normal text-fg-muted"
+                  >
+                    {c.lastMessagePreview}
+                  </span>
+                )}
               </NavLink>
               <IconButton
                 label={`Delete conversation ${c.title || UNTITLED}`}

@@ -94,6 +94,8 @@ func newStack() (*stack, error) {
 		project: project,
 		env: append(os.Environ(),
 			"KB_LLM_PROVIDER=fake",
+			// Hash embeddings score like noise; keep every retrieved chunk.
+			"KB_RAG_MIN_SCORE=0",
 			"KB_GATEWAY_PORT="+gatewayPort,
 			"KB_E2E_S3_PORT="+s3Port,
 			"KB_WEB_PORT="+webPort,

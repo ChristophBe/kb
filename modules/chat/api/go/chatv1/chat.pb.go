@@ -179,6 +179,9 @@ func (ChatErrorCode) EnumDescriptor() ([]byte, []int) {
 	return file_kb_chat_v1_chat_proto_rawDescGZIP(), []int{2}
 }
 
+// A source an answer is grounded in: a chunk of a document, or a section of the
+// user manual. Manual citations set manual_page and manual_section instead of
+// document_id and chunk_index; their document_title names the page and section.
 type Citation struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	DocumentId    string                 `protobuf:"bytes,1,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
@@ -186,6 +189,10 @@ type Citation struct {
 	ChunkIndex    int32                  `protobuf:"varint,3,opt,name=chunk_index,json=chunkIndex,proto3" json:"chunk_index,omitempty"`
 	Snippet       string                 `protobuf:"bytes,4,opt,name=snippet,proto3" json:"snippet,omitempty"`
 	Score         float32                `protobuf:"fixed32,5,opt,name=score,proto3" json:"score,omitempty"`
+	// The manual page, as in /help/<manual_page>.
+	ManualPage string `protobuf:"bytes,6,opt,name=manual_page,json=manualPage,proto3" json:"manual_page,omitempty"`
+	// The section anchor on that page, as in /help/<manual_page>#<manual_section>.
+	ManualSection string `protobuf:"bytes,7,opt,name=manual_section,json=manualSection,proto3" json:"manual_section,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -253,6 +260,20 @@ func (x *Citation) GetScore() float32 {
 		return x.Score
 	}
 	return 0
+}
+
+func (x *Citation) GetManualPage() string {
+	if x != nil {
+		return x.ManualPage
+	}
+	return ""
+}
+
+func (x *Citation) GetManualSection() string {
+	if x != nil {
+		return x.ManualSection
+	}
+	return ""
 }
 
 type ChatMessage struct {
@@ -1250,7 +1271,7 @@ var File_kb_chat_v1_chat_proto protoreflect.FileDescriptor
 const file_kb_chat_v1_chat_proto_rawDesc = "" +
 	"\n" +
 	"\x15kb/chat/v1/chat.proto\x12\n" +
-	"kb.chat.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19kb/common/v1/common.proto\"\xa3\x01\n" +
+	"kb.chat.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19kb/common/v1/common.proto\"\xeb\x01\n" +
 	"\bCitation\x12\x1f\n" +
 	"\vdocument_id\x18\x01 \x01(\tR\n" +
 	"documentId\x12%\n" +
@@ -1258,7 +1279,10 @@ const file_kb_chat_v1_chat_proto_rawDesc = "" +
 	"\vchunk_index\x18\x03 \x01(\x05R\n" +
 	"chunkIndex\x12\x18\n" +
 	"\asnippet\x18\x04 \x01(\tR\asnippet\x12\x14\n" +
-	"\x05score\x18\x05 \x01(\x02R\x05score\"\x88\x02\n" +
+	"\x05score\x18\x05 \x01(\x02R\x05score\x12\x1f\n" +
+	"\vmanual_page\x18\x06 \x01(\tR\n" +
+	"manualPage\x12%\n" +
+	"\x0emanual_section\x18\a \x01(\tR\rmanualSection\"\x88\x02\n" +
 	"\vChatMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12+\n" +
 	"\x04role\x18\x02 \x01(\x0e2\x17.kb.chat.v1.MessageRoleR\x04role\x12\x18\n" +

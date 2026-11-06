@@ -33,6 +33,12 @@ The sources are the passages that matched your question best; the answer doesn't
 
 Clear **Answer from the knowledge base** below the question box to get answers from the language model alone, without searching your documents. These answers have no sources. Select it again to go back. The setting applies to the questions you send next while the conversation is open.
 
+## Ask how to use kb
+
+Chat also knows this manual. Ask how to do something, for example "How do I restrict a chat to some documents?", and the answer explains it, citing the sections of the manual it used. These sources are marked **user manual**; select one to open that section of the help page.
+
+The manual is searched alongside your documents and only when **Answer from the knowledge base** is ticked. Its sections never replace passages from your documents, and they are only cited when they match your question closely. When kb has just started, it can take a moment before chat knows the manual.
+
 ## Restrict a chat to some documents
 
 By default, answers come from all your documents (**Scope: all documents** under the conversation's title). To use only some of them:

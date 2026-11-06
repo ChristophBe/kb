@@ -84,6 +84,26 @@ describe("Answer", () => {
     expect(link.getAttribute("href")).toBe("/m/document/d1");
   });
 
+  it("links manual sources to their section of the help page", () => {
+    const manual = create(CitationSchema, {
+      documentTitle: "Chat: Stop an answer",
+      snippet: "Select Stop.",
+      manualPage: "chat",
+      manualSection: "stop-an-answer",
+    });
+    renderAnswer("Select Stop [1], see also [2].", [manual, ...sources]);
+
+    const marker = screen.getByRole("link", {
+      name: "Source 1: Chat: Stop an answer, user manual",
+    });
+    expect(marker.getAttribute("href")).toBe("/help/chat#stop-an-answer");
+    const notes = within(screen.getByRole("list", { name: "Sources" }));
+    const note = notes.getByRole("link", { name: "Chat: Stop an answer, user manual" });
+    expect(note.getAttribute("href")).toBe("/help/chat#stop-an-answer");
+    expect(notes.getByText("user manual")).toBeTruthy();
+    expect(notes.getByRole("link", { name: "Report.pdf, chunk 3" })).toBeTruthy();
+  });
+
   it("leaves markers in code and without a source as text", () => {
     const { container } = renderAnswer("Array `a[1]` and [7].\n\n```\nb[2]\n```", sources);
     expect(screen.queryByRole("link", { name: /^Source/ })).toBeNull();

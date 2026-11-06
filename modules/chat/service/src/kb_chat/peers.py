@@ -11,6 +11,7 @@ from kb.document.v1 import document_pb2, document_pb2_grpc
 from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 
 from .chat import Peer, PeerError, PeerUnavailableError, PromptMessage, PromptRole
+from .manual import Manual, merge_sources
 
 # Peer statuses that mean "try again later" rather than a bug.
 _PEER_UNAVAILABLE = {grpc.StatusCode.UNAVAILABLE, grpc.StatusCode.DEADLINE_EXCEEDED}
@@ -33,27 +34,43 @@ def _peer_errors(peer: Peer) -> Iterator[None]:
         raise PeerError(peer, message) from err
 
 
+class PeerEmbedder:
+    def __init__(self, llm: llm_pb2_grpc.LlmServiceStub) -> None:
+        self._llm = llm
+
+    async def embed(self, texts: Sequence[str]) -> list[list[float]]:
+        with _peer_errors(Peer.LLM):
+            embedded = await self._llm.Embed(llm_pb2.EmbedRequest(inputs=list(texts)))
+        return [list(e.values) for e in embedded.embeddings]
+
+
 class PeerRetriever:
+    """Finds document passages and, with a manual, the manual sections that
+    match the question; the question is embedded once for both."""
+
     def __init__(
-        self, documents: document_pb2_grpc.DocumentServiceStub, llm: llm_pb2_grpc.LlmServiceStub
+        self,
+        documents: document_pb2_grpc.DocumentServiceStub,
+        llm: llm_pb2_grpc.LlmServiceStub,
+        manual: Manual | None = None,
     ) -> None:
         self._documents = documents
-        self._llm = llm
+        self._embedder = PeerEmbedder(llm)
+        self._manual = manual
 
     async def retrieve(
         self, query: str, limit: int, document_ids: Sequence[uuid.UUID]
     ) -> list[chat_pb2.Citation]:
-        with _peer_errors(Peer.LLM):
-            embedded = await self._llm.Embed(llm_pb2.EmbedRequest(inputs=[query]))
+        (embedding,) = await self._embedder.embed([query])
         with _peer_errors(Peer.DOCUMENT):
             result = await self._documents.SearchChunks(
                 document_pb2.SearchChunksRequest(
-                    embedding=embedded.embeddings[0].values,
+                    embedding=embedding,
                     limit=limit,
                     document_ids=[str(i) for i in document_ids],
                 )
             )
-        return [
+        documents = [
             chat_pb2.Citation(
                 document_id=r.chunk.document_id,
                 document_title=r.document_title,
@@ -63,6 +80,8 @@ class PeerRetriever:
             )
             for r in result.results
         ]
+        manual = self._manual.search(embedding) if self._manual else []
+        return merge_sources(documents, manual)
 
 
 class PeerGenerator:

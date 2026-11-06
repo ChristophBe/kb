@@ -149,6 +149,8 @@ async def test_answer_streams_sources_then_deltas_then_the_saved_message() -> No
             "chunk_index": 2,
             "snippet": "Paris",
             "score": pytest.approx(0.9),
+            "manual_page": "",
+            "manual_section": "",
         }
     ]
     assert retriever.calls == [("Capital?", 3, [])]
@@ -194,6 +196,34 @@ async def test_prompt_numbers_sources_and_keeps_the_history_in_order() -> None:
         PromptMessage(PromptRole.ASSISTANT, "reply"),
         PromptMessage(PromptRole.USER, "Capital?"),
     ]
+
+
+async def test_manual_sources_are_named_as_such_and_saved_with_their_section() -> None:
+    class ManualRetriever(FakeRetriever):
+        async def retrieve(
+            self, query: str, limit: int, document_ids: Sequence[uuid.UUID]
+        ) -> list[chat_pb2.Citation]:
+            return [
+                chat_pb2.Citation(
+                    document_title="Chat: Stop an answer",
+                    snippet="Select Stop.",
+                    score=0.8,
+                    manual_page="chat",
+                    manual_section="stop-an-answer",
+                )
+            ]
+
+    chat, repo, _, generator = make(retriever=ManualRetriever())
+    events = await collect(chat, repo)
+
+    system = generator.calls[0][1][0]
+    assert "[1] User manual, Chat: Stop an answer:\nSelect Stop." in system.content
+    saved = events[-1]
+    assert isinstance(saved, AnswerSaved)
+    (citation,) = saved.message.citations
+    assert citation["manual_page"] == "chat"
+    assert citation["manual_section"] == "stop-an-answer"
+    assert citation["document_id"] == ""
 
 
 async def test_history_is_limited_and_excludes_the_new_question() -> None:

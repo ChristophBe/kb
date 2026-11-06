@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from .chat import Chat
 from .config import Settings
 from .db import SqlRepository, migrate
-from .peers import PeerGenerator, PeerRetriever
+from .manual import Manual, load_sections
+from .peers import PeerEmbedder, PeerGenerator, PeerRetriever
 from .server import ChatServicer
 
 log = logging.getLogger("kb_chat")
@@ -28,13 +29,25 @@ async def run() -> None:
             repo = SqlRepository(engine)
             documents = document_pb2_grpc.DocumentServiceStub(doc_ch)
             llm = llm_pb2_grpc.LlmServiceStub(llm_ch)
-            chat = Chat(settings, repo, PeerRetriever(documents, llm), PeerGenerator(llm))
-            servicer = ChatServicer(repo, chat)
-            await serve(
-                settings.grpc_port,
-                [lambda s: chat_pb2_grpc.add_ChatServiceServicer_to_server(servicer, s)],
-                [chat_pb2.DESCRIPTOR.services_by_name["ChatService"].full_name],
+            manual = Manual(
+                load_sections(settings.manual_dir),
+                settings.manual_top_k,
+                settings.manual_min_score,
             )
+            # In the background: chat answers without the manual until the llm
+            # module has embedded it.
+            loading = asyncio.create_task(manual.load(PeerEmbedder(llm)))
+            retriever = PeerRetriever(documents, llm, manual)
+            chat = Chat(settings, repo, retriever, PeerGenerator(llm))
+            servicer = ChatServicer(repo, chat)
+            try:
+                await serve(
+                    settings.grpc_port,
+                    [lambda s: chat_pb2_grpc.add_ChatServiceServicer_to_server(servicer, s)],
+                    [chat_pb2.DESCRIPTOR.services_by_name["ChatService"].full_name],
+                )
+            finally:
+                loading.cancel()
     finally:
         await engine.dispose()
 

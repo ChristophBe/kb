@@ -51,12 +51,19 @@ export function remarkCitations({ count }: { count: number }) {
   return walk;
 }
 
-function documentPath(c: Citation) {
+/** Where a source opens: its section of the user manual, or its document. */
+function sourcePath(c: Citation) {
+  if (c.manualPage) return `/help/${c.manualPage}#${c.manualSection}`;
   return `/m/document/${c.documentId}`;
 }
 
+/** What the source is within its title: "user manual" or the chunk. */
+function sourceDetail(c: Citation) {
+  return c.manualPage ? "user manual" : `chunk ${c.chunkIndex}`;
+}
+
 function citationName(n: number, c: Citation) {
-  return `Source ${n}: ${c.documentTitle}, chunk ${c.chunkIndex}`;
+  return `Source ${n}: ${c.documentTitle}, ${sourceDetail(c)}`;
 }
 
 function CodeBlock(props: ComponentProps<"pre">) {
@@ -121,7 +128,7 @@ export function Answer({ content, citations }: { content: string; citations: Cit
         if (citation) {
           return (
             <Link
-              to={documentPath(citation)}
+              to={sourcePath(citation)}
               aria-label={citationName(n, citation)}
               className="font-mono text-xs hover:underline"
               {...linked(n)}
@@ -157,10 +164,14 @@ export function Answer({ content, citations }: { content: string; citations: Cit
             const n = i + 1;
             return (
               <SourceNote
-                key={`${c.documentId}-${c.chunkIndex}`}
+                key={
+                  c.manualPage
+                    ? `${c.manualPage}#${c.manualSection}`
+                    : `${c.documentId}-${c.chunkIndex}`
+                }
                 n={n}
                 active={active === n}
-                detail={`chunk ${c.chunkIndex}`}
+                detail={sourceDetail(c)}
                 snippet={c.snippet}
                 title={<SourceLink citation={c} {...linked(n)} />}
               />
@@ -178,8 +189,8 @@ function SourceLink({
 }: { citation: Citation } & Omit<ComponentProps<typeof Link>, "to">) {
   return (
     <Link
-      to={documentPath(citation)}
-      aria-label={`${citation.documentTitle}, chunk ${citation.chunkIndex}`}
+      to={sourcePath(citation)}
+      aria-label={`${citation.documentTitle}, ${sourceDetail(citation)}`}
       className="hover:underline"
       {...handlers}
     >

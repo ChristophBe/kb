@@ -45,12 +45,19 @@ enum ChatErrorCode {
   CHAT_ERROR_CODE_INTERNAL = 2;
 }
 
+// A source an answer is grounded in: a chunk of a document, or a section of the
+// user manual. Manual citations set manual_page and manual_section instead of
+// document_id and chunk_index; their document_title names the page and section.
 message Citation {
   string document_id = 1;
   string document_title = 2;
   int32 chunk_index = 3;
   string snippet = 4;
   float score = 5;
+  // The manual page, as in /help/<manual_page>.
+  string manual_page = 6;
+  // The section anchor on that page, as in /help/<manual_page>#<manual_section>.
+  string manual_section = 7;
 }
 
 message ChatMessage {

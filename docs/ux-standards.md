@@ -49,7 +49,7 @@ Every colour role is written once as `light-dark(<light>, <dark>)`. The mode fol
 | Glass | `glass-area` (or the `Area` component), `glass`, `glass-strong` | `glass-area`: full-height regions of the layout, i.e. the sidebar and the conversation list. They sit flush with the viewport edge and each other, divided by a `border-border` hairline, with no radius or shadow. `glass`: floating chrome, i.e. the chat composer. `glass-strong`: overlays, i.e. dialogs, menus, toasts. Never for dense content such as tables or long text. All three fall back to an opaque `surface` without `backdrop-filter` support or under `prefers-reduced-transparency`. |
 | Text | `text-fg`, `text-fg-muted` | Body text and headings; secondary text, meta, icons. |
 | Border | `border-border`, `divide-border`, `border-border-strong` | Decorative dividers; boundaries that identify a control (inputs, secondary buttons) and must reach 3:1. Glass brings its own rim (`--color-glass-edge`). |
-| Accent | `bg-accent`, `hover:bg-accent-hover`, `text-on-accent`; `bg-accent-subtle` with `text-accent` | Filled: primary actions, one per view at most. Subtle: the active nav item, the selected conversation, the user's chat messages (with `text-fg`). `border-accent` for the active citation note and the selected tab. |
+| Accent | `bg-accent`, `hover:bg-accent-hover`, `text-on-accent`; `bg-accent-subtle` with `text-accent` | Filled: primary actions, one per view at most. Subtle: the active nav item, the selected conversation, the user's chat messages (with `text-fg`). `border-accent` for the active citation note and the selected tab. `accent-2` (`text-gradient`) is the second stop of the hero gradient: the home page's accent word and its glow only, never controls or status. |
 | Focus | `--color-focus` (global `:focus-visible` outline) | Never override per component. |
 | Status | `text-{tone}` on `bg-{tone}-subtle` for `neutral`, `info`, `success`, `warning`, `danger` | Badges (pills), alerts, inline errors. Status is never shown by colour alone; add text or an icon with a label. |
 
@@ -62,6 +62,7 @@ Every colour role is written once as `light-dark(<light>, <dark>)`. The mode fol
 | Radius | Concentric, growing with the container: `rounded-control` (10 px: buttons, inputs, nav items, alerts), `rounded-card` (16 px: cards, messages, toasts, menus), `rounded-panel` (24 px: the chat composer, dialogs; layout areas stay square), `rounded-full` (pills: badges, segmented controls; avatars, spinners). |
 | Rules | Solid `border-border` for structural edges inside content (cards, table heads). `divide-dotted divide-border` between rows of a list or `<dl>`. |
 | Shadow | `shadow-glass` for chrome that floats and lifted cards on hover; `shadow-overlay` for overlays (built into `glass-strong`). No other shadows exist. |
+| Motion | `animate-rise` (entrance, staggered with `animation-delay`) and `animate-glow` (the drifting halo) on the home page only; nothing else animates beyond hover and state transitions. Reduced motion stills both. |
 | Focus ring | 2 px solid `--color-focus`, 2 px offset. |
 
 Two components carry kb's own identity. Use them wherever their content appears, rather than a new treatment:

@@ -1,6 +1,6 @@
 import type { KbModule } from "@kb/module-sdk";
 import { buttonClass, Card, cn, PageTitle } from "@kb/ui";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { type FormEvent, useId, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { ModuleBoundary } from "./ModuleBoundary.tsx";
@@ -11,13 +11,13 @@ function modulePath(m: KbModule, path: string) {
 }
 
 /**
- * The landing page: a hero with search and the main actions, then a showcase
+ * The landing page: a hero with a prompt and the main actions, then a showcase
  * of every module's feature, then any module widgets. Everything
  * module-specific comes from `KbModule.feature` and `KbModule.widgets`.
  */
 export function Home({ modules }: { modules: KbModule[] }) {
-  const searcher = modules.find((m) => m.feature?.search);
-  const actions = modules.filter((m) => m.feature && m !== searcher).slice(0, 2);
+  const prompter = modules.find((m) => m.feature?.prompt);
+  const actions = modules.filter((m) => m.feature && m !== prompter).slice(0, 2);
   const widgets = modules.flatMap((m) =>
     Object.entries(m.widgets ?? {}).map(([name, Widget]) => (
       <ModuleBoundary key={`${m.id}.${name}`} title={m.title} widget>
@@ -35,17 +35,15 @@ export function Home({ modules }: { modules: KbModule[] }) {
           Upload what you know, then search it or ask in plain language. Every answer cites its
           sources.
         </p>
-        {searcher?.feature?.search && (
-          <HomeSearch to={modulePath(searcher, searcher.feature.search)} />
-        )}
+        {prompter?.feature?.prompt && <HomePrompt module={prompter} {...prompter.feature.prompt} />}
         {actions.length > 0 && (
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {actions.map((m, i) =>
+            {actions.map((m) =>
               m.feature ? (
                 <Link
                   key={m.id}
                   to={modulePath(m, m.feature.cta.path)}
-                  className={buttonClass(i === 0 ? "primary" : "secondary", "px-5 py-2")}
+                  className={buttonClass("secondary", "px-5 py-2")}
                 >
                   <m.icon className="size-4" />
                   {m.feature.cta.label}
@@ -74,8 +72,16 @@ export function Home({ modules }: { modules: KbModule[] }) {
 }
 
 /** Searches the module that declared `feature.search`, with the query in `?q=`. */
-function HomeSearch({ to }: { to: string }) {
+/** The hero's main input; opens the module's `prompt.path` with the text in `?q=`. */
+function HomePrompt({
+  module: m,
+  path,
+  label,
+  placeholder,
+  submit: submitLabel,
+}: { module: KbModule } & NonNullable<NonNullable<KbModule["feature"]>["prompt"]>) {
   const navigate = useNavigate();
+  const to = modulePath(m, path);
   const [q, setQ] = useState("");
   const inputId = useId();
   const submit = (e: FormEvent) => {
@@ -84,28 +90,26 @@ function HomeSearch({ to }: { to: string }) {
     navigate(query ? `${to}?${new URLSearchParams({ q: query })}` : to);
   };
   return (
-    <search className="mt-8 w-full max-w-xl">
-      <form
-        onSubmit={submit}
-        className="glass flex items-center gap-2 rounded-full py-1.5 pr-1.5 pl-5 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus"
-      >
-        <label htmlFor={inputId} className="sr-only">
-          Search your documents
-        </label>
-        <Search className="size-5 shrink-0 text-fg-muted" aria-hidden="true" />
-        <input
-          id={inputId}
-          type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search your documents…"
-          className="min-w-0 flex-1 bg-transparent py-2 text-base placeholder:text-fg-muted focus-visible:outline-none"
-        />
-        <button type="submit" className={buttonClass("primary", "rounded-full px-5 py-2")}>
-          Search
-        </button>
-      </form>
-    </search>
+    <form
+      onSubmit={submit}
+      className="glass mt-8 flex w-full max-w-xl items-center gap-2 rounded-full py-1.5 pr-1.5 pl-5 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus"
+    >
+      <label htmlFor={inputId} className="sr-only">
+        {label}
+      </label>
+      <m.icon className="size-5 shrink-0 text-fg-muted" />
+      <input
+        id={inputId}
+        type="text"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder={placeholder}
+        className="min-w-0 flex-1 bg-transparent py-2 text-base placeholder:text-fg-muted focus-visible:outline-none"
+      />
+      <button type="submit" className={buttonClass("primary", "rounded-full px-5 py-2")}>
+        {submitLabel}
+      </button>
+    </form>
   );
 }
 

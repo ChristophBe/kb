@@ -12,7 +12,6 @@ export default defineModule({
     headline: "Search by meaning",
     description: "Find the passage you need, even when you don't remember the exact words.",
     cta: { label: "Search documents", path: "search" },
-    search: "search",
   },
   routes: [
     { index: true, element: <DocumentList /> },

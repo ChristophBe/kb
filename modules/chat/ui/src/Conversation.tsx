@@ -10,9 +10,10 @@ import { Code, ConnectError, useClient, useQuery, useQueryClient } from "@kb/mod
 import { Button, ErrorMessage, Spinner, Textarea } from "@kb/ui";
 import { RotateCcw, Send, Square, TriangleAlert } from "lucide-react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
-import { useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { Answer } from "./Answer.tsx";
 import { ConversationHeader } from "./ConversationHeader.tsx";
+import type { StartState } from "./StartChat.tsx";
 import { DocumentPicker } from "./scope.tsx";
 
 interface Pending {
@@ -134,6 +135,23 @@ export function Conversation() {
     abort.current?.abort();
     composer.current?.focus();
   };
+
+  // A question handed over by StartChat (the home page's prompt): ask it once,
+  // then drop it from the history entry so a reload doesn't ask again. Asked a
+  // tick later and cancelled on cleanup: StrictMode's simulated unmount would
+  // otherwise run the cleanup above and stop the answer it just started.
+  const location = useLocation();
+  const navigate = useNavigate();
+  const handedOver = (location.state as StartState | null)?.question;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when a navigation hands over a question.
+  useEffect(() => {
+    if (!handedOver) return;
+    const timer = setTimeout(() => {
+      navigate(".", { replace: true, state: null });
+      ask(handedOver);
+    });
+    return () => clearTimeout(timer);
+  }, [location.key]);
 
   const send = (e: FormEvent) => {
     e.preventDefault();

@@ -4,6 +4,8 @@ Chat answers your questions from the documents in your knowledge base and shows 
 
 ## Start a conversation
 
+Opening **Chat** shows the conversation with the most recent message, so you can carry on where you left off. If you have no conversations yet, it asks you to start a new chat.
+
 1. Open **Chat**.
 2. Select **New chat**.
 
@@ -65,9 +67,9 @@ If the whole conversation can't be loaded or the question can't be sent, a messa
 
 The list on the left shows your conversations, the one with the most recent message first. Renaming a conversation or changing its documents doesn't move it.
 
-Each entry shows the conversation's title, a line with the beginning of its last message, and how long ago that message was sent, for example "5 min ago". Point at the time to see the exact date and time. A conversation without messages has no preview line.
+Each entry shows the conversation's title, a line with the beginning of its last message, and how long ago that message was sent, for example "5 minutes ago". Point at the time to see the exact date and time. A conversation without messages has no preview line.
 
-Select an entry to open the conversation.
+Select an entry to open the conversation. When you delete the open conversation, the next most recent one opens.
 
 ## Rename a conversation
 

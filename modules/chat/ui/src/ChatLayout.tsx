@@ -2,18 +2,24 @@ import { ChatService } from "@kb/chat-api/kb/chat/v1/chat_pb";
 import { toast, useClient, useMutation, useQuery, useQueryClient } from "@kb/module-sdk";
 import { Area, Button, ErrorMessage, IconButton, navItemClass, RelativeTime } from "@kb/ui";
 import { Plus, Trash2 } from "lucide-react";
-import { NavLink, Outlet, useNavigate, useParams } from "react-router";
+import { Navigate, NavLink, Outlet, useNavigate, useParams } from "react-router";
 import { UNTITLED } from "./ConversationHeader.tsx";
+
+/** The conversations, most recent message first. */
+function useConversations() {
+  const client = useClient(ChatService);
+  return useQuery({
+    queryKey: ["conversations"],
+    queryFn: () => client.listConversations({ page: { pageSize: 100 } }),
+  });
+}
 
 export function ChatLayout() {
   const { id: openId } = useParams();
   const client = useClient(ChatService);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const conversations = useQuery({
-    queryKey: ["conversations"],
-    queryFn: () => client.listConversations({ page: { pageSize: 100 } }),
-  });
+  const conversations = useConversations();
   const create = useMutation({
     mutationFn: () => client.createConversation({}),
     onSuccess: ({ conversation }) => {
@@ -90,10 +96,15 @@ export function ChatLayout() {
   );
 }
 
-export function ChatEmpty() {
+/** Opens the most recent conversation, or shows the empty state when there is none. */
+export function ChatIndex() {
+  const conversations = useConversations();
+  const latest = conversations.data?.conversations[0];
+  if (latest) return <Navigate to={latest.id} replace />;
+  if (conversations.isPending) return null;
   return (
     <div className="flex flex-1 items-center justify-center text-sm text-fg-muted">
-      Start a new chat or pick a conversation.
+      Start a new chat.
     </div>
   );
 }

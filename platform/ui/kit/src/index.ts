@@ -11,14 +11,12 @@ export {
   Input,
   PageHeader,
   PageTitle,
-  RelativeTime,
   SourceNote,
   Spinner,
   Textarea,
   type Tone,
   type Variant,
-  WidgetCard,
 } from "./components.tsx";
 export { Dialog } from "./dialog.tsx";
-export { formatBytes, formatRelativeTime, formatTime } from "./format.ts";
+export { formatBytes, formatTime } from "./format.ts";
 export { DelayedLoading, Skeleton, SkeletonRows } from "./loading.tsx";

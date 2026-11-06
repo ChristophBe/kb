@@ -17,7 +17,7 @@ const chat = module("chat", {
     description: "Answers from your documents.",
     cta: { label: "Ask a question", path: "" },
   },
-  widgets: { recent: () => <p>Recent conversations widget</p> },
+  widgets: { status: () => <p>Chat widget</p> },
 });
 const document = module("document", {
   feature: {
@@ -50,13 +50,12 @@ function renderHome(modules: KbModule[]) {
 }
 
 describe("Home", () => {
-  it("leads with the hero, recent work and every feature", async () => {
+  it("leads with the hero, then every feature, then module widgets", async () => {
     const { container } = renderHome([chat, document, ingestion, plain]);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
       "Your documents, ready to answer.",
     );
-    expect(screen.getByRole("heading", { name: "Pick up where you left off" })).toBeTruthy();
-    expect(screen.getByText("Recent conversations widget")).toBeTruthy();
+    expect(screen.getByText("Chat widget")).toBeTruthy();
 
     const features = screen.getByRole("region", { name: "Everything kb can do" });
     const links = [...features.querySelectorAll("a")].map((a) => a.getAttribute("href"));
@@ -87,9 +86,8 @@ describe("Home", () => {
     expect(screen.getByTestId("where").textContent).toBe("/m/document/search?q=revenue+2025");
   });
 
-  it("leaves out the search box and recent work when no module provides them", () => {
+  it("leaves out the search box when no module provides search", () => {
     renderHome([ingestion, plain]);
     expect(screen.queryByRole("search")).toBeNull();
-    expect(screen.queryByRole("heading", { name: "Pick up where you left off" })).toBeNull();
   });
 });

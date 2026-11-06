@@ -51,15 +51,15 @@ export function remarkCitations({ count }: { count: number }) {
   return walk;
 }
 
-/** Where a source opens: its section of the user manual, or its document. */
+/** Where a source opens: its section of the user manual, or its passage in the document. */
 function sourcePath(c: Citation) {
   if (c.manualPage) return `/help/${c.manualPage}#${c.manualSection}`;
-  return `/m/document/${c.documentId}`;
+  return `/m/document/${c.documentId}#chunk-${c.chunkIndex}`;
 }
 
-/** What the source is within its title: "user manual" or the chunk. */
+/** What the source is within its title: "user manual" or the chunk, numbered from 1 as in search. */
 function sourceDetail(c: Citation) {
-  return c.manualPage ? "user manual" : `chunk ${c.chunkIndex}`;
+  return c.manualPage ? "user manual" : `chunk ${c.chunkIndex + 1}`;
 }
 
 function citationName(n: number, c: Citation) {

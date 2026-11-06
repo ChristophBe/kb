@@ -22,10 +22,10 @@ Follow-up questions in the same conversation can refer to earlier questions and 
 
 ## Check the sources of an answer
 
-Answers from the knowledge base contain numbers like [1] and [2]. Each number points to a passage listed under the answer's sources, with the document's title, the passage number and a short excerpt.
+Answers from the knowledge base contain numbers like [1] and [2]. Each number points to a passage listed under the answer's sources, with the document's title, the passage number and a short excerpt. Passage numbers are the same as in search and on the document's page.
 
 - Point at or focus a number to highlight its source, and the other way round.
-- Select a number or a source's title to open the document.
+- Select a number or a source's title to open the document at that passage. The passage is scrolled into view and briefly highlighted.
 
 The sources are the passages that matched your question best; the answer doesn't have to use all of them. When they don't contain the answer, the answer is meant to say so, but check the sources before relying on it.
 

@@ -9,6 +9,7 @@ services:
       KB_DATABASE_URL: postgresql+asyncpg://kb:kb@postgres:5432/kb
       KB_DOCUMENT_ADDR: document-service:9001
       KB_LLM_ADDR: llm-service:9004
+      KB_RAG_MIN_SCORE: ${KB_RAG_MIN_SCORE:-0.5}
     ports: ["9003:9003"]
     # Infrastructure only: other modules are soft dependencies (docs/architecture/module.md).
     depends_on:

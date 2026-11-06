@@ -34,7 +34,3 @@ More in [Ask a question](chat.md#ask-a-question).
 ## Switch between light and dark mode
 
 The switch at the bottom of the sidebar has three options: **System** (follow your computer's setting), **Light** and **Dark**. kb remembers your choice in this browser.
-
-## Look at the design preview
-
-**M1 prototype**, under **Preview** in the sidebar, is a clickable design draft filled with sample data. Nothing you do there changes your knowledge base, and your own documents don't appear in it.

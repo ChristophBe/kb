@@ -11,7 +11,7 @@ Low-fidelity wireframes and flows for every UI area M1 adds or reworks. The M1 i
 
 ## Clickable prototype
 
-Every screen in this draft can be tried in the running app: start the web shell (`task web`, or `task up` for the whole stack) and open **Preview → M1 prototype** in the sidebar (`/prototype`). It needs no backend, uses mock data, and keeps changes until you reload.
+Every screen in this draft can be tried in the Vite dev server: start the web shell with `task web` and open **Preview → M1 prototype** in the sidebar (`/prototype`). It needs no backend, uses mock data, and keeps changes until you reload. Production builds (the `web` image, `task up`) leave the prototype out entirely.
 
 - **Simulate** switches every screen between normal, loading, empty, error and service-unavailable states.
 - Filenames and questions steer failures: an upload named `*fail*` breaks mid-upload, `*scan*` fails processing, other formats than PDF/Markdown/text are rejected; a chat question containing "fail" interrupts the answer.

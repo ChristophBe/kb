@@ -1,7 +1,16 @@
 import { ChatService } from "@kb/chat-api/kb/chat/v1/chat_pb";
 import { toast, useClient, useMutation, useQuery, useQueryClient } from "@kb/module-sdk";
-import { Area, Button, ErrorMessage, IconButton, navItemClass, RelativeTime } from "@kb/ui";
+import {
+  Area,
+  Button,
+  ConfirmDialog,
+  ErrorMessage,
+  IconButton,
+  navItemClass,
+  RelativeTime,
+} from "@kb/ui";
 import { Plus, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
 import { Navigate, NavLink, Outlet, useNavigate, useParams } from "react-router";
 import { UNTITLED } from "./ConversationHeader.tsx";
 
@@ -27,14 +36,25 @@ export function ChatLayout() {
       if (conversation) navigate(conversation.id);
     },
   });
+  // The conversation the delete confirmation asks about.
+  const [deleting, setDeleting] = useState<{ id: string; title: string } | null>(null);
+  const list = useRef<HTMLElement>(null);
   const remove = useMutation({
     mutationFn: (id: string) => client.deleteConversation({ id }),
-    onSuccess: () => {
+    onSuccess: async (_, id) => {
       toast.success("Conversation deleted");
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
-      navigate("");
+      // Awaited: the index route must not redirect from the stale list back to
+      // the deleted conversation, and the dialog closes (onSettled) only once
+      // the entry is gone, so the focus falls back to the list.
+      await queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      // The index route opens the next most recent conversation.
+      if (id === openId) navigate("");
     },
   });
+  const confirmDelete = (id: string) =>
+    remove.mutate(id, {
+      onSettled: () => setDeleting(null),
+    });
 
   return (
     <div className="-m-8 flex h-screen">
@@ -45,7 +65,12 @@ export function ChatLayout() {
           </Button>
         </div>
         <ErrorMessage error={conversations.error ?? create.error} />
-        <nav className="flex-1 overflow-y-auto px-3 pb-3">
+        <nav
+          ref={list}
+          tabIndex={-1}
+          aria-label="Conversations"
+          className="flex-1 overflow-y-auto px-3 pb-3"
+        >
           {conversations.data?.conversations.map((c) => (
             <div key={c.id} className={navItemClass(c.id === openId, "group gap-0 p-0")}>
               <NavLink
@@ -81,7 +106,7 @@ export function ChatLayout() {
                 label={`Delete conversation ${c.title || UNTITLED}`}
                 tone="danger"
                 className="mr-1 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
-                onClick={() => remove.mutate(c.id)}
+                onClick={() => setDeleting({ id: c.id, title: c.title || UNTITLED })}
               >
                 <Trash2 className="size-4" />
               </IconButton>
@@ -89,6 +114,18 @@ export function ChatLayout() {
           ))}
         </nav>
       </Area>
+      <ConfirmDialog
+        open={deleting !== null}
+        title="Delete conversation?"
+        confirmLabel="Delete"
+        pending={remove.isPending}
+        onConfirm={() => deleting && confirmDelete(deleting.id)}
+        onCancel={() => setDeleting(null)}
+        // After a delete, the entry's button is gone; the focus stays in the list.
+        fallbackFocus={list}
+      >
+        “{deleting?.title}” and all its messages will be deleted. This can't be undone.
+      </ConfirmDialog>
       <div className="flex min-w-0 flex-1 flex-col">
         <Outlet />
       </div>

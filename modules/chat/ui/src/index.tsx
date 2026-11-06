@@ -2,7 +2,6 @@ import { defineModule } from "@kb/module-sdk";
 import { MessageSquare } from "lucide-react";
 import { ChatEmpty, ChatLayout } from "./ChatLayout.tsx";
 import { Conversation } from "./Conversation.tsx";
-import { RecentConversations } from "./RecentConversations.tsx";
 
 export default defineModule({
   id: "chat",
@@ -14,7 +13,6 @@ export default defineModule({
       "Ask in plain language and get answers from your documents, with sources you can check.",
     cta: { label: "Ask a question", path: "" },
   },
-  widgets: { recent: RecentConversations },
   routes: [
     {
       element: <ChatLayout />,

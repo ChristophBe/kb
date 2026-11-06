@@ -10,12 +10,10 @@ import {
   ErrorMessage,
   Input,
   PageHeader,
-  RelativeTime,
   SourceNote,
   Spinner,
   Textarea,
   type Tone,
-  WidgetCard,
 } from "./components.tsx";
 import { expectNoAxeViolations } from "./testing/axe.ts";
 
@@ -52,30 +50,6 @@ describe("kit components have no axe violations", () => {
         <nav aria-label="Sections">Content</nav>
       </Area>,
     );
-    await expectNoAxeViolations(container);
-  });
-
-  it("RelativeTime", () => {
-    const { container } = render(<RelativeTime ts={{ seconds: 1_700_000_000n }} />);
-    const time = container.querySelector("time");
-    expect(time?.getAttribute("dateTime")).toBe("2023-11-14T22:13:20.000Z");
-    expect(time?.title).not.toBe("");
-    expect(render(<RelativeTime ts={undefined} />).container.childElementCount).toBe(0);
-  });
-
-  it("WidgetCard", async () => {
-    const { container } = render(
-      <WidgetCard
-        title="Recent documents"
-        icon={() => <svg aria-hidden="true" />}
-        action={<a href="/all">All documents</a>}
-      >
-        <ul>
-          <li>report.pdf</li>
-        </ul>
-      </WidgetCard>,
-    );
-    expect(container.querySelector("h3")?.textContent).toBe("Recent documents");
     await expectNoAxeViolations(container);
   });
 

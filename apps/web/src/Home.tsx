@@ -11,8 +11,8 @@ function modulePath(m: KbModule, path: string) {
 }
 
 /**
- * The landing page: a hero with search and the main actions, the user's recent
- * work (module widgets), and a showcase of every module's feature. Everything
+ * The landing page: a hero with search and the main actions, then a showcase
+ * of every module's feature, then any module widgets. Everything
  * module-specific comes from `KbModule.feature` and `KbModule.widgets`.
  */
 export function Home({ modules }: { modules: KbModule[] }) {
@@ -25,7 +25,6 @@ export function Home({ modules }: { modules: KbModule[] }) {
       </ModuleBoundary>
     )),
   );
-  const recentId = useId();
   const featuresId = useId();
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-16 pb-8">
@@ -57,15 +56,6 @@ export function Home({ modules }: { modules: KbModule[] }) {
         )}
       </header>
 
-      {widgets.length > 0 && (
-        <section aria-labelledby={recentId}>
-          <h2 id={recentId} className="mb-4 text-xl font-medium">
-            Pick up where you left off
-          </h2>
-          <div className="grid gap-4 lg:grid-cols-2">{widgets}</div>
-        </section>
-      )}
-
       <section aria-labelledby={featuresId}>
         <h2 id={featuresId} className="mb-4 text-xl font-medium">
           Everything kb can do
@@ -78,6 +68,7 @@ export function Home({ modules }: { modules: KbModule[] }) {
           ))}
         </ul>
       </section>
+      {widgets.length > 0 && <div className="grid gap-4 lg:grid-cols-2">{widgets}</div>}
     </div>
   );
 }

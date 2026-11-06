@@ -34,12 +34,24 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 }
 
 /**
- * A frosted, full-height region of the layout (the sidebar, a list pane),
- * flush with its neighbours and divided from them by a hairline.
+ * A frosted, full-height region of the layout, flush with its neighbours and
+ * divided from them by a hairline. `primary` is the main sidebar; `secondary`
+ * is a lighter shade for a list pane beside it (the conversation list).
  */
-export function Area({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function Area({
+  tone = "primary",
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & { tone?: "primary" | "secondary" }) {
   return (
-    <div className={cn("glass-area flex h-screen flex-col border-border", className)} {...props} />
+    <div
+      className={cn(
+        tone === "primary" ? "glass-area" : "glass-subtle",
+        "flex h-screen flex-col border-border",
+        className,
+      )}
+      {...props}
+    />
   );
 }
 

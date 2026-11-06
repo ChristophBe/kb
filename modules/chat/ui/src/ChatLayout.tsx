@@ -31,7 +31,7 @@ export function ChatLayout() {
 
   return (
     <div className="-m-8 flex h-screen">
-      <Area className="w-64 shrink-0 border-r">
+      <Area tone="secondary" className="w-64 shrink-0 border-r">
         <div className="p-3">
           <Button className="w-full" onClick={() => create.mutate()} disabled={create.isPending}>
             <Plus className="size-4" /> New chat

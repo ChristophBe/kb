@@ -1,5 +1,5 @@
 import type { KbModule, RuntimeConfig } from "@kb/module-sdk";
-import { Area, Card, cn, PageTitle } from "@kb/ui";
+import { Area, Card, navItemClass, PageTitle } from "@kb/ui";
 import { FlaskConical, Library } from "lucide-react";
 import { useMemo } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
@@ -38,14 +38,6 @@ export function App({ config }: { config: RuntimeConfig }) {
   return <RouterProvider router={router} />;
 }
 
-/** Nav link; the active item is an accent-tinted pill. */
-function navItem(isActive: boolean) {
-  return cn(
-    "flex items-center gap-2 rounded-control px-3 py-2 text-sm text-fg-muted transition-colors hover:bg-surface-muted hover:text-fg",
-    isActive && "bg-accent-subtle font-medium text-accent hover:bg-accent-subtle hover:text-accent",
-  );
-}
-
 function Shell({ modules }: { modules: KbModule[] }) {
   return (
     <div className="flex min-h-screen">
@@ -65,7 +57,7 @@ function Shell({ modules }: { modules: KbModule[] }) {
                   key={to}
                   to={to}
                   end={!item.path}
-                  className={({ isActive }) => navItem(isActive)}
+                  className={({ isActive }) => navItemClass(isActive)}
                 >
                   <Icon className="size-4" /> {item.label}
                 </NavLink>
@@ -80,7 +72,7 @@ function Shell({ modules }: { modules: KbModule[] }) {
           <span className="px-3 pb-1 font-mono text-xs font-medium tracking-wide text-fg-muted uppercase">
             Preview
           </span>
-          <NavLink to="/prototype" className={({ isActive }) => navItem(isActive)}>
+          <NavLink to="/prototype" className={({ isActive }) => navItemClass(isActive)}>
             <FlaskConical className="size-4" aria-hidden="true" /> M1 prototype
           </NavLink>
         </nav>

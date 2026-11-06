@@ -39,6 +39,8 @@ const pairs: [foreground: string, background: string, minimum: number][] = [
   ["fg", "accent-subtle", TEXT], // the user's own chat messages
   ["accent", "glass/canvas", TEXT], // active nav item on the glass sidebar
   ["danger", "surface", TEXT],
+  ["danger", "glass-strong/canvas", TEXT], // error toasts
+  ["danger", "glass-strong/surface", TEXT],
   ...tones.map((tone): [string, string, number] => [tone, `${tone}-subtle`, TEXT]),
 ];
 

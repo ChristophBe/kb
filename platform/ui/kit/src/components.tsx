@@ -10,21 +10,62 @@ const variants: Record<Variant, string> = {
   danger: "text-danger hover:bg-danger-subtle",
 };
 
+/** Button styling, for elements that look like a button but aren't one, e.g. a link. */
+export function buttonClass(variant: Variant = "primary", className?: string) {
+  return cn(
+    "inline-flex items-center justify-center gap-2 rounded-control px-3.5 py-1.5 text-sm font-medium transition-[background-color,transform] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
+    variants[variant],
+    className,
+  );
+}
+
 export function Button({
   variant = "primary",
   className,
   ...props
 }: ComponentProps<"button"> & { variant?: Variant }) {
+  return <button type="button" className={buttonClass(variant, className)} {...props} />;
+}
+
+/**
+ * A button that shows only an icon. `label` is its accessible name and tooltip;
+ * the icon is hidden from screen readers. `danger` turns it red on hover.
+ */
+export function IconButton({
+  label,
+  tone = "neutral",
+  className,
+  children,
+  ...props
+}: Omit<ComponentProps<"button">, "aria-label"> & {
+  label: string;
+  tone?: "neutral" | "danger";
+}) {
   return (
     <button
       type="button"
+      aria-label={label}
+      title={label}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-control px-3.5 py-1.5 text-sm font-medium transition-[background-color,transform] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
-        variants[variant],
+        "inline-flex size-7 shrink-0 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-surface-muted disabled:pointer-events-none disabled:opacity-50",
+        tone === "danger" ? "hover:text-danger" : "hover:text-fg",
         className,
       )}
       {...props}
-    />
+    >
+      <span aria-hidden="true" className="contents">
+        {children}
+      </span>
+    </button>
+  );
+}
+
+/** A navigation item; the current place is an accent-tinted pill. */
+export function navItemClass(active: boolean, className?: string) {
+  return cn(
+    "flex items-center gap-2 rounded-control px-3 py-2 text-sm text-fg-muted transition-colors hover:bg-surface-muted hover:text-fg",
+    active && "bg-accent-subtle font-medium text-accent hover:bg-accent-subtle hover:text-accent",
+    className,
   );
 }
 

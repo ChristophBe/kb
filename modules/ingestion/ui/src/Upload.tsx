@@ -12,6 +12,7 @@ import {
   EmptyState,
   ErrorMessage,
   formatTime,
+  IconButton,
   PageHeader,
   SkeletonRows,
   type Tone,
@@ -288,14 +289,9 @@ function UploadItem({
           Retry upload
         </Button>
       )}
-      <Button
-        variant="ghost"
-        aria-label={removeLabel}
-        data-focus={`upload-${key}`}
-        onClick={onRemove}
-      >
-        <X className="size-4" aria-hidden="true" />
-      </Button>
+      <IconButton label={removeLabel} data-focus={`upload-${key}`} onClick={onRemove}>
+        <X className="size-4" />
+      </IconButton>
     </li>
   );
 }

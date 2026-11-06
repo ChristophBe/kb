@@ -280,14 +280,14 @@ function Bubble({
   if (role === MessageRole.USER) {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] rounded-card bg-accent-subtle px-4 py-2 text-sm whitespace-pre-wrap">
+        <div className="max-w-[85%] rounded-card bg-accent-subtle px-4 py-2 text-base whitespace-pre-wrap">
           {content}
         </div>
       </div>
     );
   }
   return (
-    <div className="flex flex-col gap-2 rounded-card border border-border bg-surface px-4 py-2 text-sm @container">
+    <div className="flex flex-col gap-2 rounded-card border border-border bg-surface px-4 py-2 text-base @container">
       {content && <Answer content={content} citations={citations} />}
       {stopped && (
         <p className="flex items-center gap-2 text-xs text-fg-muted">

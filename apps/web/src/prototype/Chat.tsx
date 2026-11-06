@@ -1,4 +1,14 @@
-import { Button, cn, EmptyState, Input, SourceNote, Spinner, Textarea } from "@kb/ui";
+import {
+  Button,
+  cn,
+  EmptyState,
+  IconButton,
+  Input,
+  navItemClass,
+  SourceNote,
+  Spinner,
+  Textarea,
+} from "@kb/ui";
 import { AlertTriangle, Copy, Plus, Square, Trash2, X } from "lucide-react";
 import { type FormEvent, type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate, useParams, useSearchParams } from "react-router";
@@ -85,27 +95,22 @@ export function ChatLayout() {
               <nav aria-label="Conversations" className="flex-1 overflow-y-auto px-2 pb-2">
                 <ul>
                   {list.map((c) => (
-                    <li
-                      key={c.id}
-                      className="group flex items-center rounded-control text-sm hover:bg-surface-muted has-[[aria-current=page]]:bg-surface-muted"
-                    >
+                    <li key={c.id} className={navItemClass(c.id === id, "group gap-0 p-0")}>
                       <NavLink
                         to={c.id}
                         data-conversation={c.id}
-                        className={({ isActive }) =>
-                          cn("min-w-0 flex-1 truncate px-3 py-2", isActive && "font-medium")
-                        }
+                        className="min-w-0 flex-1 truncate px-3 py-2"
                       >
                         {c.title || "New conversation"}
                       </NavLink>
-                      <button
-                        type="button"
-                        aria-label={`Delete conversation ${c.title || "New conversation"}`}
-                        className="mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-control text-fg-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:text-danger"
+                      <IconButton
+                        label={`Delete conversation ${c.title || "New conversation"}`}
+                        tone="danger"
+                        className="mr-1 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
                         onClick={() => setDeleting(c)}
                       >
-                        <Trash2 className="size-4" aria-hidden="true" />
-                      </button>
+                        <Trash2 className="size-4" />
+                      </IconButton>
                     </li>
                   ))}
                 </ul>
@@ -665,7 +670,7 @@ function Markdown({ text, citations }: { text: string; citations: Citation[] }) 
       }
       if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
         return (
-          <code key={k} className="rounded bg-surface-muted px-1 text-sm">
+          <code key={k} className="rounded-control bg-surface-muted px-1 text-sm">
             {part.slice(1, -1)}
           </code>
         );

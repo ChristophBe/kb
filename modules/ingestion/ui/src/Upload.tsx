@@ -218,7 +218,9 @@ export function Upload() {
                     {job.filename}
                   </span>
                   {job.status === JobStatus.DONE && (
-                    <span className="text-fg-muted">{job.chunkCount} chunks</span>
+                    <span className="text-fg-muted">
+                      {job.chunkCount} {job.chunkCount === 1 ? "chunk" : "chunks"}
+                    </span>
                   )}
                   {job.error && <span className="truncate text-danger">{job.error}</span>}
                   {job.status === JobStatus.FAILED && (

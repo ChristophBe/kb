@@ -17,9 +17,10 @@ const UI = 3;
 const tones = ["neutral", "info", "success", "warning", "danger"];
 
 /** What glass chrome and overlays realistically sit on, after blur. */
-const glassBackdrops = ["canvas", "surface", "accent-subtle"].flatMap((under) => [
+const glassBackdrops = ["canvas", "surface", "surface-muted", "accent-subtle"].flatMap((under) => [
   `glass/${under}`,
   `glass-strong/${under}`,
+  `glass-subtle/${under}`,
 ]);
 
 const pairs: [foreground: string, background: string, minimum: number][] = [
@@ -38,6 +39,7 @@ const pairs: [foreground: string, background: string, minimum: number][] = [
   ["accent", "accent-subtle", TEXT], // active nav item, selected rows
   ["fg", "accent-subtle", TEXT], // the user's own chat messages
   ["accent", "glass/canvas", TEXT], // active nav item on the glass sidebar
+  ["accent", "glass-subtle/canvas", TEXT], // active conversation in the secondary list
   ["accent-2", "canvas", UI], // hero gradient word: 40 px, so large text (3:1)
   ["danger", "surface", TEXT],
   ["danger", "glass-strong/canvas", TEXT], // error toasts

@@ -4,6 +4,10 @@ import { Button, Input } from "@kb/ui";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { ScopeChips } from "./scope.tsx";
 
+/** Frosted and sticky: messages scroll under it, blurred. It spans the scroll container's padding. */
+const HEADER =
+  "glass-subtle sticky top-0 z-10 -mx-8 flex flex-col gap-1 border-b border-border px-8 py-3";
+
 export const UNTITLED = "New conversation";
 
 /** Title of the open conversation, with rename in place, and its document scope. */
@@ -56,7 +60,7 @@ export function ConversationHeader({ conversation }: { conversation: Conversatio
 
   if (!editing) {
     return (
-      <header className="flex flex-col gap-1 border-b border-border px-8 py-3">
+      <header className={HEADER}>
         <div className="flex items-center gap-3">
           <h1 className="min-w-0 flex-1 truncate font-medium">{conversation.title || UNTITLED}</h1>
           <Button ref={renameButton} variant="ghost" onClick={() => setDraft(conversation.title)}>
@@ -68,7 +72,7 @@ export function ConversationHeader({ conversation }: { conversation: Conversatio
     );
   }
   return (
-    <header className="flex flex-col gap-1 border-b border-border px-8 py-3">
+    <header className={HEADER}>
       <form onSubmit={save} className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <Input

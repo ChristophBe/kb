@@ -171,12 +171,12 @@ export function Conversation() {
       : undefined;
   return (
     <>
-      {conversation.data?.conversation && (
-        <ConversationHeader conversation={conversation.data.conversation} />
-      )}
-      {/* The composer floats over the messages; scroll padding keeps focus clear of it (WCAG 2.4.11). */}
-      <div className="flex flex-1 scroll-pb-48 flex-col overflow-y-auto px-8 pt-6">
-        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4">
+      {/* The header and composer float over the messages (frosted); scroll padding keeps focus clear of both (WCAG 2.4.11). */}
+      <div className="flex flex-1 scroll-pt-24 scroll-pb-48 flex-col overflow-y-auto px-8">
+        {conversation.data?.conversation && (
+          <ConversationHeader conversation={conversation.data.conversation} />
+        )}
+        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 pt-6">
           {conversation.isPending && <Spinner />}
           <ErrorMessage error={conversation.error ? readableError(conversation.error) : error} />
           {messages.map((m) => (

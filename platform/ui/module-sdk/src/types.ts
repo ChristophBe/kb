@@ -8,7 +8,7 @@ export interface NavItem {
   icon?: ComponentType<{ className?: string }>;
 }
 
-/** How the home page presents a module: one feature tile, possibly a hero action or the search box. */
+/** How the home page presents a module: one feature tile, possibly a hero action or the hero prompt. */
 export interface Feature {
   /** Short benefit-led headline, e.g. "Search by meaning". */
   headline: string;
@@ -16,8 +16,12 @@ export interface Feature {
   description: string;
   /** The entry point; `path` is relative to the module root, like `NavItem.path`. */
   cta: { label: string; path: string };
-  /** Route (relative to the module root) that searches with `?q=`; the home search box submits there. */
-  search?: string;
+  /**
+   * The home page's main input. Submitting it opens `path` (relative to the
+   * module root) with the text in `?q=`. `label` names the input for screen
+   * readers, `submit` is the button text. At most one module should set it.
+   */
+  prompt?: { path: string; label: string; placeholder: string; submit: string };
 }
 
 /**

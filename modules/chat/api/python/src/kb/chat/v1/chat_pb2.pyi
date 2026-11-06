@@ -41,18 +41,22 @@ CHAT_ERROR_CODE_UNAVAILABLE: ChatErrorCode
 CHAT_ERROR_CODE_INTERNAL: ChatErrorCode
 
 class Citation(_message.Message):
-    __slots__ = ("document_id", "document_title", "chunk_index", "snippet", "score")
+    __slots__ = ("document_id", "document_title", "chunk_index", "snippet", "score", "manual_page", "manual_section")
     DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_TITLE_FIELD_NUMBER: _ClassVar[int]
     CHUNK_INDEX_FIELD_NUMBER: _ClassVar[int]
     SNIPPET_FIELD_NUMBER: _ClassVar[int]
     SCORE_FIELD_NUMBER: _ClassVar[int]
+    MANUAL_PAGE_FIELD_NUMBER: _ClassVar[int]
+    MANUAL_SECTION_FIELD_NUMBER: _ClassVar[int]
     document_id: str
     document_title: str
     chunk_index: int
     snippet: str
     score: float
-    def __init__(self, document_id: _Optional[str] = ..., document_title: _Optional[str] = ..., chunk_index: _Optional[int] = ..., snippet: _Optional[str] = ..., score: _Optional[float] = ...) -> None: ...
+    manual_page: str
+    manual_section: str
+    def __init__(self, document_id: _Optional[str] = ..., document_title: _Optional[str] = ..., chunk_index: _Optional[int] = ..., snippet: _Optional[str] = ..., score: _Optional[float] = ..., manual_page: _Optional[str] = ..., manual_section: _Optional[str] = ...) -> None: ...
 
 class ChatMessage(_message.Message):
     __slots__ = ("id", "role", "content", "citations", "create_time", "status")

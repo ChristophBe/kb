@@ -14,6 +14,9 @@ COPY platform/api/python platform/api/python
 COPY modules modules
 ARG PACKAGE
 RUN uv sync --frozen --no-dev --package ${PACKAGE}
+# The chat answers how-to questions from the user manual. After the sync, so a
+# manual change doesn't reinstall the dependencies.
+COPY docs/user-manual docs/user-manual
 ENV KB_ENTRYPOINT=${PACKAGE}
 USER nobody
 CMD ["sh", "-c", "exec ${KB_ENTRYPOINT}"]

@@ -22,3 +22,4 @@ services:
         - { action: sync+restart, path: ./service/src, target: /app/modules/chat/service/src }
         - { action: sync+restart, path: ./migrations, target: /app/modules/chat/migrations }
         - { action: sync+restart, path: ../../platform/python/src, target: /app/platform/python/src }
+        - { action: sync+restart, path: ../../docs/user-manual, target: /app/docs/user-manual }

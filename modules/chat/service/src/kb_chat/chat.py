@@ -19,6 +19,7 @@ TITLE_LENGTH = 60
 SYSTEM_PROMPT = "You are a helpful assistant for a personal knowledge base. Answer concisely."
 RAG_PROMPT = (
     "Answer using the numbered sources below when they are relevant and cite them like [1]. "
+    "Sources from the user manual explain how to use this knowledge base tool. "
     "If the sources do not contain the answer, say so.\n\nSources:\n{sources}"
 )
 
@@ -203,9 +204,14 @@ def _system_prompt(citations: Sequence[chat_pb2.Citation]) -> str:
     if not citations:
         return SYSTEM_PROMPT
     sources = "\n\n".join(
-        f"[{i}] {c.document_title}:\n{c.snippet}" for i, c in enumerate(citations, start=1)
+        f"[{i}] {_source_name(c)}:\n{c.snippet}" for i, c in enumerate(citations, start=1)
     )
     return f"{SYSTEM_PROMPT}\n\n{RAG_PROMPT.format(sources=sources)}"
+
+
+def _source_name(c: chat_pb2.Citation) -> str:
+    # Tells the model that a source explains the tool, not the user's documents.
+    return f"User manual, {c.document_title}" if c.manual_page else c.document_title
 
 
 def _citation_to_dict(c: chat_pb2.Citation) -> dict[str, Any]:
@@ -215,4 +221,6 @@ def _citation_to_dict(c: chat_pb2.Citation) -> dict[str, Any]:
         "chunk_index": c.chunk_index,
         "snippet": c.snippet,
         "score": c.score,
+        "manual_page": c.manual_page,
+        "manual_section": c.manual_section,
     }

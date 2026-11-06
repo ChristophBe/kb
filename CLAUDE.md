@@ -17,6 +17,7 @@ Shared, module-agnostic code lives in `platform/` (`go/`, `python/`, `ui/`, `pro
 - Only the `llm` module talks to LLM vendors. Add a provider in `modules/llm/service/src/kb_llm/providers/` and register it in `REGISTRY`.
 - Generated / `DO NOT EDIT` files: `modules/*/api/**`, `platform/api/**`, `**/buf.gen.yaml`, `**/internal/store/*.go` (sqlc, except `repo.go`), `compose.yaml`, `deploy/envoy/envoy.yaml`, `apps/web/src/modules.gen.ts`, `.golangci.yml`, `.importlinter`, `biome.modules.jsonc`, `.github/ISSUE_TEMPLATE/{epic,feature,chore,bug}.yml`.
 - The embedding dimension (768) appears in `modules/document/migrations` and `KB_EMBEDDING_DIMENSIONS`; change both together via a new migration.
+- A PR that adds or changes a user-facing feature updates its page in `docs/user-manual/` (rules in its README); a PR removing a feature removes its description.
 
 ## Issues
 Backlog lives in GitHub issues: epics (`type:epic`) per module with sub-issues, phases as GitHub milestones. Conventions in CONTRIBUTING.md.

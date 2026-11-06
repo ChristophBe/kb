@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
 import { HelpIndex, HelpPage } from "./help/Help.tsx";
 import { ModuleBoundary } from "./ModuleBoundary.tsx";
-import { activeModules } from "./registry.ts";
+import { activeModules, navEntries } from "./registry.ts";
 import { ThemeToggle } from "./ThemeToggle.tsx";
 import { ToastHost } from "./ToastHost.tsx";
 
@@ -51,22 +51,16 @@ function Shell({ modules }: { modules: KbModule[] }) {
           <span className="text-fg-muted">/</span> Knowledge Base
         </Link>
         <nav className="flex flex-col gap-0.5 px-3">
-          {modules.flatMap((m) =>
-            (m.nav ?? [{ path: "", label: m.title, icon: m.icon }]).map((item) => {
-              const Icon = item.icon ?? m.icon;
-              const to = item.path ? `/m/${m.id}/${item.path}` : `/m/${m.id}`;
-              return (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={!item.path}
-                  className={({ isActive }) => navItemClass(isActive)}
-                >
-                  <Icon className="size-4" /> {item.label}
-                </NavLink>
-              );
-            }),
-          )}
+          {navEntries(modules).map(({ to, label, icon: Icon, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) => navItemClass(isActive)}
+            >
+              <Icon className="size-4" /> {label}
+            </NavLink>
+          ))}
         </nav>
         <nav
           aria-label="Preview"
@@ -96,7 +90,7 @@ function Shell({ modules }: { modules: KbModule[] }) {
   );
 }
 
-function Home({ modules }: { modules: KbModule[] }) {
+export function Home({ modules }: { modules: KbModule[] }) {
   const widgets = modules.flatMap((m) =>
     Object.entries(m.widgets ?? {}).map(([name, Widget]) => <Widget key={`${m.id}.${name}`} />),
   );
@@ -104,11 +98,11 @@ function Home({ modules }: { modules: KbModule[] }) {
     <div>
       <PageTitle className="mb-8">Welcome</PageTitle>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {modules.map((m) => (
-          <Link key={m.id} to={`/m/${m.id}`}>
+        {navEntries(modules).map(({ to, label, icon: Icon }) => (
+          <Link key={to} to={to}>
             <Card className="flex items-center gap-3 p-5 transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-glass">
-              <m.icon className="size-5 text-fg-muted" />
-              <span className="font-medium">{m.title}</span>
+              <Icon className="size-5 text-fg-muted" />
+              <span className="font-medium">{label}</span>
             </Card>
           </Link>
         ))}

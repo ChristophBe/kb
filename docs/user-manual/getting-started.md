@@ -13,7 +13,7 @@ The sidebar on the left leads to every area:
 - **Models**: check that the language model behind search and chat is available. See [Models](models.md).
 - **Help**, at the bottom of the sidebar: this manual, one page per area.
 
-**kb / Knowledge Base** at the top of the sidebar takes you to the **Welcome** page, which has cards for **Chat**, **Documents**, **Ingestion** and **Models**.
+**kb / Knowledge Base** at the top of the sidebar takes you to the **Welcome** page, which has a card for each page in the sidebar: **Chat**, **Documents**, **Search**, **Ingestion** and **Models**.
 
 ## Add your first documents
 

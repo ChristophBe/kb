@@ -38,6 +38,7 @@ const pairs: [foreground: string, background: string, minimum: number][] = [
   ["accent", "accent-subtle", TEXT], // active nav item, selected rows
   ["fg", "accent-subtle", TEXT], // the user's own chat messages
   ["accent", "glass/canvas", TEXT], // active nav item on the glass sidebar
+  ["accent-2", "canvas", UI], // hero gradient word: 40 px, so large text (3:1)
   ["danger", "surface", TEXT],
   ...tones.map((tone): [string, string, number] => [tone, `${tone}-subtle`, TEXT]),
 ];

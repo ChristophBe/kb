@@ -53,14 +53,16 @@ describe("Home", () => {
   it("leads with the hero, then every feature, then module widgets", async () => {
     const { container } = renderHome([chat, document, ingestion, plain]);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
-      "Your documents, ready to answer.",
+      "Ask your documents anything.",
     );
     expect(screen.getByText("Chat widget")).toBeTruthy();
 
-    const features = screen.getByRole("region", { name: "Everything kb can do" });
+    const features = screen.getByRole("region", { name: "One place for everything you know" });
     const links = [...features.querySelectorAll("a")].map((a) => a.getAttribute("href"));
     expect(links).toEqual(["/m/chat/new", "/m/document/search", "/m/ingestion", "/m/llm"]);
     expect(features.textContent).toContain("Models"); // fallback tile without a feature
+    // The halo is decoration only.
+    expect(container.querySelector("header > [aria-hidden='true']")).toBeTruthy();
     await expectNoAxeViolations(container);
   });
 

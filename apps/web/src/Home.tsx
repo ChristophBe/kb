@@ -1,13 +1,18 @@
 import type { KbModule } from "@kb/module-sdk";
 import { buttonClass, Card, cn, PageTitle } from "@kb/ui";
-import { ArrowRight } from "lucide-react";
-import { type FormEvent, useId, useState } from "react";
+import { ArrowRight, ArrowUp, Sparkles } from "lucide-react";
+import { type CSSProperties, type FormEvent, useId, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { ModuleBoundary } from "./ModuleBoundary.tsx";
 
 /** A route inside a module; `path` is relative to the module root. */
 function modulePath(m: KbModule, path: string) {
   return path ? `/m/${m.id}/${path}` : `/m/${m.id}`;
+}
+
+/** Staggers the entrance (`animate-rise`); reduced motion makes it instant. */
+function rise(delayMs: number): CSSProperties {
+  return { animationDelay: `${delayMs}ms` };
 }
 
 /**
@@ -28,39 +33,60 @@ export function Home({ modules }: { modules: KbModule[] }) {
   const featuresId = useId();
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-16 pb-8">
-      <header className="mx-auto flex max-w-3xl flex-col items-center pt-8 text-center sm:pt-14">
-        <p className="mb-4 font-mono text-xs text-fg-muted">kb / home</p>
-        <PageTitle className="text-balance">Your documents, ready to answer.</PageTitle>
-        <p className="mt-4 max-w-xl text-base text-pretty text-fg-muted">
-          Upload what you know, then search it or ask in plain language. Every answer cites its
-          sources.
-        </p>
-        {prompter?.feature?.prompt && <HomePrompt module={prompter} {...prompter.feature.prompt} />}
-        {actions.length > 0 && (
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {actions.map((m) =>
-              m.feature ? (
-                <Link
-                  key={m.id}
-                  to={modulePath(m, m.feature.cta.path)}
-                  className={buttonClass("secondary", "px-5 py-2")}
-                >
-                  <m.icon className="size-4" />
-                  {m.feature.cta.label}
-                </Link>
-              ) : null,
-            )}
+      <header className="relative isolate -mx-8 -mt-8 overflow-hidden px-8 pt-16 pb-12 sm:pt-24">
+        <Halo />
+        <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
+          <p
+            className="mb-6 inline-flex animate-rise items-center gap-1.5 rounded-full bg-accent-subtle px-3 py-1 text-xs font-medium text-accent"
+            style={rise(0)}
+          >
+            <Sparkles className="size-3.5" aria-hidden="true" />
+            Answers with sources
+          </p>
+          <div className="animate-rise" style={rise(80)}>
+            <PageTitle className="font-semibold tracking-tight text-balance">
+              Ask your documents <span className="text-gradient">anything.</span>
+            </PageTitle>
           </div>
-        )}
+          <p
+            className="mt-5 max-w-xl animate-rise text-base text-pretty text-fg-muted"
+            style={rise(160)}
+          >
+            kb reads everything you upload and answers in plain language, with the exact passages to
+            prove it.
+          </p>
+          {prompter?.feature?.prompt && (
+            <HomePrompt module={prompter} {...prompter.feature.prompt} />
+          )}
+          {actions.length > 0 && (
+            <div
+              className="mt-6 flex animate-rise flex-wrap justify-center gap-3"
+              style={rise(320)}
+            >
+              {actions.map((m) =>
+                m.feature ? (
+                  <Link
+                    key={m.id}
+                    to={modulePath(m, m.feature.cta.path)}
+                    className={buttonClass("secondary", "px-5 py-2")}
+                  >
+                    <m.icon className="size-4" />
+                    {m.feature.cta.label}
+                  </Link>
+                ) : null,
+              )}
+            </div>
+          )}
+        </div>
       </header>
 
       <section aria-labelledby={featuresId}>
-        <h2 id={featuresId} className="mb-4 text-xl font-medium">
-          Everything kb can do
+        <h2 id={featuresId} className="mb-4 animate-rise text-xl font-medium" style={rise(400)}>
+          One place for everything you know
         </h2>
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {modules.map((m) => (
-            <li key={m.id}>
+          {modules.map((m, i) => (
+            <li key={m.id} className="animate-rise" style={rise(440 + 60 * i)}>
               <FeatureTile module={m} />
             </li>
           ))}
@@ -71,7 +97,22 @@ export function Home({ modules }: { modules: KbModule[] }) {
   );
 }
 
-/** Searches the module that declared `feature.search`, with the query in `?q=`. */
+/** Decorative light behind the hero: two slowly drifting blurred blobs in the gradient's colours. */
+function Halo() {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 -z-10 mask-b-from-60% mask-b-to-100%"
+    >
+      <div className="absolute top-1/3 left-1/2 size-[28rem] -translate-x-[70%] animate-glow rounded-full bg-accent/25 blur-3xl" />
+      <div
+        className="absolute top-1/4 left-1/2 size-[24rem] -translate-x-[10%] animate-glow rounded-full bg-accent-2/20 blur-3xl"
+        style={{ animationDelay: "-7s", animationDirection: "alternate-reverse" }}
+      />
+    </div>
+  );
+}
+
 /** The hero's main input; opens the module's `prompt.path` with the text in `?q=`. */
 function HomePrompt({
   module: m,
@@ -92,22 +133,24 @@ function HomePrompt({
   return (
     <form
       onSubmit={submit}
-      className="glass mt-8 flex w-full max-w-xl items-center gap-2 rounded-full py-1.5 pr-1.5 pl-5 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus"
+      style={rise(240)}
+      className="glass-strong mt-10 flex w-full max-w-2xl animate-rise items-center gap-3 rounded-full py-2 pr-2 pl-6 transition-shadow focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus"
     >
       <label htmlFor={inputId} className="sr-only">
         {label}
       </label>
-      <m.icon className="size-5 shrink-0 text-fg-muted" />
+      <m.icon className="size-5 shrink-0 text-accent" />
       <input
         id={inputId}
         type="text"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={placeholder}
-        className="min-w-0 flex-1 bg-transparent py-2 text-base placeholder:text-fg-muted focus-visible:outline-none"
+        className="min-w-0 flex-1 bg-transparent py-3 text-base placeholder:text-fg-muted focus-visible:outline-none"
       />
-      <button type="submit" className={buttonClass("primary", "rounded-full px-5 py-2")}>
+      <button type="submit" className={buttonClass("primary", "rounded-full px-5 py-3")}>
         {submitLabel}
+        <ArrowUp className="size-4" aria-hidden="true" />
       </button>
     </form>
   );
@@ -115,7 +158,7 @@ function HomePrompt({
 
 function FeatureTile({ module: m }: { module: KbModule }) {
   const tile =
-    "group flex h-full flex-col gap-3 p-5 transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-glass";
+    "group relative flex h-full flex-col gap-3 overflow-hidden p-5 transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-glass";
   if (!m.feature) {
     return (
       <Link to={modulePath(m, "")} className="block h-full">
@@ -130,7 +173,12 @@ function FeatureTile({ module: m }: { module: KbModule }) {
   return (
     <Link to={modulePath(m, cta.path)} className="block h-full">
       <Card className={tile}>
-        <span className="inline-flex size-10 items-center justify-center rounded-card bg-accent-subtle text-accent">
+        {/* Gradient rule along the top edge, shown on hover. */}
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-accent to-accent-2 opacity-0 transition-opacity group-hover:opacity-100"
+        />
+        <span className="inline-flex size-10 items-center justify-center rounded-card bg-accent-subtle text-accent transition-colors group-hover:bg-accent group-hover:text-on-accent">
           <m.icon className="size-5" />
         </span>
         <h3 className="font-medium">{headline}</h3>

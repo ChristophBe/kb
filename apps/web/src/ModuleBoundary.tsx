@@ -1,4 +1,4 @@
-import { Button } from "@kb/ui";
+import { Button, buttonClass } from "@kb/ui";
 import { Component, type ReactNode, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router";
 
@@ -49,7 +49,7 @@ function ErrorPanel({
     heading.current?.focus();
   }, []);
   return (
-    <div role="alert" className="rounded-card border border-border bg-danger-subtle p-4 text-sm">
+    <div role="alert" className="rounded-card bg-danger-subtle p-4 text-sm">
       <h1 ref={heading} tabIndex={-1} className="font-semibold text-danger">
         Something went wrong in {title}.
       </h1>
@@ -58,10 +58,7 @@ function ErrorPanel({
         <Button variant="secondary" onClick={onRetry}>
           Try again
         </Button>
-        <Link
-          to="/"
-          className="inline-flex items-center rounded-control px-3 py-1.5 text-sm font-medium hover:bg-surface"
-        >
+        <Link to="/" className={buttonClass("ghost", "hover:bg-surface")}>
           Go to home
         </Link>
       </div>

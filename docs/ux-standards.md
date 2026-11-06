@@ -15,11 +15,11 @@ kb meets **[WCAG 2.2](https://www.w3.org/TR/WCAG22/) level AA**. These success c
 | [2.1.1](https://www.w3.org/WAI/WCAG22/Understanding/keyboard) Keyboard | Everything works with the keyboard alone. | Native `<button>`, `<a href>`, `<input>`; no click handlers on `<div>`. Hover-only affordances (e.g. a delete icon) also appear on `:focus-visible`/`:focus-within`. |
 | [2.1.2](https://www.w3.org/WAI/WCAG22/Understanding/no-keyboard-trap) No keyboard trap | Focus can always leave a component. | Dialogs trap focus only while open and close on `Esc`. |
 | [2.4.7](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible) / [2.4.11](https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum) Focus visible, not obscured | A visible focus indicator that sticky UI doesn't cover. | Global `:focus-visible` outline from `theme.css`; never `outline-none` without a replacement. Sticky composers/headers leave room (`scroll-padding`). |
-| [2.5.8](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum) Target size | Pointer targets at least 24×24 px (or spaced so a 24 px circle doesn't overlap another). | Icon buttons are at least `size-6` including padding. |
+| [2.5.8](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum) Target size | Pointer targets at least 24×24 px (or spaced so a 24 px circle doesn't overlap another). | Icon buttons use `IconButton` (`size-7`, never smaller than `size-6`). |
 | [4.1.2](https://www.w3.org/WAI/WCAG22/Understanding/name-role-value) Name, role, value | Every control has an accessible name and state. | Visible label, or `aria-label` on icon-only buttons; `aria-current="page"` on the active nav link (React Router's `NavLink` sets it); `aria-expanded`/`aria-pressed` where applicable. |
 | [4.1.3](https://www.w3.org/WAI/WCAG22/Understanding/status-messages) Status messages | Status changes are announced without moving focus. | `ErrorMessage` is `role="alert"`, `Spinner` is `role="status"`; toasts and job progress use live regions (see below). |
 | [2.3.3](https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions) Reduced motion (AAA, adopted) | Respect `prefers-reduced-motion`. | `theme.css` shortens animations and transitions; JS that animates (e.g. `scrollIntoView({ behavior: "smooth" })`) checks `matchMedia("(prefers-reduced-motion: reduce)")`. |
-| Reduced transparency (adopted) | Respect `prefers-reduced-transparency`. | `glass` and `glass-strong` turn into an opaque `surface`. |
+| Reduced transparency (adopted) | Respect `prefers-reduced-transparency`. | `glass-area`, `glass` and `glass-strong` turn into an opaque `surface`. |
 
 ## Interaction patterns
 
@@ -63,6 +63,15 @@ Every colour role is written once as `light-dark(<light>, <dark>)`. The mode fol
 | Rules | Solid `border-border` for structural edges inside content (cards, table heads). `divide-dotted divide-border` between rows of a list or `<dl>`. |
 | Shadow | `shadow-glass` for chrome that floats and lifted cards on hover; `shadow-overlay` for overlays (built into `glass-strong`). No other shadows exist. |
 | Focus ring | 2 px solid `--color-focus`, 2 px offset. |
+
+Controls come from the kit, so they look and behave the same everywhere. Don't copy their classes into a module:
+
+| Component | Use |
+|---|---|
+| `Button` / `buttonClass(variant)` | Every button. `buttonClass` styles an element that only looks like a button, e.g. a `<Link>` to the search page. |
+| `IconButton` | A button that shows only an icon. Its `label` is the accessible name and tooltip, and the icon is hidden from screen readers. `tone="danger"` for delete and remove. |
+| `navItemClass(active)` | Nav links and list rows that mark the current place: the sidebar, the conversation list. The active one is the `accent-subtle` pill. |
+| `Area` | The full-height `glass-area` regions of the layout. |
 
 Two components carry kb's own identity. Use them wherever their content appears, rather than a new treatment:
 

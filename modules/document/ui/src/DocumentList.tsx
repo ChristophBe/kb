@@ -2,7 +2,7 @@ import { DocumentService } from "@kb/document-api/kb/document/v1/document_pb";
 import { toast, useClient, useMutation, useQuery, useQueryClient } from "@kb/module-sdk";
 import {
   Badge,
-  Button,
+  buttonClass,
   Card,
   ChunkStrip,
   DelayedLoading,
@@ -10,6 +10,7 @@ import {
   ErrorMessage,
   formatBytes,
   formatTime,
+  IconButton,
   PageHeader,
   SkeletonRows,
 } from "@kb/ui";
@@ -44,10 +45,7 @@ export function DocumentList() {
         title="Documents"
         description="Everything in your knowledge base."
         actions={
-          <Link
-            to="search"
-            className="inline-flex items-center gap-2 rounded-control border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium hover:bg-surface-muted"
-          >
+          <Link to="search" className={buttonClass("secondary")}>
             <SearchIcon className="size-4" aria-hidden="true" /> Search
           </Link>
         }
@@ -91,12 +89,12 @@ export function DocumentList() {
                       {formatTime(d.createTime)}
                     </td>
                     <td className="px-2 py-1 text-right whitespace-nowrap">
-                      <Button variant="ghost" title="Download" onClick={() => download(d.id)}>
+                      <IconButton label="Download" onClick={() => download(d.id)}>
                         <Download className="size-4" />
-                      </Button>
-                      <Button variant="danger" title="Delete" onClick={() => remove.mutate(d.id)}>
+                      </IconButton>
+                      <IconButton label="Delete" tone="danger" onClick={() => remove.mutate(d.id)}>
                         <Trash2 className="size-4" />
-                      </Button>
+                      </IconButton>
                     </td>
                   </tr>
                 );

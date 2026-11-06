@@ -1,5 +1,5 @@
 import type { Citation } from "@kb/chat-api/kb/chat/v1/chat_pb";
-import { SourceNote } from "@kb/ui";
+import { IconButton, SourceNote } from "@kb/ui";
 import { Check, Copy } from "lucide-react";
 import { type ComponentProps, useCallback, useMemo, useRef, useState } from "react";
 import Markdown, { type Components } from "react-markdown";
@@ -70,18 +70,13 @@ function CodeBlock(props: ComponentProps<"pre">) {
   return (
     <div className="relative">
       <pre ref={code} {...props} />
-      <button
-        type="button"
-        aria-label={copied ? "Copied" : "Copy code"}
+      <IconButton
+        label={copied ? "Copied" : "Copy code"}
         onClick={copy}
-        className="absolute top-1 right-1 rounded-control p-1 text-fg-muted hover:bg-surface hover:text-fg"
+        className="absolute top-1 right-1 hover:bg-surface"
       >
-        {copied ? (
-          <Check className="size-3.5" aria-hidden="true" />
-        ) : (
-          <Copy className="size-3.5" aria-hidden="true" />
-        )}
-      </button>
+        {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+      </IconButton>
     </div>
   );
 }

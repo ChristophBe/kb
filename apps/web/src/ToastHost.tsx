@@ -1,5 +1,5 @@
 import { dismissToast, type Toast, useToasts } from "@kb/module-sdk";
-import { cn } from "@kb/ui";
+import { cn, IconButton } from "@kb/ui";
 import { AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -68,14 +68,13 @@ function ToastItem({ toast }: { toast: Toast }) {
           {toast.action.label}
         </button>
       )}
-      <button
-        type="button"
-        aria-label="Dismiss notification"
+      <IconButton
+        label="Dismiss notification"
         onClick={() => dismissToast(toast.id)}
-        className="inline-flex size-6 items-center justify-center rounded-control text-fg-muted hover:bg-surface-muted"
+        className="size-6"
       >
-        <X className="size-4" aria-hidden="true" />
-      </button>
+        <X className="size-4" />
+      </IconButton>
     </div>
   );
 }

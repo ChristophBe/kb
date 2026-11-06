@@ -1,6 +1,7 @@
 import {
   Badge,
   Button,
+  buttonClass,
   Card,
   ChunkStrip,
   EmptyState,
@@ -101,11 +102,7 @@ export function DocumentList() {
         description="All documents in the knowledge base."
         actions={
           <>
-            <Link
-              to="../search"
-              relative="path"
-              className="inline-flex items-center gap-2 rounded-control border border-border-strong bg-surface px-3 py-1.5 text-sm font-medium hover:bg-surface-muted"
-            >
+            <Link to="../search" relative="path" className={buttonClass("secondary")}>
               <SearchIcon className="size-4" aria-hidden="true" /> Search
             </Link>
             <Link

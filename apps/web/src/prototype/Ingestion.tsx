@@ -1,4 +1,4 @@
-import { Badge, Button, Card, EmptyState, PageHeader } from "@kb/ui";
+import { Badge, Button, Card, EmptyState, IconButton, PageHeader } from "@kb/ui";
 import { Upload as UploadIcon, X } from "lucide-react";
 import { type DragEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
@@ -347,18 +347,16 @@ function UploadRow({
         </>
       )}
       {removable && (
-        <button
-          type="button"
-          aria-label={
+        <IconButton
+          label={
             row.state === "uploading" || row.state === "waiting"
               ? `Cancel upload of ${row.filename}`
               : `Dismiss ${row.filename}`
           }
           onClick={onRemove}
-          className="inline-flex size-7 items-center justify-center rounded-control text-fg-muted hover:bg-surface-muted"
         >
-          <X className="size-4" aria-hidden="true" />
-        </button>
+          <X className="size-4" />
+        </IconButton>
       )}
     </li>
   );

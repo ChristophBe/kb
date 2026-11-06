@@ -6,8 +6,9 @@
  *
  * Aesthetic: a frosted instrument. Calm zinc neutrals on a softly lit canvas,
  * frosted layout areas divided by hairlines, floating glass only for what
- * floats (the composer, overlays), soft concentric corners, and one blue accent for action and place. IBM Plex Sans for the
- * interface, Plex Mono for data.
+ * floats (the composer, overlays), soft concentric corners, and one blue
+ * accent for action and place. IBM Plex Sans for the interface, Plex Mono for
+ * data.
  *
  * Every colour role is `light-dark(<light>, <dark>)`; the mode follows
  * `color-scheme`, which the OS sets unless `<html data-theme>` overrides it.

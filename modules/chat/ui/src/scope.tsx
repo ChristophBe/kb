@@ -9,7 +9,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@kb/module-sdk";
-import { Button, Dialog, ErrorMessage, Input, Spinner } from "@kb/ui";
+import { Button, Dialog, ErrorMessage, IconButton, Input, Spinner } from "@kb/ui";
 import { FileText, X } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { Link } from "react-router";
@@ -101,15 +101,15 @@ export function ScopeChips({ conversation }: { conversation: Conversation }) {
               >
                 {name(id)}
               </Link>
-              <button
-                type="button"
-                aria-label={`Remove ${name(id)} from scope`}
+              <IconButton
+                label={`Remove ${name(id)} from scope`}
+                tone="danger"
                 disabled={setScope.isPending}
-                className="inline-flex size-6 shrink-0 items-center justify-center rounded-control text-fg-muted hover:text-danger disabled:opacity-50"
+                className="size-6 hover:bg-transparent"
                 onClick={() => remove(id, i)}
               >
-                <X className="size-3" aria-hidden="true" />
-              </button>
+                <X className="size-3" />
+              </IconButton>
             </li>
           ))}
         </ul>

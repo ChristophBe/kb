@@ -1,4 +1,4 @@
-import { Button, Card, cn, PageHeader } from "@kb/ui";
+import { Button, Card, navItemClass, PageHeader } from "@kb/ui";
 import { FlaskConical } from "lucide-react";
 import { Component, type ReactNode, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, Route, Routes, useLocation } from "react-router";
@@ -112,12 +112,7 @@ function PrototypeLayout() {
               key={a.label}
               to={a.to}
               end={a.end}
-              className={({ isActive }) =>
-                cn(
-                  "rounded-control px-3 py-1.5 text-sm text-fg-muted hover:bg-surface-muted",
-                  isActive && "bg-accent-subtle font-medium text-accent hover:bg-accent-subtle",
-                )
-              }
+              className={({ isActive }) => navItemClass(isActive, "py-1.5")}
             >
               {a.label}
             </NavLink>

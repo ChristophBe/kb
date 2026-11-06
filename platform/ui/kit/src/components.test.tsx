@@ -1,14 +1,17 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import {
   Area,
   Badge,
   Button,
+  buttonClass,
   Card,
   ChunkStrip,
   EmptyState,
   ErrorMessage,
+  IconButton,
   Input,
+  navItemClass,
   PageHeader,
   SourceNote,
   Spinner,
@@ -31,6 +34,37 @@ describe("kit components have no axe violations", () => {
           <svg aria-hidden="true" />
         </Button>
       </>,
+    );
+    await expectNoAxeViolations(container);
+  });
+
+  it("IconButton", async () => {
+    const { container } = render(
+      <>
+        <IconButton label="Download">
+          <svg />
+        </IconButton>
+        <IconButton label="Delete document" tone="danger">
+          <svg />
+        </IconButton>
+      </>,
+    );
+    await expectNoAxeViolations(container);
+  });
+
+  it("links styled with buttonClass and navItemClass", async () => {
+    const { container } = render(
+      <nav aria-label="Sections">
+        <a href="/search" className={buttonClass("secondary")}>
+          Search
+        </a>
+        <a href="/documents" aria-current="page" className={navItemClass(true)}>
+          Documents
+        </a>
+        <a href="/chat" className={navItemClass(false)}>
+          Chat
+        </a>
+      </nav>,
     );
     await expectNoAxeViolations(container);
   });
@@ -124,6 +158,19 @@ describe("kit components have no axe violations", () => {
   it("Spinner", async () => {
     const { container } = render(<Spinner label="Loading documents" />);
     await expectNoAxeViolations(container);
+  });
+});
+
+describe("IconButton", () => {
+  it("is named by its label and hides the icon", () => {
+    render(
+      <IconButton label="Dismiss notification">
+        <svg data-testid="icon" />
+      </IconButton>,
+    );
+    const button = screen.getByRole("button", { name: "Dismiss notification" });
+    expect(button.getAttribute("title")).toBe("Dismiss notification");
+    expect(screen.getByTestId("icon").closest("[aria-hidden]")).not.toBeNull();
   });
 });
 

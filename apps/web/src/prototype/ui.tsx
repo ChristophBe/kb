@@ -1,4 +1,4 @@
-import { Button, cn, Spinner } from "@kb/ui";
+import { Button, cn, IconButton, Skeleton, Spinner } from "@kb/ui";
 import { AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
 import {
   createContext,
@@ -115,12 +115,6 @@ export function LoadState<T>({
   return <>{children(state.data)}</>;
 }
 
-export function Skeleton({ className }: { className?: string }) {
-  return (
-    <div className={cn("animate-pulse rounded-control bg-surface-muted", className ?? "h-4")} />
-  );
-}
-
 export function SkeletonRows({ rows = 3 }: { rows?: number }) {
   return (
     <div className="space-y-3 p-4">
@@ -135,53 +129,9 @@ export function SkeletonRows({ rows = 3 }: { rows?: number }) {
   );
 }
 
-// --- Dialog (native <dialog>, APG modal dialog) ----------------------------
+// --- Dialog and Skeleton come from the kit ------------------------------------
 
-export function Dialog({
-  open,
-  onClose,
-  title,
-  children,
-  footer,
-}: {
-  open: boolean;
-  onClose: () => void;
-  title: string;
-  children: ReactNode;
-  footer: ReactNode;
-}) {
-  const ref = useRef<HTMLDialogElement>(null);
-  const titleId = useId();
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) {
-      return;
-    }
-    if (open && !dialog.open) {
-      dialog.showModal();
-    } else if (!open && dialog.open) {
-      dialog.close();
-    }
-  }, [open]);
-  return (
-    <dialog
-      ref={ref}
-      aria-labelledby={titleId}
-      onClose={onClose}
-      className="m-auto w-[min(32rem,calc(100vw-2rem))] glass-strong rounded-panel p-0 text-fg backdrop:bg-black/30 backdrop:backdrop-blur-sm"
-    >
-      {open && (
-        <div className="flex flex-col gap-4 p-5">
-          <h2 id={titleId} className="text-lg font-semibold">
-            {title}
-          </h2>
-          <div className="text-sm">{children}</div>
-          <div className="flex flex-wrap justify-end gap-2">{footer}</div>
-        </div>
-      )}
-    </dialog>
-  );
-}
+export { Dialog, Skeleton } from "@kb/ui";
 
 // --- Tabs (APG tabs, manual activation) ------------------------------------
 
@@ -443,14 +393,13 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
           {toast.action.label}
         </button>
       )}
-      <button
-        type="button"
-        aria-label="Dismiss notification"
+      <IconButton
+        label="Dismiss notification"
         onClick={() => onDismiss(toast.id)}
-        className="inline-flex size-6 items-center justify-center rounded-control text-fg-muted hover:bg-surface-muted"
+        className="size-6"
       >
-        <X className="size-4" aria-hidden="true" />
-      </button>
+        <X className="size-4" />
+      </IconButton>
     </div>
   );
 }

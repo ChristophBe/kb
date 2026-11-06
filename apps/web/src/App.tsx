@@ -1,8 +1,9 @@
 import type { KbModule, RuntimeConfig } from "@kb/module-sdk";
 import { Area, Card, navItemClass, PageTitle } from "@kb/ui";
-import { FlaskConical, Library } from "lucide-react";
+import { CircleHelp, FlaskConical, Library } from "lucide-react";
 import { useMemo } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
+import { HelpIndex, HelpPage } from "./help/Help.tsx";
 import { ModuleBoundary } from "./ModuleBoundary.tsx";
 import { activeModules } from "./registry.ts";
 import { ThemeToggle } from "./ThemeToggle.tsx";
@@ -25,6 +26,8 @@ export function App({ config }: { config: RuntimeConfig }) {
             ),
             children: m.routes,
           })),
+          { path: "help", element: <HelpIndex /> },
+          { path: "help/:page", element: <HelpPage /> },
           // Clickable M1 prototype with mock data (docs/ux/m1), loaded on demand.
           {
             path: "prototype/*",
@@ -76,7 +79,12 @@ function Shell({ modules }: { modules: KbModule[] }) {
             <FlaskConical className="size-4" aria-hidden="true" /> M1 prototype
           </NavLink>
         </nav>
-        <div className="mt-auto p-3 pt-6">
+        <nav aria-label="Help" className="mt-auto flex flex-col gap-0.5 px-3 pt-6">
+          <NavLink to="/help" className={({ isActive }) => navItemClass(isActive)}>
+            <CircleHelp className="size-4" aria-hidden="true" /> Help
+          </NavLink>
+        </nav>
+        <div className="p-3">
           <ThemeToggle />
         </div>
       </Area>

@@ -1,6 +1,6 @@
 import type { KbModule, RuntimeConfig } from "@kb/module-sdk";
 import { Area, navItemClass } from "@kb/ui";
-import { CircleHelp, FlaskConical, Library } from "lucide-react";
+import { CircleHelp, Library } from "lucide-react";
 import { useMemo } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
 import { Home } from "./Home.tsx";
@@ -29,11 +29,6 @@ export function App({ config }: { config: RuntimeConfig }) {
           })),
           { path: "help", element: <HelpIndex /> },
           { path: "help/:page", element: <HelpPage /> },
-          // Clickable M1 prototype with mock data (docs/ux/m1), loaded on demand.
-          {
-            path: "prototype/*",
-            lazy: async () => ({ Component: (await import("./prototype/index.tsx")).Prototype }),
-          },
           { path: "*", element: <p className="text-sm text-fg-muted">Page not found.</p> },
         ],
       },
@@ -62,17 +57,6 @@ function Shell({ modules }: { modules: KbModule[] }) {
               <Icon className="size-4" /> {label}
             </NavLink>
           ))}
-        </nav>
-        <nav
-          aria-label="Preview"
-          className="mt-6 flex flex-col gap-0.5 border-t border-border px-3 pt-4"
-        >
-          <span className="px-3 pb-1 font-mono text-xs font-medium tracking-wide text-fg-muted uppercase">
-            Preview
-          </span>
-          <NavLink to="/prototype" className={({ isActive }) => navItemClass(isActive)}>
-            <FlaskConical className="size-4" aria-hidden="true" /> M1 prototype
-          </NavLink>
         </nav>
         <nav aria-label="Help" className="mt-auto flex flex-col gap-0.5 px-3 pt-6">
           <NavLink to="/help" className={({ isActive }) => navItemClass(isActive)}>

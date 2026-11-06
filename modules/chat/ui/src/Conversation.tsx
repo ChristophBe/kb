@@ -7,9 +7,9 @@ import {
   MessageStatus,
 } from "@kb/chat-api/kb/chat/v1/chat_pb";
 import { Code, ConnectError, useClient, useQuery, useQueryClient } from "@kb/module-sdk";
-import { Button, ErrorMessage, Spinner, Textarea } from "@kb/ui";
-import { RotateCcw, Send, Square, TriangleAlert } from "lucide-react";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { Button, buttonClass, ErrorMessage, Spinner } from "@kb/ui";
+import { ArrowUp, MessageSquare, RotateCcw, Square, TriangleAlert } from "lucide-react";
+import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { Answer } from "./Answer.tsx";
 import { ConversationHeader } from "./ConversationHeader.tsx";
@@ -67,6 +67,7 @@ export function Conversation() {
   // Aborting the stream cancels the answer on the server, which saves it as stopped.
   const abort = useRef<AbortController | null>(null);
   const composer = useRef<HTMLTextAreaElement>(null);
+  const composerId = useId();
   const bottom = useRef<HTMLDivElement>(null);
 
   // Leaving the conversation stops its answer, like closing the tab does.
@@ -218,15 +219,18 @@ export function Conversation() {
         <p role="status" className="sr-only">
           {status}
         </p>
-        <form
-          onSubmit={send}
-          className="glass sticky bottom-4 mx-auto mt-6 mb-4 w-full max-w-3xl rounded-panel p-3"
-        >
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-              <Textarea
+        <form onSubmit={send} className="sticky bottom-4 mx-auto mt-6 mb-4 w-full max-w-3xl">
+          {/* Styled like the home page's prompt: one glass field with a round Ask button. */}
+          <div className="glass-strong flex flex-col gap-1 rounded-panel py-2 pr-2 pl-5 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus">
+            <div className="flex items-end gap-3">
+              <MessageSquare className="mb-3.5 size-5 shrink-0 text-accent" aria-hidden="true" />
+              <label htmlFor={composerId} className="sr-only">
+                Message
+              </label>
+              <textarea
+                id={composerId}
                 ref={composer}
-                rows={2}
+                rows={1}
                 value={input}
                 placeholder="Ask something…"
                 onChange={(e) => setInput(e.target.value)}
@@ -234,31 +238,33 @@ export function Conversation() {
                   if (e.key === "Enter" && !e.shiftKey) send(e);
                   if (e.key === "Escape" && pending) stop();
                 }}
+                className="max-h-40 min-w-0 flex-1 resize-none bg-transparent py-3 text-base field-sizing-content placeholder:text-fg-muted focus-visible:outline-none"
               />
               {pending && (
-                <Button
+                <button
                   type="button"
-                  variant="secondary"
                   title="Stop the answer (Esc)"
                   onClick={stop}
+                  className={buttonClass("secondary", "rounded-full px-4 py-3")}
                 >
                   <Square className="size-3 fill-current" aria-hidden="true" />
                   Stop
-                </Button>
+                </button>
               )}
-              <Button
+              <button
                 type="submit"
-                aria-label="Send"
                 aria-describedby={pending ? SEND_HINT : undefined}
                 disabled={!input.trim() || pending !== null}
+                className={buttonClass("primary", "rounded-full px-5 py-3")}
               >
-                <Send className="size-4" aria-hidden="true" />
-              </Button>
+                Ask
+                <ArrowUp className="size-4" aria-hidden="true" />
+              </button>
               <span id={SEND_HINT} hidden>
                 Wait for the answer or stop it (Esc).
               </span>
             </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pb-1">
               <label className="flex items-center gap-2 text-xs text-fg-muted">
                 <input
                   type="checkbox"

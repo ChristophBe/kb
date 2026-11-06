@@ -160,7 +160,7 @@ describe("Conversation", () => {
   it("stops a streaming answer and keeps it as stopped", async () => {
     streamChat.mockImplementation(stoppableStream(["Revenue grew"]));
     await renderConversation();
-    const send = screen.getByRole("button", { name: "Send" });
+    const send = screen.getByRole("button", { name: "Ask" });
     expect(screen.queryByRole("button", { name: "Stop" })).toBeNull();
     await ask("How did revenue develop?");
 

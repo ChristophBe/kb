@@ -1,5 +1,12 @@
-import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
+import {
+  type ComponentProps,
+  type HTMLAttributes,
+  type ReactNode,
+  useEffect,
+  useState,
+} from "react";
 import { cn } from "./cn.ts";
+import { formatRelativeTime, formatTime } from "./format.ts";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
@@ -259,5 +266,27 @@ export function Spinner({ className, label = "Loading" }: { className?: string; 
         className,
       )}
     />
+  );
+}
+
+/** The time since a protobuf Timestamp ("5 minutes ago"), with the absolute time as tooltip. */
+export function RelativeTime({
+  time,
+  ...props
+}: { time: { seconds: bigint } | undefined } & Omit<ComponentProps<"time">, "dateTime" | "title">) {
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+  if (!time) return null;
+  return (
+    <time
+      dateTime={new Date(Number(time.seconds) * 1000).toISOString()}
+      title={formatTime(time)}
+      {...props}
+    >
+      {formatRelativeTime(time, now)}
+    </time>
   );
 }

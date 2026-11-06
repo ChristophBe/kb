@@ -13,11 +13,12 @@ export {
   navItemClass,
   PageHeader,
   PageTitle,
+  RelativeTime,
   SourceNote,
   Spinner,
   Textarea,
   type Tone,
 } from "./components.tsx";
 export { Dialog } from "./dialog.tsx";
-export { formatBytes, formatTime } from "./format.ts";
+export { formatBytes, formatRelativeTime, formatTime } from "./format.ts";
 export { DelayedLoading, Skeleton, SkeletonRows } from "./loading.tsx";

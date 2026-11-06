@@ -60,6 +60,29 @@ describe("ChatLayout", () => {
     expect(screen.getByText("Start a new chat or pick a conversation.")).toBeTruthy();
   });
 
+  it("shows the last message's preview and age", async () => {
+    const seconds = BigInt(Math.floor(Date.now() / 1000) - 5 * 60);
+    const { transport } = chatService([
+      create(ConversationSchema, {
+        id: "c1",
+        title: "Q3 revenue",
+        lastMessagePreview: "It grew by 12 %.",
+        lastMessageTime: { seconds },
+      }),
+      conversation("c2", "Hiring plan"),
+    ]);
+    renderModule(chat, transport);
+    const link = await screen.findByRole("link", { name: "Q3 revenue" });
+    expect(link.getAttribute("aria-describedby")).toBe("c1-preview c1-age");
+    expect(within(link).getByText("It grew by 12 %.")).toBeTruthy();
+    const age = within(link).getByText("5 minutes ago");
+    expect(age.getAttribute("title")).toBe(new Date(Number(seconds) * 1000).toLocaleString());
+
+    const empty = sidebar().getByRole("link", { name: "Hiring plan" });
+    expect(empty.textContent).toBe("Hiring plan");
+    expect(empty.getAttribute("aria-describedby")).toBeNull();
+  });
+
   it("opens a conversation with its messages", async () => {
     const { transport } = chatService([conversation("c1", "Q3 revenue")]);
     renderModule(chat, transport, "/c1");

@@ -13,6 +13,7 @@ import {
   Input,
   navItemClass,
   PageHeader,
+  RelativeTime,
   SourceNote,
   Spinner,
   Textarea,
@@ -158,6 +159,27 @@ describe("kit components have no axe violations", () => {
   it("Spinner", async () => {
     const { container } = render(<Spinner label="Loading documents" />);
     await expectNoAxeViolations(container);
+  });
+
+  it("RelativeTime", async () => {
+    const { container } = render(<RelativeTime time={{ seconds: 1_700_000_000n }} />);
+    await expectNoAxeViolations(container);
+  });
+});
+
+describe("RelativeTime", () => {
+  it("shows the age with the absolute time as tooltip", () => {
+    const seconds = BigInt(Math.floor(Date.now() / 1000) - 5 * 60);
+    render(<RelativeTime time={{ seconds }} />);
+    const time = screen.getByText("5 minutes ago");
+    expect(time.tagName).toBe("TIME");
+    expect(time.getAttribute("dateTime")).toBe(new Date(Number(seconds) * 1000).toISOString());
+    expect(time.getAttribute("title")).toBe(new Date(Number(seconds) * 1000).toLocaleString());
+  });
+
+  it("renders nothing without a time", () => {
+    const { container } = render(<RelativeTime time={undefined} />);
+    expect(container.innerHTML).toBe("");
   });
 });
 

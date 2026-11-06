@@ -20,7 +20,10 @@ log = logging.getLogger("kb_chat")
 # The README holds the rules for writing the manual, not help for users.
 _SKIPPED_PAGES = {"README"}
 _FENCE = re.compile(r"^\s*(```|~~~)")
-_SLUG_DROPPED = re.compile(r"[^\w\- ]")
+# Like the help page: drop all but letters, digits, whitespace, "_" and "-",
+# then turn every whitespace character into "-" (runs are not collapsed).
+_SLUG_DROPPED = re.compile(r"[^\w\s-]")
+_WHITESPACE = re.compile(r"\s")
 
 
 @dataclass(frozen=True)
@@ -39,9 +42,8 @@ class Section:
 
 
 def slug(heading: str) -> str:
-    """The anchor GitHub (and the help page) gives a heading: lower case,
-    punctuation dropped except hyphens, spaces turned into hyphens."""
-    return _SLUG_DROPPED.sub("", heading.strip().lower()).replace(" ", "-")
+    """The anchor the help page (like GitHub) gives a heading."""
+    return _WHITESPACE.sub("-", _SLUG_DROPPED.sub("", heading.strip().lower()))
 
 
 def parse_page(page: str, markdown: str) -> list[Section]:

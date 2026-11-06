@@ -19,6 +19,7 @@ export {
   Textarea,
   type Tone,
 } from "./components.tsx";
+export { ConfirmDialog } from "./confirm-dialog.tsx";
 export { Dialog } from "./dialog.tsx";
 export { formatBytes, formatRelativeTime, formatTime } from "./format.ts";
 export { DelayedLoading, Skeleton, SkeletonRows } from "./loading.tsx";

@@ -37,6 +37,8 @@ def test_slug_matches_github_anchors() -> None:
     assert slug("Stop an answer (while it's written)") == "stop-an-answer-while-its-written"
     assert slug("Switch between light and dark mode") == "switch-between-light-and-dark-mode"
     assert slug("Fix a failed upload \u2013 step-by-step") == "fix-a-failed-upload--step-by-step"
+    assert slug("  Größe_ändern\tjetzt ") == "größe_ändern-jetzt"
+    assert slug("Files that are not supported (yet?)") == "files-that-are-not-supported-yet"
 
 
 def test_a_page_is_split_into_its_level_two_sections() -> None:

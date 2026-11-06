@@ -81,9 +81,14 @@ describe("kit components have no axe violations", () => {
 
   it("Area", async () => {
     const { container } = render(
-      <Area>
-        <nav aria-label="Sections">Content</nav>
-      </Area>,
+      <>
+        <Area>
+          <nav aria-label="Sections">Content</nav>
+        </Area>
+        <Area tone="secondary">
+          <nav aria-label="Conversations">List</nav>
+        </Area>
+      </>,
     );
     await expectNoAxeViolations(container);
   });

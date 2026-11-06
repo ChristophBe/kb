@@ -157,8 +157,7 @@ function HomePrompt({
 }
 
 function FeatureTile({ module: m }: { module: KbModule }) {
-  const tile =
-    "group relative flex h-full flex-col gap-3 overflow-hidden p-5 transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-glass";
+  const tile = "flex h-full flex-col gap-3 p-5";
   if (!m.feature) {
     return (
       <Link to={modulePath(m, "")} className="block h-full">
@@ -173,22 +172,14 @@ function FeatureTile({ module: m }: { module: KbModule }) {
   return (
     <Link to={modulePath(m, cta.path)} className="block h-full">
       <Card className={tile}>
-        {/* Gradient rule along the top edge, shown on hover. */}
-        <span
-          aria-hidden="true"
-          className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-accent to-accent-2 opacity-0 transition-opacity group-hover:opacity-100"
-        />
-        <span className="inline-flex size-10 items-center justify-center rounded-card bg-accent-subtle text-accent transition-colors group-hover:bg-accent group-hover:text-on-accent">
+        <span className="inline-flex size-10 items-center justify-center rounded-card bg-accent-subtle text-accent">
           <m.icon className="size-5" />
         </span>
         <h3 className="font-medium">{headline}</h3>
         <p className="flex-1 text-sm text-fg-muted">{description}</p>
         <span className="inline-flex items-center gap-1 text-sm font-medium text-accent">
           {cta.label}
-          <ArrowRight
-            className="size-4 transition-transform group-hover:translate-x-0.5"
-            aria-hidden="true"
-          />
+          <ArrowRight className="size-4" aria-hidden="true" />
         </span>
       </Card>
     </Link>

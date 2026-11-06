@@ -5,6 +5,7 @@ import {
   buttonClass,
   Card,
   ChunkStrip,
+  ConfirmDialog,
   DelayedLoading,
   EmptyState,
   ErrorMessage,
@@ -15,6 +16,7 @@ import {
   SkeletonRows,
 } from "@kb/ui";
 import { Download, Search as SearchIcon, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
 import { Link } from "react-router";
 import { statusLabel } from "./status.ts";
 
@@ -26,6 +28,9 @@ export function DocumentList() {
     queryFn: () => client.listDocuments({ page: { pageSize: 100 } }),
     refetchInterval: 5000,
   });
+  // The document the delete confirmation asks about.
+  const [deleting, setDeleting] = useState<{ id: string; title: string } | null>(null);
+  const table = useRef<HTMLTableElement>(null);
   const remove = useMutation({
     mutationFn: (id: string) => client.deleteDocument({ id }),
     onSuccess: () => {
@@ -33,6 +38,10 @@ export function DocumentList() {
       return queryClient.invalidateQueries({ queryKey: ["documents"] });
     },
   });
+  const confirmDelete = (id: string) =>
+    remove.mutate(id, {
+      onSettled: () => setDeleting(null),
+    });
   const download = async (id: string) => {
     const { url } = await client.getDownloadUrl({ id });
     window.open(url, "_blank");
@@ -57,7 +66,7 @@ export function DocumentList() {
             <SkeletonRows label="Loading documents" />
           </DelayedLoading>
         ) : docs.data?.documents.length ? (
-          <table className="w-full text-sm">
+          <table ref={table} tabIndex={-1} aria-label="Documents" className="w-full text-sm">
             <thead className="border-b border-border text-left text-xs text-fg-muted uppercase">
               <tr>
                 <th className="px-4 py-2 font-medium">Title</th>
@@ -92,7 +101,7 @@ export function DocumentList() {
                       <IconButton label="Download" onClick={() => download(d.id)}>
                         <Download className="size-4" />
                       </IconButton>
-                      <IconButton label="Delete" tone="danger" onClick={() => remove.mutate(d.id)}>
+                      <IconButton label="Delete" tone="danger" onClick={() => setDeleting(d)}>
                         <Trash2 className="size-4" />
                       </IconButton>
                     </td>
@@ -105,6 +114,19 @@ export function DocumentList() {
           <EmptyState>No documents yet. Upload some in Ingestion.</EmptyState>
         )}
       </Card>
+      <ConfirmDialog
+        open={deleting !== null}
+        title="Delete document?"
+        confirmLabel="Delete"
+        pending={remove.isPending}
+        onConfirm={() => deleting && confirmDelete(deleting.id)}
+        onCancel={() => setDeleting(null)}
+        // After a delete, the row's button is gone; the focus stays in the list.
+        fallbackFocus={table}
+      >
+        “{deleting?.title}” and its passages will be deleted. Chat can no longer use them. This
+        can't be undone.
+      </ConfirmDialog>
     </div>
   );
 }

@@ -69,6 +69,9 @@ Chats that were [restricted](chat.md#restrict-a-chat-to-some-documents) to the o
 
 ## Delete a document
 
-Select the delete button (the bin) in the document's row in **Documents**. The document is deleted at once, without asking for confirmation, and a notification says "Document deleted". This can't be undone.
+1. In **Documents**, select the delete button (the bin) in the document's row.
+2. A dialog asks **Delete document?** and names the document. Select **Delete** to delete it, or **Cancel** (or press Escape) to keep it.
+
+When it is deleted, a notification says "Document deleted". This can't be undone.
 
 The document and its passages disappear from search and are no longer used in chat answers. Chats restricted to it show it as **Deleted document**.

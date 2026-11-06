@@ -69,19 +69,20 @@ describe("Answer", () => {
     expect(screen.getByRole("link", { name: "ok" }).getAttribute("rel")).toBe("noreferrer");
   });
 
-  it("links markers to the source document", () => {
+  it("links markers to the source passage, numbered from 1 as in search", () => {
     renderAnswer("Revenue grew [1], costs fell [2].", sources);
-    const marker = screen.getByRole("link", { name: "Source 1: Report.pdf, chunk 3" });
-    expect(marker.getAttribute("href")).toBe("/m/document/d1");
+    const marker = screen.getByRole("link", { name: "Source 1: Report.pdf, chunk 4" });
+    expect(marker.getAttribute("href")).toBe("/m/document/d1#chunk-3");
     expect(marker.textContent).toBe("[1]");
-    expect(screen.getByRole("link", { name: "Source 2: Notes.md, chunk 0" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Source 2: Notes.md, chunk 1" })).toBeTruthy();
   });
 
-  it("links the margin notes to the source document", () => {
+  it("links the margin notes to the source passage", () => {
     renderAnswer("No markers.", sources);
     const notes = within(screen.getByRole("list", { name: "Sources" }));
-    const link = notes.getByRole("link", { name: "Report.pdf, chunk 3" });
-    expect(link.getAttribute("href")).toBe("/m/document/d1");
+    const link = notes.getByRole("link", { name: "Report.pdf, chunk 4" });
+    expect(link.getAttribute("href")).toBe("/m/document/d1#chunk-3");
+    expect(notes.getByText("chunk 4")).toBeTruthy();
   });
 
   it("links manual sources to their section of the help page", () => {
@@ -101,7 +102,7 @@ describe("Answer", () => {
     const note = notes.getByRole("link", { name: "Chat: Stop an answer, user manual" });
     expect(note.getAttribute("href")).toBe("/help/chat#stop-an-answer");
     expect(notes.getByText("user manual")).toBeTruthy();
-    expect(notes.getByRole("link", { name: "Report.pdf, chunk 3" })).toBeTruthy();
+    expect(notes.getByRole("link", { name: "Report.pdf, chunk 4" })).toBeTruthy();
   });
 
   it("leaves markers in code and without a source as text", () => {
@@ -119,7 +120,7 @@ describe("Answer", () => {
   it("highlights the note of a hovered or focused marker", () => {
     renderAnswer("Fact [1].", sources);
     const marker = screen.getByRole("link", { name: /^Source 1/ });
-    const note = screen.getByRole("link", { name: "Report.pdf, chunk 3" }).closest("li");
+    const note = screen.getByRole("link", { name: "Report.pdf, chunk 4" }).closest("li");
     expect(note?.className).not.toContain("border-accent");
     fireEvent.mouseEnter(marker);
     expect(note?.className).toContain("border-accent");

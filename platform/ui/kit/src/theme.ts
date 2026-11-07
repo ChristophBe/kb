@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 
 export type ThemePref = "system" | "light" | "dark";
 
-/** Also read by the inline script in index.html, which applies it before first paint. */
+/** Also read by the inline script in the index.html of apps/web and apps/site, which applies it before first paint. */
 const STORAGE_KEY = "kb.theme";
 
 function isThemePref(value: unknown): value is ThemePref {

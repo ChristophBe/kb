@@ -1,6 +1,6 @@
 # UX and accessibility standards
 
-Rules for every UI in kb: the shell (`apps/web`), the shared kit (`platform/ui/kit`, package `@kb/ui`) and module UIs (`modules/*/ui`). New UI work follows them and reviews check against them, using the UI checklist in the PR template. Code conventions for the TypeScript side are in the [coding standards](coding-standards.md); the automated gates are listed under [Automated checks](#automated-checks).
+Rules for every UI in kb: the shell (`apps/web`), the marketing site (`apps/site`), the shared kit (`platform/ui/kit`, package `@kb/ui`) and module UIs (`modules/*/ui`). New UI work follows them and reviews check against them, using the UI checklist in the PR template. Code conventions for the TypeScript side are in the [coding standards](coding-standards.md); the automated gates are listed under [Automated checks](#automated-checks).
 
 ## Accessibility target
 

@@ -25,3 +25,5 @@ export { Dialog } from "./dialog.tsx";
 export { formatBytes, formatRelativeTime, formatTime } from "./format.ts";
 export { DelayedLoading, Skeleton, SkeletonRows } from "./loading.tsx";
 export { headingSlug } from "./slug.ts";
+export { applyThemePref, readThemePref, type ThemePref, useThemePref } from "./theme.ts";
+export { ThemeToggle } from "./theme-toggle.tsx";

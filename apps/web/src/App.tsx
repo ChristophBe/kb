@@ -1,5 +1,5 @@
 import type { KbModule, RuntimeConfig } from "@kb/module-sdk";
-import { Area, navItemClass } from "@kb/ui";
+import { Area, navItemClass, ThemeToggle } from "@kb/ui";
 import { CircleHelp, Library } from "lucide-react";
 import { useMemo } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
@@ -7,7 +7,6 @@ import { Home } from "./Home.tsx";
 import { HelpIndex, HelpPage } from "./help/Help.tsx";
 import { ModuleBoundary } from "./ModuleBoundary.tsx";
 import { activeModules, navEntries } from "./registry.ts";
-import { ThemeToggle } from "./ThemeToggle.tsx";
 import { ToastHost } from "./ToastHost.tsx";
 
 export function App({ config }: { config: RuntimeConfig }) {

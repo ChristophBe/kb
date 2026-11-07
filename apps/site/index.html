@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>kb: ask your documents anything</title>
+    <meta
+      name="description"
+      content="kb is an open-source knowledge base you run yourself. Upload your documents, search them by meaning and get answers with the exact passages that prove them."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="kb: ask your documents anything" />
+    <meta
+      property="og:description"
+      content="Upload your documents, search them by meaning and get answers with sources. Runs on your own machine."
+    />
+    <meta name="theme-color" content="#f4f4f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      // Applies the saved theme (@kb/ui theme.ts) before first paint, so a pinned theme doesn't flash.
+      try {
+        const theme = localStorage.getItem("kb.theme");
+        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
+  </head>
+  <body class="bg-canvas text-fg antialiased">
+    <div id="root"><!--app--></div>
+    <script type="module" src="/src/entry-client.tsx"></script>
+  </body>
+</html>

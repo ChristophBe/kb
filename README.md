@@ -2,6 +2,8 @@
 
 A modular knowledge-management system: ingest documents, manage them, and chat with them.
 
+**Website:** [christophbe.github.io/kb](https://christophbe.github.io/kb/), built from [`apps/site`](apps/site) and published to GitHub Pages on every push to `main`.
+
 - **Go** — core infrastructure services (document, ingestion)
 - **Python** — data-science / LLM work (ingestion worker, chat, llm gateway)
 - **TypeScript + React** — a modular UI shell; each module ships its own UI package
@@ -52,6 +54,7 @@ No GPU or want a fast smoke test? Use `KB_LLM_PROVIDER=fake KB_RAG_MIN_SCORE=-1 
 | `task lint` / `task test` | All languages |
 | `task dev` | Stack with hot reload (`docker compose watch`) |
 | `task web` | Vite dev server for the UI against the running stack |
+| `task site` | Vite dev server for the marketing site (`apps/site`) |
 | `task ci` | What CI runs (incl. a check that generated code is committed) |
 
 ### Adding a module

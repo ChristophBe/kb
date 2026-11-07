@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "kb llm module: gateway to LLM providers"
 requires-python = ">=3.13"
 dependencies = [
+    "anthropic>=2.3",
     "httpx>=0.28",
     "kb-llm-api",
     "kb-platform",

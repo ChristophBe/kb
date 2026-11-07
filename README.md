@@ -44,7 +44,7 @@ task up -- --profile ollama     # full stack incl. Ollama (pulls llama3.2 + nomi
 open http://localhost:3000
 ```
 
-No GPU or want a fast smoke test? Use `KB_LLM_PROVIDER=fake KB_RAG_MIN_SCORE=-1 task up` (deterministic echo answers and hash embeddings, which need the relevance threshold off). To use an Ollama running on the host (faster on macOS), set `KB_OLLAMA_URL=http://host.docker.internal:11434`. See `.env.example` for all settings, including the host ports if 8080/3000 are taken.
+No GPU or want a fast smoke test? Use `KB_LLM_PROVIDER=fake KB_RAG_MIN_SCORE=-1 task up` (deterministic echo answers and hash embeddings, which need the relevance threshold off). To use an Ollama running on the host (faster on macOS), set `KB_OLLAMA_URL=http://host.docker.internal:11434`. To chat with Claude, set `KB_LLM_PROVIDER=anthropic` and `KB_ANTHROPIC_API_KEY` (chat only for now: Anthropic has no embedding models, so search and document processing don't work with it yet). See `.env.example` for all settings, including the host ports if 8080/3000 are taken.
 
 ## Development
 

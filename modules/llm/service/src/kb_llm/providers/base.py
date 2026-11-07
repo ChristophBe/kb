@@ -12,8 +12,20 @@ class ProviderUnavailableError(ProviderError):
     """The provider cannot be reached, is overloaded or timed out; try again later."""
 
 
+class ProviderRateLimitedError(ProviderUnavailableError):
+    """The provider rejected the call because a rate limit or quota is used up."""
+
+
 class ModelNotFoundError(ProviderError):
     """The provider does not know the requested model."""
+
+
+class ProviderAuthError(ProviderError):
+    """The provider rejected kb's credentials (a missing, wrong or revoked key)."""
+
+
+class NotSupportedError(ProviderError):
+    """The provider does not offer this operation (e.g. embeddings)."""
 
 
 class Role(StrEnum):

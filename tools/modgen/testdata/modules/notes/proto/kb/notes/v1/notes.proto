@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package kb.notes.v1;
+
+// NotesService { rpc Commented(X) } must not be picked up.
+service NotesService {
+  rpc GetNote(GetNoteRequest) returns (GetNoteResponse);
+  /* rpc Hidden(GetNoteRequest) returns (GetNoteResponse); */
+  rpc ListNotes(ListNotesRequest) returns (stream ListNotesResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+  // IndexNote is called by the search worker only.
+  rpc IndexNote(IndexNoteRequest) returns (IndexNoteResponse);
+}
+
+// NotesAdminService is internal as a whole.
+service NotesAdminService {
+  rpc Rebuild(RebuildRequest) returns (RebuildResponse);
+}
+
+message GetNoteRequest {}
+message GetNoteResponse {}
+message ListNotesRequest {}
+message ListNotesResponse {}
+message IndexNoteRequest {}
+message IndexNoteResponse {}
+message RebuildRequest {}
+message RebuildResponse {}

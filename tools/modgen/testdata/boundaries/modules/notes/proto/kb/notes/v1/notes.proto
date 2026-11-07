@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package kb.notes.v1;
+
+service NotesService {
+  rpc GetNote(GetNoteRequest) returns (GetNoteResponse);
+}
+
+message GetNoteRequest {}
+message GetNoteResponse {}

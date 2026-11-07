@@ -76,6 +76,23 @@ A module with a Go service and a Python worker (ingestion) applies both columns,
 - Event consumers are idempotent (at-least-once delivery, [ADR 0004](../adr/0004-nats-jetstream-events-between-modules.md)) and treat a peer outage as a transient error: they NAK and retry rather than fail the work permanently.
 - Publishing an event that another module consumes makes it part of the contract; it follows the same compatibility rules as RPCs (`buf breaking`).
 
+## Browser-reachable RPCs
+
+Envoy routes the browser to a service's methods one by one (`deploy/envoy/envoy.yaml`, generated from the manifests). Every method of a service in `grpc_services` is public unless the manifest marks it `internal`:
+
+```yaml
+services:
+  - name: document-service
+    grpc_services: [kb.document.v1.DocumentService]
+    internal:                                        # called by other modules' services only
+      - kb.document.v1.DocumentService/AddChunks     # one method
+      # - kb.document.v1.DocumentAdminService        # or a whole service from grpc_services
+```
+
+- Mark a method `internal` when only backend code calls it: writes that belong to a pipeline (`AddChunks`, `SetDocumentStatus`), raw access (`ReadContent`), or anything that would let a browser spend provider resources directly (`LlmService/Generate`, `Embed`). A new RPC is public by default, so decide when adding it.
+- Envoy has no route for an internal method; the browser gets HTTP 404, which gRPC-Web clients report as `UNIMPLEMENTED`. Services call each other directly (`KB_<MODULE>_ADDR`), not through Envoy, so internal methods keep working between modules.
+- `tools/modgen` reads the method names from the module's `.proto` files and fails when a `grpc_services` entry or an `internal` entry names nothing that exists.
+
 ## Declared dependencies
 
 `module.yaml` lists what a module uses from other modules:

@@ -1,3 +1,4 @@
+<!-- PR title: Conventional Commits, e.g. `fix(document): reject empty uploads` (types, scopes and version bumps: CONTRIBUTING.md#pr-titles-and-commit-messages) -->
 Closes #
 
 ## What changed

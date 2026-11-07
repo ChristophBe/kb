@@ -29,7 +29,7 @@ Pick one type and mirror its form's sections as `## ` headings:
 | `type:bug` | Steps to reproduce, Expected vs. actual behaviour, Logs (optional) |
 
 Rules (these implement the **Definition of Ready** in CONTRIBUTING.md; read its checklist):
-- Title: short, imperative or noun phrase, no type prefix (epics: `Epic: <module/area>`).
+- Title: short, imperative or noun phrase, no type prefix (epics: `Epic: <module/area>`). Issue titles stay plain; only the PR that closes the issue gets a Conventional Commits title (see "PR titles and commit messages" in CONTRIBUTING.md), derived from the issue's labels: `type:feature` → `feat`, `type:bug` → `fix`, `type:docs` → `docs`, `type:chore` → `chore` (or `ci` / `build` / `refactor` / `test` / `perf` when that fits better), scope = the `module:*` / `area:*` label without its prefix, plus `!` for a breaking change. E.g. issue "Reject empty uploads" (`type:bug module:document`) → PR `fix(document): reject empty uploads`.
 - A work item is about one PR. Larger → split into several sub-issues.
 - Acceptance criteria are `- [ ]` checkboxes, each observable or testable.
 - Work items end with `Part of #<epic>`; every work item belongs to exactly one epic (bugs may stand alone).

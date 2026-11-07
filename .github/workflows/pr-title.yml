@@ -1,0 +1,54 @@
+name: pr-title
+
+# PRs are squash-merged with the PR title as the commit title, so the title is the
+# commit message on main and must follow Conventional Commits (see CONTRIBUTING.md).
+# `pull_request` (not `pull_request_target`): the check only reads the title and
+# never runs PR code, and it takes effect on the PR that changes this file.
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: modules/*/module.yaml
+          sparse-checkout-cone-mode: false
+      # Allowed scopes: every module id from modules/*/module.yaml, every `area:*`
+      # label, and `deps` for dependency updates (`build(deps): …`). Derived on each
+      # run so new modules and areas need no edit here.
+      - name: Collect allowed scopes
+        id: scopes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo 'list<<EOF'
+            sed -n 's/^id:[[:space:]]*//p' modules/*/module.yaml
+            gh label list --repo "$GITHUB_REPOSITORY" --limit 200 --json name --jq '.[].name | select(startswith("area:")) | ltrimstr("area:")'
+            echo deps
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          types: |
+            feat
+            fix
+            chore
+            docs
+            refactor
+            test
+            ci
+            build
+            perf
+          scopes: ${{ steps.scopes.outputs.list }}
+          requireScope: false

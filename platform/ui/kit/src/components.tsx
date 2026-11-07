@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { cn } from "./cn.ts";
+import { fieldViolations } from "./errors.ts";
 import { formatRelativeTime, formatTime } from "./format.ts";
 
 export type Variant = "primary" | "secondary" | "ghost" | "danger";
@@ -183,12 +184,33 @@ export function EmptyState({ children }: { children: ReactNode }) {
   return <div className="py-12 text-center text-sm text-fg-muted">{children}</div>;
 }
 
-export function ErrorMessage({ error }: { error: unknown }) {
+/**
+ * An error as an alert. A request rejected with field violations shows their
+ * descriptions; `exclude` names the fields a form already shows next to their
+ * inputs (see `fieldError`), and nothing is shown when only those are left.
+ */
+export function ErrorMessage({ error, exclude = [] }: { error: unknown; exclude?: string[] }) {
   if (!error) return null;
-  const message = error instanceof Error ? error.message : String(error);
+  const violations = fieldViolations(error);
+  const shown = violations.filter((v) => !exclude.includes(v.field));
+  if (violations.length > 0 && shown.length === 0) return null;
   return (
     <div role="alert" className="rounded-control bg-danger-subtle px-3 py-2 text-sm text-danger">
-      {message}
+      {shown.length === 0 ? (
+        error instanceof Error ? (
+          error.message
+        ) : (
+          String(error)
+        )
+      ) : shown.length === 1 ? (
+        shown[0]?.description
+      ) : (
+        <ul className="list-disc space-y-0.5 pl-4">
+          {shown.map((v) => (
+            <li key={`${v.field}:${v.description}`}>{v.description}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

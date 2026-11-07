@@ -1,6 +1,7 @@
 import { Code, ConnectError } from "@connectrpc/connect";
 import { KbRuntimeProvider } from "@kb/module-sdk";
 import { polyfillDialog } from "@kb/ui/testing/dialog";
+import { badRequestDetail } from "@kb/ui/testing/errors";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { MetadataEditor, validate } from "./MetadataEditor.tsx";
@@ -114,5 +115,18 @@ describe("MetadataEditor", () => {
     await save();
     const alert = await dialog().findByRole("alert");
     expect(alert.textContent).toBe("metadata keys must not be empty");
+  });
+
+  it("shows the server's field violations in the dialog", async () => {
+    const err = new ConnectError("Metadata keys must not be empty", Code.InvalidArgument);
+    err.details.push(
+      badRequestDetail([{ field: "metadata", description: "Metadata keys must not be empty" }]),
+    );
+    updateDocument.mockRejectedValue(err);
+    renderEditor();
+    fireEvent.click(screen.getByRole("button", { name: "Edit metadata" }));
+    await save();
+    const alert = await dialog().findByRole("alert");
+    expect(alert.textContent).toBe("Metadata keys must not be empty");
   });
 });

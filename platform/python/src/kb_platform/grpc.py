@@ -1,11 +1,16 @@
 import asyncio
 import logging
 import signal
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
+from typing import Any, NoReturn
 
 import grpc
+from google.protobuf import any_pb2
+from google.protobuf.message import Message
+from google.rpc import error_details_pb2, status_pb2
 from grpc_health.v1 import health, health_pb2, health_pb2_grpc
 from grpc_reflection.v1alpha import reflection
+from grpc_status import rpc_status
 
 log = logging.getLogger(__name__)
 
@@ -66,3 +71,74 @@ async def is_serving(ch: grpc.aio.Channel, rpc_timeout: float = 2.0) -> bool:
     except grpc.aio.AioRpcError:
         return False
     return resp.status == health_pb2.HealthCheckResponse.SERVING
+
+
+FieldViolation = error_details_pb2.BadRequest.FieldViolation
+
+
+def violation(field: str, description: str) -> FieldViolation:
+    """One invalid field of a request, for `abort_invalid_argument`. `field` is
+    the field's path in the request message, in proto field names (see
+    kb.common.v1); `description` is a sentence a user can act on."""
+    return FieldViolation(field=field, description=description)
+
+
+def error_info(
+    domain: str, reason: str, metadata: Mapping[str, str] | None = None
+) -> error_details_pb2.ErrorInfo:
+    """A google.rpc.ErrorInfo detail: `reason` is a stable UPPER_SNAKE_CASE
+    identifier clients may branch on, `domain` the proto package of the module
+    that defines it (e.g. "kb.chat.v1")."""
+    return error_details_pb2.ErrorInfo(domain=domain, reason=reason, metadata=metadata or {})
+
+
+def status_with_details(code: grpc.StatusCode, message: str, *details: Message) -> grpc.Status:
+    """A status carrying `details` in the grpc-status-details-bin trailer."""
+    packed = []
+    for detail in details:
+        any_detail = any_pb2.Any()
+        any_detail.Pack(detail)
+        packed.append(any_detail)
+    return rpc_status.to_status(
+        status_pb2.Status(code=code.value[0], message=message, details=packed)
+    )
+
+
+async def abort_with_details(
+    context: grpc.aio.ServicerContext[Any, Any],
+    code: grpc.StatusCode,
+    message: str,
+    *details: Message,
+) -> NoReturn:
+    """Ends the RPC with `code`, `message` and the given error details."""
+    status = status_with_details(code, message, *details)
+    await context.abort(status.code, status.details, status.trailing_metadata)
+    raise AssertionError("unreachable: abort raises")  # pragma: no cover
+
+
+async def abort_invalid_argument(
+    context: grpc.aio.ServicerContext[Any, Any], *violations: FieldViolation
+) -> NoReturn:
+    """Ends the RPC with INVALID_ARGUMENT and the violations as a
+    google.rpc.BadRequest detail. The message joins the descriptions, so
+    clients that ignore details still get a readable error."""
+    await abort_with_details(
+        context,
+        grpc.StatusCode.INVALID_ARGUMENT,
+        "; ".join(v.description for v in violations),
+        error_details_pb2.BadRequest(field_violations=violations),
+    )
+
+
+def field_violations(err: grpc.aio.AioRpcError | grpc.RpcError) -> list[FieldViolation]:
+    """The field violations carried by a failed call, if any."""
+    status = rpc_status.from_call(err)  # pyright: ignore[reportArgumentType]
+    if status is None:
+        return []
+    found: list[FieldViolation] = []
+    for detail in status.details:
+        if detail.Is(error_details_pb2.BadRequest.DESCRIPTOR):
+            bad_request = error_details_pb2.BadRequest()
+            detail.Unpack(bad_request)
+            found.extend(bad_request.field_violations)
+    return found

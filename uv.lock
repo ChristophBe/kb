@@ -358,6 +358,18 @@ wheels = [
 ]
 
 [[package]]
+name = "googleapis-common-protos"
+version = "1.76.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "protobuf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/62/b6/bc095b23a3e0d978e75c8c18cabe4c11f791837410670e4486f0d539bfba/googleapis_common_protos-1.76.0.tar.gz", hash = "sha256:71db0e44a1d4c2dd024ebad44ca67129cc1e2892e4861df466764749d5ef8642", size = 156250, upload-time = "2026-10-22T23:43:36.263Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/05/6d/78dc67a9e779e594b49bf62604034d3a6aa428a55afc729cafda4b7333e1/googleapis_common_protos-1.76.0-py3-none-any.whl", hash = "sha256:59e13344a9f3651aa201a03e2bee815a3bf43a4baf1f9ff8a9b62a840ce25fac", size = 307707, upload-time = "2026-10-22T23:43:10.445Z" },
+]
+
+[[package]]
 name = "greenlet"
 version = "3.5.6"
 source = { registry = "https://pypi.org/simple" }
@@ -572,6 +584,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a6/73/e14a3e0b099739b90ba6a269cdb80db9bcc02bcaac3de80b526b11c1a6ae/grpcio_reflection-1.85.0.tar.gz", hash = "sha256:b50383d750c2bbddb9c2b163b41de2219550e4393e1f1e0fb0080b8e1284fdd2", size = 19301, upload-time = "2026-10-26T06:25:05.727Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5b/9a/edfd2bd4e40a56161ab3dce0a35d68948d7ffaab5d9f0d732191f40017fe/grpcio_reflection-1.85.0-py3-none-any.whl", hash = "sha256:1e8cee7917c62bc2f0ee2c41774869598ba9e1bdb947530ac4275f414feff568", size = 22985, upload-time = "2026-10-26T06:24:50.375Z" },
+]
+
+[[package]]
+name = "grpcio-status"
+version = "1.85.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "googleapis-common-protos" },
+    { name = "grpcio" },
+    { name = "protobuf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/84/74/5500e64539b5019afdba20c06be322dd0a0c3d8c9461e11f6e8691749336/grpcio_status-1.85.0.tar.gz", hash = "sha256:b7b99c00a7a908e685094f67c241ea4e9126e22a8cb8505b15702726239df2af", size = 14005, upload-time = "2026-10-26T06:25:06.585Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/97/0d/852497d50c8a627a9102b4256918e1d196c327f817bfc4feb4869a8212c3/grpcio_status-1.85.0-py3-none-any.whl", hash = "sha256:f77368f05d20a0c2d5ac26aff71e688b5888256953add52b2d334a67ecd931ce", size = 14637, upload-time = "2026-10-26T06:24:51.516Z" },
 ]
 
 [[package]]
@@ -872,6 +898,7 @@ dependencies = [
     { name = "grpcio" },
     { name = "grpcio-health-checking" },
     { name = "grpcio-reflection" },
+    { name = "grpcio-status" },
     { name = "nats-py" },
     { name = "pydantic-settings" },
 ]
@@ -881,6 +908,7 @@ requires-dist = [
     { name = "grpcio", specifier = ">=1.85.0" },
     { name = "grpcio-health-checking", specifier = ">=1.85.0" },
     { name = "grpcio-reflection", specifier = ">=1.85.0" },
+    { name = "grpcio-status", specifier = ">=1.85.0" },
     { name = "nats-py", specifier = ">=2.11" },
     { name = "pydantic-settings", specifier = ">=2.11" },
 ]

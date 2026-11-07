@@ -15,6 +15,7 @@ from kb_chat.peers import PeerGenerator, PeerRetriever
 from kb_chat.preview import preview
 from kb_chat.repository import ConversationRow, MessageRow
 from kb_chat.server import ChatServicer
+from kb_platform.grpc import field_violations
 
 
 def servicer(repo: Any, documents: Any, llm: Any) -> ChatServicer:
@@ -337,6 +338,7 @@ async def test_stream_chat_rejects_empty_content(env: Env) -> None:
             )
         ]
     assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    assert [v.field for v in field_violations(err.value)] == ["content"]
 
 
 async def test_stream_chat_unknown_conversation_is_not_found(env: Env) -> None:
@@ -419,6 +421,7 @@ async def test_rename_rejects_invalid_titles(env: Env, title: str) -> None:
     with pytest.raises(grpc.aio.AioRpcError) as err:
         await stub.UpdateConversation(chat_pb2.UpdateConversationRequest(id=conv.id, title=title))
     assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    assert [v.field for v in field_violations(err.value)] == ["title"]
     got = await stub.GetConversation(chat_pb2.GetConversationRequest(id=conv.id))
     assert got.conversation.title == "Old"
 
@@ -498,12 +501,19 @@ async def test_an_empty_update_clears_the_scope(env: Env) -> None:
     assert list(resp.conversation.document_ids) == []
 
 
-@pytest.mark.parametrize("ids", [["not-a-uuid"], [str(uuid.uuid4()) for _ in range(101)]])
-async def test_invalid_scopes_are_rejected(env: Env, ids: list[str]) -> None:
+@pytest.mark.parametrize(
+    ("ids", "field"),
+    [
+        (["not-a-uuid"], "document_ids[0]"),
+        ([str(uuid.uuid4()) for _ in range(101)], "document_ids"),
+    ],
+)
+async def test_invalid_scopes_are_rejected(env: Env, ids: list[str], field: str) -> None:
     stub, *_ = env
     with pytest.raises(grpc.aio.AioRpcError) as created:
         await stub.CreateConversation(chat_pb2.CreateConversationRequest(document_ids=ids))
     assert created.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    assert [v.field for v in field_violations(created.value)] == [field]
 
     conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
     with pytest.raises(grpc.aio.AioRpcError) as updated:
@@ -513,3 +523,6 @@ async def test_invalid_scopes_are_rejected(env: Env, ids: list[str]) -> None:
             )
         )
     assert updated.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    assert [v.field for v in field_violations(updated.value)] == [
+        field.replace("document_ids", "document_ids.ids", 1)
+    ]

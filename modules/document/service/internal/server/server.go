@@ -12,6 +12,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -25,6 +26,7 @@ import (
 	"github.com/christoph/kb/modules/document/service/internal/store"
 	llmv1 "github.com/christoph/kb/modules/llm/api/go/llmv1"
 	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
+	"github.com/christoph/kb/platform/go/grpcserver"
 )
 
 const (
@@ -33,6 +35,8 @@ const (
 	defaultLimit    = 5
 	maxLimit        = 50
 	readChunkSize   = 64 << 10
+	// maxTitleLength matches the limit on conversation titles in the chat module.
+	maxTitleLength = 200
 )
 
 // Repository is the persistence the server needs.
@@ -68,7 +72,7 @@ func New(repo Repository, objects ObjectStore, llm llmv1.LlmServiceClient, log *
 
 func (s *Server) CreateDocument(ctx context.Context, req *documentv1.CreateDocumentRequest) (*documentv1.CreateDocumentResponse, error) {
 	if req.GetFilename() == "" {
-		return nil, status.Error(codes.InvalidArgument, "filename is required")
+		return nil, grpcserver.InvalidArgument(grpcserver.Violation("filename", "A filename is required"))
 	}
 	id := uuid.New()
 	title := req.GetTitle()
@@ -129,7 +133,7 @@ func (s *Server) ListDocuments(ctx context.Context, req *documentv1.ListDocument
 }
 
 func (s *Server) UpdateDocument(ctx context.Context, req *documentv1.UpdateDocumentRequest) (*documentv1.UpdateDocumentResponse, error) {
-	id, err := parseID(req.GetId())
+	id, err := parseID("id", req.GetId())
 	if err != nil {
 		return nil, err
 	}
@@ -137,14 +141,18 @@ func (s *Server) UpdateDocument(ctx context.Context, req *documentv1.UpdateDocum
 	if req.Title != nil {
 		title := strings.TrimSpace(req.GetTitle())
 		if title == "" {
-			return nil, status.Error(codes.InvalidArgument, "title must not be empty")
+			return nil, grpcserver.InvalidArgument(grpcserver.Violation("title", "Title must not be empty"))
+		}
+		if utf8.RuneCountInString(title) > maxTitleLength {
+			return nil, grpcserver.InvalidArgument(grpcserver.Violation("title",
+				fmt.Sprintf("Title must not be longer than %d characters", maxTitleLength)))
 		}
 		params.Title = pgtype.Text{String: title, Valid: true}
 	}
 	if req.GetSetMetadata() {
 		for key := range req.GetMetadata() {
 			if strings.TrimSpace(key) == "" {
-				return nil, status.Error(codes.InvalidArgument, "metadata keys must not be empty")
+				return nil, grpcserver.InvalidArgument(grpcserver.Violation("metadata", "Metadata keys must not be empty"))
 			}
 		}
 		params.Metadata = nonNil(req.GetMetadata())
@@ -157,7 +165,7 @@ func (s *Server) UpdateDocument(ctx context.Context, req *documentv1.UpdateDocum
 }
 
 func (s *Server) DeleteDocument(ctx context.Context, req *documentv1.DeleteDocumentRequest) (*documentv1.DeleteDocumentResponse, error) {
-	id, err := parseID(req.GetId())
+	id, err := parseID("id", req.GetId())
 	if err != nil {
 		return nil, err
 	}
@@ -173,12 +181,12 @@ func (s *Server) DeleteDocument(ctx context.Context, req *documentv1.DeleteDocum
 }
 
 func (s *Server) SetDocumentStatus(ctx context.Context, req *documentv1.SetDocumentStatusRequest) (*documentv1.SetDocumentStatusResponse, error) {
-	id, err := parseID(req.GetId())
+	id, err := parseID("id", req.GetId())
 	if err != nil {
 		return nil, err
 	}
 	if req.GetStatus() == documentv1.DocumentStatus_DOCUMENT_STATUS_UNSPECIFIED {
-		return nil, status.Error(codes.InvalidArgument, "status is required")
+		return nil, grpcserver.InvalidArgument(grpcserver.Violation("status", "A status is required"))
 	}
 	if req.GetStatus() == documentv1.DocumentStatus_DOCUMENT_STATUS_UPLOADED {
 		return s.markUploaded(ctx, id, req)
@@ -260,14 +268,15 @@ func (s *Server) ReadContent(req *documentv1.ReadContentRequest, stream document
 }
 
 func (s *Server) AddChunks(ctx context.Context, req *documentv1.AddChunksRequest) (*documentv1.AddChunksResponse, error) {
-	id, err := parseID(req.GetDocumentId())
+	id, err := parseID("document_id", req.GetDocumentId())
 	if err != nil {
 		return nil, err
 	}
 	rows := make([]store.InsertChunksParams, 0, len(req.GetChunks()))
-	for _, c := range req.GetChunks() {
+	for i, c := range req.GetChunks() {
 		if len(c.GetEmbedding()) == 0 {
-			return nil, status.Errorf(codes.InvalidArgument, "chunk %d has no embedding", c.GetIndex())
+			return nil, grpcserver.InvalidArgument(grpcserver.Violation(fmt.Sprintf("chunks[%d].embedding", i),
+				fmt.Sprintf("Chunk %d has no embedding", c.GetIndex())))
 		}
 		rows = append(rows, store.InsertChunksParams{
 			DocumentID: id,
@@ -288,7 +297,7 @@ func (s *Server) AddChunks(ctx context.Context, req *documentv1.AddChunksRequest
 // the last index of the previous page, so pages stay stable while the client
 // pages; a document re-processed in between simply continues after that index.
 func (s *Server) ListChunks(ctx context.Context, req *documentv1.ListChunksRequest) (*documentv1.ListChunksResponse, error) {
-	id, err := parseID(req.GetDocumentId())
+	id, err := parseID("document_id", req.GetDocumentId())
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +328,7 @@ func (s *Server) ListChunks(ctx context.Context, req *documentv1.ListChunksReque
 
 func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksRequest) (*documentv1.SearchChunksResponse, error) {
 	if len(req.GetEmbedding()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "embedding is required")
+		return nil, grpcserver.InvalidArgument(grpcserver.Violation("embedding", "An embedding is required"))
 	}
 	ids, err := parseIDs(req.GetDocumentIds())
 	if err != nil {
@@ -338,7 +347,7 @@ func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksR
 func (s *Server) SearchDocuments(ctx context.Context, req *documentv1.SearchDocumentsRequest) (*documentv1.SearchDocumentsResponse, error) {
 	query := strings.TrimSpace(req.GetQuery())
 	if query == "" {
-		return nil, status.Error(codes.InvalidArgument, "query is required")
+		return nil, grpcserver.InvalidArgument(grpcserver.Violation("query", "A query is required"))
 	}
 	ids, err := parseIDs(req.GetDocumentIds())
 	if err != nil {
@@ -389,7 +398,7 @@ func (s *Server) search(ctx context.Context, embedding []float32, limit int32, i
 }
 
 func (s *Server) get(ctx context.Context, rawID string) (store.DocumentDocument, error) {
-	id, err := parseID(rawID)
+	id, err := parseID("id", rawID)
 	if err != nil {
 		return store.DocumentDocument{}, err
 	}
@@ -412,18 +421,19 @@ func (s *Server) internal(op string, err error) error {
 	return status.Errorf(codes.Internal, "%s failed", op)
 }
 
-func parseID(raw string) (uuid.UUID, error) {
+// parseID parses the id in the request field named field.
+func parseID(field, raw string) (uuid.UUID, error) {
 	id, err := uuid.Parse(raw)
 	if err != nil {
-		return uuid.Nil, status.Errorf(codes.InvalidArgument, "invalid id %q", raw)
+		return uuid.Nil, grpcserver.InvalidArgument(grpcserver.Violation(field, fmt.Sprintf("Invalid id %q", raw)))
 	}
 	return id, nil
 }
 
 func parseIDs(raw []string) ([]uuid.UUID, error) {
 	ids := make([]uuid.UUID, 0, len(raw))
-	for _, r := range raw {
-		id, err := parseID(r)
+	for i, r := range raw {
+		id, err := parseID(fmt.Sprintf("document_ids[%d]", i), r)
 		if err != nil {
 			return nil, err
 		}
@@ -444,7 +454,7 @@ func pageParams(p *commonv1.PageRequest) (limit, offset int32, err error) {
 	if tok := p.GetPageToken(); tok != "" {
 		o, perr := strconv.Atoi(tok)
 		if perr != nil || o < 0 {
-			return 0, 0, status.Error(codes.InvalidArgument, "invalid page token")
+			return 0, 0, errInvalidPageToken()
 		}
 		offset = int32(o)
 	}
@@ -463,13 +473,17 @@ func decodeChunkToken(tok string) (int32, error) {
 	}
 	raw, err := base64.RawURLEncoding.DecodeString(tok)
 	if err != nil {
-		return 0, status.Error(codes.InvalidArgument, "invalid page token")
+		return 0, errInvalidPageToken()
 	}
 	idx, err := strconv.ParseInt(string(raw), 10, 32)
 	if err != nil || idx < 0 {
-		return 0, status.Error(codes.InvalidArgument, "invalid page token")
+		return 0, errInvalidPageToken()
 	}
 	return int32(idx), nil
+}
+
+func errInvalidPageToken() error {
+	return grpcserver.InvalidArgument(grpcserver.Violation("page.page_token", "The page token is invalid"))
 }
 
 // isGenericContentType reports a type that says nothing about the content:

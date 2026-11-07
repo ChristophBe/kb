@@ -1,6 +1,6 @@
 import { DocumentService } from "@kb/document-api/kb/document/v1/document_pb";
 import { ConnectError, toast, useClient, useMutation, useQueryClient } from "@kb/module-sdk";
-import { Button, Input, PageTitle } from "@kb/ui";
+import { Button, fieldError, Input, PageTitle } from "@kb/ui";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 
 /** The document's title as the page heading, with editing in place. */
@@ -38,7 +38,8 @@ export function TitleEditor({ id, title }: { id: string; title: string }) {
       return queryClient.invalidateQueries({ queryKey: ["documents"] });
     },
     onError: (err) => {
-      setError(ConnectError.from(err).rawMessage);
+      // The server's message for the title field, else what went wrong.
+      setError(fieldError(err, "title") ?? ConnectError.from(err).rawMessage);
       input.current?.focus();
     },
   });

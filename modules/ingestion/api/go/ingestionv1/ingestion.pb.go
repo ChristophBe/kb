@@ -193,7 +193,8 @@ type CreateUploadRequest struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	Filename    string                 `protobuf:"bytes,1,opt,name=filename,proto3" json:"filename,omitempty"`
 	ContentType string                 `protobuf:"bytes,2,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
-	SizeBytes   int64                  `protobuf:"varint,3,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
+	// The file's size; must be greater than 0, empty files are rejected.
+	SizeBytes int64 `protobuf:"varint,3,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
 	// Defaults to the filename when empty.
 	Title         string `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
 	unknownFields protoimpl.UnknownFields

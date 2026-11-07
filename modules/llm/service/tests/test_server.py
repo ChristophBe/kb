@@ -6,6 +6,7 @@ from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_llm.config import Settings
 from kb_llm.providers import REGISTRY, build_provider
 from kb_llm.server import LlmServicer
+from kb_platform.grpc import field_violations
 
 
 @pytest.fixture
@@ -45,3 +46,10 @@ async def test_embed_is_deterministic_and_sized(stub: llm_pb2_grpc.LlmServiceStu
     vectors = [list(e.values) for e in resp.embeddings]
     assert vectors[0] == vectors[2]
     assert vectors[0] != vectors[1]
+
+
+async def test_generate_without_messages_is_rejected(stub: llm_pb2_grpc.LlmServiceStub) -> None:
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        _ = [r async for r in stub.Generate(llm_pb2.GenerateRequest())]
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    assert [v.field for v in field_violations(err.value)] == ["messages"]

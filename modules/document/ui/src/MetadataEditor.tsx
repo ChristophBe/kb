@@ -1,6 +1,6 @@
 import { DocumentService } from "@kb/document-api/kb/document/v1/document_pb";
 import { ConnectError, toast, useClient, useMutation, useQueryClient } from "@kb/module-sdk";
-import { Button, Dialog, ErrorMessage, Input } from "@kb/ui";
+import { Button, Dialog, ErrorMessage, fieldViolations, Input } from "@kb/ui";
 import { Plus, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -173,7 +173,14 @@ export function MetadataEditor({ id, metadata }: { id: string; metadata: Record<
           >
             <Plus className="size-4" aria-hidden="true" /> Add field
           </Button>
-          <ErrorMessage error={save.error ? ConnectError.from(save.error).rawMessage : null} />
+          <ErrorMessage
+            error={
+              // Field violations as a list; any other error by its message, without the code.
+              save.error && fieldViolations(save.error).length === 0
+                ? ConnectError.from(save.error).rawMessage
+                : save.error
+            }
+          />
         </div>
       </Dialog>
     </>

@@ -42,7 +42,7 @@ A new document is titled with its file name.
 1. Open the document and select **Edit title** next to its title.
 2. Type the new title and select **Save**, or press Enter.
 
-Select **Cancel** or press Escape to keep the old title. The title can't be empty. The new title also shows in search results and in chat sources.
+Select **Cancel** or press Escape to keep the old title. The title can't be empty and can be up to 200 characters long; if it doesn't fit, the reason shows below the field. The new title also shows in search results and in chat sources.
 
 ## Edit the metadata of a document
 

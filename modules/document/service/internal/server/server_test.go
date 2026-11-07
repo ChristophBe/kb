@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -258,8 +259,8 @@ func TestSearchChunksValidates(t *testing.T) {
 		t.Errorf("missing embedding: err = %v", err)
 	}
 	_, err = srv.SearchChunks(t.Context(), &documentv1.SearchChunksRequest{Embedding: []float32{1}, DocumentIds: []string{"nope"}})
-	if status.Code(err) != codes.InvalidArgument {
-		t.Errorf("bad id: err = %v", err)
+	if v := grpcserver.FieldViolations(err); status.Code(err) != codes.InvalidArgument || len(v) != 1 || v[0].GetField() != "document_ids[0]" {
+		t.Errorf("bad id: err = %v, violations %v", err, v)
 	}
 }
 
@@ -395,13 +396,15 @@ func TestSearchDocumentsWithLLMDown(t *testing.T) {
 func TestUpdateDocumentValidates(t *testing.T) {
 	title := func(s string) *string { return &s }
 	for _, tc := range []struct {
-		name string
-		req  *documentv1.UpdateDocumentRequest
+		name  string
+		req   *documentv1.UpdateDocumentRequest
+		field string
 	}{
-		{"empty title", &documentv1.UpdateDocumentRequest{Title: title("")}},
-		{"blank title", &documentv1.UpdateDocumentRequest{Title: title(" \t ")}},
-		{"empty key", &documentv1.UpdateDocumentRequest{SetMetadata: true, Metadata: map[string]string{"": "x"}}},
-		{"blank key", &documentv1.UpdateDocumentRequest{SetMetadata: true, Metadata: map[string]string{"  ": "x"}}},
+		{"empty title", &documentv1.UpdateDocumentRequest{Title: title("")}, "title"},
+		{"blank title", &documentv1.UpdateDocumentRequest{Title: title(" \t ")}, "title"},
+		{"long title", &documentv1.UpdateDocumentRequest{Title: title(strings.Repeat("ä", maxTitleLength+1))}, "title"},
+		{"empty key", &documentv1.UpdateDocumentRequest{SetMetadata: true, Metadata: map[string]string{"": "x"}}, "metadata"},
+		{"blank key", &documentv1.UpdateDocumentRequest{SetMetadata: true, Metadata: map[string]string{"  ": "x"}}, "metadata"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			repo := &fakeRepo{}
@@ -410,10 +413,21 @@ func TestUpdateDocumentValidates(t *testing.T) {
 			if status.Code(err) != codes.InvalidArgument {
 				t.Fatalf("err = %v, want InvalidArgument", err)
 			}
+			if v := grpcserver.FieldViolations(err); len(v) != 1 || v[0].GetField() != tc.field {
+				t.Errorf("violations %v, want one for %q", v, tc.field)
+			}
 			if len(repo.updated) != 0 {
 				t.Errorf("document was updated: %+v", repo.updated)
 			}
 		})
+	}
+}
+
+func TestUpdateDocumentAcceptsATitleOfMaximumLength(t *testing.T) {
+	title := strings.Repeat("ä", maxTitleLength)
+	repo := &fakeRepo{}
+	if _, err := newServer(repo).UpdateDocument(t.Context(), &documentv1.UpdateDocumentRequest{Id: uuid.NewString(), Title: &title}); err != nil {
+		t.Fatal(err)
 	}
 }
 

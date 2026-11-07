@@ -10,6 +10,7 @@ import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
 from kb.chat.v1 import chat_pb2, chat_pb2_grpc
 from kb.common.v1 import common_pb2
+from kb_platform.grpc import abort_invalid_argument, violation
 
 from .chat import (
     AnswerDelta,
@@ -66,7 +67,9 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         try:
             offset = int(request.page.page_token or 0)
         except ValueError:
-            await context.abort(grpc.StatusCode.INVALID_ARGUMENT, "invalid page token")
+            await abort_invalid_argument(
+                context, violation("page.page_token", "The page token is invalid")
+            )
         rows = await self._repo.list_conversations(limit + 1, offset)
         token = str(offset + limit) if len(rows) > limit else ""
         return chat_pb2.ListConversationsResponse(
@@ -89,15 +92,17 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         if request.HasField("title"):
             title = request.title.strip()
             if not title:
-                await context.abort(grpc.StatusCode.INVALID_ARGUMENT, "title must not be empty")
+                await abort_invalid_argument(context, violation("title", "Title must not be empty"))
             if len(title) > MAX_TITLE_LENGTH:
-                await context.abort(
-                    grpc.StatusCode.INVALID_ARGUMENT,
-                    f"title must not be longer than {MAX_TITLE_LENGTH} characters",
+                await abort_invalid_argument(
+                    context,
+                    violation(
+                        "title", f"Title must not be longer than {MAX_TITLE_LENGTH} characters"
+                    ),
                 )
         document_ids: list[uuid.UUID] | None = None
         if request.HasField("document_ids"):
-            document_ids = await _scope(request.document_ids.ids, context)
+            document_ids = await _scope(request.document_ids.ids, context, "document_ids.ids")
         if title is not None or document_ids is not None:
             updated = await self._repo.update_conversation(
                 conv.id, title=title, document_ids=document_ids
@@ -113,7 +118,9 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
     ) -> AsyncIterator[chat_pb2.StreamChatResponse]:
         content = request.content.strip()
         if not content:
-            await context.abort(grpc.StatusCode.INVALID_ARGUMENT, "content must not be empty")
+            await abort_invalid_argument(
+                context, violation("content", "The message must not be empty")
+            )
         events = self._chat.answer(
             _parse_id(request.conversation_id), content, request.model, request.use_knowledge_base
         )
@@ -150,20 +157,28 @@ def _parse_id(raw: str) -> uuid.UUID:
         return uuid.UUID(int=0)
 
 
-async def _scope(raw: Sequence[str], context: _Context) -> list[uuid.UUID]:
-    """Parses a document scope; duplicates are dropped, the order is kept."""
+async def _scope(
+    raw: Sequence[str], context: _Context, field: str = "document_ids"
+) -> list[uuid.UUID]:
+    """Parses a document scope, the request field named `field`; duplicates are
+    dropped, the order is kept."""
     ids: list[uuid.UUID] = []
-    for value in raw:
+    for i, value in enumerate(raw):
         try:
             parsed = uuid.UUID(value)
         except ValueError:
-            await context.abort(grpc.StatusCode.INVALID_ARGUMENT, f"invalid document id {value!r}")
+            await abort_invalid_argument(
+                context, violation(f"{field}[{i}]", f"Invalid document id {value!r}")
+            )
         if parsed not in ids:
             ids.append(parsed)
     if len(ids) > MAX_SCOPE_DOCUMENTS:
-        await context.abort(
-            grpc.StatusCode.INVALID_ARGUMENT,
-            f"a conversation can be limited to at most {MAX_SCOPE_DOCUMENTS} documents",
+        await abort_invalid_argument(
+            context,
+            violation(
+                field,
+                f"A conversation can be limited to at most {MAX_SCOPE_DOCUMENTS} documents",
+            ),
         )
     return ids
 

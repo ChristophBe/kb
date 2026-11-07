@@ -88,6 +88,8 @@ export type CreateUploadRequest = Message<"kb.ingestion.v1.CreateUploadRequest">
   contentType: string;
 
   /**
+   * The file's size; must be greater than 0, empty files are rejected.
+   *
    * @generated from field: int64 size_bytes = 3;
    */
   sizeBytes: bigint;

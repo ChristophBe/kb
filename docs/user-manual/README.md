@@ -28,6 +28,6 @@ The design drafts in [`docs/ux/`](../ux/) are for contributors; this manual is f
 - [Getting started](getting-started.md) — the areas of kb, your first documents and question, light and dark mode
 - [Ingestion](ingestion.md) — uploading files, following their processing, retrying failed uploads and processing
 - [Documents](documents.md) — browsing, opening and reading documents, renaming, metadata, downloading, replacing, deleting
-- [Search](search.md) — searching passages across all documents and opening them in their document
+- [Search](search.md) — the search box in the sidebar, searching passages across all documents and opening them in their document
 - [Chat](chat.md) — asking questions, sources, restricting to documents, stopping and retrying answers, managing conversations
 - [Models](models.md) — whether the language model is available and which models are installed

@@ -1,6 +1,22 @@
 # Search
 
-Search finds passages across all your documents. It matches by meaning, not only by exact words, so a question or a description works as well as keywords.
+Search finds passages across all your documents. It matches by meaning, not only by exact words, so a question or a description works as well as keywords. The search box at the top of the sidebar finds pages of kb from anywhere.
+
+## Search from any page
+
+The search box at the top of the sidebar is on every page. Press ⌘K (on a Mac) or Ctrl+K (on Windows and Linux) to jump into it.
+
+1. Type a few letters. Matches appear below the box as you type, grouped by kind; **Pages** lists the pages of kb whose name contains what you typed, for example **Chat** when you type "chat".
+2. Select a match, or move to it with the Up and Down arrow keys and press Enter, to open it.
+3. Press Escape to close the list; press it again to empty the box.
+
+Each group shows its first five matches. To see all of them, select **See all results for …** at the bottom of the list, or press Enter without choosing a match.
+
+While a group is still searching it shows a spinning circle and "Searching…"; if it can't be searched, it says so, for example "Couldn't search …". The other groups still show their matches.
+
+## See all results
+
+The page that opens from **See all results for …** lists every match, grouped the same way, with a search box at the top to change the search. The address of the page contains your search, so you can bookmark or share it.
 
 ## Search your documents
 

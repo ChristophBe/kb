@@ -1,4 +1,4 @@
-import type { KbModule, RuntimeConfig } from "@kb/module-sdk";
+import type { KbModule, RuntimeConfig, SearchProvider } from "@kb/module-sdk";
 import { Area, navItemClass, ThemeToggle } from "@kb/ui";
 import { CircleHelp, Library } from "lucide-react";
 import { useMemo } from "react";
@@ -7,14 +7,18 @@ import { Home } from "./Home.tsx";
 import { HelpIndex, HelpPage } from "./help/Help.tsx";
 import { ModuleBoundary } from "./ModuleBoundary.tsx";
 import { activeModules, navEntries } from "./registry.ts";
+import { HeaderSearch } from "./search/HeaderSearch.tsx";
+import { searchProviders } from "./search/pages.ts";
+import { SearchPage } from "./search/SearchPage.tsx";
 import { ToastHost } from "./ToastHost.tsx";
 
 export function App({ config }: { config: RuntimeConfig }) {
   const router = useMemo(() => {
     const modules = activeModules(config);
+    const providers = searchProviders(modules);
     return createBrowserRouter([
       {
-        element: <Shell modules={modules} />,
+        element: <Shell modules={modules} providers={providers} />,
         children: [
           { index: true, element: <Home modules={modules} /> },
           ...modules.map((m) => ({
@@ -26,6 +30,7 @@ export function App({ config }: { config: RuntimeConfig }) {
             ),
             children: m.routes,
           })),
+          { path: "search", element: <SearchPage providers={providers} /> },
           { path: "help", element: <HelpIndex /> },
           { path: "help/:page", element: <HelpPage /> },
           { path: "*", element: <p className="text-sm text-fg-muted">Page not found.</p> },
@@ -36,7 +41,7 @@ export function App({ config }: { config: RuntimeConfig }) {
   return <RouterProvider router={router} />;
 }
 
-function Shell({ modules }: { modules: KbModule[] }) {
+function Shell({ modules, providers }: { modules: KbModule[]; providers: SearchProvider[] }) {
   return (
     <div className="flex min-h-screen">
       <Area className="sticky top-0 w-60 shrink-0 overflow-y-auto border-r">
@@ -45,6 +50,9 @@ function Shell({ modules }: { modules: KbModule[] }) {
           <span className="font-mono font-medium">kb</span>
           <span className="text-fg-muted">/</span> Knowledge Base
         </Link>
+        <div className="px-3 pb-4">
+          <HeaderSearch providers={providers} />
+        </div>
         <nav className="flex flex-col gap-0.5 px-3">
           {navEntries(modules).map(({ to, label, icon: Icon, end }) => (
             <NavLink

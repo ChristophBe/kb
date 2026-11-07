@@ -3,6 +3,7 @@ import { type Client, createClient, type Transport } from "@connectrpc/connect";
 import { createGrpcWebTransport } from "@connectrpc/connect-web";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createContext, type ReactNode, useContext, useMemo } from "react";
+import type { SearchContext } from "./types.ts";
 
 /** Runtime configuration served by the web container as /config.json. */
 export interface RuntimeConfig {
@@ -64,4 +65,10 @@ export function useRuntimeConfig(): RuntimeConfig {
 export function useClient<T extends DescService>(service: T): Client<T> {
   const { transport } = useRuntime();
   return useMemo(() => createClient(service, transport), [service, transport]);
+}
+
+/** The context the shell passes to every `SearchProvider.search` call. */
+export function useSearchContext(): SearchContext {
+  const { transport } = useRuntime();
+  return useMemo(() => ({ client: (service) => createClient(service, transport) }), [transport]);
 }

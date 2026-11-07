@@ -13,6 +13,8 @@ The sidebar on the left leads to every area:
 - **Models**: check that the language model behind search and chat is available. See [Models](models.md).
 - **Help**, at the bottom of the sidebar: this manual, one page per area.
 
+The search box at the top of the sidebar finds pages from anywhere; press ⌘K or Ctrl+K to jump into it. See [Search from any page](search.md#search-from-any-page).
+
 **kb / Knowledge Base** at the top of the sidebar takes you to the home page. Type a question into its box and press Enter to start a new chat with it. Below the box are shortcuts to **Search documents** and **Upload documents**, and cards that lead to chatting, searching, uploading and the models.
 
 ## Add your first documents

@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@import "@kb/ui/theme.css";
+
+/* Classes used by the shared UI kit. */
+@source "../../../platform/ui/kit/src";
+
+@theme {
+  /* The demo answer appearing word by word, as a streamed answer does; reduced motion stills it. */
+  --animate-stream: stream 0.3s ease-out both;
+
+  @keyframes stream {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* The sticky nav must not cover a section it jumps to (WCAG 2.4.11). */
+    scroll-padding-top: 5rem;
+  }
+}

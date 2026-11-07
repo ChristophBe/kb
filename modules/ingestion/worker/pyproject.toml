@@ -9,6 +9,7 @@ dependencies = [
     "kb-llm-api",
     "kb-platform",
     "pypdf>=6.0",
+    "tokenizers>=0.22",
 ]
 
 [project.scripts]

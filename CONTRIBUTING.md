@@ -62,10 +62,41 @@ Update the overview diagrams in the same PR when services, ports or gRPC/NATS li
 ## Pull requests
 
 - Branch from `main` and reference the issue (`Closes #123`).
+- Title the PR in [Conventional Commits](https://www.conventionalcommits.org/) form (see below).
 - Follow the [coding standards](docs/coding-standards.md).
 - UI work follows the [UX and accessibility standards](docs/ux-standards.md) (WCAG 2.2 AA, design tokens, interaction patterns) and fills in the UI checklist of the PR template.
 - A PR that adds or changes a user-facing feature updates the matching page of the [user manual](docs/user-manual/README.md) in the same PR, following its rules; a PR that removes a feature removes its description. PRs without a user-facing change tick the checkbox as not applicable.
 - Run `task gen`, `task lint` and `task test` before pushing; the pre-push hook installed by `task setup` runs the fast versions for you.
+
+### PR titles and commit messages
+
+PRs are squash-merged and the PR title becomes the commit title on `main`, from which versions are derived. The title follows [Conventional Commits](https://www.conventionalcommits.org/):
+
+```text
+<type>[(<scope>)][!]: <summary>
+```
+
+- **type**, one of:
+
+  | Type | Use for | Version bump |
+  |---|---|---|
+  | `feat` | A new user-facing feature or capability | minor |
+  | `fix` | A bug fix | patch |
+  | `perf` | A performance improvement | patch |
+  | `refactor` | A code change without behaviour change | patch |
+  | `docs` | Documentation only | patch |
+  | `test` | Tests only | patch |
+  | `build` | Build system, tooling, dependencies | patch |
+  | `ci` | CI workflows | patch |
+  | `chore` | Anything else (housekeeping, config) | patch |
+
+- **scope** (optional): a module id (`document`, `ingestion`, `chat`, `llm`, …: the `id` in `modules/*/module.yaml`), an area (`platform`, `ui-shell`, `infra`: the `area:*` labels), or `deps` for dependency updates. Usually the scope label of the issue the PR closes, without its prefix. Leave it out when the change spans several.
+- **`!`** after the type or scope marks a breaking change and bumps the **major** version, whatever the type (e.g. `feat(chat)!: drop the v1 conversation API`). Explain the break in the PR description; a `BREAKING CHANGE:` footer in the squash commit body has the same effect.
+- **summary**: imperative, lower-case start, no trailing full stop.
+
+Examples: `fix(document): reject empty uploads`, `feat(ui-shell): add a command palette`, `build(deps): bump vite to 7.1.0`, `docs: describe the home page`.
+
+The `pr-title` workflow (`.github/workflows/pr-title.yml`) checks the title on every PR and re-runs when the title is edited; the allowed scopes are read from the module manifests and the `area:*` labels on each run. With Claude Code, the `/pr` skill (`.claude/skills/pr/`) derives the title from the closed issue's labels. Individual commits on the branch are squashed away and need not follow the convention, but it is good practice for them to.
 
 ### Required checks
 
@@ -83,5 +114,6 @@ CI must pass on every PR. It fails when any of these fails:
 | Accessibility lint (biome `a11y` rules as errors) | `task lint` |
 | No axe violations in kit components | `task test` |
 | WCAG AA contrast of every colour-token pair, light and dark | `task test` (see [UX standards](docs/ux-standards.md#automated-checks)) |
+| PR title follows Conventional Commits | `.github/workflows/pr-title.yml` (job `pr-title`) |
 
-All of these except the end-to-end smoke test (job `e2e`) run in the `check` job of `.github/workflows/ci.yml`. Configure it as a required status check for `main` under *Settings → Branches* (or a ruleset): require a pull request, require status check `check`, and require the branch to be up to date. Branch protection on a private repository needs GitHub Pro/Team; until then the rule is enforced by convention.
+All of these except the end-to-end smoke test (job `e2e`) and the PR title check (job `pr-title`) run in the `check` job of `.github/workflows/ci.yml`. Configure it as a required status check for `main` under *Settings → Branches* (or a ruleset): require a pull request, require status check `check`, and require the branch to be up to date. Branch protection on a private repository needs GitHub Pro/Team; until then the rule is enforced by convention.

@@ -7,4 +7,9 @@ services:
     language: python
     port: 9004
     grpc_services: [kb.llm.v1.LlmService]
+    # Generation and embeddings are for other modules' services only (chat,
+    # document search, ingestion worker); Envoy does not route them.
+    internal:
+      - kb.llm.v1.LlmService/Generate
+      - kb.llm.v1.LlmService/Embed
 ui: "@kb/module-llm"

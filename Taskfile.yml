@@ -225,3 +225,8 @@ tasks:
     desc: Run the web shell with Vite against the running stack.
     cmds:
       - pnpm dev
+
+  site:
+    desc: Run the marketing site (apps/site, published to GitHub Pages) with Vite.
+    cmds:
+      - pnpm site

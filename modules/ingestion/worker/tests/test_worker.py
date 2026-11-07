@@ -89,9 +89,29 @@ def uploaded(filename: str, content_type: str = "text/markdown") -> events_pb2.D
     )
 
 
+def test_chunk_overlap_must_be_below_chunk_size() -> None:
+    with pytest.raises(ValueError, match="KB_CHUNK_OVERLAP_TOKENS"):
+        Settings(chunk_tokens=100, chunk_overlap_tokens=100)
+
+
+def test_chunks_must_fit_the_embedding_model_input() -> None:
+    # 2 of the 512 go to the [CLS] and [SEP] tokens.
+    make(b"", chunk_tokens=510, embedding_max_tokens=512)
+    with pytest.raises(ValueError, match="exceeds the embedding model's input limit of 510"):
+        make(b"", chunk_tokens=511, embedding_max_tokens=512)
+
+
+def test_an_unknown_tokenizer_is_rejected() -> None:
+    with pytest.raises(ValueError, match="no tokenizer 'nope'"):
+        make(b"", chunk_tokenizer="nope")
+
+
 async def test_processes_text_into_embedded_chunks() -> None:
     proc, docs, published = make(
-        b"# Title\n\n" + b"word " * 100, chunk_size=200, chunk_overlap=20, embed_batch_size=2
+        b"# Title\n\n" + b"word " * 100,
+        chunk_tokens=40,
+        chunk_overlap_tokens=5,
+        embed_batch_size=2,
     )
     await proc.handle(uploaded("notes.md"))
 

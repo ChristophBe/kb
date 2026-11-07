@@ -37,8 +37,17 @@ type Service struct {
 	Language string `yaml:"language"`
 	// Port is the gRPC port; 0 for components that serve no API (workers).
 	Port int `yaml:"port"`
-	// GRPCServices are fully qualified service names routed through Envoy.
+	// GRPCServices are the fully qualified gRPC services the component
+	// serves; Envoy routes their public methods to the browser.
 	GRPCServices []string `yaml:"grpc_services"`
+	// Internal lists what only other modules' services may call: whole
+	// services ("kb.x.v1.XService") or methods ("kb.x.v1.XService/Method").
+	// Envoy has no route for them, so browsers get 404 (UNIMPLEMENTED);
+	// services reach each other directly, not through Envoy.
+	Internal []string `yaml:"internal"`
+	// Routes are the gRPC paths ("/kb.x.v1.XService/Method") Envoy routes to
+	// the component: every method of GRPCServices that is not internal.
+	Routes []string `yaml:"-"`
 }
 
 var (
@@ -66,8 +75,18 @@ func LoadModules(dir string) ([]Module, error) {
 		if err := m.validate(filepath.Base(filepath.Dir(path))); err != nil {
 			return nil, fmt.Errorf("%s: %w", path, err)
 		}
-		if info, err := os.Stat(filepath.Join(filepath.Dir(path), "proto")); err == nil && info.IsDir() {
+		protoDir := filepath.Join(filepath.Dir(path), "proto")
+		if info, err := os.Stat(protoDir); err == nil && info.IsDir() {
 			m.HasProto = true
+		}
+		defined, err := protoMethods(protoDir)
+		if err != nil {
+			return nil, err
+		}
+		for i := range m.Services {
+			if err := m.Services[i].resolveRoutes(defined); err != nil {
+				return nil, fmt.Errorf("%s: %w", path, err)
+			}
 		}
 		inits, err := filepath.Glob(filepath.Join(filepath.Dir(path), "*", "src", "*", "__init__.py"))
 		if err != nil {

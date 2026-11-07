@@ -84,7 +84,7 @@ flowchart TB
 | `ingestion-worker` | ingestion | — | document, llm | consumes `uploaded`; publishes `started`, `processed`, `failed` |
 | `chat-service` | chat | schema `chat` (conversations, messages) | document, llm | — |
 | `llm-service` | llm | provider registry | Ollama over HTTP | — |
-| `envoy` | — | routes from `grpc_services` in each manifest | all four services | — |
+| `envoy` | — | per-method routes for the public RPCs of each manifest's `grpc_services` (not `internal`) | all four services | — |
 | `web` | — | UI shell; module UIs from `apps/web/src/modules.gen.ts` | via envoy | — |
 
 Modules never share a schema, bucket or stream: each is owned by one module, and other modules go through its gRPC API or its events ([ADR 0002](../adr/0002-module-per-folder-monorepo.md), [ADR 0004](../adr/0004-nats-jetstream-events-between-modules.md)).

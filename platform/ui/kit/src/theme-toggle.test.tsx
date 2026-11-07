@@ -1,7 +1,7 @@
-import { expectNoAxeViolations } from "@kb/ui/testing";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { ThemeToggle } from "./ThemeToggle.tsx";
+import { expectNoAxeViolations } from "./testing/axe.ts";
+import { ThemeToggle } from "./theme-toggle.tsx";
 
 describe("ThemeToggle", () => {
   afterEach(() => {

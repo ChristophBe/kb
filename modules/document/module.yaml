@@ -7,6 +7,14 @@ services:
     language: go
     port: 9001
     grpc_services: [kb.document.v1.DocumentService]
+    # Called only by other modules' services (ingestion creates and fills
+    # documents, chat retrieves chunks); Envoy does not route them.
+    internal:
+      - kb.document.v1.DocumentService/CreateDocument
+      - kb.document.v1.DocumentService/SetDocumentStatus
+      - kb.document.v1.DocumentService/ReadContent
+      - kb.document.v1.DocumentService/AddChunks
+      - kb.document.v1.DocumentService/SearchChunks
 ui: "@kb/module-document"
 # SearchDocuments embeds queries through llm; everything else works without it.
 depends_on: [llm]

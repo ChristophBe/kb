@@ -18,6 +18,7 @@
     "@fontsource-variable/ibm-plex-sans": "catalog:",
     "@fontsource/ibm-plex-mono": "catalog:",
     "clsx": "catalog:",
+    "lucide-react": "catalog:",
     "tailwind-merge": "catalog:"
   },
   "peerDependencies": {

@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "pnpm --filter @kb/web dev",
     "build": "pnpm --filter @kb/web build",
+    "site": "pnpm --filter @kb/site dev",
+    "site:build": "pnpm --filter @kb/site build",
     "lint": "biome check .",
     "format": "biome check --write .",
     "typecheck": "pnpm -r --parallel typecheck",

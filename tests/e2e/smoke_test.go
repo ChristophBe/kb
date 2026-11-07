@@ -105,6 +105,51 @@ func TestScopedChat(t *testing.T) {
 	}
 }
 
+// TestInternalRPCsAreNotRouted checks that methods marked internal in the
+// module manifests are not reachable through the gateway, while the uploads
+// and chats of the other tests show the services still call them directly.
+func TestInternalRPCsAreNotRouted(t *testing.T) {
+	ctx, cancel := context.WithTimeout(t.Context(), testTimeout)
+	defer cancel()
+	c := newClients(kb.gateway)
+	waitReady(ctx, t, c)
+
+	h, opt := http.DefaultClient, connect.WithGRPCWeb()
+	calls := map[string]func(context.Context) error{
+		documentv1.DocumentService_AddChunks_FullMethodName: func(ctx context.Context) error {
+			client := connect.NewClient[documentv1.AddChunksRequest, documentv1.AddChunksResponse](h, kb.gateway+documentv1.DocumentService_AddChunks_FullMethodName, opt)
+			_, err := client.CallUnary(ctx, connect.NewRequest(&documentv1.AddChunksRequest{}))
+			return err
+		},
+		documentv1.DocumentService_SetDocumentStatus_FullMethodName: func(ctx context.Context) error {
+			client := connect.NewClient[documentv1.SetDocumentStatusRequest, documentv1.SetDocumentStatusResponse](h, kb.gateway+documentv1.DocumentService_SetDocumentStatus_FullMethodName, opt)
+			_, err := client.CallUnary(ctx, connect.NewRequest(&documentv1.SetDocumentStatusRequest{}))
+			return err
+		},
+		llmv1.LlmService_Embed_FullMethodName: func(ctx context.Context) error {
+			client := connect.NewClient[llmv1.EmbedRequest, llmv1.EmbedResponse](h, kb.gateway+llmv1.LlmService_Embed_FullMethodName, opt)
+			_, err := client.CallUnary(ctx, connect.NewRequest(&llmv1.EmbedRequest{Inputs: []string{"x"}}))
+			return err
+		},
+		llmv1.LlmService_Generate_FullMethodName: func(ctx context.Context) error {
+			client := connect.NewClient[llmv1.GenerateRequest, llmv1.GenerateResponse](h, kb.gateway+llmv1.LlmService_Generate_FullMethodName, opt)
+			stream, err := client.CallServerStream(ctx, connect.NewRequest(&llmv1.GenerateRequest{}))
+			if err != nil {
+				return err
+			}
+			defer stream.Close()
+			for stream.Receive() {
+			}
+			return stream.Err()
+		},
+	}
+	for method, call := range calls {
+		if err := call(ctx); connect.CodeOf(err) != connect.CodeUnimplemented {
+			t.Errorf("%s through the gateway: err = %v, want code %s", method, err, connect.CodeUnimplemented)
+		}
+	}
+}
+
 // upload uploads a file through its presigned URL, waits until it is processed
 // and returns the id of its document.
 func upload(ctx context.Context, t *testing.T, c *clients, filename, title, body string) string {

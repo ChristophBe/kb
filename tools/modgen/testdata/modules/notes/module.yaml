@@ -4,5 +4,8 @@ services:
   - name: notes-service
     language: go
     port: 9101
-    grpc_services: [kb.notes.v1.NotesService]
+    grpc_services: [kb.notes.v1.NotesService, kb.notes.v1.NotesAdminService]
+    internal:
+      - kb.notes.v1.NotesService/IndexNote
+      - kb.notes.v1.NotesAdminService
 ui: "@kb/module-notes"

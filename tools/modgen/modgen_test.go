@@ -123,3 +123,41 @@ func writeManifest(t *testing.T, dir, id, manifest string) {
 		t.Fatal(err)
 	}
 }
+
+func TestLoadModulesResolvesPublicRoutes(t *testing.T) {
+	modules, err := LoadModules("testdata/modules")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := strings.Join(modules[0].Services[0].Routes, " ")
+	want := "/kb.notes.v1.NotesService/GetNote /kb.notes.v1.NotesService/ListNotes"
+	if got != want {
+		t.Errorf("routes = %q, want %q (internal methods and services must be left out)", got, want)
+	}
+}
+
+func TestLoadModulesValidatesInternal(t *testing.T) {
+	const proto = "package kb.x.v1;\nservice XService {\n  rpc Get(A) returns (B);\n  rpc Put(A) returns (B);\n}\n"
+	cases := map[string]string{
+		"undefined service": "grpc_services: [kb.x.v1.Other]",
+		"unknown method":    "grpc_services: [kb.x.v1.XService]\n    internal: [kb.x.v1.XService/Nope]",
+		"unrouted service":  "grpc_services: []\n    internal: [kb.x.v1.XService]",
+		"redundant method":  "grpc_services: [kb.x.v1.XService]\n    internal: [kb.x.v1.XService, kb.x.v1.XService/Get]",
+	}
+	for name, extra := range cases {
+		t.Run(name, func(t *testing.T) {
+			dir := t.TempDir()
+			writeManifest(t, dir, "x", "id: x\ntitle: X\nservices:\n  - name: x-service\n    language: go\n    port: 9000\n    "+extra+"\n")
+			protoDir := filepath.Join(dir, "x", "proto", "kb", "x", "v1")
+			if err := os.MkdirAll(protoDir, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(protoDir, "x.proto"), []byte(proto), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := LoadModules(dir); err == nil {
+				t.Fatal("expected an error")
+			}
+		})
+	}
+}

@@ -13,8 +13,11 @@ from .providers.base import (
     Message,
     ModelKind,
     ModelNotFoundError,
+    NotSupportedError,
     Provider,
+    ProviderAuthError,
     ProviderError,
+    ProviderRateLimitedError,
     ProviderUnavailableError,
     Role,
 )
@@ -146,11 +149,23 @@ async def _provider_errors(context: _Context) -> AsyncIterator[None]:
     """Maps provider failures to gRPC statuses; the cause is only logged."""
     try:
         yield
+    except ProviderRateLimitedError as exc:
+        log.warning("provider rate limited: %s", exc)
+        await context.abort(
+            grpc.StatusCode.RESOURCE_EXHAUSTED, "the model provider is rate limited"
+        )
     except ProviderUnavailableError as exc:
         log.warning("provider unavailable: %s", exc)
         await context.abort(grpc.StatusCode.UNAVAILABLE, "the model provider is unavailable")
     except ModelNotFoundError as exc:
         await context.abort(grpc.StatusCode.NOT_FOUND, str(exc))
+    except NotSupportedError as exc:
+        await context.abort(grpc.StatusCode.UNIMPLEMENTED, str(exc))
+    except ProviderAuthError as exc:
+        log.error("provider rejected its credentials: %s", exc)
+        await context.abort(
+            grpc.StatusCode.FAILED_PRECONDITION, "the model provider rejected kb's credentials"
+        )
     except ProviderError as exc:
         log.error("provider call failed: %s", exc)
         await context.abort(grpc.StatusCode.INTERNAL, "provider call failed")

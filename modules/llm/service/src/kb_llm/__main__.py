@@ -15,7 +15,11 @@ log = logging.getLogger("kb_llm")
 async def run() -> None:
     settings = Settings()
     setup_logging(settings.log_level, settings.log_format)
-    provider = build_provider(settings)
+    try:
+        provider = build_provider(settings)
+    except ValueError as exc:  # misconfiguration, e.g. a missing API key
+        log.error("cannot start: %s", exc)
+        raise SystemExit(1) from None
     log.info("using provider %s", provider.name)
     servicer = LlmServicer(provider, settings)
     try:

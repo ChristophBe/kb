@@ -8,7 +8,7 @@ How the modules, the infrastructure and the browser fit together. The diagrams f
 flowchart LR
     user([User])
     kb["kb<br/>knowledge management"]
-    llmvendor[("LLM provider<br/>Ollama (default)")]
+    llmvendor[("LLM provider<br/>Ollama (default), Anthropic")]
 
     user -- "browser: upload, browse, chat" --> kb
     kb -- "generate, embed" --> llmvendor
@@ -83,7 +83,7 @@ flowchart TB
 | `ingestion-service` | ingestion | schema `ingestion` (jobs), stream `INGESTION` | document | publishes `uploaded`; consumes `started`, `processed`, `failed` |
 | `ingestion-worker` | ingestion | — | document, llm | consumes `uploaded`; publishes `started`, `processed`, `failed` |
 | `chat-service` | chat | schema `chat` (conversations, messages) | document, llm | — |
-| `llm-service` | llm | provider registry | Ollama over HTTP | — |
+| `llm-service` | llm | provider registry | Ollama over HTTP, Anthropic API | — |
 | `envoy` | — | per-method routes for the public RPCs of each manifest's `grpc_services` (not `internal`) | all four services | — |
 | `web` | — | UI shell; module UIs from `apps/web/src/modules.gen.ts` | via envoy | — |
 

@@ -11,6 +11,7 @@ from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from .chunking import chunk_markdown, chunk_pages
 from .config import Settings
 from .extract import extract_pages, is_markdown
+from .tokens import load as load_tokenizer
 
 log = logging.getLogger(__name__)
 
@@ -76,6 +77,16 @@ class Processor:
         publish: Publish,
     ) -> None:
         self._settings = settings
+        self._tokens = load_tokenizer(settings.chunk_tokenizer)
+        # The longest input the worker may send to the embedding model.
+        self._max_tokens = settings.embedding_max_tokens - self._tokens.special_tokens
+        if settings.chunk_tokens > self._max_tokens:
+            raise ValueError(
+                f"KB_CHUNK_TOKENS ({settings.chunk_tokens}) exceeds the embedding model's "
+                f"input limit of {self._max_tokens} tokens (KB_EMBEDDING_MAX_TOKENS "
+                f"{settings.embedding_max_tokens} minus "
+                f"{self._tokens.special_tokens} special tokens)"
+            )
         self._documents = documents
         self._llm = llm
         self._publish = publish
@@ -143,14 +154,23 @@ class Processor:
         ):
             data.extend(part.data)
         pages = extract_pages(bytes(data), event.filename, event.content_type)
-        size, overlap = self._settings.chunk_size, self._settings.chunk_overlap
+        size, overlap = self._settings.chunk_tokens, self._settings.chunk_overlap_tokens
         if is_markdown(event.filename, event.content_type):
-            min_section = self._settings.chunk_min_section_size
-            chunks = chunk_markdown(pages[0].text, size, overlap, min_section)
+            min_section = self._settings.chunk_min_section_tokens
+            chunks = chunk_markdown(pages[0].text, size, overlap, min_section, self._tokens)
         else:
-            chunks = chunk_pages(pages, size, overlap)
+            chunks = chunk_pages(pages, size, overlap, self._tokens)
         if not chunks:
             raise ValueError("document contains no text")
+        # Chunking stays within size; only a run of characters that can't be cut
+        # (one grapheme of thousands of tokens) could exceed it. Fail rather than
+        # let the model truncate it.
+        for chunk in chunks:
+            if (count := self._tokens.count(chunk.text)) > self._max_tokens:
+                raise ValueError(
+                    f"a chunk has {count} tokens, more than the embedding model's "
+                    f"limit of {self._max_tokens}"
+                )
 
         inputs: list[document_pb2.ChunkInput] = []
         batch = self._settings.embed_batch_size

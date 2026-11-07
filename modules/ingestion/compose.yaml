@@ -33,6 +33,11 @@ services:
       KB_NATS_URL: nats://nats:4222
       KB_DOCUMENT_ADDR: document-service:9001
       KB_LLM_ADDR: llm-service:9004
+      # Chunk sizes in tokens of the embedding model (see .env.example).
+      KB_CHUNK_TOKENIZER: ${KB_CHUNK_TOKENIZER:-nomic-embed-text}
+      KB_CHUNK_TOKENS: ${KB_CHUNK_TOKENS:-256}
+      KB_CHUNK_OVERLAP_TOKENS: ${KB_CHUNK_OVERLAP_TOKENS:-32}
+      KB_EMBEDDING_MAX_TOKENS: ${KB_EMBEDDING_MAX_TOKENS:-2048}
     # The worker pauses job intake while document or llm is down.
     depends_on:
       nats: { condition: service_healthy }

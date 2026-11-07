@@ -34,9 +34,11 @@ If the connection breaks, the row shows **Upload failed** with the reason.
 1. Select **Retry upload** to send the file again.
 2. Or select **×** to dismiss the row.
 
-## Files that are not supported
+## Files that can't be uploaded
 
 A file kb can't read, such as an image or a Word document, shows "Not supported (PDF, Markdown or plain text)" and isn't uploaded. Select **×** to dismiss it. Save the content as PDF or plain text and upload that instead.
+
+An empty file shows "The file is empty" and isn't uploaded either. Select **×** to dismiss it, add content to the file and upload it again.
 
 ## Retry processing
 

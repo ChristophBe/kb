@@ -1,6 +1,7 @@
 import { create } from "@bufbuild/protobuf";
 import { type Job, JobSchema, JobStatus } from "@kb/ingestion-api/kb/ingestion/v1/ingestion_pb";
 import { Code, ConnectError } from "@kb/module-sdk";
+import { badRequestDetail } from "@kb/ui/testing/errors";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { type Put, UploadError } from "./put.ts";
@@ -121,6 +122,23 @@ describe("useUploads", () => {
     await waitFor(() => expect(calls).toHaveLength(3));
     expect(calls[2]?.url).toBe(calls[0]?.url);
     expect(client.createUpload).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects a file the server refuses, without offering a retry", async () => {
+    const client = fakeClient();
+    const err = new ConnectError("The file is empty", Code.InvalidArgument);
+    err.details.push(badRequestDetail([{ field: "size_bytes", description: "The file is empty" }]));
+    client.createUpload.mockRejectedValueOnce(err);
+    const put = vi.fn<Put>();
+    const { hook, events } = setup(client, put);
+    act(() => hook.result.current.add([file("empty.md")]));
+    await waitFor(() => expect(hook.result.current.uploads[0]?.status).toBe("rejected"));
+    expect(hook.result.current.uploads[0]?.error).toBe("The file is empty");
+    expect(put).not.toHaveBeenCalled();
+    expect(events.announce).toHaveBeenCalledWith(
+      "empty.md wasn't uploaded: The file is empty",
+      true,
+    );
   });
 
   it("asks for a new URL once the old one has expired", async () => {

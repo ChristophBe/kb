@@ -4,11 +4,13 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"strconv"
 	"time"
 
 	"github.com/google/uuid"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -16,11 +18,14 @@ import (
 	ingestionv1 "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1"
 	"github.com/christoph/kb/modules/ingestion/service/internal/app"
 	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
+	"github.com/christoph/kb/platform/go/grpcserver"
 )
 
 const (
 	defaultPageSize = 50
 	maxPageSize     = 200
+	// domain is the ErrorInfo domain of this module's errors.
+	domain = "kb.ingestion.v1"
 )
 
 type Server struct {
@@ -36,8 +41,16 @@ func New(service *app.Service, log *slog.Logger) *Server {
 }
 
 func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUploadRequest) (*ingestionv1.CreateUploadResponse, error) {
+	var violations []*errdetails.BadRequest_FieldViolation
 	if req.GetFilename() == "" {
-		return nil, status.Error(codes.InvalidArgument, "filename is required")
+		violations = append(violations, grpcserver.Violation("filename", "A filename is required"))
+	}
+	if req.GetSizeBytes() <= 0 {
+		// Nothing could be extracted from an empty file; it would only fail later.
+		violations = append(violations, grpcserver.Violation("size_bytes", "The file is empty"))
+	}
+	if len(violations) > 0 {
+		return nil, grpcserver.InvalidArgument(violations...)
 	}
 	job, uploadURL, err := s.app.CreateUpload(ctx, app.NewUpload{
 		Title:       req.GetTitle(),
@@ -52,7 +65,7 @@ func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUpload
 }
 
 func (s *Server) CompleteUpload(ctx context.Context, req *ingestionv1.CompleteUploadRequest) (*ingestionv1.CompleteUploadResponse, error) {
-	id, err := parseID(req.GetJobId())
+	id, err := parseID("job_id", req.GetJobId())
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +94,7 @@ func (s *Server) ListJobs(ctx context.Context, req *ingestionv1.ListJobsRequest)
 	if tok := req.GetPage().GetPageToken(); tok != "" {
 		o, err := strconv.Atoi(tok)
 		if err != nil || o < 0 {
-			return nil, status.Error(codes.InvalidArgument, "invalid page token")
+			return nil, grpcserver.InvalidArgument(grpcserver.Violation("page.page_token", "The page token is invalid"))
 		}
 		offset = int32(o)
 	}
@@ -128,7 +141,7 @@ func (s *Server) WatchJob(req *ingestionv1.WatchJobRequest, stream ingestionv1.I
 }
 
 func (s *Server) ReprocessJob(ctx context.Context, req *ingestionv1.ReprocessJobRequest) (*ingestionv1.ReprocessJobResponse, error) {
-	id, err := parseID(req.GetId())
+	id, err := parseID("id", req.GetId())
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +153,7 @@ func (s *Server) ReprocessJob(ctx context.Context, req *ingestionv1.ReprocessJob
 }
 
 func (s *Server) getJob(ctx context.Context, raw string) (app.Job, error) {
-	id, err := parseID(raw)
+	id, err := parseID("id", raw)
 	if err != nil {
 		return app.Job{}, err
 	}
@@ -151,10 +164,11 @@ func (s *Server) getJob(ctx context.Context, raw string) (app.Job, error) {
 	return job, nil
 }
 
-func parseID(raw string) (uuid.UUID, error) {
+// parseID parses the job id in the request field named field.
+func parseID(field, raw string) (uuid.UUID, error) {
 	id, err := uuid.Parse(raw)
 	if err != nil {
-		return uuid.Nil, status.Errorf(codes.InvalidArgument, "invalid job id %q", raw)
+		return uuid.Nil, grpcserver.InvalidArgument(grpcserver.Violation(field, fmt.Sprintf("Invalid job id %q", raw)))
 	}
 	return id, nil
 }
@@ -163,15 +177,24 @@ func (s *Server) toStatus(op string, err error) error {
 	switch {
 	case errors.Is(err, app.ErrNotFound):
 		return status.Error(codes.NotFound, err.Error())
-	case errors.Is(err, app.ErrAlreadyCompleted), errors.Is(err, app.ErrUploadMissing),
-		errors.Is(err, app.ErrNotReprocessable):
-		return status.Error(codes.FailedPrecondition, err.Error())
+	case errors.Is(err, app.ErrAlreadyCompleted):
+		return failedPrecondition("UPLOAD_ALREADY_COMPLETED", app.ErrAlreadyCompleted)
+	case errors.Is(err, app.ErrUploadMissing):
+		return failedPrecondition("UPLOAD_MISSING", app.ErrUploadMissing)
+	case errors.Is(err, app.ErrNotReprocessable):
+		return failedPrecondition("JOB_NOT_REPROCESSABLE", app.ErrNotReprocessable)
 	case errors.Is(err, app.ErrDocumentsUnavailable):
 		s.log.Warn(op, "error", err)
 		return status.Error(codes.Unavailable, app.ErrDocumentsUnavailable.Error())
 	}
 	s.log.Error(op, "error", err)
 	return status.Errorf(codes.Internal, "%s failed", op)
+}
+
+// failedPrecondition reports a request in the wrong state, with a reason
+// clients can branch on.
+func failedPrecondition(reason string, err error) error {
+	return grpcserver.WithDetails(codes.FailedPrecondition, err.Error(), grpcserver.ErrorInfo(domain, reason, nil))
 }
 
 func toProto(j app.Job) *ingestionv1.Job {

@@ -1,6 +1,7 @@
 import type { Job } from "@kb/ingestion-api/kb/ingestion/v1/ingestion_pb";
 import { JobStatus } from "@kb/ingestion-api/kb/ingestion/v1/ingestion_pb";
 import { Code, ConnectError } from "@kb/module-sdk";
+import { fieldViolations } from "@kb/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isSupported, SUPPORTED_FORMATS } from "./files.ts";
 import { type Put, UploadError } from "./put.ts";
@@ -148,6 +149,14 @@ export function useUploads(client: UploadClient, put: Put, events: UploadEvents,
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;
         if (err instanceof UploadError && err.expired) targets.current.delete(key);
+        // The server rejected the file itself (e.g. it is empty): retrying won't help.
+        const violations = fieldViolations(err);
+        if (violations.length > 0) {
+          const reason = violations.map((v) => v.description).join(". ");
+          patch(key, { status: "rejected", error: reason });
+          events.announce(`${file.name} wasn't uploaded: ${reason}`, true);
+          return;
+        }
         patch(key, { status: "failed", error: describe(err) });
         events.announce(`Upload of ${file.name} failed`, true);
       } finally {

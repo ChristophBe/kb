@@ -49,6 +49,7 @@ message Job {
 message CreateUploadRequest {
   string filename = 1;
   string content_type = 2;
+  // The file's size; must be greater than 0, empty files are rejected.
   int64 size_bytes = 3;
   // Defaults to the filename when empty.
   string title = 4;

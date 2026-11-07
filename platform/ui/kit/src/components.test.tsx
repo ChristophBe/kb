@@ -20,6 +20,7 @@ import {
   type Tone,
 } from "./components.tsx";
 import { expectNoAxeViolations } from "./testing/axe.ts";
+import { badRequestDetail } from "./testing/errors.ts";
 
 describe("kit components have no axe violations", () => {
   it("Button", async () => {
@@ -161,6 +162,19 @@ describe("kit components have no axe violations", () => {
     await expectNoAxeViolations(container);
   });
 
+  it("ErrorMessage with field violations", async () => {
+    const error = Object.assign(new Error("invalid"), {
+      details: [
+        badRequestDetail([
+          { field: "title", description: "Title must not be empty" },
+          { field: "filename", description: "A filename is required" },
+        ]),
+      ],
+    });
+    const { container } = render(<ErrorMessage error={error} />);
+    await expectNoAxeViolations(container);
+  });
+
   it("Spinner", async () => {
     const { container } = render(<Spinner label="Loading documents" />);
     await expectNoAxeViolations(container);
@@ -169,6 +183,43 @@ describe("kit components have no axe violations", () => {
   it("RelativeTime", async () => {
     const { container } = render(<RelativeTime time={{ seconds: 1_700_000_000n }} />);
     await expectNoAxeViolations(container);
+  });
+});
+
+describe("ErrorMessage", () => {
+  const rejected = (...violations: { field: string; description: string }[]) =>
+    Object.assign(new Error("[invalid_argument] invalid"), {
+      rawMessage: "invalid",
+      details: [badRequestDetail(violations)],
+    });
+
+  it("shows an error's message", () => {
+    render(<ErrorMessage error={new Error("Couldn't load documents")} />);
+    expect(screen.getByRole("alert").textContent).toBe("Couldn't load documents");
+  });
+
+  it("shows field violations instead of the message", () => {
+    render(
+      <ErrorMessage
+        error={rejected(
+          { field: "title", description: "Title must not be empty" },
+          { field: "metadata", description: "Metadata keys must not be empty" },
+        )}
+      />,
+    );
+    const items = screen.getAllByRole("listitem").map((li) => li.textContent);
+    expect(items).toEqual(["Title must not be empty", "Metadata keys must not be empty"]);
+  });
+
+  it("leaves out fields the form shows itself", () => {
+    const error = rejected(
+      { field: "title", description: "Title must not be empty" },
+      { field: "metadata", description: "Metadata keys must not be empty" },
+    );
+    const { rerender } = render(<ErrorMessage error={error} exclude={["title"]} />);
+    expect(screen.getByRole("alert").textContent).toBe("Metadata keys must not be empty");
+    rerender(<ErrorMessage error={error} exclude={["title", "metadata"]} />);
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 });
 

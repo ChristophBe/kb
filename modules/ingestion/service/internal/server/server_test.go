@@ -3,11 +3,13 @@ package server
 import (
 	"context"
 	"log/slog"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -19,7 +21,18 @@ import (
 	"github.com/christoph/kb/modules/ingestion/service/internal/documents"
 	"github.com/christoph/kb/modules/ingestion/service/internal/events"
 	"github.com/christoph/kb/modules/ingestion/service/internal/store"
+	"github.com/christoph/kb/platform/go/grpcserver"
 )
+
+func firstOf[T any](details []any) (T, bool) {
+	for _, d := range details {
+		if t, ok := d.(T); ok {
+			return t, true
+		}
+	}
+	var zero T
+	return zero, false
+}
 
 type fakeRepo struct {
 	store.Querier
@@ -96,7 +109,7 @@ func TestUploadFlowQueuesProcessingOnce(t *testing.T) {
 	pub := &fakePublisher{}
 	srv := New(app.New(store.NewJobs(repo), documents.New(docs), events.NewPublisher(pub)), slog.New(slog.DiscardHandler))
 
-	created, err := srv.CreateUpload(t.Context(), &ingestionv1.CreateUploadRequest{Filename: "a.md"})
+	created, err := srv.CreateUpload(t.Context(), &ingestionv1.CreateUploadRequest{Filename: "a.md", SizeBytes: 3})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,6 +188,33 @@ func TestCompleteUploadMapsPeerErrors(t *testing.T) {
 	}
 }
 
+func TestCreateUploadValidates(t *testing.T) {
+	srv := New(app.New(store.NewJobs(&fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}), documents.New(&fakeDocuments{}), events.NewPublisher(&fakePublisher{})), slog.New(slog.DiscardHandler))
+	for _, tc := range []struct {
+		name   string
+		req    *ingestionv1.CreateUploadRequest
+		fields []string
+	}{
+		{"no filename", &ingestionv1.CreateUploadRequest{SizeBytes: 3}, []string{"filename"}},
+		{"empty file", &ingestionv1.CreateUploadRequest{Filename: "a.md"}, []string{"size_bytes"}},
+		{"both", &ingestionv1.CreateUploadRequest{SizeBytes: -1}, []string{"filename", "size_bytes"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := srv.CreateUpload(t.Context(), tc.req)
+			if status.Code(err) != codes.InvalidArgument {
+				t.Fatalf("err = %v, want InvalidArgument", err)
+			}
+			var fields []string
+			for _, v := range grpcserver.FieldViolations(err) {
+				fields = append(fields, v.GetField())
+			}
+			if !slices.Equal(fields, tc.fields) {
+				t.Errorf("fields %v, want %v", fields, tc.fields)
+			}
+		})
+	}
+}
+
 func TestUnknownAndInvalidJobs(t *testing.T) {
 	srv := New(app.New(store.NewJobs(&fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}), documents.New(&fakeDocuments{}), events.NewPublisher(&fakePublisher{})), slog.New(slog.DiscardHandler))
 	_, err := srv.GetJob(t.Context(), &ingestionv1.GetJobRequest{Id: uuid.NewString()})
@@ -182,8 +222,8 @@ func TestUnknownAndInvalidJobs(t *testing.T) {
 		t.Errorf("unknown: %v", err)
 	}
 	_, err = srv.CompleteUpload(t.Context(), &ingestionv1.CompleteUploadRequest{JobId: "nope"})
-	if status.Code(err) != codes.InvalidArgument {
-		t.Errorf("invalid: %v", err)
+	if v := grpcserver.FieldViolations(err); status.Code(err) != codes.InvalidArgument || len(v) != 1 || v[0].GetField() != "job_id" {
+		t.Errorf("invalid: %v, violations %v", err, v)
 	}
 }
 
@@ -217,6 +257,12 @@ func TestReprocessJob(t *testing.T) {
 			_, err := srv.ReprocessJob(t.Context(), &ingestionv1.ReprocessJobRequest{Id: tc.id})
 			if status.Code(err) != tc.want {
 				t.Fatalf("err = %v, want %v", err, tc.want)
+			}
+			if tc.want == codes.FailedPrecondition {
+				details := status.Convert(err).Details()
+				if info, ok := firstOf[*errdetails.ErrorInfo](details); !ok || info.GetReason() != "JOB_NOT_REPROCESSABLE" || info.GetDomain() != "kb.ingestion.v1" {
+					t.Errorf("details = %v, want ErrorInfo JOB_NOT_REPROCESSABLE", details)
+				}
 			}
 		})
 	}

@@ -4,6 +4,37 @@ package kb.common.v1;
 
 option go_package = "github.com/christoph/kb/platform/api/go/commonv1;commonv1";
 
+// Error details
+//
+// Every kb service reports errors as a gRPC status (code and message) and adds
+// standard google.rpc error details (google/rpc/error_details.proto) where a
+// client can act on them. They travel in the grpc-status-details-bin trailer
+// as a serialized google.rpc.Status. A status message is always readable on
+// its own, so clients that ignore the details still show a sensible error.
+//
+// google.rpc.BadRequest: every INVALID_ARGUMENT for invalid request input
+// carries one FieldViolation per invalid field:
+//   - field: the path of the field in the request message, in proto field
+//     names: "title", "page.page_token", "document_ids[2]",
+//     "chunks[0].embedding" (repeated fields by zero-based position).
+//   - description: a sentence a user can act on, e.g. "Title must not be
+//     empty". UIs show it next to the matching input.
+// The status message joins the descriptions with "; ".
+//
+// google.rpc.ErrorInfo: errors a client may want to branch on, such as
+// FAILED_PRECONDITION, carry an ErrorInfo:
+//   - domain: the proto package of the module that defines the reason, e.g.
+//     "kb.ingestion.v1".
+//   - reason: a stable UPPER_SNAKE_CASE identifier, e.g.
+//     "UPLOAD_ALREADY_COMPLETED". Reasons are part of the module's contract:
+//     never rename or reuse one.
+//   - metadata: optional context, keys in lower_snake_case.
+//
+// Helpers: grpcserver.InvalidArgument / Violation / ErrorInfo / WithDetails
+// (platform/go/grpcserver), kb_platform.grpc.abort_invalid_argument /
+// violation / error_info / abort_with_details (platform/python), and
+// fieldViolations / ErrorMessage in @kb/ui (platform/ui/kit).
+
 // PageRequest is embedded in list requests that support cursor pagination.
 message PageRequest {
   // Maximum number of items to return. The server applies a default when 0.

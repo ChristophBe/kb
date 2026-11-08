@@ -54,6 +54,9 @@ message Document {
   map<string, string> metadata = 9;
   google.protobuf.Timestamp create_time = 10;
   google.protobuf.Timestamp update_time = 11;
+  // The user who uploaded the document, as the subject of their token. Set by
+  // the service; only this user can see the document.
+  string owner_id = 12;
 }
 
 message Chunk {

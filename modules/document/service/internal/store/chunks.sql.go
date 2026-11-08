@@ -83,16 +83,18 @@ FROM (
            (1 - (c.embedding <=> $1::vector))::real AS score
     FROM document.chunks c
     JOIN document.documents d ON d.id = c.document_id
-    WHERE cardinality($2::uuid[]) = 0
-       OR c.document_id = ANY($2::uuid[])
+    WHERE d.owner_id = $2
+      AND (cardinality($3::uuid[]) = 0
+           OR c.document_id = ANY($3::uuid[]))
     ORDER BY c.document_id, c.embedding <=> $1::vector, c.idx
 ) best
 ORDER BY score DESC, document_id
-LIMIT $3
+LIMIT $4
 `
 
 type SearchBestChunksParams struct {
 	Embedding   pgvector.Vector
+	OwnerID     string
 	DocumentIds []uuid.UUID
 	MaxResults  int32
 }
@@ -106,11 +108,17 @@ type SearchBestChunksRow struct {
 	Score         float32
 }
 
-// SearchBestChunks returns each document's most similar chunk, ranked by
-// that chunk's score: the documents most similar to the embedding. It is an
-// exact scan, since the vector index can't pick one chunk per document.
+// SearchBestChunks returns the most similar chunk of each of the owner's
+// documents, ranked by that chunk's score: the documents most similar to the
+// embedding. It is an exact scan, since the vector index can't pick one chunk
+// per document.
 func (q *Queries) SearchBestChunks(ctx context.Context, arg SearchBestChunksParams) ([]SearchBestChunksRow, error) {
-	rows, err := q.db.Query(ctx, searchBestChunks, arg.Embedding, arg.DocumentIds, arg.MaxResults)
+	rows, err := q.db.Query(ctx, searchBestChunks,
+		arg.Embedding,
+		arg.OwnerID,
+		arg.DocumentIds,
+		arg.MaxResults,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -141,14 +149,16 @@ SELECT c.document_id, c.idx, c.text, c.metadata, d.title AS document_title,
        (1 - (c.embedding <=> $1::vector))::real AS score
 FROM document.chunks c
 JOIN document.documents d ON d.id = c.document_id
-WHERE cardinality($2::uuid[]) = 0
-   OR c.document_id = ANY($2::uuid[])
+WHERE d.owner_id = $2
+  AND (cardinality($3::uuid[]) = 0
+       OR c.document_id = ANY($3::uuid[]))
 ORDER BY c.embedding <=> $1::vector
-LIMIT $3
+LIMIT $4
 `
 
 type SearchChunksParams struct {
 	Embedding   pgvector.Vector
+	OwnerID     string
 	DocumentIds []uuid.UUID
 	MaxResults  int32
 }
@@ -162,8 +172,17 @@ type SearchChunksRow struct {
 	Score         float32
 }
 
+// SearchChunks returns the owner's chunks most similar to the embedding. The
+// HNSW index yields candidates before the owner filter applies, so the pool
+// sets hnsw.iterative_scan (store.ConfigurePool) to keep scanning until the
+// limit is filled.
 func (q *Queries) SearchChunks(ctx context.Context, arg SearchChunksParams) ([]SearchChunksRow, error) {
-	rows, err := q.db.Query(ctx, searchChunks, arg.Embedding, arg.DocumentIds, arg.MaxResults)
+	rows, err := q.db.Query(ctx, searchChunks,
+		arg.Embedding,
+		arg.OwnerID,
+		arg.DocumentIds,
+		arg.MaxResults,
+	)
 	if err != nil {
 		return nil, err
 	}

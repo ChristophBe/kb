@@ -8,9 +8,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-	pgxvec "github.com/pgvector/pgvector-go/pgx"
-
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	"github.com/christoph/kb/modules/document/migrations"
 	"github.com/christoph/kb/modules/document/service/internal/server"
@@ -63,9 +60,7 @@ func run() error {
 	// The vector type exists only after the first migration, so the pool
 	// that registers it is opened afterwards.
 	pool.Close()
-	pool, err = postgres.Connect(ctx, cfg.DatabaseURL, func(c *pgxpool.Config) {
-		c.AfterConnect = pgxvec.RegisterTypes
-	})
+	pool, err = postgres.Connect(ctx, cfg.DatabaseURL, store.ConfigurePool)
 	if err != nil {
 		return err
 	}

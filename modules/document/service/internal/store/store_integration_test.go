@@ -4,12 +4,14 @@ package store
 
 import (
 	"context"
+	"errors"
+	"math/rand/v2"
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/pgvector/pgvector-go"
-	pgxvec "github.com/pgvector/pgvector-go/pgx"
 
 	"github.com/christoph/kb/modules/document/migrations"
 	"github.com/christoph/kb/platform/go/postgres/pgtest"
@@ -18,13 +20,13 @@ import (
 const (
 	dimensions  = 768
 	readyStatus = 4
+	// owner owns the documents of tests that aren't about ownership.
+	owner = "alice"
 )
 
 func newRepo(t *testing.T) *Repo {
 	t.Helper()
-	return NewRepo(pgtest.Start(t, "document", migrations.FS, func(c *pgxpool.Config) {
-		c.AfterConnect = pgxvec.RegisterTypes
-	}))
+	return NewRepo(pgtest.Start(t, "document", migrations.FS, ConfigurePool))
 }
 
 // axis returns a vector along one dimension; axes are orthogonal, and blend
@@ -45,9 +47,14 @@ func blend(a, b []float32, weight float32) []float32 {
 
 func newDocument(t *testing.T, r *Repo, title string) uuid.UUID {
 	t.Helper()
+	return newOwnedDocument(t, r, owner, title)
+}
+
+func newOwnedDocument(t *testing.T, r *Repo, ownerID, title string) uuid.UUID {
+	t.Helper()
 	id := uuid.New()
 	if _, err := r.CreateDocument(context.Background(), CreateDocumentParams{
-		ID: id, Title: title, Filename: title, ContentType: "text/plain", ObjectKey: id.String(),
+		ID: id, OwnerID: ownerID, Title: title, Filename: title, ContentType: "text/plain", ObjectKey: id.String(),
 		Status: 1, Metadata: map[string]string{},
 	}); err != nil {
 		t.Fatal(err)
@@ -68,7 +75,7 @@ func search(t *testing.T, r *Repo, query []float32, limit int32, docs ...uuid.UU
 		docs = []uuid.UUID{}
 	}
 	rows, err := r.SearchChunks(t.Context(), SearchChunksParams{
-		Embedding: pgvector.NewVector(query), DocumentIds: docs, MaxResults: limit,
+		Embedding: pgvector.NewVector(query), OwnerID: owner, DocumentIds: docs, MaxResults: limit,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -99,7 +106,7 @@ func TestReplaceChunksSwapsChunksAndMarksTheDocumentReady(t *testing.T) {
 	if rows[0].Metadata["heading"] != "new" {
 		t.Errorf("metadata = %v", rows[0].Metadata)
 	}
-	got, err := r.GetDocument(ctx, doc)
+	got, err := r.GetAnyDocument(ctx, doc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -182,7 +189,7 @@ func searchBest(t *testing.T, r *Repo, query []float32, limit int32, docs ...uui
 		docs = []uuid.UUID{}
 	}
 	rows, err := r.SearchBestChunks(t.Context(), SearchBestChunksParams{
-		Embedding: pgvector.NewVector(query), DocumentIds: docs, MaxResults: limit,
+		Embedding: pgvector.NewVector(query), OwnerID: owner, DocumentIds: docs, MaxResults: limit,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -265,5 +272,120 @@ func TestListChunksPagesInIndexOrderWithinADocument(t *testing.T) {
 	}
 	if got := texts(1, 2); len(got) != 1 || got[0] != "two" {
 		t.Errorf("second page = %v", got)
+	}
+}
+
+func TestDocumentQueriesFindOnlyTheOwnersDocuments(t *testing.T) {
+	r := newRepo(t)
+	ctx := t.Context()
+	mine, theirs := newOwnedDocument(t, r, "alice", "mine.md"), newOwnedDocument(t, r, "bob", "theirs.md")
+
+	docs, err := r.ListDocuments(ctx, ListDocumentsParams{OwnerID: "alice", Limit: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(docs) != 1 || docs[0].ID != mine || docs[0].OwnerID != "alice" {
+		t.Errorf("alice lists %+v, want only her document", docs)
+	}
+	if _, err := r.GetDocument(ctx, GetDocumentParams{ID: theirs, OwnerID: "alice"}); !errors.Is(err, pgx.ErrNoRows) {
+		t.Errorf("get bob's document as alice: err = %v, want no rows", err)
+	}
+	if _, err := r.UpdateDocument(ctx, UpdateDocumentParams{ID: theirs, OwnerID: "alice", Title: pgtype.Text{String: "x", Valid: true}}); !errors.Is(err, pgx.ErrNoRows) {
+		t.Errorf("update bob's document as alice: err = %v, want no rows", err)
+	}
+	if _, err := r.DeleteDocument(ctx, DeleteDocumentParams{ID: theirs, OwnerID: "alice"}); !errors.Is(err, pgx.ErrNoRows) {
+		t.Errorf("delete bob's document as alice: err = %v, want no rows", err)
+	}
+	got, err := r.GetDocument(ctx, GetDocumentParams{ID: theirs, OwnerID: "bob"})
+	if err != nil || got.Title != "theirs.md" {
+		t.Errorf("bob's document after alice's attempts: %+v, %v", got, err)
+	}
+	if _, err := r.DeleteDocument(ctx, DeleteDocumentParams{ID: theirs, OwnerID: "bob"}); err != nil {
+		t.Errorf("delete as the owner: %v", err)
+	}
+}
+
+func TestSearchesFindOnlyTheOwnersChunks(t *testing.T) {
+	r := newRepo(t)
+	ctx := t.Context()
+	mine, theirs := newOwnedDocument(t, r, "alice", "mine.md"), newOwnedDocument(t, r, "bob", "theirs.md")
+	if _, err := r.ReplaceChunks(ctx, mine, []InsertChunksParams{chunk(mine, 0, "mine", axis(1))}, readyStatus); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.ReplaceChunks(ctx, theirs, []InsertChunksParams{chunk(theirs, 0, "theirs", axis(0))}, readyStatus); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, docs := range [][]uuid.UUID{{}, {theirs}, {mine, theirs}} {
+		rows, err := r.SearchChunks(ctx, SearchChunksParams{Embedding: pgvector.NewVector(axis(0)), OwnerID: "alice", DocumentIds: docs, MaxResults: 10})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, row := range rows {
+			if row.DocumentID != mine {
+				t.Errorf("alice's search limited to %v finds %q", docs, row.Text)
+			}
+		}
+		best, err := r.SearchBestChunks(ctx, SearchBestChunksParams{Embedding: pgvector.NewVector(axis(0)), OwnerID: "alice", DocumentIds: docs, MaxResults: 10})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, row := range best {
+			if row.DocumentID != mine {
+				t.Errorf("alice's document search limited to %v finds %q", docs, row.DocumentTitle)
+			}
+		}
+	}
+}
+
+// Other users' chunks closer to the query than any of the owner's fill the
+// HNSW candidate list (hnsw.ef_search); the iterative scan ConfigurePool turns
+// on still reaches the owner's chunks.
+func TestSearchChunksFindsTheOwnersChunksBehindOtherUsersChunks(t *testing.T) {
+	r := newRepo(t)
+	ctx := t.Context()
+	query := axis(0)
+	rng := rand.New(rand.NewPCG(1, 2))
+	// near returns a random vector at about the given distance from the query.
+	near := func(distance float32) []float32 {
+		v := make([]float32, dimensions)
+		for i := range v {
+			v[i] = (1-distance)*query[i] + distance*float32(rng.NormFloat64())/8
+		}
+		return v
+	}
+	theirs := newOwnedDocument(t, r, "bob", "theirs.md")
+	crowd := make([]InsertChunksParams, 0, 200)
+	for i := range 200 {
+		crowd = append(crowd, chunk(theirs, int32(i), "theirs", near(0.2)))
+	}
+	if _, err := r.ReplaceChunks(ctx, theirs, crowd, readyStatus); err != nil {
+		t.Fatal(err)
+	}
+	mine := newOwnedDocument(t, r, "alice", "mine.md")
+	if _, err := r.ReplaceChunks(ctx, mine, []InsertChunksParams{
+		chunk(mine, 0, "mine 0", near(0.6)), chunk(mine, 1, "mine 1", near(0.6)),
+	}, readyStatus); err != nil {
+		t.Fatal(err)
+	}
+
+	// The tables are small enough for an exact scan; make the planner walk
+	// the vector index the way it does on a large knowledge base.
+	conn, err := r.pool.Acquire(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Release()
+	if _, err := conn.Exec(ctx, "SET enable_seqscan = off; SET enable_sort = off"); err != nil {
+		t.Fatal(err)
+	}
+	rows, err := New(conn).SearchChunks(ctx, SearchChunksParams{
+		Embedding: pgvector.NewVector(query), OwnerID: "alice", DocumentIds: []uuid.UUID{}, MaxResults: 5,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 2 {
+		t.Errorf("alice finds %d chunks, want both of hers: %+v", len(rows), rows)
 	}
 }

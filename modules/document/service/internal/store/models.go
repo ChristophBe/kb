@@ -31,4 +31,5 @@ type DocumentDocument struct {
 	Metadata     map[string]string
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
+	OwnerID      string
 }

@@ -8,6 +8,10 @@ Open **Documents**. The table shows each document's **Title**, **Status**, **Chu
 
 With no documents yet, the page says so; add some in [Ingestion](ingestion.md#upload-documents).
 
+## Who can see your documents
+
+Your documents are private: only you see them once you have uploaded them, and only you can search, chat with, change or delete them. Other people signed in to kb have their own documents and never see yours, not in the list, in search results or in chat answers. If you send someone a link to one of your documents, they get an error that the document was not found.
+
 ## Understand the status of a document
 
 - **Awaiting upload**: the upload has started but the file hasn't arrived yet.

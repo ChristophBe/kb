@@ -26,7 +26,16 @@ import (
 	"github.com/christoph/kb/platform/go/grpcserver"
 )
 
-// fakeRepo embeds the interface so tests only implement what they use.
+const (
+	alice = "alice-subject"
+	bob   = "bob-subject"
+)
+
+// asAlice is the context of a call alice made through the gateway.
+func asAlice(t *testing.T) context.Context { return grpcserver.WithUser(t.Context(), alice) }
+
+// fakeRepo embeds the interface so tests only implement what they use. Its
+// documents belong to alice unless a test says otherwise.
 type fakeRepo struct {
 	Repository
 	created  []store.CreateDocumentParams
@@ -35,6 +44,7 @@ type fakeRepo struct {
 	marked   []store.MarkDocumentUploadedParams
 	statuses []store.SetDocumentStatusParams
 	updated  []store.UpdateDocumentParams
+	deleted  []uuid.UUID
 	chunks   []store.ListChunksRow
 	chunkReq []store.ListChunksParams
 	found    []store.SearchChunksRow
@@ -45,19 +55,49 @@ type fakeRepo struct {
 
 func (f *fakeRepo) CreateDocument(_ context.Context, p store.CreateDocumentParams) (store.DocumentDocument, error) {
 	f.created = append(f.created, p)
-	return store.DocumentDocument{ID: p.ID, Title: p.Title, Filename: p.Filename, Status: p.Status}, nil
+	return store.DocumentDocument{ID: p.ID, OwnerID: p.OwnerID, Title: p.Title, Filename: p.Filename, Status: p.Status}, nil
 }
 
+// ListDocuments behaves like the query: the owner's documents, paged.
 func (f *fakeRepo) ListDocuments(_ context.Context, p store.ListDocumentsParams) ([]store.DocumentDocument, error) {
-	end := min(int(p.Offset+p.Limit), len(f.list))
-	return f.list[p.Offset:end], nil
+	owned := []store.DocumentDocument{}
+	for _, d := range f.list {
+		if owner(d) == p.OwnerID {
+			owned = append(owned, d)
+		}
+	}
+	end := min(int(p.Offset+p.Limit), len(owned))
+	return owned[p.Offset:end], nil
 }
 
-func (f *fakeRepo) GetDocument(context.Context, uuid.UUID) (store.DocumentDocument, error) {
+func (f *fakeRepo) GetDocument(_ context.Context, p store.GetDocumentParams) (store.DocumentDocument, error) {
+	if f.doc.ID == uuid.Nil || owner(f.doc) != p.OwnerID {
+		return store.DocumentDocument{}, pgx.ErrNoRows
+	}
+	return f.doc, nil
+}
+
+func (f *fakeRepo) GetAnyDocument(context.Context, uuid.UUID) (store.DocumentDocument, error) {
 	if f.doc.ID == uuid.Nil {
 		return store.DocumentDocument{}, pgx.ErrNoRows
 	}
 	return f.doc, nil
+}
+
+func (f *fakeRepo) DeleteDocument(_ context.Context, p store.DeleteDocumentParams) (string, error) {
+	if f.doc.ID != p.ID || owner(f.doc) != p.OwnerID {
+		return "", pgx.ErrNoRows
+	}
+	f.deleted = append(f.deleted, p.ID)
+	return f.doc.ObjectKey, nil
+}
+
+// owner is a fake document's owner: alice unless set.
+func owner(d store.DocumentDocument) string {
+	if d.OwnerID == "" {
+		return alice
+	}
+	return d.OwnerID
 }
 
 func (f *fakeRepo) MarkDocumentUploaded(_ context.Context, p store.MarkDocumentUploadedParams) (store.DocumentDocument, error) {
@@ -128,7 +168,15 @@ func (fakeObjects) PresignPut(_ context.Context, key string) (string, error) {
 	return "http://s3/" + key, nil
 }
 
-func (fakeObjects) Open(context.Context, string) (io.ReadCloser, error) { return nil, io.EOF }
+func (fakeObjects) Open(context.Context, string) (io.ReadCloser, error) {
+	return io.NopCloser(strings.NewReader("content")), nil
+}
+
+func (fakeObjects) PresignGet(_ context.Context, key, _ string) (string, error) {
+	return "http://s3/" + key, nil
+}
+
+func (fakeObjects) Delete(context.Context, string) error { return nil }
 
 func (f fakeObjects) Stat(context.Context, string) (int64, string, error) {
 	return f.size, f.contentType, f.statErr
@@ -140,7 +188,7 @@ func newServer(repo *fakeRepo) *Server {
 
 func TestCreateDocumentDefaultsTitleAndPresigns(t *testing.T) {
 	repo := &fakeRepo{}
-	resp, err := newServer(repo).CreateDocument(t.Context(), &documentv1.CreateDocumentRequest{Filename: "notes.md"})
+	resp, err := newServer(repo).CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{Filename: "notes.md"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,7 +207,7 @@ func TestCreateDocumentDefaultsTitleAndPresigns(t *testing.T) {
 }
 
 func TestCreateDocumentRequiresFilename(t *testing.T) {
-	_, err := newServer(&fakeRepo{}).CreateDocument(t.Context(), &documentv1.CreateDocumentRequest{})
+	_, err := newServer(&fakeRepo{}).CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{})
 	if status.Code(err) != codes.InvalidArgument {
 		t.Fatalf("err = %v, want InvalidArgument", err)
 	}
@@ -171,14 +219,14 @@ func TestListDocumentsPaginates(t *testing.T) {
 		repo.list = append(repo.list, store.DocumentDocument{ID: uuid.New()})
 	}
 	srv := newServer(repo)
-	first, err := srv.ListDocuments(t.Context(), &documentv1.ListDocumentsRequest{Page: &commonv1.PageRequest{PageSize: 2}})
+	first, err := srv.ListDocuments(asAlice(t), &documentv1.ListDocumentsRequest{Page: &commonv1.PageRequest{PageSize: 2}})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(first.GetDocuments()) != 2 || first.GetPage().GetNextPageToken() != "2" {
 		t.Fatalf("first page: %d docs, token %q", len(first.GetDocuments()), first.GetPage().GetNextPageToken())
 	}
-	second, err := srv.ListDocuments(t.Context(), &documentv1.ListDocumentsRequest{
+	second, err := srv.ListDocuments(asAlice(t), &documentv1.ListDocumentsRequest{
 		Page: &commonv1.PageRequest{PageSize: 2, PageToken: first.GetPage().GetNextPageToken()},
 	})
 	if err != nil {
@@ -261,11 +309,11 @@ func uploadedRequest(id uuid.UUID) *documentv1.SetDocumentStatusRequest {
 
 func TestSearchChunksValidates(t *testing.T) {
 	srv := newServer(&fakeRepo{})
-	_, err := srv.SearchChunks(t.Context(), &documentv1.SearchChunksRequest{})
+	_, err := srv.SearchChunks(asAlice(t), &documentv1.SearchChunksRequest{})
 	if status.Code(err) != codes.InvalidArgument {
 		t.Errorf("missing embedding: err = %v", err)
 	}
-	_, err = srv.SearchChunks(t.Context(), &documentv1.SearchChunksRequest{Embedding: []float32{1}, DocumentIds: []string{"nope"}})
+	_, err = srv.SearchChunks(asAlice(t), &documentv1.SearchChunksRequest{Embedding: []float32{1}, DocumentIds: []string{"nope"}})
 	if v := grpcserver.FieldViolations(err); status.Code(err) != codes.InvalidArgument || len(v) != 1 || v[0].GetField() != "document_ids[0]" {
 		t.Errorf("bad id: err = %v, violations %v", err, v)
 	}
@@ -279,7 +327,7 @@ func TestSearchDocumentsEmbedsTheQueryAndSearches(t *testing.T) {
 	}}}
 	llm := &fakeLLM{vector: []float32{0.5, 0.25}}
 	srv := New(repo, fakeObjects{}, llm, slog.New(slog.DiscardHandler))
-	resp, err := srv.SearchDocuments(t.Context(), &documentv1.SearchDocumentsRequest{
+	resp, err := srv.SearchDocuments(asAlice(t), &documentv1.SearchDocumentsRequest{
 		Query: "  revenue growth ", DocumentIds: []string{docID.String()},
 	})
 	if err != nil {
@@ -307,7 +355,7 @@ func TestSearchDocumentsEmbedsTheQueryAndSearches(t *testing.T) {
 
 func TestSearchDocumentsCapsTheLimit(t *testing.T) {
 	repo := &fakeRepo{}
-	if _, err := newServer(repo).SearchDocuments(t.Context(), &documentv1.SearchDocumentsRequest{Query: "q", Limit: 1000}); err != nil {
+	if _, err := newServer(repo).SearchDocuments(asAlice(t), &documentv1.SearchDocumentsRequest{Query: "q", Limit: 1000}); err != nil {
 		t.Fatal(err)
 	}
 	if repo.searches[0].MaxResults != maxLimit || repo.bestReq[0].MaxResults != maxLimit {
@@ -323,7 +371,7 @@ func TestSearchDocumentsReturnsEachDocumentOnceWithItsBestChunk(t *testing.T) {
 	}}
 	llm := &fakeLLM{vector: []float32{0.5, 0.25}}
 	srv := New(repo, fakeObjects{}, llm, slog.New(slog.DiscardHandler))
-	resp, err := srv.SearchDocuments(t.Context(), &documentv1.SearchDocumentsRequest{Query: "revenue", Limit: 2})
+	resp, err := srv.SearchDocuments(asAlice(t), &documentv1.SearchDocumentsRequest{Query: "revenue", Limit: 2})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -357,7 +405,7 @@ func TestSearchDocumentsValidatesBeforeEmbedding(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			llm := &fakeLLM{}
-			_, err := New(&fakeRepo{}, fakeObjects{}, llm, slog.New(slog.DiscardHandler)).SearchDocuments(t.Context(), tc.req)
+			_, err := New(&fakeRepo{}, fakeObjects{}, llm, slog.New(slog.DiscardHandler)).SearchDocuments(asAlice(t), tc.req)
 			if status.Code(err) != codes.InvalidArgument {
 				t.Errorf("err = %v, want InvalidArgument", err)
 			}
@@ -382,7 +430,7 @@ func TestSearchDocumentsMapsLLMErrors(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			repo := &fakeRepo{}
 			srv := New(repo, fakeObjects{}, &fakeLLM{err: tc.err}, slog.New(slog.DiscardHandler))
-			_, err := srv.SearchDocuments(t.Context(), &documentv1.SearchDocumentsRequest{Query: "q"})
+			_, err := srv.SearchDocuments(asAlice(t), &documentv1.SearchDocumentsRequest{Query: "q"})
 			if status.Code(err) != tc.want {
 				t.Errorf("err = %v, want %v", err, tc.want)
 			}
@@ -395,7 +443,7 @@ func TestSearchDocumentsMapsLLMErrors(t *testing.T) {
 
 func TestSearchDocumentsRejectsAnEmptyEmbedding(t *testing.T) {
 	srv := New(&fakeRepo{}, fakeObjects{}, &fakeLLM{}, slog.New(slog.DiscardHandler))
-	_, err := srv.SearchDocuments(t.Context(), &documentv1.SearchDocumentsRequest{Query: "q"})
+	_, err := srv.SearchDocuments(asAlice(t), &documentv1.SearchDocumentsRequest{Query: "q"})
 	if status.Code(err) != codes.Internal {
 		t.Errorf("err = %v, want Internal", err)
 	}
@@ -421,11 +469,11 @@ func TestSearchDocumentsWithLLMDown(t *testing.T) {
 	repo := &fakeRepo{list: []store.DocumentDocument{{ID: uuid.New()}}}
 	srv := New(repo, fakeObjects{}, llmv1.NewLlmServiceClient(conn), slog.New(slog.DiscardHandler))
 
-	_, err = srv.SearchDocuments(t.Context(), &documentv1.SearchDocumentsRequest{Query: "q"})
+	_, err = srv.SearchDocuments(asAlice(t), &documentv1.SearchDocumentsRequest{Query: "q"})
 	if status.Code(err) != codes.Unavailable {
 		t.Errorf("search: err = %v, want Unavailable", err)
 	}
-	resp, err := srv.ListDocuments(t.Context(), &documentv1.ListDocumentsRequest{})
+	resp, err := srv.ListDocuments(asAlice(t), &documentv1.ListDocumentsRequest{})
 	if err != nil || len(resp.GetDocuments()) != 1 {
 		t.Errorf("list: %v, %v", resp, err)
 	}
@@ -447,7 +495,7 @@ func TestUpdateDocumentValidates(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			repo := &fakeRepo{}
 			tc.req.Id = uuid.NewString()
-			_, err := newServer(repo).UpdateDocument(t.Context(), tc.req)
+			_, err := newServer(repo).UpdateDocument(asAlice(t), tc.req)
 			if status.Code(err) != codes.InvalidArgument {
 				t.Fatalf("err = %v, want InvalidArgument", err)
 			}
@@ -464,7 +512,7 @@ func TestUpdateDocumentValidates(t *testing.T) {
 func TestUpdateDocumentAcceptsATitleOfMaximumLength(t *testing.T) {
 	title := strings.Repeat("ä", maxTitleLength)
 	repo := &fakeRepo{}
-	if _, err := newServer(repo).UpdateDocument(t.Context(), &documentv1.UpdateDocumentRequest{Id: uuid.NewString(), Title: &title}); err != nil {
+	if _, err := newServer(repo).UpdateDocument(asAlice(t), &documentv1.UpdateDocumentRequest{Id: uuid.NewString(), Title: &title}); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -472,7 +520,7 @@ func TestUpdateDocumentAcceptsATitleOfMaximumLength(t *testing.T) {
 func TestUpdateDocumentTrimsTheTitleAndKeepsMetadata(t *testing.T) {
 	repo := &fakeRepo{}
 	title := "  Quarterly report  "
-	resp, err := newServer(repo).UpdateDocument(t.Context(), &documentv1.UpdateDocumentRequest{
+	resp, err := newServer(repo).UpdateDocument(asAlice(t), &documentv1.UpdateDocumentRequest{
 		Id: uuid.NewString(), Title: &title, SetMetadata: true, Metadata: map[string]string{"year": "2026", "empty value": ""},
 	})
 	if err != nil {
@@ -485,7 +533,7 @@ func TestUpdateDocumentTrimsTheTitleAndKeepsMetadata(t *testing.T) {
 
 func TestUpdateDocumentWithoutChangesLeavesFieldsAlone(t *testing.T) {
 	repo := &fakeRepo{}
-	if _, err := newServer(repo).UpdateDocument(t.Context(), &documentv1.UpdateDocumentRequest{Id: uuid.NewString()}); err != nil {
+	if _, err := newServer(repo).UpdateDocument(asAlice(t), &documentv1.UpdateDocumentRequest{Id: uuid.NewString()}); err != nil {
 		t.Fatal(err)
 	}
 	if p := repo.updated[0]; p.Title.Valid || p.Metadata != nil {
@@ -504,7 +552,7 @@ func TestListChunksPaginatesInIndexOrder(t *testing.T) {
 	var got []int32
 	token := ""
 	for range 3 {
-		resp, err := srv.ListChunks(t.Context(), &documentv1.ListChunksRequest{
+		resp, err := srv.ListChunks(asAlice(t), &documentv1.ListChunksRequest{
 			DocumentId: repo.doc.ID.String(), Page: &commonv1.PageRequest{PageSize: 2, PageToken: token},
 		})
 		if err != nil {
@@ -531,7 +579,7 @@ func TestListChunksDefaultsAndCapsThePageSize(t *testing.T) {
 		size, want int32
 	}{{0, defaultPageSize}, {-3, defaultPageSize}, {maxPageSize + 1, maxPageSize}} {
 		repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New()}}
-		_, err := newServer(repo).ListChunks(t.Context(), &documentv1.ListChunksRequest{
+		_, err := newServer(repo).ListChunks(asAlice(t), &documentv1.ListChunksRequest{
 			DocumentId: repo.doc.ID.String(), Page: &commonv1.PageRequest{PageSize: tc.size},
 		})
 		if err != nil {
@@ -545,7 +593,7 @@ func TestListChunksDefaultsAndCapsThePageSize(t *testing.T) {
 
 func TestListChunksEmptyDocument(t *testing.T) {
 	repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New()}}
-	resp, err := newServer(repo).ListChunks(t.Context(), &documentv1.ListChunksRequest{DocumentId: repo.doc.ID.String()})
+	resp, err := newServer(repo).ListChunks(asAlice(t), &documentv1.ListChunksRequest{DocumentId: repo.doc.ID.String()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -555,7 +603,7 @@ func TestListChunksEmptyDocument(t *testing.T) {
 }
 
 func TestListChunksUnknownDocument(t *testing.T) {
-	_, err := newServer(&fakeRepo{}).ListChunks(t.Context(), &documentv1.ListChunksRequest{DocumentId: uuid.NewString()})
+	_, err := newServer(&fakeRepo{}).ListChunks(asAlice(t), &documentv1.ListChunksRequest{DocumentId: uuid.NewString()})
 	if status.Code(err) != codes.NotFound {
 		t.Fatalf("err = %v, want NotFound", err)
 	}
@@ -574,7 +622,7 @@ func TestListChunksValidates(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			repo := &fakeRepo{doc: store.DocumentDocument{ID: id}}
-			_, err := newServer(repo).ListChunks(t.Context(), &documentv1.ListChunksRequest{
+			_, err := newServer(repo).ListChunks(asAlice(t), &documentv1.ListChunksRequest{
 				DocumentId: tc.id, Page: &commonv1.PageRequest{PageToken: tc.token},
 			})
 			if status.Code(err) != codes.InvalidArgument {
@@ -588,3 +636,176 @@ func TestListChunksValidates(t *testing.T) {
 }
 
 func encode(s string) string { return base64.RawURLEncoding.EncodeToString([]byte(s)) }
+
+func TestUserRPCsRequireAUser(t *testing.T) {
+	id := uuid.NewString()
+	for name, call := range map[string]func(*Server, context.Context) error{
+		"CreateDocument": func(s *Server, ctx context.Context) error {
+			_, err := s.CreateDocument(ctx, &documentv1.CreateDocumentRequest{Filename: "a.md"})
+			return err
+		},
+		"GetDocument": func(s *Server, ctx context.Context) error {
+			_, err := s.GetDocument(ctx, &documentv1.GetDocumentRequest{Id: id})
+			return err
+		},
+		"ListDocuments": func(s *Server, ctx context.Context) error {
+			_, err := s.ListDocuments(ctx, &documentv1.ListDocumentsRequest{})
+			return err
+		},
+		"UpdateDocument": func(s *Server, ctx context.Context) error {
+			_, err := s.UpdateDocument(ctx, &documentv1.UpdateDocumentRequest{Id: id})
+			return err
+		},
+		"DeleteDocument": func(s *Server, ctx context.Context) error {
+			_, err := s.DeleteDocument(ctx, &documentv1.DeleteDocumentRequest{Id: id})
+			return err
+		},
+		"GetDownloadUrl": func(s *Server, ctx context.Context) error {
+			_, err := s.GetDownloadUrl(ctx, &documentv1.GetDownloadUrlRequest{Id: id})
+			return err
+		},
+		"ListChunks": func(s *Server, ctx context.Context) error {
+			_, err := s.ListChunks(ctx, &documentv1.ListChunksRequest{DocumentId: id})
+			return err
+		},
+		"SearchChunks": func(s *Server, ctx context.Context) error {
+			_, err := s.SearchChunks(ctx, &documentv1.SearchChunksRequest{Embedding: []float32{1}})
+			return err
+		},
+		"SearchDocuments": func(s *Server, ctx context.Context) error {
+			_, err := s.SearchDocuments(ctx, &documentv1.SearchDocumentsRequest{Query: "q"})
+			return err
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			repo := &fakeRepo{}
+			if err := call(newServer(repo), t.Context()); status.Code(err) != codes.Unauthenticated {
+				t.Errorf("err = %v, want Unauthenticated", err)
+			}
+			if len(repo.created)+len(repo.updated)+len(repo.searches)+len(repo.bestReq)+len(repo.chunkReq) != 0 {
+				t.Errorf("the repository was used: %+v", repo)
+			}
+		})
+	}
+}
+
+func TestCreateDocumentIsOwnedByTheCaller(t *testing.T) {
+	repo := &fakeRepo{}
+	resp, err := newServer(repo).CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{Filename: "a.md"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if repo.created[0].OwnerID != alice || resp.GetDocument().GetOwnerId() != alice {
+		t.Errorf("owner = %q, response owner = %q; want %q", repo.created[0].OwnerID, resp.GetDocument().GetOwnerId(), alice)
+	}
+}
+
+func TestListDocumentsListsOnlyTheCallersDocuments(t *testing.T) {
+	mine := uuid.New()
+	repo := &fakeRepo{list: []store.DocumentDocument{{ID: uuid.New(), OwnerID: bob}, {ID: mine, OwnerID: alice}}}
+	resp, err := newServer(repo).ListDocuments(asAlice(t), &documentv1.ListDocumentsRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if docs := resp.GetDocuments(); len(docs) != 1 || docs[0].GetId() != mine.String() || docs[0].GetOwnerId() != alice {
+		t.Errorf("documents = %v, want only alice's", docs)
+	}
+}
+
+// Another user's document looks exactly like one that doesn't exist.
+func TestAnotherUsersDocumentIsNotFound(t *testing.T) {
+	theirs := store.DocumentDocument{ID: uuid.New(), OwnerID: bob, ObjectKey: "k"}
+	id := theirs.ID.String()
+	for name, call := range map[string]func(*Server, context.Context) error{
+		"GetDocument": func(s *Server, ctx context.Context) error {
+			_, err := s.GetDocument(ctx, &documentv1.GetDocumentRequest{Id: id})
+			return err
+		},
+		"DeleteDocument": func(s *Server, ctx context.Context) error {
+			_, err := s.DeleteDocument(ctx, &documentv1.DeleteDocumentRequest{Id: id})
+			return err
+		},
+		"GetDownloadUrl": func(s *Server, ctx context.Context) error {
+			_, err := s.GetDownloadUrl(ctx, &documentv1.GetDownloadUrlRequest{Id: id})
+			return err
+		},
+		"ListChunks": func(s *Server, ctx context.Context) error {
+			_, err := s.ListChunks(ctx, &documentv1.ListChunksRequest{DocumentId: id})
+			return err
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			repo := &fakeRepo{doc: theirs}
+			if err := call(newServer(repo), asAlice(t)); status.Code(err) != codes.NotFound {
+				t.Errorf("err = %v, want NotFound", err)
+			}
+			if len(repo.deleted)+len(repo.chunkReq) != 0 {
+				t.Errorf("the document was touched: deleted %v, chunk queries %v", repo.deleted, repo.chunkReq)
+			}
+			if err := call(newServer(repo), grpcserver.WithUser(t.Context(), bob)); err != nil {
+				t.Errorf("as the owner: %v", err)
+			}
+		})
+	}
+}
+
+func TestUpdateDocumentUpdatesOnlyTheCallersDocument(t *testing.T) {
+	repo := &fakeRepo{}
+	if _, err := newServer(repo).UpdateDocument(asAlice(t), &documentv1.UpdateDocumentRequest{Id: uuid.NewString()}); err != nil {
+		t.Fatal(err)
+	}
+	if repo.updated[0].OwnerID != alice {
+		t.Errorf("updated for owner %q, want %q", repo.updated[0].OwnerID, alice)
+	}
+}
+
+func TestSearchesFindOnlyTheCallersChunks(t *testing.T) {
+	repo := &fakeRepo{}
+	srv := newServer(repo)
+	if _, err := srv.SearchChunks(asAlice(t), &documentv1.SearchChunksRequest{Embedding: []float32{1}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := srv.SearchDocuments(asAlice(t), &documentv1.SearchDocumentsRequest{Query: "q"}); err != nil {
+		t.Fatal(err)
+	}
+	for i, s := range repo.searches {
+		if s.OwnerID != alice {
+			t.Errorf("chunk search %d for owner %q, want %q", i, s.OwnerID, alice)
+		}
+	}
+	if len(repo.searches) != 2 || repo.bestReq[0].OwnerID != alice {
+		t.Errorf("searches %+v, best-chunk searches %+v", repo.searches, repo.bestReq)
+	}
+}
+
+// readStream collects what ReadContent sends.
+type readStream struct {
+	grpc.ServerStream
+	ctx  context.Context
+	data []byte
+}
+
+func (s *readStream) Context() context.Context { return s.ctx }
+
+func (s *readStream) Send(r *documentv1.ReadContentResponse) error {
+	s.data = append(s.data, r.GetData()...)
+	return nil
+}
+
+// The ingestion worker runs without a user and works on everyone's documents.
+func TestPipelineRPCsActOnAnyDocumentWithoutAUser(t *testing.T) {
+	repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New(), OwnerID: bob, ObjectKey: "k"}}
+	srv := newServer(repo)
+	stream := &readStream{ctx: t.Context()}
+	if err := srv.ReadContent(&documentv1.ReadContentRequest{Id: repo.doc.ID.String()}, stream); err != nil {
+		t.Fatal(err)
+	}
+	if string(stream.data) != "content" {
+		t.Errorf("content = %q", stream.data)
+	}
+	if _, err := srv.SetDocumentStatus(t.Context(), &documentv1.SetDocumentStatusRequest{
+		Id: repo.doc.ID.String(), Status: documentv1.DocumentStatus_DOCUMENT_STATUS_PROCESSING,
+	}); err != nil {
+		t.Fatal(err)
+	}
+}

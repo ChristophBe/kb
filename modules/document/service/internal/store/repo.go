@@ -5,8 +5,25 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	pgxvec "github.com/pgvector/pgvector-go/pgx"
 )
+
+// ConfigurePool prepares each connection of the pool the queries run on: it
+// registers the vector type and turns on pgvector's iterative index scans.
+// Without them, an HNSW scan returns its candidate list (hnsw.ef_search, 40
+// chunks) before the owner filter of SearchChunks applies, so a user whose
+// documents are a small part of the index would get few or no results.
+func ConfigurePool(c *pgxpool.Config) {
+	c.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		if err := pgxvec.RegisterTypes(ctx, conn); err != nil {
+			return err
+		}
+		_, err := conn.Exec(ctx, "SET hnsw.iterative_scan = strict_order")
+		return err
+	}
+}
 
 // Repo adds multi-statement operations on top of the generated queries.
 type Repo struct {

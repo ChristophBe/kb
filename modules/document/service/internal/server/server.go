@@ -56,6 +56,12 @@ type ObjectStore interface {
 	Delete(ctx context.Context, key string) error
 }
 
+// Server implements DocumentService. Documents belong to the user who uploaded
+// them: the RPCs a user calls, and the internal CreateDocument and SearchChunks
+// that services call on a user's behalf (passing the user on), act on that
+// user's documents only and report another user's as not found. The other
+// internal RPCs serve the ingestion pipeline, which runs without a user, and
+// act on any document.
 type Server struct {
 	documentv1.UnimplementedDocumentServiceServer
 	repo    Repository
@@ -70,7 +76,13 @@ func New(repo Repository, objects ObjectStore, llm llmv1.LlmServiceClient, log *
 	return &Server{repo: repo, objects: objects, llm: llm, log: log}
 }
 
+// CreateDocument registers a document owned by the calling user, so it is
+// called on behalf of a user (ingestion forwards the uploader).
 func (s *Server) CreateDocument(ctx context.Context, req *documentv1.CreateDocumentRequest) (*documentv1.CreateDocumentResponse, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return nil, err
+	}
 	if req.GetFilename() == "" {
 		return nil, grpcserver.InvalidArgument(grpcserver.Violation("filename", "A filename is required"))
 	}
@@ -86,6 +98,7 @@ func (s *Server) CreateDocument(ctx context.Context, req *documentv1.CreateDocum
 	key := id.String() + "/" + path.Base(req.GetFilename())
 	doc, err := s.repo.CreateDocument(ctx, store.CreateDocumentParams{
 		ID:          id,
+		OwnerID:     owner,
 		Title:       title,
 		Filename:    req.GetFilename(),
 		ContentType: contentType,
@@ -113,11 +126,15 @@ func (s *Server) GetDocument(ctx context.Context, req *documentv1.GetDocumentReq
 }
 
 func (s *Server) ListDocuments(ctx context.Context, req *documentv1.ListDocumentsRequest) (*documentv1.ListDocumentsResponse, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return nil, err
+	}
 	limit, offset, err := pageParams(req.GetPage())
 	if err != nil {
 		return nil, err
 	}
-	docs, err := s.repo.ListDocuments(ctx, store.ListDocumentsParams{Limit: limit + 1, Offset: offset})
+	docs, err := s.repo.ListDocuments(ctx, store.ListDocumentsParams{OwnerID: owner, Limit: limit + 1, Offset: offset})
 	if err != nil {
 		return nil, s.internal("list documents", err)
 	}
@@ -133,11 +150,15 @@ func (s *Server) ListDocuments(ctx context.Context, req *documentv1.ListDocument
 }
 
 func (s *Server) UpdateDocument(ctx context.Context, req *documentv1.UpdateDocumentRequest) (*documentv1.UpdateDocumentResponse, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return nil, err
+	}
 	id, err := parseID("id", req.GetId())
 	if err != nil {
 		return nil, err
 	}
-	params := store.UpdateDocumentParams{ID: id}
+	params := store.UpdateDocumentParams{ID: id, OwnerID: owner}
 	if req.Title != nil {
 		title := strings.TrimSpace(req.GetTitle())
 		if title == "" {
@@ -165,11 +186,15 @@ func (s *Server) UpdateDocument(ctx context.Context, req *documentv1.UpdateDocum
 }
 
 func (s *Server) DeleteDocument(ctx context.Context, req *documentv1.DeleteDocumentRequest) (*documentv1.DeleteDocumentResponse, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return nil, err
+	}
 	id, err := parseID("id", req.GetId())
 	if err != nil {
 		return nil, err
 	}
-	key, err := s.repo.DeleteDocument(ctx, id)
+	key, err := s.repo.DeleteDocument(ctx, store.DeleteDocumentParams{ID: id, OwnerID: owner})
 	if err != nil {
 		return nil, s.notFoundOr("delete document", err)
 	}
@@ -203,7 +228,7 @@ func (s *Server) SetDocumentStatus(ctx context.Context, req *documentv1.SetDocum
 // markUploaded trusts the bucket, not the client: the object must exist, and
 // its actual size replaces the size declared when the upload was created.
 func (s *Server) markUploaded(ctx context.Context, id uuid.UUID, req *documentv1.SetDocumentStatusRequest) (*documentv1.SetDocumentStatusResponse, error) {
-	doc, err := s.repo.GetDocument(ctx, id)
+	doc, err := s.repo.GetAnyDocument(ctx, id)
 	if err != nil {
 		return nil, s.notFoundOr("get document", err)
 	}
@@ -241,9 +266,13 @@ func (s *Server) GetDownloadUrl(ctx context.Context, req *documentv1.GetDownload
 
 func (s *Server) ReadContent(req *documentv1.ReadContentRequest, stream documentv1.DocumentService_ReadContentServer) error {
 	ctx := stream.Context()
-	doc, err := s.get(ctx, req.GetId())
+	id, err := parseID("id", req.GetId())
 	if err != nil {
 		return err
+	}
+	doc, err := s.repo.GetAnyDocument(ctx, id)
+	if err != nil {
+		return s.notFoundOr("get document", err)
 	}
 	r, err := s.objects.Open(ctx, doc.ObjectKey)
 	if err != nil {
@@ -297,6 +326,10 @@ func (s *Server) AddChunks(ctx context.Context, req *documentv1.AddChunksRequest
 // the last index of the previous page, so pages stay stable while the client
 // pages; a document re-processed in between simply continues after that index.
 func (s *Server) ListChunks(ctx context.Context, req *documentv1.ListChunksRequest) (*documentv1.ListChunksResponse, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return nil, err
+	}
 	id, err := parseID("document_id", req.GetDocumentId())
 	if err != nil {
 		return nil, err
@@ -306,8 +339,8 @@ func (s *Server) ListChunks(ctx context.Context, req *documentv1.ListChunksReque
 		return nil, err
 	}
 	limit := pageSize(req.GetPage())
-	if _, err := s.repo.GetDocument(ctx, id); err != nil {
-		return nil, s.notFoundOr("get document", err)
+	if _, err := s.getOwned(ctx, owner, id); err != nil {
+		return nil, err
 	}
 	rows, err := s.repo.ListChunks(ctx, store.ListChunksParams{DocumentID: id, AfterIdx: after, MaxResults: limit + 1})
 	if err != nil {
@@ -326,7 +359,13 @@ func (s *Server) ListChunks(ctx context.Context, req *documentv1.ListChunksReque
 	return resp, nil
 }
 
+// SearchChunks searches the calling user's chunks; chat calls it on behalf of
+// the user asking.
 func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksRequest) (*documentv1.SearchChunksResponse, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return nil, err
+	}
 	if len(req.GetEmbedding()) == 0 {
 		return nil, grpcserver.InvalidArgument(grpcserver.Violation("embedding", "An embedding is required"))
 	}
@@ -334,7 +373,7 @@ func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksR
 	if err != nil {
 		return nil, err
 	}
-	results, err := s.search(ctx, req.GetEmbedding(), req.GetLimit(), ids)
+	results, err := s.search(ctx, owner, req.GetEmbedding(), req.GetLimit(), ids)
 	if err != nil {
 		return nil, err
 	}
@@ -346,6 +385,10 @@ func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksR
 // counts documents. Only this RPC needs llm: while it is down, this fails with
 // UNAVAILABLE and every other RPC keeps working.
 func (s *Server) SearchDocuments(ctx context.Context, req *documentv1.SearchDocumentsRequest) (*documentv1.SearchDocumentsResponse, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return nil, err
+	}
 	query := strings.TrimSpace(req.GetQuery())
 	if query == "" {
 		return nil, grpcserver.InvalidArgument(grpcserver.Violation("query", "A query is required"))
@@ -368,12 +411,12 @@ func (s *Server) SearchDocuments(ctx context.Context, req *documentv1.SearchDocu
 		return nil, s.internal("embed query", fmt.Errorf("got %d embeddings for 1 input", len(embedded.GetEmbeddings())))
 	}
 	embedding := embedded.GetEmbeddings()[0].GetValues()
-	results, err := s.search(ctx, embedding, req.GetLimit(), ids)
+	results, err := s.search(ctx, owner, embedding, req.GetLimit(), ids)
 	if err != nil {
 		return nil, err
 	}
 	rows, err := s.repo.SearchBestChunks(ctx, store.SearchBestChunksParams{
-		Embedding: pgvector.NewVector(embedding), DocumentIds: ids, MaxResults: clampLimit(req.GetLimit()),
+		Embedding: pgvector.NewVector(embedding), OwnerID: owner, DocumentIds: ids, MaxResults: clampLimit(req.GetLimit()),
 	})
 	if err != nil {
 		return nil, s.internal("search documents", err)
@@ -400,9 +443,9 @@ func clampLimit(limit int32) int32 {
 	return min(limit, maxLimit)
 }
 
-func (s *Server) search(ctx context.Context, embedding []float32, limit int32, ids []uuid.UUID) ([]*documentv1.ScoredChunk, error) {
+func (s *Server) search(ctx context.Context, owner string, embedding []float32, limit int32, ids []uuid.UUID) ([]*documentv1.ScoredChunk, error) {
 	rows, err := s.repo.SearchChunks(ctx, store.SearchChunksParams{
-		Embedding: pgvector.NewVector(embedding), DocumentIds: ids, MaxResults: clampLimit(limit),
+		Embedding: pgvector.NewVector(embedding), OwnerID: owner, DocumentIds: ids, MaxResults: clampLimit(limit),
 	})
 	if err != nil {
 		return nil, s.internal("search chunks", err)
@@ -420,16 +463,36 @@ func (s *Server) search(ctx context.Context, embedding []float32, limit int32, i
 	return results, nil
 }
 
+// get returns the calling user's document with the id in the request.
 func (s *Server) get(ctx context.Context, rawID string) (store.DocumentDocument, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return store.DocumentDocument{}, err
+	}
 	id, err := parseID("id", rawID)
 	if err != nil {
 		return store.DocumentDocument{}, err
 	}
-	doc, err := s.repo.GetDocument(ctx, id)
+	return s.getOwned(ctx, owner, id)
+}
+
+// getOwned returns owner's document; another user's is not found.
+func (s *Server) getOwned(ctx context.Context, owner string, id uuid.UUID) (store.DocumentDocument, error) {
+	doc, err := s.repo.GetDocument(ctx, store.GetDocumentParams{ID: id, OwnerID: owner})
 	if err != nil {
 		return store.DocumentDocument{}, s.notFoundOr("get document", err)
 	}
 	return doc, nil
+}
+
+// caller returns the user the call is made for. Calls through the gateway
+// always carry one, and services pass it on when calling for a user.
+func caller(ctx context.Context) (string, error) {
+	user, ok := grpcserver.UserFromContext(ctx)
+	if !ok {
+		return "", status.Error(codes.Unauthenticated, "the call has no user")
+	}
+	return user, nil
 }
 
 func (s *Server) notFoundOr(op string, err error) error {
@@ -539,5 +602,6 @@ func toProto(d store.DocumentDocument) *documentv1.Document {
 		Metadata:     d.Metadata,
 		CreateTime:   timestamppb.New(d.CreatedAt.Time),
 		UpdateTime:   timestamppb.New(d.UpdatedAt.Time),
+		OwnerId:      d.OwnerID,
 	}
 }

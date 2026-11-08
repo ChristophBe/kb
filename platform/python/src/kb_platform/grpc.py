@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import contextvars
 import inspect
 import logging
 import signal
-from collections.abc import Awaitable, Callable, Iterable, Mapping
+from collections.abc import Awaitable, Callable, Iterable, Iterator, Mapping
 from typing import Any, NoReturn
 
 import grpc
@@ -33,6 +34,17 @@ def current_user() -> str | None:
     by `UserInterceptor`; None for calls without a user, such as calls between
     services."""
     return _user.get()
+
+
+@contextlib.contextmanager
+def as_user(user: str) -> Iterator[None]:
+    """Runs the block with `current_user()` returning `user`, for tests and
+    code that acts on behalf of a user outside an RPC."""
+    token = _user.set(user)
+    try:
+        yield
+    finally:
+        _user.reset(token)
 
 
 class UserInterceptor(grpc.aio.ServerInterceptor):
@@ -149,9 +161,57 @@ async def serve(
     await server.stop(grace_seconds)
 
 
+class ForwardUserInterceptor(
+    grpc.aio.UnaryUnaryClientInterceptor,
+    grpc.aio.UnaryStreamClientInterceptor,
+    grpc.aio.StreamUnaryClientInterceptor,
+    grpc.aio.StreamStreamClientInterceptor,
+):
+    """Passes `current_user()`, if any, on to the called service as x-kb-user,
+    so a call made while handling a user's RPC acts for that user. `channel`
+    installs it."""
+
+    async def intercept_unary_unary(
+        self, continuation: Any, client_call_details: grpc.aio.ClientCallDetails, request: Any
+    ) -> Any:
+        return await continuation(_forward_user(client_call_details), request)
+
+    async def intercept_unary_stream(
+        self, continuation: Any, client_call_details: grpc.aio.ClientCallDetails, request: Any
+    ) -> Any:
+        return await continuation(_forward_user(client_call_details), request)
+
+    async def intercept_stream_unary(
+        self,
+        continuation: Any,
+        client_call_details: grpc.aio.ClientCallDetails,
+        request_iterator: Any,
+    ) -> Any:
+        return await continuation(_forward_user(client_call_details), request_iterator)
+
+    async def intercept_stream_stream(
+        self,
+        continuation: Any,
+        client_call_details: grpc.aio.ClientCallDetails,
+        request_iterator: Any,
+    ) -> Any:
+        return await continuation(_forward_user(client_call_details), request_iterator)
+
+
+def _forward_user(details: grpc.aio.ClientCallDetails) -> grpc.aio.ClientCallDetails:
+    user = current_user()
+    if user is None:
+        return details
+    metadata = grpc.aio.Metadata(*(details.metadata or ()))
+    metadata.add(USER_HEADER, user)
+    return details._replace(metadata=metadata)  # pyright: ignore[reportAttributeAccessIssue]
+
+
 def channel(target: str) -> grpc.aio.Channel:
-    """Open an insecure channel to another module's service."""
-    return grpc.aio.insecure_channel(target)
+    """Open an insecure channel to another module's service. Calls made while
+    `current_user()` is set pass the user on (see `ForwardUserInterceptor`);
+    calls without one, such as a worker's, reach the peer without a user."""
+    return grpc.aio.insecure_channel(target, interceptors=[ForwardUserInterceptor()])
 
 
 async def is_serving(ch: grpc.aio.Channel, rpc_timeout: float = 2.0) -> bool:

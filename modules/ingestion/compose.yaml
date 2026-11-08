@@ -3,7 +3,7 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/go.Dockerfile
-      args: { CMD: ./modules/ingestion/service/cmd/ingestion-service }
+      args: { CMD: ./modules/ingestion/service/cmd/ingestion-service, KB_VERSION: "${KB_VERSION:-dev}" }
     environment:
       KB_LOG_LEVEL: ${KB_LOG_LEVEL:-info}
       KB_DATABASE_URL: postgres://kb:kb@postgres:5432/kb?sslmode=disable
@@ -27,7 +27,7 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/python.Dockerfile
-      args: { PACKAGE: kb-ingestion-worker }
+      args: { PACKAGE: kb-ingestion-worker, KB_VERSION: "${KB_VERSION:-dev}" }
     environment:
       KB_LOG_LEVEL: ${KB_LOG_LEVEL:-INFO}
       KB_NATS_URL: nats://nats:4222

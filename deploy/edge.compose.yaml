@@ -18,6 +18,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/docker/web.Dockerfile
+      args: { KB_VERSION: "${KB_VERSION:-dev}" }
     environment:
       KB_API_BASE_URL: ${KB_API_BASE_URL:-http://localhost:8080}
       KB_ENABLED_MODULES: ${KB_ENABLED_MODULES:-}

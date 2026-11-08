@@ -15,7 +15,7 @@ Shared, module-agnostic code lives in `platform/` (`go/`, `python/`, `ui/`, `pro
 - Changing a proto, a `module.yaml`, or SQL queries → `task gen` and commit the output (CI fails on drift).
 - Modules talk to each other only via the other module's generated gRPC client or its events, and only to modules listed in `depends_on`. Never read another module's DB schema, bucket or stream. Peers are soft dependencies: no `depends_on` on other modules' services in compose; return `UNAVAILABLE` while a peer is down.
 - Only the `llm` module talks to LLM vendors. Add a provider in `modules/llm/service/src/kb_llm/providers/` and register it in `REGISTRY`.
-- Generated / `DO NOT EDIT` files: `modules/*/api/**`, `platform/api/**`, `**/buf.gen.yaml`, `**/internal/store/*.go` (sqlc, except `repo.go`), `compose.yaml`, `deploy/envoy/envoy.yaml`, `apps/web/src/modules.gen.ts`, `.golangci.yml`, `.importlinter`, `biome.modules.jsonc`, `.github/ISSUE_TEMPLATE/{epic,feature,chore,bug}.yml`.
+- Generated / `DO NOT EDIT` files: `modules/*/api/**`, `platform/api/**`, `**/buf.gen.yaml`, `**/internal/store/*.go` (sqlc, except `repo.go`), `compose.yaml`, `deploy/envoy/envoy.yaml`, `deploy/images.json`, `deploy/release.compose.yaml`, `apps/web/src/modules.gen.ts`, `.golangci.yml`, `.importlinter`, `biome.modules.jsonc`, `.github/ISSUE_TEMPLATE/{epic,feature,chore,bug}.yml`.
 - The embedding dimension (768) appears in `modules/document/migrations` and `KB_EMBEDDING_DIMENSIONS`; change both together via a new migration.
 - A PR that adds or changes a user-facing feature updates its page in `docs/user-manual/` (rules in its README); a PR removing a feature removes its description.
 

@@ -9,7 +9,8 @@ on:
     branches: [main]
 
 # One release run per ref at a time, so two quick merges get two versions; a
-# second run waits for the first instead of cancelling it.
+# second run waits for the first instead of cancelling it. The image job is part
+# of the run, so `latest` always ends up on the newest version.
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -106,3 +107,18 @@ jobs:
             echo
             echo "$CHANGELOG"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # A job in this run rather than a workflow on the tag: it gets the version
+  # directly, needs only GITHUB_TOKEN, and is serialised with the release.
+  images:
+    needs: release
+    if: needs.release.outputs.version != ''
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/images.yml
+    with:
+      version: ${{ needs.release.outputs.version }}
+      push: true
+      latest: true
+      platforms: linux/amd64,linux/arm64

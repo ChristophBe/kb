@@ -3,7 +3,7 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/go.Dockerfile
-      args: { CMD: ./modules/document/service/cmd/document-service }
+      args: { CMD: ./modules/document/service/cmd/document-service, KB_VERSION: "${KB_VERSION:-dev}" }
     environment:
       KB_LOG_LEVEL: ${KB_LOG_LEVEL:-info}
       KB_DATABASE_URL: postgres://kb:kb@postgres:5432/kb?sslmode=disable

@@ -1,6 +1,6 @@
 name: pr-title
 
-# PRs are squash-merged with the PR title as the commit title, so the title is the
+# PRs land as merge commits titled with the PR title, so the title is the merge
 # commit message on main and must follow Conventional Commits (see CONTRIBUTING.md).
 # `pull_request` (not `pull_request_target`): the check only reads the title and
 # never runs PR code, and it takes effect on the PR that changes this file.

@@ -75,6 +75,67 @@ func (q *Queries) ListChunks(ctx context.Context, arg ListChunksParams) ([]ListC
 	return items, nil
 }
 
+const searchBestChunks = `-- name: SearchBestChunks :many
+SELECT document_id, idx, text, metadata, document_title, score
+FROM (
+    SELECT DISTINCT ON (c.document_id)
+           c.document_id, c.idx, c.text, c.metadata, d.title AS document_title,
+           (1 - (c.embedding <=> $1::vector))::real AS score
+    FROM document.chunks c
+    JOIN document.documents d ON d.id = c.document_id
+    WHERE cardinality($2::uuid[]) = 0
+       OR c.document_id = ANY($2::uuid[])
+    ORDER BY c.document_id, c.embedding <=> $1::vector, c.idx
+) best
+ORDER BY score DESC, document_id
+LIMIT $3
+`
+
+type SearchBestChunksParams struct {
+	Embedding   pgvector.Vector
+	DocumentIds []uuid.UUID
+	MaxResults  int32
+}
+
+type SearchBestChunksRow struct {
+	DocumentID    uuid.UUID
+	Idx           int32
+	Text          string
+	Metadata      map[string]string
+	DocumentTitle string
+	Score         float32
+}
+
+// SearchBestChunks returns each document's most similar chunk, ranked by
+// that chunk's score: the documents most similar to the embedding. It is an
+// exact scan, since the vector index can't pick one chunk per document.
+func (q *Queries) SearchBestChunks(ctx context.Context, arg SearchBestChunksParams) ([]SearchBestChunksRow, error) {
+	rows, err := q.db.Query(ctx, searchBestChunks, arg.Embedding, arg.DocumentIds, arg.MaxResults)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SearchBestChunksRow{}
+	for rows.Next() {
+		var i SearchBestChunksRow
+		if err := rows.Scan(
+			&i.DocumentID,
+			&i.Idx,
+			&i.Text,
+			&i.Metadata,
+			&i.DocumentTitle,
+			&i.Score,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchChunks = `-- name: SearchChunks :many
 SELECT c.document_id, c.idx, c.text, c.metadata, d.title AS document_title,
        (1 - (c.embedding <=> $1::vector))::real AS score

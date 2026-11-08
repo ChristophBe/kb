@@ -176,6 +176,63 @@ func TestSearchChunksCanBeLimitedToDocuments(t *testing.T) {
 	}
 }
 
+func searchBest(t *testing.T, r *Repo, query []float32, limit int32, docs ...uuid.UUID) []SearchBestChunksRow {
+	t.Helper()
+	if docs == nil {
+		docs = []uuid.UUID{}
+	}
+	rows, err := r.SearchBestChunks(t.Context(), SearchBestChunksParams{
+		Embedding: pgvector.NewVector(query), DocumentIds: docs, MaxResults: limit,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return rows
+}
+
+func TestSearchBestChunksRanksDocumentsByTheirBestChunk(t *testing.T) {
+	r := newRepo(t)
+	many, one, far := newDocument(t, r, "many.md"), newDocument(t, r, "one.md"), newDocument(t, r, "far.md")
+	ctx := t.Context()
+	query := axis(0)
+	// Five chunks of "many" match, but its best is worse than "one"'s only chunk.
+	manyChunks := make([]InsertChunksParams, 0, 5)
+	for i, w := range []float32{0.5, 0.3, 0.6, 0.4, 0.7} {
+		manyChunks = append(manyChunks, chunk(many, int32(i), "many", blend(query, axis(1), w)))
+	}
+	for doc, chunks := range map[uuid.UUID][]InsertChunksParams{
+		many: manyChunks,
+		one:  {chunk(one, 0, "one", blend(query, axis(1), 0.1))},
+		far:  {chunk(far, 0, "far", axis(2))},
+	} {
+		if _, err := r.ReplaceChunks(ctx, doc, chunks, readyStatus); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	rows := searchBest(t, r, query, 10)
+	if len(rows) != 3 {
+		t.Fatalf("got %d rows, want one per document: %+v", len(rows), rows)
+	}
+	if rows[0].DocumentID != one || rows[1].DocumentID != many || rows[2].DocumentID != far {
+		t.Fatalf("order = %v, %v, %v; want one, many, far", rows[0].DocumentTitle, rows[1].DocumentTitle, rows[2].DocumentTitle)
+	}
+	if rows[1].Idx != 1 || rows[1].DocumentTitle != "many.md" {
+		t.Errorf("best chunk of many = %d (%q), want 1", rows[1].Idx, rows[1].DocumentTitle)
+	}
+	if rows[0].Score <= rows[1].Score || rows[1].Score <= rows[2].Score {
+		t.Errorf("scores = %v, %v, %v", rows[0].Score, rows[1].Score, rows[2].Score)
+	}
+
+	// The limit counts documents, not chunks.
+	if rows := searchBest(t, r, query, 2); len(rows) != 2 || rows[1].DocumentID != many {
+		t.Errorf("limit 2: %+v", rows)
+	}
+	if rows := searchBest(t, r, query, 10, many, far); len(rows) != 2 || rows[0].DocumentID != many {
+		t.Errorf("filtered: %+v", rows)
+	}
+}
+
 func TestListChunksPagesInIndexOrderWithinADocument(t *testing.T) {
 	r := newRepo(t)
 	ctx := t.Context()

@@ -28,6 +28,9 @@ const (
 	domain = "kb.ingestion.v1"
 )
 
+// Server implements IngestionService. Jobs belong to the user who created the
+// upload: every RPC acts on the calling user's jobs only and reports another
+// user's as not found.
 type Server struct {
 	ingestionv1.UnimplementedIngestionServiceServer
 	app *app.Service
@@ -41,6 +44,10 @@ func New(service *app.Service, log *slog.Logger) *Server {
 }
 
 func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUploadRequest) (*ingestionv1.CreateUploadResponse, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return nil, err
+	}
 	var violations []*errdetails.BadRequest_FieldViolation
 	if req.GetFilename() == "" {
 		violations = append(violations, grpcserver.Violation("filename", "A filename is required"))
@@ -52,7 +59,7 @@ func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUpload
 	if len(violations) > 0 {
 		return nil, grpcserver.InvalidArgument(violations...)
 	}
-	job, uploadURL, err := s.app.CreateUpload(ctx, app.NewUpload{
+	job, uploadURL, err := s.app.CreateUpload(ctx, owner, app.NewUpload{
 		Title:       req.GetTitle(),
 		Filename:    req.GetFilename(),
 		ContentType: req.GetContentType(),
@@ -65,11 +72,15 @@ func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUpload
 }
 
 func (s *Server) CompleteUpload(ctx context.Context, req *ingestionv1.CompleteUploadRequest) (*ingestionv1.CompleteUploadResponse, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return nil, err
+	}
 	id, err := parseID("job_id", req.GetJobId())
 	if err != nil {
 		return nil, err
 	}
-	job, err := s.app.CompleteUpload(ctx, id)
+	job, err := s.app.CompleteUpload(ctx, owner, id)
 	if err != nil {
 		return nil, s.toStatus("complete upload", err)
 	}
@@ -85,6 +96,10 @@ func (s *Server) GetJob(ctx context.Context, req *ingestionv1.GetJobRequest) (*i
 }
 
 func (s *Server) ListJobs(ctx context.Context, req *ingestionv1.ListJobsRequest) (*ingestionv1.ListJobsResponse, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return nil, err
+	}
 	limit := req.GetPage().GetPageSize()
 	if limit <= 0 {
 		limit = defaultPageSize
@@ -98,7 +113,7 @@ func (s *Server) ListJobs(ctx context.Context, req *ingestionv1.ListJobsRequest)
 		}
 		offset = int32(o)
 	}
-	jobs, err := s.app.ListJobs(ctx, limit+1, offset)
+	jobs, err := s.app.ListJobs(ctx, owner, limit+1, offset)
 	if err != nil {
 		return nil, s.toStatus("list jobs", err)
 	}
@@ -141,27 +156,46 @@ func (s *Server) WatchJob(req *ingestionv1.WatchJobRequest, stream ingestionv1.I
 }
 
 func (s *Server) ReprocessJob(ctx context.Context, req *ingestionv1.ReprocessJobRequest) (*ingestionv1.ReprocessJobResponse, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return nil, err
+	}
 	id, err := parseID("id", req.GetId())
 	if err != nil {
 		return nil, err
 	}
-	job, err := s.app.ReprocessJob(ctx, id)
+	job, err := s.app.ReprocessJob(ctx, owner, id)
 	if err != nil {
 		return nil, s.toStatus("reprocess job", err)
 	}
 	return &ingestionv1.ReprocessJobResponse{Job: toProto(job)}, nil
 }
 
+// getJob returns the calling user's job with the id in the request.
 func (s *Server) getJob(ctx context.Context, raw string) (app.Job, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return app.Job{}, err
+	}
 	id, err := parseID("id", raw)
 	if err != nil {
 		return app.Job{}, err
 	}
-	job, err := s.app.GetJob(ctx, id)
+	job, err := s.app.GetJob(ctx, owner, id)
 	if err != nil {
 		return app.Job{}, s.toStatus("get job", err)
 	}
 	return job, nil
+}
+
+// caller returns the user the call is made for. Calls through the gateway
+// always carry one.
+func caller(ctx context.Context) (string, error) {
+	user, ok := grpcserver.UserFromContext(ctx)
+	if !ok {
+		return "", status.Error(codes.Unauthenticated, "the call has no user")
+	}
+	return user, nil
 }
 
 // parseID parses the job id in the request field named field.
@@ -210,5 +244,6 @@ func toProto(j app.Job) *ingestionv1.Job {
 		Stage:       j.Stage,
 		CreateTime:  timestamppb.New(j.CreatedAt),
 		UpdateTime:  timestamppb.New(j.UpdatedAt),
+		OwnerId:     j.OwnerID,
 	}
 }

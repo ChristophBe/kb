@@ -17,7 +17,7 @@ SET status = $1, error = $2, chunk_count = $3,
     progress = CASE WHEN $1 = 4 THEN 100 ELSE progress END,
     updated_at = now()
 WHERE id = $4 AND run = $5 AND status < 4 AND status < $1
-RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id
 `
 
 type AdvanceJobParams struct {
@@ -54,27 +54,33 @@ func (q *Queries) AdvanceJob(ctx context.Context, arg AdvanceJobParams) (Ingesti
 		&i.Run,
 		&i.Progress,
 		&i.Stage,
+		&i.OwnerID,
 	)
 	return i, err
 }
 
 const createJob = `-- name: CreateJob :one
-INSERT INTO ingestion.jobs (id, document_id, filename, content_type, status)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage
+
+INSERT INTO ingestion.jobs (id, owner_id, document_id, filename, content_type, status)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id
 `
 
 type CreateJobParams struct {
 	ID          uuid.UUID
+	OwnerID     string
 	DocumentID  uuid.UUID
 	Filename    string
 	ContentType string
 	Status      int16
 }
 
+// Queries taking an owner_id act for that user and find only their jobs. The
+// others apply the worker's events, which carry no user, and act on any job.
 func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (IngestionJob, error) {
 	row := q.db.QueryRow(ctx, createJob,
 		arg.ID,
+		arg.OwnerID,
 		arg.DocumentID,
 		arg.Filename,
 		arg.ContentType,
@@ -94,16 +100,22 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (Ingestion
 		&i.Run,
 		&i.Progress,
 		&i.Stage,
+		&i.OwnerID,
 	)
 	return i, err
 }
 
 const getJob = `-- name: GetJob :one
-SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage FROM ingestion.jobs WHERE id = $1
+SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id FROM ingestion.jobs WHERE id = $1 AND owner_id = $2
 `
 
-func (q *Queries) GetJob(ctx context.Context, id uuid.UUID) (IngestionJob, error) {
-	row := q.db.QueryRow(ctx, getJob, id)
+type GetJobParams struct {
+	ID      uuid.UUID
+	OwnerID string
+}
+
+func (q *Queries) GetJob(ctx context.Context, arg GetJobParams) (IngestionJob, error) {
+	row := q.db.QueryRow(ctx, getJob, arg.ID, arg.OwnerID)
 	var i IngestionJob
 	err := row.Scan(
 		&i.ID,
@@ -118,23 +130,26 @@ func (q *Queries) GetJob(ctx context.Context, id uuid.UUID) (IngestionJob, error
 		&i.Run,
 		&i.Progress,
 		&i.Stage,
+		&i.OwnerID,
 	)
 	return i, err
 }
 
 const listJobs = `-- name: ListJobs :many
-SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage FROM ingestion.jobs
+SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id FROM ingestion.jobs
+WHERE owner_id = $1
 ORDER BY created_at DESC, id DESC
-LIMIT $1 OFFSET $2
+LIMIT $2 OFFSET $3
 `
 
 type ListJobsParams struct {
-	Limit  int32
-	Offset int32
+	OwnerID string
+	Limit   int32
+	Offset  int32
 }
 
 func (q *Queries) ListJobs(ctx context.Context, arg ListJobsParams) ([]IngestionJob, error) {
-	rows, err := q.db.Query(ctx, listJobs, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listJobs, arg.OwnerID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -155,6 +170,7 @@ func (q *Queries) ListJobs(ctx context.Context, arg ListJobsParams) ([]Ingestion
 			&i.Run,
 			&i.Progress,
 			&i.Stage,
+			&i.OwnerID,
 		); err != nil {
 			return nil, err
 		}
@@ -171,7 +187,7 @@ UPDATE ingestion.jobs
 SET status = 3, stage = $1, progress = $2, updated_at = now()
 WHERE id = $3 AND run = $4 AND status IN (2, 3)
   AND (stage, progress) < ($1::smallint, $2::smallint)
-RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id
 `
 
 type ReportProgressParams struct {
@@ -206,6 +222,7 @@ func (q *Queries) ReportProgress(ctx context.Context, arg ReportProgressParams) 
 		&i.Run,
 		&i.Progress,
 		&i.Stage,
+		&i.OwnerID,
 	)
 	return i, err
 }
@@ -213,15 +230,20 @@ func (q *Queries) ReportProgress(ctx context.Context, arg ReportProgressParams) 
 const reprocessJob = `-- name: ReprocessJob :one
 UPDATE ingestion.jobs
 SET status = 2, error = '', chunk_count = 0, progress = 0, stage = 0, run = run + 1, updated_at = now()
-WHERE id = $1 AND status IN (4, 5)
-RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage
+WHERE id = $1 AND owner_id = $2 AND status IN (4, 5)
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id
 `
+
+type ReprocessJobParams struct {
+	ID      uuid.UUID
+	OwnerID string
+}
 
 // ReprocessJob is the one transition back: it queues a terminal job
 // (DONE=4, FAILED=5) again (QUEUED=2) as a new run, clearing the result of
 // the previous one.
-func (q *Queries) ReprocessJob(ctx context.Context, id uuid.UUID) (IngestionJob, error) {
-	row := q.db.QueryRow(ctx, reprocessJob, id)
+func (q *Queries) ReprocessJob(ctx context.Context, arg ReprocessJobParams) (IngestionJob, error) {
+	row := q.db.QueryRow(ctx, reprocessJob, arg.ID, arg.OwnerID)
 	var i IngestionJob
 	err := row.Scan(
 		&i.ID,
@@ -236,6 +258,7 @@ func (q *Queries) ReprocessJob(ctx context.Context, id uuid.UUID) (IngestionJob,
 		&i.Run,
 		&i.Progress,
 		&i.Stage,
+		&i.OwnerID,
 	)
 	return i, err
 }

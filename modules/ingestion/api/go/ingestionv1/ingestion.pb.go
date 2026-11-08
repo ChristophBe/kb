@@ -157,7 +157,10 @@ type Job struct {
 	// job is reprocessed.
 	Progress int32 `protobuf:"varint,10,opt,name=progress,proto3" json:"progress,omitempty"`
 	// The step the current run reached; UNSPECIFIED until the worker reports one.
-	Stage         JobStage `protobuf:"varint,11,opt,name=stage,proto3,enum=kb.ingestion.v1.JobStage" json:"stage,omitempty"`
+	Stage JobStage `protobuf:"varint,11,opt,name=stage,proto3,enum=kb.ingestion.v1.JobStage" json:"stage,omitempty"`
+	// The user who created the upload, as the subject of their token. Set by
+	// the service; only this user can see the job.
+	OwnerId       string `protobuf:"bytes,12,opt,name=owner_id,json=ownerId,proto3" json:"owner_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -267,6 +270,13 @@ func (x *Job) GetStage() JobStage {
 		return x.Stage
 	}
 	return JobStage_JOB_STAGE_UNSPECIFIED
+}
+
+func (x *Job) GetOwnerId() string {
+	if x != nil {
+		return x.OwnerId
+	}
+	return ""
 }
 
 type CreateUploadRequest struct {
@@ -843,7 +853,7 @@ var File_kb_ingestion_v1_ingestion_proto protoreflect.FileDescriptor
 
 const file_kb_ingestion_v1_ingestion_proto_rawDesc = "" +
 	"\n" +
-	"\x1fkb/ingestion/v1/ingestion.proto\x12\x0fkb.ingestion.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19kb/common/v1/common.proto\"\xa7\x03\n" +
+	"\x1fkb/ingestion/v1/ingestion.proto\x12\x0fkb.ingestion.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19kb/common/v1/common.proto\"\xc2\x03\n" +
 	"\x03Job\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
 	"\vdocument_id\x18\x02 \x01(\tR\n" +
@@ -860,7 +870,8 @@ const file_kb_ingestion_v1_ingestion_proto_rawDesc = "" +
 	"updateTime\x12\x1a\n" +
 	"\bprogress\x18\n" +
 	" \x01(\x05R\bprogress\x12/\n" +
-	"\x05stage\x18\v \x01(\x0e2\x19.kb.ingestion.v1.JobStageR\x05stage\"\x89\x01\n" +
+	"\x05stage\x18\v \x01(\x0e2\x19.kb.ingestion.v1.JobStageR\x05stage\x12\x19\n" +
+	"\bowner_id\x18\f \x01(\tR\aownerId\"\x89\x01\n" +
 	"\x13CreateUploadRequest\x12\x1a\n" +
 	"\bfilename\x18\x01 \x01(\tR\bfilename\x12!\n" +
 	"\fcontent_type\x18\x02 \x01(\tR\vcontentType\x12\x1d\n" +

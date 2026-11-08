@@ -6,8 +6,6 @@ package store
 
 import (
 	"context"
-
-	"github.com/google/uuid"
 )
 
 type Querier interface {
@@ -16,8 +14,10 @@ type Querier interface {
 	// terminal jobs (DONE=4, FAILED=5) never change, and events of an earlier run
 	// are ignored. The only way back is ReprocessJob. A DONE job is 100% done.
 	AdvanceJob(ctx context.Context, arg AdvanceJobParams) (IngestionJob, error)
+	// Queries taking an owner_id act for that user and find only their jobs. The
+	// others apply the worker's events, which carry no user, and act on any job.
 	CreateJob(ctx context.Context, arg CreateJobParams) (IngestionJob, error)
-	GetJob(ctx context.Context, id uuid.UUID) (IngestionJob, error)
+	GetJob(ctx context.Context, arg GetJobParams) (IngestionJob, error)
 	ListJobs(ctx context.Context, arg ListJobsParams) ([]IngestionJob, error)
 	// ReportProgress records the stage and progress of a job's current run. A
 	// report means the worker is at it, so a QUEUED job (whose started event is
@@ -27,7 +27,7 @@ type Querier interface {
 	// ReprocessJob is the one transition back: it queues a terminal job
 	// (DONE=4, FAILED=5) again (QUEUED=2) as a new run, clearing the result of
 	// the previous one.
-	ReprocessJob(ctx context.Context, id uuid.UUID) (IngestionJob, error)
+	ReprocessJob(ctx context.Context, arg ReprocessJobParams) (IngestionJob, error)
 }
 
 var _ Querier = (*Queries)(nil)

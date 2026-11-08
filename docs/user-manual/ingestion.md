@@ -25,6 +25,10 @@ Several files can be processed at the same time, so more than one row may show *
 
 When a file is done, a notification says "*file* added"; when it fails, it says "Couldn't process *file*". The document also appears under [Documents](documents.md), where its status follows the same steps.
 
+## Who can see your uploads
+
+Your uploads are private: the list under **Uploads** shows only the files you uploaded, and only you can follow or retry their processing. Other people signed in to kb never see your uploads, and you never see theirs.
+
 ## Cancel an upload
 
 Select the **×** button at the end of the file's row while it is waiting or uploading. The upload stops and the row disappears.

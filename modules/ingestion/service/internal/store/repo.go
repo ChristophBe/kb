@@ -23,6 +23,7 @@ func NewJobs(q Querier) *Jobs {
 func (j *Jobs) Create(ctx context.Context, job app.Job) (app.Job, error) {
 	row, err := j.q.CreateJob(ctx, CreateJobParams{
 		ID:          job.ID,
+		OwnerID:     job.OwnerID,
 		DocumentID:  job.DocumentID,
 		Filename:    job.Filename,
 		ContentType: job.ContentType,
@@ -34,8 +35,8 @@ func (j *Jobs) Create(ctx context.Context, job app.Job) (app.Job, error) {
 	return toJob(row), nil
 }
 
-func (j *Jobs) Get(ctx context.Context, id uuid.UUID) (app.Job, error) {
-	row, err := j.q.GetJob(ctx, id)
+func (j *Jobs) Get(ctx context.Context, owner string, id uuid.UUID) (app.Job, error) {
+	row, err := j.q.GetJob(ctx, GetJobParams{ID: id, OwnerID: owner})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return app.Job{}, app.ErrNotFound
 	}
@@ -45,8 +46,8 @@ func (j *Jobs) Get(ctx context.Context, id uuid.UUID) (app.Job, error) {
 	return toJob(row), nil
 }
 
-func (j *Jobs) List(ctx context.Context, limit, offset int32) ([]app.Job, error) {
-	rows, err := j.q.ListJobs(ctx, ListJobsParams{Limit: limit, Offset: offset})
+func (j *Jobs) List(ctx context.Context, owner string, limit, offset int32) ([]app.Job, error) {
+	rows, err := j.q.ListJobs(ctx, ListJobsParams{OwnerID: owner, Limit: limit, Offset: offset})
 	if err != nil {
 		return nil, err
 	}
@@ -83,8 +84,8 @@ func (j *Jobs) ReportProgress(ctx context.Context, p app.Progress) (app.Job, err
 	return toJob(row), nil
 }
 
-func (j *Jobs) Reprocess(ctx context.Context, id uuid.UUID) (app.Job, error) {
-	row, err := j.q.ReprocessJob(ctx, id)
+func (j *Jobs) Reprocess(ctx context.Context, owner string, id uuid.UUID) (app.Job, error) {
+	row, err := j.q.ReprocessJob(ctx, ReprocessJobParams{ID: id, OwnerID: owner})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return app.Job{}, app.ErrNotAdvanced
 	}
@@ -97,6 +98,7 @@ func (j *Jobs) Reprocess(ctx context.Context, id uuid.UUID) (app.Job, error) {
 func toJob(row IngestionJob) app.Job {
 	return app.Job{
 		ID:          row.ID,
+		OwnerID:     row.OwnerID,
 		DocumentID:  row.DocumentID,
 		Filename:    row.Filename,
 		ContentType: row.ContentType,

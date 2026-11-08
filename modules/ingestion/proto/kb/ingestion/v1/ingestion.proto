@@ -63,6 +63,9 @@ message Job {
   int32 progress = 10;
   // The step the current run reached; UNSPECIFIED until the worker reports one.
   JobStage stage = 11;
+  // The user who created the upload, as the subject of their token. Set by
+  // the service; only this user can see the job.
+  string owner_id = 12;
 }
 
 message CreateUploadRequest {

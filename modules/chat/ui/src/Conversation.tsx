@@ -13,6 +13,7 @@ import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { Answer } from "./Answer.tsx";
 import { ConversationHeader } from "./ConversationHeader.tsx";
+import { ModelPicker, useModelChoice } from "./model.tsx";
 import type { StartState } from "./StartChat.tsx";
 import { DocumentPicker } from "./scope.tsx";
 
@@ -57,6 +58,7 @@ export function Conversation() {
   });
   const [input, setInput] = useState("");
   const [useKnowledgeBase, setUseKnowledgeBase] = useState(true);
+  const modelChoice = useModelChoice(id);
   const [pending, setPending] = useState<Pending | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Reasons for answers that failed while this page was open, by message id.
@@ -103,7 +105,12 @@ export function Conversation() {
     const savedCount = (conversation.data?.messages.length ?? 0) + 2;
     try {
       const stream = client.streamChat(
-        { conversationId: id, content: question, useKnowledgeBase },
+        {
+          conversationId: id,
+          content: question,
+          model: modelChoice?.model ?? "",
+          useKnowledgeBase,
+        },
         { signal: controller.signal },
       );
       for await (const res of stream) {
@@ -276,6 +283,7 @@ export function Conversation() {
               {conversation.data?.conversation && useKnowledgeBase && (
                 <DocumentPicker conversation={conversation.data.conversation} />
               )}
+              {modelChoice && <ModelPicker choice={modelChoice} disabled={pending !== null} />}
             </div>
           </div>
         </form>

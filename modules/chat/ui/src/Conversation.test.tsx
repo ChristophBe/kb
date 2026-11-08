@@ -13,6 +13,7 @@ import {
   type StreamChatResponse,
   StreamChatResponseSchema,
 } from "@kb/chat-api/kb/chat/v1/chat_pb";
+import { ModelKind } from "@kb/llm-api/kb/llm/v1/llm_pb";
 import { KbRuntimeProvider } from "@kb/module-sdk";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
@@ -21,11 +22,19 @@ import { Conversation } from "./Conversation.tsx";
 
 const getConversation = vi.fn();
 const streamChat = vi.fn();
+// The llm module's chat models for the model picker.
+const listModels = vi.fn(async () => ({
+  models: [
+    { id: "llama3.2", kind: ModelKind.CHAT },
+    { id: "qwen2.5:0.5b", kind: ModelKind.CHAT },
+  ],
+}));
+const getProviderStatus = vi.fn(async () => ({ defaultChatModel: "llama3.2" }));
 
-// The real runtime, except that the chat client is a fake.
+// The real runtime, except that the chat and llm clients are fakes.
 vi.mock("@kb/module-sdk", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@kb/module-sdk")>()),
-  useClient: () => ({ getConversation, streamChat }),
+  useClient: () => ({ getConversation, streamChat, listModels, getProviderStatus }),
 }));
 
 // jsdom doesn't lay out, so it has no scrollIntoView.
@@ -231,6 +240,20 @@ describe("Conversation", () => {
 
     fireEvent.click(screen.getByRole("checkbox", { name: "Answer from the knowledge base" }));
     expect(screen.queryByRole("button", { name: "Choose documents" })).toBeNull();
+  });
+
+  it("answers with the model picked for the conversation", async () => {
+    streamChat.mockImplementation(completeStream("Hello."));
+    await renderConversation();
+    await ask("Hi");
+    expect(streamChat.mock.calls[0]?.[0]).toMatchObject({ model: "" });
+
+    fireEvent.change(await screen.findByRole("combobox", { name: "Model" }), {
+      target: { value: "qwen2.5:0.5b" },
+    });
+    await ask("Hi again");
+    expect(streamChat.mock.calls[1]?.[0]).toMatchObject({ model: "qwen2.5:0.5b" });
+    localStorage.clear();
   });
 
   it("shows a readable error when the chat service can't be reached", async () => {

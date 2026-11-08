@@ -37,6 +37,12 @@ The sources are the passages that matched your question best; the answer doesn't
 
 Clear **Answer from the knowledge base** below the question box to get answers from the language model alone, without searching your documents. These answers have no sources. Select it again to go back. The setting applies to the questions you send next while the conversation is open.
 
+## Choose the model that answers
+
+**Model** below the question box shows the language model that writes the answers. It starts at the standard chat model, marked **(default)**. To use another one, pick it from the list; the questions you send next in this conversation are answered by that model. The list shows the chat models listed on [Models](models.md#see-the-installed-models).
+
+The choice is remembered for each conversation in this browser, also after a reload; other browsers and new conversations use the default. If the chosen model is no longer installed, the conversation goes back to the default. **Model** is hidden while the models can't be loaded; answers then use the default. You can't change the model while an answer is being written.
+
 ## Ask how to use kb
 
 Chat also knows this manual. Ask how to do something, for example "How do I restrict a chat to some documents?", and the answer explains it, citing the sections of the manual it used. These sources are marked **user manual**; select one to open that section of the help page.

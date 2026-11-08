@@ -38,7 +38,26 @@ services:
       interval: 2s
       retries: 30
 
+  # Dev OIDC identity provider (users alice and bob, password "password").
+  # Envoy fetches its signing keys at dex:5556; browsers and tests reach it at
+  # the issuer URL, so the published port must match KB_OIDC_ISSUER.
+  dex:
+    image: dexidp/dex:v2.44.0
+    command: ["dex", "serve", "/etc/dex/config.yaml.tpl"]
+    environment:
+      KB_OIDC_ISSUER: ${KB_OIDC_ISSUER:-http://localhost:5556/dex}
+      KB_WEB_PORT: ${KB_WEB_PORT:-3000}
+    ports: ["${KB_DEX_PORT:-5556}:5556"]
+    volumes:
+      - dex:/var/dex
+      - ./dex/config.yaml.tpl:/etc/dex/config.yaml.tpl:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:5556/dex/healthz"]
+      interval: 2s
+      retries: 30
+
 volumes:
   postgres:
   s3:
   nats:
+  dex:

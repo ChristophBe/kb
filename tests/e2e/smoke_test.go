@@ -39,7 +39,7 @@ The aurora borealis appears when charged particles from the sun hit the upper at
 func TestUploadAndChat(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), testTimeout)
 	defer cancel()
-	c := newClients(kb.gateway)
+	c := newClients(kb.gateway, kb.token)
 	waitReady(ctx, t, c)
 
 	const title = "Aurora smoke test"
@@ -64,7 +64,7 @@ func TestUploadAndChat(t *testing.T) {
 func TestScopedChat(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), testTimeout)
 	defer cancel()
-	c := newClients(kb.gateway)
+	c := newClients(kb.gateway, kb.token)
 	waitReady(ctx, t, c)
 
 	const tidesTitle, moonTitle = "Tides scope test", "Moon scope test"
@@ -111,10 +111,10 @@ func TestScopedChat(t *testing.T) {
 func TestInternalRPCsAreNotRouted(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), testTimeout)
 	defer cancel()
-	c := newClients(kb.gateway)
+	c := newClients(kb.gateway, kb.token)
 	waitReady(ctx, t, c)
 
-	h, opt := http.DefaultClient, connect.WithGRPCWeb()
+	h, opt := bearer(kb.token), connect.WithGRPCWeb()
 	calls := map[string]func(context.Context) error{
 		documentv1.DocumentService_AddChunks_FullMethodName: func(ctx context.Context) error {
 			client := connect.NewClient[documentv1.AddChunksRequest, documentv1.AddChunksResponse](h, kb.gateway+documentv1.DocumentService_AddChunks_FullMethodName, opt)
@@ -237,9 +237,10 @@ type clients struct {
 }
 
 // newClients builds connect clients from the procedure names and messages of
-// the generated Go bindings (modules/*/api/go).
-func newClients(gateway string) *clients {
-	h := http.DefaultClient
+// the generated Go bindings (modules/*/api/go). They authenticate with token;
+// an empty token sends none.
+func newClients(gateway, token string) *clients {
+	h := bearer(token)
 	opt := connect.WithGRPCWeb()
 	return &clients{
 		createUpload:       connect.NewClient[ingestionv1.CreateUploadRequest, ingestionv1.CreateUploadResponse](h, gateway+ingestionv1.IngestionService_CreateUpload_FullMethodName, opt),

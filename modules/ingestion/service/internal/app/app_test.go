@@ -16,10 +16,15 @@ const (
 	processing = ingestionv1.JobStatus_JOB_STATUS_PROCESSING
 	done       = ingestionv1.JobStatus_JOB_STATUS_DONE
 	failed     = ingestionv1.JobStatus_JOB_STATUS_FAILED
+
+	// alice owns the jobs of pendingJob; bob is another user.
+	alice = "alice"
+	bob   = "bob"
 )
 
-// fakeJobs mirrors the AdvanceJob and ReprocessJob queries: forward only
-// within the current run, nothing after a terminal status until reprocessed.
+// fakeJobs mirrors the queries: Get and Reprocess find only the owner's jobs,
+// and jobs move forward only within the current run, nothing after a
+// terminal status until reprocessed.
 type fakeJobs struct {
 	jobs         map[uuid.UUID]Job
 	createErr    error
@@ -43,15 +48,15 @@ func (f *fakeJobs) Create(_ context.Context, job Job) (Job, error) {
 	return job, nil
 }
 
-func (f *fakeJobs) Get(_ context.Context, id uuid.UUID) (Job, error) {
+func (f *fakeJobs) Get(_ context.Context, owner string, id uuid.UUID) (Job, error) {
 	j, ok := f.jobs[id]
-	if !ok {
+	if !ok || j.OwnerID != owner {
 		return Job{}, ErrNotFound
 	}
 	return j, nil
 }
 
-func (f *fakeJobs) List(context.Context, int32, int32) ([]Job, error) { return nil, nil }
+func (f *fakeJobs) List(context.Context, string, int32, int32) ([]Job, error) { return nil, nil }
 
 func (f *fakeJobs) Advance(_ context.Context, t Transition) (Job, error) {
 	if f.advanceErr != nil {
@@ -83,12 +88,12 @@ func (f *fakeJobs) ReportProgress(_ context.Context, p Progress) (Job, error) {
 	return j, nil
 }
 
-func (f *fakeJobs) Reprocess(_ context.Context, id uuid.UUID) (Job, error) {
+func (f *fakeJobs) Reprocess(_ context.Context, owner string, id uuid.UUID) (Job, error) {
 	if f.reprocessErr != nil {
 		return Job{}, f.reprocessErr
 	}
 	j, ok := f.jobs[id]
-	if !ok || !j.Terminal() {
+	if !ok || j.OwnerID != owner || !j.Terminal() {
 		return Job{}, ErrNotAdvanced
 	}
 	j.Status, j.Error, j.ChunkCount, j.Run = queued, "", 0, j.Run+1
@@ -124,17 +129,17 @@ func (f *fakePublisher) PublishUploaded(_ context.Context, job Job) error {
 }
 
 func pendingJob() Job {
-	return Job{ID: uuid.New(), DocumentID: uuid.New(), Status: pending, Run: 1}
+	return Job{ID: uuid.New(), OwnerID: alice, DocumentID: uuid.New(), Status: pending, Run: 1}
 }
 
 func TestCreateUploadStoresAPendingJob(t *testing.T) {
 	doc := Document{ID: uuid.New(), Filename: "a.md", ContentType: "text/markdown", UploadURL: "http://s3/up"}
 	jobs := newFakeJobs()
-	job, url, err := New(jobs, &fakeDocuments{doc: doc}, &fakePublisher{}).CreateUpload(t.Context(), NewUpload{Filename: "a.md"})
+	job, url, err := New(jobs, &fakeDocuments{doc: doc}, &fakePublisher{}).CreateUpload(t.Context(), alice, NewUpload{Filename: "a.md"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if url != doc.UploadURL || job.DocumentID != doc.ID || job.Status != pending || job.ContentType != doc.ContentType {
+	if url != doc.UploadURL || job.OwnerID != alice || job.DocumentID != doc.ID || job.Status != pending || job.ContentType != doc.ContentType {
 		t.Errorf("url %q, job %+v", url, job)
 	}
 	if _, ok := jobs.jobs[job.ID]; !ok {
@@ -156,7 +161,7 @@ func TestCreateUploadFailures(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			jobs := newFakeJobs()
 			jobs.createErr = tc.createJob
-			_, _, err := New(jobs, &fakeDocuments{createErr: tc.createDoc}, &fakePublisher{}).CreateUpload(t.Context(), NewUpload{})
+			_, _, err := New(jobs, &fakeDocuments{createErr: tc.createDoc}, &fakePublisher{}).CreateUpload(t.Context(), alice, NewUpload{})
 			if !errors.Is(err, tc.want) {
 				t.Fatalf("err = %v, want %v", err, tc.want)
 			}
@@ -167,7 +172,7 @@ func TestCreateUploadFailures(t *testing.T) {
 func TestCompleteUploadQueuesAndPublishes(t *testing.T) {
 	job := pendingJob()
 	docs, pub := &fakeDocuments{}, &fakePublisher{}
-	got, err := New(newFakeJobs(job), docs, pub).CompleteUpload(t.Context(), job.ID)
+	got, err := New(newFakeJobs(job), docs, pub).CompleteUpload(t.Context(), alice, job.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +192,7 @@ func TestCompleteUploadThatCannotProceedLeavesTheJobPending(t *testing.T) {
 		t.Run(want.Error(), func(t *testing.T) {
 			job := pendingJob()
 			jobs, pub := newFakeJobs(job), &fakePublisher{}
-			_, err := New(jobs, &fakeDocuments{markErr: want}, pub).CompleteUpload(t.Context(), job.ID)
+			_, err := New(jobs, &fakeDocuments{markErr: want}, pub).CompleteUpload(t.Context(), alice, job.ID)
 			if !errors.Is(err, want) {
 				t.Fatalf("err = %v, want %v", err, want)
 			}
@@ -202,7 +207,7 @@ func TestCompleteUploadThatCannotProceedLeavesTheJobPending(t *testing.T) {
 }
 
 func TestCompleteUploadUnknownJob(t *testing.T) {
-	_, err := New(newFakeJobs(), &fakeDocuments{}, &fakePublisher{}).CompleteUpload(t.Context(), uuid.New())
+	_, err := New(newFakeJobs(), &fakeDocuments{}, &fakePublisher{}).CompleteUpload(t.Context(), alice, uuid.New())
 	if !errors.Is(err, ErrNotFound) {
 		t.Fatalf("err = %v", err)
 	}
@@ -212,10 +217,10 @@ func TestCompleteUploadTwice(t *testing.T) {
 	job := pendingJob()
 	docs := &fakeDocuments{}
 	s := New(newFakeJobs(job), docs, &fakePublisher{})
-	if _, err := s.CompleteUpload(t.Context(), job.ID); err != nil {
+	if _, err := s.CompleteUpload(t.Context(), alice, job.ID); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.CompleteUpload(t.Context(), job.ID); !errors.Is(err, ErrAlreadyCompleted) {
+	if _, err := s.CompleteUpload(t.Context(), alice, job.ID); !errors.Is(err, ErrAlreadyCompleted) {
 		t.Fatalf("err = %v", err)
 	}
 	if len(docs.marked) != 1 {
@@ -228,7 +233,7 @@ func TestCompleteUploadLosingARace(t *testing.T) {
 	jobs := newFakeJobs(job)
 	jobs.advanceErr = ErrNotAdvanced
 	pub := &fakePublisher{}
-	_, err := New(jobs, &fakeDocuments{}, pub).CompleteUpload(t.Context(), job.ID)
+	_, err := New(jobs, &fakeDocuments{}, pub).CompleteUpload(t.Context(), alice, job.ID)
 	if !errors.Is(err, ErrAlreadyCompleted) {
 		t.Fatalf("err = %v", err)
 	}
@@ -240,7 +245,7 @@ func TestCompleteUploadLosingARace(t *testing.T) {
 func TestCompleteUploadPublishFailure(t *testing.T) {
 	job := pendingJob()
 	broken := errors.New("nats down")
-	_, err := New(newFakeJobs(job), &fakeDocuments{}, &fakePublisher{err: broken}).CompleteUpload(t.Context(), job.ID)
+	_, err := New(newFakeJobs(job), &fakeDocuments{}, &fakePublisher{err: broken}).CompleteUpload(t.Context(), alice, job.ID)
 	if !errors.Is(err, broken) {
 		t.Fatalf("err = %v", err)
 	}
@@ -383,7 +388,7 @@ func TestReprocessQueuesATerminalJobAsANewRun(t *testing.T) {
 			job := pendingJob()
 			job.Status, job.Error, job.ChunkCount = from, "no text", 7
 			jobs, pub := newFakeJobs(job), &fakePublisher{}
-			got, err := New(jobs, &fakeDocuments{}, pub).ReprocessJob(t.Context(), job.ID)
+			got, err := New(jobs, &fakeDocuments{}, pub).ReprocessJob(t.Context(), alice, job.ID)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -402,7 +407,7 @@ func TestReprocessedJobIgnoresEventsOfTheEarlierRun(t *testing.T) {
 	job.Status = failed
 	jobs := newFakeJobs(job)
 	s := New(jobs, &fakeDocuments{}, &fakePublisher{})
-	if _, err := s.ReprocessJob(t.Context(), job.ID); err != nil {
+	if _, err := s.ReprocessJob(t.Context(), alice, job.ID); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.ApplyFailed(t.Context(), job.ID, 1, "late"); err != nil {
@@ -425,7 +430,7 @@ func TestReprocessRejectsJobsThatAreNotTerminal(t *testing.T) {
 			job := pendingJob()
 			job.Status = from
 			jobs, pub := newFakeJobs(job), &fakePublisher{}
-			_, err := New(jobs, &fakeDocuments{}, pub).ReprocessJob(t.Context(), job.ID)
+			_, err := New(jobs, &fakeDocuments{}, pub).ReprocessJob(t.Context(), alice, job.ID)
 			if !errors.Is(err, ErrNotReprocessable) {
 				t.Fatalf("err = %v, want ErrNotReprocessable", err)
 			}
@@ -437,7 +442,7 @@ func TestReprocessRejectsJobsThatAreNotTerminal(t *testing.T) {
 }
 
 func TestReprocessUnknownJob(t *testing.T) {
-	_, err := New(newFakeJobs(), &fakeDocuments{}, &fakePublisher{}).ReprocessJob(t.Context(), uuid.New())
+	_, err := New(newFakeJobs(), &fakeDocuments{}, &fakePublisher{}).ReprocessJob(t.Context(), alice, uuid.New())
 	if !errors.Is(err, ErrNotFound) {
 		t.Fatalf("err = %v, want ErrNotFound", err)
 	}
@@ -446,7 +451,7 @@ func TestReprocessUnknownJob(t *testing.T) {
 func TestReprocessStoreFailure(t *testing.T) {
 	jobs := newFakeJobs()
 	jobs.reprocessErr = errors.New("database down")
-	_, err := New(jobs, &fakeDocuments{}, &fakePublisher{}).ReprocessJob(t.Context(), uuid.New())
+	_, err := New(jobs, &fakeDocuments{}, &fakePublisher{}).ReprocessJob(t.Context(), alice, uuid.New())
 	if !errors.Is(err, jobs.reprocessErr) {
 		t.Fatalf("err = %v", err)
 	}
@@ -457,11 +462,35 @@ func TestReprocessPublishFailureFailsTheJobAgain(t *testing.T) {
 	job.Status = failed
 	jobs := newFakeJobs(job)
 	broken := errors.New("nats down")
-	_, err := New(jobs, &fakeDocuments{}, &fakePublisher{err: broken}).ReprocessJob(t.Context(), job.ID)
+	_, err := New(jobs, &fakeDocuments{}, &fakePublisher{err: broken}).ReprocessJob(t.Context(), alice, job.ID)
 	if !errors.Is(err, broken) {
 		t.Fatalf("err = %v", err)
 	}
 	if got := jobs.jobs[job.ID]; got.Status != failed || got.Run != 2 || got.Error == "" {
 		t.Errorf("job = %+v, want FAILED in run 2 so it can be retried", got)
+	}
+}
+
+func TestAnotherUsersJobIsNotFound(t *testing.T) {
+	job := pendingJob()
+	jobs, docs, pub := newFakeJobs(job), &fakeDocuments{}, &fakePublisher{}
+	s := New(jobs, docs, pub)
+	if _, err := s.GetJob(t.Context(), bob, job.ID); !errors.Is(err, ErrNotFound) {
+		t.Errorf("get: err = %v, want ErrNotFound", err)
+	}
+	if _, err := s.CompleteUpload(t.Context(), bob, job.ID); !errors.Is(err, ErrNotFound) {
+		t.Errorf("complete: err = %v, want ErrNotFound", err)
+	}
+	if len(docs.marked) != 0 || len(pub.sent) != 0 {
+		t.Errorf("bob completed alice's upload: marked %v, published %v", docs.marked, pub.sent)
+	}
+
+	job.Status = failed
+	jobs.jobs[job.ID] = job
+	if _, err := s.ReprocessJob(t.Context(), bob, job.ID); !errors.Is(err, ErrNotFound) {
+		t.Errorf("reprocess: err = %v, want ErrNotFound", err)
+	}
+	if got := jobs.jobs[job.ID]; got.Status != failed || got.Run != 1 || len(pub.sent) != 0 {
+		t.Errorf("bob reprocessed alice's job: %+v, published %v", got, pub.sent)
 	}
 }

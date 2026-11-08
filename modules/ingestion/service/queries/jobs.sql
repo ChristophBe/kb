@@ -1,15 +1,19 @@
+-- Queries taking an owner_id act for that user and find only their jobs. The
+-- others apply the worker's events, which carry no user, and act on any job.
+
 -- name: CreateJob :one
-INSERT INTO ingestion.jobs (id, document_id, filename, content_type, status)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO ingestion.jobs (id, owner_id, document_id, filename, content_type, status)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: GetJob :one
-SELECT * FROM ingestion.jobs WHERE id = $1;
+SELECT * FROM ingestion.jobs WHERE id = $1 AND owner_id = $2;
 
 -- name: ListJobs :many
 SELECT * FROM ingestion.jobs
+WHERE owner_id = $1
 ORDER BY created_at DESC, id DESC
-LIMIT $1 OFFSET $2;
+LIMIT $2 OFFSET $3;
 
 -- AdvanceJob moves a job forward within its current run. Status values are
 -- ordered, so a stale or duplicate event can never move a job backwards,
@@ -40,5 +44,5 @@ RETURNING *;
 -- name: ReprocessJob :one
 UPDATE ingestion.jobs
 SET status = 2, error = '', chunk_count = 0, progress = 0, stage = 0, run = run + 1, updated_at = now()
-WHERE id = sqlc.arg(id) AND status IN (4, 5)
+WHERE id = sqlc.arg(id) AND owner_id = sqlc.arg(owner_id) AND status IN (4, 5)
 RETURNING *;

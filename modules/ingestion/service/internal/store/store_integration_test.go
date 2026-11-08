@@ -5,12 +5,17 @@ package store
 import (
 	"errors"
 	"fmt"
+	"io/fs"
+	"log/slog"
+	"strings"
 	"testing"
+	"testing/fstest"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	"github.com/christoph/kb/modules/ingestion/migrations"
+	"github.com/christoph/kb/platform/go/postgres"
 	"github.com/christoph/kb/platform/go/postgres/pgtest"
 )
 
@@ -20,13 +25,24 @@ const (
 	processing    = 3
 	done          = 4
 	failed        = 5
+
+	// owner owns the jobs of tests that aren't about ownership.
+	owner = "alice"
+	// alice is the subject of the Dex dev user alice, who gets the jobs from
+	// before ownership.
+	aliceSubject = "CgVhbGljZRIFbG9jYWw"
 )
 
 func newJob(t *testing.T, q *Queries, status int16) uuid.UUID {
 	t.Helper()
+	return newOwnedJob(t, q, owner, status)
+}
+
+func newOwnedJob(t *testing.T, q *Queries, ownerID string, status int16) uuid.UUID {
+	t.Helper()
 	id := uuid.New()
 	if _, err := q.CreateJob(t.Context(), CreateJobParams{
-		ID: id, DocumentID: uuid.New(), Filename: "a.md", ContentType: "text/markdown", Status: status,
+		ID: id, OwnerID: ownerID, DocumentID: uuid.New(), Filename: "a.md", ContentType: "text/markdown", Status: status,
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +99,7 @@ func TestAdvanceJob(t *testing.T) {
 			if !errors.Is(err, pgx.ErrNoRows) {
 				t.Fatalf("err = %v, want ErrNoRows", err)
 			}
-			job, err := q.GetJob(t.Context(), id)
+			job, err := q.GetJob(t.Context(), GetJobParams{ID: id, OwnerID: owner})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -114,7 +130,7 @@ func TestReportProgress(t *testing.T) {
 
 	t.Run("records progress and marks a queued job processing", func(t *testing.T) {
 		id := newJob(t, q, queued)
-		before, err := q.GetJob(t.Context(), id)
+		before, err := q.GetJob(t.Context(), GetJobParams{ID: id, OwnerID: owner})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -148,7 +164,7 @@ func TestReportProgress(t *testing.T) {
 			if _, err := report(id, tc.run, tc.stage, tc.progress); !errors.Is(err, pgx.ErrNoRows) {
 				t.Fatalf("err = %v, want ErrNoRows", err)
 			}
-			job, err := q.GetJob(t.Context(), id)
+			job, err := q.GetJob(t.Context(), GetJobParams{ID: id, OwnerID: owner})
 			if err != nil || job.Stage != embedding || job.Progress != 40 {
 				t.Errorf("job changed: %+v, err %v", job, err)
 			}
@@ -173,7 +189,7 @@ func TestReportProgress(t *testing.T) {
 		if err != nil || job.Progress != 100 {
 			t.Fatalf("done: %+v, err %v", job, err)
 		}
-		job, err = q.ReprocessJob(t.Context(), id)
+		job, err = q.ReprocessJob(t.Context(), ReprocessJobParams{ID: id, OwnerID: owner})
 		if err != nil || job.Progress != 0 || job.Stage != 0 {
 			t.Fatalf("reprocessed: %+v, err %v", job, err)
 		}
@@ -203,7 +219,7 @@ func TestReprocessJob(t *testing.T) {
 			if _, err := q.AdvanceJob(t.Context(), AdvanceJobParams{ID: id, Run: 1, Status: from, Error: "no text", ChunkCount: 7}); err != nil {
 				t.Fatal(err)
 			}
-			job, err := q.ReprocessJob(t.Context(), id)
+			job, err := q.ReprocessJob(t.Context(), ReprocessJobParams{ID: id, OwnerID: owner})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -224,10 +240,10 @@ func TestReprocessJob(t *testing.T) {
 	for _, from := range []int16{pendingUpload, queued, processing} {
 		t.Run(fmt.Sprintf("leaves status %d alone", from), func(t *testing.T) {
 			id := newJob(t, q, from)
-			if _, err := q.ReprocessJob(t.Context(), id); !errors.Is(err, pgx.ErrNoRows) {
+			if _, err := q.ReprocessJob(t.Context(), ReprocessJobParams{ID: id, OwnerID: owner}); !errors.Is(err, pgx.ErrNoRows) {
 				t.Fatalf("err = %v, want ErrNoRows", err)
 			}
-			job, err := q.GetJob(t.Context(), id)
+			job, err := q.GetJob(t.Context(), GetJobParams{ID: id, OwnerID: owner})
 			if err != nil || job.Status != from || job.Run != 1 {
 				t.Fatalf("job changed: %+v, err %v", job, err)
 			}
@@ -235,7 +251,7 @@ func TestReprocessJob(t *testing.T) {
 	}
 
 	t.Run("does not reprocess an unknown job", func(t *testing.T) {
-		if _, err := q.ReprocessJob(t.Context(), uuid.New()); !errors.Is(err, pgx.ErrNoRows) {
+		if _, err := q.ReprocessJob(t.Context(), ReprocessJobParams{ID: uuid.New(), OwnerID: owner}); !errors.Is(err, pgx.ErrNoRows) {
 			t.Fatalf("err = %v, want ErrNoRows", err)
 		}
 	})
@@ -244,18 +260,87 @@ func TestReprocessJob(t *testing.T) {
 func TestListJobsPagesNewestFirst(t *testing.T) {
 	q := New(pgtest.Start(t, "ingestion", migrations.FS))
 	first, second := newJob(t, q, queued), newJob(t, q, queued)
-	jobs, err := q.ListJobs(t.Context(), ListJobsParams{Limit: 1, Offset: 0})
+	jobs, err := q.ListJobs(t.Context(), ListJobsParams{OwnerID: owner, Limit: 1, Offset: 0})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(jobs) != 1 || jobs[0].ID != second {
 		t.Errorf("first page = %+v, want job %v", jobs, second)
 	}
-	jobs, err = q.ListJobs(t.Context(), ListJobsParams{Limit: 1, Offset: 1})
+	jobs, err = q.ListJobs(t.Context(), ListJobsParams{OwnerID: owner, Limit: 1, Offset: 1})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(jobs) != 1 || jobs[0].ID != first {
 		t.Errorf("second page = %+v, want job %v", jobs, first)
+	}
+}
+
+func TestJobQueriesFindOnlyTheOwnersJobs(t *testing.T) {
+	q := New(pgtest.Start(t, "ingestion", migrations.FS))
+	ctx := t.Context()
+	mine, theirs := newOwnedJob(t, q, "alice", failed), newOwnedJob(t, q, "bob", failed)
+
+	jobs, err := q.ListJobs(ctx, ListJobsParams{OwnerID: "alice", Limit: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(jobs) != 1 || jobs[0].ID != mine || jobs[0].OwnerID != "alice" {
+		t.Errorf("alice lists %+v, want only her job", jobs)
+	}
+	if _, err := q.GetJob(ctx, GetJobParams{ID: theirs, OwnerID: "alice"}); !errors.Is(err, pgx.ErrNoRows) {
+		t.Errorf("get bob's job as alice: err = %v, want no rows", err)
+	}
+	if _, err := q.ReprocessJob(ctx, ReprocessJobParams{ID: theirs, OwnerID: "alice"}); !errors.Is(err, pgx.ErrNoRows) {
+		t.Errorf("reprocess bob's job as alice: err = %v, want no rows", err)
+	}
+	got, err := q.GetJob(ctx, GetJobParams{ID: theirs, OwnerID: "bob"})
+	if err != nil || got.Status != failed || got.Run != 1 {
+		t.Errorf("bob's job after alice's attempts: %+v, %v", got, err)
+	}
+	if _, err := q.ReprocessJob(ctx, ReprocessJobParams{ID: theirs, OwnerID: "bob"}); err != nil {
+		t.Errorf("reprocess as the owner: %v", err)
+	}
+	// The worker's events carry no user and still apply to any job.
+	if _, err := q.AdvanceJob(ctx, AdvanceJobParams{ID: theirs, Run: 2, Status: processing}); err != nil {
+		t.Errorf("advance without an owner: %v", err)
+	}
+}
+
+func TestOwnerMigrationGivesExistingJobsToAlice(t *testing.T) {
+	// Migrate up to the version before owners, add a job, then migrate on.
+	before := fstest.MapFS{}
+	err := fs.WalkDir(migrations.FS, ".", func(name string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || name >= "00004" {
+			return err
+		}
+		data, err := fs.ReadFile(migrations.FS, name)
+		before[name] = &fstest.MapFile{Data: data}
+		return err
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	pool := pgtest.Start(t, "ingestion", before)
+	ctx := t.Context()
+	id := uuid.New()
+	if _, err := pool.Exec(ctx, `INSERT INTO ingestion.jobs (id, document_id, filename, content_type, status)
+		VALUES ($1, $2, 'old.md', 'text/markdown', 4)`, id, uuid.New()); err != nil {
+		t.Fatal(err)
+	}
+	if err := postgres.Migrate(ctx, pool, "ingestion", migrations.FS, slog.New(slog.DiscardHandler)); err != nil {
+		t.Fatal(err)
+	}
+
+	q := New(pool)
+	job, err := q.GetJob(ctx, GetJobParams{ID: id, OwnerID: aliceSubject})
+	if err != nil || job.OwnerID != aliceSubject || job.Filename != "old.md" {
+		t.Fatalf("old job as alice: %+v, %v", job, err)
+	}
+	// New jobs need an owner: the backfill default is gone.
+	_, err = pool.Exec(ctx, `INSERT INTO ingestion.jobs (id, document_id, filename, content_type, status)
+		VALUES ($1, $2, 'new.md', 'text/markdown', 1)`, uuid.New(), uuid.New())
+	if err == nil || !strings.Contains(err.Error(), "owner_id") {
+		t.Errorf("job without an owner: err = %v, want a not-null violation", err)
 	}
 }

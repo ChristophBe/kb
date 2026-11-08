@@ -26,6 +26,17 @@ import (
 	"github.com/christoph/kb/platform/go/grpcserver"
 )
 
+// alice and bob are two users; the tests call as alice unless they say otherwise.
+const (
+	alice = "alice"
+	bob   = "bob"
+)
+
+// as returns the test's context carrying user, as the user interceptor would.
+func as(t *testing.T, user string) context.Context {
+	return grpcserver.WithUser(t.Context(), user)
+}
+
 func firstOf[T any](details []any) (T, bool) {
 	for _, d := range details {
 		if t, ok := d.(T); ok {
@@ -42,17 +53,28 @@ type fakeRepo struct {
 }
 
 func (f *fakeRepo) CreateJob(_ context.Context, p store.CreateJobParams) (store.IngestionJob, error) {
-	j := store.IngestionJob{ID: p.ID, DocumentID: p.DocumentID, Filename: p.Filename, Status: p.Status, Run: 1}
+	j := store.IngestionJob{ID: p.ID, OwnerID: p.OwnerID, DocumentID: p.DocumentID, Filename: p.Filename, Status: p.Status, Run: 1}
 	f.jobs[p.ID] = j
 	return j, nil
 }
 
-func (f *fakeRepo) GetJob(_ context.Context, id uuid.UUID) (store.IngestionJob, error) {
-	j, ok := f.jobs[id]
-	if !ok {
-		return j, pgx.ErrNoRows
+func (f *fakeRepo) GetJob(_ context.Context, p store.GetJobParams) (store.IngestionJob, error) {
+	j, ok := f.jobs[p.ID]
+	if !ok || j.OwnerID != p.OwnerID {
+		return store.IngestionJob{}, pgx.ErrNoRows
 	}
 	return j, nil
+}
+
+// ListJobs returns the owner's jobs; the tests don't page.
+func (f *fakeRepo) ListJobs(_ context.Context, p store.ListJobsParams) ([]store.IngestionJob, error) {
+	var jobs []store.IngestionJob
+	for _, j := range f.jobs {
+		if j.OwnerID == p.OwnerID {
+			jobs = append(jobs, j)
+		}
+	}
+	return jobs, nil
 }
 
 func (f *fakeRepo) AdvanceJob(_ context.Context, p store.AdvanceJobParams) (store.IngestionJob, error) {
@@ -82,13 +104,13 @@ func (f *fakeRepo) ReportProgress(_ context.Context, p store.ReportProgressParam
 	return j, nil
 }
 
-func (f *fakeRepo) ReprocessJob(_ context.Context, id uuid.UUID) (store.IngestionJob, error) {
-	j, ok := f.jobs[id]
-	if !ok || j.Status < 4 {
-		return j, pgx.ErrNoRows
+func (f *fakeRepo) ReprocessJob(_ context.Context, p store.ReprocessJobParams) (store.IngestionJob, error) {
+	j, ok := f.jobs[p.ID]
+	if !ok || j.OwnerID != p.OwnerID || j.Status < 4 {
+		return store.IngestionJob{}, pgx.ErrNoRows
 	}
 	j.Status, j.Error, j.ChunkCount, j.Run = int16(ingestionv1.JobStatus_JOB_STATUS_QUEUED), "", 0, j.Run+1
-	f.jobs[id] = j
+	f.jobs[p.ID] = j
 	return j, nil
 }
 
@@ -128,7 +150,7 @@ func TestUploadFlowQueuesProcessingOnce(t *testing.T) {
 	pub := &fakePublisher{}
 	srv := New(app.New(store.NewJobs(repo), documents.New(docs), events.NewPublisher(pub)), slog.New(slog.DiscardHandler))
 
-	created, err := srv.CreateUpload(t.Context(), &ingestionv1.CreateUploadRequest{Filename: "a.md", SizeBytes: 3})
+	created, err := srv.CreateUpload(as(t, alice), &ingestionv1.CreateUploadRequest{Filename: "a.md", SizeBytes: 3})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -136,7 +158,7 @@ func TestUploadFlowQueuesProcessingOnce(t *testing.T) {
 		t.Fatalf("unexpected create response: %v", created)
 	}
 
-	done, err := srv.CompleteUpload(t.Context(), &ingestionv1.CompleteUploadRequest{JobId: created.GetJob().GetId()})
+	done, err := srv.CompleteUpload(as(t, alice), &ingestionv1.CompleteUploadRequest{JobId: created.GetJob().GetId()})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,7 +175,7 @@ func TestUploadFlowQueuesProcessingOnce(t *testing.T) {
 		t.Errorf("document statuses = %v", docs.statuses)
 	}
 
-	_, err = srv.CompleteUpload(t.Context(), &ingestionv1.CompleteUploadRequest{JobId: created.GetJob().GetId()})
+	_, err = srv.CompleteUpload(as(t, alice), &ingestionv1.CompleteUploadRequest{JobId: created.GetJob().GetId()})
 	if status.Code(err) != codes.FailedPrecondition {
 		t.Errorf("second complete: err = %v, want FailedPrecondition", err)
 	}
@@ -187,13 +209,13 @@ func TestCompleteUploadMapsPeerErrors(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			id := uuid.New()
 			repo := &fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{
-				id: {ID: id, DocumentID: uuid.New(), Status: int16(ingestionv1.JobStatus_JOB_STATUS_PENDING_UPLOAD)},
+				id: {ID: id, OwnerID: alice, DocumentID: uuid.New(), Status: int16(ingestionv1.JobStatus_JOB_STATUS_PENDING_UPLOAD)},
 			}}
 			docs := &peerFailure{err: status.Error(tc.peer, "peer detail")}
 			pub := &fakePublisher{}
 			srv := New(app.New(store.NewJobs(repo), documents.New(docs), events.NewPublisher(pub)), slog.New(slog.DiscardHandler))
 
-			_, err := srv.CompleteUpload(t.Context(), &ingestionv1.CompleteUploadRequest{JobId: id.String()})
+			_, err := srv.CompleteUpload(as(t, alice), &ingestionv1.CompleteUploadRequest{JobId: id.String()})
 			if status.Code(err) != tc.want {
 				t.Fatalf("err = %v, want %v", err, tc.want)
 			}
@@ -219,7 +241,7 @@ func TestCreateUploadValidates(t *testing.T) {
 		{"both", &ingestionv1.CreateUploadRequest{SizeBytes: -1}, []string{"filename", "size_bytes"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := srv.CreateUpload(t.Context(), tc.req)
+			_, err := srv.CreateUpload(as(t, alice), tc.req)
 			if status.Code(err) != codes.InvalidArgument {
 				t.Fatalf("err = %v, want InvalidArgument", err)
 			}
@@ -236,11 +258,11 @@ func TestCreateUploadValidates(t *testing.T) {
 
 func TestUnknownAndInvalidJobs(t *testing.T) {
 	srv := New(app.New(store.NewJobs(&fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}), documents.New(&fakeDocuments{}), events.NewPublisher(&fakePublisher{})), slog.New(slog.DiscardHandler))
-	_, err := srv.GetJob(t.Context(), &ingestionv1.GetJobRequest{Id: uuid.NewString()})
+	_, err := srv.GetJob(as(t, alice), &ingestionv1.GetJobRequest{Id: uuid.NewString()})
 	if status.Code(err) != codes.NotFound {
 		t.Errorf("unknown: %v", err)
 	}
-	_, err = srv.CompleteUpload(t.Context(), &ingestionv1.CompleteUploadRequest{JobId: "nope"})
+	_, err = srv.CompleteUpload(as(t, alice), &ingestionv1.CompleteUploadRequest{JobId: "nope"})
 	if v := grpcserver.FieldViolations(err); status.Code(err) != codes.InvalidArgument || len(v) != 1 || v[0].GetField() != "job_id" {
 		t.Errorf("invalid: %v, violations %v", err, v)
 	}
@@ -256,7 +278,7 @@ func TestReprocessJob(t *testing.T) {
 	} {
 		id := uuid.New()
 		ids[st] = id
-		repo.jobs[id] = store.IngestionJob{ID: id, DocumentID: uuid.New(), Status: int16(st), Error: "no text", ChunkCount: 4, Run: 1}
+		repo.jobs[id] = store.IngestionJob{ID: id, OwnerID: alice, DocumentID: uuid.New(), Status: int16(st), Error: "no text", ChunkCount: 4, Run: 1}
 	}
 	pub := &fakePublisher{}
 	srv := New(app.New(store.NewJobs(repo), documents.New(&fakeDocuments{}), events.NewPublisher(pub)), slog.New(slog.DiscardHandler))
@@ -273,7 +295,7 @@ func TestReprocessJob(t *testing.T) {
 		{"malformed", "nope", codes.InvalidArgument},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := srv.ReprocessJob(t.Context(), &ingestionv1.ReprocessJobRequest{Id: tc.id})
+			_, err := srv.ReprocessJob(as(t, alice), &ingestionv1.ReprocessJobRequest{Id: tc.id})
 			if status.Code(err) != tc.want {
 				t.Fatalf("err = %v, want %v", err, tc.want)
 			}
@@ -292,7 +314,7 @@ func TestReprocessJob(t *testing.T) {
 	for i, st := range []ingestionv1.JobStatus{ingestionv1.JobStatus_JOB_STATUS_FAILED, ingestionv1.JobStatus_JOB_STATUS_DONE} {
 		t.Run(st.String(), func(t *testing.T) {
 			id := ids[st]
-			resp, err := srv.ReprocessJob(t.Context(), &ingestionv1.ReprocessJobRequest{Id: id.String()})
+			resp, err := srv.ReprocessJob(as(t, alice), &ingestionv1.ReprocessJobRequest{Id: id.String()})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -335,7 +357,7 @@ func TestWatchJobStreamsProgressUntilDone(t *testing.T) {
 	id := uuid.New()
 	repo := &fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{
 		id: {
-			ID: id, DocumentID: uuid.New(), Status: int16(ingestionv1.JobStatus_JOB_STATUS_PROCESSING), Run: 1,
+			ID: id, OwnerID: alice, DocumentID: uuid.New(), Status: int16(ingestionv1.JobStatus_JOB_STATUS_PROCESSING), Run: 1,
 			UpdatedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
 		},
 	}}
@@ -350,7 +372,7 @@ func TestWatchJobStreamsProgressUntilDone(t *testing.T) {
 		func() error { return service.ApplyProgress(t.Context(), id, 1, embedding, 50) },
 		func() error { return service.ApplyProcessed(t.Context(), id, 1, 8) },
 	}
-	stream := &watchStream{ctx: t.Context()}
+	stream := &watchStream{ctx: as(t, alice)}
 	stream.onSend = func(*ingestionv1.Job) {
 		if len(steps) > 0 {
 			if err := steps[0](); err != nil {
@@ -381,5 +403,97 @@ func TestWatchJobStreamsProgressUntilDone(t *testing.T) {
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("streamed %v, want %v", got, want)
+	}
+}
+
+func TestCallsWithoutAUserAreUnauthenticated(t *testing.T) {
+	id := uuid.New()
+	repo := &fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{
+		id: {ID: id, OwnerID: alice, DocumentID: uuid.New(), Status: int16(ingestionv1.JobStatus_JOB_STATUS_FAILED), Run: 1},
+	}}
+	srv := New(app.New(store.NewJobs(repo), documents.New(&fakeDocuments{}), events.NewPublisher(&fakePublisher{})), slog.New(slog.DiscardHandler))
+	ctx := t.Context()
+	for name, call := range map[string]func() error{
+		"CreateUpload": func() error {
+			_, err := srv.CreateUpload(ctx, &ingestionv1.CreateUploadRequest{Filename: "a.md", SizeBytes: 3})
+			return err
+		},
+		"CompleteUpload": func() error {
+			_, err := srv.CompleteUpload(ctx, &ingestionv1.CompleteUploadRequest{JobId: id.String()})
+			return err
+		},
+		"GetJob": func() error {
+			_, err := srv.GetJob(ctx, &ingestionv1.GetJobRequest{Id: id.String()})
+			return err
+		},
+		"ListJobs": func() error {
+			_, err := srv.ListJobs(ctx, &ingestionv1.ListJobsRequest{})
+			return err
+		},
+		"WatchJob": func() error {
+			return srv.WatchJob(&ingestionv1.WatchJobRequest{Id: id.String()}, &watchStream{ctx: ctx, onSend: func(*ingestionv1.Job) {}})
+		},
+		"ReprocessJob": func() error {
+			_, err := srv.ReprocessJob(ctx, &ingestionv1.ReprocessJobRequest{Id: id.String()})
+			return err
+		},
+	} {
+		if err := call(); status.Code(err) != codes.Unauthenticated {
+			t.Errorf("%s: err = %v, want Unauthenticated", name, err)
+		}
+	}
+	if repo.jobs[id].Run != 1 {
+		t.Errorf("job reprocessed without a user: %+v", repo.jobs[id])
+	}
+}
+
+func TestUsersOnlySeeTheirOwnJobs(t *testing.T) {
+	repo := &fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}
+	pub := &fakePublisher{}
+	srv := New(app.New(store.NewJobs(repo), documents.New(&fakeDocuments{}), events.NewPublisher(pub)), slog.New(slog.DiscardHandler))
+	srv.PollInterval = time.Millisecond
+
+	created, err := srv.CreateUpload(as(t, alice), &ingestionv1.CreateUploadRequest{Filename: "a.md", SizeBytes: 3})
+	if err != nil {
+		t.Fatal(err)
+	}
+	job := created.GetJob()
+	if job.GetOwnerId() != alice {
+		t.Fatalf("owner_id = %q, want %q", job.GetOwnerId(), alice)
+	}
+
+	// bob can't see, complete, watch or reprocess alice's job: it does not exist for him.
+	if _, err := srv.GetJob(as(t, bob), &ingestionv1.GetJobRequest{Id: job.GetId()}); status.Code(err) != codes.NotFound {
+		t.Errorf("get: err = %v, want NotFound", err)
+	}
+	if _, err := srv.CompleteUpload(as(t, bob), &ingestionv1.CompleteUploadRequest{JobId: job.GetId()}); status.Code(err) != codes.NotFound {
+		t.Errorf("complete: err = %v, want NotFound", err)
+	}
+	stream := &watchStream{ctx: as(t, bob), onSend: func(*ingestionv1.Job) {}}
+	if err := srv.WatchJob(&ingestionv1.WatchJobRequest{Id: job.GetId()}, stream); status.Code(err) != codes.NotFound || len(stream.sent) != 0 {
+		t.Errorf("watch: err = %v, sent %v, want NotFound", err, stream.sent)
+	}
+	list, err := srv.ListJobs(as(t, bob), &ingestionv1.ListJobsRequest{})
+	if err != nil || len(list.GetJobs()) != 0 {
+		t.Errorf("bob's list = %v, %v; want empty", list.GetJobs(), err)
+	}
+	id := uuid.MustParse(job.GetId())
+	failedJob := repo.jobs[id]
+	failedJob.Status = int16(ingestionv1.JobStatus_JOB_STATUS_FAILED)
+	repo.jobs[id] = failedJob
+	if _, err := srv.ReprocessJob(as(t, bob), &ingestionv1.ReprocessJobRequest{Id: job.GetId()}); status.Code(err) != codes.NotFound {
+		t.Errorf("reprocess: err = %v, want NotFound", err)
+	}
+	if got := repo.jobs[id]; got.Run != 1 || len(pub.sent) != 0 {
+		t.Errorf("bob changed alice's job: %+v, published %v", got, pub.sent)
+	}
+
+	// alice still sees and controls it.
+	list, err = srv.ListJobs(as(t, alice), &ingestionv1.ListJobsRequest{})
+	if err != nil || len(list.GetJobs()) != 1 || list.GetJobs()[0].GetId() != job.GetId() {
+		t.Errorf("alice's list = %v, %v", list.GetJobs(), err)
+	}
+	if _, err := srv.ReprocessJob(as(t, alice), &ingestionv1.ReprocessJobRequest{Id: job.GetId()}); err != nil {
+		t.Errorf("alice reprocess: %v", err)
 	}
 }

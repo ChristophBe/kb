@@ -40,7 +40,7 @@ JOB_STAGE_EMBEDDING: JobStage
 JOB_STAGE_STORING: JobStage
 
 class Job(_message.Message):
-    __slots__ = ("id", "document_id", "filename", "content_type", "status", "error", "chunk_count", "create_time", "update_time", "progress", "stage")
+    __slots__ = ("id", "document_id", "filename", "content_type", "status", "error", "chunk_count", "create_time", "update_time", "progress", "stage", "owner_id")
     ID_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
     FILENAME_FIELD_NUMBER: _ClassVar[int]
@@ -52,6 +52,7 @@ class Job(_message.Message):
     UPDATE_TIME_FIELD_NUMBER: _ClassVar[int]
     PROGRESS_FIELD_NUMBER: _ClassVar[int]
     STAGE_FIELD_NUMBER: _ClassVar[int]
+    OWNER_ID_FIELD_NUMBER: _ClassVar[int]
     id: str
     document_id: str
     filename: str
@@ -63,7 +64,8 @@ class Job(_message.Message):
     update_time: _timestamp_pb2.Timestamp
     progress: int
     stage: JobStage
-    def __init__(self, id: _Optional[str] = ..., document_id: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., status: _Optional[_Union[JobStatus, str]] = ..., error: _Optional[str] = ..., chunk_count: _Optional[int] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., progress: _Optional[int] = ..., stage: _Optional[_Union[JobStage, str]] = ...) -> None: ...
+    owner_id: str
+    def __init__(self, id: _Optional[str] = ..., document_id: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., status: _Optional[_Union[JobStatus, str]] = ..., error: _Optional[str] = ..., chunk_count: _Optional[int] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., progress: _Optional[int] = ..., stage: _Optional[_Union[JobStage, str]] = ..., owner_id: _Optional[str] = ...) -> None: ...
 
 class CreateUploadRequest(_message.Message):
     __slots__ = ("filename", "content_type", "size_bytes", "title")

@@ -22,4 +22,5 @@ type IngestionJob struct {
 	Run         int32
 	Progress    int16
 	Stage       int16
+	OwnerID     string
 }

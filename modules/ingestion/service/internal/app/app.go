@@ -35,6 +35,7 @@ var (
 // Job is one document's way through ingestion.
 type Job struct {
 	ID          uuid.UUID
+	OwnerID     string // the user who created the upload; only they see the job
 	DocumentID  uuid.UUID
 	Filename    string
 	ContentType string
@@ -75,7 +76,10 @@ type Progress struct {
 	Progress int32
 }
 
-// Jobs persists jobs. Get returns ErrNotFound for an unknown job, Advance
+// Jobs persists jobs. Get, List and Reprocess act for an owner and only find
+// that owner's jobs; Advance and ReportProgress apply the worker's events,
+// which carry no user, to any job. Get returns ErrNotFound for an unknown job
+// (or another owner's), Advance
 // returns ErrNotAdvanced when the transition does not apply. ReportProgress
 // records progress of a QUEUED or PROCESSING job's current run (making it
 // PROCESSING) and returns ErrNotAdvanced when the job is in another state or
@@ -83,11 +87,11 @@ type Progress struct {
 // next run, and returns ErrNotAdvanced for any other job.
 type Jobs interface {
 	Create(ctx context.Context, job Job) (Job, error)
-	Get(ctx context.Context, id uuid.UUID) (Job, error)
-	List(ctx context.Context, limit, offset int32) ([]Job, error)
+	Get(ctx context.Context, owner string, id uuid.UUID) (Job, error)
+	List(ctx context.Context, owner string, limit, offset int32) ([]Job, error)
 	Advance(ctx context.Context, t Transition) (Job, error)
 	ReportProgress(ctx context.Context, p Progress) (Job, error)
-	Reprocess(ctx context.Context, id uuid.UUID) (Job, error)
+	Reprocess(ctx context.Context, owner string, id uuid.UUID) (Job, error)
 }
 
 // NewUpload describes a file about to be uploaded.
@@ -130,15 +134,16 @@ func New(jobs Jobs, documents Documents, publisher Publisher) *Service {
 	return &Service{jobs: jobs, documents: documents, publisher: publisher}
 }
 
-// CreateUpload registers the document and a job waiting for its file. It
-// returns the job and the URL to upload the file to.
-func (s *Service) CreateUpload(ctx context.Context, upload NewUpload) (Job, string, error) {
+// CreateUpload registers the document and a job of owner waiting for its
+// file. It returns the job and the URL to upload the file to.
+func (s *Service) CreateUpload(ctx context.Context, owner string, upload NewUpload) (Job, string, error) {
 	doc, err := s.documents.Create(ctx, upload)
 	if err != nil {
 		return Job{}, "", err
 	}
 	job, err := s.jobs.Create(ctx, Job{
 		ID:          uuid.New(),
+		OwnerID:     owner,
 		DocumentID:  doc.ID,
 		Filename:    doc.Filename,
 		ContentType: doc.ContentType,
@@ -150,9 +155,9 @@ func (s *Service) CreateUpload(ctx context.Context, upload NewUpload) (Job, stri
 	return job, doc.UploadURL, nil
 }
 
-// CompleteUpload queues a job once its file has arrived.
-func (s *Service) CompleteUpload(ctx context.Context, id uuid.UUID) (Job, error) {
-	job, err := s.jobs.Get(ctx, id)
+// CompleteUpload queues owner's job once its file has arrived.
+func (s *Service) CompleteUpload(ctx context.Context, owner string, id uuid.UUID) (Job, error) {
+	job, err := s.jobs.Get(ctx, owner, id)
 	if err != nil {
 		return Job{}, err
 	}
@@ -175,12 +180,12 @@ func (s *Service) CompleteUpload(ctx context.Context, id uuid.UUID) (Job, error)
 	return job, nil
 }
 
-// ReprocessJob queues a FAILED or DONE job again as a new run. The worker
-// replaces the document's chunks, so they are not duplicated.
-func (s *Service) ReprocessJob(ctx context.Context, id uuid.UUID) (Job, error) {
-	job, err := s.jobs.Reprocess(ctx, id)
+// ReprocessJob queues owner's FAILED or DONE job again as a new run. The
+// worker replaces the document's chunks, so they are not duplicated.
+func (s *Service) ReprocessJob(ctx context.Context, owner string, id uuid.UUID) (Job, error) {
+	job, err := s.jobs.Reprocess(ctx, owner, id)
 	if errors.Is(err, ErrNotAdvanced) {
-		if _, err := s.jobs.Get(ctx, id); err != nil {
+		if _, err := s.jobs.Get(ctx, owner, id); err != nil {
 			return Job{}, err
 		}
 		return Job{}, ErrNotReprocessable
@@ -200,14 +205,14 @@ func (s *Service) ReprocessJob(ctx context.Context, id uuid.UUID) (Job, error) {
 	return job, nil
 }
 
-// GetJob returns one job.
-func (s *Service) GetJob(ctx context.Context, id uuid.UUID) (Job, error) {
-	return s.jobs.Get(ctx, id)
+// GetJob returns one of owner's jobs.
+func (s *Service) GetJob(ctx context.Context, owner string, id uuid.UUID) (Job, error) {
+	return s.jobs.Get(ctx, owner, id)
 }
 
-// ListJobs returns a page of jobs, newest first.
-func (s *Service) ListJobs(ctx context.Context, limit, offset int32) ([]Job, error) {
-	return s.jobs.List(ctx, limit, offset)
+// ListJobs returns a page of owner's jobs, newest first.
+func (s *Service) ListJobs(ctx context.Context, owner string, limit, offset int32) ([]Job, error) {
+	return s.jobs.List(ctx, owner, limit, offset)
 }
 
 // ApplyStarted records that the worker picked up run run of a job.

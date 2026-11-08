@@ -14,7 +14,7 @@ jobs:
           SEMREL_VERSION: v2.31.0
           SEMREL_SHA256: b8f518b1aeb1d1742f4e6e91a179b707cea4309a64fe3854f465bf724f04f6d3
         run: |
-          curl -fsSL -o "$RUNNER_TEMP/semantic-release" \
+          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/semantic-release" \
             "https://github.com/go-semantic-release/semantic-release/releases/download/$SEMREL_VERSION/semantic-release_${SEMREL_VERSION}_linux_amd64"
           echo "$SEMREL_SHA256  $RUNNER_TEMP/semantic-release" | sha256sum -c -
           chmod +x "$RUNNER_TEMP/semantic-release"

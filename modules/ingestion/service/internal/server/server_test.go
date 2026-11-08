@@ -82,7 +82,7 @@ func (f *fakeRepo) AdvanceJob(_ context.Context, p store.AdvanceJobParams) (stor
 	if !ok || j.Run != p.Run || j.Status >= 4 || j.Status >= p.Status {
 		return j, pgx.ErrNoRows
 	}
-	j.Status = p.Status
+	j.Status, j.Error = p.Status, p.Error
 	if p.Status == 4 {
 		j.Progress = 100
 	}
@@ -117,9 +117,16 @@ func (f *fakeRepo) ReprocessJob(_ context.Context, p store.ReprocessJobParams) (
 type fakeDocuments struct {
 	documentv1.DocumentServiceClient
 	statuses []documentv1.DocumentStatus
+	created  []*documentv1.CreateDocumentRequest
+	// createErr fails CreateDocument.
+	createErr error
 }
 
 func (f *fakeDocuments) CreateDocument(_ context.Context, req *documentv1.CreateDocumentRequest, _ ...grpc.CallOption) (*documentv1.CreateDocumentResponse, error) {
+	f.created = append(f.created, req)
+	if f.createErr != nil {
+		return nil, f.createErr
+	}
 	return &documentv1.CreateDocumentResponse{
 		Document:  &documentv1.Document{Id: uuid.NewString(), Filename: req.GetFilename()},
 		UploadUrl: "http://s3/upload",
@@ -253,6 +260,64 @@ func TestCreateUploadValidates(t *testing.T) {
 				t.Errorf("fields %v, want %v", fields, tc.fields)
 			}
 		})
+	}
+}
+
+func TestCreateUploadForwardsTheChecksum(t *testing.T) {
+	docs := &fakeDocuments{}
+	srv := New(app.New(store.NewJobs(&fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}), documents.New(docs), events.NewPublisher(&fakePublisher{})), slog.New(slog.DiscardHandler))
+	if _, err := srv.CreateUpload(as(t, alice), &ingestionv1.CreateUploadRequest{Filename: "a.md", SizeBytes: 3, Sha256: "abc123"}); err != nil {
+		t.Fatal(err)
+	}
+	if len(docs.created) != 1 || docs.created[0].GetSha256() != "abc123" {
+		t.Errorf("created = %v, want the checksum passed on", docs.created)
+	}
+}
+
+func TestCreateUploadPassesOnTheDocumentModulesViolations(t *testing.T) {
+	docs := &fakeDocuments{createErr: grpcserver.InvalidArgument(
+		grpcserver.Violation("size_bytes", "The file is larger than the limit of 50 MiB"),
+		grpcserver.Violation("content_type", "Files of type application/zip are not accepted"),
+	)}
+	repo := &fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}
+	srv := New(app.New(store.NewJobs(repo), documents.New(docs), events.NewPublisher(&fakePublisher{})), slog.New(slog.DiscardHandler))
+	_, err := srv.CreateUpload(as(t, alice), &ingestionv1.CreateUploadRequest{Filename: "a.zip", SizeBytes: 1 << 30})
+	if status.Code(err) != codes.InvalidArgument {
+		t.Fatalf("err = %v, want InvalidArgument", err)
+	}
+	var got []string
+	for _, v := range grpcserver.FieldViolations(err) {
+		got = append(got, v.GetField()+": "+v.GetDescription())
+	}
+	want := []string{"size_bytes: The file is larger than the limit of 50 MiB", "content_type: Files of type application/zip are not accepted"}
+	if !slices.Equal(got, want) {
+		t.Errorf("violations %v, want %v", got, want)
+	}
+	if len(repo.jobs) != 0 {
+		t.Errorf("a job was created: %v", repo.jobs)
+	}
+}
+
+func TestCompleteUploadFailsTheJobOfARejectedFile(t *testing.T) {
+	id := uuid.New()
+	repo := &fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{
+		id: {ID: id, OwnerID: alice, DocumentID: uuid.New(), Status: int16(ingestionv1.JobStatus_JOB_STATUS_PENDING_UPLOAD), Run: 1},
+	}}
+	reason := "The uploaded file does not match its checksum"
+	docs := &peerFailure{err: grpcserver.WithDetails(codes.FailedPrecondition, reason,
+		grpcserver.ErrorInfo("kb.document.v1", "UPLOAD_REJECTED", nil))}
+	pub := &fakePublisher{}
+	srv := New(app.New(store.NewJobs(repo), documents.New(docs), events.NewPublisher(pub)), slog.New(slog.DiscardHandler))
+
+	resp, err := srv.CompleteUpload(as(t, alice), &ingestionv1.CompleteUploadRequest{JobId: id.String()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if job := resp.GetJob(); job.GetStatus() != ingestionv1.JobStatus_JOB_STATUS_FAILED || job.GetError() != reason {
+		t.Errorf("job = %v, want FAILED with %q", job, reason)
+	}
+	if len(pub.sent) != 0 {
+		t.Errorf("a rejected file was queued: %v", pub.sent)
 	}
 }
 

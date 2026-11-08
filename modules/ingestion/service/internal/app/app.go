@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,6 +32,34 @@ var (
 	// not terminal.
 	ErrNotAdvanced = errors.New("job not advanced")
 )
+
+// FieldViolation names a field of the upload the document module rejected
+// and why, in a sentence for the user.
+type FieldViolation struct {
+	Field, Description string
+}
+
+// InvalidUploadError means the document module does not accept the file
+// described (empty, too large, a type it does not take).
+type InvalidUploadError struct {
+	Violations []FieldViolation
+}
+
+func (e *InvalidUploadError) Error() string {
+	descriptions := make([]string, 0, len(e.Violations))
+	for _, v := range e.Violations {
+		descriptions = append(descriptions, v.Description)
+	}
+	return "invalid upload: " + strings.Join(descriptions, "; ")
+}
+
+// UploadRejectedError means the document module refused the uploaded file
+// (too large, not matching its checksum). Reason is for the user.
+type UploadRejectedError struct {
+	Reason string
+}
+
+func (e *UploadRejectedError) Error() string { return "upload rejected: " + e.Reason }
 
 // Job is one document's way through ingestion.
 type Job struct {
@@ -100,6 +129,8 @@ type NewUpload struct {
 	Filename    string
 	ContentType string
 	SizeBytes   int64
+	// SHA256 is the file's checksum in hex, empty if the client sent none.
+	SHA256 string
 }
 
 // Document is what ingestion knows about a document of the document module.
@@ -111,8 +142,9 @@ type Document struct {
 }
 
 // Documents is the document module. It returns ErrDocumentsUnavailable while
-// the module is unreachable, and MarkUploaded returns ErrUploadMissing when
-// the file is not there.
+// the module is unreachable. Create returns an *InvalidUploadError for a file
+// the module does not accept. MarkUploaded returns ErrUploadMissing when the
+// file is not there and an *UploadRejectedError when the module refuses it.
 type Documents interface {
 	Create(ctx context.Context, upload NewUpload) (Document, error)
 	MarkUploaded(ctx context.Context, id uuid.UUID) error
@@ -155,7 +187,8 @@ func (s *Service) CreateUpload(ctx context.Context, owner string, upload NewUplo
 	return job, doc.UploadURL, nil
 }
 
-// CompleteUpload queues owner's job once its file has arrived.
+// CompleteUpload queues owner's job once its file has arrived. A file the
+// document module rejects fails the job, with the module's reason.
 func (s *Service) CompleteUpload(ctx context.Context, owner string, id uuid.UUID) (Job, error) {
 	job, err := s.jobs.Get(ctx, owner, id)
 	if err != nil {
@@ -165,7 +198,20 @@ func (s *Service) CompleteUpload(ctx context.Context, owner string, id uuid.UUID
 		return Job{}, ErrAlreadyCompleted
 	}
 	if err := s.documents.MarkUploaded(ctx, job.DocumentID); err != nil {
-		return Job{}, err
+		var rejected *UploadRejectedError
+		if !errors.As(err, &rejected) {
+			return Job{}, err
+		}
+		job, err = s.jobs.Advance(ctx, Transition{
+			ID: id, Run: job.Run, Status: ingestionv1.JobStatus_JOB_STATUS_FAILED, Error: rejected.Reason,
+		})
+		if errors.Is(err, ErrNotAdvanced) {
+			return Job{}, ErrAlreadyCompleted
+		}
+		if err != nil {
+			return Job{}, fmt.Errorf("fail job: %w", err)
+		}
+		return job, nil
 	}
 	job, err = s.jobs.Advance(ctx, Transition{ID: id, Run: job.Run, Status: ingestionv1.JobStatus_JOB_STATUS_QUEUED})
 	if errors.Is(err, ErrNotAdvanced) {

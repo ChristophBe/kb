@@ -7,11 +7,13 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	"github.com/christoph/kb/modules/ingestion/service/internal/app"
+	"github.com/christoph/kb/platform/go/grpcserver"
 )
 
 // Client implements app.Documents.
@@ -29,7 +31,17 @@ func (c *Client) Create(ctx context.Context, upload app.NewUpload) (app.Document
 		Filename:    upload.Filename,
 		ContentType: upload.ContentType,
 		SizeBytes:   upload.SizeBytes,
+		Sha256:      upload.SHA256,
 	})
+	if violations := grpcserver.FieldViolations(err); status.Code(err) == codes.InvalidArgument && len(violations) > 0 {
+		// The request's fields are named as in CreateUploadRequest, so the
+		// violations pass on unchanged.
+		invalid := &app.InvalidUploadError{}
+		for _, v := range violations {
+			invalid.Violations = append(invalid.Violations, app.FieldViolation{Field: v.GetField(), Description: v.GetDescription()})
+		}
+		return app.Document{}, invalid
+	}
 	if err != nil {
 		return app.Document{}, peerError("create document", err)
 	}
@@ -51,9 +63,23 @@ func (c *Client) MarkUploaded(ctx context.Context, id uuid.UUID) error {
 		Id: id.String(), Status: documentv1.DocumentStatus_DOCUMENT_STATUS_UPLOADED,
 	})
 	if status.Code(err) == codes.FailedPrecondition {
+		if hasReason(err, "UPLOAD_REJECTED") {
+			return &app.UploadRejectedError{Reason: status.Convert(err).Message()}
+		}
 		return app.ErrUploadMissing
 	}
 	return peerError("mark document uploaded", err)
+}
+
+// hasReason reports whether err carries an ErrorInfo of the document module
+// with this reason.
+func hasReason(err error, reason string) bool {
+	for _, d := range status.Convert(err).Details() {
+		if info, ok := d.(*errdetails.ErrorInfo); ok && info.GetDomain() == "kb.document.v1" && info.GetReason() == reason {
+			return true
+		}
+	}
+	return false
 }
 
 // peerError keeps the peer's status from reaching callers of this module: a

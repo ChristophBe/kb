@@ -15,6 +15,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -162,14 +163,20 @@ type fakeObjects struct {
 	size        int64
 	contentType string
 	statErr     error
+	// content is what Open reads; "content" when empty.
+	content string
 }
 
-func (fakeObjects) PresignPut(_ context.Context, key string) (string, error) {
-	return "http://s3/" + key, nil
+// PresignPut encodes the signed size and type in the URL for tests to check.
+func (fakeObjects) PresignPut(_ context.Context, key, contentType string, size int64) (string, error) {
+	return fmt.Sprintf("http://s3/%s?type=%s&size=%d", key, contentType, size), nil
 }
 
-func (fakeObjects) Open(context.Context, string) (io.ReadCloser, error) {
-	return io.NopCloser(strings.NewReader("content")), nil
+func (f fakeObjects) Open(context.Context, string) (io.ReadCloser, error) {
+	if f.content == "" {
+		return io.NopCloser(strings.NewReader("content")), nil
+	}
+	return io.NopCloser(strings.NewReader(f.content)), nil
 }
 
 func (fakeObjects) PresignGet(_ context.Context, key, _ string) (string, error) {
@@ -182,13 +189,21 @@ func (f fakeObjects) Stat(context.Context, string) (int64, string, error) {
 	return f.size, f.contentType, f.statErr
 }
 
+// testLimits mirror the defaults: 50 MiB of PDF, text, JSON or YAML.
+var testLimits = Limits{
+	MaxUploadBytes:      50 << 20,
+	AllowedContentTypes: []string{"application/pdf", "text/*", "application/json", "application/yaml"},
+}
+
 func newServer(repo *fakeRepo) *Server {
-	return New(repo, fakeObjects{}, &fakeLLM{vector: []float32{1, 0}}, slog.New(slog.DiscardHandler))
+	return New(repo, fakeObjects{}, &fakeLLM{vector: []float32{1, 0}}, testLimits, slog.New(slog.DiscardHandler))
 }
 
 func TestCreateDocumentDefaultsTitleAndPresigns(t *testing.T) {
 	repo := &fakeRepo{}
-	resp, err := newServer(repo).CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{Filename: "notes.md"})
+	resp, err := newServer(repo).CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{
+		Filename: "notes.md", ContentType: "text/markdown", SizeBytes: 42,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,13 +213,102 @@ func TestCreateDocumentDefaultsTitleAndPresigns(t *testing.T) {
 	if resp.GetDocument().GetStatus() != documentv1.DocumentStatus_DOCUMENT_STATUS_PENDING_UPLOAD {
 		t.Errorf("status = %v", resp.GetDocument().GetStatus())
 	}
-	if want := "http://s3/" + repo.created[0].ObjectKey; resp.GetUploadUrl() != want {
-		t.Errorf("upload url = %q, want %q", resp.GetUploadUrl(), want)
-	}
-	if repo.created[0].ContentType != "application/octet-stream" {
-		t.Errorf("content type default not applied: %q", repo.created[0].ContentType)
+	if want := "http://s3/" + repo.created[0].ObjectKey + "?type=text/markdown&size=42"; resp.GetUploadUrl() != want {
+		t.Errorf("upload url = %q, want %q (signed for the declared type and size)", resp.GetUploadUrl(), want)
 	}
 }
+
+func TestCreateDocumentTypesGenericFilesByExtension(t *testing.T) {
+	for _, tc := range []struct{ declared, filename, want string }{
+		{"", "notes.md", "text/markdown"},
+		{"application/octet-stream", "config.YML", "application/yaml"},
+		{"text/plain", "notes.md", "text/plain"},
+	} {
+		repo := &fakeRepo{}
+		_, err := newServer(repo).CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{
+			Filename: tc.filename, ContentType: tc.declared, SizeBytes: 1,
+		})
+		if err != nil {
+			t.Fatalf("%q %s: %v", tc.declared, tc.filename, err)
+		}
+		if got := repo.created[0].ContentType; got != tc.want {
+			t.Errorf("%q %s: stored type %q, want %q", tc.declared, tc.filename, got, tc.want)
+		}
+	}
+}
+
+func TestCreateDocumentRejectsFilesOutsideTheLimits(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		req   *documentv1.CreateDocumentRequest
+		field string
+		want  string
+	}{
+		{"empty", &documentv1.CreateDocumentRequest{Filename: "a.md"}, "size_bytes", "The file is empty"},
+		{"oversize", &documentv1.CreateDocumentRequest{Filename: "a.pdf", SizeBytes: 50<<20 + 1},
+			"size_bytes", "The file is larger than the limit of 50 MiB"},
+		{"disallowed type", &documentv1.CreateDocumentRequest{Filename: "a.docx", ContentType: "application/msword", SizeBytes: 1},
+			"content_type", "Files of type application/msword are not accepted"},
+		{"unknown extension", &documentv1.CreateDocumentRequest{Filename: "a.bin", SizeBytes: 1},
+			"content_type", "Files of type application/octet-stream are not accepted"},
+		{"bad checksum", &documentv1.CreateDocumentRequest{Filename: "a.md", SizeBytes: 1, Sha256: "abc"},
+			"sha256", "The checksum must be a SHA-256 in hex"},
+		{"long title", &documentv1.CreateDocumentRequest{Filename: "a.md", SizeBytes: 1, Title: strings.Repeat("x", 201)},
+			"title", "Title must not be longer than 200 characters"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := &fakeRepo{}
+			_, err := newServer(repo).CreateDocument(asAlice(t), tc.req)
+			v := grpcserver.FieldViolations(err)
+			if status.Code(err) != codes.InvalidArgument || len(v) != 1 || v[0].GetField() != tc.field || v[0].GetDescription() != tc.want {
+				t.Fatalf("err = %v, violations %v; want %s: %q", err, v, tc.field, tc.want)
+			}
+			if len(repo.created) != 0 {
+				t.Errorf("document was created: %+v", repo.created)
+			}
+		})
+	}
+}
+
+func TestCreateDocumentReportsEveryViolation(t *testing.T) {
+	_, err := newServer(&fakeRepo{}).CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{
+		Filename: "a.exe", ContentType: "application/x-msdownload", SizeBytes: 1 << 40,
+	})
+	var fields []string
+	for _, v := range grpcserver.FieldViolations(err) {
+		fields = append(fields, v.GetField())
+	}
+	if !slices.Equal(fields, []string{"size_bytes", "content_type"}) {
+		t.Errorf("violated fields = %v, want size_bytes and content_type", fields)
+	}
+}
+
+func TestCreateDocumentAllowsTypeWildcardsAndParameters(t *testing.T) {
+	srv := newServer(&fakeRepo{})
+	for _, ct := range []string{"text/csv", "text/plain; charset=utf-8", "application/PDF"} {
+		if _, err := srv.CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{
+			Filename: "f", ContentType: ct, SizeBytes: 1,
+		}); err != nil {
+			t.Errorf("%s: %v", ct, err)
+		}
+	}
+}
+
+func TestCreateDocumentStoresTheChecksumInLowercase(t *testing.T) {
+	repo := &fakeRepo{}
+	sum := strings.ToUpper(contentSHA256)
+	if _, err := newServer(repo).CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{
+		Filename: "a.md", SizeBytes: 7, Sha256: sum,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if repo.created[0].Sha256 != contentSHA256 {
+		t.Errorf("stored checksum %q, want %q", repo.created[0].Sha256, contentSHA256)
+	}
+}
+
+// contentSHA256 is the SHA-256 of "content", what fakeObjects stores.
+const contentSHA256 = "ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73"
 
 func TestCreateDocumentRequiresFilename(t *testing.T) {
 	_, err := newServer(&fakeRepo{}).CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{})
@@ -247,7 +351,7 @@ func TestSetUploadedRecordsTheActualObject(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New(), ObjectKey: "k", SizeBytes: 1, ContentType: "application/pdf"}}
-			srv := New(repo, fakeObjects{size: 42, contentType: tc.stored}, &fakeLLM{}, slog.New(slog.DiscardHandler))
+			srv := New(repo, fakeObjects{size: 42, contentType: tc.stored}, &fakeLLM{}, testLimits, slog.New(slog.DiscardHandler))
 			resp, err := srv.SetDocumentStatus(t.Context(), uploadedRequest(repo.doc.ID))
 			if err != nil {
 				t.Fatal(err)
@@ -270,7 +374,7 @@ func TestSetUploadedFailsWithoutAnObject(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New(), ObjectKey: "k"}}
-			srv := New(repo, fakeObjects{statErr: tc.statErr}, &fakeLLM{}, slog.New(slog.DiscardHandler))
+			srv := New(repo, fakeObjects{statErr: tc.statErr}, &fakeLLM{}, testLimits, slog.New(slog.DiscardHandler))
 			_, err := srv.SetDocumentStatus(t.Context(), uploadedRequest(repo.doc.ID))
 			if status.Code(err) != tc.want {
 				t.Fatalf("err = %v, want %v", err, tc.want)
@@ -282,6 +386,59 @@ func TestSetUploadedFailsWithoutAnObject(t *testing.T) {
 	}
 }
 
+func TestSetUploadedVerifiesTheChecksum(t *testing.T) {
+	repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New(), ObjectKey: "k", Sha256: contentSHA256}}
+	srv := New(repo, fakeObjects{size: 7}, &fakeLLM{}, testLimits, slog.New(slog.DiscardHandler))
+	resp, err := srv.SetDocumentStatus(t.Context(), uploadedRequest(repo.doc.ID))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.GetDocument().GetStatus() != documentv1.DocumentStatus_DOCUMENT_STATUS_UPLOADED || len(repo.statuses) != 0 {
+		t.Errorf("status %v, other statuses set %+v; want UPLOADED", resp.GetDocument().GetStatus(), repo.statuses)
+	}
+}
+
+func TestSetUploadedFailsARejectedFile(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		objects fakeObjects
+		reason  string
+	}{
+		{"checksum mismatch", fakeObjects{size: 8, content: "tampered"}, "The uploaded file does not match its checksum"},
+		{"oversize", fakeObjects{size: 50<<20 + 1}, "The file is larger than the limit of 50 MiB"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New(), ObjectKey: "k", Sha256: contentSHA256}}
+			srv := New(repo, tc.objects, &fakeLLM{}, testLimits, slog.New(slog.DiscardHandler))
+			_, err := srv.SetDocumentStatus(t.Context(), uploadedRequest(repo.doc.ID))
+			if status.Code(err) != codes.FailedPrecondition || status.Convert(err).Message() != tc.reason {
+				t.Fatalf("err = %v, want FailedPrecondition %q", err, tc.reason)
+			}
+			if reason := errorReason(err); reason != "UPLOAD_REJECTED" {
+				t.Errorf("reason = %q, want UPLOAD_REJECTED", reason)
+			}
+			if len(repo.marked) != 0 {
+				t.Errorf("document was marked uploaded: %+v", repo.marked)
+			}
+			want := store.SetDocumentStatusParams{
+				ID: repo.doc.ID, Status: int16(documentv1.DocumentStatus_DOCUMENT_STATUS_FAILED), StatusDetail: tc.reason,
+			}
+			if len(repo.statuses) != 1 || repo.statuses[0] != want {
+				t.Errorf("statuses = %+v, want %+v", repo.statuses, want)
+			}
+		})
+	}
+}
+
+func errorReason(err error) string {
+	for _, d := range status.Convert(err).Details() {
+		if info, ok := d.(*errdetails.ErrorInfo); ok {
+			return info.GetReason()
+		}
+	}
+	return ""
+}
+
 func TestSetUploadedUnknownDocument(t *testing.T) {
 	_, err := newServer(&fakeRepo{}).SetDocumentStatus(t.Context(), uploadedRequest(uuid.New()))
 	if status.Code(err) != codes.NotFound {
@@ -291,7 +448,7 @@ func TestSetUploadedUnknownDocument(t *testing.T) {
 
 func TestOtherStatusesDoNotCheckTheObject(t *testing.T) {
 	repo := &fakeRepo{}
-	srv := New(repo, fakeObjects{statErr: fs.ErrNotExist}, &fakeLLM{}, slog.New(slog.DiscardHandler))
+	srv := New(repo, fakeObjects{statErr: fs.ErrNotExist}, &fakeLLM{}, testLimits, slog.New(slog.DiscardHandler))
 	_, err := srv.SetDocumentStatus(t.Context(), &documentv1.SetDocumentStatusRequest{
 		Id: uuid.NewString(), Status: documentv1.DocumentStatus_DOCUMENT_STATUS_PROCESSING,
 	})
@@ -326,7 +483,7 @@ func TestSearchDocumentsEmbedsTheQueryAndSearches(t *testing.T) {
 		DocumentTitle: "Quarterly report", Score: 0.82,
 	}}}
 	llm := &fakeLLM{vector: []float32{0.5, 0.25}}
-	srv := New(repo, fakeObjects{}, llm, slog.New(slog.DiscardHandler))
+	srv := New(repo, fakeObjects{}, llm, testLimits, slog.New(slog.DiscardHandler))
 	resp, err := srv.SearchDocuments(asAlice(t), &documentv1.SearchDocumentsRequest{
 		Query: "  revenue growth ", DocumentIds: []string{docID.String()},
 	})
@@ -370,7 +527,7 @@ func TestSearchDocumentsReturnsEachDocumentOnceWithItsBestChunk(t *testing.T) {
 		{DocumentID: notes, Idx: 0, Text: "Revenue notes.", DocumentTitle: "Notes", Score: 0.4},
 	}}
 	llm := &fakeLLM{vector: []float32{0.5, 0.25}}
-	srv := New(repo, fakeObjects{}, llm, slog.New(slog.DiscardHandler))
+	srv := New(repo, fakeObjects{}, llm, testLimits, slog.New(slog.DiscardHandler))
 	resp, err := srv.SearchDocuments(asAlice(t), &documentv1.SearchDocumentsRequest{Query: "revenue", Limit: 2})
 	if err != nil {
 		t.Fatal(err)
@@ -405,7 +562,7 @@ func TestSearchDocumentsValidatesBeforeEmbedding(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			llm := &fakeLLM{}
-			_, err := New(&fakeRepo{}, fakeObjects{}, llm, slog.New(slog.DiscardHandler)).SearchDocuments(asAlice(t), tc.req)
+			_, err := New(&fakeRepo{}, fakeObjects{}, llm, testLimits, slog.New(slog.DiscardHandler)).SearchDocuments(asAlice(t), tc.req)
 			if status.Code(err) != codes.InvalidArgument {
 				t.Errorf("err = %v, want InvalidArgument", err)
 			}
@@ -429,7 +586,7 @@ func TestSearchDocumentsMapsLLMErrors(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			repo := &fakeRepo{}
-			srv := New(repo, fakeObjects{}, &fakeLLM{err: tc.err}, slog.New(slog.DiscardHandler))
+			srv := New(repo, fakeObjects{}, &fakeLLM{err: tc.err}, testLimits, slog.New(slog.DiscardHandler))
 			_, err := srv.SearchDocuments(asAlice(t), &documentv1.SearchDocumentsRequest{Query: "q"})
 			if status.Code(err) != tc.want {
 				t.Errorf("err = %v, want %v", err, tc.want)
@@ -442,7 +599,7 @@ func TestSearchDocumentsMapsLLMErrors(t *testing.T) {
 }
 
 func TestSearchDocumentsRejectsAnEmptyEmbedding(t *testing.T) {
-	srv := New(&fakeRepo{}, fakeObjects{}, &fakeLLM{}, slog.New(slog.DiscardHandler))
+	srv := New(&fakeRepo{}, fakeObjects{}, &fakeLLM{}, testLimits, slog.New(slog.DiscardHandler))
 	_, err := srv.SearchDocuments(asAlice(t), &documentv1.SearchDocumentsRequest{Query: "q"})
 	if status.Code(err) != codes.Internal {
 		t.Errorf("err = %v, want Internal", err)
@@ -467,7 +624,7 @@ func TestSearchDocumentsWithLLMDown(t *testing.T) {
 	}
 	defer conn.Close()
 	repo := &fakeRepo{list: []store.DocumentDocument{{ID: uuid.New()}}}
-	srv := New(repo, fakeObjects{}, llmv1.NewLlmServiceClient(conn), slog.New(slog.DiscardHandler))
+	srv := New(repo, fakeObjects{}, llmv1.NewLlmServiceClient(conn), testLimits, slog.New(slog.DiscardHandler))
 
 	_, err = srv.SearchDocuments(asAlice(t), &documentv1.SearchDocumentsRequest{Query: "q"})
 	if status.Code(err) != codes.Unavailable {
@@ -641,7 +798,7 @@ func TestUserRPCsRequireAUser(t *testing.T) {
 	id := uuid.NewString()
 	for name, call := range map[string]func(*Server, context.Context) error{
 		"CreateDocument": func(s *Server, ctx context.Context) error {
-			_, err := s.CreateDocument(ctx, &documentv1.CreateDocumentRequest{Filename: "a.md"})
+			_, err := s.CreateDocument(ctx, &documentv1.CreateDocumentRequest{Filename: "a.md", SizeBytes: 1})
 			return err
 		},
 		"GetDocument": func(s *Server, ctx context.Context) error {
@@ -691,7 +848,7 @@ func TestUserRPCsRequireAUser(t *testing.T) {
 
 func TestCreateDocumentIsOwnedByTheCaller(t *testing.T) {
 	repo := &fakeRepo{}
-	resp, err := newServer(repo).CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{Filename: "a.md"})
+	resp, err := newServer(repo).CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{Filename: "a.md", SizeBytes: 1})
 	if err != nil {
 		t.Fatal(err)
 	}

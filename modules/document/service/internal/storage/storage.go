@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -68,8 +69,15 @@ func NewS3(ctx context.Context, cfg Config) (*S3, error) {
 	return &S3{internal: internal, public: public, bucket: cfg.Bucket}, nil
 }
 
-func (m *S3) PresignPut(ctx context.Context, key string) (string, error) {
-	u, err := m.public.PresignedPutObject(ctx, m.bucket, key, presignExpiry)
+// PresignPut returns a URL to upload the object with. Content-Type and
+// Content-Length are signed headers: the server refuses (403) an upload that
+// sends another type or another number of bytes, so the declared size and
+// type hold for the stored object.
+func (m *S3) PresignPut(ctx context.Context, key, contentType string, size int64) (string, error) {
+	headers := http.Header{}
+	headers.Set("Content-Type", contentType)
+	headers.Set("Content-Length", strconv.FormatInt(size, 10))
+	u, err := m.public.PresignHeader(ctx, http.MethodPut, m.bucket, key, presignExpiry, nil, headers)
 	if err != nil {
 		return "", err
 	}

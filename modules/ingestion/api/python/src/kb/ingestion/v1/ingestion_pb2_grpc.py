@@ -75,14 +75,18 @@ class IngestionServiceServicer:
 
     def CreateUpload(self, request, context):
         """CreateUpload registers an ingestion job and returns a presigned URL the
-        client uploads the file to.
+        client uploads the file to. A file the document module does not accept
+        (empty, too large, of a type it does not take) is rejected with field
+        violations.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def CompleteUpload(self, request, context):
-        """CompleteUpload confirms the upload finished and queues processing.
+        """CompleteUpload confirms the upload finished and queues processing. A
+        file the document module rejects once uploaded (too large, not matching
+        its sha256) fails the job instead, with the reason in error.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')

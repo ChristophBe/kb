@@ -286,7 +286,10 @@ type CreateUploadRequest struct {
 	// The file's size; must be greater than 0, empty files are rejected.
 	SizeBytes int64 `protobuf:"varint,3,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
 	// Defaults to the filename when empty.
-	Title         string `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	Title string `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	// Optional SHA-256 of the file, in hex. A file uploaded with other content
+	// fails its job on CompleteUpload.
+	Sha256        string `protobuf:"bytes,5,opt,name=sha256,proto3" json:"sha256,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -349,10 +352,19 @@ func (x *CreateUploadRequest) GetTitle() string {
 	return ""
 }
 
+func (x *CreateUploadRequest) GetSha256() string {
+	if x != nil {
+		return x.Sha256
+	}
+	return ""
+}
+
 type CreateUploadResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Job           *Job                   `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
-	UploadUrl     string                 `protobuf:"bytes,2,opt,name=upload_url,json=uploadUrl,proto3" json:"upload_url,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Job   *Job                   `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	// A presigned URL to PUT the file to, sending the job's content_type as
+	// Content-Type and exactly size_bytes bytes; other uploads are refused.
+	UploadUrl     string `protobuf:"bytes,2,opt,name=upload_url,json=uploadUrl,proto3" json:"upload_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -871,13 +883,14 @@ const file_kb_ingestion_v1_ingestion_proto_rawDesc = "" +
 	"\bprogress\x18\n" +
 	" \x01(\x05R\bprogress\x12/\n" +
 	"\x05stage\x18\v \x01(\x0e2\x19.kb.ingestion.v1.JobStageR\x05stage\x12\x19\n" +
-	"\bowner_id\x18\f \x01(\tR\aownerId\"\x89\x01\n" +
+	"\bowner_id\x18\f \x01(\tR\aownerId\"\xa1\x01\n" +
 	"\x13CreateUploadRequest\x12\x1a\n" +
 	"\bfilename\x18\x01 \x01(\tR\bfilename\x12!\n" +
 	"\fcontent_type\x18\x02 \x01(\tR\vcontentType\x12\x1d\n" +
 	"\n" +
 	"size_bytes\x18\x03 \x01(\x03R\tsizeBytes\x12\x14\n" +
-	"\x05title\x18\x04 \x01(\tR\x05title\"]\n" +
+	"\x05title\x18\x04 \x01(\tR\x05title\x12\x16\n" +
+	"\x06sha256\x18\x05 \x01(\tR\x06sha256\"]\n" +
 	"\x14CreateUploadResponse\x12&\n" +
 	"\x03job\x18\x01 \x01(\v2\x14.kb.ingestion.v1.JobR\x03job\x12\x1d\n" +
 	"\n" +

@@ -206,6 +206,22 @@ func TestCompleteUploadThatCannotProceedLeavesTheJobPending(t *testing.T) {
 	}
 }
 
+func TestCompleteUploadOfARejectedFileFailsTheJob(t *testing.T) {
+	job := pendingJob()
+	jobs, pub := newFakeJobs(job), &fakePublisher{}
+	docs := &fakeDocuments{markErr: &UploadRejectedError{Reason: "The uploaded file does not match its checksum"}}
+	got, err := New(jobs, docs, pub).CompleteUpload(t.Context(), alice, job.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Status != ingestionv1.JobStatus_JOB_STATUS_FAILED || got.Error != "The uploaded file does not match its checksum" {
+		t.Errorf("job = %+v, want FAILED with the reason", got)
+	}
+	if len(pub.sent) != 0 {
+		t.Errorf("published = %v", pub.sent)
+	}
+}
+
 func TestCompleteUploadUnknownJob(t *testing.T) {
 	_, err := New(newFakeJobs(), &fakeDocuments{}, &fakePublisher{}).CompleteUpload(t.Context(), alice, uuid.New())
 	if !errors.Is(err, ErrNotFound) {

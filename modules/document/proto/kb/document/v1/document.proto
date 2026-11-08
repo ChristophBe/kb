@@ -57,6 +57,9 @@ message Document {
   // The user who uploaded the document, as the subject of their token. Set by
   // the service; only this user can see the document.
   string owner_id = 12;
+  // The SHA-256 of the file as declared at creation, in lowercase hex; empty
+  // when none was declared.
+  string sha256 = 13;
 }
 
 message Chunk {
@@ -82,16 +85,27 @@ message ScoredDocument {
   Chunk best_chunk = 4;
 }
 
+// CreateDocument rejects, with field violations, a file that is empty, larger
+// than the service's upload limit or of a type it does not accept.
 message CreateDocumentRequest {
   string title = 1;
   string filename = 2;
+  // A missing or generic type (application/octet-stream) is replaced by the
+  // type the filename's extension stands for, if the service knows one.
   string content_type = 3;
+  // The file's exact size; must be greater than 0.
   int64 size_bytes = 4;
   map<string, string> metadata = 5;
+  // Optional SHA-256 of the file, in hex. When set, SetDocumentStatus(UPLOADED)
+  // checks the uploaded file against it and fails the document on a mismatch.
+  string sha256 = 6;
 }
 
 message CreateDocumentResponse {
   Document document = 1;
+  // A presigned URL to PUT the file to. The request must send the
+  // document's content_type as Content-Type and exactly size_bytes bytes;
+  // the storage server refuses any other upload.
   string upload_url = 2;
 }
 
@@ -130,6 +144,10 @@ message DeleteDocumentRequest {
 
 message DeleteDocumentResponse {}
 
+// Setting UPLOADED checks the uploaded file: FAILED_PRECONDITION when it is
+// missing. A file larger than the upload limit or not matching the declared
+// sha256 sets the document FAILED, with the reason in status_detail, and
+// fails with FAILED_PRECONDITION and ErrorInfo reason UPLOAD_REJECTED.
 message SetDocumentStatusRequest {
   string id = 1;
   DocumentStatus status = 2;

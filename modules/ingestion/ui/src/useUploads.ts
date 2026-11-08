@@ -3,7 +3,7 @@ import { JobStatus } from "@kb/ingestion-api/kb/ingestion/v1/ingestion_pb";
 import { Code, ConnectError } from "@kb/module-sdk";
 import { fieldViolations } from "@kb/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isSupported, SUPPORTED_FORMATS } from "./files.ts";
+import { isSupported, SUPPORTED_FORMATS, sha256 } from "./files.ts";
 import { type Put, UploadError } from "./put.ts";
 
 /** Uploads at the same time; the rest wait. */
@@ -17,6 +17,7 @@ export interface UploadClient {
     filename: string;
     contentType: string;
     sizeBytes: bigint;
+    sha256: string;
   }): Promise<{ job?: Job; uploadUrl: string }>;
   completeUpload(req: { jobId: string }): Promise<{ job?: Job }>;
   watchJob(req: { id: string }): AsyncIterable<{ job?: Job }>;
@@ -35,10 +36,11 @@ export interface Upload {
   error?: string;
 }
 
-/** Where a file goes: the job created for it and its presigned URL. */
+/** Where a file goes: the job created for it and its presigned URL, signed for contentType. */
 interface Target {
   jobId: string;
   url: string;
+  contentType: string;
   issuedAt: number;
 }
 
@@ -133,12 +135,25 @@ export function useUploads(client: UploadClient, put: Put, events: UploadEvents,
             filename: file.name,
             contentType: file.type || "application/octet-stream",
             sizeBytes: BigInt(file.size),
+            sha256: await sha256(file),
           });
-          target = { jobId: created.job?.id ?? "", url: created.uploadUrl, issuedAt: now() };
+          target = {
+            jobId: created.job?.id ?? "",
+            url: created.uploadUrl,
+            // The server may name a better type than the browser's (e.g. for .md).
+            contentType: created.job?.contentType || file.type || "application/octet-stream",
+            issuedAt: now(),
+          };
           targets.current.set(key, target);
         }
         controller.signal.throwIfAborted();
-        await put(target.url, file, (progress) => patch(key, { progress }), controller.signal);
+        await put(
+          target.url,
+          file,
+          target.contentType,
+          (progress) => patch(key, { progress }),
+          controller.signal,
+        );
         controller.signal.throwIfAborted();
         const completed = await client.completeUpload({ jobId: target.jobId });
         if (completed.job) events.onJob(completed.job);

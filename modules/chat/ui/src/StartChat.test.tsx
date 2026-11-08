@@ -55,9 +55,12 @@ describe("StartChat", () => {
     const { transport, streamChat } = chatService();
     renderModule(chat, transport, "/new");
     const nav = within(screen.getByRole("navigation"));
-    expect(
-      (await nav.findByRole("link", { name: "New conversation" })).getAttribute("aria-current"),
-    ).toBe("page");
+    // The link renders before the list refetch marks the opened conversation as current.
+    await waitFor(() =>
+      expect(nav.getByRole("link", { name: "New conversation" }).getAttribute("aria-current")).toBe(
+        "page",
+      ),
+    );
     expect(streamChat).not.toHaveBeenCalled();
   });
 

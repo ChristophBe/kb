@@ -90,10 +90,12 @@ func Render(modules []Module) ([]File, error) {
 		"PyForbid":   pyPlatformForbidden(modules),
 		"GoModule":   GoModule,
 		"PyPlatform": PlatformPyPackage,
+		"Images":     images(modules),
 	}
 	for _, out := range []struct{ path, tmpl string }{
 		{"deploy/envoy/envoy.yaml", "envoy.yaml.tmpl"},
 		{"compose.yaml", "compose.yaml.tmpl"},
+		{"deploy/release.compose.yaml", "release.compose.yaml.tmpl"},
 		{"apps/web/src/modules.gen.ts", "modules.gen.ts.tmpl"},
 		{".github/ISSUE_TEMPLATE/epic.yml", "issue-epic.yml.tmpl"},
 		{".github/ISSUE_TEMPLATE/feature.yml", "issue-feature.yml.tmpl"},
@@ -107,6 +109,11 @@ func Render(modules []Module) ([]File, error) {
 			return nil, err
 		}
 	}
+	matrix, err := imagesJSON(modules)
+	if err != nil {
+		return nil, err
+	}
+	files = append(files, File{Path: "deploy/images.json", Content: matrix})
 	return files, nil
 }
 

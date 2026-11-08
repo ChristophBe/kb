@@ -66,7 +66,7 @@ func TestLoadModulesRejectsInvalidManifests(t *testing.T) {
 func TestLoadModulesRejectsDuplicatePorts(t *testing.T) {
 	dir := t.TempDir()
 	for _, id := range []string{"a", "b"} {
-		manifest := "id: " + id + "\ntitle: T\nservices: [{name: " + id + "-svc, language: go, port: 9000}]\n"
+		manifest := "id: " + id + "\ntitle: T\nservices: [{name: " + id + "-svc, language: python, port: 9000}]\n"
 		if err := os.MkdirAll(filepath.Join(dir, id), 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -147,7 +147,7 @@ func TestLoadModulesValidatesInternal(t *testing.T) {
 	for name, extra := range cases {
 		t.Run(name, func(t *testing.T) {
 			dir := t.TempDir()
-			writeManifest(t, dir, "x", "id: x\ntitle: X\nservices:\n  - name: x-service\n    language: go\n    port: 9000\n    "+extra+"\n")
+			writeManifest(t, dir, "x", "id: x\ntitle: X\nservices:\n  - name: x-service\n    language: python\n    port: 9000\n    "+extra+"\n")
 			protoDir := filepath.Join(dir, "x", "proto", "kb", "x", "v1")
 			if err := os.MkdirAll(protoDir, 0o755); err != nil {
 				t.Fatal(err)
@@ -159,5 +159,23 @@ func TestLoadModulesValidatesInternal(t *testing.T) {
 				t.Fatal("expected an error")
 			}
 		})
+	}
+}
+
+func TestLoadModulesResolvesGoMainPackage(t *testing.T) {
+	dir := t.TempDir()
+	writeManifest(t, dir, "x", "id: x\ntitle: X\nservices: [{name: x-service, language: go, port: 9000}]\n")
+	if _, err := LoadModules(dir); err == nil || !strings.Contains(err.Error(), "cmd/x-service") {
+		t.Fatalf("err = %v, want missing main package error", err)
+	}
+	if err := os.MkdirAll(filepath.Join(dir, "x", "service", "cmd", "x-service"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	modules, err := LoadModules(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := modules[0].Services[0].Cmd, "./modules/x/service/cmd/x-service"; got != want {
+		t.Errorf("Cmd = %q, want %q", got, want)
 	}
 }

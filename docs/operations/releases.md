@@ -19,24 +19,6 @@ Runs for the same ref are serialised (`concurrency`), so two quick merges give t
 
 The released version (without the `v`, e.g. `0.3.1`) is the `version` output of the `release` job. Image builds pass it as build arg `KB_VERSION` (`deploy/docker/*.Dockerfile`); every service logs it at startup (Go: `"msg":"starting",…,"version":"0.3.1"`, Python: `starting version 0.3.1`, web: `kb web starting version 0.3.1`) and the images carry it as label `org.opencontainers.image.version`. Builds without it report `dev`.
 
-## GitHub App
+## Token
 
-The release is created with a GitHub App token rather than `GITHUB_TOKEN`, because tags and releases created with `GITHUB_TOKEN` don't trigger other workflows (image and chart builds run on the tag). Until the app is configured, every push to `main` fails the `release` workflow with *Release app missing*.
-
-One-time setup (repository admin):
-
-1. Create a GitHub App under *Settings → Developer settings → GitHub Apps → New GitHub App* (personal account or organisation that owns the repository):
-   - name e.g. `kb-release`, homepage URL the repository URL,
-   - *Webhook*: untick *Active*,
-   - *Repository permissions*: **Contents: Read and write** (Metadata: Read-only is added automatically), nothing else,
-   - *Where can this GitHub App be installed?*: *Only on this account*.
-2. On the app's page note the **Client ID**, then under *Private keys* click *Generate a private key* and keep the downloaded `.pem` file.
-3. *Install App* → install it on the account, *Only select repositories* → this repository.
-4. In the repository, add the credentials (*Settings → Secrets and variables → Actions*), or with the GitHub CLI:
-
-   ```sh
-   gh variable set RELEASE_APP_CLIENT_ID --body '<client id>'
-   gh secret set RELEASE_APP_PRIVATE_KEY < kb-release.<date>.private-key.pem
-   ```
-
-5. If a ruleset or branch protection restricts tag creation, add the app to its bypass list. Then re-run the last failed `release` run (*Actions → release → Re-run jobs*) to create `v0.1.0`.
+The release is created with the workflow's `GITHUB_TOKEN` (job permission `contents: write`); no app or secret needs to be set up. Tags and releases created with `GITHUB_TOKEN` don't trigger other workflows, so builds that need the version (container images, the Helm chart) run as jobs in the `release` workflow after the `release` job and read its `version` output instead of running on the tag.

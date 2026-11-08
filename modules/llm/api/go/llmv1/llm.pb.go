@@ -375,8 +375,10 @@ func (*ListModelsRequest) Descriptor() ([]byte, []int) {
 }
 
 type ListModelsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Models        []*Model               `protobuf:"bytes,1,rep,name=models,proto3" json:"models,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The chat provider's chat models and the embedding provider's embedding
+	// models.
+	Models        []*Model `protobuf:"bytes,1,rep,name=models,proto3" json:"models,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -454,21 +456,91 @@ func (*GetProviderStatusRequest) Descriptor() ([]byte, []int) {
 	return file_kb_llm_v1_llm_proto_rawDescGZIP(), []int{6}
 }
 
+// ProviderHealth is the state of the provider serving one task.
+type ProviderHealth struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Registry name, e.g. "ollama" or "anthropic".
+	Provider      string `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	Healthy       bool   `protobuf:"varint,2,opt,name=healthy,proto3" json:"healthy,omitempty"`
+	Detail        string `protobuf:"bytes,3,opt,name=detail,proto3" json:"detail,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProviderHealth) Reset() {
+	*x = ProviderHealth{}
+	mi := &file_kb_llm_v1_llm_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProviderHealth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProviderHealth) ProtoMessage() {}
+
+func (x *ProviderHealth) ProtoReflect() protoreflect.Message {
+	mi := &file_kb_llm_v1_llm_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProviderHealth.ProtoReflect.Descriptor instead.
+func (*ProviderHealth) Descriptor() ([]byte, []int) {
+	return file_kb_llm_v1_llm_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ProviderHealth) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+func (x *ProviderHealth) GetHealthy() bool {
+	if x != nil {
+		return x.Healthy
+	}
+	return false
+}
+
+func (x *ProviderHealth) GetDetail() string {
+	if x != nil {
+		return x.Detail
+	}
+	return ""
+}
+
 type GetProviderStatusResponse struct {
-	state                 protoimpl.MessageState `protogen:"open.v1"`
-	Provider              string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
-	Healthy               bool                   `protobuf:"varint,2,opt,name=healthy,proto3" json:"healthy,omitempty"`
-	Detail                string                 `protobuf:"bytes,3,opt,name=detail,proto3" json:"detail,omitempty"`
-	DefaultChatModel      string                 `protobuf:"bytes,4,opt,name=default_chat_model,json=defaultChatModel,proto3" json:"default_chat_model,omitempty"`
-	DefaultEmbeddingModel string                 `protobuf:"bytes,5,opt,name=default_embedding_model,json=defaultEmbeddingModel,proto3" json:"default_embedding_model,omitempty"`
-	EmbeddingDimensions   int32                  `protobuf:"varint,6,opt,name=embedding_dimensions,json=embeddingDimensions,proto3" json:"embedding_dimensions,omitempty"`
-	unknownFields         protoimpl.UnknownFields
-	sizeCache             protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The provider's name when one serves chat and embeddings, else
+	// "<chat>+<embedding>" (e.g. "anthropic+ollama"). See chat and embedding.
+	Provider string `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	// True when both the chat and the embedding provider are healthy.
+	Healthy bool `protobuf:"varint,2,opt,name=healthy,proto3" json:"healthy,omitempty"`
+	// The detail of each provider, prefixed by its task when they differ.
+	Detail                string `protobuf:"bytes,3,opt,name=detail,proto3" json:"detail,omitempty"`
+	DefaultChatModel      string `protobuf:"bytes,4,opt,name=default_chat_model,json=defaultChatModel,proto3" json:"default_chat_model,omitempty"`
+	DefaultEmbeddingModel string `protobuf:"bytes,5,opt,name=default_embedding_model,json=defaultEmbeddingModel,proto3" json:"default_embedding_model,omitempty"`
+	EmbeddingDimensions   int32  `protobuf:"varint,6,opt,name=embedding_dimensions,json=embeddingDimensions,proto3" json:"embedding_dimensions,omitempty"`
+	// Provider serving Generate (KB_CHAT_PROVIDER).
+	Chat *ProviderHealth `protobuf:"bytes,7,opt,name=chat,proto3" json:"chat,omitempty"`
+	// Provider serving Embed (KB_EMBEDDING_PROVIDER).
+	Embedding     *ProviderHealth `protobuf:"bytes,8,opt,name=embedding,proto3" json:"embedding,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetProviderStatusResponse) Reset() {
 	*x = GetProviderStatusResponse{}
-	mi := &file_kb_llm_v1_llm_proto_msgTypes[7]
+	mi := &file_kb_llm_v1_llm_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -480,7 +552,7 @@ func (x *GetProviderStatusResponse) String() string {
 func (*GetProviderStatusResponse) ProtoMessage() {}
 
 func (x *GetProviderStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_llm_v1_llm_proto_msgTypes[7]
+	mi := &file_kb_llm_v1_llm_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -493,7 +565,7 @@ func (x *GetProviderStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProviderStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetProviderStatusResponse) Descriptor() ([]byte, []int) {
-	return file_kb_llm_v1_llm_proto_rawDescGZIP(), []int{7}
+	return file_kb_llm_v1_llm_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetProviderStatusResponse) GetProvider() string {
@@ -538,9 +610,23 @@ func (x *GetProviderStatusResponse) GetEmbeddingDimensions() int32 {
 	return 0
 }
 
+func (x *GetProviderStatusResponse) GetChat() *ProviderHealth {
+	if x != nil {
+		return x.Chat
+	}
+	return nil
+}
+
+func (x *GetProviderStatusResponse) GetEmbedding() *ProviderHealth {
+	if x != nil {
+		return x.Embedding
+	}
+	return nil
+}
+
 type GenerateRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Model id; empty selects the provider's default chat model.
+	// Model id; empty selects the chat provider's default chat model.
 	Model         string             `protobuf:"bytes,1,opt,name=model,proto3" json:"model,omitempty"`
 	Messages      []*Message         `protobuf:"bytes,2,rep,name=messages,proto3" json:"messages,omitempty"`
 	Options       *GenerationOptions `protobuf:"bytes,3,opt,name=options,proto3" json:"options,omitempty"`
@@ -550,7 +636,7 @@ type GenerateRequest struct {
 
 func (x *GenerateRequest) Reset() {
 	*x = GenerateRequest{}
-	mi := &file_kb_llm_v1_llm_proto_msgTypes[8]
+	mi := &file_kb_llm_v1_llm_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -562,7 +648,7 @@ func (x *GenerateRequest) String() string {
 func (*GenerateRequest) ProtoMessage() {}
 
 func (x *GenerateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_llm_v1_llm_proto_msgTypes[8]
+	mi := &file_kb_llm_v1_llm_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -575,7 +661,7 @@ func (x *GenerateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateRequest.ProtoReflect.Descriptor instead.
 func (*GenerateRequest) Descriptor() ([]byte, []int) {
-	return file_kb_llm_v1_llm_proto_rawDescGZIP(), []int{8}
+	return file_kb_llm_v1_llm_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GenerateRequest) GetModel() string {
@@ -612,7 +698,7 @@ type GenerateResponse struct {
 
 func (x *GenerateResponse) Reset() {
 	*x = GenerateResponse{}
-	mi := &file_kb_llm_v1_llm_proto_msgTypes[9]
+	mi := &file_kb_llm_v1_llm_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -624,7 +710,7 @@ func (x *GenerateResponse) String() string {
 func (*GenerateResponse) ProtoMessage() {}
 
 func (x *GenerateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_llm_v1_llm_proto_msgTypes[9]
+	mi := &file_kb_llm_v1_llm_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -637,7 +723,7 @@ func (x *GenerateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateResponse.ProtoReflect.Descriptor instead.
 func (*GenerateResponse) Descriptor() ([]byte, []int) {
-	return file_kb_llm_v1_llm_proto_rawDescGZIP(), []int{9}
+	return file_kb_llm_v1_llm_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GenerateResponse) GetDelta() string {
@@ -670,7 +756,7 @@ func (x *GenerateResponse) GetModel() string {
 
 type EmbedRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Model id; empty selects the provider's default embedding model.
+	// Model id; empty selects the embedding provider's default embedding model.
 	Model         string   `protobuf:"bytes,1,opt,name=model,proto3" json:"model,omitempty"`
 	Inputs        []string `protobuf:"bytes,2,rep,name=inputs,proto3" json:"inputs,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -679,7 +765,7 @@ type EmbedRequest struct {
 
 func (x *EmbedRequest) Reset() {
 	*x = EmbedRequest{}
-	mi := &file_kb_llm_v1_llm_proto_msgTypes[10]
+	mi := &file_kb_llm_v1_llm_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -691,7 +777,7 @@ func (x *EmbedRequest) String() string {
 func (*EmbedRequest) ProtoMessage() {}
 
 func (x *EmbedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_llm_v1_llm_proto_msgTypes[10]
+	mi := &file_kb_llm_v1_llm_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -704,7 +790,7 @@ func (x *EmbedRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmbedRequest.ProtoReflect.Descriptor instead.
 func (*EmbedRequest) Descriptor() ([]byte, []int) {
-	return file_kb_llm_v1_llm_proto_rawDescGZIP(), []int{10}
+	return file_kb_llm_v1_llm_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *EmbedRequest) GetModel() string {
@@ -730,7 +816,7 @@ type Embedding struct {
 
 func (x *Embedding) Reset() {
 	*x = Embedding{}
-	mi := &file_kb_llm_v1_llm_proto_msgTypes[11]
+	mi := &file_kb_llm_v1_llm_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -742,7 +828,7 @@ func (x *Embedding) String() string {
 func (*Embedding) ProtoMessage() {}
 
 func (x *Embedding) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_llm_v1_llm_proto_msgTypes[11]
+	mi := &file_kb_llm_v1_llm_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -755,7 +841,7 @@ func (x *Embedding) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Embedding.ProtoReflect.Descriptor instead.
 func (*Embedding) Descriptor() ([]byte, []int) {
-	return file_kb_llm_v1_llm_proto_rawDescGZIP(), []int{11}
+	return file_kb_llm_v1_llm_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *Embedding) GetValues() []float32 {
@@ -776,7 +862,7 @@ type EmbedResponse struct {
 
 func (x *EmbedResponse) Reset() {
 	*x = EmbedResponse{}
-	mi := &file_kb_llm_v1_llm_proto_msgTypes[12]
+	mi := &file_kb_llm_v1_llm_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -788,7 +874,7 @@ func (x *EmbedResponse) String() string {
 func (*EmbedResponse) ProtoMessage() {}
 
 func (x *EmbedResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_llm_v1_llm_proto_msgTypes[12]
+	mi := &file_kb_llm_v1_llm_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -801,7 +887,7 @@ func (x *EmbedResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmbedResponse.ProtoReflect.Descriptor instead.
 func (*EmbedResponse) Descriptor() ([]byte, []int) {
-	return file_kb_llm_v1_llm_proto_rawDescGZIP(), []int{12}
+	return file_kb_llm_v1_llm_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *EmbedResponse) GetEmbeddings() []*Embedding {
@@ -849,14 +935,20 @@ const file_kb_llm_v1_llm_proto_rawDesc = "" +
 	"\x11ListModelsRequest\">\n" +
 	"\x12ListModelsResponse\x12(\n" +
 	"\x06models\x18\x01 \x03(\v2\x10.kb.llm.v1.ModelR\x06models\"\x1a\n" +
-	"\x18GetProviderStatusRequest\"\x82\x02\n" +
+	"\x18GetProviderStatusRequest\"^\n" +
+	"\x0eProviderHealth\x12\x1a\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x18\n" +
+	"\ahealthy\x18\x02 \x01(\bR\ahealthy\x12\x16\n" +
+	"\x06detail\x18\x03 \x01(\tR\x06detail\"\xea\x02\n" +
 	"\x19GetProviderStatusResponse\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x18\n" +
 	"\ahealthy\x18\x02 \x01(\bR\ahealthy\x12\x16\n" +
 	"\x06detail\x18\x03 \x01(\tR\x06detail\x12,\n" +
 	"\x12default_chat_model\x18\x04 \x01(\tR\x10defaultChatModel\x126\n" +
 	"\x17default_embedding_model\x18\x05 \x01(\tR\x15defaultEmbeddingModel\x121\n" +
-	"\x14embedding_dimensions\x18\x06 \x01(\x05R\x13embeddingDimensions\"\x8f\x01\n" +
+	"\x14embedding_dimensions\x18\x06 \x01(\x05R\x13embeddingDimensions\x12-\n" +
+	"\x04chat\x18\a \x01(\v2\x19.kb.llm.v1.ProviderHealthR\x04chat\x127\n" +
+	"\tembedding\x18\b \x01(\v2\x19.kb.llm.v1.ProviderHealthR\tembedding\"\x8f\x01\n" +
 	"\x0fGenerateRequest\x12\x14\n" +
 	"\x05model\x18\x01 \x01(\tR\x05model\x12.\n" +
 	"\bmessages\x18\x02 \x03(\v2\x12.kb.llm.v1.MessageR\bmessages\x126\n" +
@@ -909,7 +1001,7 @@ func file_kb_llm_v1_llm_proto_rawDescGZIP() []byte {
 }
 
 var file_kb_llm_v1_llm_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_kb_llm_v1_llm_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_kb_llm_v1_llm_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_kb_llm_v1_llm_proto_goTypes = []any{
 	(Role)(0),                         // 0: kb.llm.v1.Role
 	(ModelKind)(0),                    // 1: kb.llm.v1.ModelKind
@@ -920,34 +1012,37 @@ var file_kb_llm_v1_llm_proto_goTypes = []any{
 	(*ListModelsRequest)(nil),         // 6: kb.llm.v1.ListModelsRequest
 	(*ListModelsResponse)(nil),        // 7: kb.llm.v1.ListModelsResponse
 	(*GetProviderStatusRequest)(nil),  // 8: kb.llm.v1.GetProviderStatusRequest
-	(*GetProviderStatusResponse)(nil), // 9: kb.llm.v1.GetProviderStatusResponse
-	(*GenerateRequest)(nil),           // 10: kb.llm.v1.GenerateRequest
-	(*GenerateResponse)(nil),          // 11: kb.llm.v1.GenerateResponse
-	(*EmbedRequest)(nil),              // 12: kb.llm.v1.EmbedRequest
-	(*Embedding)(nil),                 // 13: kb.llm.v1.Embedding
-	(*EmbedResponse)(nil),             // 14: kb.llm.v1.EmbedResponse
+	(*ProviderHealth)(nil),            // 9: kb.llm.v1.ProviderHealth
+	(*GetProviderStatusResponse)(nil), // 10: kb.llm.v1.GetProviderStatusResponse
+	(*GenerateRequest)(nil),           // 11: kb.llm.v1.GenerateRequest
+	(*GenerateResponse)(nil),          // 12: kb.llm.v1.GenerateResponse
+	(*EmbedRequest)(nil),              // 13: kb.llm.v1.EmbedRequest
+	(*Embedding)(nil),                 // 14: kb.llm.v1.Embedding
+	(*EmbedResponse)(nil),             // 15: kb.llm.v1.EmbedResponse
 }
 var file_kb_llm_v1_llm_proto_depIdxs = []int32{
 	1,  // 0: kb.llm.v1.Model.kind:type_name -> kb.llm.v1.ModelKind
 	0,  // 1: kb.llm.v1.Message.role:type_name -> kb.llm.v1.Role
 	2,  // 2: kb.llm.v1.ListModelsResponse.models:type_name -> kb.llm.v1.Model
-	3,  // 3: kb.llm.v1.GenerateRequest.messages:type_name -> kb.llm.v1.Message
-	4,  // 4: kb.llm.v1.GenerateRequest.options:type_name -> kb.llm.v1.GenerationOptions
-	5,  // 5: kb.llm.v1.GenerateResponse.usage:type_name -> kb.llm.v1.Usage
-	13, // 6: kb.llm.v1.EmbedResponse.embeddings:type_name -> kb.llm.v1.Embedding
-	6,  // 7: kb.llm.v1.LlmService.ListModels:input_type -> kb.llm.v1.ListModelsRequest
-	8,  // 8: kb.llm.v1.LlmService.GetProviderStatus:input_type -> kb.llm.v1.GetProviderStatusRequest
-	10, // 9: kb.llm.v1.LlmService.Generate:input_type -> kb.llm.v1.GenerateRequest
-	12, // 10: kb.llm.v1.LlmService.Embed:input_type -> kb.llm.v1.EmbedRequest
-	7,  // 11: kb.llm.v1.LlmService.ListModels:output_type -> kb.llm.v1.ListModelsResponse
-	9,  // 12: kb.llm.v1.LlmService.GetProviderStatus:output_type -> kb.llm.v1.GetProviderStatusResponse
-	11, // 13: kb.llm.v1.LlmService.Generate:output_type -> kb.llm.v1.GenerateResponse
-	14, // 14: kb.llm.v1.LlmService.Embed:output_type -> kb.llm.v1.EmbedResponse
-	11, // [11:15] is the sub-list for method output_type
-	7,  // [7:11] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	9,  // 3: kb.llm.v1.GetProviderStatusResponse.chat:type_name -> kb.llm.v1.ProviderHealth
+	9,  // 4: kb.llm.v1.GetProviderStatusResponse.embedding:type_name -> kb.llm.v1.ProviderHealth
+	3,  // 5: kb.llm.v1.GenerateRequest.messages:type_name -> kb.llm.v1.Message
+	4,  // 6: kb.llm.v1.GenerateRequest.options:type_name -> kb.llm.v1.GenerationOptions
+	5,  // 7: kb.llm.v1.GenerateResponse.usage:type_name -> kb.llm.v1.Usage
+	14, // 8: kb.llm.v1.EmbedResponse.embeddings:type_name -> kb.llm.v1.Embedding
+	6,  // 9: kb.llm.v1.LlmService.ListModels:input_type -> kb.llm.v1.ListModelsRequest
+	8,  // 10: kb.llm.v1.LlmService.GetProviderStatus:input_type -> kb.llm.v1.GetProviderStatusRequest
+	11, // 11: kb.llm.v1.LlmService.Generate:input_type -> kb.llm.v1.GenerateRequest
+	13, // 12: kb.llm.v1.LlmService.Embed:input_type -> kb.llm.v1.EmbedRequest
+	7,  // 13: kb.llm.v1.LlmService.ListModels:output_type -> kb.llm.v1.ListModelsResponse
+	10, // 14: kb.llm.v1.LlmService.GetProviderStatus:output_type -> kb.llm.v1.GetProviderStatusResponse
+	12, // 15: kb.llm.v1.LlmService.Generate:output_type -> kb.llm.v1.GenerateResponse
+	15, // 16: kb.llm.v1.LlmService.Embed:output_type -> kb.llm.v1.EmbedResponse
+	13, // [13:17] is the sub-list for method output_type
+	9,  // [9:13] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_kb_llm_v1_llm_proto_init() }
@@ -962,7 +1057,7 @@ func file_kb_llm_v1_llm_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kb_llm_v1_llm_proto_rawDesc), len(file_kb_llm_v1_llm_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   13,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

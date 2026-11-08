@@ -268,6 +268,9 @@ importers:
       '@kb/document-api':
         specifier: workspace:*
         version: link:../../document/api/ts
+      '@kb/llm-api':
+        specifier: workspace:*
+        version: link:../../llm/api/ts
       '@kb/module-sdk':
         specifier: workspace:*
         version: link:../../../platform/ui/module-sdk

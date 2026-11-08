@@ -108,6 +108,7 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
                 context, violation("messages", "At least one message is required")
             )
         model = request.model or self._chat.default_chat_model
+        log.info("Generate with model %s", model)
         messages = [
             Message(role=_ROLES.get(m.role, Role.USER), content=m.content) for m in request.messages
         ]

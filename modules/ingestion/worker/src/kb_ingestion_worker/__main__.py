@@ -1,5 +1,4 @@
 import asyncio
-import contextlib
 import logging
 import signal
 
@@ -14,9 +13,14 @@ from nats.js.api import AckPolicy, ConsumerConfig
 from nats.js.errors import Error as JetStreamError
 
 from .config import Settings
-from .worker import STREAM, SUBJECT_UPLOADED, PeerGate, Processor, deliver
+from .worker import STREAM, SUBJECT_UPLOADED, PeerGate, Processor, consume, deliver
 
 CONSUMER = "ingestion-worker"
+# Seconds JetStream waits for an ack before it redelivers. Deliveries in
+# progress are marked so every HEARTBEAT seconds, however long they take, so
+# this only decides how soon the upload of a crashed worker is retried.
+ACK_WAIT = 120
+HEARTBEAT = ACK_WAIT / 4
 
 log = logging.getLogger("kb_ingestion_worker")
 
@@ -44,9 +48,11 @@ async def run() -> None:
             durable_name=CONSUMER,
             filter_subject=SUBJECT_UPLOADED,
             ack_policy=AckPolicy.EXPLICIT,
-            # Embedding large documents can take a while on CPU-only Ollama.
-            ack_wait=600,
+            ack_wait=ACK_WAIT,
             max_deliver=settings.max_deliver,
+            # max_ack_pending stays at the server default: each worker fetches
+            # only as many messages as it has free slots (KB_WORKER_CONCURRENCY),
+            # which bounds what is pending across all replicas.
         )
         # Creates the consumer, or updates one made by an earlier version (which
         # pull_subscribe would reuse unchanged). The server's value is the one
@@ -67,19 +73,22 @@ async def run() -> None:
         async def peers_serving() -> bool:
             return all(await asyncio.gather(is_serving(doc_ch), is_serving(llm_ch)))
 
-        gate = PeerGate(peers_serving)
-        log.info("waiting for %s", SUBJECT_UPLOADED)
-        while not stop.is_set():
-            if not await gate.is_open():
-                with contextlib.suppress(TimeoutError):
-                    await asyncio.wait_for(stop.wait(), timeout=2)
-                continue
+        async def fetch(n: int) -> list[_Delivery]:
             try:
-                msgs = await sub.fetch(1, timeout=2)
+                return [_Delivery(m) for m in await sub.fetch(n, timeout=2)]
             except TimeoutError:
-                continue
-            for msg in msgs:
-                await deliver(processor, _Delivery(msg), max_deliver)
+                return []
+
+        async def handle(msg: _Delivery) -> None:
+            await deliver(processor, msg, max_deliver, heartbeat=HEARTBEAT)
+
+        gate = PeerGate(peers_serving)
+        log.info(
+            "waiting for %s, processing up to %d at once",
+            SUBJECT_UPLOADED,
+            settings.worker_concurrency,
+        )
+        await consume(fetch, handle, settings.worker_concurrency, stop, gate.is_open)
 
     await nc.drain()
 
@@ -100,6 +109,9 @@ class _Delivery:
 
     async def nak(self, delay: float | None = None) -> None:
         await self._msg.nak(delay=delay)
+
+    async def in_progress(self) -> None:
+        await self._msg.in_progress()
 
 
 def main() -> None:

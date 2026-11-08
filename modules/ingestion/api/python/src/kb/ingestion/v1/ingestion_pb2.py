@@ -26,7 +26,7 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from kb.common.v1 import common_pb2 as kb_dot_common_dot_v1_dot_common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1fkb/ingestion/v1/ingestion.proto\x12\x0fkb.ingestion.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19kb/common/v1/common.proto\"\xda\x02\n\x03Job\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x1a\n\x08\x66ilename\x18\x03 \x01(\tR\x08\x66ilename\x12!\n\x0c\x63ontent_type\x18\x04 \x01(\tR\x0b\x63ontentType\x12\x32\n\x06status\x18\x05 \x01(\x0e\x32\x1a.kb.ingestion.v1.JobStatusR\x06status\x12\x14\n\x05\x65rror\x18\x06 \x01(\tR\x05\x65rror\x12\x1f\n\x0b\x63hunk_count\x18\x07 \x01(\x05R\nchunkCount\x12;\n\x0b\x63reate_time\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreateTime\x12;\n\x0bupdate_time\x18\t \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdateTime\"\x89\x01\n\x13\x43reateUploadRequest\x12\x1a\n\x08\x66ilename\x18\x01 \x01(\tR\x08\x66ilename\x12!\n\x0c\x63ontent_type\x18\x02 \x01(\tR\x0b\x63ontentType\x12\x1d\n\nsize_bytes\x18\x03 \x01(\x03R\tsizeBytes\x12\x14\n\x05title\x18\x04 \x01(\tR\x05title\"]\n\x14\x43reateUploadResponse\x12&\n\x03job\x18\x01 \x01(\x0b\x32\x14.kb.ingestion.v1.JobR\x03job\x12\x1d\n\nupload_url\x18\x02 \x01(\tR\tuploadUrl\".\n\x15\x43ompleteUploadRequest\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\"@\n\x16\x43ompleteUploadResponse\x12&\n\x03job\x18\x01 \x01(\x0b\x32\x14.kb.ingestion.v1.JobR\x03job\"\x1f\n\rGetJobRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"8\n\x0eGetJobResponse\x12&\n\x03job\x18\x01 \x01(\x0b\x32\x14.kb.ingestion.v1.JobR\x03job\"@\n\x0fListJobsRequest\x12-\n\x04page\x18\x01 \x01(\x0b\x32\x19.kb.common.v1.PageRequestR\x04page\"l\n\x10ListJobsResponse\x12(\n\x04jobs\x18\x01 \x03(\x0b\x32\x14.kb.ingestion.v1.JobR\x04jobs\x12.\n\x04page\x18\x02 \x01(\x0b\x32\x1a.kb.common.v1.PageResponseR\x04page\"!\n\x0fWatchJobRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\":\n\x10WatchJobResponse\x12&\n\x03job\x18\x01 \x01(\x0b\x32\x14.kb.ingestion.v1.JobR\x03job\"%\n\x13ReprocessJobRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\">\n\x14ReprocessJobResponse\x12&\n\x03job\x18\x01 \x01(\x0b\x32\x14.kb.ingestion.v1.JobR\x03job*\xa4\x01\n\tJobStatus\x12\x1a\n\x16JOB_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n\x19JOB_STATUS_PENDING_UPLOAD\x10\x01\x12\x15\n\x11JOB_STATUS_QUEUED\x10\x02\x12\x19\n\x15JOB_STATUS_PROCESSING\x10\x03\x12\x13\n\x0fJOB_STATUS_DONE\x10\x04\x12\x15\n\x11JOB_STATUS_FAILED\x10\x05\x32\x9e\x04\n\x10IngestionService\x12[\n\x0c\x43reateUpload\x12$.kb.ingestion.v1.CreateUploadRequest\x1a%.kb.ingestion.v1.CreateUploadResponse\x12\x61\n\x0e\x43ompleteUpload\x12&.kb.ingestion.v1.CompleteUploadRequest\x1a\'.kb.ingestion.v1.CompleteUploadResponse\x12I\n\x06GetJob\x12\x1e.kb.ingestion.v1.GetJobRequest\x1a\x1f.kb.ingestion.v1.GetJobResponse\x12O\n\x08ListJobs\x12 .kb.ingestion.v1.ListJobsRequest\x1a!.kb.ingestion.v1.ListJobsResponse\x12Q\n\x08WatchJob\x12 .kb.ingestion.v1.WatchJobRequest\x1a!.kb.ingestion.v1.WatchJobResponse0\x01\x12[\n\x0cReprocessJob\x12$.kb.ingestion.v1.ReprocessJobRequest\x1a%.kb.ingestion.v1.ReprocessJobResponseBJZHgithub.com/christoph/kb/modules/ingestion/api/go/ingestionv1;ingestionv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1fkb/ingestion/v1/ingestion.proto\x12\x0fkb.ingestion.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19kb/common/v1/common.proto\"\xa7\x03\n\x03Job\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x1a\n\x08\x66ilename\x18\x03 \x01(\tR\x08\x66ilename\x12!\n\x0c\x63ontent_type\x18\x04 \x01(\tR\x0b\x63ontentType\x12\x32\n\x06status\x18\x05 \x01(\x0e\x32\x1a.kb.ingestion.v1.JobStatusR\x06status\x12\x14\n\x05\x65rror\x18\x06 \x01(\tR\x05\x65rror\x12\x1f\n\x0b\x63hunk_count\x18\x07 \x01(\x05R\nchunkCount\x12;\n\x0b\x63reate_time\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ncreateTime\x12;\n\x0bupdate_time\x18\t \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nupdateTime\x12\x1a\n\x08progress\x18\n \x01(\x05R\x08progress\x12/\n\x05stage\x18\x0b \x01(\x0e\x32\x19.kb.ingestion.v1.JobStageR\x05stage\"\x89\x01\n\x13\x43reateUploadRequest\x12\x1a\n\x08\x66ilename\x18\x01 \x01(\tR\x08\x66ilename\x12!\n\x0c\x63ontent_type\x18\x02 \x01(\tR\x0b\x63ontentType\x12\x1d\n\nsize_bytes\x18\x03 \x01(\x03R\tsizeBytes\x12\x14\n\x05title\x18\x04 \x01(\tR\x05title\"]\n\x14\x43reateUploadResponse\x12&\n\x03job\x18\x01 \x01(\x0b\x32\x14.kb.ingestion.v1.JobR\x03job\x12\x1d\n\nupload_url\x18\x02 \x01(\tR\tuploadUrl\".\n\x15\x43ompleteUploadRequest\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\"@\n\x16\x43ompleteUploadResponse\x12&\n\x03job\x18\x01 \x01(\x0b\x32\x14.kb.ingestion.v1.JobR\x03job\"\x1f\n\rGetJobRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"8\n\x0eGetJobResponse\x12&\n\x03job\x18\x01 \x01(\x0b\x32\x14.kb.ingestion.v1.JobR\x03job\"@\n\x0fListJobsRequest\x12-\n\x04page\x18\x01 \x01(\x0b\x32\x19.kb.common.v1.PageRequestR\x04page\"l\n\x10ListJobsResponse\x12(\n\x04jobs\x18\x01 \x03(\x0b\x32\x14.kb.ingestion.v1.JobR\x04jobs\x12.\n\x04page\x18\x02 \x01(\x0b\x32\x1a.kb.common.v1.PageResponseR\x04page\"!\n\x0fWatchJobRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\":\n\x10WatchJobResponse\x12&\n\x03job\x18\x01 \x01(\x0b\x32\x14.kb.ingestion.v1.JobR\x03job\"%\n\x13ReprocessJobRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\">\n\x14ReprocessJobResponse\x12&\n\x03job\x18\x01 \x01(\x0b\x32\x14.kb.ingestion.v1.JobR\x03job*\xa4\x01\n\tJobStatus\x12\x1a\n\x16JOB_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n\x19JOB_STATUS_PENDING_UPLOAD\x10\x01\x12\x15\n\x11JOB_STATUS_QUEUED\x10\x02\x12\x19\n\x15JOB_STATUS_PROCESSING\x10\x03\x12\x13\n\x0fJOB_STATUS_DONE\x10\x04\x12\x15\n\x11JOB_STATUS_FAILED\x10\x05*\x87\x01\n\x08JobStage\x12\x19\n\x15JOB_STAGE_UNSPECIFIED\x10\x00\x12\x18\n\x14JOB_STAGE_EXTRACTING\x10\x01\x12\x16\n\x12JOB_STAGE_CHUNKING\x10\x02\x12\x17\n\x13JOB_STAGE_EMBEDDING\x10\x03\x12\x15\n\x11JOB_STAGE_STORING\x10\x04\x32\x9e\x04\n\x10IngestionService\x12[\n\x0c\x43reateUpload\x12$.kb.ingestion.v1.CreateUploadRequest\x1a%.kb.ingestion.v1.CreateUploadResponse\x12\x61\n\x0e\x43ompleteUpload\x12&.kb.ingestion.v1.CompleteUploadRequest\x1a\'.kb.ingestion.v1.CompleteUploadResponse\x12I\n\x06GetJob\x12\x1e.kb.ingestion.v1.GetJobRequest\x1a\x1f.kb.ingestion.v1.GetJobResponse\x12O\n\x08ListJobs\x12 .kb.ingestion.v1.ListJobsRequest\x1a!.kb.ingestion.v1.ListJobsResponse\x12Q\n\x08WatchJob\x12 .kb.ingestion.v1.WatchJobRequest\x1a!.kb.ingestion.v1.WatchJobResponse0\x01\x12[\n\x0cReprocessJob\x12$.kb.ingestion.v1.ReprocessJobRequest\x1a%.kb.ingestion.v1.ReprocessJobResponseBJZHgithub.com/christoph/kb/modules/ingestion/api/go/ingestionv1;ingestionv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,34 +34,36 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'kb.ingestion.v1.ingestion_p
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'ZHgithub.com/christoph/kb/modules/ingestion/api/go/ingestionv1;ingestionv1'
-  _globals['_JOBSTATUS']._serialized_start=1276
-  _globals['_JOBSTATUS']._serialized_end=1440
+  _globals['_JOBSTATUS']._serialized_start=1353
+  _globals['_JOBSTATUS']._serialized_end=1517
+  _globals['_JOBSTAGE']._serialized_start=1520
+  _globals['_JOBSTAGE']._serialized_end=1655
   _globals['_JOB']._serialized_start=113
-  _globals['_JOB']._serialized_end=459
-  _globals['_CREATEUPLOADREQUEST']._serialized_start=462
-  _globals['_CREATEUPLOADREQUEST']._serialized_end=599
-  _globals['_CREATEUPLOADRESPONSE']._serialized_start=601
-  _globals['_CREATEUPLOADRESPONSE']._serialized_end=694
-  _globals['_COMPLETEUPLOADREQUEST']._serialized_start=696
-  _globals['_COMPLETEUPLOADREQUEST']._serialized_end=742
-  _globals['_COMPLETEUPLOADRESPONSE']._serialized_start=744
-  _globals['_COMPLETEUPLOADRESPONSE']._serialized_end=808
-  _globals['_GETJOBREQUEST']._serialized_start=810
-  _globals['_GETJOBREQUEST']._serialized_end=841
-  _globals['_GETJOBRESPONSE']._serialized_start=843
-  _globals['_GETJOBRESPONSE']._serialized_end=899
-  _globals['_LISTJOBSREQUEST']._serialized_start=901
-  _globals['_LISTJOBSREQUEST']._serialized_end=965
-  _globals['_LISTJOBSRESPONSE']._serialized_start=967
-  _globals['_LISTJOBSRESPONSE']._serialized_end=1075
-  _globals['_WATCHJOBREQUEST']._serialized_start=1077
-  _globals['_WATCHJOBREQUEST']._serialized_end=1110
-  _globals['_WATCHJOBRESPONSE']._serialized_start=1112
-  _globals['_WATCHJOBRESPONSE']._serialized_end=1170
-  _globals['_REPROCESSJOBREQUEST']._serialized_start=1172
-  _globals['_REPROCESSJOBREQUEST']._serialized_end=1209
-  _globals['_REPROCESSJOBRESPONSE']._serialized_start=1211
-  _globals['_REPROCESSJOBRESPONSE']._serialized_end=1273
-  _globals['_INGESTIONSERVICE']._serialized_start=1443
-  _globals['_INGESTIONSERVICE']._serialized_end=1985
+  _globals['_JOB']._serialized_end=536
+  _globals['_CREATEUPLOADREQUEST']._serialized_start=539
+  _globals['_CREATEUPLOADREQUEST']._serialized_end=676
+  _globals['_CREATEUPLOADRESPONSE']._serialized_start=678
+  _globals['_CREATEUPLOADRESPONSE']._serialized_end=771
+  _globals['_COMPLETEUPLOADREQUEST']._serialized_start=773
+  _globals['_COMPLETEUPLOADREQUEST']._serialized_end=819
+  _globals['_COMPLETEUPLOADRESPONSE']._serialized_start=821
+  _globals['_COMPLETEUPLOADRESPONSE']._serialized_end=885
+  _globals['_GETJOBREQUEST']._serialized_start=887
+  _globals['_GETJOBREQUEST']._serialized_end=918
+  _globals['_GETJOBRESPONSE']._serialized_start=920
+  _globals['_GETJOBRESPONSE']._serialized_end=976
+  _globals['_LISTJOBSREQUEST']._serialized_start=978
+  _globals['_LISTJOBSREQUEST']._serialized_end=1042
+  _globals['_LISTJOBSRESPONSE']._serialized_start=1044
+  _globals['_LISTJOBSRESPONSE']._serialized_end=1152
+  _globals['_WATCHJOBREQUEST']._serialized_start=1154
+  _globals['_WATCHJOBREQUEST']._serialized_end=1187
+  _globals['_WATCHJOBRESPONSE']._serialized_start=1189
+  _globals['_WATCHJOBRESPONSE']._serialized_end=1247
+  _globals['_REPROCESSJOBREQUEST']._serialized_start=1249
+  _globals['_REPROCESSJOBREQUEST']._serialized_end=1286
+  _globals['_REPROCESSJOBRESPONSE']._serialized_start=1288
+  _globals['_REPROCESSJOBRESPONSE']._serialized_end=1350
+  _globals['_INGESTIONSERVICE']._serialized_start=1658
+  _globals['_INGESTIONSERVICE']._serialized_end=2200
 # @@protoc_insertion_point(module_scope)

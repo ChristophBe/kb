@@ -14,12 +14,20 @@ import (
 )
 
 type fakeJobs struct {
-	calls []string
-	id    uuid.UUID
-	runs  []int32
-	count int32
-	why   string
-	err   error
+	calls    []string
+	id       uuid.UUID
+	runs     []int32
+	count    int32
+	why      string
+	stage    ingestionv1.JobStage
+	progress int32
+	err      error
+}
+
+func (f *fakeJobs) ApplyProgress(_ context.Context, id uuid.UUID, run int32, stage ingestionv1.JobStage, progress int32) error {
+	f.calls, f.id, f.runs = append(f.calls, "progress"), id, append(f.runs, run)
+	f.stage, f.progress = stage, progress
+	return f.err
 }
 
 func (f *fakeJobs) ApplyStarted(_ context.Context, id uuid.UUID, run int32) error {
@@ -52,16 +60,21 @@ func TestApplyDecodesEachEvent(t *testing.T) {
 	if err := apply(t.Context(), jobs, SubjectStarted, marshal(t, &ingestionv1.ProcessingStarted{JobId: id.String(), Run: 1})); err != nil {
 		t.Fatal(err)
 	}
+	progress := &ingestionv1.ProcessingProgress{JobId: id.String(), Run: 1, Stage: ingestionv1.JobStage_JOB_STAGE_EMBEDDING, Progress: 42}
+	if err := apply(t.Context(), jobs, SubjectProgress, marshal(t, progress)); err != nil {
+		t.Fatal(err)
+	}
 	if err := apply(t.Context(), jobs, SubjectProcessed, marshal(t, &ingestionv1.DocumentProcessed{JobId: id.String(), ChunkCount: 3, Run: 2})); err != nil {
 		t.Fatal(err)
 	}
 	if err := apply(t.Context(), jobs, SubjectFailed, marshal(t, &ingestionv1.ProcessingFailed{JobId: id.String(), Error: "boom", Run: 3})); err != nil {
 		t.Fatal(err)
 	}
-	if len(jobs.calls) != 3 || jobs.id != id || jobs.count != 3 || jobs.why != "boom" {
+	if len(jobs.calls) != 4 || jobs.id != id || jobs.count != 3 || jobs.why != "boom" ||
+		jobs.stage != ingestionv1.JobStage_JOB_STAGE_EMBEDDING || jobs.progress != 42 {
 		t.Errorf("jobs = %+v", jobs)
 	}
-	if want := []int32{1, 2, 3}; !slices.Equal(jobs.runs, want) {
+	if want := []int32{1, 1, 2, 3}; !slices.Equal(jobs.runs, want) {
 		t.Errorf("runs = %v, want %v", jobs.runs, want)
 	}
 }
@@ -69,6 +82,7 @@ func TestApplyDecodesEachEvent(t *testing.T) {
 func TestApplyDropsMalformedJobIDs(t *testing.T) {
 	for subject, msg := range map[string]proto.Message{
 		SubjectStarted:   &ingestionv1.ProcessingStarted{JobId: "nope"},
+		SubjectProgress:  &ingestionv1.ProcessingProgress{JobId: "nope"},
 		SubjectProcessed: &ingestionv1.DocumentProcessed{JobId: "nope"},
 		SubjectFailed:    &ingestionv1.ProcessingFailed{JobId: "nope"},
 	} {

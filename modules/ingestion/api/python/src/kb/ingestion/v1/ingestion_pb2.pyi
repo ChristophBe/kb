@@ -19,15 +19,28 @@ class JobStatus(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     JOB_STATUS_PROCESSING: _ClassVar[JobStatus]
     JOB_STATUS_DONE: _ClassVar[JobStatus]
     JOB_STATUS_FAILED: _ClassVar[JobStatus]
+
+class JobStage(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    JOB_STAGE_UNSPECIFIED: _ClassVar[JobStage]
+    JOB_STAGE_EXTRACTING: _ClassVar[JobStage]
+    JOB_STAGE_CHUNKING: _ClassVar[JobStage]
+    JOB_STAGE_EMBEDDING: _ClassVar[JobStage]
+    JOB_STAGE_STORING: _ClassVar[JobStage]
 JOB_STATUS_UNSPECIFIED: JobStatus
 JOB_STATUS_PENDING_UPLOAD: JobStatus
 JOB_STATUS_QUEUED: JobStatus
 JOB_STATUS_PROCESSING: JobStatus
 JOB_STATUS_DONE: JobStatus
 JOB_STATUS_FAILED: JobStatus
+JOB_STAGE_UNSPECIFIED: JobStage
+JOB_STAGE_EXTRACTING: JobStage
+JOB_STAGE_CHUNKING: JobStage
+JOB_STAGE_EMBEDDING: JobStage
+JOB_STAGE_STORING: JobStage
 
 class Job(_message.Message):
-    __slots__ = ("id", "document_id", "filename", "content_type", "status", "error", "chunk_count", "create_time", "update_time")
+    __slots__ = ("id", "document_id", "filename", "content_type", "status", "error", "chunk_count", "create_time", "update_time", "progress", "stage")
     ID_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
     FILENAME_FIELD_NUMBER: _ClassVar[int]
@@ -37,6 +50,8 @@ class Job(_message.Message):
     CHUNK_COUNT_FIELD_NUMBER: _ClassVar[int]
     CREATE_TIME_FIELD_NUMBER: _ClassVar[int]
     UPDATE_TIME_FIELD_NUMBER: _ClassVar[int]
+    PROGRESS_FIELD_NUMBER: _ClassVar[int]
+    STAGE_FIELD_NUMBER: _ClassVar[int]
     id: str
     document_id: str
     filename: str
@@ -46,7 +61,9 @@ class Job(_message.Message):
     chunk_count: int
     create_time: _timestamp_pb2.Timestamp
     update_time: _timestamp_pb2.Timestamp
-    def __init__(self, id: _Optional[str] = ..., document_id: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., status: _Optional[_Union[JobStatus, str]] = ..., error: _Optional[str] = ..., chunk_count: _Optional[int] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+    progress: int
+    stage: JobStage
+    def __init__(self, id: _Optional[str] = ..., document_id: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., status: _Optional[_Union[JobStatus, str]] = ..., error: _Optional[str] = ..., chunk_count: _Optional[int] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., progress: _Optional[int] = ..., stage: _Optional[_Union[JobStage, str]] = ...) -> None: ...
 
 class CreateUploadRequest(_message.Message):
     __slots__ = ("filename", "content_type", "size_bytes", "title")

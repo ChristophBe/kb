@@ -206,6 +206,8 @@ func toProto(j app.Job) *ingestionv1.Job {
 		Status:      j.Status,
 		Error:       j.Error,
 		ChunkCount:  j.ChunkCount,
+		Progress:    j.Progress,
+		Stage:       j.Stage,
 		CreateTime:  timestamppb.New(j.CreatedAt),
 		UpdateTime:  timestamppb.New(j.UpdatedAt),
 	}

@@ -4,13 +4,15 @@
 
 import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
+import type { JobStage } from "./ingestion_pb";
+import { file_kb_ingestion_v1_ingestion } from "./ingestion_pb";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file kb/ingestion/v1/events.proto.
  */
 export const file_kb_ingestion_v1_events: GenFile = /*@__PURE__*/
-  fileDesc("ChxrYi9pbmdlc3Rpb24vdjEvZXZlbnRzLnByb3RvEg9rYi5pbmdlc3Rpb24udjEibAoQRG9jdW1lbnRVcGxvYWRlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSEAoIZmlsZW5hbWUYAyABKAkSFAoMY29udGVudF90eXBlGAQgASgJEgsKA3J1bhgFIAEoBSJFChFQcm9jZXNzaW5nU3RhcnRlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSCwoDcnVuGAMgASgFIloKEURvY3VtZW50UHJvY2Vzc2VkEg4KBmpvYl9pZBgBIAEoCRITCgtkb2N1bWVudF9pZBgCIAEoCRITCgtjaHVua19jb3VudBgDIAEoBRILCgNydW4YBCABKAUiUwoQUHJvY2Vzc2luZ0ZhaWxlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSDQoFZXJyb3IYAyABKAkSCwoDcnVuGAQgASgFQkpaSGdpdGh1Yi5jb20vY2hyaXN0b3BoL2tiL21vZHVsZXMvaW5nZXN0aW9uL2FwaS9nby9pbmdlc3Rpb252MTtpbmdlc3Rpb252MWIGcHJvdG8z");
+  fileDesc("ChxrYi9pbmdlc3Rpb24vdjEvZXZlbnRzLnByb3RvEg9rYi5pbmdlc3Rpb24udjEibAoQRG9jdW1lbnRVcGxvYWRlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSEAoIZmlsZW5hbWUYAyABKAkSFAoMY29udGVudF90eXBlGAQgASgJEgsKA3J1bhgFIAEoBSJFChFQcm9jZXNzaW5nU3RhcnRlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSCwoDcnVuGAMgASgFIoIBChJQcm9jZXNzaW5nUHJvZ3Jlc3MSDgoGam9iX2lkGAEgASgJEhMKC2RvY3VtZW50X2lkGAIgASgJEgsKA3J1bhgDIAEoBRIoCgVzdGFnZRgEIAEoDjIZLmtiLmluZ2VzdGlvbi52MS5Kb2JTdGFnZRIQCghwcm9ncmVzcxgFIAEoBSJaChFEb2N1bWVudFByb2Nlc3NlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSEwoLY2h1bmtfY291bnQYAyABKAUSCwoDcnVuGAQgASgFIlMKEFByb2Nlc3NpbmdGYWlsZWQSDgoGam9iX2lkGAEgASgJEhMKC2RvY3VtZW50X2lkGAIgASgJEg0KBWVycm9yGAMgASgJEgsKA3J1bhgEIAEoBUJKWkhnaXRodWIuY29tL2NocmlzdG9waC9rYi9tb2R1bGVzL2luZ2VzdGlvbi9hcGkvZ28vaW5nZXN0aW9udjE7aW5nZXN0aW9udjFiBnByb3RvMw", [file_kb_ingestion_v1_ingestion]);
 
 /**
  * Subject: kb.ingestion.uploaded
@@ -81,6 +83,49 @@ export const ProcessingStartedSchema: GenMessage<ProcessingStarted> = /*@__PURE_
   messageDesc(file_kb_ingestion_v1_events, 1);
 
 /**
+ * Subject: kb.ingestion.progress
+ * Published while a job is processed: when a stage starts and after every
+ * embedding batch. Best effort: a lost event only delays the next update.
+ *
+ * @generated from message kb.ingestion.v1.ProcessingProgress
+ */
+export type ProcessingProgress = Message<"kb.ingestion.v1.ProcessingProgress"> & {
+  /**
+   * @generated from field: string job_id = 1;
+   */
+  jobId: string;
+
+  /**
+   * @generated from field: string document_id = 2;
+   */
+  documentId: string;
+
+  /**
+   * @generated from field: int32 run = 3;
+   */
+  run: number;
+
+  /**
+   * @generated from field: kb.ingestion.v1.JobStage stage = 4;
+   */
+  stage: JobStage;
+
+  /**
+   * 0–100, see Job.progress.
+   *
+   * @generated from field: int32 progress = 5;
+   */
+  progress: number;
+};
+
+/**
+ * Describes the message kb.ingestion.v1.ProcessingProgress.
+ * Use `create(ProcessingProgressSchema)` to create a new message.
+ */
+export const ProcessingProgressSchema: GenMessage<ProcessingProgress> = /*@__PURE__*/
+  messageDesc(file_kb_ingestion_v1_events, 2);
+
+/**
  * Subject: kb.ingestion.processed
  *
  * @generated from message kb.ingestion.v1.DocumentProcessed
@@ -112,7 +157,7 @@ export type DocumentProcessed = Message<"kb.ingestion.v1.DocumentProcessed"> & {
  * Use `create(DocumentProcessedSchema)` to create a new message.
  */
 export const DocumentProcessedSchema: GenMessage<DocumentProcessed> = /*@__PURE__*/
-  messageDesc(file_kb_ingestion_v1_events, 2);
+  messageDesc(file_kb_ingestion_v1_events, 3);
 
 /**
  * Subject: kb.ingestion.failed
@@ -146,5 +191,5 @@ export type ProcessingFailed = Message<"kb.ingestion.v1.ProcessingFailed"> & {
  * Use `create(ProcessingFailedSchema)` to create a new message.
  */
 export const ProcessingFailedSchema: GenMessage<ProcessingFailed> = /*@__PURE__*/
-  messageDesc(file_kb_ingestion_v1_events, 3);
+  messageDesc(file_kb_ingestion_v1_events, 4);
 

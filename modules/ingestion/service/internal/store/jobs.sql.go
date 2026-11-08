@@ -13,9 +13,11 @@ import (
 
 const advanceJob = `-- name: AdvanceJob :one
 UPDATE ingestion.jobs
-SET status = $1, error = $2, chunk_count = $3, updated_at = now()
+SET status = $1, error = $2, chunk_count = $3,
+    progress = CASE WHEN $1 = 4 THEN 100 ELSE progress END,
+    updated_at = now()
 WHERE id = $4 AND run = $5 AND status < 4 AND status < $1
-RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage
 `
 
 type AdvanceJobParams struct {
@@ -29,7 +31,7 @@ type AdvanceJobParams struct {
 // AdvanceJob moves a job forward within its current run. Status values are
 // ordered, so a stale or duplicate event can never move a job backwards,
 // terminal jobs (DONE=4, FAILED=5) never change, and events of an earlier run
-// are ignored. The only way back is ReprocessJob.
+// are ignored. The only way back is ReprocessJob. A DONE job is 100% done.
 func (q *Queries) AdvanceJob(ctx context.Context, arg AdvanceJobParams) (IngestionJob, error) {
 	row := q.db.QueryRow(ctx, advanceJob,
 		arg.Status,
@@ -50,6 +52,8 @@ func (q *Queries) AdvanceJob(ctx context.Context, arg AdvanceJobParams) (Ingesti
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Run,
+		&i.Progress,
+		&i.Stage,
 	)
 	return i, err
 }
@@ -57,7 +61,7 @@ func (q *Queries) AdvanceJob(ctx context.Context, arg AdvanceJobParams) (Ingesti
 const createJob = `-- name: CreateJob :one
 INSERT INTO ingestion.jobs (id, document_id, filename, content_type, status)
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage
 `
 
 type CreateJobParams struct {
@@ -88,12 +92,14 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (Ingestion
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Run,
+		&i.Progress,
+		&i.Stage,
 	)
 	return i, err
 }
 
 const getJob = `-- name: GetJob :one
-SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run FROM ingestion.jobs WHERE id = $1
+SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage FROM ingestion.jobs WHERE id = $1
 `
 
 func (q *Queries) GetJob(ctx context.Context, id uuid.UUID) (IngestionJob, error) {
@@ -110,12 +116,14 @@ func (q *Queries) GetJob(ctx context.Context, id uuid.UUID) (IngestionJob, error
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Run,
+		&i.Progress,
+		&i.Stage,
 	)
 	return i, err
 }
 
 const listJobs = `-- name: ListJobs :many
-SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run FROM ingestion.jobs
+SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage FROM ingestion.jobs
 ORDER BY created_at DESC, id DESC
 LIMIT $1 OFFSET $2
 `
@@ -145,6 +153,8 @@ func (q *Queries) ListJobs(ctx context.Context, arg ListJobsParams) ([]Ingestion
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Run,
+			&i.Progress,
+			&i.Stage,
 		); err != nil {
 			return nil, err
 		}
@@ -156,11 +166,55 @@ func (q *Queries) ListJobs(ctx context.Context, arg ListJobsParams) ([]Ingestion
 	return items, nil
 }
 
+const reportProgress = `-- name: ReportProgress :one
+UPDATE ingestion.jobs
+SET status = 3, stage = $1, progress = $2, updated_at = now()
+WHERE id = $3 AND run = $4 AND status IN (2, 3)
+  AND (stage, progress) < ($1::smallint, $2::smallint)
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage
+`
+
+type ReportProgressParams struct {
+	Stage    int16
+	Progress int16
+	ID       uuid.UUID
+	Run      int32
+}
+
+// ReportProgress records the stage and progress of a job's current run. A
+// report means the worker is at it, so a QUEUED job (whose started event is
+// late) becomes PROCESSING (3). Stage and progress only grow, so stale and
+// duplicate reports change nothing, and terminal jobs are left alone.
+func (q *Queries) ReportProgress(ctx context.Context, arg ReportProgressParams) (IngestionJob, error) {
+	row := q.db.QueryRow(ctx, reportProgress,
+		arg.Stage,
+		arg.Progress,
+		arg.ID,
+		arg.Run,
+	)
+	var i IngestionJob
+	err := row.Scan(
+		&i.ID,
+		&i.DocumentID,
+		&i.Filename,
+		&i.ContentType,
+		&i.Status,
+		&i.Error,
+		&i.ChunkCount,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Run,
+		&i.Progress,
+		&i.Stage,
+	)
+	return i, err
+}
+
 const reprocessJob = `-- name: ReprocessJob :one
 UPDATE ingestion.jobs
-SET status = 2, error = '', chunk_count = 0, run = run + 1, updated_at = now()
+SET status = 2, error = '', chunk_count = 0, progress = 0, stage = 0, run = run + 1, updated_at = now()
 WHERE id = $1 AND status IN (4, 5)
-RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage
 `
 
 // ReprocessJob is the one transition back: it queues a terminal job
@@ -180,6 +234,8 @@ func (q *Queries) ReprocessJob(ctx context.Context, id uuid.UUID) (IngestionJob,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Run,
+		&i.Progress,
+		&i.Stage,
 	)
 	return i, err
 }

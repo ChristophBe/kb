@@ -14,11 +14,16 @@ type Querier interface {
 	// AdvanceJob moves a job forward within its current run. Status values are
 	// ordered, so a stale or duplicate event can never move a job backwards,
 	// terminal jobs (DONE=4, FAILED=5) never change, and events of an earlier run
-	// are ignored. The only way back is ReprocessJob.
+	// are ignored. The only way back is ReprocessJob. A DONE job is 100% done.
 	AdvanceJob(ctx context.Context, arg AdvanceJobParams) (IngestionJob, error)
 	CreateJob(ctx context.Context, arg CreateJobParams) (IngestionJob, error)
 	GetJob(ctx context.Context, id uuid.UUID) (IngestionJob, error)
 	ListJobs(ctx context.Context, arg ListJobsParams) ([]IngestionJob, error)
+	// ReportProgress records the stage and progress of a job's current run. A
+	// report means the worker is at it, so a QUEUED job (whose started event is
+	// late) becomes PROCESSING (3). Stage and progress only grow, so stale and
+	// duplicate reports change nothing, and terminal jobs are left alone.
+	ReportProgress(ctx context.Context, arg ReportProgressParams) (IngestionJob, error)
 	// ReprocessJob is the one transition back: it queues a terminal job
 	// (DONE=4, FAILED=5) again (QUEUED=2) as a new run, clearing the result of
 	// the previous one.

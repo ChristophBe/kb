@@ -70,6 +70,19 @@ func (j *Jobs) Advance(ctx context.Context, t app.Transition) (app.Job, error) {
 	return toJob(row), nil
 }
 
+func (j *Jobs) ReportProgress(ctx context.Context, p app.Progress) (app.Job, error) {
+	row, err := j.q.ReportProgress(ctx, ReportProgressParams{
+		ID: p.ID, Run: p.Run, Stage: int16(p.Stage), Progress: int16(p.Progress),
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return app.Job{}, app.ErrNotAdvanced
+	}
+	if err != nil {
+		return app.Job{}, err
+	}
+	return toJob(row), nil
+}
+
 func (j *Jobs) Reprocess(ctx context.Context, id uuid.UUID) (app.Job, error) {
 	row, err := j.q.ReprocessJob(ctx, id)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -91,6 +104,8 @@ func toJob(row IngestionJob) app.Job {
 		Error:       row.Error,
 		ChunkCount:  row.ChunkCount,
 		Run:         row.Run,
+		Stage:       ingestionv1.JobStage(row.Stage),
+		Progress:    int32(row.Progress),
 		CreatedAt:   row.CreatedAt.Time,
 		UpdatedAt:   row.UpdatedAt.Time,
 	}

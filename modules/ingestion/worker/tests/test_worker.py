@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import pathlib
 from collections.abc import Sequence
@@ -7,15 +8,17 @@ import grpc
 import pytest
 from google.protobuf.message import Message
 from kb.document.v1 import document_pb2
-from kb.ingestion.v1 import events_pb2
+from kb.ingestion.v1 import events_pb2, ingestion_pb2
 from kb.llm.v1 import llm_pb2
 from kb_ingestion_worker.config import Settings
 from kb_ingestion_worker.worker import (
     SUBJECT_FAILED,
     SUBJECT_PROCESSED,
+    SUBJECT_PROGRESS,
     SUBJECT_STARTED,
     PeerGate,
     Processor,
+    consume,
     deliver,
     is_transient,
 )
@@ -55,10 +58,13 @@ class FakeLlm:
 
 
 def make(content: bytes, llm: FakeLlm | None = None, **settings: Any):
+    """The processor, its documents and the events it published apart from
+    progress reports."""
     published: list[tuple[str, Message]] = []
 
     async def publish(subject: str, message: Message, dedupe_id: str) -> None:
-        published.append((subject, message))
+        if subject != SUBJECT_PROGRESS:
+            published.append((subject, message))
 
     docs = FakeDocuments(content)
     proc = Processor(Settings(**settings), docs, llm or FakeLlm(), publish)  # type: ignore[arg-type]
@@ -75,12 +81,16 @@ class FakeMsg:
         self.num_delivered = num_delivered
         self.acked = False
         self.nak_delay: float | None = None
+        self.in_progress_calls = 0
 
     async def ack(self) -> None:
         self.acked = True
 
     async def nak(self, delay: float | None = None) -> None:
         self.nak_delay = delay
+
+    async def in_progress(self) -> None:
+        self.in_progress_calls += 1
 
 
 def uploaded(filename: str, content_type: str = "text/markdown") -> events_pb2.DocumentUploaded:
@@ -139,7 +149,7 @@ async def test_events_carry_the_run_and_a_message_id_per_run() -> None:
     second.run = 2
     await proc.handle(second)
 
-    assert [(m.run, i) for _, m, i in sent] == [  # type: ignore[attr-defined]
+    assert [(m.run, i) for s, m, i in sent if s != SUBJECT_PROGRESS] == [  # type: ignore[attr-defined]
         (1, "j1:1:started"),
         (1, "j1:1:processed"),
         (2, "j1:2:started"),
@@ -281,3 +291,177 @@ async def test_deliver_treats_the_consumer_limit_as_the_last_attempt() -> None:
 
     assert msg.acked
     assert [s for s, _ in published][-1] == SUBJECT_FAILED
+
+
+async def test_reports_progress_per_stage_and_embedding_batch() -> None:
+    sent: list[tuple[str, Message, str]] = []
+
+    async def publish(subject: str, message: Message, dedupe_id: str) -> None:
+        sent.append((subject, message, dedupe_id))
+
+    docs = FakeDocuments(b"# Title\n\n" + b"word " * 200)
+    settings = Settings(chunk_tokens=40, chunk_overlap_tokens=5, embed_batch_size=2)
+    proc = Processor(settings, docs, FakeLlm(), publish)  # type: ignore[arg-type]
+    event = uploaded("notes.md")
+    event.run = 2
+    await proc.handle(event)
+
+    reports = [m for s, m, _ in sent if s == SUBJECT_PROGRESS]
+    assert all(isinstance(m, events_pb2.ProcessingProgress) for m in reports)
+    steps = [(m.stage, m.progress) for m in reports]  # type: ignore[attr-defined]
+    batches = -(-len(docs.chunks) // 2)
+    embedding = [p for stage, p in steps if stage == ingestion_pb2.JOB_STAGE_EMBEDDING]
+    assert steps[:2] == [
+        (ingestion_pb2.JOB_STAGE_EXTRACTING, 0),
+        (ingestion_pb2.JOB_STAGE_CHUNKING, 5),
+    ]
+    # One report as embedding starts, one after every batch.
+    assert len(embedding) == batches + 1
+    assert embedding[0] == 10
+    assert embedding[-1] == 90
+    assert steps[-1] == (ingestion_pb2.JOB_STAGE_STORING, 90)
+    # Stage and progress only grow, which is what the service relies on.
+    assert steps == sorted(steps)
+    assert all(m.run == 2 and m.job_id == "j1" for m in reports)  # type: ignore[attr-defined]
+    ids = [i for s, _, i in sent if s == SUBJECT_PROGRESS]
+    assert ids[0] == "j1:2:progress:1:0"
+    # Every report comes before the result.
+    assert [s for s, _, _ in sent][-1] == SUBJECT_PROCESSED
+
+
+async def test_a_failed_progress_report_does_not_fail_the_job() -> None:
+    sent: list[str] = []
+
+    async def publish(subject: str, message: Message, dedupe_id: str) -> None:
+        if subject == SUBJECT_PROGRESS:
+            raise ConnectionError("nats down")
+        sent.append(subject)
+
+    proc = Processor(Settings(), FakeDocuments(b"some text"), FakeLlm(), publish)  # type: ignore[arg-type]
+    assert await proc.handle(uploaded("notes.md")) is None
+    assert sent == [SUBJECT_STARTED, SUBJECT_PROCESSED]
+
+
+class SlowLlm(FakeLlm):
+    def __init__(self, delay: float) -> None:
+        super().__init__()
+        self.delay = delay
+
+    async def Embed(self, request: llm_pb2.EmbedRequest):
+        await asyncio.sleep(self.delay)
+        return await super().Embed(request)
+
+
+async def test_deliver_keeps_a_long_job_from_being_redelivered() -> None:
+    proc, _, _ = make(b"text", SlowLlm(0.1))
+    msg = FakeMsg(uploaded("notes.md"), num_delivered=1)
+
+    await deliver(proc, msg, max_deliver=5, heartbeat=0.02)
+
+    assert msg.acked
+    assert msg.in_progress_calls >= 2
+    calls = msg.in_progress_calls
+    await asyncio.sleep(0.05)
+    assert msg.in_progress_calls == calls, "heartbeat kept running after the ack"
+
+
+class Inbox:
+    """A stand-in for the JetStream consumer: hands out queued messages."""
+
+    def __init__(self, count: int) -> None:
+        self.queue = list(range(count))
+        self.requested: list[int] = []
+
+    async def fetch(self, n: int) -> list[int]:
+        self.requested.append(n)
+        await asyncio.sleep(0)
+        taken, self.queue = self.queue[:n], self.queue[n:]
+        return taken
+
+
+async def always() -> bool:
+    return True
+
+
+@pytest.mark.parametrize("concurrency", [1, 3])
+async def test_consume_handles_up_to_concurrency_messages_at_once(concurrency: int) -> None:
+    inbox, stop = Inbox(7), asyncio.Event()
+    running, peak, handled = 0, 0, []
+
+    async def handle(msg: int) -> None:
+        nonlocal running, peak
+        running += 1
+        peak = max(peak, running)
+        await asyncio.sleep(0.01)
+        running -= 1
+        handled.append(msg)
+        if len(handled) == 7:
+            stop.set()
+
+    await asyncio.wait_for(consume(inbox.fetch, handle, concurrency, stop, always), 5)
+
+    assert sorted(handled) == list(range(7))
+    assert peak == concurrency
+    # Only free slots are fetched, so no message waits for a slot.
+    assert max(inbox.requested) == concurrency
+
+
+async def test_consume_finishes_running_messages_when_stopped() -> None:
+    inbox, stop = Inbox(5), asyncio.Event()
+    started, finished = asyncio.Event(), []
+
+    async def handle(msg: int) -> None:
+        started.set()
+        await asyncio.sleep(0.02)
+        finished.append(msg)
+
+    task = asyncio.create_task(consume(inbox.fetch, handle, 2, stop, always))
+    await started.wait()
+    stop.set()
+    await asyncio.wait_for(task, 5)
+
+    assert sorted(finished) == [0, 1]
+    assert inbox.queue == [2, 3, 4]
+
+
+async def test_consume_fetches_nothing_while_peers_are_down() -> None:
+    inbox, stop = Inbox(1), asyncio.Event()
+    checks = 0
+
+    async def ready() -> bool:
+        nonlocal checks
+        checks += 1
+        if checks == 3:
+            stop.set()
+        return False
+
+    async def handle(msg: int) -> None:
+        raise AssertionError("nothing should be handled")
+
+    await asyncio.wait_for(consume(inbox.fetch, handle, 2, stop, ready, idle=0.01), 5)
+    assert inbox.requested == []
+
+
+async def test_consume_survives_a_failing_handler(caplog: pytest.LogCaptureFixture) -> None:
+    inbox, stop = Inbox(3), asyncio.Event()
+    handled: list[int] = []
+
+    async def handle(msg: int) -> None:
+        handled.append(msg)
+        if len(handled) == 3:
+            stop.set()
+        if msg == 0:
+            raise RuntimeError("bug")
+
+    await asyncio.wait_for(consume(inbox.fetch, handle, 1, stop, always), 5)
+    assert handled == [0, 1, 2]
+    assert any("handling a delivery failed" in r.getMessage() for r in caplog.records)
+
+
+def test_concurrency_comes_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert Settings().worker_concurrency == 2
+    monkeypatch.setenv("KB_WORKER_CONCURRENCY", "4")
+    assert Settings().worker_concurrency == 4
+    monkeypatch.setenv("KB_WORKER_CONCURRENCY", "0")
+    with pytest.raises(ValueError, match="worker_concurrency"):
+        Settings()

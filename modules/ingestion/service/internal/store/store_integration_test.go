@@ -101,6 +101,99 @@ func TestAdvanceJob(t *testing.T) {
 	})
 }
 
+func TestReportProgress(t *testing.T) {
+	q := New(pgtest.Start(t, "ingestion", migrations.FS))
+	const (
+		chunking  = 2
+		embedding = 3
+		storing   = 4
+	)
+	report := func(id uuid.UUID, run int32, stage, progress int16) (IngestionJob, error) {
+		return q.ReportProgress(t.Context(), ReportProgressParams{ID: id, Run: run, Stage: stage, Progress: progress})
+	}
+
+	t.Run("records progress and marks a queued job processing", func(t *testing.T) {
+		id := newJob(t, q, queued)
+		before, err := q.GetJob(t.Context(), id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		job, err := report(id, 1, embedding, 40)
+		if err != nil || job.Status != processing || job.Stage != embedding || job.Progress != 40 {
+			t.Fatalf("job %+v, err %v", job, err)
+		}
+		if !job.UpdatedAt.Time.After(before.UpdatedAt.Time) {
+			t.Errorf("updated_at not bumped: %v -> %v", before.UpdatedAt.Time, job.UpdatedAt.Time)
+		}
+		if job, err = report(id, 1, storing, 40); err != nil || job.Stage != storing {
+			t.Fatalf("next stage: %+v, err %v", job, err)
+		}
+	})
+
+	for _, tc := range []struct {
+		name            string
+		run             int32
+		stage, progress int16
+	}{
+		{"ignores a duplicate", 1, embedding, 40},
+		{"ignores lower progress", 1, embedding, 20},
+		{"ignores an earlier stage", 1, chunking, 90},
+		{"ignores another run", 2, storing, 90},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			id := newJob(t, q, processing)
+			if _, err := report(id, 1, embedding, 40); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := report(id, tc.run, tc.stage, tc.progress); !errors.Is(err, pgx.ErrNoRows) {
+				t.Fatalf("err = %v, want ErrNoRows", err)
+			}
+			job, err := q.GetJob(t.Context(), id)
+			if err != nil || job.Stage != embedding || job.Progress != 40 {
+				t.Errorf("job changed: %+v, err %v", job, err)
+			}
+		})
+	}
+
+	for _, from := range []int16{pendingUpload, done, failed} {
+		t.Run(fmt.Sprintf("leaves status %d alone", from), func(t *testing.T) {
+			id := newJob(t, q, from)
+			if _, err := report(id, 1, embedding, 40); !errors.Is(err, pgx.ErrNoRows) {
+				t.Fatalf("err = %v, want ErrNoRows", err)
+			}
+		})
+	}
+
+	t.Run("done means 100 percent and reprocessing starts over", func(t *testing.T) {
+		id := newJob(t, q, processing)
+		if _, err := report(id, 1, embedding, 60); err != nil {
+			t.Fatal(err)
+		}
+		job, err := q.AdvanceJob(t.Context(), AdvanceJobParams{ID: id, Run: 1, Status: done, ChunkCount: 3})
+		if err != nil || job.Progress != 100 {
+			t.Fatalf("done: %+v, err %v", job, err)
+		}
+		job, err = q.ReprocessJob(t.Context(), id)
+		if err != nil || job.Progress != 0 || job.Stage != 0 {
+			t.Fatalf("reprocessed: %+v, err %v", job, err)
+		}
+		if job, err = report(id, 2, chunking, 5); err != nil || job.Progress != 5 {
+			t.Fatalf("run 2: %+v, err %v", job, err)
+		}
+	})
+
+	t.Run("a failed job keeps its progress", func(t *testing.T) {
+		id := newJob(t, q, processing)
+		if _, err := report(id, 1, embedding, 60); err != nil {
+			t.Fatal(err)
+		}
+		job, err := q.AdvanceJob(t.Context(), AdvanceJobParams{ID: id, Run: 1, Status: failed, Error: "boom"})
+		if err != nil || job.Progress != 60 {
+			t.Fatalf("failed: %+v, err %v", job, err)
+		}
+	})
+}
+
 func TestReprocessJob(t *testing.T) {
 	q := New(pgtest.Start(t, "ingestion", migrations.FS))
 

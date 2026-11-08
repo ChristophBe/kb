@@ -6,9 +6,11 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -59,6 +61,23 @@ func (f *fakeRepo) AdvanceJob(_ context.Context, p store.AdvanceJobParams) (stor
 		return j, pgx.ErrNoRows
 	}
 	j.Status = p.Status
+	if p.Status == 4 {
+		j.Progress = 100
+	}
+	j.UpdatedAt = pgtype.Timestamptz{Time: j.UpdatedAt.Time.Add(time.Millisecond), Valid: true}
+	f.jobs[p.ID] = j
+	return j, nil
+}
+
+// ReportProgress mirrors the query: QUEUED or PROCESSING jobs of the run,
+// forward only. It bumps updated_at, which WatchJob looks at.
+func (f *fakeRepo) ReportProgress(_ context.Context, p store.ReportProgressParams) (store.IngestionJob, error) {
+	j, ok := f.jobs[p.ID]
+	if !ok || j.Run != p.Run || j.Status < 2 || j.Status > 3 || j.Stage > p.Stage || (j.Stage == p.Stage && j.Progress >= p.Progress) {
+		return j, pgx.ErrNoRows
+	}
+	j.Status, j.Stage, j.Progress = 3, p.Stage, p.Progress
+	j.UpdatedAt = pgtype.Timestamptz{Time: j.UpdatedAt.Time.Add(time.Millisecond), Valid: true}
 	f.jobs[p.ID] = j
 	return j, nil
 }
@@ -293,5 +312,74 @@ func TestReprocessJob(t *testing.T) {
 				t.Errorf("message id = %q", sent.id)
 			}
 		})
+	}
+}
+
+// watchStream collects what WatchJob sends and calls onSend after each message.
+type watchStream struct {
+	grpc.ServerStream
+	ctx    context.Context
+	sent   []*ingestionv1.Job
+	onSend func(*ingestionv1.Job)
+}
+
+func (w *watchStream) Context() context.Context { return w.ctx }
+
+func (w *watchStream) Send(resp *ingestionv1.WatchJobResponse) error {
+	w.sent = append(w.sent, resp.GetJob())
+	w.onSend(resp.GetJob())
+	return nil
+}
+
+func TestWatchJobStreamsProgressUntilDone(t *testing.T) {
+	id := uuid.New()
+	repo := &fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{
+		id: {
+			ID: id, DocumentID: uuid.New(), Status: int16(ingestionv1.JobStatus_JOB_STATUS_PROCESSING), Run: 1,
+			UpdatedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		},
+	}}
+	service := app.New(store.NewJobs(repo), documents.New(&fakeDocuments{}), events.NewPublisher(&fakePublisher{}))
+	srv := New(service, slog.New(slog.DiscardHandler))
+	srv.PollInterval = time.Millisecond
+
+	embedding := ingestionv1.JobStage_JOB_STAGE_EMBEDDING
+	// Every message the client sees, the worker gets one step further.
+	steps := []func() error{
+		func() error { return service.ApplyProgress(t.Context(), id, 1, embedding, 10) },
+		func() error { return service.ApplyProgress(t.Context(), id, 1, embedding, 50) },
+		func() error { return service.ApplyProcessed(t.Context(), id, 1, 8) },
+	}
+	stream := &watchStream{ctx: t.Context()}
+	stream.onSend = func(*ingestionv1.Job) {
+		if len(steps) > 0 {
+			if err := steps[0](); err != nil {
+				t.Error(err)
+			}
+			steps = steps[1:]
+		}
+	}
+	if err := srv.WatchJob(&ingestionv1.WatchJobRequest{Id: id.String()}, stream); err != nil {
+		t.Fatal(err)
+	}
+
+	type update struct {
+		status   ingestionv1.JobStatus
+		stage    ingestionv1.JobStage
+		progress int32
+	}
+	var got []update
+	for _, j := range stream.sent {
+		got = append(got, update{j.GetStatus(), j.GetStage(), j.GetProgress()})
+	}
+	processing := ingestionv1.JobStatus_JOB_STATUS_PROCESSING
+	want := []update{
+		{processing, ingestionv1.JobStage_JOB_STAGE_UNSPECIFIED, 0},
+		{processing, embedding, 10},
+		{processing, embedding, 50},
+		{ingestionv1.JobStatus_JOB_STATUS_DONE, embedding, 100},
+	}
+	if !slices.Equal(got, want) {
+		t.Errorf("streamed %v, want %v", got, want)
 	}
 }

@@ -17,6 +17,8 @@ from grpc_health.v1 import health, health_pb2, health_pb2_grpc
 from grpc_reflection.v1alpha import reflection
 from grpc_status import rpc_status
 
+from kb_platform import telemetry
+
 log = logging.getLogger(__name__)
 
 Registrar = Callable[[grpc.aio.Server], None]
@@ -131,8 +133,9 @@ async def serve(
     """Run a grpc.aio server with health checking and reflection until SIGINT
     or SIGTERM. `service_names` are the fully qualified names reported as
     SERVING and exposed via reflection. Handlers read the calling user with
-    `current_user()`."""
-    server = grpc.aio.server(interceptors=[UserInterceptor()])
+    `current_user()`. With tracing on (`kb_platform.telemetry`), each call
+    continues the caller's trace in a server span."""
+    server = grpc.aio.server(interceptors=[*telemetry.server_interceptors(), UserInterceptor()])
     for reg in register:
         reg(server)
 
@@ -210,8 +213,11 @@ def _forward_user(details: grpc.aio.ClientCallDetails) -> grpc.aio.ClientCallDet
 def channel(target: str) -> grpc.aio.Channel:
     """Open an insecure channel to another module's service. Calls made while
     `current_user()` is set pass the user on (see `ForwardUserInterceptor`);
-    calls without one, such as a worker's, reach the peer without a user."""
-    return grpc.aio.insecure_channel(target, interceptors=[ForwardUserInterceptor()])
+    calls without one, such as a worker's, reach the peer without a user. With
+    tracing on, calls carry the current trace on to the peer."""
+    return grpc.aio.insecure_channel(
+        target, interceptors=[*telemetry.client_interceptors(), ForwardUserInterceptor()]
+    )
 
 
 async def is_serving(ch: grpc.aio.Channel, rpc_timeout: float = 2.0) -> bool:

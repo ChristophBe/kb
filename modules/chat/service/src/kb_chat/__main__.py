@@ -6,6 +6,7 @@ from kb.document.v1 import document_pb2_grpc
 from kb.llm.v1 import llm_pb2_grpc
 from kb_platform.grpc import channel, serve
 from kb_platform.logging import setup_logging
+from kb_platform.telemetry import setup_tracing
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from .chat import Chat
@@ -21,6 +22,7 @@ log = logging.getLogger("kb_chat")
 async def run() -> None:
     settings = Settings()
     setup_logging(settings.log_level, settings.log_format)
+    setup_tracing(settings.otel_endpoint, "chat-service")
     await migrate(settings.database_url)
 
     engine = create_async_engine(settings.database_url, pool_pre_ping=True)

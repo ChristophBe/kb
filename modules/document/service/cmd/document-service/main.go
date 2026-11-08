@@ -18,6 +18,7 @@ import (
 	"github.com/christoph/kb/platform/go/grpcserver"
 	"github.com/christoph/kb/platform/go/logging"
 	"github.com/christoph/kb/platform/go/postgres"
+	"github.com/christoph/kb/platform/go/telemetry"
 )
 
 type Config struct {
@@ -51,6 +52,11 @@ func run() error {
 	log := logging.Setup(cfg.LogLevel, cfg.LogFormat, "document-service")
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	shutdown, err := telemetry.Setup(ctx, cfg.OTelEndpoint, "document-service")
+	if err != nil {
+		return err
+	}
+	defer shutdown()
 
 	pool, err := postgres.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {

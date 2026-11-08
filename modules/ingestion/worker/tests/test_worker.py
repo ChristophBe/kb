@@ -78,6 +78,7 @@ def rpc_error(code: grpc.StatusCode, details: str = "peer detail") -> grpc.aio.A
 class FakeMsg:
     def __init__(self, event: events_pb2.DocumentUploaded, num_delivered: int) -> None:
         self.data = event.SerializeToString()
+        self.headers: dict[str, str] | None = None
         self.num_delivered = num_delivered
         self.acked = False
         self.nak_delay: float | None = None

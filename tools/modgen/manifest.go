@@ -48,6 +48,9 @@ type Service struct {
 	// Routes are the gRPC paths ("/kb.x.v1.XService/Method") Envoy routes to
 	// the component: every method of GRPCServices that is not internal.
 	Routes []string `yaml:"-"`
+	// Cmd is the Go main package ("./modules/<id>/service/cmd/<name>"),
+	// found as modules/<id>/*/cmd/<name>; empty for Python components.
+	Cmd string `yaml:"-"`
 }
 
 var (
@@ -85,6 +88,9 @@ func LoadModules(dir string) ([]Module, error) {
 		}
 		for i := range m.Services {
 			if err := m.Services[i].resolveRoutes(defined); err != nil {
+				return nil, fmt.Errorf("%s: %w", path, err)
+			}
+			if err := m.Services[i].resolveCmd(filepath.Dir(path), m.ID); err != nil {
 				return nil, fmt.Errorf("%s: %w", path, err)
 			}
 		}

@@ -75,7 +75,7 @@ class ChatMessage(_message.Message):
     def __init__(self, id: _Optional[str] = ..., role: _Optional[_Union[MessageRole, str]] = ..., content: _Optional[str] = ..., citations: _Optional[_Iterable[_Union[Citation, _Mapping]]] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., status: _Optional[_Union[MessageStatus, str]] = ...) -> None: ...
 
 class Conversation(_message.Message):
-    __slots__ = ("id", "title", "create_time", "update_time", "document_ids", "last_message_time", "last_message_preview")
+    __slots__ = ("id", "title", "create_time", "update_time", "document_ids", "last_message_time", "last_message_preview", "owner_id")
     ID_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
     CREATE_TIME_FIELD_NUMBER: _ClassVar[int]
@@ -83,6 +83,7 @@ class Conversation(_message.Message):
     DOCUMENT_IDS_FIELD_NUMBER: _ClassVar[int]
     LAST_MESSAGE_TIME_FIELD_NUMBER: _ClassVar[int]
     LAST_MESSAGE_PREVIEW_FIELD_NUMBER: _ClassVar[int]
+    OWNER_ID_FIELD_NUMBER: _ClassVar[int]
     id: str
     title: str
     create_time: _timestamp_pb2.Timestamp
@@ -90,7 +91,8 @@ class Conversation(_message.Message):
     document_ids: _containers.RepeatedScalarFieldContainer[str]
     last_message_time: _timestamp_pb2.Timestamp
     last_message_preview: str
-    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., document_ids: _Optional[_Iterable[str]] = ..., last_message_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., last_message_preview: _Optional[str] = ...) -> None: ...
+    owner_id: str
+    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., document_ids: _Optional[_Iterable[str]] = ..., last_message_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., last_message_preview: _Optional[str] = ..., owner_id: _Optional[str] = ...) -> None: ...
 
 class DocumentIds(_message.Message):
     __slots__ = ("ids",)

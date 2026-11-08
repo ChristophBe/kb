@@ -2,6 +2,10 @@
 
 Chat answers your questions from the documents in your knowledge base and shows which passages each answer is based on. Your conversations are kept, so you can come back to them.
 
+## Who can see your conversations
+
+Your conversations are private: only you see them, and only you can find, rename, delete or continue them. Other people signed in to kb have their own conversations and never see yours, not in the list or in [conversation search](#find-a-conversation). If you send someone a link to one of your conversations, they see "This conversation no longer exists."
+
 ## Start a conversation
 
 Opening **Chat** shows the conversation with the most recent message, so you can carry on where you left off. If you have no conversations yet, it asks you to start a new chat.

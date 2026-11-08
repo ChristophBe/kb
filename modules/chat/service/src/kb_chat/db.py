@@ -48,6 +48,7 @@ conversations = Table(
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
     Column("updated_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
     Column("document_ids", ARRAY(Uuid), nullable=False, server_default="{}"),
+    Column("owner_id", Text, nullable=False),
 )
 
 messages = Table(
@@ -91,6 +92,11 @@ def _conversation(row: Any) -> ConversationRow:
     return ConversationRow(**values, last_message_preview=preview(content or ""))
 
 
+def _owned(owner: str, id: uuid.UUID) -> ColumnElement[bool]:
+    """The conversation `id` if `owner` owns it; another user's is missing."""
+    return (conversations.c.id == id) & (conversations.c.owner_id == owner)
+
+
 # Full-text search. The tsvector expressions match the indexes of migration
 # 0004; the configuration is a literal so that the planner can use them.
 _SEARCH_CONFIG = literal_column("'simple'::regconfig")
@@ -115,28 +121,29 @@ class SqlRepository:
         self._engine = engine
 
     async def create_conversation(
-        self, title: str, document_ids: list[uuid.UUID]
+        self, owner: str, title: str, document_ids: list[uuid.UUID]
     ) -> ConversationRow:
         async with self._engine.begin() as conn:
             result = await conn.execute(
                 insert(conversations)
-                .values(id=uuid.uuid4(), title=title, document_ids=document_ids)
+                .values(id=uuid.uuid4(), owner_id=owner, title=title, document_ids=document_ids)
                 .returning(conversations)
             )
             row = result.mappings().one()
         return ConversationRow(**row)
 
-    async def get_conversation(self, id: uuid.UUID) -> ConversationRow | None:
+    async def get_conversation(self, owner: str, id: uuid.UUID) -> ConversationRow | None:
         async with self._engine.connect() as conn:
-            result = await conn.execute(
-                _conversations_with_last_message.where(conversations.c.id == id)
-            )
+            result = await conn.execute(_conversations_with_last_message.where(_owned(owner, id)))
             row = result.mappings().first()
         return _conversation(row) if row else None
 
-    async def list_conversations(self, limit: int, offset: int) -> list[ConversationRow]:
+    async def list_conversations(
+        self, owner: str, limit: int, offset: int
+    ) -> list[ConversationRow]:
         query = (
-            _conversations_with_last_message.order_by(
+            _conversations_with_last_message.where(conversations.c.owner_id == owner)
+            .order_by(
                 func.coalesce(_last_message.c.last_message_time, conversations.c.created_at).desc(),
                 conversations.c.id.desc(),
             )
@@ -147,7 +154,9 @@ class SqlRepository:
             rows = (await conn.execute(query)).mappings().all()
         return [_conversation(r) for r in rows]
 
-    async def search_conversations(self, query: str, limit: int) -> list[ConversationMatch]:
+    async def search_conversations(
+        self, owner: str, query: str, limit: int
+    ) -> list[ConversationMatch]:
         tsquery = _tsquery(query)
         if tsquery is None:
             return []
@@ -167,7 +176,10 @@ class SqlRepository:
                 )
                 .label("place"),
             )
-            .where(content_matches)
+            .select_from(
+                messages.join(conversations, conversations.c.id == messages.c.conversation_id)
+            )
+            .where(conversations.c.owner_id == owner, content_matches)
             .subquery("ranked_messages")
         )
         best = (
@@ -190,7 +202,10 @@ class SqlRepository:
                     best, best.c.conversation_id == conversations.c.id
                 )
             )
-            .where(or_(title_matches, best.c.conversation_id.is_not(None)))
+            .where(
+                conversations.c.owner_id == owner,
+                or_(title_matches, best.c.conversation_id.is_not(None)),
+            )
             .order_by(
                 title_matches.desc(),
                 best.c.rank.desc().nulls_last(),
@@ -210,9 +225,9 @@ class SqlRepository:
             matches.append(ConversationMatch(_conversation(values), snippet))
         return matches
 
-    async def delete_conversation(self, id: uuid.UUID) -> bool:
+    async def delete_conversation(self, owner: str, id: uuid.UUID) -> bool:
         async with self._engine.begin() as conn:
-            result = await conn.execute(delete(conversations).where(conversations.c.id == id))
+            result = await conn.execute(delete(conversations).where(_owned(owner, id)))
         return result.rowcount > 0
 
     async def set_title(self, id: uuid.UUID, title: str) -> None:
@@ -223,6 +238,7 @@ class SqlRepository:
 
     async def update_conversation(
         self,
+        owner: str,
         id: uuid.UUID,
         *,
         title: str | None = None,
@@ -234,12 +250,8 @@ class SqlRepository:
         if document_ids is not None:
             values["document_ids"] = document_ids
         async with self._engine.begin() as conn:
-            await conn.execute(
-                update(conversations).where(conversations.c.id == id).values(**values)
-            )
-            result = await conn.execute(
-                _conversations_with_last_message.where(conversations.c.id == id)
-            )
+            await conn.execute(update(conversations).where(_owned(owner, id)).values(**values))
+            result = await conn.execute(_conversations_with_last_message.where(_owned(owner, id)))
             row = result.mappings().first()
         return _conversation(row) if row else None
 

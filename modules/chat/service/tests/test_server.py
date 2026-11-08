@@ -1,6 +1,7 @@
 import asyncio
+import contextlib
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from datetime import UTC, datetime
 from typing import Any
 
@@ -15,12 +16,65 @@ from kb_chat.peers import PeerGenerator, PeerRetriever
 from kb_chat.preview import preview
 from kb_chat.repository import ConversationMatch, ConversationRow, MessageRow
 from kb_chat.server import ChatServicer
-from kb_platform.grpc import field_violations
+from kb_platform.grpc import USER_HEADER, UserInterceptor, field_violations
+
+ALICE, BOB = "alice", "bob"
 
 
 def servicer(repo: Any, documents: Any, llm: Any) -> ChatServicer:
     chat = Chat(Settings(), repo, PeerRetriever(documents, llm), PeerGenerator(llm))
     return ChatServicer(repo, chat)
+
+
+def _with_user(details: Any, user: str) -> Any:
+    """Call details that send `user` in x-kb-user, as the gateway does for a
+    signed-in user."""
+    metadata = grpc.aio.Metadata(*(details.metadata or ()), (USER_HEADER, user))
+    return details._replace(metadata=metadata)
+
+
+# grpc.aio files an interceptor under one kind of call only, hence one class each.
+class UnaryAsUser(grpc.aio.UnaryUnaryClientInterceptor):
+    def __init__(self, user: str) -> None:
+        self._user = user
+
+    async def intercept_unary_unary(
+        self, continuation: Any, client_call_details: Any, request: Any
+    ) -> Any:
+        return await continuation(_with_user(client_call_details, self._user), request)
+
+
+class StreamAsUser(grpc.aio.UnaryStreamClientInterceptor):
+    def __init__(self, user: str) -> None:
+        self._user = user
+
+    async def intercept_unary_stream(
+        self, continuation: Any, client_call_details: Any, request: Any
+    ) -> Any:
+        return await continuation(_with_user(client_call_details, self._user), request)
+
+
+# Opens a client of the running server for a user; None calls without a user.
+Connect = Callable[..., chat_pb2_grpc.ChatServiceStub]
+
+
+@contextlib.asynccontextmanager
+async def running(repo: Any, documents: Any, llm: Any) -> AsyncIterator[Connect]:
+    """Serves chat with the user interceptor of kb_platform.grpc.serve."""
+    server = grpc.aio.server(interceptors=[UserInterceptor()])
+    chat_pb2_grpc.add_ChatServiceServicer_to_server(servicer(repo, documents, llm), server)
+    port = server.add_insecure_port("127.0.0.1:0")
+    await server.start()
+    async with contextlib.AsyncExitStack() as channels:
+
+        def connect(user: str | None = ALICE) -> chat_pb2_grpc.ChatServiceStub:
+            interceptors: list[Any] = [UnaryAsUser(user), StreamAsUser(user)] if user else []
+            ch = grpc.aio.insecure_channel(f"127.0.0.1:{port}", interceptors=interceptors)
+            channels.push_async_callback(ch.close)
+            return chat_pb2_grpc.ChatServiceStub(ch)
+
+        yield connect
+    await server.stop(None)
 
 
 class MemoryRepo:
@@ -29,49 +83,59 @@ class MemoryRepo:
         self.messages: list[MessageRow] = []
         self.searches: list[tuple[str, int]] = []
 
-    async def create_conversation(self, title: str, document_ids: list[uuid.UUID]):
+    def _owned(self, owner: str) -> list[ConversationRow]:
+        return [c for c in self.conversations.values() if c.owner_id == owner]
+
+    async def create_conversation(self, owner: str, title: str, document_ids: list[uuid.UUID]):
         now = datetime.now(UTC)
-        conv = ConversationRow(uuid.uuid4(), title, now, now, document_ids)
+        conv = ConversationRow(uuid.uuid4(), title, now, now, owner, document_ids)
         self.conversations[conv.id] = conv
         return conv
 
-    async def get_conversation(self, id: uuid.UUID):
-        return self.conversations.get(id)
+    async def get_conversation(self, owner: str, id: uuid.UUID):
+        conv = self.conversations.get(id)
+        return conv if conv is not None and conv.owner_id == owner else None
 
-    async def list_conversations(self, limit: int, offset: int):
+    async def list_conversations(self, owner: str, limit: int, offset: int):
         convs = sorted(
-            self.conversations.values(),
+            self._owned(owner),
             key=lambda c: c.last_message_time or c.created_at,
             reverse=True,
         )
         return convs[offset : offset + limit]
 
-    async def search_conversations(self, query: str, limit: int):
+    async def search_conversations(self, owner: str, query: str, limit: int):
         """Substring matches: titles first, then the first matching message."""
         self.searches.append((query, limit))
         q = query.lower()
-        titled = [c for c in self.conversations.values() if q in c.title.lower()]
-        matches = [ConversationMatch(c) for c in titled]
+        owned = self._owned(owner)
+        matches = [ConversationMatch(c) for c in owned if q in c.title.lower()]
         for m in self.messages:
             conv = self.conversations[m.conversation_id]
+            if conv not in owned:
+                continue
             if q in m.content.lower() and all(x.conversation is not conv for x in matches):
                 matches.append(ConversationMatch(conv, preview(m.content)))
         return matches[:limit]
 
-    async def delete_conversation(self, id: uuid.UUID):
-        return self.conversations.pop(id, None) is not None
+    async def delete_conversation(self, owner: str, id: uuid.UUID):
+        if await self.get_conversation(owner, id) is None:
+            return False
+        del self.conversations[id]
+        return True
 
     async def set_title(self, id: uuid.UUID, title: str):
         self.conversations[id].title = title
 
     async def update_conversation(
         self,
+        owner: str,
         id: uuid.UUID,
         *,
         title: str | None = None,
         document_ids: list[uuid.UUID] | None = None,
     ):
-        conv = self.conversations.get(id)
+        conv = await self.get_conversation(owner, id)
         if conv is not None and title is not None:
             conv.title = title
         if conv is not None and document_ids is not None:
@@ -154,18 +218,17 @@ Env = tuple[chat_pb2_grpc.ChatServiceStub, MemoryRepo, FakeLlm, FakeDocuments]
 
 
 @pytest.fixture
-async def env() -> AsyncIterator[Env]:
+async def served() -> AsyncIterator[tuple[Connect, MemoryRepo, FakeLlm, FakeDocuments]]:
     repo, llm, documents = MemoryRepo(), FakeLlm(), FakeDocuments()
-    server = grpc.aio.server()
-    chat_pb2_grpc.add_ChatServiceServicer_to_server(
-        servicer(repo, documents, llm),
-        server,
-    )
-    port = server.add_insecure_port("127.0.0.1:0")
-    await server.start()
-    async with grpc.aio.insecure_channel(f"127.0.0.1:{port}") as ch:
-        yield chat_pb2_grpc.ChatServiceStub(ch), repo, llm, documents
-    await server.stop(None)
+    async with running(repo, documents, llm) as connect:
+        yield connect, repo, llm, documents
+
+
+@pytest.fixture
+def env(served: tuple[Connect, MemoryRepo, FakeLlm, FakeDocuments]) -> Env:
+    """A client for alice."""
+    connect, repo, llm, documents = served
+    return connect(), repo, llm, documents
 
 
 async def test_stream_chat_with_knowledge_base(env: Env) -> None:
@@ -246,19 +309,14 @@ async def stream_with(
     documents: Any, llm: Any, use_knowledge_base: bool = True
 ) -> tuple[list[chat_pb2.StreamChatResponse], chat_pb2.GetConversationResponse]:
     """Streams one question and returns the events and the saved conversation."""
-    server = grpc.aio.server()
-    chat_pb2_grpc.add_ChatServiceServicer_to_server(servicer(MemoryRepo(), documents, llm), server)
-    port = server.add_insecure_port("127.0.0.1:0")
-    await server.start()
-    async with grpc.aio.insecure_channel(f"127.0.0.1:{port}") as ch:
-        stub = chat_pb2_grpc.ChatServiceStub(ch)
+    async with running(MemoryRepo(), documents, llm) as connect:
+        stub = connect()
         conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
         request = chat_pb2.StreamChatRequest(
             conversation_id=conv.id, content="Hi", use_knowledge_base=use_knowledge_base
         )
         events = [e async for e in stub.StreamChat(request)]
         got = await stub.GetConversation(chat_pb2.GetConversationRequest(id=conv.id))
-    await server.stop(None)
     return events, got
 
 
@@ -311,12 +369,8 @@ async def test_a_cancelled_stream_stops_generation_and_keeps_the_answer_as_stopp
             return msg
 
     repo, llm = WatchedRepo(), SlowLlm()
-    server = grpc.aio.server()
-    chat_pb2_grpc.add_ChatServiceServicer_to_server(servicer(repo, FakeDocuments(), llm), server)
-    port = server.add_insecure_port("127.0.0.1:0")
-    await server.start()
-    async with grpc.aio.insecure_channel(f"127.0.0.1:{port}") as ch:
-        stub = chat_pb2_grpc.ChatServiceStub(ch)
+    async with running(repo, FakeDocuments(), llm) as connect:
+        stub = connect()
         conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
         call = stub.StreamChat(
             chat_pb2.StreamChatRequest(
@@ -330,7 +384,6 @@ async def test_a_cancelled_stream_stops_generation_and_keeps_the_answer_as_stopp
         async with asyncio.timeout(1):
             await repo.answered.wait()
         got = await stub.GetConversation(chat_pb2.GetConversationRequest(id=conv.id))
-    await server.stop(None)
 
     assert llm.calls[0].cancelled
     assert [(m.role, m.content, m.status) for m in got.messages] == [
@@ -543,10 +596,10 @@ async def test_invalid_scopes_are_rejected(env: Env, ids: list[str], field: str)
 
 async def test_search_returns_conversations_with_their_snippet(env: Env) -> None:
     stub, repo, *_ = env
-    talked = await repo.create_conversation("Holidays", [])
+    talked = await repo.create_conversation(ALICE, "Holidays", [])
     await repo.add_message(talked.id, chat_pb2.MESSAGE_ROLE_USER, "Museums in **Lisbon**?", [])
-    titled = await repo.create_conversation("Lisbon trip", [])
-    await repo.create_conversation("Unrelated", [])
+    titled = await repo.create_conversation(ALICE, "Lisbon trip", [])
+    await repo.create_conversation(ALICE, "Unrelated", [])
 
     resp = await stub.SearchConversations(chat_pb2.SearchConversationsRequest(query=" lisbon "))
 
@@ -581,3 +634,98 @@ async def test_search_rejects_invalid_requests(
     assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
     assert [v.field for v in field_violations(err.value)] == [field]
     assert repo.searches == []
+
+
+Served = tuple[Connect, MemoryRepo, FakeLlm, FakeDocuments]
+
+
+async def test_a_conversation_belongs_to_its_creator(served: Served) -> None:
+    connect, *_ = served
+    conv = (
+        await connect(BOB).CreateConversation(chat_pb2.CreateConversationRequest())
+    ).conversation
+
+    assert conv.owner_id == BOB
+    got = await connect(BOB).GetConversation(chat_pb2.GetConversationRequest(id=conv.id))
+    assert got.conversation.owner_id == BOB
+
+
+async def test_users_see_only_their_own_conversations(served: Served) -> None:
+    connect, repo, *_ = served
+    alice, bob = connect(ALICE), connect(BOB)
+    mine = (
+        await alice.CreateConversation(chat_pb2.CreateConversationRequest(title="Lisbon"))
+    ).conversation
+    await repo.add_message(uuid.UUID(mine.id), chat_pb2.MESSAGE_ROLE_USER, "Lisbon?", [])
+    theirs = (
+        await bob.CreateConversation(chat_pb2.CreateConversationRequest(title="Lisbon too"))
+    ).conversation
+
+    listed = await alice.ListConversations(chat_pb2.ListConversationsRequest())
+    found = await alice.SearchConversations(chat_pb2.SearchConversationsRequest(query="lisbon"))
+
+    assert [c.id for c in listed.conversations] == [mine.id]
+    assert [r.conversation.id for r in found.results] == [mine.id]
+    listed = await bob.ListConversations(chat_pb2.ListConversationsRequest())
+    found = await bob.SearchConversations(chat_pb2.SearchConversationsRequest(query="lisbon"))
+    assert [c.id for c in listed.conversations] == [theirs.id]
+    assert [r.conversation.id for r in found.results] == [theirs.id]
+
+
+async def test_another_users_conversation_is_not_found(served: Served) -> None:
+    connect, repo, *_ = served
+    conv = (
+        await connect(ALICE).CreateConversation(chat_pb2.CreateConversationRequest(title="Mine"))
+    ).conversation
+    bob = connect(BOB)
+
+    calls = [
+        bob.GetConversation(chat_pb2.GetConversationRequest(id=conv.id)),
+        bob.UpdateConversation(chat_pb2.UpdateConversationRequest(id=conv.id, title="Taken")),
+        bob.DeleteConversation(chat_pb2.DeleteConversationRequest(id=conv.id)),
+    ]
+    for call in calls:
+        with pytest.raises(grpc.aio.AioRpcError) as err:
+            await call
+        assert err.value.code() == grpc.StatusCode.NOT_FOUND
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        _ = [
+            e
+            async for e in bob.StreamChat(
+                chat_pb2.StreamChatRequest(conversation_id=conv.id, content="Hi")
+            )
+        ]
+    assert err.value.code() == grpc.StatusCode.NOT_FOUND
+
+    # Untouched: still there, still named, no message from bob.
+    got = await connect(ALICE).GetConversation(chat_pb2.GetConversationRequest(id=conv.id))
+    assert got.conversation.title == "Mine"
+    assert repo.messages == []
+
+
+async def test_calls_without_a_user_are_unauthenticated(served: Served) -> None:
+    connect, repo, *_ = served
+    stub = connect(None)
+    conv = await repo.create_conversation(ALICE, "Mine", [])
+
+    calls = [
+        stub.CreateConversation(chat_pb2.CreateConversationRequest()),
+        stub.GetConversation(chat_pb2.GetConversationRequest(id=str(conv.id))),
+        stub.ListConversations(chat_pb2.ListConversationsRequest()),
+        stub.UpdateConversation(chat_pb2.UpdateConversationRequest(id=str(conv.id), title="x")),
+        stub.DeleteConversation(chat_pb2.DeleteConversationRequest(id=str(conv.id))),
+        stub.SearchConversations(chat_pb2.SearchConversationsRequest(query="mine")),
+    ]
+    for call in calls:
+        with pytest.raises(grpc.aio.AioRpcError) as err:
+            await call
+        assert err.value.code() == grpc.StatusCode.UNAUTHENTICATED
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        _ = [
+            e
+            async for e in stub.StreamChat(
+                chat_pb2.StreamChatRequest(conversation_id=str(conv.id), content="Hi")
+            )
+        ]
+    assert err.value.code() == grpc.StatusCode.UNAUTHENTICATED
+    assert list(repo.conversations) == [conv.id]

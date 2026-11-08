@@ -126,14 +126,20 @@ class Chat:
         self._counter = counter or ApproximateTokenCounter()
 
     async def answer(
-        self, conversation_id: uuid.UUID, content: str, model: str, use_knowledge_base: bool
+        self,
+        owner: str,
+        conversation_id: uuid.UUID,
+        content: str,
+        model: str,
+        use_knowledge_base: bool,
     ) -> AsyncGenerator[AnswerEvent]:
         """Answers a question in a conversation. The question is saved first, so
         it stays in the conversation even when no answer can be generated. When a
         peer fails, the answer so far is saved as failed after an AnswerFailed.
         When the caller goes away (the task is cancelled or the stream closed),
-        generation stops and the answer so far is saved as stopped."""
-        conv = await self._repo.get_conversation(conversation_id)
+        generation stops and the answer so far is saved as stopped. Another
+        owner's conversation is not found."""
+        conv = await self._repo.get_conversation(owner, conversation_id)
         if conv is None:
             raise ConversationNotFoundError(str(conversation_id))
         history = await self._repo.list_messages(conv.id, self._settings.history_limit)

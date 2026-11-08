@@ -2,10 +2,11 @@
 
 // Package e2e smoke-tests the whole stack: it starts docker compose with the
 // fake LLM provider and drives upload → processing → RAG chat the way the web
-// shell does, over gRPC-Web through Envoy. Run it with `task e2e`.
+// shell does, over gRPC-Web through Envoy, authenticated with a token of a
+// dev user from Dex (password grant). Run it with `task e2e`.
 //
 // The stack runs as its own compose project (KB_E2E_PROJECT, default kb-e2e)
-// with only the gateway and S3 published, on non-default host ports, so it
+// with only the gateway, S3 and Dex published, on non-default host ports, so it
 // does not collide with a developer's `kb` stack. It is torn down with its
 // volumes after the run, also on failure (set KB_E2E_KEEP=1 to keep it).
 package e2e
@@ -34,6 +35,8 @@ type stack struct {
 	project string   // compose project name
 	env     []string // environment for every docker compose call
 	gateway string   // base URL of Envoy's gRPC-Web listener
+	issuer  string   // URL of the dev OIDC issuer (Dex)
+	token   string   // access token of the test user, fetched once the stack is up
 	keep    bool     // leave the stack running after the run
 }
 
@@ -69,6 +72,11 @@ func run(m *testing.M) int {
 		s.logs()
 		return 1
 	}
+	if s.token, err = fetchToken(s.issuer, testUser); err != nil {
+		fmt.Fprintln(os.Stderr, "e2e: fetching a token:", err)
+		s.logs()
+		return 1
+	}
 	code := m.Run()
 	if code != 0 {
 		s.logs()
@@ -88,7 +96,9 @@ func newStack() (*stack, error) {
 	gatewayPort := envOr("KB_GATEWAY_PORT", "21080")
 	s3Port := envOr("KB_E2E_S3_PORT", "21333")
 	webPort := envOr("KB_WEB_PORT", "21300")
+	dexPort := envOr("KB_DEX_PORT", "21556")
 	gateway := "http://localhost:" + gatewayPort
+	issuer := "http://localhost:" + dexPort + "/dex"
 	return &stack{
 		root:    root,
 		project: project,
@@ -102,8 +112,11 @@ func newStack() (*stack, error) {
 			"KB_WEB_PORT="+webPort,
 			"KB_API_BASE_URL="+gateway,
 			"KB_S3_PUBLIC_ENDPOINT=localhost:"+s3Port,
+			"KB_DEX_PORT="+dexPort,
+			"KB_OIDC_ISSUER="+issuer,
 		),
 		gateway: gateway,
+		issuer:  issuer,
 		keep:    os.Getenv("KB_E2E_KEEP") != "",
 	}, nil
 }

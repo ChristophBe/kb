@@ -28,8 +28,8 @@ type Server struct {
 // New creates a server with logging and recovery interceptors installed.
 func New(log *slog.Logger, opts ...grpc.ServerOption) *Server {
 	opts = append([]grpc.ServerOption{
-		grpc.ChainUnaryInterceptor(recoverUnary(log), logUnary(log)),
-		grpc.ChainStreamInterceptor(recoverStream(log), logStream(log)),
+		grpc.ChainUnaryInterceptor(recoverUnary(log), userUnary, logUnary(log)),
+		grpc.ChainStreamInterceptor(recoverStream(log), userStream, logStream(log)),
 	}, opts...)
 	s := &Server{Server: grpc.NewServer(opts...), health: health.NewServer(), log: log}
 	healthpb.RegisterHealthServer(s.Server, s.health)

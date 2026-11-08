@@ -1,4 +1,4 @@
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from typing import Any
 
 import grpc
@@ -7,8 +7,11 @@ from google.rpc import error_details_pb2
 from grpc_health.v1 import health, health_pb2, health_pb2_grpc
 from grpc_status import rpc_status
 from kb_platform.grpc import (
+    USER_HEADER,
+    UserInterceptor,
     abort_invalid_argument,
     abort_with_details,
+    current_user,
     error_info,
     field_violations,
     is_serving,
@@ -100,3 +103,72 @@ async def test_field_violations_of_a_plain_error() -> None:
         raise AssertionError("abort raises")
 
     assert field_violations(await _call_failing(handler)) == []
+
+
+async def _users_seen(metadata: tuple[tuple[str, str], ...]) -> list[str | None]:
+    """Calls one method of each kind through a server with `UserInterceptor`
+    and returns the `current_user()` each handler saw."""
+    seen: list[str | None] = []
+
+    async def unary(_request: bytes, _context: Any) -> bytes:
+        seen.append(current_user())
+        return b""
+
+    async def yielding(_request: bytes, _context: Any) -> AsyncIterator[bytes]:
+        seen.append(current_user())
+        yield b""
+
+    async def writing(_request: bytes, context: Any) -> None:
+        seen.append(current_user())
+        await context.write(b"")
+
+    async def client_stream(requests: AsyncIterator[bytes], _context: Any) -> bytes:
+        async for _ in requests:
+            pass
+        seen.append(current_user())
+        return b""
+
+    async def bidi(requests: AsyncIterator[bytes], _context: Any) -> AsyncIterator[bytes]:
+        async for _ in requests:
+            seen.append(current_user())
+            yield b""
+
+    server = grpc.aio.server(interceptors=[UserInterceptor()])
+    server.add_generic_rpc_handlers(
+        (
+            grpc.method_handlers_generic_handler(
+                "test.Svc",
+                {
+                    "Unary": grpc.unary_unary_rpc_method_handler(unary),
+                    "Yielding": grpc.unary_stream_rpc_method_handler(yielding),
+                    "Writing": grpc.unary_stream_rpc_method_handler(writing),
+                    "ClientStream": grpc.stream_unary_rpc_method_handler(client_stream),
+                    "Bidi": grpc.stream_stream_rpc_method_handler(bidi),
+                },
+            ),
+        )
+    )
+    port = server.add_insecure_port("127.0.0.1:0")
+    await server.start()
+    try:
+        async with grpc.aio.insecure_channel(f"127.0.0.1:{port}") as ch:
+            await ch.unary_unary("/test.Svc/Unary")(b"", metadata=metadata)
+            async for _ in ch.unary_stream("/test.Svc/Yielding")(b"", metadata=metadata):
+                pass
+            async for _ in ch.unary_stream("/test.Svc/Writing")(b"", metadata=metadata):
+                pass
+            await ch.stream_unary("/test.Svc/ClientStream")(iter([b""]), metadata=metadata)
+            async for _ in ch.stream_stream("/test.Svc/Bidi")(iter([b""]), metadata=metadata):
+                pass
+    finally:
+        await server.stop(None)
+    return seen
+
+
+async def test_user_interceptor_exposes_the_calling_user() -> None:
+    assert await _users_seen(((USER_HEADER, "alice"),)) == ["alice"] * 5
+
+
+async def test_user_interceptor_without_user() -> None:
+    assert await _users_seen(()) == [None] * 5
+    assert current_user() is None

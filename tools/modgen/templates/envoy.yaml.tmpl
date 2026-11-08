@@ -2,6 +2,10 @@
 # Envoy translates browser gRPC-Web calls to gRPC and routes them per method.
 # Only public methods are routed: methods listed as internal in module.yaml
 # get no route, so the browser sees 404 (UNIMPLEMENTED) for them.
+# Every routed call needs a JWT from the OIDC issuer (UNAUTHENTICATED
+# otherwise); Envoy forwards its subject to the services as x-kb-user.
+# The ${KB_OIDC_*} placeholders are filled in at startup by
+# deploy/envoy/entrypoint.sh from the environment.
 static_resources:
   listeners:
     - name: grpc_web
@@ -26,7 +30,7 @@ static_resources:
                           allow_origin_string_match:
                             - safe_regex: { regex: ".*" }
                           allow_methods: GET, PUT, DELETE, POST, OPTIONS
-                          allow_headers: content-type,x-grpc-web,x-user-agent,grpc-timeout,connect-protocol-version,connect-timeout-ms
+                          allow_headers: authorization,content-type,x-grpc-web,x-user-agent,grpc-timeout,connect-protocol-version,connect-timeout-ms
                           expose_headers: grpc-status,grpc-message,grpc-status-details-bin
                           max_age: "1728000"
                       routes:
@@ -41,10 +45,69 @@ static_resources:
                   - name: envoy.filters.http.cors
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors
+                  # The user id is only ever set from a verified token: drop a
+                  # client-supplied one before jwt_authn adds its own.
+                  - name: envoy.filters.http.header_mutation
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.header_mutation.v3.HeaderMutation
+                      mutations:
+                        request_mutations:
+                          - remove: x-kb-user
+                  - name: envoy.filters.http.jwt_authn
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
+                      providers:
+                        oidc:
+                          issuer: "${KB_OIDC_ISSUER}"
+                          audiences: [${KB_OIDC_AUDIENCES}]
+                          remote_jwks:
+                            http_uri:
+                              uri: "${KB_OIDC_JWKS_URL}"
+                              cluster: ${KB_OIDC_JWKS_CLUSTER}
+                              timeout: 5s
+                            cache_duration: 300s
+                            async_fetch: {}
+                            retry_policy: {}
+                          claim_to_headers:
+                            - header_name: x-kb-user
+                              claim_name: sub
+                      rules:
+                        # Health checks stay reachable without a token.
+                        - match: { prefix: "/grpc.health.v1.Health/" }
+                        - match: { prefix: "/" }
+                          requires: { provider_name: oidc }
+                      bypass_cors_preflight: true
                   - name: envoy.filters.http.router
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
   clusters:
+    # The OIDC issuer's JWKS endpoint, over plain HTTP (dev Dex in compose) or
+    # TLS; entrypoint.sh points jwt_authn at the one matching the URL scheme.
+    - name: oidc_http
+      connect_timeout: 5s
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: oidc_http
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: "${KB_OIDC_JWKS_HOST}", port_value: ${KB_OIDC_JWKS_PORT} }
+    - name: oidc_https
+      connect_timeout: 5s
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: oidc_https
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: "${KB_OIDC_JWKS_HOST}", port_value: ${KB_OIDC_JWKS_PORT} }
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+          sni: "${KB_OIDC_JWKS_HOST}"
 {{- range .Modules}}{{range .Services}}{{if .Routes}}
     - name: {{.Name}}
       connect_timeout: 1s

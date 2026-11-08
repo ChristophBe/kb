@@ -4,5 +4,6 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  server: { port: 5173 },
+  // KB_WEB_DEV_PORT must match the dev redirect URI Dex allows (deploy/dex).
+  server: { port: Number(process.env.KB_WEB_DEV_PORT ?? 5173) },
 });

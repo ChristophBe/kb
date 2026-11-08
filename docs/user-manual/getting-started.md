@@ -2,6 +2,10 @@
 
 kb is a knowledge base for your own documents. You upload files, kb splits them into passages, and you can then search them or ask questions that are answered from them, with sources.
 
+## Sign in
+
+kb asks you to sign in when you open it, and shows who is signed in at the bottom of the sidebar. See [Sign in](sign-in.md).
+
 ## Find your way around
 
 The sidebar on the left leads to every area:

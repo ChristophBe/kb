@@ -47,6 +47,7 @@ services:
     environment:
       KB_OIDC_ISSUER: ${KB_OIDC_ISSUER:-http://localhost:5556/dex}
       KB_WEB_PORT: ${KB_WEB_PORT:-3000}
+      KB_WEB_DEV_PORT: ${KB_WEB_DEV_PORT:-5173}
     ports: ["${KB_DEX_PORT:-5556}:5556"]
     volumes:
       - dex:/var/dex

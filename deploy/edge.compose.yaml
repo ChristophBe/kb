@@ -21,5 +21,7 @@ services:
     environment:
       KB_API_BASE_URL: ${KB_API_BASE_URL:-http://localhost:8080}
       KB_ENABLED_MODULES: ${KB_ENABLED_MODULES:-}
+      KB_OIDC_ISSUER: ${KB_OIDC_ISSUER:-http://localhost:5556/dex}
+      KB_OIDC_CLIENT_ID: ${KB_OIDC_CLIENT_ID:-kb-web}
     ports: ["${KB_WEB_PORT:-3000}:80"]
     depends_on: [envoy]

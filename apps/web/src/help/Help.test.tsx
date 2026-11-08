@@ -19,7 +19,7 @@ function renderAt(url: string) {
 describe("manual", () => {
   it("bundles every page of docs/user-manual, in index order, without the README", () => {
     const slugs = manualPages.map((p) => p.slug);
-    expect(slugs.slice(0, 2)).toEqual(["getting-started", "ingestion"]);
+    expect(slugs.slice(0, 2)).toEqual(["getting-started", "sign-in"]);
     expect(slugs).toEqual(expect.arrayContaining(["documents", "search", "chat", "models"]));
     expect(slugs).not.toContain("README");
     // A page missing from the README index would come without a summary.

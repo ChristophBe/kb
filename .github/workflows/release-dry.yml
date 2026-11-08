@@ -1,0 +1,32 @@
+# TEMPORARY (#164 verification): dry-runs the release configuration on the PR.
+name: release-dry
+on: pull_request
+permissions:
+  contents: read
+jobs:
+  dry:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }
+      - name: Install semantic-release
+        env:
+          SEMREL_VERSION: v2.31.0
+          SEMREL_SHA256: b8f518b1aeb1d1742f4e6e91a179b707cea4309a64fe3854f465bf724f04f6d3
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/semantic-release" \
+            "https://github.com/go-semantic-release/semantic-release/releases/download/$SEMREL_VERSION/semantic-release_${SEMREL_VERSION}_linux_amd64"
+          echo "$SEMREL_SHA256  $RUNNER_TEMP/semantic-release" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/semantic-release"
+      - uses: go-semantic-release/action@v1.24.1
+        id: semrel
+        with:
+          bin: ${{ runner.temp }}/semantic-release
+          github-token: ${{ github.token }}
+          dry: true
+          allow-initial-development-versions: true
+          force-bump-patch-version: true
+          custom-arguments: --no-ci --commit-analyzer-opt patch_release_rules=*
+      - env:
+          VERSION: ${{ steps.semrel.outputs.version }}
+        run: echo "version=$VERSION"; cat .generated-go-semantic-release-changelog.md || true

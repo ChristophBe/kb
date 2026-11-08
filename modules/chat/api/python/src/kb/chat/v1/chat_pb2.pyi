@@ -166,6 +166,28 @@ class UpdateConversationResponse(_message.Message):
     conversation: Conversation
     def __init__(self, conversation: _Optional[_Union[Conversation, _Mapping]] = ...) -> None: ...
 
+class SearchConversationsRequest(_message.Message):
+    __slots__ = ("query", "limit")
+    QUERY_FIELD_NUMBER: _ClassVar[int]
+    LIMIT_FIELD_NUMBER: _ClassVar[int]
+    query: str
+    limit: int
+    def __init__(self, query: _Optional[str] = ..., limit: _Optional[int] = ...) -> None: ...
+
+class SearchConversationsResponse(_message.Message):
+    __slots__ = ("results",)
+    RESULTS_FIELD_NUMBER: _ClassVar[int]
+    results: _containers.RepeatedCompositeFieldContainer[ConversationMatch]
+    def __init__(self, results: _Optional[_Iterable[_Union[ConversationMatch, _Mapping]]] = ...) -> None: ...
+
+class ConversationMatch(_message.Message):
+    __slots__ = ("conversation", "snippet")
+    CONVERSATION_FIELD_NUMBER: _ClassVar[int]
+    SNIPPET_FIELD_NUMBER: _ClassVar[int]
+    conversation: Conversation
+    snippet: str
+    def __init__(self, conversation: _Optional[_Union[Conversation, _Mapping]] = ..., snippet: _Optional[str] = ...) -> None: ...
+
 class StreamChatRequest(_message.Message):
     __slots__ = ("conversation_id", "content", "use_knowledge_base", "model")
     CONVERSATION_ID_FIELD_NUMBER: _ClassVar[int]

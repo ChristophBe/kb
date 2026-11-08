@@ -22,6 +22,14 @@ class ConversationRow:
 
 
 @dataclass
+class ConversationMatch:
+    conversation: ConversationRow
+    # An excerpt of the best matching message as plain text; empty when only
+    # the title matches.
+    snippet: str = ""
+
+
+@dataclass
 class MessageRow:
     id: uuid.UUID
     conversation_id: uuid.UUID
@@ -40,6 +48,12 @@ class Repository(Protocol):
     async def list_conversations(self, limit: int, offset: int) -> list[ConversationRow]:
         """Newest latest message first; a conversation without messages counts
         from its creation."""
+        ...
+
+    async def search_conversations(self, query: str, limit: int) -> list[ConversationMatch]:
+        """Conversations whose title or one of whose messages contains every
+        word of `query` (as a word prefix, ignoring case): title matches first,
+        then message matches, each best match first, each conversation once."""
         ...
 
     async def delete_conversation(self, id: uuid.UUID) -> bool: ...

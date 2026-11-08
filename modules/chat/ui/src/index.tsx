@@ -3,6 +3,7 @@ import { MessageSquare } from "lucide-react";
 import { ChatIndex, ChatLayout } from "./ChatLayout.tsx";
 import { Conversation } from "./Conversation.tsx";
 import { StartChat } from "./StartChat.tsx";
+import { conversationSearch } from "./search.ts";
 
 export default defineModule({
   id: "chat",
@@ -20,6 +21,7 @@ export default defineModule({
       submit: "Ask",
     },
   },
+  search: conversationSearch,
   routes: [
     {
       element: <ChatLayout />,

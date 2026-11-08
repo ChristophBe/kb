@@ -70,7 +70,7 @@ Update the overview diagrams in the same PR when services, ports or gRPC/NATS li
 
 ### PR titles and commit messages
 
-PRs are squash-merged and the PR title becomes the commit title on `main`, from which versions are derived. The title follows [Conventional Commits](https://www.conventionalcommits.org/):
+PRs are squash-merged and the PR title becomes the commit title on `main`, from which versions are derived: every push to `main` is released as `vX.Y.Z` with the bump in the table below (see [releases](docs/operations/releases.md)). The title follows [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```text
 <type>[(<scope>)][!]: <summary>

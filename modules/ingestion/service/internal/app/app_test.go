@@ -62,7 +62,24 @@ func (f *fakeJobs) Advance(_ context.Context, t Transition) (Job, error) {
 		return Job{}, ErrNotAdvanced
 	}
 	j.Status, j.Error, j.ChunkCount = t.Status, t.Error, t.ChunkCount
+	if t.Status == done {
+		j.Progress = 100
+	}
 	f.jobs[t.ID] = j
+	return j, nil
+}
+
+func (f *fakeJobs) ReportProgress(_ context.Context, p Progress) (Job, error) {
+	if f.advanceErr != nil {
+		return Job{}, f.advanceErr
+	}
+	j, ok := f.jobs[p.ID]
+	if !ok || j.Run != p.Run || (j.Status != queued && j.Status != processing) ||
+		j.Stage > p.Stage || (j.Stage == p.Stage && j.Progress >= p.Progress) {
+		return Job{}, ErrNotAdvanced
+	}
+	j.Status, j.Stage, j.Progress = processing, p.Stage, p.Progress
+	f.jobs[p.ID] = j
 	return j, nil
 }
 
@@ -75,6 +92,7 @@ func (f *fakeJobs) Reprocess(_ context.Context, id uuid.UUID) (Job, error) {
 		return Job{}, ErrNotAdvanced
 	}
 	j.Status, j.Error, j.ChunkCount, j.Run = queued, "", 0, j.Run+1
+	j.Stage, j.Progress = ingestionv1.JobStage_JOB_STAGE_UNSPECIFIED, 0
 	f.jobs[id] = j
 	return j, nil
 }
@@ -245,6 +263,65 @@ func TestProcessingEventsMoveTheJobForward(t *testing.T) {
 	}
 	if got := jobs.jobs[job.ID]; got.Status != done || got.ChunkCount != 7 {
 		t.Fatalf("after processed: %+v", got)
+	}
+}
+
+func TestProgressEventsRecordStageAndProgress(t *testing.T) {
+	embedding := ingestionv1.JobStage_JOB_STAGE_EMBEDDING
+	job := pendingJob()
+	job.Status = queued
+	jobs := newFakeJobs(job)
+	s := New(jobs, &fakeDocuments{}, &fakePublisher{})
+
+	// The started event may arrive late: progress already means PROCESSING.
+	if err := s.ApplyProgress(t.Context(), job.ID, 1, embedding, 40); err != nil {
+		t.Fatal(err)
+	}
+	if got := jobs.jobs[job.ID]; got.Status != processing || got.Stage != embedding || got.Progress != 40 {
+		t.Fatalf("after progress: %+v", got)
+	}
+	// Stale reports, other runs and out-of-range values don't move it back.
+	for _, p := range []struct {
+		run      int32
+		stage    ingestionv1.JobStage
+		progress int32
+	}{
+		{1, embedding, 20},
+		{1, ingestionv1.JobStage_JOB_STAGE_CHUNKING, 90},
+		{2, ingestionv1.JobStage_JOB_STAGE_STORING, 90},
+		{1, embedding, -5},
+	} {
+		if err := s.ApplyProgress(t.Context(), job.ID, p.run, p.stage, p.progress); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got := jobs.jobs[job.ID]; got.Stage != embedding || got.Progress != 40 {
+		t.Fatalf("stale progress applied: %+v", got)
+	}
+	if err := s.ApplyProgress(t.Context(), job.ID, 1, embedding, 250); err != nil {
+		t.Fatal(err)
+	}
+	if got := jobs.jobs[job.ID].Progress; got != 100 {
+		t.Errorf("progress = %d, want it clamped to 100", got)
+	}
+	if err := s.ApplyProcessed(t.Context(), job.ID, 1, 3); err != nil {
+		t.Fatal(err)
+	}
+	// A late progress report doesn't touch a finished job.
+	if err := s.ApplyProgress(t.Context(), job.ID, 1, ingestionv1.JobStage_JOB_STAGE_STORING, 90); err != nil {
+		t.Fatal(err)
+	}
+	if got := jobs.jobs[job.ID]; got.Status != done || got.Progress != 100 {
+		t.Errorf("after processed: %+v", got)
+	}
+}
+
+func TestApplyProgressReportsStoreFailures(t *testing.T) {
+	jobs := newFakeJobs()
+	jobs.advanceErr = errors.New("database down")
+	err := New(jobs, &fakeDocuments{}, &fakePublisher{}).ApplyProgress(t.Context(), uuid.New(), 1, ingestionv1.JobStage_JOB_STAGE_EMBEDDING, 10)
+	if !errors.Is(err, jobs.advanceErr) {
+		t.Fatalf("err = %v, want retry", err)
 	}
 }
 

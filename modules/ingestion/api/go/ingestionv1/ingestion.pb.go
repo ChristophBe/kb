@@ -81,17 +81,83 @@ func (JobStatus) EnumDescriptor() ([]byte, []int) {
 	return file_kb_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{0}
 }
 
+// JobStage is the step of processing a job is in. Stages run in this order.
+type JobStage int32
+
+const (
+	JobStage_JOB_STAGE_UNSPECIFIED JobStage = 0
+	// Reading the uploaded file and extracting its text.
+	JobStage_JOB_STAGE_EXTRACTING JobStage = 1
+	// Splitting the text into chunks.
+	JobStage_JOB_STAGE_CHUNKING JobStage = 2
+	// Computing the chunks' embeddings, the longest stage.
+	JobStage_JOB_STAGE_EMBEDDING JobStage = 3
+	// Storing the embedded chunks in the document module.
+	JobStage_JOB_STAGE_STORING JobStage = 4
+)
+
+// Enum value maps for JobStage.
+var (
+	JobStage_name = map[int32]string{
+		0: "JOB_STAGE_UNSPECIFIED",
+		1: "JOB_STAGE_EXTRACTING",
+		2: "JOB_STAGE_CHUNKING",
+		3: "JOB_STAGE_EMBEDDING",
+		4: "JOB_STAGE_STORING",
+	}
+	JobStage_value = map[string]int32{
+		"JOB_STAGE_UNSPECIFIED": 0,
+		"JOB_STAGE_EXTRACTING":  1,
+		"JOB_STAGE_CHUNKING":    2,
+		"JOB_STAGE_EMBEDDING":   3,
+		"JOB_STAGE_STORING":     4,
+	}
+)
+
+func (x JobStage) Enum() *JobStage {
+	p := new(JobStage)
+	*p = x
+	return p
+}
+
+func (x JobStage) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (JobStage) Descriptor() protoreflect.EnumDescriptor {
+	return file_kb_ingestion_v1_ingestion_proto_enumTypes[1].Descriptor()
+}
+
+func (JobStage) Type() protoreflect.EnumType {
+	return &file_kb_ingestion_v1_ingestion_proto_enumTypes[1]
+}
+
+func (x JobStage) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use JobStage.Descriptor instead.
+func (JobStage) EnumDescriptor() ([]byte, []int) {
+	return file_kb_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{1}
+}
+
 type Job struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	DocumentId    string                 `protobuf:"bytes,2,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
-	Filename      string                 `protobuf:"bytes,3,opt,name=filename,proto3" json:"filename,omitempty"`
-	ContentType   string                 `protobuf:"bytes,4,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
-	Status        JobStatus              `protobuf:"varint,5,opt,name=status,proto3,enum=kb.ingestion.v1.JobStatus" json:"status,omitempty"`
-	Error         string                 `protobuf:"bytes,6,opt,name=error,proto3" json:"error,omitempty"`
-	ChunkCount    int32                  `protobuf:"varint,7,opt,name=chunk_count,json=chunkCount,proto3" json:"chunk_count,omitempty"`
-	CreateTime    *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	UpdateTime    *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Id          string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	DocumentId  string                 `protobuf:"bytes,2,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
+	Filename    string                 `protobuf:"bytes,3,opt,name=filename,proto3" json:"filename,omitempty"`
+	ContentType string                 `protobuf:"bytes,4,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	Status      JobStatus              `protobuf:"varint,5,opt,name=status,proto3,enum=kb.ingestion.v1.JobStatus" json:"status,omitempty"`
+	Error       string                 `protobuf:"bytes,6,opt,name=error,proto3" json:"error,omitempty"`
+	ChunkCount  int32                  `protobuf:"varint,7,opt,name=chunk_count,json=chunkCount,proto3" json:"chunk_count,omitempty"`
+	CreateTime  *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
+	UpdateTime  *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`
+	// Estimated share of the current run that is done, 0–100. It only grows
+	// within a run, is 100 once the job is DONE and starts over at 0 when the
+	// job is reprocessed.
+	Progress int32 `protobuf:"varint,10,opt,name=progress,proto3" json:"progress,omitempty"`
+	// The step the current run reached; UNSPECIFIED until the worker reports one.
+	Stage         JobStage `protobuf:"varint,11,opt,name=stage,proto3,enum=kb.ingestion.v1.JobStage" json:"stage,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -187,6 +253,20 @@ func (x *Job) GetUpdateTime() *timestamppb.Timestamp {
 		return x.UpdateTime
 	}
 	return nil
+}
+
+func (x *Job) GetProgress() int32 {
+	if x != nil {
+		return x.Progress
+	}
+	return 0
+}
+
+func (x *Job) GetStage() JobStage {
+	if x != nil {
+		return x.Stage
+	}
+	return JobStage_JOB_STAGE_UNSPECIFIED
 }
 
 type CreateUploadRequest struct {
@@ -763,7 +843,7 @@ var File_kb_ingestion_v1_ingestion_proto protoreflect.FileDescriptor
 
 const file_kb_ingestion_v1_ingestion_proto_rawDesc = "" +
 	"\n" +
-	"\x1fkb/ingestion/v1/ingestion.proto\x12\x0fkb.ingestion.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19kb/common/v1/common.proto\"\xda\x02\n" +
+	"\x1fkb/ingestion/v1/ingestion.proto\x12\x0fkb.ingestion.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19kb/common/v1/common.proto\"\xa7\x03\n" +
 	"\x03Job\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
 	"\vdocument_id\x18\x02 \x01(\tR\n" +
@@ -777,7 +857,10 @@ const file_kb_ingestion_v1_ingestion_proto_rawDesc = "" +
 	"\vcreate_time\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"createTime\x12;\n" +
 	"\vupdate_time\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"updateTime\"\x89\x01\n" +
+	"updateTime\x12\x1a\n" +
+	"\bprogress\x18\n" +
+	" \x01(\x05R\bprogress\x12/\n" +
+	"\x05stage\x18\v \x01(\x0e2\x19.kb.ingestion.v1.JobStageR\x05stage\"\x89\x01\n" +
 	"\x13CreateUploadRequest\x12\x1a\n" +
 	"\bfilename\x18\x01 \x01(\tR\bfilename\x12!\n" +
 	"\fcontent_type\x18\x02 \x01(\tR\vcontentType\x12\x1d\n" +
@@ -815,7 +898,13 @@ const file_kb_ingestion_v1_ingestion_proto_rawDesc = "" +
 	"\x11JOB_STATUS_QUEUED\x10\x02\x12\x19\n" +
 	"\x15JOB_STATUS_PROCESSING\x10\x03\x12\x13\n" +
 	"\x0fJOB_STATUS_DONE\x10\x04\x12\x15\n" +
-	"\x11JOB_STATUS_FAILED\x10\x052\x9e\x04\n" +
+	"\x11JOB_STATUS_FAILED\x10\x05*\x87\x01\n" +
+	"\bJobStage\x12\x19\n" +
+	"\x15JOB_STAGE_UNSPECIFIED\x10\x00\x12\x18\n" +
+	"\x14JOB_STAGE_EXTRACTING\x10\x01\x12\x16\n" +
+	"\x12JOB_STAGE_CHUNKING\x10\x02\x12\x17\n" +
+	"\x13JOB_STAGE_EMBEDDING\x10\x03\x12\x15\n" +
+	"\x11JOB_STAGE_STORING\x10\x042\x9e\x04\n" +
 	"\x10IngestionService\x12[\n" +
 	"\fCreateUpload\x12$.kb.ingestion.v1.CreateUploadRequest\x1a%.kb.ingestion.v1.CreateUploadResponse\x12a\n" +
 	"\x0eCompleteUpload\x12&.kb.ingestion.v1.CompleteUploadRequest\x1a'.kb.ingestion.v1.CompleteUploadResponse\x12I\n" +
@@ -836,56 +925,58 @@ func file_kb_ingestion_v1_ingestion_proto_rawDescGZIP() []byte {
 	return file_kb_ingestion_v1_ingestion_proto_rawDescData
 }
 
-var file_kb_ingestion_v1_ingestion_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_kb_ingestion_v1_ingestion_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_kb_ingestion_v1_ingestion_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_kb_ingestion_v1_ingestion_proto_goTypes = []any{
 	(JobStatus)(0),                 // 0: kb.ingestion.v1.JobStatus
-	(*Job)(nil),                    // 1: kb.ingestion.v1.Job
-	(*CreateUploadRequest)(nil),    // 2: kb.ingestion.v1.CreateUploadRequest
-	(*CreateUploadResponse)(nil),   // 3: kb.ingestion.v1.CreateUploadResponse
-	(*CompleteUploadRequest)(nil),  // 4: kb.ingestion.v1.CompleteUploadRequest
-	(*CompleteUploadResponse)(nil), // 5: kb.ingestion.v1.CompleteUploadResponse
-	(*GetJobRequest)(nil),          // 6: kb.ingestion.v1.GetJobRequest
-	(*GetJobResponse)(nil),         // 7: kb.ingestion.v1.GetJobResponse
-	(*ListJobsRequest)(nil),        // 8: kb.ingestion.v1.ListJobsRequest
-	(*ListJobsResponse)(nil),       // 9: kb.ingestion.v1.ListJobsResponse
-	(*WatchJobRequest)(nil),        // 10: kb.ingestion.v1.WatchJobRequest
-	(*WatchJobResponse)(nil),       // 11: kb.ingestion.v1.WatchJobResponse
-	(*ReprocessJobRequest)(nil),    // 12: kb.ingestion.v1.ReprocessJobRequest
-	(*ReprocessJobResponse)(nil),   // 13: kb.ingestion.v1.ReprocessJobResponse
-	(*timestamppb.Timestamp)(nil),  // 14: google.protobuf.Timestamp
-	(*commonv1.PageRequest)(nil),   // 15: kb.common.v1.PageRequest
-	(*commonv1.PageResponse)(nil),  // 16: kb.common.v1.PageResponse
+	(JobStage)(0),                  // 1: kb.ingestion.v1.JobStage
+	(*Job)(nil),                    // 2: kb.ingestion.v1.Job
+	(*CreateUploadRequest)(nil),    // 3: kb.ingestion.v1.CreateUploadRequest
+	(*CreateUploadResponse)(nil),   // 4: kb.ingestion.v1.CreateUploadResponse
+	(*CompleteUploadRequest)(nil),  // 5: kb.ingestion.v1.CompleteUploadRequest
+	(*CompleteUploadResponse)(nil), // 6: kb.ingestion.v1.CompleteUploadResponse
+	(*GetJobRequest)(nil),          // 7: kb.ingestion.v1.GetJobRequest
+	(*GetJobResponse)(nil),         // 8: kb.ingestion.v1.GetJobResponse
+	(*ListJobsRequest)(nil),        // 9: kb.ingestion.v1.ListJobsRequest
+	(*ListJobsResponse)(nil),       // 10: kb.ingestion.v1.ListJobsResponse
+	(*WatchJobRequest)(nil),        // 11: kb.ingestion.v1.WatchJobRequest
+	(*WatchJobResponse)(nil),       // 12: kb.ingestion.v1.WatchJobResponse
+	(*ReprocessJobRequest)(nil),    // 13: kb.ingestion.v1.ReprocessJobRequest
+	(*ReprocessJobResponse)(nil),   // 14: kb.ingestion.v1.ReprocessJobResponse
+	(*timestamppb.Timestamp)(nil),  // 15: google.protobuf.Timestamp
+	(*commonv1.PageRequest)(nil),   // 16: kb.common.v1.PageRequest
+	(*commonv1.PageResponse)(nil),  // 17: kb.common.v1.PageResponse
 }
 var file_kb_ingestion_v1_ingestion_proto_depIdxs = []int32{
 	0,  // 0: kb.ingestion.v1.Job.status:type_name -> kb.ingestion.v1.JobStatus
-	14, // 1: kb.ingestion.v1.Job.create_time:type_name -> google.protobuf.Timestamp
-	14, // 2: kb.ingestion.v1.Job.update_time:type_name -> google.protobuf.Timestamp
-	1,  // 3: kb.ingestion.v1.CreateUploadResponse.job:type_name -> kb.ingestion.v1.Job
-	1,  // 4: kb.ingestion.v1.CompleteUploadResponse.job:type_name -> kb.ingestion.v1.Job
-	1,  // 5: kb.ingestion.v1.GetJobResponse.job:type_name -> kb.ingestion.v1.Job
-	15, // 6: kb.ingestion.v1.ListJobsRequest.page:type_name -> kb.common.v1.PageRequest
-	1,  // 7: kb.ingestion.v1.ListJobsResponse.jobs:type_name -> kb.ingestion.v1.Job
-	16, // 8: kb.ingestion.v1.ListJobsResponse.page:type_name -> kb.common.v1.PageResponse
-	1,  // 9: kb.ingestion.v1.WatchJobResponse.job:type_name -> kb.ingestion.v1.Job
-	1,  // 10: kb.ingestion.v1.ReprocessJobResponse.job:type_name -> kb.ingestion.v1.Job
-	2,  // 11: kb.ingestion.v1.IngestionService.CreateUpload:input_type -> kb.ingestion.v1.CreateUploadRequest
-	4,  // 12: kb.ingestion.v1.IngestionService.CompleteUpload:input_type -> kb.ingestion.v1.CompleteUploadRequest
-	6,  // 13: kb.ingestion.v1.IngestionService.GetJob:input_type -> kb.ingestion.v1.GetJobRequest
-	8,  // 14: kb.ingestion.v1.IngestionService.ListJobs:input_type -> kb.ingestion.v1.ListJobsRequest
-	10, // 15: kb.ingestion.v1.IngestionService.WatchJob:input_type -> kb.ingestion.v1.WatchJobRequest
-	12, // 16: kb.ingestion.v1.IngestionService.ReprocessJob:input_type -> kb.ingestion.v1.ReprocessJobRequest
-	3,  // 17: kb.ingestion.v1.IngestionService.CreateUpload:output_type -> kb.ingestion.v1.CreateUploadResponse
-	5,  // 18: kb.ingestion.v1.IngestionService.CompleteUpload:output_type -> kb.ingestion.v1.CompleteUploadResponse
-	7,  // 19: kb.ingestion.v1.IngestionService.GetJob:output_type -> kb.ingestion.v1.GetJobResponse
-	9,  // 20: kb.ingestion.v1.IngestionService.ListJobs:output_type -> kb.ingestion.v1.ListJobsResponse
-	11, // 21: kb.ingestion.v1.IngestionService.WatchJob:output_type -> kb.ingestion.v1.WatchJobResponse
-	13, // 22: kb.ingestion.v1.IngestionService.ReprocessJob:output_type -> kb.ingestion.v1.ReprocessJobResponse
-	17, // [17:23] is the sub-list for method output_type
-	11, // [11:17] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	15, // 1: kb.ingestion.v1.Job.create_time:type_name -> google.protobuf.Timestamp
+	15, // 2: kb.ingestion.v1.Job.update_time:type_name -> google.protobuf.Timestamp
+	1,  // 3: kb.ingestion.v1.Job.stage:type_name -> kb.ingestion.v1.JobStage
+	2,  // 4: kb.ingestion.v1.CreateUploadResponse.job:type_name -> kb.ingestion.v1.Job
+	2,  // 5: kb.ingestion.v1.CompleteUploadResponse.job:type_name -> kb.ingestion.v1.Job
+	2,  // 6: kb.ingestion.v1.GetJobResponse.job:type_name -> kb.ingestion.v1.Job
+	16, // 7: kb.ingestion.v1.ListJobsRequest.page:type_name -> kb.common.v1.PageRequest
+	2,  // 8: kb.ingestion.v1.ListJobsResponse.jobs:type_name -> kb.ingestion.v1.Job
+	17, // 9: kb.ingestion.v1.ListJobsResponse.page:type_name -> kb.common.v1.PageResponse
+	2,  // 10: kb.ingestion.v1.WatchJobResponse.job:type_name -> kb.ingestion.v1.Job
+	2,  // 11: kb.ingestion.v1.ReprocessJobResponse.job:type_name -> kb.ingestion.v1.Job
+	3,  // 12: kb.ingestion.v1.IngestionService.CreateUpload:input_type -> kb.ingestion.v1.CreateUploadRequest
+	5,  // 13: kb.ingestion.v1.IngestionService.CompleteUpload:input_type -> kb.ingestion.v1.CompleteUploadRequest
+	7,  // 14: kb.ingestion.v1.IngestionService.GetJob:input_type -> kb.ingestion.v1.GetJobRequest
+	9,  // 15: kb.ingestion.v1.IngestionService.ListJobs:input_type -> kb.ingestion.v1.ListJobsRequest
+	11, // 16: kb.ingestion.v1.IngestionService.WatchJob:input_type -> kb.ingestion.v1.WatchJobRequest
+	13, // 17: kb.ingestion.v1.IngestionService.ReprocessJob:input_type -> kb.ingestion.v1.ReprocessJobRequest
+	4,  // 18: kb.ingestion.v1.IngestionService.CreateUpload:output_type -> kb.ingestion.v1.CreateUploadResponse
+	6,  // 19: kb.ingestion.v1.IngestionService.CompleteUpload:output_type -> kb.ingestion.v1.CompleteUploadResponse
+	8,  // 20: kb.ingestion.v1.IngestionService.GetJob:output_type -> kb.ingestion.v1.GetJobResponse
+	10, // 21: kb.ingestion.v1.IngestionService.ListJobs:output_type -> kb.ingestion.v1.ListJobsResponse
+	12, // 22: kb.ingestion.v1.IngestionService.WatchJob:output_type -> kb.ingestion.v1.WatchJobResponse
+	14, // 23: kb.ingestion.v1.IngestionService.ReprocessJob:output_type -> kb.ingestion.v1.ReprocessJobResponse
+	18, // [18:24] is the sub-list for method output_type
+	12, // [12:18] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_kb_ingestion_v1_ingestion_proto_init() }
@@ -898,7 +989,7 @@ func file_kb_ingestion_v1_ingestion_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kb_ingestion_v1_ingestion_proto_rawDesc), len(file_kb_ingestion_v1_ingestion_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      2,
 			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,

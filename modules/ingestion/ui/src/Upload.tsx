@@ -1,6 +1,7 @@
 import {
   IngestionService,
   type Job,
+  JobStage,
   JobStatus,
 } from "@kb/ingestion-api/kb/ingestion/v1/ingestion_pb";
 import { toast, useClient, useQuery, useQueryClient } from "@kb/module-sdk";
@@ -31,6 +32,30 @@ const statusLabel: Record<JobStatus, [string, Tone]> = {
   [JobStatus.DONE]: ["Done", "success"],
   [JobStatus.FAILED]: ["Failed", "danger"],
 };
+
+/** What the user sees for each processing stage. */
+const stageLabel: Record<JobStage, string> = {
+  [JobStage.UNSPECIFIED]: "Starting",
+  [JobStage.EXTRACTING]: "Reading",
+  [JobStage.CHUNKING]: "Splitting",
+  [JobStage.EMBEDDING]: "Indexing",
+  [JobStage.STORING]: "Saving",
+};
+
+/** How often the list refreshes while a job is being processed, for jobs no upload of this page watches. */
+const ACTIVE_REFRESH_MS = 3000;
+
+const active = (job: Job) => job.status === JobStatus.QUEUED || job.status === JobStatus.PROCESSING;
+
+/** A progress bar with its percentage; label names it for screen readers. */
+function ProgressBar({ percent, label }: { percent: number; label: string }) {
+  return (
+    <span className="flex items-center gap-2">
+      <progress max={100} value={percent} aria-label={label} className="h-1.5 w-40 accent-fg" />
+      <span className="w-10 text-right font-mono text-fg-muted tabular-nums">{percent} %</span>
+    </span>
+  );
+}
 
 /** A local status region: progress is not announced continuously, state changes once. */
 function useAnnouncer() {
@@ -67,6 +92,7 @@ export function Upload() {
   const jobs = useQuery({
     queryKey: ["ingestion-jobs"],
     queryFn: () => client.listJobs({ page: { pageSize: 50 } }),
+    refetchInterval: (query) => (query.state.data?.jobs.some(active) ? ACTIVE_REFRESH_MS : false),
   });
 
   const events = useMemo(
@@ -217,6 +243,12 @@ export function Upload() {
                   >
                     {job.filename}
                   </span>
+                  {job.status === JobStatus.PROCESSING && (
+                    <>
+                      <span className="text-fg-muted">{stageLabel[job.stage]}</span>
+                      <ProgressBar percent={job.progress} label={`Processing ${job.filename}`} />
+                    </>
+                  )}
                   {job.status === JobStatus.DONE && (
                     <span className="text-fg-muted">
                       {job.chunkCount} {job.chunkCount === 1 ? "chunk" : "chunks"}
@@ -269,17 +301,7 @@ function UploadItem({
     <li className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2">
       <span className="min-w-0 flex-1 truncate font-medium">{file.name}</span>
       {status === "waiting" && <span className="text-fg-muted">Waiting</span>}
-      {status === "uploading" && (
-        <span className="flex items-center gap-2">
-          <progress
-            max={100}
-            value={percent}
-            aria-label={`Uploading ${file.name}`}
-            className="h-1.5 w-40 accent-fg"
-          />
-          <span className="w-10 text-right font-mono text-fg-muted tabular-nums">{percent} %</span>
-        </span>
-      )}
+      {status === "uploading" && <ProgressBar percent={percent} label={`Uploading ${file.name}`} />}
       {(status === "failed" || status === "rejected") && (
         <span className="flex items-center gap-1.5 text-danger">
           <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />

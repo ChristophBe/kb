@@ -34,6 +34,19 @@ enum JobStatus {
   JOB_STATUS_FAILED = 5;
 }
 
+// JobStage is the step of processing a job is in. Stages run in this order.
+enum JobStage {
+  JOB_STAGE_UNSPECIFIED = 0;
+  // Reading the uploaded file and extracting its text.
+  JOB_STAGE_EXTRACTING = 1;
+  // Splitting the text into chunks.
+  JOB_STAGE_CHUNKING = 2;
+  // Computing the chunks' embeddings, the longest stage.
+  JOB_STAGE_EMBEDDING = 3;
+  // Storing the embedded chunks in the document module.
+  JOB_STAGE_STORING = 4;
+}
+
 message Job {
   string id = 1;
   string document_id = 2;
@@ -44,6 +57,12 @@ message Job {
   int32 chunk_count = 7;
   google.protobuf.Timestamp create_time = 8;
   google.protobuf.Timestamp update_time = 9;
+  // Estimated share of the current run that is done, 0–100. It only grows
+  // within a run, is 100 once the job is DONE and starts over at 0 when the
+  // job is reprocessed.
+  int32 progress = 10;
+  // The step the current run reached; UNSPECIFIED until the worker reports one.
+  JobStage stage = 11;
 }
 
 message CreateUploadRequest {

@@ -20,4 +20,6 @@ type IngestionJob struct {
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 	Run         int32
+	Progress    int16
+	Stage       int16
 }

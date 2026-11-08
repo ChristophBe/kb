@@ -43,7 +43,10 @@ type Job struct {
 	ChunkCount  int32
 	// Run counts the processing runs: 1 for the upload, incremented by every
 	// reprocess. Events name the run they belong to.
-	Run       int32
+	Run int32
+	// Stage and Progress (0–100) describe how far the current run got.
+	Stage     ingestionv1.JobStage
+	Progress  int32
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -63,15 +66,27 @@ type Transition struct {
 	ChunkCount int32
 }
 
+// Progress reports how far run Run of a job got. Stage and Progress only
+// grow within a run.
+type Progress struct {
+	ID       uuid.UUID
+	Run      int32
+	Stage    ingestionv1.JobStage
+	Progress int32
+}
+
 // Jobs persists jobs. Get returns ErrNotFound for an unknown job, Advance
-// returns ErrNotAdvanced when the transition does not apply. Reprocess queues
-// a FAILED or DONE job again as its next run, and returns ErrNotAdvanced for
-// any other job.
+// returns ErrNotAdvanced when the transition does not apply. ReportProgress
+// records progress of a QUEUED or PROCESSING job's current run (making it
+// PROCESSING) and returns ErrNotAdvanced when the job is in another state or
+// run, or already further. Reprocess queues a FAILED or DONE job again as its
+// next run, and returns ErrNotAdvanced for any other job.
 type Jobs interface {
 	Create(ctx context.Context, job Job) (Job, error)
 	Get(ctx context.Context, id uuid.UUID) (Job, error)
 	List(ctx context.Context, limit, offset int32) ([]Job, error)
 	Advance(ctx context.Context, t Transition) (Job, error)
+	ReportProgress(ctx context.Context, p Progress) (Job, error)
 	Reprocess(ctx context.Context, id uuid.UUID) (Job, error)
 }
 
@@ -198,6 +213,19 @@ func (s *Service) ListJobs(ctx context.Context, limit, offset int32) ([]Job, err
 // ApplyStarted records that the worker picked up run run of a job.
 func (s *Service) ApplyStarted(ctx context.Context, id uuid.UUID, run int32) error {
 	return s.apply(ctx, Transition{ID: id, Run: run, Status: ingestionv1.JobStatus_JOB_STATUS_PROCESSING})
+}
+
+// ApplyProgress records the stage and progress the worker reported for run
+// run of a job. Progress outside 0–100 is clamped.
+func (s *Service) ApplyProgress(ctx context.Context, id uuid.UUID, run int32, stage ingestionv1.JobStage, progress int32) error {
+	if run == 0 {
+		run = 1
+	}
+	p := Progress{ID: id, Run: run, Stage: stage, Progress: min(max(progress, 0), 100)}
+	if _, err := s.jobs.ReportProgress(ctx, p); err != nil && !errors.Is(err, ErrNotAdvanced) {
+		return err
+	}
+	return nil
 }
 
 // ApplyProcessed records that the worker finished run run of a job.

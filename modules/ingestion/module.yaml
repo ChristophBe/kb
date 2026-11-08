@@ -15,5 +15,6 @@ depends_on: [document, llm]
 consumes:
   - kb.ingestion.uploaded   # ingestion-worker
   - kb.ingestion.started    # ingestion-service (job status)
+  - kb.ingestion.progress
   - kb.ingestion.processed
   - kb.ingestion.failed

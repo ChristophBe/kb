@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package kb.ingestion.v1;
 
+import "kb/ingestion/v1/ingestion.proto";
+
 option go_package = "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1;ingestionv1";
 
 // Events published on NATS JetStream stream "INGESTION". The subject for each
@@ -26,6 +28,18 @@ message ProcessingStarted {
   string job_id = 1;
   string document_id = 2;
   int32 run = 3;
+}
+
+// Subject: kb.ingestion.progress
+// Published while a job is processed: when a stage starts and after every
+// embedding batch. Best effort: a lost event only delays the next update.
+message ProcessingProgress {
+  string job_id = 1;
+  string document_id = 2;
+  int32 run = 3;
+  JobStage stage = 4;
+  // 0–100, see Job.progress.
+  int32 progress = 5;
 }
 
 // Subject: kb.ingestion.processed

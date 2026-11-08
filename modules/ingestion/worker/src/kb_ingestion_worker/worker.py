@@ -1,3 +1,5 @@
+import asyncio
+import contextlib
 import logging
 from collections.abc import Awaitable, Callable
 from typing import Protocol
@@ -5,7 +7,7 @@ from typing import Protocol
 import grpc
 from google.protobuf.message import Message
 from kb.document.v1 import document_pb2, document_pb2_grpc
-from kb.ingestion.v1 import events_pb2
+from kb.ingestion.v1 import events_pb2, ingestion_pb2
 from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 
 from .chunking import chunk_markdown, chunk_pages
@@ -18,6 +20,7 @@ log = logging.getLogger(__name__)
 STREAM = "INGESTION"
 SUBJECT_UPLOADED = "kb.ingestion.uploaded"
 SUBJECT_STARTED = "kb.ingestion.started"
+SUBJECT_PROGRESS = "kb.ingestion.progress"
 SUBJECT_PROCESSED = "kb.ingestion.processed"
 SUBJECT_FAILED = "kb.ingestion.failed"
 
@@ -42,6 +45,15 @@ class PeerGate:
                 log.warning("document or llm service unavailable; pausing job intake")
             self._open = ok
         return ok
+
+
+# Progress (0 to 100) at the start of each stage. Embedding takes most of the
+# time, so it covers 10 to 90 and advances after every batch.
+_EXTRACTING = ingestion_pb2.JOB_STAGE_EXTRACTING
+_CHUNKING = ingestion_pb2.JOB_STAGE_CHUNKING
+_EMBEDDING = ingestion_pb2.JOB_STAGE_EMBEDDING
+_STORING = ingestion_pb2.JOB_STAGE_STORING
+_EMBEDDING_START, _EMBEDDING_END = 10, 90
 
 
 # publish(subject, message, dedupe_id)
@@ -147,19 +159,45 @@ class Processor:
         delay = self._settings.retry_delay * 2 ** (attempt - 1)
         return min(delay, self._settings.retry_max_delay)
 
+    async def _report(self, event: events_pb2.DocumentUploaded, stage: int, progress: int) -> None:
+        """Publishes how far the job got. Best effort: progress is only shown
+        to the user, so a failed publish doesn't fail the job."""
+        run = event.run or 1
+        message = events_pb2.ProcessingProgress(
+            job_id=event.job_id,
+            document_id=event.document_id,
+            run=run,
+            stage=stage,  # type: ignore[arg-type]
+            progress=progress,
+        )
+        try:
+            await self._publish(
+                SUBJECT_PROGRESS, message, f"{event.job_id}:{run}:progress:{stage}:{progress}"
+            )
+        except Exception as exc:
+            log.warning("could not report progress of job %s: %s", event.job_id, exc)
+
     async def _process(self, event: events_pb2.DocumentUploaded) -> int:
+        await self._report(event, _EXTRACTING, 0)
         data = bytearray()
         async for part in self._documents.ReadContent(
             document_pb2.ReadContentRequest(id=event.document_id)
         ):
             data.extend(part.data)
-        pages = extract_pages(bytes(data), event.filename, event.content_type)
+        # Extraction and chunking are CPU-bound; a thread keeps the other jobs
+        # and the delivery heartbeats going meanwhile.
+        pages = await asyncio.to_thread(
+            extract_pages, bytes(data), event.filename, event.content_type
+        )
+        await self._report(event, _CHUNKING, 5)
         size, overlap = self._settings.chunk_tokens, self._settings.chunk_overlap_tokens
         if is_markdown(event.filename, event.content_type):
             min_section = self._settings.chunk_min_section_tokens
-            chunks = chunk_markdown(pages[0].text, size, overlap, min_section, self._tokens)
+            chunks = await asyncio.to_thread(
+                chunk_markdown, pages[0].text, size, overlap, min_section, self._tokens
+            )
         else:
-            chunks = chunk_pages(pages, size, overlap, self._tokens)
+            chunks = await asyncio.to_thread(chunk_pages, pages, size, overlap, self._tokens)
         if not chunks:
             raise ValueError("document contains no text")
         # Chunking stays within size; only a run of characters that can't be cut
@@ -172,8 +210,10 @@ class Processor:
                     f"limit of {self._max_tokens}"
                 )
 
+        await self._report(event, _EMBEDDING, _EMBEDDING_START)
         inputs: list[document_pb2.ChunkInput] = []
         batch = self._settings.embed_batch_size
+        span = _EMBEDDING_END - _EMBEDDING_START
         for start in range(0, len(chunks), batch):
             group = chunks[start : start + batch]
             resp = await self._llm.Embed(llm_pb2.EmbedRequest(inputs=[c.text for c in group]))
@@ -186,6 +226,9 @@ class Processor:
                         embedding=emb.values,
                     )
                 )
+            done = start + len(group)
+            await self._report(event, _EMBEDDING, _EMBEDDING_START + span * done // len(chunks))
+        await self._report(event, _STORING, _EMBEDDING_END)
         resp = await self._documents.AddChunks(
             document_pb2.AddChunksRequest(document_id=event.document_id, chunks=inputs)
         )
@@ -215,14 +258,81 @@ class Delivery(Protocol):
 
     async def nak(self, delay: float | None = None) -> None: ...
 
+    async def in_progress(self) -> None: ...
 
-async def deliver(processor: Processor, msg: Delivery, max_deliver: int) -> None:
+
+async def deliver(
+    processor: Processor, msg: Delivery, max_deliver: int, heartbeat: float | None = None
+) -> None:
     """Handles one delivery: ack when done, NAK with a delay to retry. The
-    consumer redelivers at most max_deliver times, so that delivery is the last."""
+    consumer redelivers at most max_deliver times, so that delivery is the last.
+
+    Every heartbeat seconds while the upload is processed the delivery is
+    marked in progress, so that JetStream doesn't redeliver a long job to
+    another worker once the consumer's ack wait has passed."""
     event = events_pb2.DocumentUploaded.FromString(msg.data)
     attempt = msg.num_delivered
-    retry_in = await processor.handle(event, attempt, last=attempt >= max_deliver)
+    beat = asyncio.create_task(_keep_alive(msg, heartbeat)) if heartbeat else None
+    try:
+        retry_in = await processor.handle(event, attempt, last=attempt >= max_deliver)
+    finally:
+        if beat:
+            beat.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await beat
     if retry_in is None:
         await msg.ack()
     else:
         await msg.nak(delay=retry_in)
+
+
+async def _keep_alive(msg: Delivery, interval: float) -> None:
+    while True:
+        await asyncio.sleep(interval)
+        try:
+            await msg.in_progress()
+        except Exception as exc:
+            log.warning("could not extend the ack wait of a delivery: %s", exc)
+
+
+async def consume[T](
+    fetch: Callable[[int], Awaitable[list[T]]],
+    handle: Callable[[T], Awaitable[None]],
+    concurrency: int,
+    stop: asyncio.Event,
+    ready: Callable[[], Awaitable[bool]],
+    idle: float = 2,
+) -> None:
+    """Handles up to concurrency messages at once until stop is set, then waits
+    for the ones in progress.
+
+    fetch(n) returns up to n messages, or none after a while. Messages are only
+    fetched for free slots, so none waits in the worker while its ack wait runs
+    out. While ready() is false (a peer is down) no new messages are fetched;
+    it is checked again after idle seconds."""
+    running: set[asyncio.Task[None]] = set()
+
+    async def guarded(msg: T) -> None:
+        try:
+            await handle(msg)
+        except Exception:
+            # Not acked: JetStream redelivers it after the ack wait.
+            log.exception("handling a delivery failed")
+
+    stopped = asyncio.create_task(stop.wait())
+    try:
+        while not stop.is_set():
+            if len(running) >= concurrency:
+                await asyncio.wait({stopped, *running}, return_when=asyncio.FIRST_COMPLETED)
+                continue
+            if not await ready():
+                await asyncio.wait({stopped}, timeout=idle)
+                continue
+            for msg in await fetch(concurrency - len(running)):
+                task = asyncio.create_task(guarded(msg))
+                running.add(task)
+                task.add_done_callback(running.discard)
+        if running:
+            await asyncio.wait(running)
+    finally:
+        stopped.cancel()

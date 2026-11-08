@@ -38,6 +38,7 @@ services:
       KB_CHUNK_TOKENS: ${KB_CHUNK_TOKENS:-256}
       KB_CHUNK_OVERLAP_TOKENS: ${KB_CHUNK_OVERLAP_TOKENS:-32}
       KB_EMBEDDING_MAX_TOKENS: ${KB_EMBEDDING_MAX_TOKENS:-2048}
+      KB_WORKER_CONCURRENCY: ${KB_WORKER_CONCURRENCY:-2}
     # The worker pauses job intake while document or llm is down.
     depends_on:
       nats: { condition: service_healthy }

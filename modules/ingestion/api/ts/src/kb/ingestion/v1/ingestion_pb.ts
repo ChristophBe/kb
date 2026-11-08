@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file kb/ingestion/v1/ingestion.proto.
  */
 export const file_kb_ingestion_v1_ingestion: GenFile = /*@__PURE__*/
-  fileDesc("Ch9rYi9pbmdlc3Rpb24vdjEvaW5nZXN0aW9uLnByb3RvEg9rYi5pbmdlc3Rpb24udjEigAIKA0pvYhIKCgJpZBgBIAEoCRITCgtkb2N1bWVudF9pZBgCIAEoCRIQCghmaWxlbmFtZRgDIAEoCRIUCgxjb250ZW50X3R5cGUYBCABKAkSKgoGc3RhdHVzGAUgASgOMhoua2IuaW5nZXN0aW9uLnYxLkpvYlN0YXR1cxINCgVlcnJvchgGIAEoCRITCgtjaHVua19jb3VudBgHIAEoBRIvCgtjcmVhdGVfdGltZRgIIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLwoLdXBkYXRlX3RpbWUYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wImAKE0NyZWF0ZVVwbG9hZFJlcXVlc3QSEAoIZmlsZW5hbWUYASABKAkSFAoMY29udGVudF90eXBlGAIgASgJEhIKCnNpemVfYnl0ZXMYAyABKAMSDQoFdGl0bGUYBCABKAkiTQoUQ3JlYXRlVXBsb2FkUmVzcG9uc2USIQoDam9iGAEgASgLMhQua2IuaW5nZXN0aW9uLnYxLkpvYhISCgp1cGxvYWRfdXJsGAIgASgJIicKFUNvbXBsZXRlVXBsb2FkUmVxdWVzdBIOCgZqb2JfaWQYASABKAkiOwoWQ29tcGxldGVVcGxvYWRSZXNwb25zZRIhCgNqb2IYASABKAsyFC5rYi5pbmdlc3Rpb24udjEuSm9iIhsKDUdldEpvYlJlcXVlc3QSCgoCaWQYASABKAkiMwoOR2V0Sm9iUmVzcG9uc2USIQoDam9iGAEgASgLMhQua2IuaW5nZXN0aW9uLnYxLkpvYiI6Cg9MaXN0Sm9ic1JlcXVlc3QSJwoEcGFnZRgBIAEoCzIZLmtiLmNvbW1vbi52MS5QYWdlUmVxdWVzdCJgChBMaXN0Sm9ic1Jlc3BvbnNlEiIKBGpvYnMYASADKAsyFC5rYi5pbmdlc3Rpb24udjEuSm9iEigKBHBhZ2UYAiABKAsyGi5rYi5jb21tb24udjEuUGFnZVJlc3BvbnNlIh0KD1dhdGNoSm9iUmVxdWVzdBIKCgJpZBgBIAEoCSI1ChBXYXRjaEpvYlJlc3BvbnNlEiEKA2pvYhgBIAEoCzIULmtiLmluZ2VzdGlvbi52MS5Kb2IiIQoTUmVwcm9jZXNzSm9iUmVxdWVzdBIKCgJpZBgBIAEoCSI5ChRSZXByb2Nlc3NKb2JSZXNwb25zZRIhCgNqb2IYASABKAsyFC5rYi5pbmdlc3Rpb24udjEuSm9iKqQBCglKb2JTdGF0dXMSGgoWSk9CX1NUQVRVU19VTlNQRUNJRklFRBAAEh0KGUpPQl9TVEFUVVNfUEVORElOR19VUExPQUQQARIVChFKT0JfU1RBVFVTX1FVRVVFRBACEhkKFUpPQl9TVEFUVVNfUFJPQ0VTU0lORxADEhMKD0pPQl9TVEFUVVNfRE9ORRAEEhUKEUpPQl9TVEFUVVNfRkFJTEVEEAUyngQKEEluZ2VzdGlvblNlcnZpY2USWwoMQ3JlYXRlVXBsb2FkEiQua2IuaW5nZXN0aW9uLnYxLkNyZWF0ZVVwbG9hZFJlcXVlc3QaJS5rYi5pbmdlc3Rpb24udjEuQ3JlYXRlVXBsb2FkUmVzcG9uc2USYQoOQ29tcGxldGVVcGxvYWQSJi5rYi5pbmdlc3Rpb24udjEuQ29tcGxldGVVcGxvYWRSZXF1ZXN0Gicua2IuaW5nZXN0aW9uLnYxLkNvbXBsZXRlVXBsb2FkUmVzcG9uc2USSQoGR2V0Sm9iEh4ua2IuaW5nZXN0aW9uLnYxLkdldEpvYlJlcXVlc3QaHy5rYi5pbmdlc3Rpb24udjEuR2V0Sm9iUmVzcG9uc2USTwoITGlzdEpvYnMSIC5rYi5pbmdlc3Rpb24udjEuTGlzdEpvYnNSZXF1ZXN0GiEua2IuaW5nZXN0aW9uLnYxLkxpc3RKb2JzUmVzcG9uc2USUQoIV2F0Y2hKb2ISIC5rYi5pbmdlc3Rpb24udjEuV2F0Y2hKb2JSZXF1ZXN0GiEua2IuaW5nZXN0aW9uLnYxLldhdGNoSm9iUmVzcG9uc2UwARJbCgxSZXByb2Nlc3NKb2ISJC5rYi5pbmdlc3Rpb24udjEuUmVwcm9jZXNzSm9iUmVxdWVzdBolLmtiLmluZ2VzdGlvbi52MS5SZXByb2Nlc3NKb2JSZXNwb25zZUJKWkhnaXRodWIuY29tL2NocmlzdG9waC9rYi9tb2R1bGVzL2luZ2VzdGlvbi9hcGkvZ28vaW5nZXN0aW9udjE7aW5nZXN0aW9udjFiBnByb3RvMw", [file_google_protobuf_timestamp, file_kb_common_v1_common]);
+  fileDesc("Ch9rYi9pbmdlc3Rpb24vdjEvaW5nZXN0aW9uLnByb3RvEg9rYi5pbmdlc3Rpb24udjEivAIKA0pvYhIKCgJpZBgBIAEoCRITCgtkb2N1bWVudF9pZBgCIAEoCRIQCghmaWxlbmFtZRgDIAEoCRIUCgxjb250ZW50X3R5cGUYBCABKAkSKgoGc3RhdHVzGAUgASgOMhoua2IuaW5nZXN0aW9uLnYxLkpvYlN0YXR1cxINCgVlcnJvchgGIAEoCRITCgtjaHVua19jb3VudBgHIAEoBRIvCgtjcmVhdGVfdGltZRgIIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLwoLdXBkYXRlX3RpbWUYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhAKCHByb2dyZXNzGAogASgFEigKBXN0YWdlGAsgASgOMhkua2IuaW5nZXN0aW9uLnYxLkpvYlN0YWdlImAKE0NyZWF0ZVVwbG9hZFJlcXVlc3QSEAoIZmlsZW5hbWUYASABKAkSFAoMY29udGVudF90eXBlGAIgASgJEhIKCnNpemVfYnl0ZXMYAyABKAMSDQoFdGl0bGUYBCABKAkiTQoUQ3JlYXRlVXBsb2FkUmVzcG9uc2USIQoDam9iGAEgASgLMhQua2IuaW5nZXN0aW9uLnYxLkpvYhISCgp1cGxvYWRfdXJsGAIgASgJIicKFUNvbXBsZXRlVXBsb2FkUmVxdWVzdBIOCgZqb2JfaWQYASABKAkiOwoWQ29tcGxldGVVcGxvYWRSZXNwb25zZRIhCgNqb2IYASABKAsyFC5rYi5pbmdlc3Rpb24udjEuSm9iIhsKDUdldEpvYlJlcXVlc3QSCgoCaWQYASABKAkiMwoOR2V0Sm9iUmVzcG9uc2USIQoDam9iGAEgASgLMhQua2IuaW5nZXN0aW9uLnYxLkpvYiI6Cg9MaXN0Sm9ic1JlcXVlc3QSJwoEcGFnZRgBIAEoCzIZLmtiLmNvbW1vbi52MS5QYWdlUmVxdWVzdCJgChBMaXN0Sm9ic1Jlc3BvbnNlEiIKBGpvYnMYASADKAsyFC5rYi5pbmdlc3Rpb24udjEuSm9iEigKBHBhZ2UYAiABKAsyGi5rYi5jb21tb24udjEuUGFnZVJlc3BvbnNlIh0KD1dhdGNoSm9iUmVxdWVzdBIKCgJpZBgBIAEoCSI1ChBXYXRjaEpvYlJlc3BvbnNlEiEKA2pvYhgBIAEoCzIULmtiLmluZ2VzdGlvbi52MS5Kb2IiIQoTUmVwcm9jZXNzSm9iUmVxdWVzdBIKCgJpZBgBIAEoCSI5ChRSZXByb2Nlc3NKb2JSZXNwb25zZRIhCgNqb2IYASABKAsyFC5rYi5pbmdlc3Rpb24udjEuSm9iKqQBCglKb2JTdGF0dXMSGgoWSk9CX1NUQVRVU19VTlNQRUNJRklFRBAAEh0KGUpPQl9TVEFUVVNfUEVORElOR19VUExPQUQQARIVChFKT0JfU1RBVFVTX1FVRVVFRBACEhkKFUpPQl9TVEFUVVNfUFJPQ0VTU0lORxADEhMKD0pPQl9TVEFUVVNfRE9ORRAEEhUKEUpPQl9TVEFUVVNfRkFJTEVEEAUqhwEKCEpvYlN0YWdlEhkKFUpPQl9TVEFHRV9VTlNQRUNJRklFRBAAEhgKFEpPQl9TVEFHRV9FWFRSQUNUSU5HEAESFgoSSk9CX1NUQUdFX0NIVU5LSU5HEAISFwoTSk9CX1NUQUdFX0VNQkVERElORxADEhUKEUpPQl9TVEFHRV9TVE9SSU5HEAQyngQKEEluZ2VzdGlvblNlcnZpY2USWwoMQ3JlYXRlVXBsb2FkEiQua2IuaW5nZXN0aW9uLnYxLkNyZWF0ZVVwbG9hZFJlcXVlc3QaJS5rYi5pbmdlc3Rpb24udjEuQ3JlYXRlVXBsb2FkUmVzcG9uc2USYQoOQ29tcGxldGVVcGxvYWQSJi5rYi5pbmdlc3Rpb24udjEuQ29tcGxldGVVcGxvYWRSZXF1ZXN0Gicua2IuaW5nZXN0aW9uLnYxLkNvbXBsZXRlVXBsb2FkUmVzcG9uc2USSQoGR2V0Sm9iEh4ua2IuaW5nZXN0aW9uLnYxLkdldEpvYlJlcXVlc3QaHy5rYi5pbmdlc3Rpb24udjEuR2V0Sm9iUmVzcG9uc2USTwoITGlzdEpvYnMSIC5rYi5pbmdlc3Rpb24udjEuTGlzdEpvYnNSZXF1ZXN0GiEua2IuaW5nZXN0aW9uLnYxLkxpc3RKb2JzUmVzcG9uc2USUQoIV2F0Y2hKb2ISIC5rYi5pbmdlc3Rpb24udjEuV2F0Y2hKb2JSZXF1ZXN0GiEua2IuaW5nZXN0aW9uLnYxLldhdGNoSm9iUmVzcG9uc2UwARJbCgxSZXByb2Nlc3NKb2ISJC5rYi5pbmdlc3Rpb24udjEuUmVwcm9jZXNzSm9iUmVxdWVzdBolLmtiLmluZ2VzdGlvbi52MS5SZXByb2Nlc3NKb2JSZXNwb25zZUJKWkhnaXRodWIuY29tL2NocmlzdG9waC9rYi9tb2R1bGVzL2luZ2VzdGlvbi9hcGkvZ28vaW5nZXN0aW9udjE7aW5nZXN0aW9udjFiBnByb3RvMw", [file_google_protobuf_timestamp, file_kb_common_v1_common]);
 
 /**
  * @generated from message kb.ingestion.v1.Job
@@ -64,6 +64,22 @@ export type Job = Message<"kb.ingestion.v1.Job"> & {
    * @generated from field: google.protobuf.Timestamp update_time = 9;
    */
   updateTime?: Timestamp | undefined;
+
+  /**
+   * Estimated share of the current run that is done, 0–100. It only grows
+   * within a run, is 100 once the job is DONE and starts over at 0 when the
+   * job is reprocessed.
+   *
+   * @generated from field: int32 progress = 10;
+   */
+  progress: number;
+
+  /**
+   * The step the current run reached; UNSPECIFIED until the worker reports one.
+   *
+   * @generated from field: kb.ingestion.v1.JobStage stage = 11;
+   */
+  stage: JobStage;
 };
 
 /**
@@ -346,6 +362,52 @@ export enum JobStatus {
  */
 export const JobStatusSchema: GenEnum<JobStatus> = /*@__PURE__*/
   enumDesc(file_kb_ingestion_v1_ingestion, 0);
+
+/**
+ * JobStage is the step of processing a job is in. Stages run in this order.
+ *
+ * @generated from enum kb.ingestion.v1.JobStage
+ */
+export enum JobStage {
+  /**
+   * @generated from enum value: JOB_STAGE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * Reading the uploaded file and extracting its text.
+   *
+   * @generated from enum value: JOB_STAGE_EXTRACTING = 1;
+   */
+  EXTRACTING = 1,
+
+  /**
+   * Splitting the text into chunks.
+   *
+   * @generated from enum value: JOB_STAGE_CHUNKING = 2;
+   */
+  CHUNKING = 2,
+
+  /**
+   * Computing the chunks' embeddings, the longest stage.
+   *
+   * @generated from enum value: JOB_STAGE_EMBEDDING = 3;
+   */
+  EMBEDDING = 3,
+
+  /**
+   * Storing the embedded chunks in the document module.
+   *
+   * @generated from enum value: JOB_STAGE_STORING = 4;
+   */
+  STORING = 4,
+}
+
+/**
+ * Describes the enum kb.ingestion.v1.JobStage.
+ */
+export const JobStageSchema: GenEnum<JobStage> = /*@__PURE__*/
+  enumDesc(file_kb_ingestion_v1_ingestion, 1);
 
 /**
  * IngestionService accepts new content and tracks it through processing

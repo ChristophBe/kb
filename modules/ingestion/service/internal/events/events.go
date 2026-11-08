@@ -22,6 +22,7 @@ const (
 
 	SubjectUploaded  = "kb.ingestion.uploaded"
 	SubjectStarted   = "kb.ingestion.started"
+	SubjectProgress  = "kb.ingestion.progress"
 	SubjectProcessed = "kb.ingestion.processed"
 	SubjectFailed    = "kb.ingestion.failed"
 
@@ -71,15 +72,16 @@ func EnsureStream(ctx context.Context, js jetstream.JetStream) error {
 // Jobs receives the processing events.
 type Jobs interface {
 	ApplyStarted(ctx context.Context, id uuid.UUID, run int32) error
+	ApplyProgress(ctx context.Context, id uuid.UUID, run int32, stage ingestionv1.JobStage, progress int32) error
 	ApplyProcessed(ctx context.Context, id uuid.UUID, run, chunkCount int32) error
 	ApplyFailed(ctx context.Context, id uuid.UUID, run int32, reason string) error
 }
 
-// Consume applies started/processed/failed events to jobs until ctx ends.
+// Consume applies started/progress/processed/failed events to jobs until ctx ends.
 func Consume(ctx context.Context, js jetstream.JetStream, jobs Jobs, log *slog.Logger) error {
 	cons, err := js.CreateOrUpdateConsumer(ctx, Stream, jetstream.ConsumerConfig{
 		Durable:        consumerName,
-		FilterSubjects: []string{SubjectStarted, SubjectProcessed, SubjectFailed},
+		FilterSubjects: []string{SubjectStarted, SubjectProgress, SubjectProcessed, SubjectFailed},
 		AckPolicy:      jetstream.AckExplicitPolicy,
 	})
 	if err != nil {
@@ -113,6 +115,16 @@ func apply(ctx context.Context, jobs Jobs, subject string, data []byte) error {
 			return nil //nolint:nilerr // malformed events can never succeed; drop them
 		}
 		return jobs.ApplyStarted(ctx, id, ev.GetRun())
+	case SubjectProgress:
+		var ev ingestionv1.ProcessingProgress
+		if err := proto.Unmarshal(data, &ev); err != nil {
+			return err
+		}
+		id, err := uuid.Parse(ev.GetJobId())
+		if err != nil {
+			return nil //nolint:nilerr // malformed events can never succeed; drop them
+		}
+		return jobs.ApplyProgress(ctx, id, ev.GetRun(), ev.GetStage(), ev.GetProgress())
 	case SubjectProcessed:
 		var ev ingestionv1.DocumentProcessed
 		if err := proto.Unmarshal(data, &ev); err != nil {

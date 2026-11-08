@@ -1,7 +1,7 @@
 from typing import Self
 
 from kb_platform.config import PlatformSettings
-from pydantic import model_validator
+from pydantic import Field, model_validator
 
 
 class Settings(PlatformSettings):
@@ -27,6 +27,12 @@ class Settings(PlatformSettings):
     max_deliver: int = 5
     retry_delay: float = 5
     retry_max_delay: float = 300
+    # Uploads processed at the same time. 2 overlaps one document's download,
+    # extraction and storing with another's embedding without piling requests
+    # on a single local embedding model, which works through them one by one
+    # anyway on CPU. Raise it when the embedding backend runs requests in
+    # parallel (a GPU, a hosted provider, Ollama with OLLAMA_NUM_PARALLEL).
+    worker_concurrency: int = Field(default=2, ge=1)
 
     @model_validator(mode="after")
     def _check_chunk_sizes(self) -> Self:

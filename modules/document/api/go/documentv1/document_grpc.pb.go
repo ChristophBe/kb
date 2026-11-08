@@ -58,7 +58,8 @@ type DocumentServiceClient interface {
 	ListChunks(ctx context.Context, in *ListChunksRequest, opts ...grpc.CallOption) (*ListChunksResponse, error)
 	SearchChunks(ctx context.Context, in *SearchChunksRequest, opts ...grpc.CallOption) (*SearchChunksResponse, error)
 	// SearchDocuments embeds a text query through the llm module and returns
-	// the most similar chunks. It fails with UNAVAILABLE while llm is down.
+	// the most similar documents, each with its best chunk, and the most
+	// similar chunks. It fails with UNAVAILABLE while llm is down.
 	SearchDocuments(ctx context.Context, in *SearchDocumentsRequest, opts ...grpc.CallOption) (*SearchDocumentsResponse, error)
 }
 
@@ -224,7 +225,8 @@ type DocumentServiceServer interface {
 	ListChunks(context.Context, *ListChunksRequest) (*ListChunksResponse, error)
 	SearchChunks(context.Context, *SearchChunksRequest) (*SearchChunksResponse, error)
 	// SearchDocuments embeds a text query through the llm module and returns
-	// the most similar chunks. It fails with UNAVAILABLE while llm is down.
+	// the most similar documents, each with its best chunk, and the most
+	// similar chunks. It fails with UNAVAILABLE while llm is down.
 	SearchDocuments(context.Context, *SearchDocumentsRequest) (*SearchDocumentsResponse, error)
 	mustEmbedUnimplementedDocumentServiceServer()
 }

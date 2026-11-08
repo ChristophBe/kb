@@ -88,6 +88,18 @@ class ScoredChunk(_message.Message):
     score: float
     def __init__(self, chunk: _Optional[_Union[Chunk, _Mapping]] = ..., document_title: _Optional[str] = ..., score: _Optional[float] = ...) -> None: ...
 
+class ScoredDocument(_message.Message):
+    __slots__ = ("document_id", "title", "score", "best_chunk")
+    DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
+    TITLE_FIELD_NUMBER: _ClassVar[int]
+    SCORE_FIELD_NUMBER: _ClassVar[int]
+    BEST_CHUNK_FIELD_NUMBER: _ClassVar[int]
+    document_id: str
+    title: str
+    score: float
+    best_chunk: Chunk
+    def __init__(self, document_id: _Optional[str] = ..., title: _Optional[str] = ..., score: _Optional[float] = ..., best_chunk: _Optional[_Union[Chunk, _Mapping]] = ...) -> None: ...
+
 class CreateDocumentRequest(_message.Message):
     __slots__ = ("title", "filename", "content_type", "size_bytes", "metadata")
     class MetadataEntry(_message.Message):
@@ -294,7 +306,9 @@ class SearchDocumentsRequest(_message.Message):
     def __init__(self, query: _Optional[str] = ..., limit: _Optional[int] = ..., document_ids: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class SearchDocumentsResponse(_message.Message):
-    __slots__ = ("results",)
+    __slots__ = ("results", "documents")
     RESULTS_FIELD_NUMBER: _ClassVar[int]
+    DOCUMENTS_FIELD_NUMBER: _ClassVar[int]
     results: _containers.RepeatedCompositeFieldContainer[ScoredChunk]
-    def __init__(self, results: _Optional[_Iterable[_Union[ScoredChunk, _Mapping]]] = ...) -> None: ...
+    documents: _containers.RepeatedCompositeFieldContainer[ScoredDocument]
+    def __init__(self, results: _Optional[_Iterable[_Union[ScoredChunk, _Mapping]]] = ..., documents: _Optional[_Iterable[_Union[ScoredDocument, _Mapping]]] = ...) -> None: ...

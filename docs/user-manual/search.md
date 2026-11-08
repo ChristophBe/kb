@@ -1,6 +1,6 @@
 # Search
 
-Search finds passages across all your documents. It matches by meaning, not only by exact words, so a question or a description works as well as keywords. The search box at the top of the sidebar finds pages of kb from anywhere.
+Search finds the documents that best match what you are looking for, and the passage in each that matches best. It matches by meaning, not only by exact words, so a question or a description works as well as keywords. The search box at the top of the sidebar finds pages of kb from anywhere.
 
 ## Search from any page
 
@@ -9,6 +9,8 @@ The search box at the top of the sidebar is on every page. Press ⌘K (on a Mac)
 1. Type a few letters. Matches appear below the box as you type, grouped by kind; **Pages** lists the pages of kb whose name contains what you typed, for example **Chat** when you type "chat".
 2. Select a match, or move to it with the Up and Down arrow keys and press Enter, to open it.
 3. Press Escape to close the list; press it again to empty the box.
+
+**Documents** lists the documents that match by meaning, each once with the start of its best matching passage; selecting one opens the document at that passage. **Conversations** lists your chats whose title or messages contain what you typed; see [Find a conversation](chat.md#find-a-conversation).
 
 Each group shows its first five matches. To see all of them, select **See all results for …** at the bottom of the list, or press Enter without choosing a match.
 
@@ -23,15 +25,15 @@ The page that opens from **See all results for …** lists every match, grouped 
 1. Open **Search** in the sidebar, or select **Search** on the **Documents** page.
 2. Type what you are looking for and select **Search**, or press Enter.
 
-You get up to 20 passages, the best match first. Each result shows the document's title, the passage number, the start of the passage and a relevance score; higher is closer.
+You get up to 20 documents, each once, the best match first. A document ranks by its best matching passage, so a document that matches in many places doesn't push others out. Each result shows the document's title, the start of its best matching passage and a relevance score; higher is closer.
 
 The address of the page contains your search, so you can bookmark it, share it, or go back to earlier searches with the browser's Back button.
 
-If nothing matches, the page says "No passages match …"; try other words. Only documents with the status **Ready** are searched.
+If nothing matches, the page says "No documents match …"; try other words. Only documents with the status **Ready** are searched.
 
 ## Open a passage in its document
 
-Select the title of a result. The document opens at that passage and highlights it briefly, with the passages around it. See [Read the passages of a document](documents.md#read-the-passages-of-a-document).
+Select the title of a result. The document opens at its best matching passage and highlights it briefly, with the passages around it. See [Read the passages of a document](documents.md#read-the-passages-of-a-document).
 
 ## When search does not work
 

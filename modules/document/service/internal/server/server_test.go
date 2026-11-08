@@ -39,6 +39,8 @@ type fakeRepo struct {
 	chunkReq []store.ListChunksParams
 	found    []store.SearchChunksRow
 	searches []store.SearchChunksParams
+	best     []store.SearchBestChunksRow
+	bestReq  []store.SearchBestChunksParams
 }
 
 func (f *fakeRepo) CreateDocument(_ context.Context, p store.CreateDocumentParams) (store.DocumentDocument, error) {
@@ -88,6 +90,11 @@ func (f *fakeRepo) ListChunks(_ context.Context, p store.ListChunksParams) ([]st
 func (f *fakeRepo) SearchChunks(_ context.Context, p store.SearchChunksParams) ([]store.SearchChunksRow, error) {
 	f.searches = append(f.searches, p)
 	return f.found, nil
+}
+
+func (f *fakeRepo) SearchBestChunks(_ context.Context, p store.SearchBestChunksParams) ([]store.SearchBestChunksRow, error) {
+	f.bestReq = append(f.bestReq, p)
+	return f.best, nil
 }
 
 // fakeLLM answers Embed with one fixed vector per input, or fails with err.
@@ -303,8 +310,39 @@ func TestSearchDocumentsCapsTheLimit(t *testing.T) {
 	if _, err := newServer(repo).SearchDocuments(t.Context(), &documentv1.SearchDocumentsRequest{Query: "q", Limit: 1000}); err != nil {
 		t.Fatal(err)
 	}
-	if repo.searches[0].MaxResults != maxLimit {
-		t.Errorf("limit = %d, want %d", repo.searches[0].MaxResults, maxLimit)
+	if repo.searches[0].MaxResults != maxLimit || repo.bestReq[0].MaxResults != maxLimit {
+		t.Errorf("limits = %d, %d, want %d", repo.searches[0].MaxResults, repo.bestReq[0].MaxResults, maxLimit)
+	}
+}
+
+func TestSearchDocumentsReturnsEachDocumentOnceWithItsBestChunk(t *testing.T) {
+	report, notes := uuid.New(), uuid.New()
+	repo := &fakeRepo{best: []store.SearchBestChunksRow{
+		{DocumentID: report, Idx: 4, Text: "Revenue grew.", Metadata: map[string]string{}, DocumentTitle: "Quarterly report", Score: 0.9},
+		{DocumentID: notes, Idx: 0, Text: "Revenue notes.", DocumentTitle: "Notes", Score: 0.4},
+	}}
+	llm := &fakeLLM{vector: []float32{0.5, 0.25}}
+	srv := New(repo, fakeObjects{}, llm, slog.New(slog.DiscardHandler))
+	resp, err := srv.SearchDocuments(t.Context(), &documentv1.SearchDocumentsRequest{Query: "revenue", Limit: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(llm.calls) != 1 {
+		t.Errorf("embedded %d times, want once for both searches", len(llm.calls))
+	}
+	req := repo.bestReq[0]
+	if req.MaxResults != 2 || !slices.Equal(req.Embedding.Slice(), llm.vector) {
+		t.Errorf("best-chunk search params = %+v", req)
+	}
+	docs := resp.GetDocuments()
+	if len(docs) != 2 || docs[0].GetDocumentId() != report.String() || docs[1].GetDocumentId() != notes.String() {
+		t.Fatalf("documents = %v, want report then notes", docs)
+	}
+	got := docs[0]
+	if got.GetTitle() != "Quarterly report" || got.GetScore() != float32(0.9) ||
+		got.GetBestChunk().GetIndex() != 4 || got.GetBestChunk().GetText() != "Revenue grew." ||
+		got.GetBestChunk().GetDocumentId() != report.String() {
+		t.Errorf("document = %v", got)
 	}
 }
 

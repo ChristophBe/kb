@@ -19,6 +19,10 @@ type Querier interface {
 	ListChunks(ctx context.Context, arg ListChunksParams) ([]ListChunksRow, error)
 	ListDocuments(ctx context.Context, arg ListDocumentsParams) ([]DocumentDocument, error)
 	MarkDocumentUploaded(ctx context.Context, arg MarkDocumentUploadedParams) (DocumentDocument, error)
+	// SearchBestChunks returns each document's most similar chunk, ranked by
+	// that chunk's score: the documents most similar to the embedding. It is an
+	// exact scan, since the vector index can't pick one chunk per document.
+	SearchBestChunks(ctx context.Context, arg SearchBestChunksParams) ([]SearchBestChunksRow, error)
 	SearchChunks(ctx context.Context, arg SearchChunksParams) ([]SearchChunksRow, error)
 	SetChunkCount(ctx context.Context, arg SetChunkCountParams) error
 	SetDocumentStatus(ctx context.Context, arg SetDocumentStatusParams) (DocumentDocument, error)

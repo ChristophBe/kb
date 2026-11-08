@@ -13,7 +13,7 @@ const ollama = createRouterTransport(({ service }) =>
       models: [
         { id: "qwen2.5:0.5b", provider: "ollama", kind: ModelKind.CHAT },
         { id: "nomic-embed-text", provider: "ollama", kind: ModelKind.EMBEDDING },
-        { id: "llama3.2", provider: "ollama", kind: ModelKind.CHAT },
+        { id: "llama3.2:latest", provider: "ollama", kind: ModelKind.CHAT },
       ],
     }),
   }),

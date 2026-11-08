@@ -32,8 +32,10 @@ function useChatModels() {
         llm.getProviderStatus({}),
       ]);
       const defaultModel = status.defaultChatModel;
+      // Ollama lists the default "llama3.2" as "llama3.2:latest"; offer it once.
+      const isDefault = (id: string) => id === defaultModel || id === `${defaultModel}:latest`;
       const others = models
-        .filter((m) => m.kind === ModelKind.CHAT && m.id !== defaultModel)
+        .filter((m) => m.kind === ModelKind.CHAT && !isDefault(m.id))
         .map((m) => m.id);
       return { defaultModel, ids: defaultModel ? [defaultModel, ...others] : others };
     },

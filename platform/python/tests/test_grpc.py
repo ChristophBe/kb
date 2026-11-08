@@ -11,6 +11,8 @@ from kb_platform.grpc import (
     UserInterceptor,
     abort_invalid_argument,
     abort_with_details,
+    as_user,
+    channel,
     current_user,
     error_info,
     field_violations,
@@ -105,9 +107,13 @@ async def test_field_violations_of_a_plain_error() -> None:
     assert field_violations(await _call_failing(handler)) == []
 
 
-async def _users_seen(metadata: tuple[tuple[str, str], ...]) -> list[str | None]:
+async def _users_seen(
+    metadata: tuple[tuple[str, str], ...],
+    open_channel: Callable[[str], grpc.aio.Channel] | None = None,
+) -> list[str | None]:
     """Calls one method of each kind through a server with `UserInterceptor`
-    and returns the `current_user()` each handler saw."""
+    and returns the `current_user()` each handler saw. The calls go through
+    `open_channel`, a plain channel by default."""
     seen: list[str | None] = []
 
     async def unary(_request: bytes, _context: Any) -> bytes:
@@ -151,7 +157,7 @@ async def _users_seen(metadata: tuple[tuple[str, str], ...]) -> list[str | None]
     port = server.add_insecure_port("127.0.0.1:0")
     await server.start()
     try:
-        async with grpc.aio.insecure_channel(f"127.0.0.1:{port}") as ch:
+        async with (open_channel or grpc.aio.insecure_channel)(f"127.0.0.1:{port}") as ch:
             await ch.unary_unary("/test.Svc/Unary")(b"", metadata=metadata)
             async for _ in ch.unary_stream("/test.Svc/Yielding")(b"", metadata=metadata):
                 pass
@@ -172,3 +178,18 @@ async def test_user_interceptor_exposes_the_calling_user() -> None:
 async def test_user_interceptor_without_user() -> None:
     assert await _users_seen(()) == [None] * 5
     assert current_user() is None
+
+
+async def test_channel_forwards_the_current_user() -> None:
+    with as_user("alice"):
+        assert await _users_seen((), channel) == ["alice"] * 5
+    assert current_user() is None
+
+
+async def test_channel_forwards_the_user_alongside_other_metadata() -> None:
+    with as_user("bob"):
+        assert await _users_seen((("x-other", "1"),), channel) == ["bob"] * 5
+
+
+async def test_channel_without_a_user_sends_none() -> None:
+    assert await _users_seen((), channel) == [None] * 5

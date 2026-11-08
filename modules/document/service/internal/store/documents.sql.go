@@ -13,13 +13,15 @@ import (
 )
 
 const createDocument = `-- name: CreateDocument :one
-INSERT INTO document.documents (id, title, filename, content_type, size_bytes, object_key, status, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at
+
+INSERT INTO document.documents (id, owner_id, title, filename, content_type, size_bytes, object_key, status, metadata)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id
 `
 
 type CreateDocumentParams struct {
 	ID          uuid.UUID
+	OwnerID     string
 	Title       string
 	Filename    string
 	ContentType string
@@ -29,9 +31,13 @@ type CreateDocumentParams struct {
 	Metadata    map[string]string
 }
 
+// Queries taking an owner_id act for that user and find only their documents.
+// The others serve the internal RPCs of the ingestion pipeline, which acts on
+// any document.
 func (q *Queries) CreateDocument(ctx context.Context, arg CreateDocumentParams) (DocumentDocument, error) {
 	row := q.db.QueryRow(ctx, createDocument,
 		arg.ID,
+		arg.OwnerID,
 		arg.Title,
 		arg.Filename,
 		arg.ContentType,
@@ -54,27 +60,33 @@ func (q *Queries) CreateDocument(ctx context.Context, arg CreateDocumentParams) 
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.OwnerID,
 	)
 	return i, err
 }
 
 const deleteDocument = `-- name: DeleteDocument :one
-DELETE FROM document.documents WHERE id = $1 RETURNING object_key
+DELETE FROM document.documents WHERE id = $1 AND owner_id = $2 RETURNING object_key
 `
 
-func (q *Queries) DeleteDocument(ctx context.Context, id uuid.UUID) (string, error) {
-	row := q.db.QueryRow(ctx, deleteDocument, id)
+type DeleteDocumentParams struct {
+	ID      uuid.UUID
+	OwnerID string
+}
+
+func (q *Queries) DeleteDocument(ctx context.Context, arg DeleteDocumentParams) (string, error) {
+	row := q.db.QueryRow(ctx, deleteDocument, arg.ID, arg.OwnerID)
 	var object_key string
 	err := row.Scan(&object_key)
 	return object_key, err
 }
 
-const getDocument = `-- name: GetDocument :one
-SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at FROM document.documents WHERE id = $1
+const getAnyDocument = `-- name: GetAnyDocument :one
+SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id FROM document.documents WHERE id = $1
 `
 
-func (q *Queries) GetDocument(ctx context.Context, id uuid.UUID) (DocumentDocument, error) {
-	row := q.db.QueryRow(ctx, getDocument, id)
+func (q *Queries) GetAnyDocument(ctx context.Context, id uuid.UUID) (DocumentDocument, error) {
+	row := q.db.QueryRow(ctx, getAnyDocument, id)
 	var i DocumentDocument
 	err := row.Scan(
 		&i.ID,
@@ -89,23 +101,56 @@ func (q *Queries) GetDocument(ctx context.Context, id uuid.UUID) (DocumentDocume
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.OwnerID,
+	)
+	return i, err
+}
+
+const getDocument = `-- name: GetDocument :one
+SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id FROM document.documents WHERE id = $1 AND owner_id = $2
+`
+
+type GetDocumentParams struct {
+	ID      uuid.UUID
+	OwnerID string
+}
+
+func (q *Queries) GetDocument(ctx context.Context, arg GetDocumentParams) (DocumentDocument, error) {
+	row := q.db.QueryRow(ctx, getDocument, arg.ID, arg.OwnerID)
+	var i DocumentDocument
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Filename,
+		&i.ContentType,
+		&i.SizeBytes,
+		&i.ObjectKey,
+		&i.Status,
+		&i.StatusDetail,
+		&i.ChunkCount,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.OwnerID,
 	)
 	return i, err
 }
 
 const listDocuments = `-- name: ListDocuments :many
-SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at FROM document.documents
+SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id FROM document.documents
+WHERE owner_id = $1
 ORDER BY created_at DESC, id DESC
-LIMIT $1 OFFSET $2
+LIMIT $2 OFFSET $3
 `
 
 type ListDocumentsParams struct {
-	Limit  int32
-	Offset int32
+	OwnerID string
+	Limit   int32
+	Offset  int32
 }
 
 func (q *Queries) ListDocuments(ctx context.Context, arg ListDocumentsParams) ([]DocumentDocument, error) {
-	rows, err := q.db.Query(ctx, listDocuments, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listDocuments, arg.OwnerID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +171,7 @@ func (q *Queries) ListDocuments(ctx context.Context, arg ListDocumentsParams) ([
 			&i.Metadata,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.OwnerID,
 		); err != nil {
 			return nil, err
 		}
@@ -141,7 +187,7 @@ const markDocumentUploaded = `-- name: MarkDocumentUploaded :one
 UPDATE document.documents
 SET status = $2, status_detail = $3, size_bytes = $4, content_type = $5, updated_at = now()
 WHERE id = $1
-RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id
 `
 
 type MarkDocumentUploadedParams struct {
@@ -174,6 +220,7 @@ func (q *Queries) MarkDocumentUploaded(ctx context.Context, arg MarkDocumentUplo
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.OwnerID,
 	)
 	return i, err
 }
@@ -199,7 +246,7 @@ const setDocumentStatus = `-- name: SetDocumentStatus :one
 UPDATE document.documents
 SET status = $2, status_detail = $3, updated_at = now()
 WHERE id = $1
-RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id
 `
 
 type SetDocumentStatusParams struct {
@@ -224,27 +271,34 @@ func (q *Queries) SetDocumentStatus(ctx context.Context, arg SetDocumentStatusPa
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.OwnerID,
 	)
 	return i, err
 }
 
 const updateDocument = `-- name: UpdateDocument :one
 UPDATE document.documents
-SET title      = coalesce($2, title),
-    metadata   = coalesce($3, metadata),
+SET title      = coalesce($3, title),
+    metadata   = coalesce($4, metadata),
     updated_at = now()
-WHERE id = $1
-RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at
+WHERE id = $1 AND owner_id = $2
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id
 `
 
 type UpdateDocumentParams struct {
 	ID       uuid.UUID
+	OwnerID  string
 	Title    pgtype.Text
 	Metadata map[string]string
 }
 
 func (q *Queries) UpdateDocument(ctx context.Context, arg UpdateDocumentParams) (DocumentDocument, error) {
-	row := q.db.QueryRow(ctx, updateDocument, arg.ID, arg.Title, arg.Metadata)
+	row := q.db.QueryRow(ctx, updateDocument,
+		arg.ID,
+		arg.OwnerID,
+		arg.Title,
+		arg.Metadata,
+	)
 	var i DocumentDocument
 	err := row.Scan(
 		&i.ID,
@@ -259,6 +313,7 @@ func (q *Queries) UpdateDocument(ctx context.Context, arg UpdateDocumentParams) 
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.OwnerID,
 	)
 	return i, err
 }

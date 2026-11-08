@@ -84,6 +84,9 @@ message Conversation {
   // The start of the latest message as plain text (Markdown removed), at most
   // 120 characters; empty while there are no messages.
   string last_message_preview = 7;
+  // The id of the user who created it (the subject of their token). Output
+  // only: a user sees only their own conversations.
+  string owner_id = 8;
 }
 
 // A list of document ids, wrapped so that an update can tell "keep the scope"

@@ -10,7 +10,7 @@ import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
 from kb.chat.v1 import chat_pb2, chat_pb2_grpc
 from kb.common.v1 import common_pb2
-from kb_platform.grpc import abort_invalid_argument, violation
+from kb_platform.grpc import abort_invalid_argument, current_user, violation
 
 from .chat import (
     AnswerDelta,
@@ -42,6 +42,9 @@ _PEER_TITLES = {Peer.DOCUMENT: "Documents", Peer.LLM: "Models"}
 
 
 class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
+    """Every RPC acts for the calling user (`current_user()`) and sees only the
+    conversations they own; another user's conversation is not found."""
+
     def __init__(self, repo: Repository, chat: Chat) -> None:
         self._repo = repo
         self._chat = chat
@@ -49,8 +52,9 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
     async def CreateConversation(
         self, request: chat_pb2.CreateConversationRequest, context: _Context
     ) -> chat_pb2.CreateConversationResponse:
+        owner = await _owner(context)
         document_ids = await _scope(request.document_ids, context)
-        conv = await self._repo.create_conversation(request.title, document_ids)
+        conv = await self._repo.create_conversation(owner, request.title, document_ids)
         return chat_pb2.CreateConversationResponse(conversation=_conversation(conv))
 
     async def GetConversation(
@@ -65,6 +69,7 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
     async def ListConversations(
         self, request: chat_pb2.ListConversationsRequest, context: _Context
     ) -> chat_pb2.ListConversationsResponse:
+        owner = await _owner(context)
         limit = min(request.page.page_size or DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE)
         try:
             offset = int(request.page.page_token or 0)
@@ -72,7 +77,7 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
             await abort_invalid_argument(
                 context, violation("page.page_token", "The page token is invalid")
             )
-        rows = await self._repo.list_conversations(limit + 1, offset)
+        rows = await self._repo.list_conversations(owner, limit + 1, offset)
         token = str(offset + limit) if len(rows) > limit else ""
         return chat_pb2.ListConversationsResponse(
             conversations=[_conversation(c) for c in rows[:limit]],
@@ -82,7 +87,8 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
     async def DeleteConversation(
         self, request: chat_pb2.DeleteConversationRequest, context: _Context
     ) -> chat_pb2.DeleteConversationResponse:
-        if not await self._repo.delete_conversation(_parse_id(request.id)):
+        owner = await _owner(context)
+        if not await self._repo.delete_conversation(owner, _parse_id(request.id)):
             await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
         return chat_pb2.DeleteConversationResponse()
 
@@ -107,7 +113,7 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
             document_ids = await _scope(request.document_ids.ids, context, "document_ids.ids")
         if title is not None or document_ids is not None:
             updated = await self._repo.update_conversation(
-                conv.id, title=title, document_ids=document_ids
+                conv.owner_id, conv.id, title=title, document_ids=document_ids
             )
             if updated is None:
                 await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
@@ -118,6 +124,7 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
     async def SearchConversations(
         self, request: chat_pb2.SearchConversationsRequest, context: _Context
     ) -> chat_pb2.SearchConversationsResponse:
+        owner = await _owner(context)
         query = request.query.strip()
         if not query:
             await abort_invalid_argument(context, violation("query", "Enter a search term"))
@@ -126,7 +133,7 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
                 context, violation("limit", "The limit must not be negative")
             )
         limit = min(request.limit or DEFAULT_SEARCH_LIMIT, MAX_SEARCH_LIMIT)
-        matches = await self._repo.search_conversations(query, limit)
+        matches = await self._repo.search_conversations(owner, query, limit)
         return chat_pb2.SearchConversationsResponse(
             results=[
                 chat_pb2.ConversationMatch(
@@ -139,13 +146,18 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
     async def StreamChat(
         self, request: chat_pb2.StreamChatRequest, context: _Context
     ) -> AsyncIterator[chat_pb2.StreamChatResponse]:
+        owner = await _owner(context)
         content = request.content.strip()
         if not content:
             await abort_invalid_argument(
                 context, violation("content", "The message must not be empty")
             )
         events = self._chat.answer(
-            _parse_id(request.conversation_id), content, request.model, request.use_knowledge_base
+            owner,
+            _parse_id(request.conversation_id),
+            content,
+            request.model,
+            request.use_knowledge_base,
         )
         # The document and llm modules are soft dependencies: when one fails, the
         # stream ends with an error event and the answer so far, not a gRPC error.
@@ -165,11 +177,22 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
                 raise
 
     async def _get(self, raw_id: str, context: _Context) -> ConversationRow:
-        conv = await self._repo.get_conversation(_parse_id(raw_id))
+        owner = await _owner(context)
+        conv = await self._repo.get_conversation(owner, _parse_id(raw_id))
         if conv is None:
             await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
         assert conv is not None
         return conv
+
+
+async def _owner(context: _Context) -> str:
+    """The calling user; calls without one (not through the gateway) are
+    rejected."""
+    user = current_user()
+    if user is None:
+        await context.abort(grpc.StatusCode.UNAUTHENTICATED, "no user in the call")
+    assert user is not None
+    return user
 
 
 def _parse_id(raw: str) -> uuid.UUID:
@@ -221,6 +244,7 @@ def _conversation(c: ConversationRow) -> chat_pb2.Conversation:
         document_ids=[str(i) for i in c.document_ids],
         last_message_time=_ts(c.last_message_time) if c.last_message_time else None,
         last_message_preview=c.last_message_preview,
+        owner_id=c.owner_id,
     )
 
 

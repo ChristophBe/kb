@@ -373,8 +373,11 @@ type Conversation struct {
 	// The start of the latest message as plain text (Markdown removed), at most
 	// 120 characters; empty while there are no messages.
 	LastMessagePreview string `protobuf:"bytes,7,opt,name=last_message_preview,json=lastMessagePreview,proto3" json:"last_message_preview,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	// The id of the user who created it (the subject of their token). Output
+	// only: a user sees only their own conversations.
+	OwnerId       string `protobuf:"bytes,8,opt,name=owner_id,json=ownerId,proto3" json:"owner_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Conversation) Reset() {
@@ -452,6 +455,13 @@ func (x *Conversation) GetLastMessageTime() *timestamppb.Timestamp {
 func (x *Conversation) GetLastMessagePreview() string {
 	if x != nil {
 		return x.LastMessagePreview
+	}
+	return ""
+}
+
+func (x *Conversation) GetOwnerId() string {
+	if x != nil {
+		return x.OwnerId
 	}
 	return ""
 }
@@ -1447,7 +1457,7 @@ const file_kb_chat_v1_chat_proto_rawDesc = "" +
 	"\tcitations\x18\x04 \x03(\v2\x14.kb.chat.v1.CitationR\tcitations\x12;\n" +
 	"\vcreate_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"createTime\x121\n" +
-	"\x06status\x18\x06 \x01(\x0e2\x19.kb.chat.v1.MessageStatusR\x06status\"\xcb\x02\n" +
+	"\x06status\x18\x06 \x01(\x0e2\x19.kb.chat.v1.MessageStatusR\x06status\"\xe6\x02\n" +
 	"\fConversation\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12;\n" +
@@ -1457,7 +1467,8 @@ const file_kb_chat_v1_chat_proto_rawDesc = "" +
 	"updateTime\x12!\n" +
 	"\fdocument_ids\x18\x05 \x03(\tR\vdocumentIds\x12F\n" +
 	"\x11last_message_time\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x0flastMessageTime\x120\n" +
-	"\x14last_message_preview\x18\a \x01(\tR\x12lastMessagePreview\"\x1f\n" +
+	"\x14last_message_preview\x18\a \x01(\tR\x12lastMessagePreview\x12\x19\n" +
+	"\bowner_id\x18\b \x01(\tR\aownerId\"\x1f\n" +
 	"\vDocumentIds\x12\x10\n" +
 	"\x03ids\x18\x01 \x03(\tR\x03ids\"T\n" +
 	"\x19CreateConversationRequest\x12\x14\n" +

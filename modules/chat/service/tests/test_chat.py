@@ -34,16 +34,17 @@ ASSISTANT = chat_pb2.MESSAGE_ROLE_ASSISTANT
 COMPLETE = chat_pb2.MESSAGE_STATUS_COMPLETE
 FAILED = chat_pb2.MESSAGE_STATUS_FAILED
 STOPPED = chat_pb2.MESSAGE_STATUS_STOPPED
+OWNER = "alice"
 
 
 class FakeRepo:
     def __init__(self, title: str = "") -> None:
         now = datetime.now(UTC)
-        self.conv = ConversationRow(uuid.uuid4(), title, now, now)
+        self.conv = ConversationRow(uuid.uuid4(), title, now, now, OWNER)
         self.messages: list[MessageRow] = []
 
-    async def get_conversation(self, id: uuid.UUID) -> ConversationRow | None:
-        return self.conv if id == self.conv.id else None
+    async def get_conversation(self, owner: str, id: uuid.UUID) -> ConversationRow | None:
+        return self.conv if (owner, id) == (self.conv.owner_id, self.conv.id) else None
 
     async def set_title(self, id: uuid.UUID, title: str) -> None:
         self.conv.title = title
@@ -137,7 +138,7 @@ def make(
 
 
 async def collect(chat: Chat, repo: FakeRepo, use_kb: bool = True) -> list[AnswerEvent]:
-    return [e async for e in chat.answer(repo.conv.id, "Capital?", "m1", use_kb)]
+    return [e async for e in chat.answer(OWNER, repo.conv.id, "Capital?", "m1", use_kb)]
 
 
 async def test_answer_streams_sources_then_deltas_then_the_saved_message() -> None:
@@ -255,7 +256,7 @@ async def test_history_is_limited_and_excludes_the_new_question() -> None:
 async def test_the_first_question_sets_the_title() -> None:
     chat, repo, _, _ = make()
     long_question = "x" * (TITLE_LENGTH + 10)
-    _ = [e async for e in chat.answer(repo.conv.id, long_question, "", False)]
+    _ = [e async for e in chat.answer(OWNER, repo.conv.id, long_question, "", False)]
     assert repo.conv.title == "x" * TITLE_LENGTH
 
 
@@ -268,7 +269,14 @@ async def test_an_existing_title_is_kept() -> None:
 async def test_unknown_conversation_raises_and_saves_nothing() -> None:
     chat, repo, _, _ = make()
     with pytest.raises(ConversationNotFoundError):
-        _ = [e async for e in chat.answer(uuid.uuid4(), "Hi", "", True)]
+        _ = [e async for e in chat.answer(OWNER, uuid.uuid4(), "Hi", "", True)]
+    assert repo.messages == []
+
+
+async def test_another_users_conversation_raises_and_saves_nothing() -> None:
+    chat, repo, _, _ = make()
+    with pytest.raises(ConversationNotFoundError):
+        _ = [e async for e in chat.answer("bob", repo.conv.id, "Hi", "", True)]
     assert repo.messages == []
 
 
@@ -332,7 +340,7 @@ async def test_cancelling_the_answer_stops_generation_and_saves_it_as_stopped() 
 async def test_closing_the_stream_early_stops_generation_and_saves_it_as_stopped() -> None:
     generator = HangingGenerator(("Par", "is"))
     chat, repo, _, _ = make(generator=generator)
-    events = chat.answer(repo.conv.id, "Capital?", "m1", False)
+    events = chat.answer(OWNER, repo.conv.id, "Capital?", "m1", False)
 
     assert await anext(events) == AnswerDelta("Par")
     await events.aclose()

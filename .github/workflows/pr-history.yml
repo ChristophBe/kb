@@ -1,0 +1,36 @@
+name: pr-history
+
+# main has a semi-linear history: PRs land as merge commits (title = PR title), and
+# the branch must sit on top of the current main with no merge commits of its own,
+# so every merge is a fast-forward-able bubble (see CONTRIBUTING.md). Fix a failure
+# with `git rebase origin/main` or the PR's "Update branch → Update with rebase".
+# It does not re-run when main moves on, so check "This branch is up to date" before
+# merging (branch protection, which would enforce that, is not available on this plan).
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  pr-history:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Branch is rebased on the base branch
+        env:
+          BASE: origin/${{ github.base_ref }}
+        run: |
+          if ! git merge-base --is-ancestor "$BASE" HEAD; then
+            echo "::error::Branch is behind $BASE; rebase it onto $BASE."
+            exit 1
+          fi
+          merges=$(git rev-list --merges "$BASE..HEAD")
+          if [ -n "$merges" ]; then
+            echo "::error::Branch contains merge commits ($merges); rebase instead of merging $BASE in."
+            exit 1
+          fi

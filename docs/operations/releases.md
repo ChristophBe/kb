@@ -4,7 +4,7 @@ Every push to `main` is released. The [`release` workflow](../../.github/workflo
 
 ## Versions
 
-PRs are squash-merged, so each push to `main` is one commit whose title is the PR title in [Conventional Commits](../../CONTRIBUTING.md#pr-titles-and-commit-messages) form. The bump follows from it:
+PRs land as merge commits, so each push to `main` brings the PR's branch commits plus a merge commit whose title is the PR title, all in [Conventional Commits](../../CONTRIBUTING.md#pr-titles-and-commit-messages) form. The highest bump among them wins, so a `feat` branch commit makes a `fix` PR a minor release, and the release notes list the branch commits as well as the PR:
 
 | Commit | Bump | Example |
 |---|---|---|

@@ -70,7 +70,7 @@ Update the overview diagrams in the same PR when services, ports or gRPC/NATS li
 
 ### PR titles and commit messages
 
-PRs are squash-merged and the PR title becomes the commit title on `main`, from which versions are derived: every push to `main` is released as `vX.Y.Z` with the bump in the table below (see [releases](docs/operations/releases.md)). The title follows [Conventional Commits](https://www.conventionalcommits.org/):
+`main` has a semi-linear history: a PR is rebased onto the current `main` and lands as a merge commit whose title is the PR title and whose body is the PR description. Versions are derived from these commits: every push to `main` is released as `vX.Y.Z` with the bump in the table below (see [releases](docs/operations/releases.md)). The title follows [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```text
 <type>[(<scope>)][!]: <summary>
@@ -91,12 +91,14 @@ PRs are squash-merged and the PR title becomes the commit title on `main`, from 
   | `chore` | Anything else (housekeeping, config) | patch |
 
 - **scope** (optional): a module id (`document`, `ingestion`, `chat`, `llm`, …: the `id` in `modules/*/module.yaml`), an area (`platform`, `ui-shell`, `infra`: the `area:*` labels), or `deps` for dependency updates. Usually the scope label of the issue the PR closes, without its prefix. Leave it out when the change spans several.
-- **`!`** after the type or scope marks a breaking change and bumps the **major** version, whatever the type (e.g. `feat(chat)!: drop the v1 conversation API`). Explain the break in the PR description; a `BREAKING CHANGE:` footer in the squash commit body has the same effect.
+- **`!`** after the type or scope marks a breaking change and bumps the **major** version, whatever the type (e.g. `feat(chat)!: drop the v1 conversation API`). Explain the break in the PR description; a `BREAKING CHANGE:` footer in the PR description (the merge commit body) or in a branch commit has the same effect.
 - **summary**: imperative, lower-case start, no trailing full stop.
 
 Examples: `fix(document): reject empty uploads`, `feat(ui-shell): add a command palette`, `build(deps): bump vite to 7.1.0`, `docs: describe the home page`.
 
-The `pr-title` workflow (`.github/workflows/pr-title.yml`) checks the title on every PR and re-runs when the title is edited; the allowed scopes are read from the module manifests and the `area:*` labels on each run. With Claude Code, the `/pr` skill (`.claude/skills/pr/`) derives the title from the closed issue's labels. Individual commits on the branch are squashed away and need not follow the convention, but it is good practice for them to.
+The `pr-title` workflow (`.github/workflows/pr-title.yml`) checks the title on every PR and re-runs when the title is edited; the allowed scopes are read from the module manifests and the `area:*` labels on each run. With Claude Code, the `/pr` skill (`.claude/skills/pr/`) derives the title from the closed issue's labels. Branch commits land on `main` unchanged, so they follow the same convention and should each be a coherent step.
+
+The `pr-history` workflow (`.github/workflows/pr-history.yml`) fails when the branch is behind `main` or contains merge commits. Update a stale branch by rebasing (*Update branch → Update with rebase* on the PR, or `gh pr update-branch --rebase`), never by merging `main` in. The check does not re-run when `main` moves on, so make sure the PR shows the branch as up to date before merging.
 
 ### Required checks
 

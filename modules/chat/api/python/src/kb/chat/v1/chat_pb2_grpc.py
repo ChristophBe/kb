@@ -61,6 +61,11 @@ class ChatServiceStub:
                 request_serializer=kb_dot_chat_dot_v1_dot_chat__pb2.UpdateConversationRequest.SerializeToString,
                 response_deserializer=kb_dot_chat_dot_v1_dot_chat__pb2.UpdateConversationResponse.FromString,
                 _registered_method=True)
+        self.SearchConversations = channel.unary_unary(
+                '/kb.chat.v1.ChatService/SearchConversations',
+                request_serializer=kb_dot_chat_dot_v1_dot_chat__pb2.SearchConversationsRequest.SerializeToString,
+                response_deserializer=kb_dot_chat_dot_v1_dot_chat__pb2.SearchConversationsResponse.FromString,
+                _registered_method=True)
         self.StreamChat = channel.unary_stream(
                 '/kb.chat.v1.ChatService/StreamChat',
                 request_serializer=kb_dot_chat_dot_v1_dot_chat__pb2.StreamChatRequest.SerializeToString,
@@ -104,6 +109,14 @@ class ChatServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SearchConversations(self, request, context):
+        """SearchConversations finds conversations by words in their title or in
+        their messages.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def StreamChat(self, request, context):
         """StreamChat appends a user message and streams the assistant's answer.
         """
@@ -138,6 +151,11 @@ def add_ChatServiceServicer_to_server(servicer, server):
                     servicer.UpdateConversation,
                     request_deserializer=kb_dot_chat_dot_v1_dot_chat__pb2.UpdateConversationRequest.FromString,
                     response_serializer=kb_dot_chat_dot_v1_dot_chat__pb2.UpdateConversationResponse.SerializeToString,
+            ),
+            'SearchConversations': grpc.unary_unary_rpc_method_handler(
+                    servicer.SearchConversations,
+                    request_deserializer=kb_dot_chat_dot_v1_dot_chat__pb2.SearchConversationsRequest.FromString,
+                    response_serializer=kb_dot_chat_dot_v1_dot_chat__pb2.SearchConversationsResponse.SerializeToString,
             ),
             'StreamChat': grpc.unary_stream_rpc_method_handler(
                     servicer.StreamChat,
@@ -282,6 +300,33 @@ class ChatService:
             '/kb.chat.v1.ChatService/UpdateConversation',
             kb_dot_chat_dot_v1_dot_chat__pb2.UpdateConversationRequest.SerializeToString,
             kb_dot_chat_dot_v1_dot_chat__pb2.UpdateConversationResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SearchConversations(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/kb.chat.v1.ChatService/SearchConversations',
+            kb_dot_chat_dot_v1_dot_chat__pb2.SearchConversationsRequest.SerializeToString,
+            kb_dot_chat_dot_v1_dot_chat__pb2.SearchConversationsResponse.FromString,
             options,
             channel_credentials,
             insecure,

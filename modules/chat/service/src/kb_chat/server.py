@@ -34,6 +34,8 @@ DEFAULT_PAGE_SIZE = 50
 MAX_PAGE_SIZE = 200
 MAX_TITLE_LENGTH = 200
 MAX_SCOPE_DOCUMENTS = 100
+DEFAULT_SEARCH_LIMIT = 20
+MAX_SEARCH_LIMIT = 50
 
 # The peers' titles in the UI (their module.yaml), for error messages.
 _PEER_TITLES = {Peer.DOCUMENT: "Documents", Peer.LLM: "Models"}
@@ -112,6 +114,27 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
             assert updated is not None
             conv = updated
         return chat_pb2.UpdateConversationResponse(conversation=_conversation(conv))
+
+    async def SearchConversations(
+        self, request: chat_pb2.SearchConversationsRequest, context: _Context
+    ) -> chat_pb2.SearchConversationsResponse:
+        query = request.query.strip()
+        if not query:
+            await abort_invalid_argument(context, violation("query", "Enter a search term"))
+        if request.limit < 0:
+            await abort_invalid_argument(
+                context, violation("limit", "The limit must not be negative")
+            )
+        limit = min(request.limit or DEFAULT_SEARCH_LIMIT, MAX_SEARCH_LIMIT)
+        matches = await self._repo.search_conversations(query, limit)
+        return chat_pb2.SearchConversationsResponse(
+            results=[
+                chat_pb2.ConversationMatch(
+                    conversation=_conversation(m.conversation), snippet=m.snippet
+                )
+                for m in matches
+            ]
+        )
 
     async def StreamChat(
         self, request: chat_pb2.StreamChatRequest, context: _Context

@@ -77,6 +77,8 @@ Each entry shows the conversation's title, a line with the beginning of its last
 
 Select an entry to open the conversation. When you delete the open conversation, the next most recent one opens.
 
+To find a conversation by what was said in it, type a word from its title or from any of its questions and answers in the search box at the top of the sidebar; see [Search from any page](search.md#search-from-any-page). Matching conversations appear under **Conversations**, those whose title matches first, with the part of a matching message, if one matches. Every word you type has to appear, and words that start with what you typed count too, so "budg" finds "budget". Select one to open it.
+
 ## Rename a conversation
 
 1. Open the conversation and select **Rename** next to its title.

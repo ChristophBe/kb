@@ -40,6 +40,8 @@ static_resources:
                           route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/kb.chat.v1.ChatService/UpdateConversation" }
                           route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/kb.chat.v1.ChatService/SearchConversations" }
+                          route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/kb.chat.v1.ChatService/StreamChat" }
                           route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/kb.document.v1.DocumentService/GetDocument" }

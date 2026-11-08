@@ -9,6 +9,7 @@ from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_platform.grpc import abort_invalid_argument, violation
 
 from .config import Settings
+from .providers import Providers
 from .providers.base import (
     GenerationOptions,
     Message,
@@ -21,6 +22,7 @@ from .providers.base import (
     ProviderRateLimitedError,
     ProviderUnavailableError,
     Role,
+    Status,
 )
 
 log = logging.getLogger("kb_llm")
@@ -39,34 +41,63 @@ _KINDS = {
 
 
 class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
-    def __init__(self, provider: Provider, settings: Settings) -> None:
-        self._provider = provider
+    """Serves Generate from the chat provider and Embed from the embedding
+    provider, which may be the same one."""
+
+    def __init__(self, providers: Providers, settings: Settings) -> None:
+        self._chat = providers.chat
+        self._embedding = providers.embedding
+        self._split = providers.split
         self._settings = settings
-        self._slots = asyncio.Semaphore(settings.provider_max_concurrency)
+        # A concurrency limit per provider, shared when one serves both tasks.
+        self._chat_slots = asyncio.Semaphore(settings.provider_max_concurrency)
+        self._embedding_slots = (
+            asyncio.Semaphore(settings.provider_max_concurrency)
+            if self._split
+            else self._chat_slots
+        )
 
     async def ListModels(
         self, request: llm_pb2.ListModelsRequest, context: _Context
     ) -> llm_pb2.ListModelsResponse:
         async with _provider_errors(context):
-            models = await self._provider.list_models()
+            if not self._split:
+                chat_models = embedding_models = await self._chat.list_models()
+            else:
+                chat_models, embedding_models = await asyncio.gather(
+                    self._chat.list_models(), self._embedding.list_models()
+                )
         return llm_pb2.ListModelsResponse(
             models=[
-                llm_pb2.Model(id=m.id, provider=self._provider.name, kind=_KINDS[m.kind])
+                llm_pb2.Model(id=m.id, provider=provider.name, kind=_KINDS[m.kind])
+                for provider, models, kind in (
+                    (self._chat, chat_models, ModelKind.CHAT),
+                    (self._embedding, embedding_models, ModelKind.EMBEDDING),
+                )
                 for m in models
+                if m.kind is kind
             ]
         )
 
     async def GetProviderStatus(
         self, request: llm_pb2.GetProviderStatusRequest, context: _Context
     ) -> llm_pb2.GetProviderStatusResponse:
-        status = await self._provider.status()
+        if not self._split:
+            chat = embedding = await self._chat.status()
+            name, detail = self._chat.name, chat.detail
+        else:
+            chat, embedding = await asyncio.gather(self._chat.status(), self._embedding.status())
+            name = f"{self._chat.name}+{self._embedding.name}"
+            detail = f"chat: {chat.detail}; embedding: {embedding.detail}"
         return llm_pb2.GetProviderStatusResponse(
-            provider=self._provider.name,
-            healthy=status.healthy,
-            detail=status.detail,
-            default_chat_model=self._provider.default_chat_model,
-            default_embedding_model=self._provider.default_embedding_model,
+            provider=name,
+            healthy=chat.healthy and embedding.healthy,
+            detail=detail,
+            default_chat_model=self._chat.default_chat_model,
+            default_embedding_model=self._embedding.default_embedding_model,
             embedding_dimensions=self._settings.embedding_dimensions,
+            chat=_health(self._chat, chat),
+            embedding=_health(self._embedding, embedding),
         )
 
     async def Generate(
@@ -76,7 +107,7 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
             await abort_invalid_argument(
                 context, violation("messages", "At least one message is required")
             )
-        model = request.model or self._provider.default_chat_model
+        model = request.model or self._chat.default_chat_model
         messages = [
             Message(role=_ROLES.get(m.role, Role.USER), content=m.content) for m in request.messages
         ]
@@ -86,9 +117,9 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
             max_tokens=opts.max_tokens if opts.HasField("max_tokens") else None,
         )
         async with (
-            self._slot(context),
+            _slot(self._chat_slots, context),
             _provider_errors(context),
-            contextlib.aclosing(self._provider.generate(model, messages, options)) as chunks,
+            contextlib.aclosing(self._chat.generate(model, messages, options)) as chunks,
             _logged_cancel(model),
         ):
             async for chunk in chunks:
@@ -106,13 +137,13 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
     async def Embed(
         self, request: llm_pb2.EmbedRequest, context: _Context
     ) -> llm_pb2.EmbedResponse:
-        model = request.model or self._provider.default_embedding_model
+        model = request.model or self._embedding.default_embedding_model
         if not request.inputs:
             return llm_pb2.EmbedResponse(
                 model=model, dimensions=self._settings.embedding_dimensions
             )
-        async with self._slot(context), _provider_errors(context):
-            vectors = await self._provider.embed(model, list(request.inputs))
+        async with _slot(self._embedding_slots, context), _provider_errors(context):
+            vectors = await self._embedding.embed(model, list(request.inputs))
         dims = len(vectors[0])
         if dims != self._settings.embedding_dimensions:
             await context.abort(
@@ -126,14 +157,21 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
             embeddings=[llm_pb2.Embedding(values=v) for v in vectors],
         )
 
-    @contextlib.asynccontextmanager
-    async def _slot(self, context: _Context) -> AsyncIterator[None]:
-        """Holds a concurrency slot. Calls are rejected, not queued, so a slow
-        model can't pile up requests behind it."""
-        if self._slots.locked():
-            await context.abort(grpc.StatusCode.RESOURCE_EXHAUSTED, "too many concurrent requests")
-        async with self._slots:
-            yield
+
+@contextlib.asynccontextmanager
+async def _slot(slots: asyncio.Semaphore, context: _Context) -> AsyncIterator[None]:
+    """Holds a concurrency slot. Calls are rejected, not queued, so a slow
+    model can't pile up requests behind it."""
+    if slots.locked():
+        await context.abort(grpc.StatusCode.RESOURCE_EXHAUSTED, "too many concurrent requests")
+    async with slots:
+        yield
+
+
+def _health(provider: Provider, status: Status) -> llm_pb2.ProviderHealth:
+    return llm_pb2.ProviderHealth(
+        provider=provider.name, healthy=status.healthy, detail=status.detail
+    )
 
 
 @contextlib.asynccontextmanager

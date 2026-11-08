@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13kb/llm/v1/llm.proto\x12\tkb.llm.v1\"]\n\x05Model\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n\x08provider\x18\x02 \x01(\tR\x08provider\x12(\n\x04kind\x18\x03 \x01(\x0e\x32\x14.kb.llm.v1.ModelKindR\x04kind\"H\n\x07Message\x12#\n\x04role\x18\x01 \x01(\x0e\x32\x0f.kb.llm.v1.RoleR\x04role\x12\x18\n\x07\x63ontent\x18\x02 \x01(\tR\x07\x63ontent\"}\n\x11GenerationOptions\x12%\n\x0btemperature\x18\x01 \x01(\x02H\x00R\x0btemperature\x88\x01\x01\x12\"\n\nmax_tokens\x18\x02 \x01(\x05H\x01R\tmaxTokens\x88\x01\x01\x42\x0e\n\x0c_temperatureB\r\n\x0b_max_tokens\"O\n\x05Usage\x12!\n\x0cinput_tokens\x18\x01 \x01(\x05R\x0binputTokens\x12#\n\routput_tokens\x18\x02 \x01(\x05R\x0coutputTokens\"\x13\n\x11ListModelsRequest\">\n\x12ListModelsResponse\x12(\n\x06models\x18\x01 \x03(\x0b\x32\x10.kb.llm.v1.ModelR\x06models\"\x1a\n\x18GetProviderStatusRequest\"\x82\x02\n\x19GetProviderStatusResponse\x12\x1a\n\x08provider\x18\x01 \x01(\tR\x08provider\x12\x18\n\x07healthy\x18\x02 \x01(\x08R\x07healthy\x12\x16\n\x06\x64\x65tail\x18\x03 \x01(\tR\x06\x64\x65tail\x12,\n\x12\x64\x65\x66\x61ult_chat_model\x18\x04 \x01(\tR\x10\x64\x65\x66\x61ultChatModel\x12\x36\n\x17\x64\x65\x66\x61ult_embedding_model\x18\x05 \x01(\tR\x15\x64\x65\x66\x61ultEmbeddingModel\x12\x31\n\x14\x65mbedding_dimensions\x18\x06 \x01(\x05R\x13\x65mbeddingDimensions\"\x8f\x01\n\x0fGenerateRequest\x12\x14\n\x05model\x18\x01 \x01(\tR\x05model\x12.\n\x08messages\x18\x02 \x03(\x0b\x32\x12.kb.llm.v1.MessageR\x08messages\x12\x36\n\x07options\x18\x03 \x01(\x0b\x32\x1c.kb.llm.v1.GenerationOptionsR\x07options\"z\n\x10GenerateResponse\x12\x14\n\x05\x64\x65lta\x18\x01 \x01(\tR\x05\x64\x65lta\x12\x12\n\x04\x64one\x18\x02 \x01(\x08R\x04\x64one\x12&\n\x05usage\x18\x03 \x01(\x0b\x32\x10.kb.llm.v1.UsageR\x05usage\x12\x14\n\x05model\x18\x04 \x01(\tR\x05model\"<\n\x0c\x45mbedRequest\x12\x14\n\x05model\x18\x01 \x01(\tR\x05model\x12\x16\n\x06inputs\x18\x02 \x03(\tR\x06inputs\"#\n\tEmbedding\x12\x16\n\x06values\x18\x01 \x03(\x02R\x06values\"{\n\rEmbedResponse\x12\x34\n\nembeddings\x18\x01 \x03(\x0b\x32\x14.kb.llm.v1.EmbeddingR\nembeddings\x12\x14\n\x05model\x18\x02 \x01(\tR\x05model\x12\x1e\n\ndimensions\x18\x03 \x01(\x05R\ndimensions*P\n\x04Role\x12\x14\n\x10ROLE_UNSPECIFIED\x10\x00\x12\x0f\n\x0bROLE_SYSTEM\x10\x01\x12\r\n\tROLE_USER\x10\x02\x12\x12\n\x0eROLE_ASSISTANT\x10\x03*V\n\tModelKind\x12\x1a\n\x16MODEL_KIND_UNSPECIFIED\x10\x00\x12\x13\n\x0fMODEL_KIND_CHAT\x10\x01\x12\x18\n\x14MODEL_KIND_EMBEDDING\x10\x02\x32\xba\x02\n\nLlmService\x12I\n\nListModels\x12\x1c.kb.llm.v1.ListModelsRequest\x1a\x1d.kb.llm.v1.ListModelsResponse\x12^\n\x11GetProviderStatus\x12#.kb.llm.v1.GetProviderStatusRequest\x1a$.kb.llm.v1.GetProviderStatusResponse\x12\x45\n\x08Generate\x12\x1a.kb.llm.v1.GenerateRequest\x1a\x1b.kb.llm.v1.GenerateResponse0\x01\x12:\n\x05\x45mbed\x12\x17.kb.llm.v1.EmbedRequest\x1a\x18.kb.llm.v1.EmbedResponseB8Z6github.com/christoph/kb/modules/llm/api/go/llmv1;llmv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13kb/llm/v1/llm.proto\x12\tkb.llm.v1\"]\n\x05Model\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n\x08provider\x18\x02 \x01(\tR\x08provider\x12(\n\x04kind\x18\x03 \x01(\x0e\x32\x14.kb.llm.v1.ModelKindR\x04kind\"H\n\x07Message\x12#\n\x04role\x18\x01 \x01(\x0e\x32\x0f.kb.llm.v1.RoleR\x04role\x12\x18\n\x07\x63ontent\x18\x02 \x01(\tR\x07\x63ontent\"}\n\x11GenerationOptions\x12%\n\x0btemperature\x18\x01 \x01(\x02H\x00R\x0btemperature\x88\x01\x01\x12\"\n\nmax_tokens\x18\x02 \x01(\x05H\x01R\tmaxTokens\x88\x01\x01\x42\x0e\n\x0c_temperatureB\r\n\x0b_max_tokens\"O\n\x05Usage\x12!\n\x0cinput_tokens\x18\x01 \x01(\x05R\x0binputTokens\x12#\n\routput_tokens\x18\x02 \x01(\x05R\x0coutputTokens\"\x13\n\x11ListModelsRequest\">\n\x12ListModelsResponse\x12(\n\x06models\x18\x01 \x03(\x0b\x32\x10.kb.llm.v1.ModelR\x06models\"\x1a\n\x18GetProviderStatusRequest\"^\n\x0eProviderHealth\x12\x1a\n\x08provider\x18\x01 \x01(\tR\x08provider\x12\x18\n\x07healthy\x18\x02 \x01(\x08R\x07healthy\x12\x16\n\x06\x64\x65tail\x18\x03 \x01(\tR\x06\x64\x65tail\"\xea\x02\n\x19GetProviderStatusResponse\x12\x1a\n\x08provider\x18\x01 \x01(\tR\x08provider\x12\x18\n\x07healthy\x18\x02 \x01(\x08R\x07healthy\x12\x16\n\x06\x64\x65tail\x18\x03 \x01(\tR\x06\x64\x65tail\x12,\n\x12\x64\x65\x66\x61ult_chat_model\x18\x04 \x01(\tR\x10\x64\x65\x66\x61ultChatModel\x12\x36\n\x17\x64\x65\x66\x61ult_embedding_model\x18\x05 \x01(\tR\x15\x64\x65\x66\x61ultEmbeddingModel\x12\x31\n\x14\x65mbedding_dimensions\x18\x06 \x01(\x05R\x13\x65mbeddingDimensions\x12-\n\x04\x63hat\x18\x07 \x01(\x0b\x32\x19.kb.llm.v1.ProviderHealthR\x04\x63hat\x12\x37\n\tembedding\x18\x08 \x01(\x0b\x32\x19.kb.llm.v1.ProviderHealthR\tembedding\"\x8f\x01\n\x0fGenerateRequest\x12\x14\n\x05model\x18\x01 \x01(\tR\x05model\x12.\n\x08messages\x18\x02 \x03(\x0b\x32\x12.kb.llm.v1.MessageR\x08messages\x12\x36\n\x07options\x18\x03 \x01(\x0b\x32\x1c.kb.llm.v1.GenerationOptionsR\x07options\"z\n\x10GenerateResponse\x12\x14\n\x05\x64\x65lta\x18\x01 \x01(\tR\x05\x64\x65lta\x12\x12\n\x04\x64one\x18\x02 \x01(\x08R\x04\x64one\x12&\n\x05usage\x18\x03 \x01(\x0b\x32\x10.kb.llm.v1.UsageR\x05usage\x12\x14\n\x05model\x18\x04 \x01(\tR\x05model\"<\n\x0c\x45mbedRequest\x12\x14\n\x05model\x18\x01 \x01(\tR\x05model\x12\x16\n\x06inputs\x18\x02 \x03(\tR\x06inputs\"#\n\tEmbedding\x12\x16\n\x06values\x18\x01 \x03(\x02R\x06values\"{\n\rEmbedResponse\x12\x34\n\nembeddings\x18\x01 \x03(\x0b\x32\x14.kb.llm.v1.EmbeddingR\nembeddings\x12\x14\n\x05model\x18\x02 \x01(\tR\x05model\x12\x1e\n\ndimensions\x18\x03 \x01(\x05R\ndimensions*P\n\x04Role\x12\x14\n\x10ROLE_UNSPECIFIED\x10\x00\x12\x0f\n\x0bROLE_SYSTEM\x10\x01\x12\r\n\tROLE_USER\x10\x02\x12\x12\n\x0eROLE_ASSISTANT\x10\x03*V\n\tModelKind\x12\x1a\n\x16MODEL_KIND_UNSPECIFIED\x10\x00\x12\x13\n\x0fMODEL_KIND_CHAT\x10\x01\x12\x18\n\x14MODEL_KIND_EMBEDDING\x10\x02\x32\xba\x02\n\nLlmService\x12I\n\nListModels\x12\x1c.kb.llm.v1.ListModelsRequest\x1a\x1d.kb.llm.v1.ListModelsResponse\x12^\n\x11GetProviderStatus\x12#.kb.llm.v1.GetProviderStatusRequest\x1a$.kb.llm.v1.GetProviderStatusResponse\x12\x45\n\x08Generate\x12\x1a.kb.llm.v1.GenerateRequest\x1a\x1b.kb.llm.v1.GenerateResponse0\x01\x12:\n\x05\x45mbed\x12\x17.kb.llm.v1.EmbedRequest\x1a\x18.kb.llm.v1.EmbedResponseB8Z6github.com/christoph/kb/modules/llm/api/go/llmv1;llmv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,10 +32,10 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'kb.llm.v1.llm_pb2', _global
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z6github.com/christoph/kb/modules/llm/api/go/llmv1;llmv1'
-  _globals['_ROLE']._serialized_start=1279
-  _globals['_ROLE']._serialized_end=1359
-  _globals['_MODELKIND']._serialized_start=1361
-  _globals['_MODELKIND']._serialized_end=1447
+  _globals['_ROLE']._serialized_start=1479
+  _globals['_ROLE']._serialized_end=1559
+  _globals['_MODELKIND']._serialized_start=1561
+  _globals['_MODELKIND']._serialized_end=1647
   _globals['_MODEL']._serialized_start=34
   _globals['_MODEL']._serialized_end=127
   _globals['_MESSAGE']._serialized_start=129
@@ -50,18 +50,20 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_LISTMODELSRESPONSE']._serialized_end=494
   _globals['_GETPROVIDERSTATUSREQUEST']._serialized_start=496
   _globals['_GETPROVIDERSTATUSREQUEST']._serialized_end=522
-  _globals['_GETPROVIDERSTATUSRESPONSE']._serialized_start=525
-  _globals['_GETPROVIDERSTATUSRESPONSE']._serialized_end=783
-  _globals['_GENERATEREQUEST']._serialized_start=786
-  _globals['_GENERATEREQUEST']._serialized_end=929
-  _globals['_GENERATERESPONSE']._serialized_start=931
-  _globals['_GENERATERESPONSE']._serialized_end=1053
-  _globals['_EMBEDREQUEST']._serialized_start=1055
-  _globals['_EMBEDREQUEST']._serialized_end=1115
-  _globals['_EMBEDDING']._serialized_start=1117
-  _globals['_EMBEDDING']._serialized_end=1152
-  _globals['_EMBEDRESPONSE']._serialized_start=1154
-  _globals['_EMBEDRESPONSE']._serialized_end=1277
-  _globals['_LLMSERVICE']._serialized_start=1450
-  _globals['_LLMSERVICE']._serialized_end=1764
+  _globals['_PROVIDERHEALTH']._serialized_start=524
+  _globals['_PROVIDERHEALTH']._serialized_end=618
+  _globals['_GETPROVIDERSTATUSRESPONSE']._serialized_start=621
+  _globals['_GETPROVIDERSTATUSRESPONSE']._serialized_end=983
+  _globals['_GENERATEREQUEST']._serialized_start=986
+  _globals['_GENERATEREQUEST']._serialized_end=1129
+  _globals['_GENERATERESPONSE']._serialized_start=1131
+  _globals['_GENERATERESPONSE']._serialized_end=1253
+  _globals['_EMBEDREQUEST']._serialized_start=1255
+  _globals['_EMBEDREQUEST']._serialized_end=1315
+  _globals['_EMBEDDING']._serialized_start=1317
+  _globals['_EMBEDDING']._serialized_end=1352
+  _globals['_EMBEDRESPONSE']._serialized_start=1354
+  _globals['_EMBEDRESPONSE']._serialized_end=1477
+  _globals['_LLMSERVICE']._serialized_start=1650
+  _globals['_LLMSERVICE']._serialized_end=1964
 # @@protoc_insertion_point(module_scope)

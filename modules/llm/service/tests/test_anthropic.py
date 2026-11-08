@@ -10,7 +10,7 @@ import httpx2
 import pytest
 from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_llm.config import Settings
-from kb_llm.providers import REGISTRY, build_provider
+from kb_llm.providers import REGISTRY, Providers, build_provider, build_providers
 from kb_llm.providers.anthropic import (
     MODELS,
     AnthropicLimits,
@@ -29,6 +29,7 @@ from kb_llm.providers.base import (
     ProviderUnavailableError,
     Role,
 )
+from kb_llm.providers.fake import FakeProvider
 from kb_llm.server import LlmServicer
 from pydantic import SecretStr
 
@@ -271,11 +272,16 @@ async def stub() -> AsyncIterator[StubFactory]:
     channels: list[grpc.aio.Channel] = []
 
     async def make(handler: Handler) -> llm_pb2_grpc.LlmServiceStub:
-        settings = Settings(llm_provider="anthropic", anthropic_api_key=SecretStr("k"))
-        server = grpc.aio.server()
-        llm_pb2_grpc.add_LlmServiceServicer_to_server(
-            LlmServicer(provider(handler), settings), server
+        # Claude chat with local embeddings, the pairing split providers exist for.
+        settings = Settings(
+            chat_provider="anthropic",
+            embedding_provider="fake",
+            anthropic_api_key=SecretStr("k"),
+            embedding_dimensions=16,
         )
+        providers = Providers(provider(handler), FakeProvider(settings.embedding_dimensions))
+        server = grpc.aio.server()
+        llm_pb2_grpc.add_LlmServiceServicer_to_server(LlmServicer(providers, settings), server)
         port = server.add_insecure_port("127.0.0.1:0")
         await server.start()
         servers.append(server)
@@ -327,10 +333,60 @@ async def test_grpc_status_codes(
     assert raised.value.code() == code
 
 
-async def test_grpc_embed_is_unimplemented(
+async def test_grpc_embeds_with_the_embedding_provider(
     stub: StubFactory,
 ) -> None:
-    client = await stub(lambda _: error(500, "api_error"))
-    with pytest.raises(grpc.aio.AioRpcError) as raised:
-        await client.Embed(llm_pb2.EmbedRequest(inputs=["a"]))
-    assert raised.value.code() == grpc.StatusCode.UNIMPLEMENTED
+    requests: list[httpx2.Request] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        requests.append(request)
+        return error(500, "api_error")
+
+    client = await stub(handler)
+    resp = await client.Embed(llm_pb2.EmbedRequest(inputs=["a"]))
+    assert (resp.model, resp.dimensions, len(resp.embeddings)) == ("fake-embed", 16, 1)
+    assert requests == []
+
+
+async def test_grpc_status_and_models_report_both_providers(
+    stub: StubFactory,
+) -> None:
+    client = await stub(lambda _: httpx2.Response(200, json={"data": [], "has_more": False}))
+    status = await client.GetProviderStatus(llm_pb2.GetProviderStatusRequest())
+    assert status.provider == "anthropic+fake"
+    assert status.healthy
+    assert (status.chat.provider, status.chat.healthy) == ("anthropic", True)
+    assert (status.embedding.provider, status.embedding.healthy) == ("fake", True)
+    assert (status.default_chat_model, status.default_embedding_model) == (
+        "claude-sonnet-5-5",
+        "fake-embed",
+    )
+    models = (await client.ListModels(llm_pb2.ListModelsRequest())).models
+    assert {(m.provider, m.kind) for m in models} == {
+        ("anthropic", llm_pb2.MODEL_KIND_CHAT),
+        ("fake", llm_pb2.MODEL_KIND_EMBEDDING),
+    }
+    assert "fake-chat" not in {m.id for m in models}
+
+
+async def test_grpc_status_is_unhealthy_when_the_chat_provider_is(
+    stub: StubFactory,
+) -> None:
+    client = await stub(lambda _: error(401, "authentication_error"))
+    status = await client.GetProviderStatus(llm_pb2.GetProviderStatusRequest())
+    assert not status.healthy
+    assert not status.chat.healthy
+    assert status.embedding.healthy
+    assert status.detail.startswith("chat: ")
+
+
+def test_embeddings_from_anthropic_fail_at_startup() -> None:
+    key = SecretStr("k")
+    with pytest.raises(ValueError, match="no embedding models; set KB_EMBEDDING_PROVIDER"):
+        build_providers(Settings(llm_provider="anthropic", anthropic_api_key=key))
+    with pytest.raises(ValueError, match="no embedding models"):
+        build_providers(Settings(embedding_provider="anthropic", anthropic_api_key=key))
+    providers = build_providers(
+        Settings(llm_provider="anthropic", embedding_provider="ollama", anthropic_api_key=key)
+    )
+    assert (providers.chat.name, providers.embedding.name) == ("anthropic", "ollama")

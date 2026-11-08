@@ -75,21 +75,35 @@ class GetProviderStatusRequest(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 
+class ProviderHealth(_message.Message):
+    __slots__ = ("provider", "healthy", "detail")
+    PROVIDER_FIELD_NUMBER: _ClassVar[int]
+    HEALTHY_FIELD_NUMBER: _ClassVar[int]
+    DETAIL_FIELD_NUMBER: _ClassVar[int]
+    provider: str
+    healthy: bool
+    detail: str
+    def __init__(self, provider: _Optional[str] = ..., healthy: _Optional[bool] = ..., detail: _Optional[str] = ...) -> None: ...
+
 class GetProviderStatusResponse(_message.Message):
-    __slots__ = ("provider", "healthy", "detail", "default_chat_model", "default_embedding_model", "embedding_dimensions")
+    __slots__ = ("provider", "healthy", "detail", "default_chat_model", "default_embedding_model", "embedding_dimensions", "chat", "embedding")
     PROVIDER_FIELD_NUMBER: _ClassVar[int]
     HEALTHY_FIELD_NUMBER: _ClassVar[int]
     DETAIL_FIELD_NUMBER: _ClassVar[int]
     DEFAULT_CHAT_MODEL_FIELD_NUMBER: _ClassVar[int]
     DEFAULT_EMBEDDING_MODEL_FIELD_NUMBER: _ClassVar[int]
     EMBEDDING_DIMENSIONS_FIELD_NUMBER: _ClassVar[int]
+    CHAT_FIELD_NUMBER: _ClassVar[int]
+    EMBEDDING_FIELD_NUMBER: _ClassVar[int]
     provider: str
     healthy: bool
     detail: str
     default_chat_model: str
     default_embedding_model: str
     embedding_dimensions: int
-    def __init__(self, provider: _Optional[str] = ..., healthy: _Optional[bool] = ..., detail: _Optional[str] = ..., default_chat_model: _Optional[str] = ..., default_embedding_model: _Optional[str] = ..., embedding_dimensions: _Optional[int] = ...) -> None: ...
+    chat: ProviderHealth
+    embedding: ProviderHealth
+    def __init__(self, provider: _Optional[str] = ..., healthy: _Optional[bool] = ..., detail: _Optional[str] = ..., default_chat_model: _Optional[str] = ..., default_embedding_model: _Optional[str] = ..., embedding_dimensions: _Optional[int] = ..., chat: _Optional[_Union[ProviderHealth, _Mapping]] = ..., embedding: _Optional[_Union[ProviderHealth, _Mapping]] = ...) -> None: ...
 
 class GenerateRequest(_message.Message):
     __slots__ = ("model", "messages", "options")

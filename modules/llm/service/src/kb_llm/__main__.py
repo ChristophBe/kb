@@ -6,7 +6,7 @@ from kb_platform.grpc import serve
 from kb_platform.logging import setup_logging
 
 from .config import Settings
-from .providers import build_provider
+from .providers import build_providers
 from .server import LlmServicer
 
 log = logging.getLogger("kb_llm")
@@ -16,12 +16,16 @@ async def run() -> None:
     settings = Settings()
     setup_logging(settings.log_level, settings.log_format)
     try:
-        provider = build_provider(settings)
+        providers = build_providers(settings)
     except ValueError as exc:  # misconfiguration, e.g. a missing API key
         log.error("cannot start: %s", exc)
         raise SystemExit(1) from None
-    log.info("using provider %s", provider.name)
-    servicer = LlmServicer(provider, settings)
+    log.info(
+        "using provider %s for chat and %s for embeddings",
+        providers.chat.name,
+        providers.embedding.name,
+    )
+    servicer = LlmServicer(providers, settings)
     try:
         await serve(
             settings.grpc_port,
@@ -29,7 +33,7 @@ async def run() -> None:
             [llm_pb2.DESCRIPTOR.services_by_name["LlmService"].full_name],
         )
     finally:
-        await provider.aclose()
+        await providers.aclose()
 
 
 def main() -> None:

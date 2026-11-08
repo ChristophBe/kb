@@ -30,4 +30,4 @@ The design drafts in [`docs/ux/`](../ux/) are for contributors; this manual is f
 - [Documents](documents.md) — browsing, opening and reading documents, renaming, metadata, downloading, replacing, deleting
 - [Search](search.md) — the search box in the sidebar, searching passages across all documents and opening them in their document
 - [Chat](chat.md) — asking questions, sources, restricting to documents, stopping and retrying answers, managing conversations
-- [Models](models.md) — whether the language model is available and which models are installed
+- [Models](models.md) — whether the chat and embedding providers are available and which models are installed

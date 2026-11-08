@@ -70,11 +70,12 @@ jobs:
       - name: Install semantic-release
         if: steps.check.outputs.release == 'true'
         env:
+          GH_TOKEN: ${{ github.token }}
           SEMREL_VERSION: v2.31.0
           SEMREL_SHA256: b8f518b1aeb1d1742f4e6e91a179b707cea4309a64fe3854f465bf724f04f6d3
         run: |
-          curl -fsSL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/semantic-release" \
-            "https://github.com/go-semantic-release/semantic-release/releases/download/$SEMREL_VERSION/semantic-release_${SEMREL_VERSION}_linux_amd64"
+          gh release download "$SEMREL_VERSION" --repo go-semantic-release/semantic-release \
+            --pattern "semantic-release_${SEMREL_VERSION}_linux_amd64" --output "$RUNNER_TEMP/semantic-release"
           echo "$SEMREL_SHA256  $RUNNER_TEMP/semantic-release" | sha256sum -c -
           chmod +x "$RUNNER_TEMP/semantic-release"
 

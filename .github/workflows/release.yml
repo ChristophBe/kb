@@ -1,0 +1,107 @@
+name: release
+
+# Every push to main gets a version: go-semantic-release derives it from the
+# Conventional Commits titles since the last tag (see CONTRIBUTING.md), creates
+# tag `vX.Y.Z` and a GitHub release with the changes grouped by type. Setup of
+# the GitHub App the tag is created with: docs/operations/releases.md.
+on:
+  push:
+    branches: [main]
+
+# One release run per ref at a time, so two quick merges get two versions; a
+# second run waits for the first instead of cancelling it.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      # The released version without the `v` (e.g. 0.3.1), empty when nothing was
+      # released. Image and chart builds pass it on as KB_VERSION.
+      version: ${{ steps.semrel.outputs.version }}
+    steps:
+      # Fail loudly instead of skipping: a main push without a release would
+      # silently leave a gap in the versions.
+      - name: Release app is configured
+        env:
+          CLIENT_ID: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+        run: |
+          if [ -z "$CLIENT_ID" ] || [ -z "$PRIVATE_KEY" ]; then
+            echo "::error title=Release app missing::Set variable RELEASE_APP_CLIENT_ID and secret RELEASE_APP_PRIVATE_KEY (see docs/operations/releases.md)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }
+
+      # A re-run of an older push must not tag a commit that is already released
+      # or that a newer release has overtaken.
+      - name: Commit is unreleased
+        id: check
+        run: |
+          latest=$(git tag --list 'v[0-9]*' --sort=-v:refname | head -n 1)
+          if [ -n "$(git tag --points-at HEAD --list 'v[0-9]*')" ]; then
+            echo "::notice::$GITHUB_SHA is already released; nothing to do."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          elif [ -n "$latest" ] && ! git merge-base --is-ancestor "$latest" HEAD; then
+            echo "::notice::$latest is newer than $GITHUB_SHA; nothing to do."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # GITHUB_TOKEN-created tags don't trigger workflows; the app's do, so image
+      # and chart builds can run on the tag.
+      - uses: actions/create-github-app-token@v3.3.0
+        if: steps.check.outputs.release == 'true'
+        id: app
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+
+      # The action would install the latest semantic-release; pin the CLI instead.
+      - name: Install semantic-release
+        if: steps.check.outputs.release == 'true'
+        env:
+          SEMREL_VERSION: v2.31.0
+          SEMREL_SHA256: b8f518b1aeb1d1742f4e6e91a179b707cea4309a64fe3854f465bf724f04f6d3
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/semantic-release" \
+            "https://github.com/go-semantic-release/semantic-release/releases/download/$SEMREL_VERSION/semantic-release_${SEMREL_VERSION}_linux_amd64"
+          echo "$SEMREL_SHA256  $RUNNER_TEMP/semantic-release" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/semantic-release"
+
+      # Bump rules: breaking (`!` / BREAKING CHANGE) → major, `feat` → minor,
+      # any other type → patch (patch_release_rules=*), and a commit without a
+      # Conventional Commits type still gets a patch (force-bump-patch-version).
+      # The first release is v0.1.0. While on 0.x, go-semantic-release bumps a
+      # breaking change to the next minor (semver's initial development phase);
+      # see docs/operations/releases.md for moving to 1.0.0.
+      - uses: go-semantic-release/action@v1.24.1
+        if: steps.check.outputs.release == 'true'
+        id: semrel
+        with:
+          bin: ${{ runner.temp }}/semantic-release
+          github-token: ${{ steps.app.outputs.token }}
+          allow-initial-development-versions: true
+          force-bump-patch-version: true
+          custom-arguments: --commit-analyzer-opt patch_release_rules=*
+
+      - name: Summary
+        if: steps.semrel.outputs.version != ''
+        env:
+          VERSION: ${{ steps.semrel.outputs.version }}
+          CHANGELOG: ${{ steps.semrel.outputs.changelog }}
+        run: |
+          {
+            echo "Released **v$VERSION**"
+            echo
+            echo "$CHANGELOG"
+          } >> "$GITHUB_STEP_SUMMARY"

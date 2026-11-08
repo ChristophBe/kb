@@ -92,6 +92,7 @@ services:
 - Mark a method `internal` when only backend code calls it: writes that belong to a pipeline (`AddChunks`, `SetDocumentStatus`), raw access (`ReadContent`), or anything that would let a browser spend provider resources directly (`LlmService/Generate`, `Embed`). A new RPC is public by default, so decide when adding it.
 - Envoy has no route for an internal method; the browser gets HTTP 404, which gRPC-Web clients report as `UNIMPLEMENTED`. Services call each other directly (`KB_<MODULE>_ADDR`), not through Envoy, so internal methods keep working between modules.
 - `tools/modgen` reads the method names from the module's `.proto` files and fails when a `grpc_services` entry or an `internal` entry names nothing that exists.
+- Every routed call is authenticated by Envoy ([ADR 0009](../adr/0009-oidc-authentication-at-the-gateway.md)). A handler gets the calling user with `grpcserver.UserFromContext(ctx)` (Go) or `kb_platform.grpc.current_user()` (Python); it is unset on calls from other services.
 
 ## Declared dependencies
 

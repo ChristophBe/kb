@@ -19,12 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ChatService_CreateConversation_FullMethodName = "/kb.chat.v1.ChatService/CreateConversation"
-	ChatService_GetConversation_FullMethodName    = "/kb.chat.v1.ChatService/GetConversation"
-	ChatService_ListConversations_FullMethodName  = "/kb.chat.v1.ChatService/ListConversations"
-	ChatService_DeleteConversation_FullMethodName = "/kb.chat.v1.ChatService/DeleteConversation"
-	ChatService_UpdateConversation_FullMethodName = "/kb.chat.v1.ChatService/UpdateConversation"
-	ChatService_StreamChat_FullMethodName         = "/kb.chat.v1.ChatService/StreamChat"
+	ChatService_CreateConversation_FullMethodName  = "/kb.chat.v1.ChatService/CreateConversation"
+	ChatService_GetConversation_FullMethodName     = "/kb.chat.v1.ChatService/GetConversation"
+	ChatService_ListConversations_FullMethodName   = "/kb.chat.v1.ChatService/ListConversations"
+	ChatService_DeleteConversation_FullMethodName  = "/kb.chat.v1.ChatService/DeleteConversation"
+	ChatService_UpdateConversation_FullMethodName  = "/kb.chat.v1.ChatService/UpdateConversation"
+	ChatService_SearchConversations_FullMethodName = "/kb.chat.v1.ChatService/SearchConversations"
+	ChatService_StreamChat_FullMethodName          = "/kb.chat.v1.ChatService/StreamChat"
 )
 
 // ChatServiceClient is the client API for ChatService service.
@@ -40,6 +41,9 @@ type ChatServiceClient interface {
 	DeleteConversation(ctx context.Context, in *DeleteConversationRequest, opts ...grpc.CallOption) (*DeleteConversationResponse, error)
 	// UpdateConversation changes the fields that are set and keeps the others.
 	UpdateConversation(ctx context.Context, in *UpdateConversationRequest, opts ...grpc.CallOption) (*UpdateConversationResponse, error)
+	// SearchConversations finds conversations by words in their title or in
+	// their messages.
+	SearchConversations(ctx context.Context, in *SearchConversationsRequest, opts ...grpc.CallOption) (*SearchConversationsResponse, error)
 	// StreamChat appends a user message and streams the assistant's answer.
 	StreamChat(ctx context.Context, in *StreamChatRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamChatResponse], error)
 }
@@ -102,6 +106,16 @@ func (c *chatServiceClient) UpdateConversation(ctx context.Context, in *UpdateCo
 	return out, nil
 }
 
+func (c *chatServiceClient) SearchConversations(ctx context.Context, in *SearchConversationsRequest, opts ...grpc.CallOption) (*SearchConversationsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchConversationsResponse)
+	err := c.cc.Invoke(ctx, ChatService_SearchConversations_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *chatServiceClient) StreamChat(ctx context.Context, in *StreamChatRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamChatResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &ChatService_ServiceDesc.Streams[0], ChatService_StreamChat_FullMethodName, cOpts...)
@@ -134,6 +148,9 @@ type ChatServiceServer interface {
 	DeleteConversation(context.Context, *DeleteConversationRequest) (*DeleteConversationResponse, error)
 	// UpdateConversation changes the fields that are set and keeps the others.
 	UpdateConversation(context.Context, *UpdateConversationRequest) (*UpdateConversationResponse, error)
+	// SearchConversations finds conversations by words in their title or in
+	// their messages.
+	SearchConversations(context.Context, *SearchConversationsRequest) (*SearchConversationsResponse, error)
 	// StreamChat appends a user message and streams the assistant's answer.
 	StreamChat(*StreamChatRequest, grpc.ServerStreamingServer[StreamChatResponse]) error
 	mustEmbedUnimplementedChatServiceServer()
@@ -160,6 +177,9 @@ func (UnimplementedChatServiceServer) DeleteConversation(context.Context, *Delet
 }
 func (UnimplementedChatServiceServer) UpdateConversation(context.Context, *UpdateConversationRequest) (*UpdateConversationResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateConversation not implemented")
+}
+func (UnimplementedChatServiceServer) SearchConversations(context.Context, *SearchConversationsRequest) (*SearchConversationsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SearchConversations not implemented")
 }
 func (UnimplementedChatServiceServer) StreamChat(*StreamChatRequest, grpc.ServerStreamingServer[StreamChatResponse]) error {
 	return status.Error(codes.Unimplemented, "method StreamChat not implemented")
@@ -275,6 +295,24 @@ func _ChatService_UpdateConversation_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChatService_SearchConversations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchConversationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).SearchConversations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_SearchConversations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).SearchConversations(ctx, req.(*SearchConversationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ChatService_StreamChat_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(StreamChatRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -312,6 +350,10 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateConversation",
 			Handler:    _ChatService_UpdateConversation_Handler,
+		},
+		{
+			MethodName: "SearchConversations",
+			Handler:    _ChatService_SearchConversations_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

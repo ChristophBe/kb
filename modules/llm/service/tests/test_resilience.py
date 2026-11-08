@@ -8,6 +8,7 @@ import httpx
 import pytest
 from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_llm.config import Settings
+from kb_llm.providers import Providers
 from kb_llm.providers.base import (
     Chunk,
     GenerationOptions,
@@ -83,7 +84,9 @@ async def serve() -> AsyncIterator[Serve]:
     async def start(provider: Provider) -> llm_pb2_grpc.LlmServiceStub:
         settings = Settings(embedding_dimensions=16, provider_max_concurrency=1)
         server = grpc.aio.server()
-        llm_pb2_grpc.add_LlmServiceServicer_to_server(LlmServicer(provider, settings), server)
+        llm_pb2_grpc.add_LlmServiceServicer_to_server(
+            LlmServicer(Providers(provider, provider), settings), server
+        )
         port = server.add_insecure_port("127.0.0.1:0")
         await server.start()
         channel = grpc.aio.insecure_channel(f"127.0.0.1:{port}")

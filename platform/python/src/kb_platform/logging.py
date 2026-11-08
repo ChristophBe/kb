@@ -3,6 +3,8 @@ import logging
 import sys
 from datetime import UTC, datetime
 
+from kb_platform.version import version
+
 
 class _JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
@@ -18,10 +20,14 @@ class _JsonFormatter(logging.Formatter):
 
 
 def setup_logging(level: str = "INFO", fmt: str = "json") -> None:
-    """Configure the root logger. JSON matches the Go services' slog output."""
+    """Configure the root logger and log the release version the component runs.
+
+    JSON matches the Go services' slog output.
+    """
     handler = logging.StreamHandler(sys.stderr)
     if fmt == "json":
         handler.setFormatter(_JsonFormatter())
     else:
         handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
     logging.basicConfig(level=level.upper(), handlers=[handler], force=True)
+    logging.getLogger("kb_platform").info("starting version %s", version())

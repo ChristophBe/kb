@@ -10,7 +10,7 @@ import type { Message as Message$1 } from "@bufbuild/protobuf";
  * Describes the file kb/llm/v1/llm.proto.
  */
 export const file_kb_llm_v1_llm: GenFile = /*@__PURE__*/
-  fileDesc("ChNrYi9sbG0vdjEvbGxtLnByb3RvEglrYi5sbG0udjEiSQoFTW9kZWwSCgoCaWQYASABKAkSEAoIcHJvdmlkZXIYAiABKAkSIgoEa2luZBgDIAEoDjIULmtiLmxsbS52MS5Nb2RlbEtpbmQiOQoHTWVzc2FnZRIdCgRyb2xlGAEgASgOMg8ua2IubGxtLnYxLlJvbGUSDwoHY29udGVudBgCIAEoCSJlChFHZW5lcmF0aW9uT3B0aW9ucxIYCgt0ZW1wZXJhdHVyZRgBIAEoAkgAiAEBEhcKCm1heF90b2tlbnMYAiABKAVIAYgBAUIOCgxfdGVtcGVyYXR1cmVCDQoLX21heF90b2tlbnMiNAoFVXNhZ2USFAoMaW5wdXRfdG9rZW5zGAEgASgFEhUKDW91dHB1dF90b2tlbnMYAiABKAUiEwoRTGlzdE1vZGVsc1JlcXVlc3QiNgoSTGlzdE1vZGVsc1Jlc3BvbnNlEiAKBm1vZGVscxgBIAMoCzIQLmtiLmxsbS52MS5Nb2RlbCIaChhHZXRQcm92aWRlclN0YXR1c1JlcXVlc3QiqQEKGUdldFByb3ZpZGVyU3RhdHVzUmVzcG9uc2USEAoIcHJvdmlkZXIYASABKAkSDwoHaGVhbHRoeRgCIAEoCBIOCgZkZXRhaWwYAyABKAkSGgoSZGVmYXVsdF9jaGF0X21vZGVsGAQgASgJEh8KF2RlZmF1bHRfZW1iZWRkaW5nX21vZGVsGAUgASgJEhwKFGVtYmVkZGluZ19kaW1lbnNpb25zGAYgASgFInUKD0dlbmVyYXRlUmVxdWVzdBINCgVtb2RlbBgBIAEoCRIkCghtZXNzYWdlcxgCIAMoCzISLmtiLmxsbS52MS5NZXNzYWdlEi0KB29wdGlvbnMYAyABKAsyHC5rYi5sbG0udjEuR2VuZXJhdGlvbk9wdGlvbnMiXwoQR2VuZXJhdGVSZXNwb25zZRINCgVkZWx0YRgBIAEoCRIMCgRkb25lGAIgASgIEh8KBXVzYWdlGAMgASgLMhAua2IubGxtLnYxLlVzYWdlEg0KBW1vZGVsGAQgASgJIi0KDEVtYmVkUmVxdWVzdBINCgVtb2RlbBgBIAEoCRIOCgZpbnB1dHMYAiADKAkiGwoJRW1iZWRkaW5nEg4KBnZhbHVlcxgBIAMoAiJcCg1FbWJlZFJlc3BvbnNlEigKCmVtYmVkZGluZ3MYASADKAsyFC5rYi5sbG0udjEuRW1iZWRkaW5nEg0KBW1vZGVsGAIgASgJEhIKCmRpbWVuc2lvbnMYAyABKAUqUAoEUm9sZRIUChBST0xFX1VOU1BFQ0lGSUVEEAASDwoLUk9MRV9TWVNURU0QARINCglST0xFX1VTRVIQAhISCg5ST0xFX0FTU0lTVEFOVBADKlYKCU1vZGVsS2luZBIaChZNT0RFTF9LSU5EX1VOU1BFQ0lGSUVEEAASEwoPTU9ERUxfS0lORF9DSEFUEAESGAoUTU9ERUxfS0lORF9FTUJFRERJTkcQAjK6AgoKTGxtU2VydmljZRJJCgpMaXN0TW9kZWxzEhwua2IubGxtLnYxLkxpc3RNb2RlbHNSZXF1ZXN0Gh0ua2IubGxtLnYxLkxpc3RNb2RlbHNSZXNwb25zZRJeChFHZXRQcm92aWRlclN0YXR1cxIjLmtiLmxsbS52MS5HZXRQcm92aWRlclN0YXR1c1JlcXVlc3QaJC5rYi5sbG0udjEuR2V0UHJvdmlkZXJTdGF0dXNSZXNwb25zZRJFCghHZW5lcmF0ZRIaLmtiLmxsbS52MS5HZW5lcmF0ZVJlcXVlc3QaGy5rYi5sbG0udjEuR2VuZXJhdGVSZXNwb25zZTABEjoKBUVtYmVkEhcua2IubGxtLnYxLkVtYmVkUmVxdWVzdBoYLmtiLmxsbS52MS5FbWJlZFJlc3BvbnNlQjhaNmdpdGh1Yi5jb20vY2hyaXN0b3BoL2tiL21vZHVsZXMvbGxtL2FwaS9nby9sbG12MTtsbG12MWIGcHJvdG8z");
+  fileDesc("ChNrYi9sbG0vdjEvbGxtLnByb3RvEglrYi5sbG0udjEiSQoFTW9kZWwSCgoCaWQYASABKAkSEAoIcHJvdmlkZXIYAiABKAkSIgoEa2luZBgDIAEoDjIULmtiLmxsbS52MS5Nb2RlbEtpbmQiOQoHTWVzc2FnZRIdCgRyb2xlGAEgASgOMg8ua2IubGxtLnYxLlJvbGUSDwoHY29udGVudBgCIAEoCSJlChFHZW5lcmF0aW9uT3B0aW9ucxIYCgt0ZW1wZXJhdHVyZRgBIAEoAkgAiAEBEhcKCm1heF90b2tlbnMYAiABKAVIAYgBAUIOCgxfdGVtcGVyYXR1cmVCDQoLX21heF90b2tlbnMiNAoFVXNhZ2USFAoMaW5wdXRfdG9rZW5zGAEgASgFEhUKDW91dHB1dF90b2tlbnMYAiABKAUiEwoRTGlzdE1vZGVsc1JlcXVlc3QiNgoSTGlzdE1vZGVsc1Jlc3BvbnNlEiAKBm1vZGVscxgBIAMoCzIQLmtiLmxsbS52MS5Nb2RlbCIaChhHZXRQcm92aWRlclN0YXR1c1JlcXVlc3QiQwoOUHJvdmlkZXJIZWFsdGgSEAoIcHJvdmlkZXIYASABKAkSDwoHaGVhbHRoeRgCIAEoCBIOCgZkZXRhaWwYAyABKAkigAIKGUdldFByb3ZpZGVyU3RhdHVzUmVzcG9uc2USEAoIcHJvdmlkZXIYASABKAkSDwoHaGVhbHRoeRgCIAEoCBIOCgZkZXRhaWwYAyABKAkSGgoSZGVmYXVsdF9jaGF0X21vZGVsGAQgASgJEh8KF2RlZmF1bHRfZW1iZWRkaW5nX21vZGVsGAUgASgJEhwKFGVtYmVkZGluZ19kaW1lbnNpb25zGAYgASgFEicKBGNoYXQYByABKAsyGS5rYi5sbG0udjEuUHJvdmlkZXJIZWFsdGgSLAoJZW1iZWRkaW5nGAggASgLMhkua2IubGxtLnYxLlByb3ZpZGVySGVhbHRoInUKD0dlbmVyYXRlUmVxdWVzdBINCgVtb2RlbBgBIAEoCRIkCghtZXNzYWdlcxgCIAMoCzISLmtiLmxsbS52MS5NZXNzYWdlEi0KB29wdGlvbnMYAyABKAsyHC5rYi5sbG0udjEuR2VuZXJhdGlvbk9wdGlvbnMiXwoQR2VuZXJhdGVSZXNwb25zZRINCgVkZWx0YRgBIAEoCRIMCgRkb25lGAIgASgIEh8KBXVzYWdlGAMgASgLMhAua2IubGxtLnYxLlVzYWdlEg0KBW1vZGVsGAQgASgJIi0KDEVtYmVkUmVxdWVzdBINCgVtb2RlbBgBIAEoCRIOCgZpbnB1dHMYAiADKAkiGwoJRW1iZWRkaW5nEg4KBnZhbHVlcxgBIAMoAiJcCg1FbWJlZFJlc3BvbnNlEigKCmVtYmVkZGluZ3MYASADKAsyFC5rYi5sbG0udjEuRW1iZWRkaW5nEg0KBW1vZGVsGAIgASgJEhIKCmRpbWVuc2lvbnMYAyABKAUqUAoEUm9sZRIUChBST0xFX1VOU1BFQ0lGSUVEEAASDwoLUk9MRV9TWVNURU0QARINCglST0xFX1VTRVIQAhISCg5ST0xFX0FTU0lTVEFOVBADKlYKCU1vZGVsS2luZBIaChZNT0RFTF9LSU5EX1VOU1BFQ0lGSUVEEAASEwoPTU9ERUxfS0lORF9DSEFUEAESGAoUTU9ERUxfS0lORF9FTUJFRERJTkcQAjK6AgoKTGxtU2VydmljZRJJCgpMaXN0TW9kZWxzEhwua2IubGxtLnYxLkxpc3RNb2RlbHNSZXF1ZXN0Gh0ua2IubGxtLnYxLkxpc3RNb2RlbHNSZXNwb25zZRJeChFHZXRQcm92aWRlclN0YXR1cxIjLmtiLmxsbS52MS5HZXRQcm92aWRlclN0YXR1c1JlcXVlc3QaJC5rYi5sbG0udjEuR2V0UHJvdmlkZXJTdGF0dXNSZXNwb25zZRJFCghHZW5lcmF0ZRIaLmtiLmxsbS52MS5HZW5lcmF0ZVJlcXVlc3QaGy5rYi5sbG0udjEuR2VuZXJhdGVSZXNwb25zZTABEjoKBUVtYmVkEhcua2IubGxtLnYxLkVtYmVkUmVxdWVzdBoYLmtiLmxsbS52MS5FbWJlZFJlc3BvbnNlQjhaNmdpdGh1Yi5jb20vY2hyaXN0b3BoL2tiL21vZHVsZXMvbGxtL2FwaS9nby9sbG12MTtsbG12MWIGcHJvdG8z");
 
 /**
  * @generated from message kb.llm.v1.Model
@@ -123,6 +123,9 @@ export const ListModelsRequestSchema: GenMessage<ListModelsRequest> = /*@__PURE_
  */
 export type ListModelsResponse = Message$1<"kb.llm.v1.ListModelsResponse"> & {
   /**
+   * The chat provider's chat models and the embedding provider's embedding
+   * models.
+   *
    * @generated from field: repeated kb.llm.v1.Model models = 1;
    */
   models: Model[];
@@ -149,10 +152,14 @@ export const GetProviderStatusRequestSchema: GenMessage<GetProviderStatusRequest
   messageDesc(file_kb_llm_v1_llm, 6);
 
 /**
- * @generated from message kb.llm.v1.GetProviderStatusResponse
+ * ProviderHealth is the state of the provider serving one task.
+ *
+ * @generated from message kb.llm.v1.ProviderHealth
  */
-export type GetProviderStatusResponse = Message$1<"kb.llm.v1.GetProviderStatusResponse"> & {
+export type ProviderHealth = Message$1<"kb.llm.v1.ProviderHealth"> & {
   /**
+   * Registry name, e.g. "ollama" or "anthropic".
+   *
    * @generated from field: string provider = 1;
    */
   provider: string;
@@ -163,6 +170,40 @@ export type GetProviderStatusResponse = Message$1<"kb.llm.v1.GetProviderStatusRe
   healthy: boolean;
 
   /**
+   * @generated from field: string detail = 3;
+   */
+  detail: string;
+};
+
+/**
+ * Describes the message kb.llm.v1.ProviderHealth.
+ * Use `create(ProviderHealthSchema)` to create a new message.
+ */
+export const ProviderHealthSchema: GenMessage<ProviderHealth> = /*@__PURE__*/
+  messageDesc(file_kb_llm_v1_llm, 7);
+
+/**
+ * @generated from message kb.llm.v1.GetProviderStatusResponse
+ */
+export type GetProviderStatusResponse = Message$1<"kb.llm.v1.GetProviderStatusResponse"> & {
+  /**
+   * The provider's name when one serves chat and embeddings, else
+   * "<chat>+<embedding>" (e.g. "anthropic+ollama"). See chat and embedding.
+   *
+   * @generated from field: string provider = 1;
+   */
+  provider: string;
+
+  /**
+   * True when both the chat and the embedding provider are healthy.
+   *
+   * @generated from field: bool healthy = 2;
+   */
+  healthy: boolean;
+
+  /**
+   * The detail of each provider, prefixed by its task when they differ.
+   *
    * @generated from field: string detail = 3;
    */
   detail: string;
@@ -181,6 +222,20 @@ export type GetProviderStatusResponse = Message$1<"kb.llm.v1.GetProviderStatusRe
    * @generated from field: int32 embedding_dimensions = 6;
    */
   embeddingDimensions: number;
+
+  /**
+   * Provider serving Generate (KB_CHAT_PROVIDER).
+   *
+   * @generated from field: kb.llm.v1.ProviderHealth chat = 7;
+   */
+  chat?: ProviderHealth | undefined;
+
+  /**
+   * Provider serving Embed (KB_EMBEDDING_PROVIDER).
+   *
+   * @generated from field: kb.llm.v1.ProviderHealth embedding = 8;
+   */
+  embedding?: ProviderHealth | undefined;
 };
 
 /**
@@ -188,14 +243,14 @@ export type GetProviderStatusResponse = Message$1<"kb.llm.v1.GetProviderStatusRe
  * Use `create(GetProviderStatusResponseSchema)` to create a new message.
  */
 export const GetProviderStatusResponseSchema: GenMessage<GetProviderStatusResponse> = /*@__PURE__*/
-  messageDesc(file_kb_llm_v1_llm, 7);
+  messageDesc(file_kb_llm_v1_llm, 8);
 
 /**
  * @generated from message kb.llm.v1.GenerateRequest
  */
 export type GenerateRequest = Message$1<"kb.llm.v1.GenerateRequest"> & {
   /**
-   * Model id; empty selects the provider's default chat model.
+   * Model id; empty selects the chat provider's default chat model.
    *
    * @generated from field: string model = 1;
    */
@@ -217,7 +272,7 @@ export type GenerateRequest = Message$1<"kb.llm.v1.GenerateRequest"> & {
  * Use `create(GenerateRequestSchema)` to create a new message.
  */
 export const GenerateRequestSchema: GenMessage<GenerateRequest> = /*@__PURE__*/
-  messageDesc(file_kb_llm_v1_llm, 8);
+  messageDesc(file_kb_llm_v1_llm, 9);
 
 /**
  * @generated from message kb.llm.v1.GenerateResponse
@@ -251,14 +306,14 @@ export type GenerateResponse = Message$1<"kb.llm.v1.GenerateResponse"> & {
  * Use `create(GenerateResponseSchema)` to create a new message.
  */
 export const GenerateResponseSchema: GenMessage<GenerateResponse> = /*@__PURE__*/
-  messageDesc(file_kb_llm_v1_llm, 9);
+  messageDesc(file_kb_llm_v1_llm, 10);
 
 /**
  * @generated from message kb.llm.v1.EmbedRequest
  */
 export type EmbedRequest = Message$1<"kb.llm.v1.EmbedRequest"> & {
   /**
-   * Model id; empty selects the provider's default embedding model.
+   * Model id; empty selects the embedding provider's default embedding model.
    *
    * @generated from field: string model = 1;
    */
@@ -275,7 +330,7 @@ export type EmbedRequest = Message$1<"kb.llm.v1.EmbedRequest"> & {
  * Use `create(EmbedRequestSchema)` to create a new message.
  */
 export const EmbedRequestSchema: GenMessage<EmbedRequest> = /*@__PURE__*/
-  messageDesc(file_kb_llm_v1_llm, 10);
+  messageDesc(file_kb_llm_v1_llm, 11);
 
 /**
  * @generated from message kb.llm.v1.Embedding
@@ -292,7 +347,7 @@ export type Embedding = Message$1<"kb.llm.v1.Embedding"> & {
  * Use `create(EmbeddingSchema)` to create a new message.
  */
 export const EmbeddingSchema: GenMessage<Embedding> = /*@__PURE__*/
-  messageDesc(file_kb_llm_v1_llm, 11);
+  messageDesc(file_kb_llm_v1_llm, 12);
 
 /**
  * @generated from message kb.llm.v1.EmbedResponse
@@ -319,7 +374,7 @@ export type EmbedResponse = Message$1<"kb.llm.v1.EmbedResponse"> & {
  * Use `create(EmbedResponseSchema)` to create a new message.
  */
 export const EmbedResponseSchema: GenMessage<EmbedResponse> = /*@__PURE__*/
-  messageDesc(file_kb_llm_v1_llm, 12);
+  messageDesc(file_kb_llm_v1_llm, 13);
 
 /**
  * @generated from enum kb.llm.v1.Role

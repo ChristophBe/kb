@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import asyncio
+import contextvars
+import inspect
 import logging
 import signal
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Awaitable, Callable, Iterable, Mapping
 from typing import Any, NoReturn
 
 import grpc
@@ -16,6 +20,94 @@ log = logging.getLogger(__name__)
 
 Registrar = Callable[[grpc.aio.Server], None]
 
+USER_HEADER = "x-kb-user"
+"""Metadata key carrying the id of the calling user. Envoy sets it from the
+subject of the verified token and drops any value the client sent, so services
+can trust it on calls that came through the gateway."""
+
+_user: contextvars.ContextVar[str | None] = contextvars.ContextVar("kb_user", default=None)
+
+
+def current_user() -> str | None:
+    """The id of the user the current RPC was made for, as put into the context
+    by `UserInterceptor`; None for calls without a user, such as calls between
+    services."""
+    return _user.get()
+
+
+class UserInterceptor(grpc.aio.ServerInterceptor):
+    """Makes the x-kb-user metadata of each call available as `current_user()`
+    inside its handler. `serve` installs it."""
+
+    async def intercept_service(
+        self,
+        continuation: Callable[
+            [grpc.HandlerCallDetails], Awaitable[grpc.RpcMethodHandler[Any, Any] | None]
+        ],
+        handler_call_details: grpc.HandlerCallDetails,
+    ) -> grpc.RpcMethodHandler[Any, Any] | None:
+        handler = await continuation(handler_call_details)
+        user = next(
+            (
+                str(value)
+                for key, value in handler_call_details.invocation_metadata or ()
+                if key == USER_HEADER and value
+            ),
+            None,
+        )
+        if handler is None or user is None:
+            return handler
+        return _with_user(handler, user)
+
+
+def _with_user(
+    handler: grpc.RpcMethodHandler[Any, Any], user: str
+) -> grpc.RpcMethodHandler[Any, Any]:
+    """Wraps the behaviour of `handler` so it runs with `current_user()` set."""
+
+    def unary(behavior: Callable[..., Any]) -> Callable[..., Any]:
+        async def run(request: Any, context: Any) -> Any:
+            token = _user.set(user)
+            try:
+                return await behavior(request, context)
+            finally:
+                _user.reset(token)
+
+        return run
+
+    def streaming(behavior: Callable[..., Any]) -> Callable[..., Any]:
+        # Streaming handlers either yield their responses or write them with
+        # context.write; keep the kind, grpc.aio treats the two differently.
+        if not inspect.isasyncgenfunction(behavior):
+            return unary(behavior)
+
+        async def run(request: Any, context: Any) -> Any:
+            token = _user.set(user)
+            try:
+                async for response in behavior(request, context):
+                    yield response
+            finally:
+                _user.reset(token)
+
+        return run
+
+    h: Any = handler
+    if h.unary_unary:
+        return grpc.unary_unary_rpc_method_handler(
+            unary(h.unary_unary), h.request_deserializer, h.response_serializer
+        )
+    if h.unary_stream:
+        return grpc.unary_stream_rpc_method_handler(
+            streaming(h.unary_stream), h.request_deserializer, h.response_serializer
+        )
+    if h.stream_unary:
+        return grpc.stream_unary_rpc_method_handler(
+            unary(h.stream_unary), h.request_deserializer, h.response_serializer
+        )
+    return grpc.stream_stream_rpc_method_handler(
+        streaming(h.stream_stream), h.request_deserializer, h.response_serializer
+    )
+
 
 async def serve(
     port: int,
@@ -26,8 +118,9 @@ async def serve(
 ) -> None:
     """Run a grpc.aio server with health checking and reflection until SIGINT
     or SIGTERM. `service_names` are the fully qualified names reported as
-    SERVING and exposed via reflection."""
-    server = grpc.aio.server()
+    SERVING and exposed via reflection. Handlers read the calling user with
+    `current_user()`."""
+    server = grpc.aio.server(interceptors=[UserInterceptor()])
     for reg in register:
         reg(server)
 

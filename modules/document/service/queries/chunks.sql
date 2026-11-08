@@ -15,6 +15,24 @@ WHERE cardinality(sqlc.arg('document_ids')::uuid[]) = 0
 ORDER BY c.embedding <=> sqlc.arg('embedding')::vector
 LIMIT sqlc.arg('max_results');
 
+-- SearchBestChunks returns each document's most similar chunk, ranked by
+-- that chunk's score: the documents most similar to the embedding. It is an
+-- exact scan, since the vector index can't pick one chunk per document.
+-- name: SearchBestChunks :many
+SELECT document_id, idx, text, metadata, document_title, score
+FROM (
+    SELECT DISTINCT ON (c.document_id)
+           c.document_id, c.idx, c.text, c.metadata, d.title AS document_title,
+           (1 - (c.embedding <=> sqlc.arg('embedding')::vector))::real AS score
+    FROM document.chunks c
+    JOIN document.documents d ON d.id = c.document_id
+    WHERE cardinality(sqlc.arg('document_ids')::uuid[]) = 0
+       OR c.document_id = ANY(sqlc.arg('document_ids')::uuid[])
+    ORDER BY c.document_id, c.embedding <=> sqlc.arg('embedding')::vector, c.idx
+) best
+ORDER BY score DESC, document_id
+LIMIT sqlc.arg('max_results');
+
 -- name: ListChunks :many
 SELECT document_id, idx, text, metadata
 FROM document.chunks

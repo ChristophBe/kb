@@ -16,6 +16,9 @@ service ChatService {
   rpc DeleteConversation(DeleteConversationRequest) returns (DeleteConversationResponse);
   // UpdateConversation changes the fields that are set and keeps the others.
   rpc UpdateConversation(UpdateConversationRequest) returns (UpdateConversationResponse);
+  // SearchConversations finds conversations by words in their title or in
+  // their messages.
+  rpc SearchConversations(SearchConversationsRequest) returns (SearchConversationsResponse);
   // StreamChat appends a user message and streams the assistant's answer.
   rpc StreamChat(StreamChatRequest) returns (stream StreamChatResponse);
 }
@@ -136,6 +139,29 @@ message UpdateConversationRequest {
 
 message UpdateConversationResponse {
   Conversation conversation = 1;
+}
+
+// Each word of the query matches words that start with it, regardless of case;
+// a conversation matches when its title or one of its messages contains all
+// words.
+message SearchConversationsRequest {
+  // Must not be empty or blank.
+  string query = 1;
+  // At most this many results; 0 means 20, more than 50 means 50.
+  int32 limit = 2;
+}
+
+// Title matches come first, then message matches, each group best match first;
+// a conversation appears at most once.
+message SearchConversationsResponse {
+  repeated ConversationMatch results = 1;
+}
+
+message ConversationMatch {
+  Conversation conversation = 1;
+  // An excerpt of the best matching message as plain text; empty when only the
+  // title matches.
+  string snippet = 2;
 }
 
 message StreamChatRequest {

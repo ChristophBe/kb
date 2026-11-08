@@ -105,3 +105,81 @@ async def test_paging_follows_the_order(repo: SqlRepository) -> None:
     pages = [await repo.list_conversations(2, 0), await repo.list_conversations(2, 2)]
 
     assert [[c.title for c in page] for page in pages] == [["c", "b"], ["a"]]
+
+
+async def test_search_finds_words_in_titles_and_messages(repo: SqlRepository) -> None:
+    titled = await repo.create_conversation("Trip to Lisbon", [])
+    talked = await repo.create_conversation("Holidays", [])
+    await say(repo, talked.id, "Which museums in **Lisbon** are open on Mondays?")
+    await repo.create_conversation("Unrelated", [])
+
+    found = await repo.search_conversations("lisbon", 10)
+
+    assert [m.conversation.title for m in found] == ["Trip to Lisbon", "Holidays"]
+    assert found[0].conversation.id == titled.id
+    assert found[0].snippet == ""
+    # The excerpt is plain text, without Markdown or highlight tags.
+    assert found[1].snippet == "Which museums in Lisbon are open on Mondays?"
+    assert found[1].conversation.last_message_preview == found[1].snippet
+
+
+async def test_search_matches_word_prefixes_and_needs_every_word(repo: SqlRepository) -> None:
+    conv = await repo.create_conversation("", [])
+    await say(repo, conv.id, "The quarterly report is due on Friday")
+
+    assert [m.conversation.id for m in await repo.search_conversations("QUART rep", 10)] == [
+        conv.id
+    ]
+    assert await repo.search_conversations("quarterly invoice", 10) == []
+    assert await repo.search_conversations("uarterly", 10) == []
+    # Punctuation alone has no words to look for.
+    assert await repo.search_conversations("?!", 10) == []
+    # Quotes and operators are taken as text, not as query syntax.
+    assert await repo.search_conversations("'report' & !friday |", 10) != []
+
+
+async def test_search_ranks_titles_first_and_lists_each_conversation_once(
+    repo: SqlRepository,
+) -> None:
+    often = await repo.create_conversation("Notes", [])
+    for _ in range(3):
+        await say(repo, often.id, "budget budget budget")
+    once = await repo.create_conversation("Planning", [])
+    await say(repo, once.id, "the budget for next year and some other things to talk about")
+    titled = await repo.create_conversation("Budget review", [])
+    await say(repo, titled.id, "budget")
+
+    found = await repo.search_conversations("budget", 10)
+
+    assert [m.conversation.id for m in found] == [titled.id, often.id, once.id]
+    # A title match still shows the matching message.
+    assert found[0].snippet == "budget"
+
+
+async def test_search_keeps_the_best_message_as_the_snippet(repo: SqlRepository) -> None:
+    conv = await repo.create_conversation("", [])
+    await say(repo, conv.id, "a word about tea, among many other words about other things")
+    await say(repo, conv.id, "tea, tea and more tea")
+    await say(repo, conv.id, "coffee")
+
+    [match] = await repo.search_conversations("tea", 10)
+
+    assert match.snippet == "tea, tea and more tea"
+
+
+async def test_search_cuts_long_messages_around_the_match(repo: SqlRepository) -> None:
+    conv = await repo.create_conversation("", [])
+    filler = " ".join(f"word{i}" for i in range(200))
+    await say(repo, conv.id, f"{filler} needle {filler}")
+
+    [match] = await repo.search_conversations("needle", 10)
+
+    assert "needle" in match.snippet
+    assert len(match.snippet.split()) <= 20
+
+
+async def test_search_returns_at_most_limit_results(repo: SqlRepository) -> None:
+    for i in range(3):
+        await repo.create_conversation(f"topic {i}", [])
+
+    assert len(await repo.search_conversations("topic", 2)) == 2

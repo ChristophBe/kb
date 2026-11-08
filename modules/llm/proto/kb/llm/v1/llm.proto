@@ -52,22 +52,40 @@ message Usage {
 message ListModelsRequest {}
 
 message ListModelsResponse {
+  // The chat provider's chat models and the embedding provider's embedding
+  // models.
   repeated Model models = 1;
 }
 
 message GetProviderStatusRequest {}
 
-message GetProviderStatusResponse {
+// ProviderHealth is the state of the provider serving one task.
+message ProviderHealth {
+  // Registry name, e.g. "ollama" or "anthropic".
   string provider = 1;
   bool healthy = 2;
+  string detail = 3;
+}
+
+message GetProviderStatusResponse {
+  // The provider's name when one serves chat and embeddings, else
+  // "<chat>+<embedding>" (e.g. "anthropic+ollama"). See chat and embedding.
+  string provider = 1;
+  // True when both the chat and the embedding provider are healthy.
+  bool healthy = 2;
+  // The detail of each provider, prefixed by its task when they differ.
   string detail = 3;
   string default_chat_model = 4;
   string default_embedding_model = 5;
   int32 embedding_dimensions = 6;
+  // Provider serving Generate (KB_CHAT_PROVIDER).
+  ProviderHealth chat = 7;
+  // Provider serving Embed (KB_EMBEDDING_PROVIDER).
+  ProviderHealth embedding = 8;
 }
 
 message GenerateRequest {
-  // Model id; empty selects the provider's default chat model.
+  // Model id; empty selects the chat provider's default chat model.
   string model = 1;
   repeated Message messages = 2;
   GenerationOptions options = 3;
@@ -82,7 +100,7 @@ message GenerateResponse {
 }
 
 message EmbedRequest {
-  // Model id; empty selects the provider's default embedding model.
+  // Model id; empty selects the embedding provider's default embedding model.
   string model = 1;
   repeated string inputs = 2;
 }

@@ -3,6 +3,7 @@ import { FileText, Search as SearchIcon } from "lucide-react";
 import { DocumentDetail } from "./DocumentDetail.tsx";
 import { DocumentList } from "./DocumentList.tsx";
 import { Search } from "./Search.tsx";
+import { documentSearch } from "./searchProvider.ts";
 
 export default defineModule({
   id: "document",
@@ -22,4 +23,5 @@ export default defineModule({
     { path: "", label: "Documents", icon: FileText },
     { path: "search", label: "Search", icon: SearchIcon },
   ],
+  search: documentSearch,
 });

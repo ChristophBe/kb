@@ -44,7 +44,24 @@ task up -- --profile ollama     # full stack incl. Ollama (pulls llama3.2 + nomi
 open http://localhost:3000
 ```
 
-No GPU or want a fast smoke test? Use `KB_LLM_PROVIDER=fake KB_RAG_MIN_SCORE=-1 task up` (deterministic echo answers and hash embeddings, which need the relevance threshold off). To use an Ollama running on the host (faster on macOS), set `KB_OLLAMA_URL=http://host.docker.internal:11434`. To chat with Claude, set `KB_LLM_PROVIDER=anthropic` and `KB_ANTHROPIC_API_KEY` (chat only for now: Anthropic has no embedding models, so search and document processing don't work with it yet). See `.env.example` for all settings, including the host ports if 8080/3000 are taken.
+No GPU or want a fast smoke test? Use `KB_LLM_PROVIDER=fake KB_RAG_MIN_SCORE=-1 task up` (deterministic echo answers and hash embeddings, which need the relevance threshold off). To use an Ollama running on the host (faster on macOS), set `KB_OLLAMA_URL=http://host.docker.internal:11434`. To chat with Claude, set `KB_CHAT_PROVIDER=anthropic`, `KB_EMBEDDING_PROVIDER=ollama` and `KB_ANTHROPIC_API_KEY`: Anthropic has no embedding models, so search and document processing keep using Ollama. `KB_CHAT_PROVIDER` and `KB_EMBEDDING_PROVIDER` each fall back to `KB_LLM_PROVIDER`. See `.env.example` for all settings, including the host ports if 8080/3000 are taken.
+
+## Authentication
+
+Every call through the gateway needs an OIDC access token: Envoy verifies it (`jwt_authn`, keys from the issuer's JWKS) and answers `UNAUTHENTICATED` otherwise. Only CORS preflights and health checks pass without one. Envoy forwards the token's subject to the services as the `x-kb-user` header and drops any `x-kb-user` the client sent; services read it with `grpcserver.UserFromContext(ctx)` (Go) or `kb_platform.grpc.current_user()` (Python). Calls between services carry no user yet.
+
+`task up` starts [Dex](https://dexidp.io) as the dev identity provider at `http://localhost:5556/dex`, configured in `deploy/dex/config.yaml.tpl`; nothing needs setting up by hand. It has two users, `alice@example.com` and `bob@example.com`, both with the password `password`, and two public clients: `kb-web` for the web shell (authorization code with PKCE) and `kb-cli` for scripts and tests. Fetch a token without a browser with the password grant:
+
+```sh
+TOKEN=$(curl -s http://localhost:5556/dex/token -d grant_type=password -d client_id=kb-cli \
+  -d username=alice@example.com -d password=password -d scope=openid | jq -r .access_token)
+```
+
+and send it as `authorization: Bearer $TOKEN` with each call to `:8080` (see `tests/e2e`).
+
+The web shell has no login yet ([#99](https://github.com/ChristophBe/kb/issues/99)), so its calls are rejected until then.
+
+To use another identity provider, set `KB_OIDC_ISSUER` (the `iss` of its tokens), `KB_OIDC_JWKS_URL` (where Envoy fetches the signing keys, http or https) and `KB_OIDC_AUDIENCES` (accepted client ids, comma-separated). With Dex on another host port, set `KB_DEX_PORT` and `KB_OIDC_ISSUER` together.
 
 ## Development
 

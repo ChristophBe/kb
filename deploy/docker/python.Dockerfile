@@ -1,5 +1,6 @@
 # Shared image for Python components. Build from the repository root with
 #   --build-arg PACKAGE=<workspace package with a console script of the same name>
+#   [--build-arg KB_VERSION=<x.y.z>]
 FROM python:3.13-slim
 RUN pip install --no-cache-dir uv==0.11.14
 ENV UV_LINK_MODE=copy \
@@ -18,5 +19,10 @@ RUN uv sync --frozen --no-dev --package ${PACKAGE}
 # manual change doesn't reinstall the dependencies.
 COPY docs/user-manual docs/user-manual
 ENV KB_ENTRYPOINT=${PACKAGE}
+# The release version, logged at startup (kb_platform.version); "dev" for local
+# builds. Last, so a new version reuses every layer above.
+ARG KB_VERSION=dev
+ENV KB_VERSION=${KB_VERSION}
+LABEL org.opencontainers.image.version=${KB_VERSION}
 USER nobody
 CMD ["sh", "-c", "exec ${KB_ENTRYPOINT}"]

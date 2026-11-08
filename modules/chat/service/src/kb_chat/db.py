@@ -3,6 +3,7 @@ DDL is managed by the Alembic migrations in modules/chat/migrations."""
 
 import asyncio
 import pathlib
+import re
 import uuid
 from typing import Any
 
@@ -21,15 +22,18 @@ from sqlalchemy import (
     delete,
     func,
     insert,
+    literal_column,
+    or_,
     select,
     true,
     update,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.sql.elements import ColumnElement
 
-from .preview import preview
-from .repository import ConversationRow, MessageRow
+from .preview import plain_text, preview
+from .repository import ConversationMatch, ConversationRow, MessageRow
 
 SCHEMA = "chat"
 MIGRATIONS_DIR = pathlib.Path(__file__).resolve().parents[3] / "migrations"
@@ -87,6 +91,25 @@ def _conversation(row: Any) -> ConversationRow:
     return ConversationRow(**values, last_message_preview=preview(content or ""))
 
 
+# Full-text search. The tsvector expressions match the indexes of migration
+# 0004; the configuration is a literal so that the planner can use them.
+_SEARCH_CONFIG = literal_column("'simple'::regconfig")
+# The words of a query, as the "simple" parser splits them.
+_WORD = re.compile(r"[^\W_]+")
+_HEADLINE_OPTIONS = "MaxWords=20, MinWords=8"
+
+
+def _tsvector(column: ColumnElement[str]) -> ColumnElement[Any]:
+    return func.to_tsvector(_SEARCH_CONFIG, column)
+
+
+def _tsquery(query: str) -> str | None:
+    """Every word of `query` as a prefix, all required, for to_tsquery; None
+    when it has no words."""
+    words = _WORD.findall(query.lower())
+    return " & ".join(f"'{w}':*" for w in words) if words else None
+
+
 class SqlRepository:
     def __init__(self, engine: AsyncEngine) -> None:
         self._engine = engine
@@ -123,6 +146,69 @@ class SqlRepository:
         async with self._engine.connect() as conn:
             rows = (await conn.execute(query)).mappings().all()
         return [_conversation(r) for r in rows]
+
+    async def search_conversations(self, query: str, limit: int) -> list[ConversationMatch]:
+        tsquery = _tsquery(query)
+        if tsquery is None:
+            return []
+        q = func.to_tsquery(_SEARCH_CONFIG, tsquery)
+        content_matches = _tsvector(messages.c.content).op("@@")(q)
+        rank = func.ts_rank(_tsvector(messages.c.content), q)
+        # Each conversation's best matching message; ties go to the latest one.
+        ranked = (
+            select(
+                messages.c.conversation_id,
+                messages.c.content,
+                rank.label("rank"),
+                func.row_number()
+                .over(
+                    partition_by=messages.c.conversation_id,
+                    order_by=(rank.desc(), messages.c.created_at.desc(), messages.c.id.desc()),
+                )
+                .label("place"),
+            )
+            .where(content_matches)
+            .subquery("ranked_messages")
+        )
+        best = (
+            select(ranked.c.conversation_id, ranked.c.content, ranked.c.rank)
+            .where(ranked.c.place == 1)
+            .subquery("best_message")
+        )
+        title_matches = _tsvector(conversations.c.title).op("@@")(q)
+        stmt = (
+            select(
+                conversations,
+                _last_message.c.last_message_time,
+                _last_message.c.last_message_content,
+                func.ts_headline(_SEARCH_CONFIG, best.c.content, q, _HEADLINE_OPTIONS).label(
+                    "snippet"
+                ),
+            )
+            .select_from(
+                conversations.outerjoin(_last_message, true()).outerjoin(
+                    best, best.c.conversation_id == conversations.c.id
+                )
+            )
+            .where(or_(title_matches, best.c.conversation_id.is_not(None)))
+            .order_by(
+                title_matches.desc(),
+                best.c.rank.desc().nulls_last(),
+                func.coalesce(_last_message.c.last_message_time, conversations.c.created_at).desc(),
+                conversations.c.id.desc(),
+            )
+            .limit(limit)
+        )
+        async with self._engine.connect() as conn:
+            rows = (await conn.execute(stmt)).mappings().all()
+        matches = []
+        for row in rows:
+            values = dict(row)
+            # ts_headline marks the matched words with <b>; plain_text drops
+            # those tags along with the message's Markdown.
+            snippet = plain_text(values.pop("snippet") or "")
+            matches.append(ConversationMatch(_conversation(values), snippet))
+        return matches
 
     async def delete_conversation(self, id: uuid.UUID) -> bool:
         async with self._engine.begin() as conn:

@@ -1,6 +1,7 @@
 #!/bin/sh
 # Writes the shell's runtime config from environment variables at startup.
 set -eu
+echo "kb web starting version ${KB_VERSION:-dev}"
 modules=""
 if [ -n "${KB_ENABLED_MODULES:-}" ]; then
   modules=$(printf '%s' "$KB_ENABLED_MODULES" | sed 's/[^,][^,]*/"&"/g')

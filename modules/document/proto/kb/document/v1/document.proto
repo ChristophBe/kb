@@ -28,7 +28,8 @@ service DocumentService {
   rpc ListChunks(ListChunksRequest) returns (ListChunksResponse);
   rpc SearchChunks(SearchChunksRequest) returns (SearchChunksResponse);
   // SearchDocuments embeds a text query through the llm module and returns
-  // the most similar chunks. It fails with UNAVAILABLE while llm is down.
+  // the most similar documents, each with its best chunk, and the most
+  // similar chunks. It fails with UNAVAILABLE while llm is down.
   rpc SearchDocuments(SearchDocumentsRequest) returns (SearchDocumentsResponse);
 }
 
@@ -67,6 +68,15 @@ message ScoredChunk {
   string document_title = 2;
   // Cosine similarity in [-1, 1]; higher is more similar.
   float score = 3;
+}
+
+// A document ranked by its most similar chunk.
+message ScoredDocument {
+  string document_id = 1;
+  string title = 2;
+  // The best chunk's cosine similarity in [-1, 1]; higher is more similar.
+  float score = 3;
+  Chunk best_chunk = 4;
 }
 
 message CreateDocumentRequest {
@@ -183,12 +193,16 @@ message SearchChunksResponse {
 message SearchDocumentsRequest {
   // The text to search for; must not be blank.
   string query = 1;
+  // How many documents to return; also caps `results`.
   int32 limit = 2;
   // Restricts the search to these documents when non-empty.
   repeated string document_ids = 3;
 }
 
 message SearchDocumentsResponse {
-  // Most similar first.
+  // The most similar chunks, most similar first; a document can appear more
+  // than once.
   repeated ScoredChunk results = 1;
+  // The most similar documents, each once, ordered by their best chunk.
+  repeated ScoredDocument documents = 2;
 }

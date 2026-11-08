@@ -342,8 +342,9 @@ func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksR
 }
 
 // SearchDocuments embeds the query through the llm module, then runs the same
-// vector search as SearchChunks. Only this RPC needs llm: while it is down,
-// this fails with UNAVAILABLE and every other RPC keeps working.
+// vector search as SearchChunks and ranks documents by their best chunk; limit
+// counts documents. Only this RPC needs llm: while it is down, this fails with
+// UNAVAILABLE and every other RPC keeps working.
 func (s *Server) SearchDocuments(ctx context.Context, req *documentv1.SearchDocumentsRequest) (*documentv1.SearchDocumentsResponse, error) {
 	query := strings.TrimSpace(req.GetQuery())
 	if query == "" {
@@ -366,20 +367,42 @@ func (s *Server) SearchDocuments(ctx context.Context, req *documentv1.SearchDocu
 	if len(embedded.GetEmbeddings()) != 1 || len(embedded.GetEmbeddings()[0].GetValues()) == 0 {
 		return nil, s.internal("embed query", fmt.Errorf("got %d embeddings for 1 input", len(embedded.GetEmbeddings())))
 	}
-	results, err := s.search(ctx, embedded.GetEmbeddings()[0].GetValues(), req.GetLimit(), ids)
+	embedding := embedded.GetEmbeddings()[0].GetValues()
+	results, err := s.search(ctx, embedding, req.GetLimit(), ids)
 	if err != nil {
 		return nil, err
 	}
-	return &documentv1.SearchDocumentsResponse{Results: results}, nil
+	rows, err := s.repo.SearchBestChunks(ctx, store.SearchBestChunksParams{
+		Embedding: pgvector.NewVector(embedding), DocumentIds: ids, MaxResults: clampLimit(req.GetLimit()),
+	})
+	if err != nil {
+		return nil, s.internal("search documents", err)
+	}
+	documents := make([]*documentv1.ScoredDocument, 0, len(rows))
+	for _, r := range rows {
+		documents = append(documents, &documentv1.ScoredDocument{
+			DocumentId: r.DocumentID.String(),
+			Title:      r.DocumentTitle,
+			Score:      r.Score,
+			BestChunk: &documentv1.Chunk{
+				DocumentId: r.DocumentID.String(), Index: r.Idx, Text: r.Text, Metadata: r.Metadata,
+			},
+		})
+	}
+	return &documentv1.SearchDocumentsResponse{Results: results, Documents: documents}, nil
+}
+
+// clampLimit applies the default and the cap to a search's limit.
+func clampLimit(limit int32) int32 {
+	if limit <= 0 {
+		return defaultLimit
+	}
+	return min(limit, maxLimit)
 }
 
 func (s *Server) search(ctx context.Context, embedding []float32, limit int32, ids []uuid.UUID) ([]*documentv1.ScoredChunk, error) {
-	if limit <= 0 {
-		limit = defaultLimit
-	}
-	limit = min(limit, maxLimit)
 	rows, err := s.repo.SearchChunks(ctx, store.SearchChunksParams{
-		Embedding: pgvector.NewVector(embedding), DocumentIds: ids, MaxResults: limit,
+		Embedding: pgvector.NewVector(embedding), DocumentIds: ids, MaxResults: clampLimit(limit),
 	})
 	if err != nil {
 		return nil, s.internal("search chunks", err)

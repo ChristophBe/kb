@@ -47,6 +47,7 @@ flowchart TB
         pg[("postgres :5432<br/>pgvector")]
         s3[("s3 :8333<br/>SeaweedFS")]
         nats[["nats :4222<br/>JetStream"]]
+        dex["dex :5556<br/>dev OIDC provider"]
     end
 
     ollama["ollama :11434<br/>profile: ollama"]
@@ -54,6 +55,8 @@ flowchart TB
     browser -- "HTTP: app + config.json" --> web
     browser -- "gRPC-Web" --> envoy
     browser -- "presigned PUT / GET" --> s3
+    browser -. "login, tokens" .-> dex
+    envoy -- "JWKS (verify tokens)" --> dex
 
     envoy -- "DocumentService" --> docsvc
     envoy -- "IngestionService" --> ingsvc
@@ -84,7 +87,7 @@ flowchart TB
 | `ingestion-worker` | ingestion | — | document, llm | consumes `uploaded`; publishes `started`, `processed`, `failed` |
 | `chat-service` | chat | schema `chat` (conversations, messages) | document, llm | — |
 | `llm-service` | llm | provider registry | Ollama over HTTP, Anthropic API | — |
-| `envoy` | — | per-method routes for the public RPCs of each manifest's `grpc_services` (not `internal`) | all four services | — |
+| `envoy` | — | per-method routes for the public RPCs of each manifest's `grpc_services` (not `internal`); token check, sets `x-kb-user` ([ADR 0009](../adr/0009-oidc-authentication-at-the-gateway.md)) | all four services | — |
 | `web` | — | UI shell; module UIs from `apps/web/src/modules.gen.ts` | via envoy | — |
 
 Modules never share a schema, bucket or stream: each is owned by one module, and other modules go through its gRPC API or its events ([ADR 0002](../adr/0002-module-per-folder-monorepo.md), [ADR 0004](../adr/0004-nats-jetstream-events-between-modules.md)).

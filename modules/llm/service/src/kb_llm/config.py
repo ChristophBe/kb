@@ -4,12 +4,16 @@ from pydantic import SecretStr
 
 class Settings(PlatformSettings):
     grpc_port: int = 9004
-    # Provider selection; see kb_llm.providers.REGISTRY.
+    # Provider selection; see kb_llm.providers.REGISTRY. KB_CHAT_PROVIDER and
+    # KB_EMBEDDING_PROVIDER pick one per task (e.g. Claude chat with Ollama
+    # embeddings); either one left empty falls back to KB_LLM_PROVIDER.
     llm_provider: str = "ollama"
+    chat_provider: str = ""
+    embedding_provider: str = ""
     ollama_url: str = "http://localhost:11434"
     chat_model: str = "llama3.2"
     embedding_model: str = "nomic-embed-text"
-    # Anthropic (KB_LLM_PROVIDER=anthropic). Chat only: Anthropic has no embeddings.
+    # Anthropic (provider anthropic). Chat only: Anthropic has no embeddings.
     anthropic_api_key: SecretStr | None = None
     anthropic_chat_model: str = "claude-sonnet-5-5"
     # Upper bound for one answer when the caller sets none (the API requires one).
@@ -29,3 +33,11 @@ class Settings(PlatformSettings):
     fake_token_delay: float = 0
     # Must match the vector column of the document module's chunk index.
     embedding_dimensions: int = 768
+
+    @property
+    def resolved_chat_provider(self) -> str:
+        return self.chat_provider or self.llm_provider
+
+    @property
+    def resolved_embedding_provider(self) -> str:
+        return self.embedding_provider or self.llm_provider

@@ -72,7 +72,7 @@ class AnthropicProvider:
     ) -> None:
         if not api_key:
             raise ValueError(
-                "KB_ANTHROPIC_API_KEY is not set; it is required when KB_LLM_PROVIDER=anthropic"
+                "KB_ANTHROPIC_API_KEY is not set; it is required for the anthropic provider"
             )
         self.default_chat_model = chat_model
         self._max_tokens = max_tokens

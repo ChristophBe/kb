@@ -7,6 +7,8 @@ services:
     environment:
       KB_LOG_LEVEL: ${KB_LOG_LEVEL:-INFO}
       KB_LLM_PROVIDER: ${KB_LLM_PROVIDER:-ollama}
+      KB_CHAT_PROVIDER: ${KB_CHAT_PROVIDER:-}
+      KB_EMBEDDING_PROVIDER: ${KB_EMBEDDING_PROVIDER:-}
       KB_OLLAMA_URL: ${KB_OLLAMA_URL:-http://ollama:11434}
       KB_CHAT_MODEL: ${KB_CHAT_MODEL:-llama3.2}
       KB_EMBEDDING_MODEL: ${KB_EMBEDDING_MODEL:-nomic-embed-text}

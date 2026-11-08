@@ -80,6 +80,8 @@ class Provider(Protocol):
     ProviderError, so the server needs no knowledge of a vendor's client."""
 
     name: str
+    # Empty when the provider has no models of that kind; such a provider can't
+    # be chosen for that task (see kb_llm.providers.build_providers).
     default_chat_model: str
     default_embedding_model: str
 

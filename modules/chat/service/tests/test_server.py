@@ -13,7 +13,7 @@ from kb_chat.chat import Chat
 from kb_chat.config import Settings
 from kb_chat.peers import PeerGenerator, PeerRetriever
 from kb_chat.preview import preview
-from kb_chat.repository import ConversationRow, MessageRow
+from kb_chat.repository import ConversationMatch, ConversationRow, MessageRow
 from kb_chat.server import ChatServicer
 from kb_platform.grpc import field_violations
 
@@ -27,6 +27,7 @@ class MemoryRepo:
     def __init__(self) -> None:
         self.conversations: dict[uuid.UUID, ConversationRow] = {}
         self.messages: list[MessageRow] = []
+        self.searches: list[tuple[str, int]] = []
 
     async def create_conversation(self, title: str, document_ids: list[uuid.UUID]):
         now = datetime.now(UTC)
@@ -44,6 +45,18 @@ class MemoryRepo:
             reverse=True,
         )
         return convs[offset : offset + limit]
+
+    async def search_conversations(self, query: str, limit: int):
+        """Substring matches: titles first, then the first matching message."""
+        self.searches.append((query, limit))
+        q = query.lower()
+        titled = [c for c in self.conversations.values() if q in c.title.lower()]
+        matches = [ConversationMatch(c) for c in titled]
+        for m in self.messages:
+            conv = self.conversations[m.conversation_id]
+            if q in m.content.lower() and all(x.conversation is not conv for x in matches):
+                matches.append(ConversationMatch(conv, preview(m.content)))
+        return matches[:limit]
 
     async def delete_conversation(self, id: uuid.UUID):
         return self.conversations.pop(id, None) is not None
@@ -526,3 +539,45 @@ async def test_invalid_scopes_are_rejected(env: Env, ids: list[str], field: str)
     assert [v.field for v in field_violations(updated.value)] == [
         field.replace("document_ids", "document_ids.ids", 1)
     ]
+
+
+async def test_search_returns_conversations_with_their_snippet(env: Env) -> None:
+    stub, repo, *_ = env
+    talked = await repo.create_conversation("Holidays", [])
+    await repo.add_message(talked.id, chat_pb2.MESSAGE_ROLE_USER, "Museums in **Lisbon**?", [])
+    titled = await repo.create_conversation("Lisbon trip", [])
+    await repo.create_conversation("Unrelated", [])
+
+    resp = await stub.SearchConversations(chat_pb2.SearchConversationsRequest(query=" lisbon "))
+
+    assert [(r.conversation.id, r.snippet) for r in resp.results] == [
+        (str(titled.id), ""),
+        (str(talked.id), "Museums in Lisbon?"),
+    ]
+    assert resp.results[1].conversation.title == "Holidays"
+    assert resp.results[1].conversation.last_message_preview == "Museums in Lisbon?"
+    # The query is trimmed; the limit defaults to 20.
+    assert repo.searches == [("lisbon", 20)]
+
+
+@pytest.mark.parametrize(("limit", "used"), [(5, 5), (500, 50)])
+async def test_search_caps_the_limit(env: Env, limit: int, used: int) -> None:
+    stub, repo, *_ = env
+    await stub.SearchConversations(chat_pb2.SearchConversationsRequest(query="x", limit=limit))
+    assert repo.searches == [("x", used)]
+
+
+@pytest.mark.parametrize(
+    ("query", "limit", "field"), [("", 0, "query"), ("   ", 0, "query"), ("x", -1, "limit")]
+)
+async def test_search_rejects_invalid_requests(
+    env: Env, query: str, limit: int, field: str
+) -> None:
+    stub, repo, *_ = env
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.SearchConversations(
+            chat_pb2.SearchConversationsRequest(query=query, limit=limit)
+        )
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    assert [v.field for v in field_violations(err.value)] == [field]
+    assert repo.searches == []

@@ -2,8 +2,16 @@
 services:
   envoy:
     image: envoyproxy/envoy:v1.36-latest
-    command: ["envoy", "-c", "/etc/envoy/envoy.yaml", "--log-level", "warn"]
-    volumes: [./envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro]
+    # entrypoint.sh fills in the OIDC settings, then starts Envoy.
+    entrypoint: ["/etc/envoy/entrypoint.sh"]
+    command: ["--log-level", "warn"]
+    environment:
+      KB_OIDC_ISSUER: ${KB_OIDC_ISSUER:-http://localhost:5556/dex}
+      KB_OIDC_JWKS_URL: ${KB_OIDC_JWKS_URL:-http://dex:5556/dex/keys}
+      KB_OIDC_AUDIENCES: ${KB_OIDC_AUDIENCES:-kb-web,kb-cli}
+    volumes:
+      - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
+      - ./envoy/entrypoint.sh:/etc/envoy/entrypoint.sh:ro
     ports: ["${KB_GATEWAY_PORT:-8080}:8080"]
 
   web:

@@ -5,9 +5,12 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+
+	"github.com/christoph/kb/platform/go/version"
 )
 
-// Setup installs and returns a slog logger. format is "json" or "text".
+// Setup installs and returns a slog logger and logs the release version the
+// service runs. format is "json" or "text".
 func Setup(level, format, service string) *slog.Logger {
 	var lvl slog.Level
 	if err := lvl.UnmarshalText([]byte(strings.ToUpper(level))); err != nil {
@@ -20,5 +23,6 @@ func Setup(level, format, service string) *slog.Logger {
 	}
 	logger := slog.New(h).With("service", service)
 	slog.SetDefault(logger)
+	logger.Info("starting", "version", version.Version)
 	return logger
 }

@@ -1,4 +1,4 @@
-import { DocumentService, type ScoredChunk } from "@kb/document-api/kb/document/v1/document_pb";
+import { DocumentService, type ScoredDocument } from "@kb/document-api/kb/document/v1/document_pb";
 import { Code, ConnectError, useClient, useQuery } from "@kb/module-sdk";
 import {
   Button,
@@ -12,10 +12,12 @@ import {
 } from "@kb/ui";
 import { useEffect, useId, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
+import { passagePath, SEARCH_LIMIT } from "./searchProvider.ts";
 
-export const SEARCH_LIMIT = 20;
-
-/** Semantic search over all chunks; the query lives in `?q=`, so results are linkable. */
+/**
+ * Semantic search over all documents, each listed once with its best passage;
+ * the query lives in `?q=`, so results are linkable.
+ */
 export function Search() {
   const client = useClient(DocumentService);
   const [params, setParams] = useSearchParams();
@@ -45,7 +47,7 @@ export function Search() {
     setParams({ q: query });
   };
 
-  const items = results.data?.results ?? [];
+  const items = results.data?.documents ?? [];
   let announcement = "";
   if (q && results.isFetching) announcement = "Searching…";
   else if (q && results.isSuccess)
@@ -67,15 +69,15 @@ export function Search() {
   } else if (items.length === 0) {
     body = (
       <Card>
-        <EmptyState>No passages match "{q}". Try other words.</EmptyState>
+        <EmptyState>No documents match "{q}". Try other words.</EmptyState>
       </Card>
     );
   } else {
     body = (
       <Card aria-busy={results.isFetching || undefined}>
         <ol className="divide-y divide-dotted divide-border">
-          {items.map((r) => (
-            <Result key={`${r.chunk?.documentId}-${r.chunk?.index}`} result={r} />
+          {items.map((d) => (
+            <Result key={d.documentId} result={d} />
           ))}
         </ol>
       </Card>
@@ -87,7 +89,7 @@ export function Search() {
       <PageHeader
         eyebrow="kb / documents / search"
         title="Search"
-        description="Find passages across all documents."
+        description="Find documents by their best matching passage."
       />
       <search className="mb-4 block">
         <form noValidate onSubmit={submit}>
@@ -125,22 +127,19 @@ export function Search() {
   );
 }
 
-function Result({ result }: { result: ScoredChunk }) {
-  const chunk = result.chunk;
-  if (!chunk) return null;
-  const n = chunk.index + 1;
+function Result({ result }: { result: ScoredDocument }) {
+  const chunk = result.bestChunk;
+  const { pathname, hash } = passagePath(result);
   return (
     <li className="px-4 py-3">
       <div className="flex items-baseline justify-between gap-4">
         <h2 className="min-w-0 text-sm font-medium wrap-anywhere">
           <Link
-            to={{ pathname: `../${chunk.documentId}`, hash: `chunk-${chunk.index}` }}
+            to={{ pathname: `../${pathname}`, hash }}
             relative="path"
             className="hover:underline"
           >
-            {result.documentTitle}
-            <span aria-hidden="true"> · chunk {n}</span>
-            <span className="sr-only">, chunk {n}</span>
+            {result.title}
           </Link>
         </h2>
         <span className="shrink-0 font-mono text-xs text-fg-muted tabular-nums">
@@ -148,7 +147,12 @@ function Result({ result }: { result: ScoredChunk }) {
           {result.score.toFixed(2)}
         </span>
       </div>
-      <p className="mt-1 line-clamp-3 text-sm wrap-anywhere text-fg-muted">{chunk.text}</p>
+      {chunk && (
+        <p className="mt-1 line-clamp-3 text-sm wrap-anywhere text-fg-muted">
+          <span className="sr-only">Passage {chunk.index + 1}: </span>
+          {chunk.text}
+        </p>
+      )}
     </li>
   );
 }

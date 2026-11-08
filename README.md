@@ -59,9 +59,9 @@ TOKEN=$(curl -s http://localhost:5556/dex/token -d grant_type=password -d client
 
 and send it as `authorization: Bearer $TOKEN` with each call to `:8080` (see `tests/e2e`).
 
-The web shell has no login yet ([#99](https://github.com/ChristophBe/kb/issues/99)), so its calls are rejected until then.
+The web shell signs in with `kb-web` (authorization code with PKCE, via [oidc-client-ts](https://github.com/authts/oidc-client-ts)): a signed-out visitor is sent to Dex and comes back to the route they asked for, and every call carries `authorization: Bearer <access token>`. With `offline_access` Dex issues a refresh token, which renews the access token in the background; a call rejected as `UNAUTHENTICATED` sends the browser back to sign-in. The session is kept in `localStorage`; **Sign out** in the sidebar removes it (Dex has no logout endpoint, and keeps no login session, so the next sign-in asks for the password again). The shell reads the issuer and client id from its runtime `config.json`, written from `KB_OIDC_ISSUER` and `KB_OIDC_CLIENT_ID` when the web container starts. Dex accepts `http://localhost:$KB_WEB_PORT/auth/callback` and, for `task web`, `http://localhost:$KB_WEB_DEV_PORT/auth/callback` (Vite's port, 5173 by default) as redirect URIs.
 
-To use another identity provider, set `KB_OIDC_ISSUER` (the `iss` of its tokens), `KB_OIDC_JWKS_URL` (where Envoy fetches the signing keys, http or https) and `KB_OIDC_AUDIENCES` (accepted client ids, comma-separated). With Dex on another host port, set `KB_DEX_PORT` and `KB_OIDC_ISSUER` together.
+To use another identity provider, set `KB_OIDC_ISSUER` (the `iss` of its tokens), `KB_OIDC_JWKS_URL` (where Envoy fetches the signing keys, http or https) and `KB_OIDC_AUDIENCES` (accepted client ids, comma-separated). With Dex on another host port, set `KB_DEX_PORT` and `KB_OIDC_ISSUER` together. Another provider needs a public client for the web shell (PKCE, redirect URI `<web origin>/auth/callback`), named in `KB_OIDC_CLIENT_ID`.
 
 ## Development
 

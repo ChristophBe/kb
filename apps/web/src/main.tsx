@@ -1,4 +1,4 @@
-import { KbRuntimeProvider, type RuntimeConfig } from "@kb/module-sdk";
+import type { RuntimeConfig } from "@kb/module-sdk";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.tsx";
@@ -15,9 +15,7 @@ loadConfig().then(
   (config) =>
     root.render(
       <StrictMode>
-        <KbRuntimeProvider config={config}>
-          <App config={config} />
-        </KbRuntimeProvider>
+        <App config={config} />
       </StrictMode>,
     ),
   (err: Error) => root.render(<pre className="p-6 text-danger">{err.message}</pre>),

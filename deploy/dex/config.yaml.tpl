@@ -44,8 +44,9 @@ staticClients:
     redirectURIs:
       - http://localhost:{{ getenv "KB_WEB_PORT" "3000" }}/
       - http://localhost:{{ getenv "KB_WEB_PORT" "3000" }}/auth/callback
-      - http://localhost:5173/
-      - http://localhost:5173/auth/callback
+      # The Vite dev server (task web).
+      - http://localhost:{{ getenv "KB_WEB_DEV_PORT" "5173" }}/
+      - http://localhost:{{ getenv "KB_WEB_DEV_PORT" "5173" }}/auth/callback
   # Command-line tools and tests, with the password grant.
   - id: kb-cli
     name: kb CLI

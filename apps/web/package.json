@@ -17,6 +17,7 @@
     "@kb/module-sdk": "workspace:*",
     "@kb/ui": "workspace:*",
     "lucide-react": "catalog:",
+    "oidc-client-ts": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-markdown": "catalog:",

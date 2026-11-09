@@ -105,3 +105,28 @@ jobs:
       push: true
       latest: true
       platforms: linux/amd64,linux/arm64
+
+  # The Helm chart of the release, as oci://ghcr.io/christophbe/charts/kb:<version>
+  # with chart version and appVersion both the release version, so its default
+  # image tag is the images just pushed (docs/operations/kubernetes.md).
+  chart:
+    needs: [release, images]
+    if: needs.release.outputs.version != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: azure/setup-helm@v5
+        with: { version: v4.1.3 }
+      - name: Package and push
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "$GH_TOKEN" | helm registry login ghcr.io --username "$GH_ACTOR" --password-stdin
+          helm package deploy/helm/kb --version "$VERSION" --app-version "$VERSION" --destination "$RUNNER_TEMP"
+          helm push "$RUNNER_TEMP/kb-$VERSION.tgz" oci://ghcr.io/christophbe/charts
+          echo "Chart: \`helm install kb oci://ghcr.io/christophbe/charts/kb --version $VERSION\`" >> "$GITHUB_STEP_SUMMARY"

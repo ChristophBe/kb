@@ -23,6 +23,12 @@ on:
       platforms:
         type: string
         default: linux/amd64
+      artifact:
+        description: >-
+          Also save each image as a tarball in the workflow artifact image-<component>
+          (single platform, without push), for a later job to `docker load` (ci.yml's helm job).
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       version:
@@ -100,8 +106,16 @@ jobs:
             ${{ matrix.build_args }}
             KB_VERSION=${{ inputs.version }}
           tags: ${{ steps.tags.outputs.tags }}
+          outputs: ${{ inputs.artifact && format('type=docker,dest={0}/image.tar', runner.temp) || '' }}
           # Links the package to this repository on GHCR (access, README, source).
           labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           # One cache per component; PR builds read the cache main's builds write.
           cache-from: type=gha,scope=${{ matrix.component }}
           cache-to: type=gha,scope=${{ matrix.component }},mode=max
+      - uses: actions/upload-artifact@v7
+        if: inputs.artifact
+        with:
+          name: image-${{ matrix.component }}
+          path: ${{ runner.temp }}/image.tar
+          retention-days: 1
+          compression-level: 6

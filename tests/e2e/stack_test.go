@@ -9,6 +9,11 @@
 // with only the gateway, S3 and Dex published, on non-default host ports, so it
 // does not collide with a developer's `kb` stack. It is torn down with its
 // volumes after the run, also on failure (set KB_E2E_KEEP=1 to keep it).
+//
+// KB_E2E_GATEWAY instead points the tests at a stack that is already running,
+// such as a Helm release (the `helm` CI job): no compose project is started,
+// and KB_E2E_ISSUER (default <gateway>/dex) is the Dex issuer. That stack must
+// run the fake LLM provider with KB_RAG_MIN_SCORE=-1, as the compose one does.
 package e2e
 
 import (
@@ -38,6 +43,9 @@ type stack struct {
 	issuer  string   // URL of the dev OIDC issuer (Dex)
 	token   string   // access token of the test user, fetched once the stack is up
 	keep    bool     // leave the stack running after the run
+	// external is a stack the tests did not start (KB_E2E_GATEWAY); they
+	// neither start, stop nor print the logs of it.
+	external bool
 }
 
 var kb *stack
@@ -85,6 +93,10 @@ func run(m *testing.M) int {
 }
 
 func newStack() (*stack, error) {
+	if gateway := strings.TrimSuffix(os.Getenv("KB_E2E_GATEWAY"), "/"); gateway != "" {
+		issuer := strings.TrimSuffix(envOr("KB_E2E_ISSUER", gateway+"/dex"), "/")
+		return &stack{gateway: gateway, issuer: issuer, external: true}, nil
+	}
 	root, err := filepath.Abs(filepath.Join("..", ".."))
 	if err != nil {
 		return nil, err
@@ -124,6 +136,10 @@ func newStack() (*stack, error) {
 // up builds and starts every service except the web shell, which the test
 // does not need, and waits until they are healthy.
 func (s *stack) up() error {
+	if s.external {
+		fmt.Printf("e2e: testing the running stack at %s (issuer %s)\n", s.gateway, s.issuer)
+		return nil
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), upTimeout)
 	defer cancel()
 	out, err := s.output(ctx, "config", "--services")
@@ -137,6 +153,9 @@ func (s *stack) up() error {
 }
 
 func (s *stack) down() {
+	if s.external {
+		return
+	}
 	if s.keep {
 		fmt.Printf("e2e: KB_E2E_KEEP is set, leaving compose project %s running\n", s.project)
 		return
@@ -150,6 +169,9 @@ func (s *stack) down() {
 
 // logs prints the logs of every service, for diagnosing a failed run.
 func (s *stack) logs() {
+	if s.external {
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 	fmt.Println("e2e: ===== docker compose logs =====")

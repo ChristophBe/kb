@@ -16,4 +16,5 @@ Significant decisions are recorded here, one file per decision, using [template.
 | [0007](0007-commit-generated-code.md) | Commit generated code | Accepted |
 | [0008](0008-reference-module-architecture.md) | Reference module architecture | Accepted |
 | [0009](0009-oidc-authentication-at-the-gateway.md) | Authenticate with OIDC tokens at the gateway | Accepted |
+| [0010](0010-opentelemetry-tracing.md) | Trace with OpenTelemetry, off unless configured | Accepted |
 | [0011](0011-helm-chart-generated-from-module-manifests.md) | Deploy to Kubernetes with one Helm chart generated from the module manifests | Accepted |

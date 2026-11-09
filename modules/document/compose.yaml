@@ -6,11 +6,15 @@ services:
       args: { CMD: ./modules/document/service/cmd/document-service, KB_VERSION: "${KB_VERSION:-dev}" }
     environment:
       KB_LOG_LEVEL: ${KB_LOG_LEVEL:-info}
+      KB_OTEL_ENDPOINT: ${KB_OTEL_ENDPOINT:-}
       KB_DATABASE_URL: postgres://kb:kb@postgres:5432/kb?sslmode=disable
       KB_S3_ENDPOINT: s3:8333
       KB_S3_PUBLIC_ENDPOINT: ${KB_S3_PUBLIC_ENDPOINT:-localhost:8333}
       # Soft dependency: no depends_on on llm-service, search returns UNAVAILABLE while it is down.
       KB_LLM_ADDR: llm-service:9004
+      # Upload limits; the defaults are what the ingestion worker can read.
+      KB_MAX_UPLOAD_BYTES: ${KB_MAX_UPLOAD_BYTES:-52428800}
+      KB_ALLOWED_CONTENT_TYPES: ${KB_ALLOWED_CONTENT_TYPES:-application/pdf,text/*,application/json,application/yaml,application/x-yaml}
     ports: ["9001:9001"]
     depends_on:
       postgres: { condition: service_healthy }

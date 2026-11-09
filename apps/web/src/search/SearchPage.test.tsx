@@ -3,7 +3,7 @@ import { expectNoAxeViolations } from "@kb/ui/testing";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { describe, expect, it } from "vitest";
-import { searchProviders } from "./pages.ts";
+import { pagesProvider } from "./pages.ts";
 import { SearchPage } from "./SearchPage.tsx";
 
 const Icon = () => <svg aria-hidden="true" />;
@@ -39,7 +39,7 @@ function renderPage(providers: SearchProvider[], url: string) {
 describe("SearchPage", () => {
   it("lists every hit of the query in the URL, grouped, with failures in their own group", async () => {
     const { container } = renderPage(
-      [...searchProviders(modules), documents, failing],
+      [pagesProvider(modules), documents, failing],
       "/search?q=chat",
     );
     expect((screen.getByRole("searchbox", { name: "Search kb" }) as HTMLInputElement).value).toBe(

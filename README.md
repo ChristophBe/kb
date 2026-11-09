@@ -48,6 +48,8 @@ No GPU or want a fast smoke test? Use `KB_LLM_PROVIDER=fake KB_RAG_MIN_SCORE=-1 
 
 To run a released version from the published images instead of building, see [Container images](docs/operations/images.md) (`KB_VERSION=<version> docker compose -f compose.yaml -f deploy/release.compose.yaml up`). To deploy to Kubernetes, use the Helm chart in `deploy/helm/kb` ([Kubernetes](docs/operations/kubernetes.md)).
 
+To follow a request across the services, start the stack with tracing and Jaeger: `KB_OTEL_ENDPOINT=http://otel-collector:4317 task up -- --profile observability`, then open http://localhost:16686. See [Observability](docs/operations/observability.md).
+
 ## Authentication
 
 Every call through the gateway needs an OIDC access token: Envoy verifies it (`jwt_authn`, keys from the issuer's JWKS) and answers `UNAUTHENTICATED` otherwise. Only CORS preflights and health checks pass without one. Envoy forwards the token's subject to the services as the `x-kb-user` header and drops any `x-kb-user` the client sent; services read it with `grpcserver.UserFromContext(ctx)` (Go) or `kb_platform.grpc.current_user()` (Python). Calls between services carry no user yet.

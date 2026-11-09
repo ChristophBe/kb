@@ -32,4 +32,5 @@ type DocumentDocument struct {
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
 	OwnerID      string
+	Sha256       string
 }

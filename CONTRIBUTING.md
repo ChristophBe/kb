@@ -100,6 +100,19 @@ The `pr-title` workflow (`.github/workflows/pr-title.yml`) checks the title on e
 
 The `pr-history` workflow (`.github/workflows/pr-history.yml`) fails when the branch is behind `main` or contains merge commits. Update a stale branch by rebasing (*Update branch → Update with rebase* on the PR, or `gh pr update-branch --rebase`), never by merging `main` in. The check does not re-run when `main` moves on, so make sure the PR shows the branch as up to date before merging.
 
+### Dependency updates
+
+[Dependabot](.github/dependabot.yml) opens version-update PRs every Monday, one grouped PR per ecosystem: Go (`go.mod` and `tools/go.mod`), Python (the uv workspace, `uv.lock`), npm (the pnpm workspace incl. the catalog in `pnpm-workspace.yaml`), Docker base images (`deploy/docker/*.Dockerfile`), the images pinned in `deploy/*.compose.yaml` and `modules/llm/compose.yaml`, and GitHub Actions. A release must be 14 days old before it is proposed (the same minimum age pnpm enforces). Titles read `build(deps): bump …` and release as a patch.
+
+Versions Dependabot does not see are bumped by hand: the `uv` pinned in `deploy/docker/python.Dockerfile`, `SEMREL_VERSION` in `.github/workflows/release.yml`, the `go` directive in `go.mod` and `.python-version` (keep it in step with the `python` base image).
+
+Handling an update PR:
+
+- **Generated code.** Dependabot cannot run `task gen`. When a bump changes a generator (buf, sqlc, `protoc-gen-go*`, `grpcio-tools`, `@bufbuild/protoc-gen-es`), *Generated code is up to date* fails; check out the branch, run `task gen` and push the output as a `build(deps): regenerate code` commit.
+- **Stale branch.** When `main` moves on, comment `@dependabot rebase` rather than using *Update branch*: Dependabot rebases its branch onto `main` (no merge commits, so `pr-history` passes) and keeps rebasing on conflicts. Once someone else has pushed to the branch, Dependabot stops rebasing it; then rebase it like any other PR, or comment `@dependabot recreate` to discard the extra commits.
+- **Splitting.** If one update in a group breaks, comment `@dependabot ignore <dependency>` (or `… major version`) on the group PR, and fix it in its own PR.
+- Dependabot PRs run CI with a read-only `GITHUB_TOKEN` and without repository secrets; the workflows need neither.
+
 ### Required checks
 
 CI must pass on every PR. It fails when any of these fails:

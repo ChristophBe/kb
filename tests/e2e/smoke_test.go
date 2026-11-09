@@ -5,6 +5,7 @@ package e2e
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"net/http"
@@ -159,12 +160,13 @@ func upload(ctx context.Context, t *testing.T, c *clients, filename, title, body
 		ContentType: "text/markdown",
 		SizeBytes:   int64(len(body)),
 		Title:       title,
+		Sha256:      fmt.Sprintf("%x", sha256.Sum256([]byte(body))),
 	}))
 	if err != nil {
 		t.Fatalf("CreateUpload: %v", err)
 	}
 	job := created.Msg.GetJob()
-	put(ctx, t, created.Msg.GetUploadUrl(), []byte(body))
+	put(ctx, t, created.Msg.GetUploadUrl(), job.GetContentType(), []byte(body))
 	if _, err := c.completeUpload.CallUnary(ctx, connect.NewRequest(&ingestionv1.CompleteUploadRequest{JobId: job.GetId()})); err != nil {
 		t.Fatalf("CompleteUpload: %v", err)
 	}
@@ -300,13 +302,15 @@ func waitReady(ctx context.Context, t *testing.T, c *clients) {
 	}
 }
 
-// put uploads the file to the presigned URL, as the browser does.
-func put(ctx context.Context, t *testing.T, url string, body []byte) {
+// put uploads the file to the presigned URL, as the browser does: with the
+// content type the URL is signed for.
+func put(ctx context.Context, t *testing.T, url, contentType string, body []byte) {
 	t.Helper()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewReader(body))
 	if err != nil {
 		t.Fatalf("upload request: %v", err)
 	}
+	req.Header.Set("Content-Type", contentType)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatalf("upload to %s: %v", url, err)

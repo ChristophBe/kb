@@ -4,7 +4,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { createMemoryRouter, RouterProvider, useLocation } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import { HeaderSearch } from "./HeaderSearch.tsx";
-import { searchProviders } from "./pages.ts";
+import { pagesProvider, searchProviders } from "./pages.ts";
 
 const Icon = () => <svg aria-hidden="true" />;
 
@@ -71,7 +71,7 @@ function type(text: string) {
 describe("HeaderSearch", () => {
   it("groups hits by provider, five per group at most", async () => {
     const { container } = renderSearch([
-      ...searchProviders(modules),
+      pagesProvider(modules),
       provider("Documents", 7),
       provider("Conversations", 2),
     ]);

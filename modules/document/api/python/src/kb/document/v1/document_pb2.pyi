@@ -27,7 +27,7 @@ DOCUMENT_STATUS_READY: DocumentStatus
 DOCUMENT_STATUS_FAILED: DocumentStatus
 
 class Document(_message.Message):
-    __slots__ = ("id", "title", "filename", "content_type", "size_bytes", "status", "status_detail", "chunk_count", "metadata", "create_time", "update_time", "owner_id")
+    __slots__ = ("id", "title", "filename", "content_type", "size_bytes", "status", "status_detail", "chunk_count", "metadata", "create_time", "update_time", "owner_id", "sha256")
     class MetadataEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -47,6 +47,7 @@ class Document(_message.Message):
     CREATE_TIME_FIELD_NUMBER: _ClassVar[int]
     UPDATE_TIME_FIELD_NUMBER: _ClassVar[int]
     OWNER_ID_FIELD_NUMBER: _ClassVar[int]
+    SHA256_FIELD_NUMBER: _ClassVar[int]
     id: str
     title: str
     filename: str
@@ -59,7 +60,8 @@ class Document(_message.Message):
     create_time: _timestamp_pb2.Timestamp
     update_time: _timestamp_pb2.Timestamp
     owner_id: str
-    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., status: _Optional[_Union[DocumentStatus, str]] = ..., status_detail: _Optional[str] = ..., chunk_count: _Optional[int] = ..., metadata: _Optional[_Mapping[str, str]] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., owner_id: _Optional[str] = ...) -> None: ...
+    sha256: str
+    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., status: _Optional[_Union[DocumentStatus, str]] = ..., status_detail: _Optional[str] = ..., chunk_count: _Optional[int] = ..., metadata: _Optional[_Mapping[str, str]] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., owner_id: _Optional[str] = ..., sha256: _Optional[str] = ...) -> None: ...
 
 class Chunk(_message.Message):
     __slots__ = ("document_id", "index", "text", "metadata")
@@ -103,7 +105,7 @@ class ScoredDocument(_message.Message):
     def __init__(self, document_id: _Optional[str] = ..., title: _Optional[str] = ..., score: _Optional[float] = ..., best_chunk: _Optional[_Union[Chunk, _Mapping]] = ...) -> None: ...
 
 class CreateDocumentRequest(_message.Message):
-    __slots__ = ("title", "filename", "content_type", "size_bytes", "metadata")
+    __slots__ = ("title", "filename", "content_type", "size_bytes", "metadata", "sha256")
     class MetadataEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -116,12 +118,14 @@ class CreateDocumentRequest(_message.Message):
     CONTENT_TYPE_FIELD_NUMBER: _ClassVar[int]
     SIZE_BYTES_FIELD_NUMBER: _ClassVar[int]
     METADATA_FIELD_NUMBER: _ClassVar[int]
+    SHA256_FIELD_NUMBER: _ClassVar[int]
     title: str
     filename: str
     content_type: str
     size_bytes: int
     metadata: _containers.ScalarMap[str, str]
-    def __init__(self, title: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., metadata: _Optional[_Mapping[str, str]] = ...) -> None: ...
+    sha256: str
+    def __init__(self, title: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., metadata: _Optional[_Mapping[str, str]] = ..., sha256: _Optional[str] = ...) -> None: ...
 
 class CreateDocumentResponse(_message.Message):
     __slots__ = ("document", "upload_url")

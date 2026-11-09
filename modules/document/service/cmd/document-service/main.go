@@ -18,6 +18,7 @@ import (
 	"github.com/christoph/kb/platform/go/grpcserver"
 	"github.com/christoph/kb/platform/go/logging"
 	"github.com/christoph/kb/platform/go/postgres"
+	"github.com/christoph/kb/platform/go/telemetry"
 )
 
 type Config struct {
@@ -26,6 +27,8 @@ type Config struct {
 	Storage     storage.Config `envPrefix:"S3_"`
 	// LLMAddr is the llm module, needed only by SearchDocuments.
 	LLMAddr string `env:"LLM_ADDR" envDefault:"localhost:9004"`
+	// Limits bound uploads: KB_MAX_UPLOAD_BYTES, KB_ALLOWED_CONTENT_TYPES.
+	Limits server.Limits
 }
 
 func main() {
@@ -49,6 +52,11 @@ func run() error {
 	log := logging.Setup(cfg.LogLevel, cfg.LogFormat, "document-service")
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	shutdown, err := telemetry.Setup(ctx, cfg.OTelEndpoint, "document-service")
+	if err != nil {
+		return err
+	}
+	defer shutdown()
 
 	pool, err := postgres.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -79,6 +87,6 @@ func run() error {
 	defer llmConn.Close()
 
 	srv := grpcserver.New(log)
-	documentv1.RegisterDocumentServiceServer(srv, server.New(store.NewRepo(pool), objects, llmv1.NewLlmServiceClient(llmConn), log))
+	documentv1.RegisterDocumentServiceServer(srv, server.New(store.NewRepo(pool), objects, llmv1.NewLlmServiceClient(llmConn), cfg.Limits, log))
 	return srv.Run(ctx, cfg.GRPCPort)
 }

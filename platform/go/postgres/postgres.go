@@ -7,18 +7,25 @@ import (
 	"io/fs"
 	"log/slog"
 
+	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"github.com/pressly/goose/v3/database"
+
+	"github.com/christoph/kb/platform/go/telemetry"
 )
 
 // Connect opens a connection pool and verifies it with a ping. Options can
 // adjust the pool config, e.g. to register extension types in AfterConnect.
+// With tracing on, every query gets a span.
 func Connect(ctx context.Context, url string, opts ...func(*pgxpool.Config)) (*pgxpool.Pool, error) {
 	cfg, err := pgxpool.ParseConfig(url)
 	if err != nil {
 		return nil, err
+	}
+	if telemetry.Enabled() {
+		cfg.ConnConfig.Tracer = otelpgx.NewTracer(otelpgx.WithDisableAcquireTracer())
 	}
 	for _, opt := range opts {
 		opt(cfg)

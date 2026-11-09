@@ -9,6 +9,11 @@ dependencies = [
     "grpcio-reflection>=1.85.0",
     "grpcio-status>=1.85.0",
     "nats-py>=2.11",
+    # Tracing (kb_platform.telemetry); keep the four on one release.
+    "opentelemetry-api==1.45.1",
+    "opentelemetry-exporter-otlp-proto-grpc==1.45.1",
+    "opentelemetry-instrumentation-grpc==0.66b1",
+    "opentelemetry-sdk==1.45.1",
     "pydantic-settings>=2.11",
 ]
 

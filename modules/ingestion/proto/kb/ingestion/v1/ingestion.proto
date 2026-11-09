@@ -11,9 +11,13 @@ option go_package = "github.com/christoph/kb/modules/ingestion/api/go/ingestionv
 // (extraction, chunking, embedding).
 service IngestionService {
   // CreateUpload registers an ingestion job and returns a presigned URL the
-  // client uploads the file to.
+  // client uploads the file to. A file the document module does not accept
+  // (empty, too large, of a type it does not take) is rejected with field
+  // violations.
   rpc CreateUpload(CreateUploadRequest) returns (CreateUploadResponse);
-  // CompleteUpload confirms the upload finished and queues processing.
+  // CompleteUpload confirms the upload finished and queues processing. A
+  // file the document module rejects once uploaded (too large, not matching
+  // its sha256) fails the job instead, with the reason in error.
   rpc CompleteUpload(CompleteUploadRequest) returns (CompleteUploadResponse);
   rpc GetJob(GetJobRequest) returns (GetJobResponse);
   rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
@@ -75,10 +79,15 @@ message CreateUploadRequest {
   int64 size_bytes = 3;
   // Defaults to the filename when empty.
   string title = 4;
+  // Optional SHA-256 of the file, in hex. A file uploaded with other content
+  // fails its job on CompleteUpload.
+  string sha256 = 5;
 }
 
 message CreateUploadResponse {
   Job job = 1;
+  // A presigned URL to PUT the file to, sending the job's content_type as
+  // Content-Type and exactly size_bytes bytes; other uploads are refused.
   string upload_url = 2;
 }
 

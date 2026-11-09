@@ -4,5 +4,6 @@ services:
   - name: notes-service
     language: go
     port: 9101
+    metrics_port: 9201
     grpc_services: [kb.notes.v1.NotesService]
 ui: "@kb/module-notes"

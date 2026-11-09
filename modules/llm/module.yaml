@@ -6,6 +6,7 @@ services:
   - name: llm-service
     language: python
     port: 9004
+    metrics_port: 9104
     # Deployment defaults (Helm components.llm-service.env); the code's own
     # defaults point at localhost. The chart's Ollama (ollama.enabled) or any
     # other reachable Ollama.

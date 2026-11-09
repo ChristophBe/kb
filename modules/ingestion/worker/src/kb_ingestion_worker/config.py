@@ -5,6 +5,7 @@ from pydantic import Field, model_validator
 
 
 class Settings(PlatformSettings):
+    metrics_port: int = 9105
     document_addr: str = "localhost:9001"
     llm_addr: str = "localhost:9004"
     # Chunks are measured in tokens of the embedding model's tokenizer: a name

@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import logging
+import time
 from collections.abc import Awaitable, Callable
 from typing import Protocol
 
@@ -10,6 +11,7 @@ from kb.document.v1 import document_pb2, document_pb2_grpc
 from kb.ingestion.v1 import events_pb2, ingestion_pb2
 from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_platform.nats import receive
+from prometheus_client import Counter, Gauge, Histogram
 
 from .chunking import chunk_markdown, chunk_pages
 from .config import Settings
@@ -24,6 +26,29 @@ SUBJECT_STARTED = "kb.ingestion.started"
 SUBJECT_PROGRESS = "kb.ingestion.progress"
 SUBJECT_PROCESSED = "kb.ingestion.processed"
 SUBJECT_FAILED = "kb.ingestion.failed"
+
+# Metrics (docs/metrics.md). An attempt ends processed, failed (for good) or
+# retried (a transient error; the upload is delivered again later).
+JOBS = Counter(
+    "kb_ingestion_worker_jobs",
+    "Processing attempts of uploads, by outcome: processed, failed or retried.",
+    ["outcome"],
+)
+JOB_SECONDS = Histogram(
+    "kb_ingestion_worker_job_duration_seconds",
+    "Time one processing attempt took (download, extract, chunk, embed, store), by outcome.",
+    ["outcome"],
+    buckets=(0.5, 1, 2.5, 5, 10, 30, 60, 120, 300, 600, 1800, 3600),
+)
+JOBS_IN_PROGRESS = Gauge(
+    "kb_ingestion_worker_jobs_in_progress", "Uploads this worker is processing right now."
+)
+CHUNKS = Counter("kb_ingestion_worker_chunks", "Chunks stored for processed uploads.")
+
+
+def _observe(outcome: str, start: float) -> None:
+    JOBS.labels(outcome).inc()
+    JOB_SECONDS.labels(outcome).observe(time.perf_counter() - start)
 
 
 class PeerGate:
@@ -116,6 +141,7 @@ class Processor:
         events of a reprocessed job aren't deduplicated away. The document's
         chunks are replaced, not appended to (AddChunks)."""
         job, doc_id, run = event.job_id, event.document_id, event.run or 1
+        start = time.perf_counter()
         await self._publish(
             SUBJECT_STARTED,
             events_pb2.ProcessingStarted(job_id=job, document_id=doc_id, run=run),
@@ -135,6 +161,7 @@ class Processor:
                     delay,
                     error,
                 )
+                _observe("retried", start)
                 return delay
             log.exception("processing failed for document %s", doc_id)
             if is_transient(exc):
@@ -145,6 +172,7 @@ class Processor:
                 events_pb2.ProcessingFailed(job_id=job, document_id=doc_id, error=error, run=run),
                 f"{job}:{run}:failed",
             )
+            _observe("failed", start)
             return None
         log.info("processed document %s into %d chunks", doc_id, count)
         await self._publish(
@@ -154,6 +182,8 @@ class Processor:
             ),
             f"{job}:{run}:processed",
         )
+        _observe("processed", start)
+        CHUNKS.inc(count)
         return None
 
     def _retry_delay(self, attempt: int) -> float:
@@ -278,7 +308,7 @@ async def deliver(
     attempt = msg.num_delivered
     beat = asyncio.create_task(_keep_alive(msg, heartbeat)) if heartbeat else None
     try:
-        with receive(SUBJECT_UPLOADED, msg.headers):
+        with receive(SUBJECT_UPLOADED, msg.headers), JOBS_IN_PROGRESS.track_inprogress():
             retry_in = await processor.handle(event, attempt, last=attempt >= max_deliver)
     finally:
         if beat:

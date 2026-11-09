@@ -18,6 +18,7 @@ import (
 	"github.com/christoph/kb/platform/go/config"
 	"github.com/christoph/kb/platform/go/grpcserver"
 	"github.com/christoph/kb/platform/go/logging"
+	"github.com/christoph/kb/platform/go/metrics"
 	"github.com/christoph/kb/platform/go/postgres"
 	"github.com/christoph/kb/platform/go/telemetry"
 )
@@ -49,6 +50,9 @@ func run() error {
 	if cfg.GRPCPort == 0 {
 		cfg.GRPCPort = 9001
 	}
+	if cfg.MetricsPort == 0 {
+		cfg.MetricsPort = 9101
+	}
 	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
 		return grpcserver.Probe(cfg.GRPCPort)
 	}
@@ -60,6 +64,9 @@ func run() error {
 		return err
 	}
 	defer shutdown()
+	if err := metrics.Start(ctx, cfg.MetricsPort, log); err != nil {
+		return err
+	}
 
 	pool, err := postgres.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {

@@ -11,7 +11,10 @@ import (
 	"github.com/christoph/kb/modules/ingestion/service/internal/app"
 )
 
-// Jobs implements app.Jobs on top of the generated queries.
+// Jobs implements app.Jobs on top of the generated queries. Every change of
+// a job's status counts in kb_ingestion_job_transitions_total; the updates
+// only match when the status really changes, so redelivered events don't
+// count twice.
 type Jobs struct {
 	q Querier
 }
@@ -32,6 +35,7 @@ func (j *Jobs) Create(ctx context.Context, job app.Job) (app.Job, error) {
 	if err != nil {
 		return app.Job{}, err
 	}
+	countTransition(row)
 	return toJob(row), nil
 }
 
@@ -68,6 +72,7 @@ func (j *Jobs) Advance(ctx context.Context, t app.Transition) (app.Job, error) {
 	if err != nil {
 		return app.Job{}, err
 	}
+	countTransition(row)
 	return toJob(row), nil
 }
 
@@ -92,6 +97,7 @@ func (j *Jobs) Reprocess(ctx context.Context, owner string, id uuid.UUID) (app.J
 	if err != nil {
 		return app.Job{}, err
 	}
+	countTransition(row)
 	return toJob(row), nil
 }
 

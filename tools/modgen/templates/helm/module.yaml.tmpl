@@ -4,5 +4,5 @@ The [[.ID]] module's components; kb.component (templates/_component.tpl)
 renders each, their settings come from .Values.components.<name>.
 */ -}}
 [[- range .Services]]
-{{- include "kb.component" (dict "root" $ "name" "[[.Name]]" "module" "[[$.ID]]" "language" "[[.Language]]" "port" [[.Port]] "infra" (list[[range .Infra]] "[[.]]"[[end]]) "peers" (dict[[range .Peers]] "[[.Env]]" "[[.Addr]]"[[end]])) }}
+{{- include "kb.component" (dict "root" $ "name" "[[.Name]]" "module" "[[$.ID]]" "language" "[[.Language]]" "port" [[.Port]] "metricsPort" [[.MetricsPort]] "infra" (list[[range .Infra]] "[[.]]"[[end]]) "peers" (dict[[range .Peers]] "[[.Env]]" "[[.Addr]]"[[end]])) }}
 [[- end]]

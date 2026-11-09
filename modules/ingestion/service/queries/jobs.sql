@@ -46,3 +46,8 @@ UPDATE ingestion.jobs
 SET status = 2, error = '', chunk_count = 0, progress = 0, stage = 0, run = run + 1, updated_at = now()
 WHERE id = sqlc.arg(id) AND owner_id = sqlc.arg(owner_id) AND status IN (4, 5)
 RETURNING *;
+
+-- CountJobsByStatus counts all jobs per status, for the kb_ingestion_jobs
+-- metric (docs/metrics.md).
+-- name: CountJobsByStatus :many
+SELECT status, count(*)::bigint AS jobs FROM ingestion.jobs GROUP BY status;

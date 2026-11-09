@@ -48,7 +48,8 @@ func TestLoadModulesRejectsInvalidManifests(t *testing.T) {
 		"missing title": "id: x\n",
 		"unknown infra": "id: x\ntitle: X\nservices: [{name: s, language: python, infra: [redis]}]\n",
 		"twice infra":   "id: x\ntitle: X\nservices: [{name: s, language: python, infra: [nats, nats]}]\n",
-		"bad env":       "id: x\ntitle: X\nservices: [{name: s, language: python, env: {PORT: \"1\"}}]\n",
+		"bad env":       "id: x\ntitle: X\nservices: [{name: s, language: python, metrics_port: 9100, env: {PORT: \"1\"}}]\n",
+		"no metrics":    "id: x\ntitle: X\nservices: [{name: s, language: python}]\n",
 	}
 	for name, manifest := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -69,7 +70,7 @@ func TestLoadModulesRejectsInvalidManifests(t *testing.T) {
 func TestLoadModulesRejectsDuplicatePorts(t *testing.T) {
 	dir := t.TempDir()
 	for _, id := range []string{"a", "b"} {
-		manifest := "id: " + id + "\ntitle: T\nservices: [{name: " + id + "-svc, language: python, port: 9000}]\n"
+		manifest := "id: " + id + "\ntitle: T\nservices: [{name: " + id + "-svc, language: python, port: 9000, metrics_port: 9100}]\n"
 		if err := os.MkdirAll(filepath.Join(dir, id), 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -150,7 +151,7 @@ func TestLoadModulesValidatesInternal(t *testing.T) {
 	for name, extra := range cases {
 		t.Run(name, func(t *testing.T) {
 			dir := t.TempDir()
-			writeManifest(t, dir, "x", "id: x\ntitle: X\nservices:\n  - name: x-service\n    language: python\n    port: 9000\n    "+extra+"\n")
+			writeManifest(t, dir, "x", "id: x\ntitle: X\nservices:\n  - name: x-service\n    language: python\n    port: 9000\n    metrics_port: 9100\n    "+extra+"\n")
 			protoDir := filepath.Join(dir, "x", "proto", "kb", "x", "v1")
 			if err := os.MkdirAll(protoDir, 0o755); err != nil {
 				t.Fatal(err)
@@ -167,7 +168,7 @@ func TestLoadModulesValidatesInternal(t *testing.T) {
 
 func TestLoadModulesResolvesGoMainPackage(t *testing.T) {
 	dir := t.TempDir()
-	writeManifest(t, dir, "x", "id: x\ntitle: X\nservices: [{name: x-service, language: go, port: 9000}]\n")
+	writeManifest(t, dir, "x", "id: x\ntitle: X\nservices: [{name: x-service, language: go, port: 9000, metrics_port: 9100}]\n")
 	if _, err := LoadModules(dir); err == nil || !strings.Contains(err.Error(), "cmd/x-service") {
 		t.Fatalf("err = %v, want missing main package error", err)
 	}

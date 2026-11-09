@@ -127,7 +127,7 @@ affinity: {}
 # secretKeyRef for KB_ANTHROPIC_API_KEY. Components with infra get their
 # connection settings from the values above, peers their KB_<MODULE>_ADDR.
 components:
-  # notes-service (notes module, go, gRPC :9101; uses postgres, s3)
+  # notes-service (notes module, go, gRPC :9101, metrics :9201; uses postgres, s3)
   notes-service:
     enabled: true
     replicas: 1
@@ -139,7 +139,7 @@ components:
     resources:
       requests: { cpu: 10m, memory: 32Mi }
       limits: { memory: 256Mi }
-  # search-worker (search module, python; uses nats)
+  # search-worker (search module, python, metrics :9202; uses nats)
   search-worker:
     enabled: true
     replicas: 1

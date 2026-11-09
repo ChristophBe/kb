@@ -22,6 +22,7 @@ from kb_ingestion_worker.worker import (
     deliver,
     is_transient,
 )
+from prometheus_client import REGISTRY
 
 
 class FakeDocuments:
@@ -267,6 +268,32 @@ async def test_permanent_errors_fail_at_once_without_retries() -> None:
     assert await proc.handle(uploaded("image.png", "image/png"), 1, last=False) is None
     assert [s for s, _ in published] == [SUBJECT_STARTED, SUBJECT_FAILED]
     assert docs.statuses[-1] == document_pb2.DOCUMENT_STATUS_FAILED
+
+
+def _attempts(outcome: str) -> float:
+    return REGISTRY.get_sample_value("kb_ingestion_worker_jobs_total", {"outcome": outcome}) or 0
+
+
+async def test_attempts_are_counted_by_outcome() -> None:
+    before = {o: _attempts(o) for o in ("processed", "failed", "retried")}
+    chunks_before = REGISTRY.get_sample_value("kb_ingestion_worker_chunks_total") or 0
+    llm = FakeLlm([rpc_error(grpc.StatusCode.UNAVAILABLE)])
+    proc, docs, _ = make(b"text", llm)
+    await proc.handle(uploaded("notes.md"), 1, last=False)
+    await proc.handle(uploaded("notes.md"), 2, last=False)
+    failing, _, _ = make(b"\x00\x01")
+    await failing.handle(uploaded("image.png", "image/png"), 1, last=False)
+
+    assert {o: _attempts(o) - n for o, n in before.items()} == {
+        "processed": 1,
+        "failed": 1,
+        "retried": 1,
+    }
+    chunks = REGISTRY.get_sample_value("kb_ingestion_worker_chunks_total") or 0
+    assert chunks - chunks_before == len(docs.chunks)
+    assert REGISTRY.get_sample_value(
+        "kb_ingestion_worker_job_duration_seconds_count", {"outcome": "processed"}
+    )
 
 
 async def test_deliver_naks_a_retry_and_acks_otherwise() -> None:

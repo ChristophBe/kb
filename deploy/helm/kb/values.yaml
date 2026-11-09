@@ -127,7 +127,7 @@ affinity: {}
 # secretKeyRef for KB_ANTHROPIC_API_KEY. Components with infra get their
 # connection settings from the values above, peers their KB_<MODULE>_ADDR.
 components:
-  # chat-service (chat module, python, gRPC :9003; uses postgres)
+  # chat-service (chat module, python, gRPC :9003, metrics :9103; uses postgres)
   chat-service:
     enabled: true
     replicas: 1
@@ -138,7 +138,7 @@ components:
     resources:
       requests: { cpu: 50m, memory: 128Mi }
       limits: { memory: 1Gi }
-  # document-service (document module, go, gRPC :9001; uses postgres, s3)
+  # document-service (document module, go, gRPC :9001, metrics :9101; uses postgres, s3)
   document-service:
     enabled: true
     replicas: 1
@@ -154,7 +154,7 @@ components:
     resources:
       requests: { cpu: 10m, memory: 32Mi }
       limits: { memory: 256Mi }
-  # ingestion-service (ingestion module, go, gRPC :9002; uses postgres, nats)
+  # ingestion-service (ingestion module, go, gRPC :9002, metrics :9102; uses postgres, nats)
   ingestion-service:
     enabled: true
     replicas: 1
@@ -165,7 +165,7 @@ components:
     resources:
       requests: { cpu: 10m, memory: 32Mi }
       limits: { memory: 256Mi }
-  # ingestion-worker (ingestion module, python; uses nats)
+  # ingestion-worker (ingestion module, python, metrics :9105; uses nats)
   ingestion-worker:
     enabled: true
     replicas: 1
@@ -176,7 +176,7 @@ components:
     resources:
       requests: { cpu: 50m, memory: 128Mi }
       limits: { memory: 1Gi }
-  # llm-service (llm module, python, gRPC :9004)
+  # llm-service (llm module, python, gRPC :9004, metrics :9104)
   llm-service:
     enabled: true
     replicas: 1

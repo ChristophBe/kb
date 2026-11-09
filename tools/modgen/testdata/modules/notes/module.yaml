@@ -4,6 +4,7 @@ services:
   - name: notes-service
     language: go
     port: 9101
+    metrics_port: 9201
     infra: [postgres, s3]
     env:
       KB_NOTES_LIMIT: "100"

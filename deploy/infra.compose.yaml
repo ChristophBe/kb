@@ -59,7 +59,9 @@ services:
 
   # Observability (`--profile observability`, docs/operations/observability.md).
   # Services export to the collector once KB_OTEL_ENDPOINT points at it; it
-  # forwards traces to Jaeger, whose UI is on KB_JAEGER_PORT.
+  # forwards traces to Jaeger, whose UI is on KB_JAEGER_PORT. Prometheus
+  # scrapes every component's /metrics (docs/metrics.md); its UI is on
+  # KB_PROMETHEUS_PORT.
   otel-collector:
     image: otel/opentelemetry-collector:0.164.0
     profiles: [observability]
@@ -73,8 +75,18 @@ services:
     profiles: [observability]
     ports: ["${KB_JAEGER_PORT:-16686}:16686"]
 
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    profiles: [observability]
+    # The scrape targets are generated from the module manifests (task gen).
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus:/prometheus
+    ports: ["${KB_PROMETHEUS_PORT:-9090}:9090"]
+
 volumes:
   postgres:
   s3:
   nats:
   dex:
+  prometheus:

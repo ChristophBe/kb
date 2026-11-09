@@ -37,6 +37,9 @@ type Service struct {
 	Language string `yaml:"language"`
 	// Port is the gRPC port; 0 for components that serve no API (workers).
 	Port int `yaml:"port"`
+	// MetricsPort serves the component's Prometheus metrics at /metrics
+	// (KB_METRICS_PORT); every component, workers included, has one.
+	MetricsPort int `yaml:"metrics_port"`
 	// GRPCServices are the fully qualified gRPC services the component
 	// serves; Envoy routes their public methods to the browser.
 	GRPCServices []string `yaml:"grpc_services"`
@@ -127,13 +130,15 @@ func LoadModules(dir string) ([]Module, error) {
 	ports := map[int]string{}
 	for _, m := range modules {
 		for _, s := range m.Services {
-			if s.Port == 0 {
-				continue
+			for _, port := range []int{s.Port, s.MetricsPort} {
+				if port == 0 {
+					continue
+				}
+				if other, ok := ports[port]; ok {
+					return nil, fmt.Errorf("port %d used by both %s and %s", port, other, s.Name)
+				}
+				ports[port] = s.Name
 			}
-			if other, ok := ports[s.Port]; ok {
-				return nil, fmt.Errorf("port %d used by both %s and %s", s.Port, other, s.Name)
-			}
-			ports[s.Port] = s.Name
 		}
 	}
 	if err := validateDependencies(modules); err != nil {
@@ -230,6 +235,9 @@ func (m Module) validate(dirName string) error {
 		}
 		if len(s.GRPCServices) > 0 && s.Port == 0 {
 			return fmt.Errorf("service %s: grpc_services require a port", s.Name)
+		}
+		if s.MetricsPort == 0 {
+			return fmt.Errorf("service %s: metrics_port is required", s.Name)
 		}
 		for i, kind := range s.Infra {
 			if !slices.Contains(InfraKinds, kind) {

@@ -95,6 +95,7 @@ func Render(modules []Module) ([]File, error) {
 	for _, out := range []struct{ path, tmpl string }{
 		{"deploy/envoy/envoy.yaml", "envoy.yaml.tmpl"},
 		{"compose.yaml", "compose.yaml.tmpl"},
+		{"deploy/prometheus/prometheus.yml", "prometheus.yml.tmpl"},
 		{"deploy/release.compose.yaml", "release.compose.yaml.tmpl"},
 		{"apps/web/src/modules.gen.ts", "modules.gen.ts.tmpl"},
 		{".github/ISSUE_TEMPLATE/epic.yml", "issue-epic.yml.tmpl"},

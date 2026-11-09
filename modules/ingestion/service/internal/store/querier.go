@@ -14,6 +14,9 @@ type Querier interface {
 	// terminal jobs (DONE=4, FAILED=5) never change, and events of an earlier run
 	// are ignored. The only way back is ReprocessJob. A DONE job is 100% done.
 	AdvanceJob(ctx context.Context, arg AdvanceJobParams) (IngestionJob, error)
+	// CountJobsByStatus counts all jobs per status, for the kb_ingestion_jobs
+	// metric (docs/metrics.md).
+	CountJobsByStatus(ctx context.Context) ([]CountJobsByStatusRow, error)
 	// Queries taking an owner_id act for that user and find only their jobs. The
 	// others apply the worker's events, which carry no user, and act on any job.
 	CreateJob(ctx context.Context, arg CreateJobParams) (IngestionJob, error)

@@ -4,6 +4,7 @@ import logging
 from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_platform.grpc import serve
 from kb_platform.logging import setup_logging
+from kb_platform.metrics import start_metrics_server
 from kb_platform.telemetry import setup_tracing
 
 from .config import Settings
@@ -17,6 +18,7 @@ async def run() -> None:
     settings = Settings()
     setup_logging(settings.log_level, settings.log_format)
     setup_tracing(settings.otel_endpoint, "llm-service")
+    start_metrics_server(settings.metrics_port)
     try:
         providers = build_providers(settings)
     except ValueError as exc:  # misconfiguration, e.g. a missing API key

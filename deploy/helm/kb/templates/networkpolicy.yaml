@@ -1,7 +1,9 @@
 {{- /*
 Whoever reaches a module service directly can claim any user with the
 x-kb-user header (docs/adr/0009), so only the release's own pods (Envoy and
-the other modules) may connect to the module components.
+the other modules) may connect to the module components. The metrics port
+(/metrics, no user data) is open to any pod, so a Prometheus in another
+namespace can scrape it.
 */ -}}
 {{- if .Values.networkPolicy.enabled }}
 apiVersion: networking.k8s.io/v1
@@ -21,4 +23,6 @@ spec:
             matchLabels:
               app.kubernetes.io/part-of: kb
               app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    - ports:
+        - port: metrics
 {{- end }}

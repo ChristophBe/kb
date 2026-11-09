@@ -9,6 +9,9 @@ type Base struct {
 	LogLevel  string `env:"LOG_LEVEL" envDefault:"info"`
 	LogFormat string `env:"LOG_FORMAT" envDefault:"json"`
 	GRPCPort  int    `env:"GRPC_PORT"`
+	// MetricsPort serves Prometheus metrics at /metrics (package metrics);
+	// like GRPCPort, each service defaults it to the port in its module.yaml.
+	MetricsPort int `env:"METRICS_PORT"`
 	// OTelEndpoint is the OTLP/gRPC endpoint spans go to, e.g.
 	// http://otel-collector:4317; tracing is off while it is empty.
 	OTelEndpoint string `env:"OTEL_ENDPOINT"`

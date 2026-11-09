@@ -128,7 +128,7 @@ affinity: {}
 # connection settings from the values above, peers their KB_<MODULE>_ADDR.
 components:
 [[- range .Modules]][[$m := .]][[range .Services]]
-  # [[.Name]] ([[$m.ID]] module, [[.Language]][[if .Port]], gRPC :[[.Port]][[end]][[if .Infra]]; uses [[range $i, $k := .Infra]][[if $i]], [[end]][[$k]][[end]][[end]])
+  # [[.Name]] ([[$m.ID]] module, [[.Language]][[if .Port]], gRPC :[[.Port]][[end]], metrics :[[.MetricsPort]][[if .Infra]]; uses [[range $i, $k := .Infra]][[if $i]], [[end]][[$k]][[end]][[end]])
   [[.Name]]:
     enabled: true
     replicas: 1

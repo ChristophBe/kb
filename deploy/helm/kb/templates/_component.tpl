@@ -1,9 +1,10 @@
 {{- /*
 kb.component renders one module component (a service or worker from a
-module.yaml): a Deployment and, when it serves gRPC, a Service. The
+module.yaml): a Deployment and, when it serves gRPC, a Service. Pods carry
+the prometheus.io/* annotations for annotation-based scraping of /metrics. The
 generated templates/modules/<id>.yaml call it with the manifest's facts:
   name, module, language (go | python), port (0 for workers),
-  infra (list of postgres | nats | s3), peers (KB_<MODULE>_ADDR -> address).
+  metricsPort (Prometheus /metrics, every component), infra (list of postgres | nats | s3), peers (KB_<MODULE>_ADDR -> address).
 Settings an operator changes come from .Values.components.<name>.
 
 Services apply their own migrations at startup (goose / Alembic, one version
@@ -28,6 +29,10 @@ spec:
   template:
     metadata:
       labels: {{- include "kb.labels" (dict "root" $root "component" .name "module" .module) | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .metricsPort | quote }}
+        prometheus.io/path: /metrics
     spec:
       {{- with include "kb.podDefaults" $root | trim }}{{ . | nindent 6 }}{{ end }}
       {{- if and $root.Values.infra.enabled .infra }}
@@ -53,6 +58,8 @@ spec:
             - name: KB_GRPC_PORT
               value: {{ .port | quote }}
             {{- end }}
+            - name: KB_METRICS_PORT
+              value: {{ .metricsPort | quote }}
             {{- range $key, $addr := .peers }}
             - name: {{ $key }}
               value: {{ $addr | quote }}
@@ -71,10 +78,14 @@ spec:
             {{- with $v.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- if .port }}
           ports:
+            {{- if .port }}
             - name: grpc
               containerPort: {{ .port }}
+            {{- end }}
+            - name: metrics
+              containerPort: {{ .metricsPort }}
+          {{- if .port }}
           # grpc.health.v1, as the compose healthchecks.
           startupProbe:
             grpc: { port: {{ .port }} }
@@ -104,6 +115,9 @@ spec:
       port: {{ .port }}
       targetPort: grpc
       appProtocol: kubernetes.io/h2c
+    - name: metrics
+      port: {{ .metricsPort }}
+      targetPort: metrics
 {{- end }}
 {{- end }}
 {{- end -}}

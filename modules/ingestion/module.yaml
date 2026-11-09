@@ -6,9 +6,11 @@ services:
   - name: ingestion-service
     language: go
     port: 9002
+    infra: [postgres, nats]
     grpc_services: [kb.ingestion.v1.IngestionService]
   - name: ingestion-worker
     language: python
+    infra: [nats]
 ui: "@kb/module-ingestion"
 # Documents are created and filled through the document module; the worker embeds via llm.
 depends_on: [document, llm]

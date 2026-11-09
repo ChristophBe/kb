@@ -1,0 +1,10 @@
+apiVersion: v2
+name: kb
+description: The kb knowledge base (every module, the gateway and the web shell); optionally with dev infrastructure.
+type: application
+# The chart's own version, and the kb release whose images it runs by default
+# (image.tag). Install guide: docs/operations/kubernetes.md.
+version: 0.1.0
+appVersion: "0.2.1"
+home: https://github.com/ChristophBe/kb
+sources: [https://github.com/ChristophBe/kb]

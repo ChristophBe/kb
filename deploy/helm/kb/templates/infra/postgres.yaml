@@ -1,0 +1,18 @@
+{{- if .Values.infra.enabled }}
+{{- $container := printf `
+env:
+  - { name: POSTGRES_DB, value: kb }
+  - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
+  - name: POSTGRES_USER
+    valueFrom: { secretKeyRef: { name: %s, key: postgres-user } }
+  - name: POSTGRES_PASSWORD
+    valueFrom: { secretKeyRef: { name: %s, key: postgres-password } }
+readinessProbe:
+  exec: { command: [sh, -c, 'pg_isready -U "$POSTGRES_USER"'] }
+  periodSeconds: 2
+livenessProbe:
+  exec: { command: [sh, -c, 'pg_isready -U "$POSTGRES_USER"'] }
+  periodSeconds: 10` .Values.infra.secretName .Values.infra.secretName -}}
+{{- include "kb.infraServer" (dict "root" . "name" "postgres" "image" .Values.infra.images.postgres "port" 5432
+  "dataPath" "/var/lib/postgresql/data" "container" $container) }}
+{{- end }}

@@ -6,6 +6,11 @@ services:
   - name: document-service
     language: go
     port: 9001
+    infra: [postgres, s3]
+    # Deployment defaults (Helm components.document-service.env): upload limits.
+    env:
+      KB_MAX_UPLOAD_BYTES: "52428800"
+      KB_ALLOWED_CONTENT_TYPES: application/pdf,text/*,application/json,application/yaml,application/x-yaml
     grpc_services: [kb.document.v1.DocumentService]
     # Called only by other modules' services (ingestion creates and fills
     # documents, chat retrieves chunks); Envoy does not route them.

@@ -1,0 +1,27 @@
+{{- if .Values.infra.enabled }}
+{{- $container := `
+args: ["server", "-ip.bind=0.0.0.0", "-dir=/data", "-filer", "-s3", "-s3.config=/etc/kb-s3/s3.json"]
+# SeaweedFS takes up to a minute to start its master, volume and filer.
+startupProbe:
+  httpGet: { path: /status, port: 8333 }
+  periodSeconds: 2
+  failureThreshold: 90
+readinessProbe:
+  httpGet: { path: /status, port: 8333 }
+  periodSeconds: 5
+livenessProbe:
+  httpGet: { path: /status, port: 8333 }
+  periodSeconds: 10
+  failureThreshold: 6` -}}
+{{- $mounts := `
+- name: s3-config
+  mountPath: /etc/kb-s3
+  readOnly: true` -}}
+{{- $volumes := printf `
+- name: s3-config
+  secret:
+    secretName: %s
+    items: [{ key: s3.json, path: s3.json }]` .Values.infra.secretName -}}
+{{- include "kb.infraServer" (dict "root" . "name" "s3" "image" .Values.infra.images.s3 "port" 8333
+  "dataPath" "/data" "container" $container "mounts" $mounts "volumes" $volumes) }}
+{{- end }}

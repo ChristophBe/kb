@@ -46,6 +46,9 @@ func TestLoadModulesRejectsInvalidManifests(t *testing.T) {
 		"bad language":  "id: x\ntitle: X\nservices: [{name: s, language: rust}]\n",
 		"missing port":  "id: x\ntitle: X\nservices: [{name: s, language: go, grpc_services: [a.B]}]\n",
 		"missing title": "id: x\n",
+		"unknown infra": "id: x\ntitle: X\nservices: [{name: s, language: python, infra: [redis]}]\n",
+		"twice infra":   "id: x\ntitle: X\nservices: [{name: s, language: python, infra: [nats, nats]}]\n",
+		"bad env":       "id: x\ntitle: X\nservices: [{name: s, language: python, env: {PORT: \"1\"}}]\n",
 	}
 	for name, manifest := range cases {
 		t.Run(name, func(t *testing.T) {

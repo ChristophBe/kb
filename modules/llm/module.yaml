@@ -6,6 +6,12 @@ services:
   - name: llm-service
     language: python
     port: 9004
+    # Deployment defaults (Helm components.llm-service.env); the code's own
+    # defaults point at localhost. The chart's Ollama (ollama.enabled) or any
+    # other reachable Ollama.
+    env:
+      KB_LLM_PROVIDER: ollama
+      KB_OLLAMA_URL: http://ollama:11434
     grpc_services: [kb.llm.v1.LlmService]
     # Generation and embeddings are for other modules' services only (chat,
     # document search, ingestion worker); Envoy does not route them.

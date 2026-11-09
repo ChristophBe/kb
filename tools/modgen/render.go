@@ -9,7 +9,7 @@ import (
 	"text/template"
 )
 
-//go:embed templates/*.tmpl
+//go:embed templates/*.tmpl templates/helm/*.tmpl
 var templateFS embed.FS
 
 var templates = template.Must(template.New("").Funcs(template.FuncMap{
@@ -114,7 +114,17 @@ func Render(modules []Module) ([]File, error) {
 		return nil, err
 	}
 	files = append(files, File{Path: "deploy/images.json", Content: matrix})
-	return files, nil
+	var envoy []byte
+	for _, f := range files {
+		if f.Path == "deploy/envoy/envoy.yaml" {
+			envoy = f.Content
+		}
+	}
+	chart, err := helmFiles(modules, envoy)
+	if err != nil {
+		return nil, err
+	}
+	return append(files, chart...), nil
 }
 
 // args builds a map from alternating keys and values, so templates can pass

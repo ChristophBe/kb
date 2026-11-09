@@ -1,0 +1,52 @@
+{{- /*
+One host for the browser: the gRPC services' paths go to Envoy (generated
+list, templates/_modules.gen.tpl), /dex to the dev Dex, everything else to
+the web shell. The dev SeaweedFS gets its own host, s3.<host>, because
+presigned URLs are signed for a host and use path-style bucket paths.
+*/ -}}
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kb
+  labels: {{- include "kb.labels" (dict "root" . "component" "ingress") | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations: {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- with .Values.ingress.tls }}
+  tls: {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          {{- range include "kb.gatewayPrefixes" . | fromYamlArray }}
+          - path: {{ . }}
+            pathType: Prefix
+            backend:
+              service: { name: envoy, port: { name: http } }
+          {{- end }}
+          {{- if .Values.infra.enabled }}
+          - path: /dex
+            pathType: Prefix
+            backend:
+              service: { name: dex, port: { name: http } }
+          {{- end }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: web, port: { name: http } }
+    {{- if .Values.infra.enabled }}
+    - host: {{ printf "s3.%s" .Values.ingress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: s3, port: { name: s3 } }
+    {{- end }}
+{{- end }}

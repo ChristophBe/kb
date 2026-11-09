@@ -1,0 +1,114 @@
+{{- /*
+The dev OIDC identity provider for infra.enabled, configured like
+deploy/dex/config.yaml.tpl (users alice and bob, password "password"), with
+the web shell's redirect URIs on publicUrl. Not for production.
+*/ -}}
+{{- if .Values.infra.enabled }}
+{{- $base := trimSuffix "/" .Values.publicUrl -}}
+{{- $config := printf `issuer: %s
+
+# Signing keys live as long as the pod; sign in again after a restart.
+storage:
+  type: sqlite3
+  config:
+    file: /var/dex/dex.db
+
+web:
+  http: 0.0.0.0:5556
+  allowedOrigins: ["*"]
+
+oauth2:
+  # password: fetch a token without a browser (tests, scripts, grpcurl).
+  grantTypes: [authorization_code, refresh_token, password]
+  responseTypes: [code]
+  skipApprovalScreen: true
+  passwordConnector: local
+
+expiry:
+  idTokens: 24h
+
+enablePasswordDB: true
+
+# Every user's password is "password".
+staticPasswords:
+  - email: alice@example.com
+    username: alice
+    userID: alice
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+  - email: bob@example.com
+    username: bob
+    userID: bob
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+
+staticClients:
+  # The web shell: a public client using the authorization code flow with PKCE.
+  - id: %s
+    name: kb
+    public: true
+    redirectURIs:
+      - %s/
+      - %s/auth/callback
+  # Command-line tools and tests, with the password grant.
+  - id: kb-cli
+    name: kb CLI
+    public: true
+    redirectURIs: [http://localhost:8000/callback]
+` (include "kb.oidcIssuer" .) .Values.oidc.clientId $base $base -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dex
+  labels: {{- include "kb.labels" (dict "root" . "component" "dex") | nindent 4 }}
+data:
+  config.yaml: |{{- $config | nindent 4 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dex
+  labels: {{- include "kb.labels" (dict "root" . "component" "dex") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {{- include "kb.selectorLabels" (dict "root" . "component" "dex") | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "kb.labels" (dict "root" . "component" "dex") | nindent 8 }}
+      annotations:
+        checksum/config: {{ $config | sha256sum }}
+    spec:
+      {{- with include "kb.podDefaults" . | trim }}{{ . | nindent 6 }}{{ end }}
+      containers:
+        - name: dex
+          image: {{ .Values.infra.images.dex }}
+          args: ["dex", "serve", "/etc/dex/config.yaml"]
+          ports:
+            - name: http
+              containerPort: 5556
+          readinessProbe:
+            httpGet: { path: /dex/healthz, port: http }
+            periodSeconds: 2
+          livenessProbe:
+            httpGet: { path: /dex/healthz, port: http }
+            periodSeconds: 10
+          volumeMounts:
+            - { name: config, mountPath: /etc/dex, readOnly: true }
+            - { name: data, mountPath: /var/dex }
+      volumes:
+        - name: config
+          configMap: { name: dex }
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dex
+  labels: {{- include "kb.labels" (dict "root" . "component" "dex") | nindent 4 }}
+spec:
+  selector: {{- include "kb.selectorLabels" (dict "root" . "component" "dex") | nindent 4 }}
+  ports:
+    - name: http
+      port: 5556
+      targetPort: http
+{{- end }}

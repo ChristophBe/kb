@@ -4,6 +4,9 @@ services:
   - name: notes-service
     language: go
     port: 9101
+    infra: [postgres, s3]
+    env:
+      KB_NOTES_LIMIT: "100"
     grpc_services: [kb.notes.v1.NotesService, kb.notes.v1.NotesAdminService]
     internal:
       - kb.notes.v1.NotesService/IndexNote

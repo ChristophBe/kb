@@ -66,6 +66,14 @@ tasks:
       - uv run lint-imports
       - pnpm exec biome check .
       - pnpm -r typecheck
+      # The chart with external infrastructure and with infra.enabled (CI runners have Helm).
+      - |
+        if command -v helm >/dev/null; then
+          helm lint --strict deploy/helm/kb --set infra.enabled=true
+          helm lint --strict deploy/helm/kb --set oidc.issuer=https://id.example.com --set oidc.jwksUrl=https://id.example.com/keys --set postgres.host=db --set s3.endpoint=s3.example.com
+        else
+          echo "helm not installed: skipping helm lint"
+        fi
 
   fmt:
     desc: Format all code.

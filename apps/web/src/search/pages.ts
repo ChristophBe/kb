@@ -1,13 +1,22 @@
-import type { KbModule, SearchHit, SearchProvider } from "@kb/module-sdk";
-import { helpProvider } from "../help/search.ts";
+import {
+  lazySearch,
+  type ModuleManifest,
+  type SearchHit,
+  type SearchProvider,
+} from "@kb/module-sdk";
 import { navEntries } from "../registry.ts";
+
+/** The user manual's group; the manual loads with the first search, like the help pages. */
+const helpProvider = lazySearch("Help", () =>
+  import("../help/search.ts").then((m) => m.helpProvider.search),
+);
 
 /**
  * The shell's own search group: the pages in the sidebar (the modules' nav
  * items, then Help), matched by their label. Labels that start with the query
  * come first.
  */
-export function pagesProvider(modules: KbModule[]): SearchProvider {
+export function pagesProvider(modules: ModuleManifest[]): SearchProvider {
   const pages: SearchHit[] = [
     { title: "Home", href: "/" },
     ...navEntries(modules).map(({ to, label }) => {
@@ -36,7 +45,7 @@ export function pagesProvider(modules: KbModule[]): SearchProvider {
  * The global search's groups: the shell's pages first, then each module's
  * provider, then the user manual.
  */
-export function searchProviders(modules: KbModule[]): SearchProvider[] {
+export function searchProviders(modules: ModuleManifest[]): SearchProvider[] {
   return [
     pagesProvider(modules),
     ...modules.flatMap((m) => (m.search ? [m.search] : [])),

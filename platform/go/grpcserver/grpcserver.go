@@ -1,5 +1,6 @@
 // Package grpcserver builds gRPC servers with the defaults every service
-// needs: request logging, panic recovery, health checking and reflection.
+// needs: request logging, panic recovery, health checking, reflection and,
+// when tracing is on (see package telemetry), a span per call.
 package grpcserver
 
 import (
@@ -8,14 +9,19 @@ import (
 	"log/slog"
 	"net"
 	"runtime/debug"
+	"strings"
 	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
+
+	"github.com/christoph/kb/platform/go/telemetry"
 )
 
 // Server wraps a grpc.Server together with its health service.
@@ -25,12 +31,17 @@ type Server struct {
 	log    *slog.Logger
 }
 
-// New creates a server with logging and recovery interceptors installed.
+// New creates a server with logging and recovery interceptors installed. With
+// tracing on, each call continues the caller's trace in a server span.
 func New(log *slog.Logger, opts ...grpc.ServerOption) *Server {
-	opts = append([]grpc.ServerOption{
+	defaults := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(recoverUnary(log), userUnary, logUnary(log)),
 		grpc.ChainStreamInterceptor(recoverStream(log), userStream, logStream(log)),
-	}, opts...)
+	}
+	if telemetry.Enabled() {
+		defaults = append(defaults, grpc.StatsHandler(otelgrpc.NewServerHandler(otelgrpc.WithFilter(notHealth))))
+	}
+	opts = append(defaults, opts...)
 	s := &Server{Server: grpc.NewServer(opts...), health: health.NewServer(), log: log}
 	healthpb.RegisterHealthServer(s.Server, s.health)
 	reflection.Register(s.Server)
@@ -126,4 +137,10 @@ func recoverStream(log *slog.Logger) grpc.StreamServerInterceptor {
 		}()
 		return handler(srv, ss)
 	}
+}
+
+// notHealth leaves health checks, which probes and peers make every few seconds, out of
+// the traces.
+func notHealth(info *stats.RPCTagInfo) bool {
+	return !strings.HasPrefix(info.FullMethodName, "/"+healthpb.Health_ServiceDesc.ServiceName+"/")
 }

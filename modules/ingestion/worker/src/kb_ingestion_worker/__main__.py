@@ -8,6 +8,8 @@ from kb.llm.v1 import llm_pb2_grpc
 from kb_platform.grpc import channel, is_serving
 from kb_platform.logging import setup_logging
 from kb_platform.nats import connect, ensure_stream
+from kb_platform.nats import publish as publish_event
+from kb_platform.telemetry import setup_tracing
 from nats.aio.msg import Msg
 from nats.js.api import AckPolicy, ConsumerConfig
 from nats.js.errors import Error as JetStreamError
@@ -28,13 +30,16 @@ log = logging.getLogger("kb_ingestion_worker")
 async def run() -> None:
     settings = Settings()
     setup_logging(settings.log_level, settings.log_format)
+    setup_tracing(settings.otel_endpoint, "ingestion-worker")
 
     nc = await connect(settings.nats_url, "ingestion-worker")
     js = nc.jetstream()
     await ensure_stream(js, STREAM, ["kb.ingestion.>"])
 
     async def publish(subject: str, message: Message, dedupe_id: str) -> None:
-        await js.publish(subject, message.SerializeToString(), headers={"Nats-Msg-Id": dedupe_id})
+        await publish_event(
+            js, subject, message.SerializeToString(), headers={"Nats-Msg-Id": dedupe_id}
+        )
 
     async with channel(settings.document_addr) as doc_ch, channel(settings.llm_addr) as llm_ch:
         processor = Processor(
@@ -99,6 +104,7 @@ class _Delivery:
     def __init__(self, msg: Msg) -> None:
         self._msg = msg
         self.data = msg.data
+        self.headers = msg.headers
 
     @property
     def num_delivered(self) -> int:

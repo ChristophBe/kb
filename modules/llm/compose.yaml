@@ -6,6 +6,7 @@ services:
       args: { PACKAGE: kb-llm-service, KB_VERSION: "${KB_VERSION:-dev}" }
     environment:
       KB_LOG_LEVEL: ${KB_LOG_LEVEL:-INFO}
+      KB_OTEL_ENDPOINT: ${KB_OTEL_ENDPOINT:-}
       KB_LLM_PROVIDER: ${KB_LLM_PROVIDER:-ollama}
       KB_CHAT_PROVIDER: ${KB_CHAT_PROVIDER:-}
       KB_EMBEDDING_PROVIDER: ${KB_EMBEDDING_PROVIDER:-}

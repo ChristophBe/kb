@@ -6,6 +6,7 @@ services:
       args: { CMD: ./modules/ingestion/service/cmd/ingestion-service, KB_VERSION: "${KB_VERSION:-dev}" }
     environment:
       KB_LOG_LEVEL: ${KB_LOG_LEVEL:-info}
+      KB_OTEL_ENDPOINT: ${KB_OTEL_ENDPOINT:-}
       KB_DATABASE_URL: postgres://kb:kb@postgres:5432/kb?sslmode=disable
       KB_NATS_URL: nats://nats:4222
       KB_DOCUMENT_ADDR: document-service:9001
@@ -30,6 +31,7 @@ services:
       args: { PACKAGE: kb-ingestion-worker, KB_VERSION: "${KB_VERSION:-dev}" }
     environment:
       KB_LOG_LEVEL: ${KB_LOG_LEVEL:-INFO}
+      KB_OTEL_ENDPOINT: ${KB_OTEL_ENDPOINT:-}
       KB_NATS_URL: nats://nats:4222
       KB_DOCUMENT_ADDR: document-service:9001
       KB_LLM_ADDR: llm-service:9004

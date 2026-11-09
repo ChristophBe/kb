@@ -44,7 +44,7 @@ func (j *JetStream) Publish(ctx context.Context, subject string, msg proto.Messa
 	if err != nil {
 		return err
 	}
-	_, err = j.js.PublishMsg(ctx, &nats.Msg{Subject: subject, Data: data}, jetstream.WithMsgID(msgID))
+	_, err = natsx.Publish(ctx, j.js, &nats.Msg{Subject: subject, Data: data}, jetstream.WithMsgID(msgID))
 	return err
 }
 
@@ -88,7 +88,10 @@ func Consume(ctx context.Context, js jetstream.JetStream, jobs Jobs, log *slog.L
 		return err
 	}
 	cc, err := cons.Consume(func(msg jetstream.Msg) {
-		if err := apply(ctx, jobs, msg.Subject(), msg.Data()); err != nil {
+		ctx, end := natsx.Receive(ctx, msg)
+		err := apply(ctx, jobs, msg.Subject(), msg.Data())
+		end(err)
+		if err != nil {
 			log.ErrorContext(ctx, "apply event", "subject", msg.Subject(), "error", err)
 			_ = msg.Nak()
 			return

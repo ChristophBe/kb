@@ -57,6 +57,22 @@ services:
       interval: 2s
       retries: 30
 
+  # Observability (`--profile observability`, docs/operations/observability.md).
+  # Services export to the collector once KB_OTEL_ENDPOINT points at it; it
+  # forwards traces to Jaeger, whose UI is on KB_JAEGER_PORT.
+  otel-collector:
+    image: otel/opentelemetry-collector:0.164.0
+    profiles: [observability]
+    command: ["--config=/etc/otelcol/collector.yaml"]
+    ports: ["${KB_OTEL_GRPC_PORT:-4317}:4317"]
+    volumes: [./otel/collector.yaml:/etc/otelcol/collector.yaml:ro]
+    depends_on: [jaeger]
+
+  jaeger:
+    image: jaegertracing/jaeger:2.22.0
+    profiles: [observability]
+    ports: ["${KB_JAEGER_PORT:-16686}:16686"]
+
 volumes:
   postgres:
   s3:

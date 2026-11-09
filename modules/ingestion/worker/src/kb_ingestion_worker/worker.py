@@ -9,6 +9,7 @@ from google.protobuf.message import Message
 from kb.document.v1 import document_pb2, document_pb2_grpc
 from kb.ingestion.v1 import events_pb2, ingestion_pb2
 from kb.llm.v1 import llm_pb2, llm_pb2_grpc
+from kb_platform.nats import receive
 
 from .chunking import chunk_markdown, chunk_pages
 from .config import Settings
@@ -250,6 +251,8 @@ class Delivery(Protocol):
     """The part of a JetStream message the worker uses."""
 
     data: bytes
+    # Carry the publisher's trace context, if any (kb_platform.nats).
+    headers: dict[str, str] | None
 
     @property
     def num_delivered(self) -> int: ...
@@ -269,12 +272,14 @@ async def deliver(
 
     Every heartbeat seconds while the upload is processed the delivery is
     marked in progress, so that JetStream doesn't redeliver a long job to
-    another worker once the consumer's ack wait has passed."""
+    another worker once the consumer's ack wait has passed. With tracing on the
+    upload is processed within the trace of the request that published it."""
     event = events_pb2.DocumentUploaded.FromString(msg.data)
     attempt = msg.num_delivered
     beat = asyncio.create_task(_keep_alive(msg, heartbeat)) if heartbeat else None
     try:
-        retry_in = await processor.handle(event, attempt, last=attempt >= max_deliver)
+        with receive(SUBJECT_UPLOADED, msg.headers):
+            retry_in = await processor.handle(event, attempt, last=attempt >= max_deliver)
     finally:
         if beat:
             beat.cancel()

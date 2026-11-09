@@ -1,4 +1,5 @@
 import type { KbModule, SearchHit, SearchProvider } from "@kb/module-sdk";
+import { helpProvider } from "../help/search.ts";
 import { navEntries } from "../registry.ts";
 
 /**
@@ -31,7 +32,14 @@ export function pagesProvider(modules: KbModule[]): SearchProvider {
   };
 }
 
-/** The global search's groups: the shell's pages first, then each module's provider. */
+/**
+ * The global search's groups: the shell's pages first, then each module's
+ * provider, then the user manual.
+ */
 export function searchProviders(modules: KbModule[]): SearchProvider[] {
-  return [pagesProvider(modules), ...modules.flatMap((m) => (m.search ? [m.search] : []))];
+  return [
+    pagesProvider(modules),
+    ...modules.flatMap((m) => (m.search ? [m.search] : [])),
+    helpProvider,
+  ];
 }

@@ -1,6 +1,6 @@
 # Search
 
-Search finds the documents that best match what you are looking for, and the passage in each that matches best. It matches by meaning, not only by exact words, so a question or a description works as well as keywords. The search box at the top of the sidebar finds pages of kb from anywhere.
+Search finds the documents that best match what you are looking for, and the passage in each that matches best. It matches by meaning, not only by exact words, so a question or a description works as well as keywords. The search box at the top of the sidebar finds pages of kb and sections of this help from anywhere.
 
 ## Search from any page
 
@@ -11,6 +11,8 @@ The search box at the top of the sidebar is on every page. Press ⌘K (on a Mac)
 3. Press Escape to close the list; press it again to empty the box.
 
 **Documents** lists the documents that match by meaning, each once with the start of its best matching passage; selecting one opens the document at that passage. **Conversations** lists your chats whose title or messages contain what you typed; see [Find a conversation](chat.md#find-a-conversation).
+
+**Help** lists the sections of this manual whose heading or text contains every word you typed, sections whose heading matches first. Each shows the name of its help page and the matching text; selecting one opens the help page at that section. For example, typing "rename" lists **Rename a conversation**.
 
 Each group shows its first five matches. To see all of them, select **See all results for …** at the bottom of the list, or press Enter without choosing a match.
 

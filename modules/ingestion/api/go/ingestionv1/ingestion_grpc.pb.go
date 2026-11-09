@@ -35,9 +35,13 @@ const (
 // (extraction, chunking, embedding).
 type IngestionServiceClient interface {
 	// CreateUpload registers an ingestion job and returns a presigned URL the
-	// client uploads the file to.
+	// client uploads the file to. A file the document module does not accept
+	// (empty, too large, of a type it does not take) is rejected with field
+	// violations.
 	CreateUpload(ctx context.Context, in *CreateUploadRequest, opts ...grpc.CallOption) (*CreateUploadResponse, error)
-	// CompleteUpload confirms the upload finished and queues processing.
+	// CompleteUpload confirms the upload finished and queues processing. A
+	// file the document module rejects once uploaded (too large, not matching
+	// its sha256) fails the job instead, with the reason in error.
 	CompleteUpload(ctx context.Context, in *CompleteUploadRequest, opts ...grpc.CallOption) (*CompleteUploadResponse, error)
 	GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error)
 	ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
@@ -134,9 +138,13 @@ func (c *ingestionServiceClient) ReprocessJob(ctx context.Context, in *Reprocess
 // (extraction, chunking, embedding).
 type IngestionServiceServer interface {
 	// CreateUpload registers an ingestion job and returns a presigned URL the
-	// client uploads the file to.
+	// client uploads the file to. A file the document module does not accept
+	// (empty, too large, of a type it does not take) is rejected with field
+	// violations.
 	CreateUpload(context.Context, *CreateUploadRequest) (*CreateUploadResponse, error)
-	// CompleteUpload confirms the upload finished and queues processing.
+	// CompleteUpload confirms the upload finished and queues processing. A
+	// file the document module rejects once uploaded (too large, not matching
+	// its sha256) fails the job instead, with the reason in error.
 	CompleteUpload(context.Context, *CompleteUploadRequest) (*CompleteUploadResponse, error)
 	GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error)
 	ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)

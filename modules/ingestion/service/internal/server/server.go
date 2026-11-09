@@ -64,6 +64,7 @@ func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUpload
 		Filename:    req.GetFilename(),
 		ContentType: req.GetContentType(),
 		SizeBytes:   req.GetSizeBytes(),
+		SHA256:      req.GetSha256(),
 	})
 	if err != nil {
 		return nil, s.toStatus("create upload", err)
@@ -208,6 +209,14 @@ func parseID(field, raw string) (uuid.UUID, error) {
 }
 
 func (s *Server) toStatus(op string, err error) error {
+	var invalid *app.InvalidUploadError
+	if errors.As(err, &invalid) {
+		violations := make([]*errdetails.BadRequest_FieldViolation, 0, len(invalid.Violations))
+		for _, v := range invalid.Violations {
+			violations = append(violations, grpcserver.Violation(v.Field, v.Description))
+		}
+		return grpcserver.InvalidArgument(violations...)
+	}
 	switch {
 	case errors.Is(err, app.ErrNotFound):
 		return status.Error(codes.NotFound, err.Error())

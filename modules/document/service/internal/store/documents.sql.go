@@ -14,9 +14,9 @@ import (
 
 const createDocument = `-- name: CreateDocument :one
 
-INSERT INTO document.documents (id, owner_id, title, filename, content_type, size_bytes, object_key, status, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id
+INSERT INTO document.documents (id, owner_id, title, filename, content_type, size_bytes, object_key, status, metadata, sha256)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256
 `
 
 type CreateDocumentParams struct {
@@ -29,6 +29,7 @@ type CreateDocumentParams struct {
 	ObjectKey   string
 	Status      int16
 	Metadata    map[string]string
+	Sha256      string
 }
 
 // Queries taking an owner_id act for that user and find only their documents.
@@ -45,6 +46,7 @@ func (q *Queries) CreateDocument(ctx context.Context, arg CreateDocumentParams) 
 		arg.ObjectKey,
 		arg.Status,
 		arg.Metadata,
+		arg.Sha256,
 	)
 	var i DocumentDocument
 	err := row.Scan(
@@ -61,6 +63,7 @@ func (q *Queries) CreateDocument(ctx context.Context, arg CreateDocumentParams) 
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.OwnerID,
+		&i.Sha256,
 	)
 	return i, err
 }
@@ -82,7 +85,7 @@ func (q *Queries) DeleteDocument(ctx context.Context, arg DeleteDocumentParams) 
 }
 
 const getAnyDocument = `-- name: GetAnyDocument :one
-SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id FROM document.documents WHERE id = $1
+SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256 FROM document.documents WHERE id = $1
 `
 
 func (q *Queries) GetAnyDocument(ctx context.Context, id uuid.UUID) (DocumentDocument, error) {
@@ -102,12 +105,13 @@ func (q *Queries) GetAnyDocument(ctx context.Context, id uuid.UUID) (DocumentDoc
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.OwnerID,
+		&i.Sha256,
 	)
 	return i, err
 }
 
 const getDocument = `-- name: GetDocument :one
-SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id FROM document.documents WHERE id = $1 AND owner_id = $2
+SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256 FROM document.documents WHERE id = $1 AND owner_id = $2
 `
 
 type GetDocumentParams struct {
@@ -132,12 +136,13 @@ func (q *Queries) GetDocument(ctx context.Context, arg GetDocumentParams) (Docum
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.OwnerID,
+		&i.Sha256,
 	)
 	return i, err
 }
 
 const listDocuments = `-- name: ListDocuments :many
-SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id FROM document.documents
+SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256 FROM document.documents
 WHERE owner_id = $1
 ORDER BY created_at DESC, id DESC
 LIMIT $2 OFFSET $3
@@ -172,6 +177,7 @@ func (q *Queries) ListDocuments(ctx context.Context, arg ListDocumentsParams) ([
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.OwnerID,
+			&i.Sha256,
 		); err != nil {
 			return nil, err
 		}
@@ -187,7 +193,7 @@ const markDocumentUploaded = `-- name: MarkDocumentUploaded :one
 UPDATE document.documents
 SET status = $2, status_detail = $3, size_bytes = $4, content_type = $5, updated_at = now()
 WHERE id = $1
-RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256
 `
 
 type MarkDocumentUploadedParams struct {
@@ -221,6 +227,7 @@ func (q *Queries) MarkDocumentUploaded(ctx context.Context, arg MarkDocumentUplo
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.OwnerID,
+		&i.Sha256,
 	)
 	return i, err
 }
@@ -246,7 +253,7 @@ const setDocumentStatus = `-- name: SetDocumentStatus :one
 UPDATE document.documents
 SET status = $2, status_detail = $3, updated_at = now()
 WHERE id = $1
-RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256
 `
 
 type SetDocumentStatusParams struct {
@@ -272,6 +279,7 @@ func (q *Queries) SetDocumentStatus(ctx context.Context, arg SetDocumentStatusPa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.OwnerID,
+		&i.Sha256,
 	)
 	return i, err
 }
@@ -282,7 +290,7 @@ SET title      = coalesce($3, title),
     metadata   = coalesce($4, metadata),
     updated_at = now()
 WHERE id = $1 AND owner_id = $2
-RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256
 `
 
 type UpdateDocumentParams struct {
@@ -314,6 +322,7 @@ func (q *Queries) UpdateDocument(ctx context.Context, arg UpdateDocumentParams) 
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.OwnerID,
+		&i.Sha256,
 	)
 	return i, err
 }

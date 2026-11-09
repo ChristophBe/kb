@@ -18,6 +18,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/pgvector/pgvector-go"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -37,6 +38,8 @@ const (
 	readChunkSize   = 64 << 10
 	// maxTitleLength matches the limit on conversation titles in the chat module.
 	maxTitleLength = 200
+	// domain is the ErrorInfo domain of this module's errors.
+	domain = "kb.document.v1"
 )
 
 // Repository is the persistence the server needs.
@@ -47,7 +50,9 @@ type Repository interface {
 
 // ObjectStore holds the raw files.
 type ObjectStore interface {
-	PresignPut(ctx context.Context, key string) (string, error)
+	// PresignPut returns an upload URL that only takes a file of exactly
+	// size bytes sent with this content type.
+	PresignPut(ctx context.Context, key, contentType string, size int64) (string, error)
 	PresignGet(ctx context.Context, key, filename string) (string, error)
 	Open(ctx context.Context, key string) (io.ReadCloser, error)
 	// Stat returns an object's size and content type, or an error wrapping
@@ -67,33 +72,43 @@ type Server struct {
 	repo    Repository
 	objects ObjectStore
 	llm     llmv1.LlmServiceClient
+	limits  Limits
 	log     *slog.Logger
 }
 
 // New builds the server. llm is the llm module's client, used only by
-// SearchDocuments; it may point at a service that is down.
-func New(repo Repository, objects ObjectStore, llm llmv1.LlmServiceClient, log *slog.Logger) *Server {
-	return &Server{repo: repo, objects: objects, llm: llm, log: log}
+// SearchDocuments; it may point at a service that is down. limits bound the
+// files users upload.
+func New(repo Repository, objects ObjectStore, llm llmv1.LlmServiceClient, limits Limits, log *slog.Logger) *Server {
+	return &Server{repo: repo, objects: objects, llm: llm, limits: limits, log: log}
 }
 
 // CreateDocument registers a document owned by the calling user, so it is
-// called on behalf of a user (ingestion forwards the uploader).
+// called on behalf of a user (ingestion forwards the uploader). The file must
+// fit the limits; the upload URL only takes the declared size and type.
 func (s *Server) CreateDocument(ctx context.Context, req *documentv1.CreateDocumentRequest) (*documentv1.CreateDocumentResponse, error) {
 	owner, err := caller(ctx)
 	if err != nil {
 		return nil, err
 	}
+	contentType := declaredContentType(req.GetContentType(), req.GetFilename())
+	checksum := strings.ToLower(strings.TrimSpace(req.GetSha256()))
+	var violations []*errdetails.BadRequest_FieldViolation
 	if req.GetFilename() == "" {
-		return nil, grpcserver.InvalidArgument(grpcserver.Violation("filename", "A filename is required"))
+		violations = append(violations, grpcserver.Violation("filename", "A filename is required"))
+	}
+	if utf8.RuneCountInString(req.GetTitle()) > maxTitleLength {
+		violations = append(violations, grpcserver.Violation("title",
+			fmt.Sprintf("Title must not be longer than %d characters", maxTitleLength)))
+	}
+	violations = append(violations, s.limits.validateUpload(req.GetSizeBytes(), contentType, checksum)...)
+	if len(violations) > 0 {
+		return nil, grpcserver.InvalidArgument(violations...)
 	}
 	id := uuid.New()
 	title := req.GetTitle()
 	if title == "" {
 		title = req.GetFilename()
-	}
-	contentType := req.GetContentType()
-	if contentType == "" {
-		contentType = "application/octet-stream"
 	}
 	key := id.String() + "/" + path.Base(req.GetFilename())
 	doc, err := s.repo.CreateDocument(ctx, store.CreateDocumentParams{
@@ -106,11 +121,12 @@ func (s *Server) CreateDocument(ctx context.Context, req *documentv1.CreateDocum
 		ObjectKey:   key,
 		Status:      int16(documentv1.DocumentStatus_DOCUMENT_STATUS_PENDING_UPLOAD),
 		Metadata:    nonNil(req.GetMetadata()),
+		Sha256:      checksum,
 	})
 	if err != nil {
 		return nil, s.internal("create document", err)
 	}
-	uploadURL, err := s.objects.PresignPut(ctx, key)
+	uploadURL, err := s.objects.PresignPut(ctx, key, contentType, req.GetSizeBytes())
 	if err != nil {
 		return nil, s.internal("presign upload", err)
 	}
@@ -226,7 +242,11 @@ func (s *Server) SetDocumentStatus(ctx context.Context, req *documentv1.SetDocum
 }
 
 // markUploaded trusts the bucket, not the client: the object must exist, and
-// its actual size replaces the size declared when the upload was created.
+// its actual size replaces the size declared when the upload was created. An
+// object over the size limit or not matching the declared checksum fails the
+// document. The upload URL already enforces the declared size; checking here
+// as well keeps the limit with any S3 server and for objects put there by
+// other means.
 func (s *Server) markUploaded(ctx context.Context, id uuid.UUID, req *documentv1.SetDocumentStatusRequest) (*documentv1.SetDocumentStatusResponse, error) {
 	doc, err := s.repo.GetAnyDocument(ctx, id)
 	if err != nil {
@@ -240,6 +260,18 @@ func (s *Server) markUploaded(ctx context.Context, id uuid.UUID, req *documentv1
 		s.log.ErrorContext(ctx, "stat object", "key", doc.ObjectKey, "error", err)
 		return nil, status.Error(codes.Unavailable, "object storage is unavailable")
 	}
+	if size > s.limits.MaxUploadBytes {
+		return nil, s.reject(ctx, id, fmt.Sprintf("The file is larger than the limit of %s", formatBytes(s.limits.MaxUploadBytes)))
+	}
+	if doc.Sha256 != "" {
+		actual, err := s.checksum(ctx, doc.ObjectKey)
+		if err != nil {
+			return nil, err
+		}
+		if actual != doc.Sha256 {
+			return nil, s.reject(ctx, id, "The uploaded file does not match its checksum")
+		}
+	}
 	if isGenericContentType(contentType) {
 		contentType = doc.ContentType
 	}
@@ -250,6 +282,33 @@ func (s *Server) markUploaded(ctx context.Context, id uuid.UUID, req *documentv1
 		return nil, s.notFoundOr("mark uploaded", err)
 	}
 	return &documentv1.SetDocumentStatusResponse{Document: toProto(doc)}, nil
+}
+
+// checksum hashes the stored object.
+func (s *Server) checksum(ctx context.Context, key string) (string, error) {
+	r, err := s.objects.Open(ctx, key)
+	if err != nil {
+		s.log.ErrorContext(ctx, "open object", "key", key, "error", err)
+		return "", status.Error(codes.Unavailable, "object storage is unavailable")
+	}
+	defer r.Close()
+	sum, err := sha256Hex(r)
+	if err != nil {
+		s.log.ErrorContext(ctx, "read object", "key", key, "error", err)
+		return "", status.Error(codes.Unavailable, "object storage is unavailable")
+	}
+	return sum, nil
+}
+
+// reject fails a document whose uploaded file is not acceptable, recording
+// why, and returns the error SetDocumentStatus answers with.
+func (s *Server) reject(ctx context.Context, id uuid.UUID, reason string) error {
+	if _, err := s.repo.SetDocumentStatus(ctx, store.SetDocumentStatusParams{
+		ID: id, Status: int16(documentv1.DocumentStatus_DOCUMENT_STATUS_FAILED), StatusDetail: reason,
+	}); err != nil {
+		return s.notFoundOr("fail document", err)
+	}
+	return grpcserver.WithDetails(codes.FailedPrecondition, reason, grpcserver.ErrorInfo(domain, "UPLOAD_REJECTED", nil))
 }
 
 func (s *Server) GetDownloadUrl(ctx context.Context, req *documentv1.GetDownloadUrlRequest) (*documentv1.GetDownloadUrlResponse, error) {
@@ -603,5 +662,6 @@ func toProto(d store.DocumentDocument) *documentv1.Document {
 		CreateTime:   timestamppb.New(d.CreatedAt.Time),
 		UpdateTime:   timestamppb.New(d.UpdatedAt.Time),
 		OwnerId:      d.OwnerID,
+		Sha256:       d.Sha256,
 	}
 }

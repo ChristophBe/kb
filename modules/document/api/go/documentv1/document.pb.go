@@ -96,7 +96,10 @@ type Document struct {
 	UpdateTime   *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`
 	// The user who uploaded the document, as the subject of their token. Set by
 	// the service; only this user can see the document.
-	OwnerId       string `protobuf:"bytes,12,opt,name=owner_id,json=ownerId,proto3" json:"owner_id,omitempty"`
+	OwnerId string `protobuf:"bytes,12,opt,name=owner_id,json=ownerId,proto3" json:"owner_id,omitempty"`
+	// The SHA-256 of the file as declared at creation, in lowercase hex; empty
+	// when none was declared.
+	Sha256        string `protobuf:"bytes,13,opt,name=sha256,proto3" json:"sha256,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -211,6 +214,13 @@ func (x *Document) GetUpdateTime() *timestamppb.Timestamp {
 func (x *Document) GetOwnerId() string {
 	if x != nil {
 		return x.OwnerId
+	}
+	return ""
+}
+
+func (x *Document) GetSha256() string {
+	if x != nil {
+		return x.Sha256
 	}
 	return ""
 }
@@ -414,13 +424,21 @@ func (x *ScoredDocument) GetBestChunk() *Chunk {
 	return nil
 }
 
+// CreateDocument rejects, with field violations, a file that is empty, larger
+// than the service's upload limit or of a type it does not accept.
 type CreateDocumentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Filename      string                 `protobuf:"bytes,2,opt,name=filename,proto3" json:"filename,omitempty"`
-	ContentType   string                 `protobuf:"bytes,3,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
-	SizeBytes     int64                  `protobuf:"varint,4,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
-	Metadata      map[string]string      `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Title    string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Filename string                 `protobuf:"bytes,2,opt,name=filename,proto3" json:"filename,omitempty"`
+	// A missing or generic type (application/octet-stream) is replaced by the
+	// type the filename's extension stands for, if the service knows one.
+	ContentType string `protobuf:"bytes,3,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	// The file's exact size; must be greater than 0.
+	SizeBytes int64             `protobuf:"varint,4,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
+	Metadata  map[string]string `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Optional SHA-256 of the file, in hex. When set, SetDocumentStatus(UPLOADED)
+	// checks the uploaded file against it and fails the document on a mismatch.
+	Sha256        string `protobuf:"bytes,6,opt,name=sha256,proto3" json:"sha256,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -490,10 +508,20 @@ func (x *CreateDocumentRequest) GetMetadata() map[string]string {
 	return nil
 }
 
+func (x *CreateDocumentRequest) GetSha256() string {
+	if x != nil {
+		return x.Sha256
+	}
+	return ""
+}
+
 type CreateDocumentResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Document      *Document              `protobuf:"bytes,1,opt,name=document,proto3" json:"document,omitempty"`
-	UploadUrl     string                 `protobuf:"bytes,2,opt,name=upload_url,json=uploadUrl,proto3" json:"upload_url,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Document *Document              `protobuf:"bytes,1,opt,name=document,proto3" json:"document,omitempty"`
+	// A presigned URL to PUT the file to. The request must send the
+	// document's content_type as Content-Type and exactly size_bytes bytes;
+	// the storage server refuses any other upload.
+	UploadUrl     string `protobuf:"bytes,2,opt,name=upload_url,json=uploadUrl,proto3" json:"upload_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -919,6 +947,10 @@ func (*DeleteDocumentResponse) Descriptor() ([]byte, []int) {
 	return file_kb_document_v1_document_proto_rawDescGZIP(), []int{13}
 }
 
+// Setting UPLOADED checks the uploaded file: FAILED_PRECONDITION when it is
+// missing. A file larger than the upload limit or not matching the declared
+// sha256 sets the document FAILED, with the reason in status_detail, and
+// fails with FAILED_PRECONDITION and ErrorInfo reason UPLOAD_REJECTED.
 type SetDocumentStatusRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1694,7 +1726,7 @@ var File_kb_document_v1_document_proto protoreflect.FileDescriptor
 
 const file_kb_document_v1_document_proto_rawDesc = "" +
 	"\n" +
-	"\x1dkb/document/v1/document.proto\x12\x0ekb.document.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19kb/common/v1/common.proto\"\xa2\x04\n" +
+	"\x1dkb/document/v1/document.proto\x12\x0ekb.document.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19kb/common/v1/common.proto\"\xba\x04\n" +
 	"\bDocument\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x1a\n" +
@@ -1712,7 +1744,8 @@ const file_kb_document_v1_document_proto_rawDesc = "" +
 	"createTime\x12;\n" +
 	"\vupdate_time\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"updateTime\x12\x19\n" +
-	"\bowner_id\x18\f \x01(\tR\aownerId\x1a;\n" +
+	"\bowner_id\x18\f \x01(\tR\aownerId\x12\x16\n" +
+	"\x06sha256\x18\r \x01(\tR\x06sha256\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xd0\x01\n" +
@@ -1735,14 +1768,15 @@ const file_kb_document_v1_document_proto_rawDesc = "" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x14\n" +
 	"\x05score\x18\x03 \x01(\x02R\x05score\x124\n" +
 	"\n" +
-	"best_chunk\x18\x04 \x01(\v2\x15.kb.document.v1.ChunkR\tbestChunk\"\x99\x02\n" +
+	"best_chunk\x18\x04 \x01(\v2\x15.kb.document.v1.ChunkR\tbestChunk\"\xb1\x02\n" +
 	"\x15CreateDocumentRequest\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12\x1a\n" +
 	"\bfilename\x18\x02 \x01(\tR\bfilename\x12!\n" +
 	"\fcontent_type\x18\x03 \x01(\tR\vcontentType\x12\x1d\n" +
 	"\n" +
 	"size_bytes\x18\x04 \x01(\x03R\tsizeBytes\x12O\n" +
-	"\bmetadata\x18\x05 \x03(\v23.kb.document.v1.CreateDocumentRequest.MetadataEntryR\bmetadata\x1a;\n" +
+	"\bmetadata\x18\x05 \x03(\v23.kb.document.v1.CreateDocumentRequest.MetadataEntryR\bmetadata\x12\x16\n" +
+	"\x06sha256\x18\x06 \x01(\tR\x06sha256\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"m\n" +

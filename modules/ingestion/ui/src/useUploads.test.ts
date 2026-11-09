@@ -38,7 +38,7 @@ function fakeClient(outcome = JobStatus.DONE) {
 /** A put that waits until the test settles it. */
 function controlledPut() {
   const calls: { url: string; progress: (f: number) => void; settle: (err?: Error) => void }[] = [];
-  const put: Put = (url, _file, onProgress, signal) =>
+  const put: Put = (url, _file, _contentType, onProgress, signal) =>
     new Promise((resolve, reject) => {
       signal.addEventListener("abort", () => reject(new DOMException("cancelled", "AbortError")));
       calls.push({ url, progress: onProgress, settle: (err) => (err ? reject(err) : resolve()) });
@@ -71,6 +71,31 @@ describe("useUploads", () => {
       JobStatus.QUEUED,
       JobStatus.DONE,
     ]);
+  });
+
+  it("declares the file's checksum and uploads with the type the server signed", async () => {
+    const client = fakeClient();
+    client.createUpload.mockResolvedValueOnce({
+      job: create(JobSchema, {
+        id: "job1",
+        status: JobStatus.PENDING_UPLOAD,
+        contentType: "text/markdown",
+      }),
+      uploadUrl: "http://s3/url1",
+    });
+    const put = vi.fn<Put>(async () => {});
+    const { hook } = setup(client, put);
+    act(() => hook.result.current.add([file("a.md", "")]));
+
+    await waitFor(() => expect(put).toHaveBeenCalled());
+    expect(client.createUpload).toHaveBeenCalledWith({
+      filename: "a.md",
+      contentType: "application/octet-stream",
+      sizeBytes: 7n,
+      // SHA-256 of "content".
+      sha256: "ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73",
+    });
+    expect(put.mock.calls[0]?.[2]).toBe("text/markdown");
   });
 
   it("reports progress per file", async () => {

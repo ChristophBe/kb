@@ -26,6 +26,8 @@ type Config struct {
 	Storage     storage.Config `envPrefix:"S3_"`
 	// LLMAddr is the llm module, needed only by SearchDocuments.
 	LLMAddr string `env:"LLM_ADDR" envDefault:"localhost:9004"`
+	// Limits bound uploads: KB_MAX_UPLOAD_BYTES, KB_ALLOWED_CONTENT_TYPES.
+	Limits server.Limits
 }
 
 func main() {
@@ -79,6 +81,6 @@ func run() error {
 	defer llmConn.Close()
 
 	srv := grpcserver.New(log)
-	documentv1.RegisterDocumentServiceServer(srv, server.New(store.NewRepo(pool), objects, llmv1.NewLlmServiceClient(llmConn), log))
+	documentv1.RegisterDocumentServiceServer(srv, server.New(store.NewRepo(pool), objects, llmv1.NewLlmServiceClient(llmConn), cfg.Limits, log))
 	return srv.Run(ctx, cfg.GRPCPort)
 }

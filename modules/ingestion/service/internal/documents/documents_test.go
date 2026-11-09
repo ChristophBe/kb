@@ -12,6 +12,7 @@ import (
 
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	"github.com/christoph/kb/modules/ingestion/service/internal/app"
+	"github.com/christoph/kb/platform/go/grpcserver"
 )
 
 type fakeClient struct {
@@ -49,6 +50,25 @@ func TestMissingFileIsAnApplicationError(t *testing.T) {
 	c := New(fakeClient{err: status.Error(codes.FailedPrecondition, "not uploaded")})
 	if err := c.MarkUploaded(t.Context(), uuid.New()); !errors.Is(err, app.ErrUploadMissing) {
 		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestRejectedFileIsAnApplicationError(t *testing.T) {
+	c := New(fakeClient{err: grpcserver.WithDetails(codes.FailedPrecondition, "The uploaded file does not match its checksum",
+		grpcserver.ErrorInfo("kb.document.v1", "UPLOAD_REJECTED", nil))})
+	var rejected *app.UploadRejectedError
+	if err := c.MarkUploaded(t.Context(), uuid.New()); !errors.As(err, &rejected) || rejected.Reason != "The uploaded file does not match its checksum" {
+		t.Fatalf("err = %v, want the rejection with its reason", err)
+	}
+}
+
+func TestInvalidUploadKeepsTheViolations(t *testing.T) {
+	c := New(fakeClient{err: grpcserver.InvalidArgument(grpcserver.Violation("size_bytes", "The file is larger than the limit of 50 MiB"))})
+	_, err := c.Create(t.Context(), app.NewUpload{})
+	var invalid *app.InvalidUploadError
+	if !errors.As(err, &invalid) || len(invalid.Violations) != 1 ||
+		invalid.Violations[0] != (app.FieldViolation{Field: "size_bytes", Description: "The file is larger than the limit of 50 MiB"}) {
+		t.Fatalf("err = %v, want the violation", err)
 	}
 }
 

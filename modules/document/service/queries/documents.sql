@@ -3,8 +3,8 @@
 -- any document.
 
 -- name: CreateDocument :one
-INSERT INTO document.documents (id, owner_id, title, filename, content_type, size_bytes, object_key, status, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+INSERT INTO document.documents (id, owner_id, title, filename, content_type, size_bytes, object_key, status, metadata, sha256)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 RETURNING *;
 
 -- name: GetDocument :one

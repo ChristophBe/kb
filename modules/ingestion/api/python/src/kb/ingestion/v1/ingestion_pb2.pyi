@@ -68,16 +68,18 @@ class Job(_message.Message):
     def __init__(self, id: _Optional[str] = ..., document_id: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., status: _Optional[_Union[JobStatus, str]] = ..., error: _Optional[str] = ..., chunk_count: _Optional[int] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., progress: _Optional[int] = ..., stage: _Optional[_Union[JobStage, str]] = ..., owner_id: _Optional[str] = ...) -> None: ...
 
 class CreateUploadRequest(_message.Message):
-    __slots__ = ("filename", "content_type", "size_bytes", "title")
+    __slots__ = ("filename", "content_type", "size_bytes", "title", "sha256")
     FILENAME_FIELD_NUMBER: _ClassVar[int]
     CONTENT_TYPE_FIELD_NUMBER: _ClassVar[int]
     SIZE_BYTES_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
+    SHA256_FIELD_NUMBER: _ClassVar[int]
     filename: str
     content_type: str
     size_bytes: int
     title: str
-    def __init__(self, filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., title: _Optional[str] = ...) -> None: ...
+    sha256: str
+    def __init__(self, filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., title: _Optional[str] = ..., sha256: _Optional[str] = ...) -> None: ...
 
 class CreateUploadResponse(_message.Message):
     __slots__ = ("job", "upload_url")

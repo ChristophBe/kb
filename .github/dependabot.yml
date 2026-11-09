@@ -52,6 +52,11 @@ updates:
     groups:
       docker:
         patterns: ["*"]
+    # Node majors follow the LTS line CI sets up (node-version in ci.yml and pages.yml);
+    # bump them by hand together with the workflows.
+    ignore:
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
 
   # Infrastructure images pinned in compose files (deploy/*.compose.yaml, the ollama
   # profile). Module compose files and the generated root compose.yaml only build.

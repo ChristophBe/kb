@@ -1,8 +1,11 @@
-import type { KbModule, NavItem, RuntimeConfig } from "@kb/module-sdk";
+import type { LazyModule, ModuleManifest, NavItem, RuntimeConfig } from "@kb/module-sdk";
 import { modules } from "./modules.gen.ts";
 
-/** Compiled-in modules, filtered by the runtime config. */
-export function activeModules(config: RuntimeConfig): KbModule[] {
+/**
+ * Compiled-in modules, filtered by the runtime config. Only their manifests
+ * are loaded; a disabled module's code is never fetched.
+ */
+export function activeModules(config: RuntimeConfig): LazyModule[] {
   const enabled = config.enabledModules;
   return enabled ? modules.filter((m) => enabled.includes(m.id)) : modules;
 }
@@ -21,7 +24,7 @@ export interface NavEntry {
  * for the module itself when it declares none. The sidebar and the Welcome
  * page both list these.
  */
-export function navEntries(modules: KbModule[]): NavEntry[] {
+export function navEntries(modules: ModuleManifest[]): NavEntry[] {
   return modules.flatMap((m) =>
     (m.nav ?? [{ path: "", label: m.title, icon: m.icon }]).map((item) => ({
       to: item.path ? `/m/${m.id}/${item.path}` : `/m/${m.id}`,

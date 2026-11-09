@@ -1,8 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { useState } from "react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { type ComponentType, lazy, useState } from "react";
 import { createMemoryRouter, Link, Outlet, RouterProvider } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ModuleBoundary } from "./ModuleBoundary.tsx";
+import { isChunkLoadError, ModuleBoundary, ModuleLoadError } from "./ModuleBoundary.tsx";
 
 let broken = true;
 
@@ -116,11 +116,60 @@ describe("ModuleBoundary", () => {
     expect(document.activeElement).not.toBe(heading);
     expect(screen.queryByRole("link", { name: "Go to home" })).toBeNull();
   });
+
+  it("shows a placeholder while a lazy widget loads, then the widget", async () => {
+    let resolve: (m: { default: ComponentType }) => void = () => {};
+    const Widget = lazy(() => new Promise<{ default: ComponentType }>((r) => (resolve = r)));
+    await act(async () => {
+      render(
+        <ModuleBoundaryInRouter widget>
+          <Widget />
+        </ModuleBoundaryInRouter>,
+      );
+    });
+    expect(screen.getByText("Loading Chat")).toBeTruthy();
+    await act(async () => resolve({ default: () => <p>recent chats</p> }));
+    expect(await screen.findByText("recent chats")).toBeTruthy();
+  });
+
+  it("offers a reload when a lazy widget's code can't be loaded", async () => {
+    const Widget = lazy(() => Promise.reject(new TypeError("Importing a module script failed.")));
+    await act(async () => {
+      render(
+        <ModuleBoundaryInRouter widget>
+          <Widget />
+        </ModuleBoundaryInRouter>,
+      );
+    });
+    const heading = await screen.findByRole("heading", { name: "Chat couldn't be loaded." });
+    expect(heading.tagName).toBe("H3");
+    expect(document.activeElement).not.toBe(heading);
+    expect(screen.getByRole("button", { name: "Reload page" })).toBeTruthy();
+  });
+
+  it("keeps Try again for render errors that aren't about loading code", () => {
+    expect(isChunkLoadError(new Error("render failed"))).toBe(false);
+    expect(isChunkLoadError(new ModuleLoadError("Chat", new Error("offline")))).toBe(true);
+    expect(isChunkLoadError(new Error("Unable to preload CSS for /assets/a.css"))).toBe(true);
+  });
 });
 
-function ModuleBoundaryInRouter({ children }: { children: React.ReactNode }) {
+function ModuleBoundaryInRouter({
+  widget,
+  children,
+}: {
+  widget?: boolean;
+  children: React.ReactNode;
+}) {
   const router = createMemoryRouter([
-    { path: "/", element: <ModuleBoundary title="Chat">{children}</ModuleBoundary> },
+    {
+      path: "/",
+      element: (
+        <ModuleBoundary title="Chat" widget={widget}>
+          {children}
+        </ModuleBoundary>
+      ),
+    },
   ]);
   return <RouterProvider router={router} />;
 }

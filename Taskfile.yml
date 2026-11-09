@@ -166,7 +166,7 @@ tasks:
         py_out=$(printf '%s\n' "$py_out" | sed -E 's/kb_(search|tags|platform)\.(bad|ok)/\1\/\2.py/')
         expect python "platform/bad.py search/bad.py tags/bad.py " "$py_out"
         ts_out=$(cd "$tmp" && {{.ROOT_DIR}}/node_modules/.bin/biome lint . 2>&1 || true)
-        expect ts "modules/search/ui/src/bad.ts modules/tags/ui/src/bad.ts platform/ui/kit/src/bad.ts " "$ts_out"
+        expect ts "modules/search/ui/src/bad.ts modules/search/ui/src/subpath/bad.ts modules/tags/ui/src/bad.ts platform/ui/kit/src/bad.ts " "$ts_out"
         exit $status
 
   test:integration:

@@ -1,17 +1,8 @@
 import { defineModule } from "@kb/module-sdk";
-import { Upload as UploadIcon } from "lucide-react";
-import { ActiveJobs } from "./ActiveJobs.tsx";
+import manifest from "./manifest.ts";
 import { Upload } from "./Upload.tsx";
 
 export default defineModule({
-  id: "ingestion",
-  title: "Ingestion",
-  icon: UploadIcon,
-  feature: {
-    headline: "Bring in what you know",
-    description: "Drop in PDFs, Markdown and text. kb splits and indexes them for you.",
-    cta: { label: "Upload documents", path: "" },
-  },
+  ...manifest,
   routes: [{ index: true, element: <Upload /> }],
-  widgets: { active: ActiveJobs },
 });

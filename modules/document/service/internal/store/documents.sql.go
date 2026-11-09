@@ -84,6 +84,73 @@ func (q *Queries) DeleteDocument(ctx context.Context, arg DeleteDocumentParams) 
 	return object_key, err
 }
 
+const deleteStaleUploads = `-- name: DeleteStaleUploads :many
+
+DELETE FROM document.documents d
+WHERE d.status = $1 AND d.id IN (
+    SELECT s.id FROM document.documents s
+    WHERE s.status = $1 AND s.created_at < $2
+    ORDER BY s.created_at
+    LIMIT $3
+)
+RETURNING d.object_key
+`
+
+type DeleteStaleUploadsParams struct {
+	Status     int16
+	Cutoff     pgtype.Timestamptz
+	MaxResults int32
+}
+
+// The cleanup sweeper's queries; they act on any document.
+// DeleteStaleUploads removes up to max_results documents still waiting for
+// their upload (PENDING_UPLOAD) that were created before cutoff. The status is
+// checked again on the locked row, so an upload marked done meanwhile stays.
+func (q *Queries) DeleteStaleUploads(ctx context.Context, arg DeleteStaleUploadsParams) ([]string, error) {
+	rows, err := q.db.Query(ctx, deleteStaleUploads, arg.Status, arg.Cutoff, arg.MaxResults)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var object_key string
+		if err := rows.Scan(&object_key); err != nil {
+			return nil, err
+		}
+		items = append(items, object_key)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const existingObjectKeys = `-- name: ExistingObjectKeys :many
+SELECT object_key FROM document.documents WHERE object_key = ANY($1::text[])
+`
+
+// ExistingObjectKeys returns those of keys that belong to a document.
+func (q *Queries) ExistingObjectKeys(ctx context.Context, keys []string) ([]string, error) {
+	rows, err := q.db.Query(ctx, existingObjectKeys, keys)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var object_key string
+		if err := rows.Scan(&object_key); err != nil {
+			return nil, err
+		}
+		items = append(items, object_key)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAnyDocument = `-- name: GetAnyDocument :one
 SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256 FROM document.documents WHERE id = $1
 `

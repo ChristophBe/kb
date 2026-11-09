@@ -14,7 +14,7 @@ Your documents are private: only you see them once you have uploaded them, and o
 
 ## Understand the status of a document
 
-- **Awaiting upload**: the upload has started but the file hasn't arrived yet.
+- **Awaiting upload**: the upload has started but the file hasn't arrived yet. If it never arrives, for example because the tab was closed during the upload, kb removes the document after a day (your administrator may have set another time); upload the file again.
 - **Uploaded**: the file has arrived and waits to be processed.
 - **Processing**: kb is reading the text and preparing the passages.
 - **Ready**: the document can be searched and used in chat.

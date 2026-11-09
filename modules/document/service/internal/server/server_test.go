@@ -966,3 +966,58 @@ func TestPipelineRPCsActOnAnyDocumentWithoutAUser(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+// deletingObjects records the objects deleted, failing with err if set.
+type deletingObjects struct {
+	fakeObjects
+	deleted []string
+	err     error
+}
+
+func (d *deletingObjects) Delete(_ context.Context, key string) error {
+	if d.err != nil {
+		return d.err
+	}
+	d.deleted = append(d.deleted, key)
+	return nil
+}
+
+func deleteDocument(t *testing.T, ctx context.Context, repo *fakeRepo, objects *deletingObjects) error {
+	t.Helper()
+	s := New(repo, objects, &fakeLLM{}, testLimits, slog.New(slog.DiscardHandler))
+	_, err := s.DeleteDocument(ctx, &documentv1.DeleteDocumentRequest{Id: repo.doc.ID.String()})
+	return err
+}
+
+func TestDeleteDocumentDeletesTheObjectAndTheRow(t *testing.T) {
+	repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New(), ObjectKey: "id/a.md"}}
+	objects := &deletingObjects{}
+	if err := deleteDocument(t, asAlice(t), repo, objects); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(objects.deleted, []string{"id/a.md"}) || len(repo.deleted) != 1 {
+		t.Errorf("deleted objects %v, rows %v", objects.deleted, repo.deleted)
+	}
+}
+
+func TestDeleteDocumentKeepsTheRowWhileTheObjectCannotBeDeleted(t *testing.T) {
+	repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New(), ObjectKey: "id/a.md"}}
+	err := deleteDocument(t, asAlice(t), repo, &deletingObjects{err: errors.New("s3 down")})
+	if status.Code(err) != codes.Unavailable {
+		t.Errorf("err = %v, want Unavailable", err)
+	}
+	if len(repo.deleted) != 0 {
+		t.Errorf("rows deleted: %v", repo.deleted)
+	}
+}
+
+func TestDeleteDocumentOfAnotherUserLeavesTheObject(t *testing.T) {
+	repo := &fakeRepo{doc: store.DocumentDocument{ID: uuid.New(), OwnerID: bob, ObjectKey: "id/a.md"}}
+	objects := &deletingObjects{}
+	if err := deleteDocument(t, asAlice(t), repo, objects); status.Code(err) != codes.NotFound {
+		t.Errorf("err = %v, want NotFound", err)
+	}
+	if len(objects.deleted) != 0 {
+		t.Errorf("objects deleted: %v", objects.deleted)
+	}
+}

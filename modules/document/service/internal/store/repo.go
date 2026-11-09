@@ -55,3 +55,23 @@ func (r *Repo) ReplaceChunks(ctx context.Context, documentID uuid.UUID, chunks [
 	}
 	return int32(n), tx.Commit(ctx)
 }
+
+// WithLock runs fn while holding the Postgres advisory lock key, so that of
+// several replicas only one runs fn at a time. It returns false without
+// running fn when another holds the lock. The lock is held by a transaction
+// that fn does not use, and ends with it even if the connection breaks.
+func (r *Repo) WithLock(ctx context.Context, key int64, fn func(context.Context) error) (bool, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return false, err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck // releases the lock; nothing to commit
+	var locked bool
+	if err := tx.QueryRow(ctx, "SELECT pg_try_advisory_xact_lock($1)", key).Scan(&locked); err != nil {
+		return false, fmt.Errorf("advisory lock: %w", err)
+	}
+	if !locked {
+		return false, nil
+	}
+	return true, fn(ctx)
+}

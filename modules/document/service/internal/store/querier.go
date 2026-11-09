@@ -17,6 +17,13 @@ type Querier interface {
 	CreateDocument(ctx context.Context, arg CreateDocumentParams) (DocumentDocument, error)
 	DeleteChunks(ctx context.Context, documentID uuid.UUID) error
 	DeleteDocument(ctx context.Context, arg DeleteDocumentParams) (string, error)
+	// The cleanup sweeper's queries; they act on any document.
+	// DeleteStaleUploads removes up to max_results documents still waiting for
+	// their upload (PENDING_UPLOAD) that were created before cutoff. The status is
+	// checked again on the locked row, so an upload marked done meanwhile stays.
+	DeleteStaleUploads(ctx context.Context, arg DeleteStaleUploadsParams) ([]string, error)
+	// ExistingObjectKeys returns those of keys that belong to a document.
+	ExistingObjectKeys(ctx context.Context, keys []string) ([]string, error)
 	GetAnyDocument(ctx context.Context, id uuid.UUID) (DocumentDocument, error)
 	GetDocument(ctx context.Context, arg GetDocumentParams) (DocumentDocument, error)
 	InsertChunks(ctx context.Context, arg []InsertChunksParams) (int64, error)

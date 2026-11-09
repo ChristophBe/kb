@@ -1,0 +1,74 @@
+# Weekly version updates, one grouped PR per ecosystem (CONTRIBUTING.md, "Dependency
+# updates"). Every entry shares the same schedule, cooldown and commit prefix:
+# - cooldown 14 days: matches pnpm's minimumReleaseAge (pnpm-workspace.yaml), which
+#   would otherwise reject the release Dependabot proposes, and gives the same
+#   supply-chain grace period to every other ecosystem.
+# - prefix `build(deps)` without `include: scope`: titles become
+#   `build(deps): bump …`, which the pr-title check accepts (type `build`, scope
+#   `deps`) and releases as a patch. `include: scope` would add `deps-dev` for dev
+#   dependencies, which is not an allowed scope.
+# Bumps of code generators (buf, protoc-gen-*, sqlc, grpcio-tools, protoc-gen-es)
+# can change generated code; Dependabot cannot run `task gen`, so CI's check-gen
+# fails and the PR needs a regeneration commit.
+version: 2
+
+updates:
+  # Root module and the go tool dependencies (buf, sqlc, golangci-lint, task, protoc plugins).
+  - package-ecosystem: gomod
+    directories: ["/", "/tools"]
+    schedule: { interval: weekly } # Mondays
+    cooldown: { default-days: 14 }
+    commit-message: { prefix: build(deps) }
+    groups:
+      go:
+        patterns: ["*"]
+
+  # The uv workspace: one uv.lock at the root covering every member's pyproject.toml.
+  - package-ecosystem: uv
+    directory: /
+    schedule: { interval: weekly } # Mondays
+    cooldown: { default-days: 14 }
+    commit-message: { prefix: build(deps) }
+    groups:
+      python:
+        patterns: ["*"]
+
+  # The pnpm workspace incl. the default catalog in pnpm-workspace.yaml.
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly } # Mondays
+    cooldown: { default-days: 14 }
+    commit-message: { prefix: build(deps) }
+    groups:
+      npm:
+        patterns: ["*"]
+
+  # Base images of deploy/docker/*.Dockerfile.
+  - package-ecosystem: docker
+    directory: /deploy/docker
+    schedule: { interval: weekly } # Mondays
+    cooldown: { default-days: 14 }
+    commit-message: { prefix: build(deps) }
+    groups:
+      docker:
+        patterns: ["*"]
+
+  # Infrastructure images pinned in compose files (deploy/*.compose.yaml, the ollama
+  # profile). Module compose files and the generated root compose.yaml only build.
+  - package-ecosystem: docker-compose
+    directories: ["/deploy", "/modules/llm"]
+    schedule: { interval: weekly } # Mondays
+    cooldown: { default-days: 14 }
+    commit-message: { prefix: build(deps) }
+    groups:
+      compose:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly } # Mondays
+    cooldown: { default-days: 14 }
+    commit-message: { prefix: build(deps) }
+    groups:
+      actions:
+        patterns: ["*"]

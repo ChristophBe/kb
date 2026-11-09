@@ -2,7 +2,7 @@ import { createRouterTransport } from "@connectrpc/connect";
 import type { KbModule } from "@kb/module-sdk";
 import { renderWithRuntime } from "@kb/module-sdk/testing";
 import { expectNoAxeViolations } from "@kb/ui/testing";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider, useLocation } from "react-router";
 import { describe, expect, it } from "vitest";
 import { Home } from "./Home.tsx";
@@ -109,12 +109,15 @@ describe("Home", () => {
     const router = createMemoryRouter([{ path: "/", element: <Home modules={modules} /> }]);
     // No service answers: every widget shows that its data can't be loaded, the page stays.
     const transport = createRouterTransport(() => {});
-    renderWithRuntime(<RouterProvider router={router} />, transport);
+    // The widgets are lazy; React only retries a suspended render begun in an awaited act().
+    await act(async () => {
+      renderWithRuntime(<RouterProvider router={router} />, transport);
+    });
+    expect(await screen.findByText("Your conversations can't be loaded right now.")).toBeTruthy();
+    expect(await screen.findByText("The providers can't be checked right now.")).toBeTruthy();
     const widgets = screen.getByRole("region", { name: "Pick up where you left off" });
     const titles = [...widgets.querySelectorAll("h3")].map((h) => h.textContent);
     expect(titles).toEqual(["Recent conversations", "Models"]);
-    expect(await screen.findByText("Your conversations can't be loaded right now.")).toBeTruthy();
-    expect(await screen.findByText("The providers can't be checked right now.")).toBeTruthy();
     expect(screen.queryByRole("alert")).toBeNull();
   });
 });

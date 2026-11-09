@@ -31,7 +31,7 @@ jobs:
       # released. Image and chart builds pass it on as KB_VERSION.
       version: ${{ steps.semrel.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
 
       # A re-run of an older push must not tag a commit that is already released

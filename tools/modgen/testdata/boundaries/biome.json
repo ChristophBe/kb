@@ -1,4 +1,5 @@
 {
   "extends": ["./biome.modules.jsonc"],
+  "files": { "includes": ["**", "!**/*.md", "!**/*.yaml", "!**/*.yml"] },
   "linter": { "enabled": true, "rules": { "preset": "none" } }
 }

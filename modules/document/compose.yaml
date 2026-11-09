@@ -15,6 +15,10 @@ services:
       # Upload limits; the defaults are what the ingestion worker can read.
       KB_MAX_UPLOAD_BYTES: ${KB_MAX_UPLOAD_BYTES:-52428800}
       KB_ALLOWED_CONTENT_TYPES: ${KB_ALLOWED_CONTENT_TYPES:-application/pdf,text/*,application/json,application/yaml,application/x-yaml}
+      # Cleanup of abandoned uploads and of files no document refers to.
+      KB_CLEANUP_INTERVAL: ${KB_CLEANUP_INTERVAL:-1h}
+      KB_UPLOAD_TTL: ${KB_UPLOAD_TTL:-24h}
+      KB_ORPHAN_GRACE: ${KB_ORPHAN_GRACE:-1h}
     ports: ["9001:9001"]
     depends_on:
       postgres: { condition: service_healthy }

@@ -210,13 +210,20 @@ func (s *Server) DeleteDocument(ctx context.Context, req *documentv1.DeleteDocum
 	if err != nil {
 		return nil, err
 	}
-	key, err := s.repo.DeleteDocument(ctx, store.DeleteDocumentParams{ID: id, OwnerID: owner})
+	// The object goes first and the row after it, so a failure in between
+	// leaves the row, and the client's retry deletes both: deleting an object
+	// that is already gone succeeds. An object put back by an upload still in
+	// flight is left without a row, which the cleanup sweeper removes.
+	doc, err := s.getOwned(ctx, owner, id)
 	if err != nil {
-		return nil, s.notFoundOr("delete document", err)
+		return nil, err
 	}
-	if err := s.objects.Delete(ctx, key); err != nil {
-		// The row is gone; an orphaned object is harmless, so only log it.
-		s.log.WarnContext(ctx, "delete object", "key", key, "error", err)
+	if err := s.objects.Delete(ctx, doc.ObjectKey); err != nil {
+		s.log.ErrorContext(ctx, "delete object", "key", doc.ObjectKey, "error", err)
+		return nil, status.Error(codes.Unavailable, "object storage is unavailable")
+	}
+	if _, err := s.repo.DeleteDocument(ctx, store.DeleteDocumentParams{ID: id, OwnerID: owner}); err != nil {
+		return nil, s.notFoundOr("delete document", err)
 	}
 	return &documentv1.DeleteDocumentResponse{}, nil
 }

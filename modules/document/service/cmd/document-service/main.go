@@ -10,6 +10,7 @@ import (
 
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	"github.com/christoph/kb/modules/document/migrations"
+	"github.com/christoph/kb/modules/document/service/internal/cleanup"
 	"github.com/christoph/kb/modules/document/service/internal/server"
 	"github.com/christoph/kb/modules/document/service/internal/storage"
 	"github.com/christoph/kb/modules/document/service/internal/store"
@@ -29,6 +30,8 @@ type Config struct {
 	LLMAddr string `env:"LLM_ADDR" envDefault:"localhost:9004"`
 	// Limits bound uploads: KB_MAX_UPLOAD_BYTES, KB_ALLOWED_CONTENT_TYPES.
 	Limits server.Limits
+	// Cleanup: KB_CLEANUP_INTERVAL, KB_UPLOAD_TTL, KB_ORPHAN_GRACE.
+	Cleanup cleanup.Config
 }
 
 func main() {
@@ -86,7 +89,11 @@ func run() error {
 	}
 	defer llmConn.Close()
 
+	// Removes abandoned uploads and orphaned objects; replicas take turns.
+	repo := store.NewRepo(pool)
+	go cleanup.New(repo, objects, cfg.Cleanup, log).Run(ctx)
+
 	srv := grpcserver.New(log)
-	documentv1.RegisterDocumentServiceServer(srv, server.New(store.NewRepo(pool), objects, llmv1.NewLlmServiceClient(llmConn), cfg.Limits, log))
+	documentv1.RegisterDocumentServiceServer(srv, server.New(repo, objects, llmv1.NewLlmServiceClient(llmConn), cfg.Limits, log))
 	return srv.Run(ctx, cfg.GRPCPort)
 }

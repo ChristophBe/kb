@@ -46,3 +46,22 @@ WHERE id = $1;
 
 -- name: DeleteDocument :one
 DELETE FROM document.documents WHERE id = $1 AND owner_id = $2 RETURNING object_key;
+
+-- The cleanup sweeper's queries; they act on any document.
+
+-- DeleteStaleUploads removes up to max_results documents still waiting for
+-- their upload (PENDING_UPLOAD) that were created before cutoff. The status is
+-- checked again on the locked row, so an upload marked done meanwhile stays.
+-- name: DeleteStaleUploads :many
+DELETE FROM document.documents d
+WHERE d.status = sqlc.arg(status) AND d.id IN (
+    SELECT s.id FROM document.documents s
+    WHERE s.status = sqlc.arg(status) AND s.created_at < sqlc.arg(cutoff)
+    ORDER BY s.created_at
+    LIMIT sqlc.arg(max_results)
+)
+RETURNING d.object_key;
+
+-- ExistingObjectKeys returns those of keys that belong to a document.
+-- name: ExistingObjectKeys :many
+SELECT object_key FROM document.documents WHERE object_key = ANY(sqlc.arg(keys)::text[]);

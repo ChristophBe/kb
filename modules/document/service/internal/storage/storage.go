@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"iter"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -15,8 +16,8 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-// presignExpiry bounds how long upload/download URLs stay valid.
-const presignExpiry = 15 * time.Minute
+// PresignExpiry bounds how long upload/download URLs stay valid.
+const PresignExpiry = 15 * time.Minute
 
 // Config describes the object store. PublicEndpoint is the address browsers
 // use; presigned URLs are signed for it.
@@ -77,7 +78,7 @@ func (m *S3) PresignPut(ctx context.Context, key, contentType string, size int64
 	headers := http.Header{}
 	headers.Set("Content-Type", contentType)
 	headers.Set("Content-Length", strconv.FormatInt(size, 10))
-	u, err := m.public.PresignHeader(ctx, http.MethodPut, m.bucket, key, presignExpiry, nil, headers)
+	u, err := m.public.PresignHeader(ctx, http.MethodPut, m.bucket, key, PresignExpiry, nil, headers)
 	if err != nil {
 		return "", err
 	}
@@ -87,7 +88,7 @@ func (m *S3) PresignPut(ctx context.Context, key, contentType string, size int64
 func (m *S3) PresignGet(ctx context.Context, key, filename string) (string, error) {
 	params := url.Values{}
 	params.Set("response-content-disposition", fmt.Sprintf("attachment; filename=%q", filename))
-	u, err := m.public.PresignedGetObject(ctx, m.bucket, key, presignExpiry, params)
+	u, err := m.public.PresignedGetObject(ctx, m.bucket, key, PresignExpiry, params)
 	if err != nil {
 		return "", err
 	}
@@ -111,6 +112,30 @@ func (m *S3) Stat(ctx context.Context, key string) (int64, string, error) {
 	return info.Size, info.ContentType, nil
 }
 
+// Delete removes an object; one that is already gone is no error.
 func (m *S3) Delete(ctx context.Context, key string) error {
 	return m.internal.RemoveObject(ctx, m.bucket, key, minio.RemoveObjectOptions{})
+}
+
+// Object is a stored object as listed.
+type Object struct {
+	Key          string
+	LastModified time.Time
+}
+
+// List yields every object in the bucket, stopping at the first error.
+func (m *S3) List(ctx context.Context) iter.Seq2[Object, error] {
+	return func(yield func(Object, error) bool) {
+		ctx, cancel := context.WithCancel(ctx)
+		defer cancel() // stops the listing when the caller stops early
+		for info := range m.internal.ListObjects(ctx, m.bucket, minio.ListObjectsOptions{Recursive: true}) {
+			if info.Err != nil {
+				yield(Object{}, info.Err)
+				return
+			}
+			if !yield(Object{Key: info.Key, LastModified: info.LastModified}, nil) {
+				return
+			}
+		}
+	}
 }

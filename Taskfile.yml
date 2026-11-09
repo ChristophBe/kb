@@ -172,7 +172,7 @@ tasks:
   test:integration:
     desc: Integration tests against a real Postgres (needs Docker; not part of `test`).
     cmds:
-      - go test -tags integration -count=1 ./modules/document/service/internal/store/... ./modules/ingestion/service/internal/store/...
+      - go test -tags integration -count=1 ./modules/document/service/internal/... ./modules/ingestion/service/internal/store/...
       - uv run pytest -q -m integration --rootdir modules/chat/service modules/chat/service
 
   e2e:

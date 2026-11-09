@@ -146,7 +146,10 @@ components:
       repository: kb-document-service
     env:
       KB_ALLOWED_CONTENT_TYPES: "application/pdf,text/*,application/json,application/yaml,application/x-yaml"
+      KB_CLEANUP_INTERVAL: "1h"
       KB_MAX_UPLOAD_BYTES: "52428800"
+      KB_ORPHAN_GRACE: "1h"
+      KB_UPLOAD_TTL: "24h"
     extraEnv: []
     resources:
       requests: { cpu: 10m, memory: 32Mi }

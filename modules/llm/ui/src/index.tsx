@@ -1,6 +1,7 @@
 import { defineModule } from "@kb/module-sdk";
 import { Cpu } from "lucide-react";
 import { Models } from "./Models.tsx";
+import { ProviderStatus } from "./ProviderStatus.tsx";
 
 export default defineModule({
   id: "llm",
@@ -13,4 +14,5 @@ export default defineModule({
     cta: { label: "View models", path: "" },
   },
   routes: [{ index: true, element: <Models /> }],
+  widgets: { status: ProviderStatus },
 });

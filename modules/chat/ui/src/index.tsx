@@ -2,6 +2,7 @@ import { defineModule } from "@kb/module-sdk";
 import { MessageSquare } from "lucide-react";
 import { ChatIndex, ChatLayout } from "./ChatLayout.tsx";
 import { Conversation } from "./Conversation.tsx";
+import { RecentConversations } from "./RecentConversations.tsx";
 import { StartChat } from "./StartChat.tsx";
 import { conversationSearch } from "./search.ts";
 
@@ -22,6 +23,7 @@ export default defineModule({
     },
   },
   search: conversationSearch,
+  widgets: { recent: RecentConversations },
   routes: [
     {
       element: <ChatLayout />,

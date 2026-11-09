@@ -2,6 +2,7 @@ import { defineModule } from "@kb/module-sdk";
 import { FileText, Search as SearchIcon } from "lucide-react";
 import { DocumentDetail } from "./DocumentDetail.tsx";
 import { DocumentList } from "./DocumentList.tsx";
+import { RecentDocuments } from "./RecentDocuments.tsx";
 import { Search } from "./Search.tsx";
 import { documentSearch } from "./searchProvider.ts";
 
@@ -24,4 +25,5 @@ export default defineModule({
     { path: "search", label: "Search", icon: SearchIcon },
   ],
   search: documentSearch,
+  widgets: { recent: RecentDocuments },
 });

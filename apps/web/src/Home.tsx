@@ -17,7 +17,8 @@ function rise(delayMs: number): CSSProperties {
 
 /**
  * The landing page: a hero with a prompt and the main actions, then a showcase
- * of every module's feature, then any module widgets. Everything
+ * of every module's feature, then the module widgets (the user's recent items
+ * and the state of things) under their own heading. Everything
  * module-specific comes from `KbModule.feature` and `KbModule.widgets`.
  */
 export function Home({ modules }: { modules: KbModule[] }) {
@@ -31,6 +32,7 @@ export function Home({ modules }: { modules: KbModule[] }) {
     )),
   );
   const featuresId = useId();
+  const widgetsId = useId();
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-16 pb-8">
       <header className="relative isolate -mx-8 -mt-8 overflow-hidden px-8 pt-16 pb-12 sm:pt-24">
@@ -92,7 +94,14 @@ export function Home({ modules }: { modules: KbModule[] }) {
           ))}
         </ul>
       </section>
-      {widgets.length > 0 && <div className="grid gap-4 lg:grid-cols-2">{widgets}</div>}
+      {widgets.length > 0 && (
+        <section aria-labelledby={widgetsId}>
+          <h2 id={widgetsId} className="mb-4 text-xl font-medium">
+            Pick up where you left off
+          </h2>
+          <div className="grid gap-4 lg:grid-cols-2">{widgets}</div>
+        </section>
+      )}
     </div>
   );
 }

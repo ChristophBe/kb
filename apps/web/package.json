@@ -26,6 +26,7 @@
     "remark-gfm": "catalog:"
   },
   "devDependencies": {
+    "@connectrpc/connect": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@testing-library/dom": "catalog:",
     "@testing-library/react": "catalog:",

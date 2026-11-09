@@ -28,3 +28,4 @@ export { DelayedLoading, Skeleton, SkeletonRows } from "./loading.tsx";
 export { headingSlug } from "./slug.ts";
 export { applyThemePref, readThemePref, type ThemePref, useThemePref } from "./theme.ts";
 export { ThemeToggle } from "./theme-toggle.tsx";
+export { Widget, WidgetMessage } from "./widget.tsx";

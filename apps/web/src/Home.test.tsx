@@ -1,9 +1,12 @@
+import { createRouterTransport } from "@connectrpc/connect";
 import type { KbModule } from "@kb/module-sdk";
+import { renderWithRuntime } from "@kb/module-sdk/testing";
 import { expectNoAxeViolations } from "@kb/ui/testing";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider, useLocation } from "react-router";
 import { describe, expect, it } from "vitest";
 import { Home } from "./Home.tsx";
+import { activeModules } from "./registry.ts";
 
 const Icon = () => <svg aria-hidden="true" />;
 
@@ -55,7 +58,8 @@ describe("Home", () => {
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
       "Ask your documents anything.",
     );
-    expect(screen.getByText("Chat widget")).toBeTruthy();
+    const widgets = screen.getByRole("region", { name: "Pick up where you left off" });
+    expect(widgets.textContent).toBe("Pick up where you left offChat widget");
 
     const features = screen.getByRole("region", { name: "One place for everything you know" });
     const links = [...features.querySelectorAll("a")].map((a) => a.getAttribute("href"));
@@ -93,5 +97,24 @@ describe("Home", () => {
   it("leaves out the prompt when no module provides one", () => {
     renderHome([document, ingestion, plain]);
     expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
+  it("leaves out the widgets' section when no module has widgets", () => {
+    renderHome([document, ingestion, plain]);
+    expect(screen.queryByRole("region", { name: "Pick up where you left off" })).toBeNull();
+  });
+
+  it("shows the widgets of the enabled modules only", async () => {
+    const modules = activeModules({ apiBaseUrl: "http://test", enabledModules: ["chat", "llm"] });
+    const router = createMemoryRouter([{ path: "/", element: <Home modules={modules} /> }]);
+    // No service answers: every widget shows that its data can't be loaded, the page stays.
+    const transport = createRouterTransport(() => {});
+    renderWithRuntime(<RouterProvider router={router} />, transport);
+    const widgets = screen.getByRole("region", { name: "Pick up where you left off" });
+    const titles = [...widgets.querySelectorAll("h3")].map((h) => h.textContent);
+    expect(titles).toEqual(["Recent conversations", "Models"]);
+    expect(await screen.findByText("Your conversations can't be loaded right now.")).toBeTruthy();
+    expect(await screen.findByText("The providers can't be checked right now.")).toBeTruthy();
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 });

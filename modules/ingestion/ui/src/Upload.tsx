@@ -1,7 +1,6 @@
 import {
   IngestionService,
   type Job,
-  JobStage,
   JobStatus,
 } from "@kb/ingestion-api/kb/ingestion/v1/ingestion_pb";
 import { toast, useClient, useQuery, useQueryClient } from "@kb/module-sdk";
@@ -21,6 +20,7 @@ import {
 import { AlertTriangle, Upload as UploadIcon, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SUPPORTED_FORMATS } from "./files.ts";
+import { active, ProgressBar, stageLabel } from "./progress.tsx";
 import { putWithProgress } from "./put.ts";
 import { type Upload as UploadRow, useUploads } from "./useUploads.ts";
 
@@ -33,29 +33,8 @@ const statusLabel: Record<JobStatus, [string, Tone]> = {
   [JobStatus.FAILED]: ["Failed", "danger"],
 };
 
-/** What the user sees for each processing stage. */
-const stageLabel: Record<JobStage, string> = {
-  [JobStage.UNSPECIFIED]: "Starting",
-  [JobStage.EXTRACTING]: "Reading",
-  [JobStage.CHUNKING]: "Splitting",
-  [JobStage.EMBEDDING]: "Indexing",
-  [JobStage.STORING]: "Saving",
-};
-
 /** How often the list refreshes while a job is being processed, for jobs no upload of this page watches. */
 const ACTIVE_REFRESH_MS = 3000;
-
-const active = (job: Job) => job.status === JobStatus.QUEUED || job.status === JobStatus.PROCESSING;
-
-/** A progress bar with its percentage; label names it for screen readers. */
-function ProgressBar({ percent, label }: { percent: number; label: string }) {
-  return (
-    <span className="flex items-center gap-2">
-      <progress max={100} value={percent} aria-label={label} className="h-1.5 w-40 accent-fg" />
-      <span className="w-10 text-right font-mono text-fg-muted tabular-nums">{percent} %</span>
-    </span>
-  );
-}
 
 /** A local status region: progress is not announced continuously, state changes once. */
 function useAnnouncer() {

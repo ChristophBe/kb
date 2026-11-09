@@ -1,5 +1,6 @@
 import { defineModule } from "@kb/module-sdk";
 import { Upload as UploadIcon } from "lucide-react";
+import { ActiveJobs } from "./ActiveJobs.tsx";
 import { Upload } from "./Upload.tsx";
 
 export default defineModule({
@@ -12,4 +13,5 @@ export default defineModule({
     cta: { label: "Upload documents", path: "" },
   },
   routes: [{ index: true, element: <Upload /> }],
+  widgets: { active: ActiveJobs },
 });

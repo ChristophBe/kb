@@ -38,12 +38,99 @@ jobs:
       - run: $TASK test:integration
 
   # The release images (deploy/images.json), built for amd64 without pushing.
+  # The helm job installs them from the artifacts.
   images:
     # images.yml declares packages: write for its push; it stays off here.
     permissions:
       contents: read
       packages: write
     uses: ./.github/workflows/images.yml
+    with:
+      artifact: true
+
+  # The Helm chart (deploy/helm/kb): lint, install on kind with the dev
+  # infrastructure and the images of this run, then the e2e smoke test against
+  # the release through its Ingress (docs/operations/kubernetes.md).
+  helm:
+    needs: images
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CLUSTER: kb
+      PUBLIC_URL: http://kb.localhost:8000
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            tools/go.sum
+      - uses: azure/setup-helm@v5
+        with: { version: v4.1.3 }
+
+      - name: Lint
+        run: |
+          helm lint --strict deploy/helm/kb --set infra.enabled=true
+          helm lint --strict deploy/helm/kb --set oidc.issuer=https://id.example.com --set oidc.jwksUrl=https://id.example.com/keys --set postgres.host=db --set s3.endpoint=s3.example.com
+
+      # The Ingress controller listens on the node's port 80, published as 8000.
+      - name: Kind config
+        run: |
+          cat > "$RUNNER_TEMP/kind.yaml" <<'EOF'
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          nodes:
+            - role: control-plane
+              extraPortMappings:
+                - { containerPort: 80, hostPort: 8000, listenAddress: 127.0.0.1 }
+          EOF
+      - uses: helm/kind-action@v1.15.1
+        with:
+          cluster_name: ${{ env.CLUSTER }}
+          config: ${{ runner.temp }}/kind.yaml
+      - name: Traefik
+        run: |
+          helm install traefik traefik --repo https://traefik.github.io/charts --version 42.0.0 \
+            -n traefik --create-namespace \
+            --set ports.web.hostPort=80 --set service.enabled=false --set ingressClass.isDefaultClass=true --wait
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: image-*
+          path: ${{ runner.temp }}/images
+      - name: Load the images into kind
+        run: |
+          for tar in "$RUNNER_TEMP"/images/*/image.tar; do
+            kind load image-archive --name "$CLUSTER" "$tar"
+          done
+
+      - name: Install
+        run: |
+          helm install kb deploy/helm/kb -n kb --create-namespace \
+            --set infra.enabled=true \
+            --set publicUrl="$PUBLIC_URL" \
+            --set image.tag=dev \
+            --set components.llm-service.env.KB_LLM_PROVIDER=fake \
+            --set components.chat-service.env.KB_RAG_MIN_SCORE=-1 \
+            --wait --timeout 10m
+
+      # Go's resolver doesn't map *.localhost to the loopback address by itself.
+      - run: echo "127.0.0.1 kb.localhost s3.kb.localhost" | sudo tee -a /etc/hosts
+      - name: Smoke test
+        env:
+          KB_E2E_GATEWAY: ${{ env.PUBLIC_URL }}
+        run: go tool -modfile=tools/go.mod task e2e
+
+      - name: Cluster state
+        if: failure()
+        run: |
+          kubectl get all,ingress,pvc -A
+          kubectl -n kb describe pods
+          for p in $(kubectl -n kb get pods -o name); do
+            echo "===== $p"
+            kubectl -n kb logs "$p" --all-containers --prefix --tail=300 || true
+          done
 
   # Upload → processing → RAG chat against the composed stack (fake LLM provider).
   e2e:

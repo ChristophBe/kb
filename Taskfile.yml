@@ -179,6 +179,7 @@ tasks:
     desc: >-
       End-to-end smoke test (needs Docker; not part of `test`): builds and starts the stack as
       compose project kb-e2e on ports 21xxx, uploads a file and chats about it, tears it down.
+      With KB_E2E_GATEWAY set it tests that running stack instead (e.g. a Helm release).
     vars:
       PROJECT: '{{.KB_E2E_PROJECT | default "kb-e2e"}}'
     cmds:

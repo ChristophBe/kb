@@ -40,11 +40,12 @@ describe("pagesProvider", () => {
 });
 
 describe("searchProviders", () => {
-  it("puts Pages first, then the modules that provide a search", () => {
+  it("puts Pages first, then the modules that provide a search, then Help", () => {
     const provider = { label: "Conversations", search: async () => [] };
     expect(searchProviders([document, { ...chat, search: provider }]).map((p) => p.label)).toEqual([
       "Pages",
       "Conversations",
+      "Help",
     ]);
   });
 });

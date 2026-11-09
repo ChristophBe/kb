@@ -26,6 +26,12 @@ var (
 	ErrDocumentsUnavailable = errors.New("the document service is unavailable")
 	// ErrNotReprocessable means the job is not FAILED or DONE.
 	ErrNotReprocessable = errors.New("only failed or done jobs can be reprocessed")
+	// ErrDocumentNotFound means the document module has no such document (or
+	// it is another user's).
+	ErrDocumentNotFound = errors.New("document not found")
+	// ErrDocumentBusy means the document can't take a new version yet: it or
+	// its job is still being uploaded or processed.
+	ErrDocumentBusy = errors.New("the document is still being uploaded or processed")
 	// ErrNotAdvanced is returned by Jobs.Advance when the transition does not
 	// apply: the job is unknown, terminal, in another run or already past the
 	// requested status. Jobs.Reprocess returns it when the job is unknown or
@@ -72,7 +78,7 @@ type Job struct {
 	Error       string
 	ChunkCount  int32
 	// Run counts the processing runs: 1 for the upload, incremented by every
-	// reprocess. Events name the run they belong to.
+	// reprocess and new version. Events name the run they belong to.
 	Run int32
 	// Stage and Progress (0–100) describe how far the current run got.
 	Stage     ingestionv1.JobStage
@@ -121,6 +127,11 @@ type Jobs interface {
 	Advance(ctx context.Context, t Transition) (Job, error)
 	ReportProgress(ctx context.Context, p Progress) (Job, error)
 	Reprocess(ctx context.Context, owner string, id uuid.UUID) (Job, error)
+	// GetByDocument returns owner's job of a document, ErrNotFound if none.
+	GetByDocument(ctx context.Context, owner string, documentID uuid.UUID) (Job, error)
+	// Restart makes owner's job wait for a new file as its next run, unless
+	// it is QUEUED or PROCESSING (ErrNotAdvanced).
+	Restart(ctx context.Context, owner string, id uuid.UUID, filename, contentType string) (Job, error)
 }
 
 // NewUpload describes a file about to be uploaded.
@@ -145,8 +156,11 @@ type Document struct {
 // the module is unreachable. Create returns an *InvalidUploadError for a file
 // the module does not accept. MarkUploaded returns ErrUploadMissing when the
 // file is not there and an *UploadRejectedError when the module refuses it.
+// Replace starts a new version of a document; it returns an
+// *InvalidUploadError like Create, ErrDocumentNotFound and ErrDocumentBusy.
 type Documents interface {
 	Create(ctx context.Context, upload NewUpload) (Document, error)
+	Replace(ctx context.Context, id uuid.UUID, upload NewUpload) (Document, error)
 	MarkUploaded(ctx context.Context, id uuid.UUID) error
 }
 
@@ -183,6 +197,50 @@ func (s *Service) CreateUpload(ctx context.Context, owner string, upload NewUplo
 	})
 	if err != nil {
 		return Job{}, "", fmt.Errorf("create job: %w", err)
+	}
+	return job, doc.UploadURL, nil
+}
+
+// ReplaceUpload starts a new version of owner's document. The document's job
+// waits for the new file as its next run, so CompleteUpload and the worker
+// handle it like a first upload; a document without a job gets one. It
+// returns the job and the URL to upload the file to.
+func (s *Service) ReplaceUpload(ctx context.Context, owner string, documentID uuid.UUID, upload NewUpload) (Job, string, error) {
+	job, err := s.jobs.GetByDocument(ctx, owner, documentID)
+	hasJob := err == nil
+	if err != nil && !errors.Is(err, ErrNotFound) {
+		return Job{}, "", fmt.Errorf("get job: %w", err)
+	}
+	// Checked here too, so that a run in progress is never cut short.
+	if hasJob && (job.Status == ingestionv1.JobStatus_JOB_STATUS_QUEUED || job.Status == ingestionv1.JobStatus_JOB_STATUS_PROCESSING) {
+		return Job{}, "", ErrDocumentBusy
+	}
+	doc, err := s.documents.Replace(ctx, documentID, upload)
+	if err != nil {
+		return Job{}, "", err
+	}
+	if !hasJob {
+		job, err = s.jobs.Create(ctx, Job{
+			ID:          uuid.New(),
+			OwnerID:     owner,
+			DocumentID:  documentID,
+			Filename:    doc.Filename,
+			ContentType: doc.ContentType,
+			Status:      ingestionv1.JobStatus_JOB_STATUS_PENDING_UPLOAD,
+		})
+		if err != nil {
+			return Job{}, "", fmt.Errorf("create job: %w", err)
+		}
+		return job, doc.UploadURL, nil
+	}
+	job, err = s.jobs.Restart(ctx, owner, job.ID, doc.Filename, doc.ContentType)
+	if errors.Is(err, ErrNotAdvanced) {
+		// Queued in between; the document's pending version is replaced by
+		// the next attempt.
+		return Job{}, "", ErrDocumentBusy
+	}
+	if err != nil {
+		return Job{}, "", fmt.Errorf("restart job: %w", err)
 	}
 	return job, doc.UploadURL, nil
 }

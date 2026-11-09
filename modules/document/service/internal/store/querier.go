@@ -22,7 +22,8 @@ type Querier interface {
 	// their upload (PENDING_UPLOAD) that were created before cutoff. The status is
 	// checked again on the locked row, so an upload marked done meanwhile stays.
 	DeleteStaleUploads(ctx context.Context, arg DeleteStaleUploadsParams) ([]string, error)
-	// ExistingObjectKeys returns those of keys that belong to a document.
+	// ExistingObjectKeys returns those of keys that belong to a document, as its
+	// file or as the file of its pending version.
 	ExistingObjectKeys(ctx context.Context, keys []string) ([]string, error)
 	GetAnyDocument(ctx context.Context, id uuid.UUID) (DocumentDocument, error)
 	GetDocument(ctx context.Context, arg GetDocumentParams) (DocumentDocument, error)
@@ -30,6 +31,11 @@ type Querier interface {
 	ListChunks(ctx context.Context, arg ListChunksParams) ([]ListChunksRow, error)
 	ListDocuments(ctx context.Context, arg ListDocumentsParams) ([]DocumentDocument, error)
 	MarkDocumentUploaded(ctx context.Context, arg MarkDocumentUploadedParams) (DocumentDocument, error)
+	MarkPendingUploaded(ctx context.Context, arg MarkPendingUploadedParams) (DocumentDocument, error)
+	// PromotePendingVersion makes an uploaded or processing (UPLOADED=2,
+	// PROCESSING=3) pending version the document's current one. It runs with the
+	// chunks of that version replacing the old ones (store.Repo.ReplaceChunks).
+	PromotePendingVersion(ctx context.Context, id uuid.UUID) error
 	// SearchBestChunks returns the most similar chunk of each of the owner's
 	// documents, ranked by that chunk's score: the documents most similar to the
 	// embedding. It is an exact scan, since the vector index can't pick one chunk
@@ -42,6 +48,14 @@ type Querier interface {
 	SearchChunks(ctx context.Context, arg SearchChunksParams) ([]SearchChunksRow, error)
 	SetChunkCount(ctx context.Context, arg SetChunkCountParams) error
 	SetDocumentStatus(ctx context.Context, arg SetDocumentStatusParams) (DocumentDocument, error)
+	SetPendingStatus(ctx context.Context, arg SetPendingStatusParams) (DocumentDocument, error)
+	// The pending version's queries: a new file from ReplaceContent that becomes
+	// the document's current one once it has been processed.
+	// StartPendingVersion records a new file for a READY (4) or FAILED (5)
+	// document, replacing a pending version that awaits its upload (1) or failed
+	// (5). The document itself is left as it is. No row means the document is
+	// not the owner's, or busy.
+	StartPendingVersion(ctx context.Context, arg StartPendingVersionParams) (DocumentDocument, error)
 	UpdateDocument(ctx context.Context, arg UpdateDocumentParams) (DocumentDocument, error)
 }
 

@@ -66,6 +66,8 @@ static_resources:
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/kb.ingestion.v1.IngestionService/CompleteUpload" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/kb.ingestion.v1.IngestionService/ReplaceUpload" }
+                          route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/kb.ingestion.v1.IngestionService/GetJob" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/kb.ingestion.v1.IngestionService/ListJobs" }

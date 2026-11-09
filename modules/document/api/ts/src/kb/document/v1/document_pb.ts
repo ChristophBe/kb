@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file kb/document/v1/document.proto.
  */
 export const file_kb_document_v1_document: GenFile = /*@__PURE__*/
-  fileDesc("Ch1rYi9kb2N1bWVudC92MS9kb2N1bWVudC5wcm90bxIOa2IuZG9jdW1lbnQudjEirAMKCERvY3VtZW50EgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEhAKCGZpbGVuYW1lGAMgASgJEhQKDGNvbnRlbnRfdHlwZRgEIAEoCRISCgpzaXplX2J5dGVzGAUgASgDEi4KBnN0YXR1cxgGIAEoDjIeLmtiLmRvY3VtZW50LnYxLkRvY3VtZW50U3RhdHVzEhUKDXN0YXR1c19kZXRhaWwYByABKAkSEwoLY2h1bmtfY291bnQYCCABKAUSOAoIbWV0YWRhdGEYCSADKAsyJi5rYi5kb2N1bWVudC52MS5Eb2N1bWVudC5NZXRhZGF0YUVudHJ5Ei8KC2NyZWF0ZV90aW1lGAogASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIvCgt1cGRhdGVfdGltZRgLIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASEAoIb3duZXJfaWQYDCABKAkSDgoGc2hhMjU2GA0gASgJGi8KDU1ldGFkYXRhRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASKhAQoFQ2h1bmsSEwoLZG9jdW1lbnRfaWQYASABKAkSDQoFaW5kZXgYAiABKAUSDAoEdGV4dBgDIAEoCRI1CghtZXRhZGF0YRgEIAMoCzIjLmtiLmRvY3VtZW50LnYxLkNodW5rLk1ldGFkYXRhRW50cnkaLwoNTWV0YWRhdGFFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIloKC1Njb3JlZENodW5rEiQKBWNodW5rGAEgASgLMhUua2IuZG9jdW1lbnQudjEuQ2h1bmsSFgoOZG9jdW1lbnRfdGl0bGUYAiABKAkSDQoFc2NvcmUYAyABKAIibgoOU2NvcmVkRG9jdW1lbnQSEwoLZG9jdW1lbnRfaWQYASABKAkSDQoFdGl0bGUYAiABKAkSDQoFc2NvcmUYAyABKAISKQoKYmVzdF9jaHVuaxgEIAEoCzIVLmtiLmRvY3VtZW50LnYxLkNodW5rIuoBChVDcmVhdGVEb2N1bWVudFJlcXVlc3QSDQoFdGl0bGUYASABKAkSEAoIZmlsZW5hbWUYAiABKAkSFAoMY29udGVudF90eXBlGAMgASgJEhIKCnNpemVfYnl0ZXMYBCABKAMSRQoIbWV0YWRhdGEYBSADKAsyMy5rYi5kb2N1bWVudC52MS5DcmVhdGVEb2N1bWVudFJlcXVlc3QuTWV0YWRhdGFFbnRyeRIOCgZzaGEyNTYYBiABKAkaLwoNTWV0YWRhdGFFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIlgKFkNyZWF0ZURvY3VtZW50UmVzcG9uc2USKgoIZG9jdW1lbnQYASABKAsyGC5rYi5kb2N1bWVudC52MS5Eb2N1bWVudBISCgp1cGxvYWRfdXJsGAIgASgJIiAKEkdldERvY3VtZW50UmVxdWVzdBIKCgJpZBgBIAEoCSJBChNHZXREb2N1bWVudFJlc3BvbnNlEioKCGRvY3VtZW50GAEgASgLMhgua2IuZG9jdW1lbnQudjEuRG9jdW1lbnQiPwoUTGlzdERvY3VtZW50c1JlcXVlc3QSJwoEcGFnZRgBIAEoCzIZLmtiLmNvbW1vbi52MS5QYWdlUmVxdWVzdCJuChVMaXN0RG9jdW1lbnRzUmVzcG9uc2USKwoJZG9jdW1lbnRzGAEgAygLMhgua2IuZG9jdW1lbnQudjEuRG9jdW1lbnQSKAoEcGFnZRgCIAEoCzIaLmtiLmNvbW1vbi52MS5QYWdlUmVzcG9uc2UizwEKFVVwZGF0ZURvY3VtZW50UmVxdWVzdBIKCgJpZBgBIAEoCRISCgV0aXRsZRgCIAEoCUgAiAEBEkUKCG1ldGFkYXRhGAMgAygLMjMua2IuZG9jdW1lbnQudjEuVXBkYXRlRG9jdW1lbnRSZXF1ZXN0Lk1ldGFkYXRhRW50cnkSFAoMc2V0X21ldGFkYXRhGAQgASgIGi8KDU1ldGFkYXRhRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4AUIICgZfdGl0bGUiRAoWVXBkYXRlRG9jdW1lbnRSZXNwb25zZRIqCghkb2N1bWVudBgBIAEoCzIYLmtiLmRvY3VtZW50LnYxLkRvY3VtZW50IiMKFURlbGV0ZURvY3VtZW50UmVxdWVzdBIKCgJpZBgBIAEoCSIYChZEZWxldGVEb2N1bWVudFJlc3BvbnNlIm0KGFNldERvY3VtZW50U3RhdHVzUmVxdWVzdBIKCgJpZBgBIAEoCRIuCgZzdGF0dXMYAiABKA4yHi5rYi5kb2N1bWVudC52MS5Eb2N1bWVudFN0YXR1cxIVCg1zdGF0dXNfZGV0YWlsGAMgASgJIkcKGVNldERvY3VtZW50U3RhdHVzUmVzcG9uc2USKgoIZG9jdW1lbnQYASABKAsyGC5rYi5kb2N1bWVudC52MS5Eb2N1bWVudCIjChVHZXREb3dubG9hZFVybFJlcXVlc3QSCgoCaWQYASABKAkiJQoWR2V0RG93bmxvYWRVcmxSZXNwb25zZRILCgN1cmwYASABKAkiIAoSUmVhZENvbnRlbnRSZXF1ZXN0EgoKAmlkGAEgASgJIiMKE1JlYWRDb250ZW50UmVzcG9uc2USDAoEZGF0YRgBIAEoDCKpAQoKQ2h1bmtJbnB1dBINCgVpbmRleBgBIAEoBRIMCgR0ZXh0GAIgASgJEhEKCWVtYmVkZGluZxgDIAMoAhI6CghtZXRhZGF0YRgEIAMoCzIoLmtiLmRvY3VtZW50LnYxLkNodW5rSW5wdXQuTWV0YWRhdGFFbnRyeRovCg1NZXRhZGF0YUVudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAEiUwoQQWRkQ2h1bmtzUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCRIqCgZjaHVua3MYAiADKAsyGi5rYi5kb2N1bWVudC52MS5DaHVua0lucHV0IigKEUFkZENodW5rc1Jlc3BvbnNlEhMKC2NodW5rX2NvdW50GAEgASgFIlEKEUxpc3RDaHVua3NSZXF1ZXN0EhMKC2RvY3VtZW50X2lkGAEgASgJEicKBHBhZ2UYAiABKAsyGS5rYi5jb21tb24udjEuUGFnZVJlcXVlc3QiZQoSTGlzdENodW5rc1Jlc3BvbnNlEiUKBmNodW5rcxgBIAMoCzIVLmtiLmRvY3VtZW50LnYxLkNodW5rEigKBHBhZ2UYAiABKAsyGi5rYi5jb21tb24udjEuUGFnZVJlc3BvbnNlIk0KE1NlYXJjaENodW5rc1JlcXVlc3QSEQoJZW1iZWRkaW5nGAEgAygCEg0KBWxpbWl0GAIgASgFEhQKDGRvY3VtZW50X2lkcxgDIAMoCSJEChRTZWFyY2hDaHVua3NSZXNwb25zZRIsCgdyZXN1bHRzGAEgAygLMhsua2IuZG9jdW1lbnQudjEuU2NvcmVkQ2h1bmsiTAoWU2VhcmNoRG9jdW1lbnRzUmVxdWVzdBINCgVxdWVyeRgBIAEoCRINCgVsaW1pdBgCIAEoBRIUCgxkb2N1bWVudF9pZHMYAyADKAkiegoXU2VhcmNoRG9jdW1lbnRzUmVzcG9uc2USLAoHcmVzdWx0cxgBIAMoCzIbLmtiLmRvY3VtZW50LnYxLlNjb3JlZENodW5rEjEKCWRvY3VtZW50cxgCIAMoCzIeLmtiLmRvY3VtZW50LnYxLlNjb3JlZERvY3VtZW50KsoBCg5Eb2N1bWVudFN0YXR1cxIfChtET0NVTUVOVF9TVEFUVVNfVU5TUEVDSUZJRUQQABIiCh5ET0NVTUVOVF9TVEFUVVNfUEVORElOR19VUExPQUQQARIcChhET0NVTUVOVF9TVEFUVVNfVVBMT0FERUQQAhIeChpET0NVTUVOVF9TVEFUVVNfUFJPQ0VTU0lORxADEhkKFURPQ1VNRU5UX1NUQVRVU19SRUFEWRAEEhoKFkRPQ1VNRU5UX1NUQVRVU19GQUlMRUQQBTL1CAoPRG9jdW1lbnRTZXJ2aWNlEl8KDkNyZWF0ZURvY3VtZW50EiUua2IuZG9jdW1lbnQudjEuQ3JlYXRlRG9jdW1lbnRSZXF1ZXN0GiYua2IuZG9jdW1lbnQudjEuQ3JlYXRlRG9jdW1lbnRSZXNwb25zZRJWCgtHZXREb2N1bWVudBIiLmtiLmRvY3VtZW50LnYxLkdldERvY3VtZW50UmVxdWVzdBojLmtiLmRvY3VtZW50LnYxLkdldERvY3VtZW50UmVzcG9uc2USXAoNTGlzdERvY3VtZW50cxIkLmtiLmRvY3VtZW50LnYxLkxpc3REb2N1bWVudHNSZXF1ZXN0GiUua2IuZG9jdW1lbnQudjEuTGlzdERvY3VtZW50c1Jlc3BvbnNlEl8KDlVwZGF0ZURvY3VtZW50EiUua2IuZG9jdW1lbnQudjEuVXBkYXRlRG9jdW1lbnRSZXF1ZXN0GiYua2IuZG9jdW1lbnQudjEuVXBkYXRlRG9jdW1lbnRSZXNwb25zZRJfCg5EZWxldGVEb2N1bWVudBIlLmtiLmRvY3VtZW50LnYxLkRlbGV0ZURvY3VtZW50UmVxdWVzdBomLmtiLmRvY3VtZW50LnYxLkRlbGV0ZURvY3VtZW50UmVzcG9uc2USaAoRU2V0RG9jdW1lbnRTdGF0dXMSKC5rYi5kb2N1bWVudC52MS5TZXREb2N1bWVudFN0YXR1c1JlcXVlc3QaKS5rYi5kb2N1bWVudC52MS5TZXREb2N1bWVudFN0YXR1c1Jlc3BvbnNlEl8KDkdldERvd25sb2FkVXJsEiUua2IuZG9jdW1lbnQudjEuR2V0RG93bmxvYWRVcmxSZXF1ZXN0GiYua2IuZG9jdW1lbnQudjEuR2V0RG93bmxvYWRVcmxSZXNwb25zZRJYCgtSZWFkQ29udGVudBIiLmtiLmRvY3VtZW50LnYxLlJlYWRDb250ZW50UmVxdWVzdBojLmtiLmRvY3VtZW50LnYxLlJlYWRDb250ZW50UmVzcG9uc2UwARJQCglBZGRDaHVua3MSIC5rYi5kb2N1bWVudC52MS5BZGRDaHVua3NSZXF1ZXN0GiEua2IuZG9jdW1lbnQudjEuQWRkQ2h1bmtzUmVzcG9uc2USUwoKTGlzdENodW5rcxIhLmtiLmRvY3VtZW50LnYxLkxpc3RDaHVua3NSZXF1ZXN0GiIua2IuZG9jdW1lbnQudjEuTGlzdENodW5rc1Jlc3BvbnNlElkKDFNlYXJjaENodW5rcxIjLmtiLmRvY3VtZW50LnYxLlNlYXJjaENodW5rc1JlcXVlc3QaJC5rYi5kb2N1bWVudC52MS5TZWFyY2hDaHVua3NSZXNwb25zZRJiCg9TZWFyY2hEb2N1bWVudHMSJi5rYi5kb2N1bWVudC52MS5TZWFyY2hEb2N1bWVudHNSZXF1ZXN0Gicua2IuZG9jdW1lbnQudjEuU2VhcmNoRG9jdW1lbnRzUmVzcG9uc2VCR1pFZ2l0aHViLmNvbS9jaHJpc3RvcGgva2IvbW9kdWxlcy9kb2N1bWVudC9hcGkvZ28vZG9jdW1lbnR2MTtkb2N1bWVudHYxYgZwcm90bzM", [file_google_protobuf_timestamp, file_kb_common_v1_common]);
+  fileDesc("Ch1rYi9kb2N1bWVudC92MS9kb2N1bWVudC5wcm90bxIOa2IuZG9jdW1lbnQudjEi9gMKCERvY3VtZW50EgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEhAKCGZpbGVuYW1lGAMgASgJEhQKDGNvbnRlbnRfdHlwZRgEIAEoCRISCgpzaXplX2J5dGVzGAUgASgDEi4KBnN0YXR1cxgGIAEoDjIeLmtiLmRvY3VtZW50LnYxLkRvY3VtZW50U3RhdHVzEhUKDXN0YXR1c19kZXRhaWwYByABKAkSEwoLY2h1bmtfY291bnQYCCABKAUSOAoIbWV0YWRhdGEYCSADKAsyJi5rYi5kb2N1bWVudC52MS5Eb2N1bWVudC5NZXRhZGF0YUVudHJ5Ei8KC2NyZWF0ZV90aW1lGAogASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIvCgt1cGRhdGVfdGltZRgLIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASEAoIb3duZXJfaWQYDCABKAkSDgoGc2hhMjU2GA0gASgJEg8KB3ZlcnNpb24YDiABKAUSNwoPcGVuZGluZ192ZXJzaW9uGA8gASgLMh4ua2IuZG9jdW1lbnQudjEuUGVuZGluZ1ZlcnNpb24aLwoNTWV0YWRhdGFFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIrQBCg5QZW5kaW5nVmVyc2lvbhIPCgd2ZXJzaW9uGAEgASgFEhAKCGZpbGVuYW1lGAIgASgJEhQKDGNvbnRlbnRfdHlwZRgDIAEoCRISCgpzaXplX2J5dGVzGAQgASgDEi4KBnN0YXR1cxgFIAEoDjIeLmtiLmRvY3VtZW50LnYxLkRvY3VtZW50U3RhdHVzEhUKDXN0YXR1c19kZXRhaWwYBiABKAkSDgoGc2hhMjU2GAcgASgJIqEBCgVDaHVuaxITCgtkb2N1bWVudF9pZBgBIAEoCRINCgVpbmRleBgCIAEoBRIMCgR0ZXh0GAMgASgJEjUKCG1ldGFkYXRhGAQgAygLMiMua2IuZG9jdW1lbnQudjEuQ2h1bmsuTWV0YWRhdGFFbnRyeRovCg1NZXRhZGF0YUVudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAEiWgoLU2NvcmVkQ2h1bmsSJAoFY2h1bmsYASABKAsyFS5rYi5kb2N1bWVudC52MS5DaHVuaxIWCg5kb2N1bWVudF90aXRsZRgCIAEoCRINCgVzY29yZRgDIAEoAiJuCg5TY29yZWREb2N1bWVudBITCgtkb2N1bWVudF9pZBgBIAEoCRINCgV0aXRsZRgCIAEoCRINCgVzY29yZRgDIAEoAhIpCgpiZXN0X2NodW5rGAQgASgLMhUua2IuZG9jdW1lbnQudjEuQ2h1bmsi6gEKFUNyZWF0ZURvY3VtZW50UmVxdWVzdBINCgV0aXRsZRgBIAEoCRIQCghmaWxlbmFtZRgCIAEoCRIUCgxjb250ZW50X3R5cGUYAyABKAkSEgoKc2l6ZV9ieXRlcxgEIAEoAxJFCghtZXRhZGF0YRgFIAMoCzIzLmtiLmRvY3VtZW50LnYxLkNyZWF0ZURvY3VtZW50UmVxdWVzdC5NZXRhZGF0YUVudHJ5Eg4KBnNoYTI1NhgGIAEoCRovCg1NZXRhZGF0YUVudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAEiWAoWQ3JlYXRlRG9jdW1lbnRSZXNwb25zZRIqCghkb2N1bWVudBgBIAEoCzIYLmtiLmRvY3VtZW50LnYxLkRvY3VtZW50EhIKCnVwbG9hZF91cmwYAiABKAkibwoVUmVwbGFjZUNvbnRlbnRSZXF1ZXN0EgoKAmlkGAEgASgJEhAKCGZpbGVuYW1lGAIgASgJEhQKDGNvbnRlbnRfdHlwZRgDIAEoCRISCgpzaXplX2J5dGVzGAQgASgDEg4KBnNoYTI1NhgFIAEoCSJYChZSZXBsYWNlQ29udGVudFJlc3BvbnNlEioKCGRvY3VtZW50GAEgASgLMhgua2IuZG9jdW1lbnQudjEuRG9jdW1lbnQSEgoKdXBsb2FkX3VybBgCIAEoCSIgChJHZXREb2N1bWVudFJlcXVlc3QSCgoCaWQYASABKAkiQQoTR2V0RG9jdW1lbnRSZXNwb25zZRIqCghkb2N1bWVudBgBIAEoCzIYLmtiLmRvY3VtZW50LnYxLkRvY3VtZW50Ij8KFExpc3REb2N1bWVudHNSZXF1ZXN0EicKBHBhZ2UYASABKAsyGS5rYi5jb21tb24udjEuUGFnZVJlcXVlc3QibgoVTGlzdERvY3VtZW50c1Jlc3BvbnNlEisKCWRvY3VtZW50cxgBIAMoCzIYLmtiLmRvY3VtZW50LnYxLkRvY3VtZW50EigKBHBhZ2UYAiABKAsyGi5rYi5jb21tb24udjEuUGFnZVJlc3BvbnNlIs8BChVVcGRhdGVEb2N1bWVudFJlcXVlc3QSCgoCaWQYASABKAkSEgoFdGl0bGUYAiABKAlIAIgBARJFCghtZXRhZGF0YRgDIAMoCzIzLmtiLmRvY3VtZW50LnYxLlVwZGF0ZURvY3VtZW50UmVxdWVzdC5NZXRhZGF0YUVudHJ5EhQKDHNldF9tZXRhZGF0YRgEIAEoCBovCg1NZXRhZGF0YUVudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAFCCAoGX3RpdGxlIkQKFlVwZGF0ZURvY3VtZW50UmVzcG9uc2USKgoIZG9jdW1lbnQYASABKAsyGC5rYi5kb2N1bWVudC52MS5Eb2N1bWVudCIjChVEZWxldGVEb2N1bWVudFJlcXVlc3QSCgoCaWQYASABKAkiGAoWRGVsZXRlRG9jdW1lbnRSZXNwb25zZSJtChhTZXREb2N1bWVudFN0YXR1c1JlcXVlc3QSCgoCaWQYASABKAkSLgoGc3RhdHVzGAIgASgOMh4ua2IuZG9jdW1lbnQudjEuRG9jdW1lbnRTdGF0dXMSFQoNc3RhdHVzX2RldGFpbBgDIAEoCSJHChlTZXREb2N1bWVudFN0YXR1c1Jlc3BvbnNlEioKCGRvY3VtZW50GAEgASgLMhgua2IuZG9jdW1lbnQudjEuRG9jdW1lbnQiIwoVR2V0RG93bmxvYWRVcmxSZXF1ZXN0EgoKAmlkGAEgASgJIiUKFkdldERvd25sb2FkVXJsUmVzcG9uc2USCwoDdXJsGAEgASgJIiAKElJlYWRDb250ZW50UmVxdWVzdBIKCgJpZBgBIAEoCSIjChNSZWFkQ29udGVudFJlc3BvbnNlEgwKBGRhdGEYASABKAwiqQEKCkNodW5rSW5wdXQSDQoFaW5kZXgYASABKAUSDAoEdGV4dBgCIAEoCRIRCgllbWJlZGRpbmcYAyADKAISOgoIbWV0YWRhdGEYBCADKAsyKC5rYi5kb2N1bWVudC52MS5DaHVua0lucHV0Lk1ldGFkYXRhRW50cnkaLwoNTWV0YWRhdGFFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIlMKEEFkZENodW5rc1JlcXVlc3QSEwoLZG9jdW1lbnRfaWQYASABKAkSKgoGY2h1bmtzGAIgAygLMhoua2IuZG9jdW1lbnQudjEuQ2h1bmtJbnB1dCIoChFBZGRDaHVua3NSZXNwb25zZRITCgtjaHVua19jb3VudBgBIAEoBSJRChFMaXN0Q2h1bmtzUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCRInCgRwYWdlGAIgASgLMhkua2IuY29tbW9uLnYxLlBhZ2VSZXF1ZXN0ImUKEkxpc3RDaHVua3NSZXNwb25zZRIlCgZjaHVua3MYASADKAsyFS5rYi5kb2N1bWVudC52MS5DaHVuaxIoCgRwYWdlGAIgASgLMhoua2IuY29tbW9uLnYxLlBhZ2VSZXNwb25zZSJNChNTZWFyY2hDaHVua3NSZXF1ZXN0EhEKCWVtYmVkZGluZxgBIAMoAhINCgVsaW1pdBgCIAEoBRIUCgxkb2N1bWVudF9pZHMYAyADKAkiRAoUU2VhcmNoQ2h1bmtzUmVzcG9uc2USLAoHcmVzdWx0cxgBIAMoCzIbLmtiLmRvY3VtZW50LnYxLlNjb3JlZENodW5rIkwKFlNlYXJjaERvY3VtZW50c1JlcXVlc3QSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKAUSFAoMZG9jdW1lbnRfaWRzGAMgAygJInoKF1NlYXJjaERvY3VtZW50c1Jlc3BvbnNlEiwKB3Jlc3VsdHMYASADKAsyGy5rYi5kb2N1bWVudC52MS5TY29yZWRDaHVuaxIxCglkb2N1bWVudHMYAiADKAsyHi5rYi5kb2N1bWVudC52MS5TY29yZWREb2N1bWVudCrKAQoORG9jdW1lbnRTdGF0dXMSHwobRE9DVU1FTlRfU1RBVFVTX1VOU1BFQ0lGSUVEEAASIgoeRE9DVU1FTlRfU1RBVFVTX1BFTkRJTkdfVVBMT0FEEAESHAoYRE9DVU1FTlRfU1RBVFVTX1VQTE9BREVEEAISHgoaRE9DVU1FTlRfU1RBVFVTX1BST0NFU1NJTkcQAxIZChVET0NVTUVOVF9TVEFUVVNfUkVBRFkQBBIaChZET0NVTUVOVF9TVEFUVVNfRkFJTEVEEAUy1gkKD0RvY3VtZW50U2VydmljZRJfCg5DcmVhdGVEb2N1bWVudBIlLmtiLmRvY3VtZW50LnYxLkNyZWF0ZURvY3VtZW50UmVxdWVzdBomLmtiLmRvY3VtZW50LnYxLkNyZWF0ZURvY3VtZW50UmVzcG9uc2USXwoOUmVwbGFjZUNvbnRlbnQSJS5rYi5kb2N1bWVudC52MS5SZXBsYWNlQ29udGVudFJlcXVlc3QaJi5rYi5kb2N1bWVudC52MS5SZXBsYWNlQ29udGVudFJlc3BvbnNlElYKC0dldERvY3VtZW50EiIua2IuZG9jdW1lbnQudjEuR2V0RG9jdW1lbnRSZXF1ZXN0GiMua2IuZG9jdW1lbnQudjEuR2V0RG9jdW1lbnRSZXNwb25zZRJcCg1MaXN0RG9jdW1lbnRzEiQua2IuZG9jdW1lbnQudjEuTGlzdERvY3VtZW50c1JlcXVlc3QaJS5rYi5kb2N1bWVudC52MS5MaXN0RG9jdW1lbnRzUmVzcG9uc2USXwoOVXBkYXRlRG9jdW1lbnQSJS5rYi5kb2N1bWVudC52MS5VcGRhdGVEb2N1bWVudFJlcXVlc3QaJi5rYi5kb2N1bWVudC52MS5VcGRhdGVEb2N1bWVudFJlc3BvbnNlEl8KDkRlbGV0ZURvY3VtZW50EiUua2IuZG9jdW1lbnQudjEuRGVsZXRlRG9jdW1lbnRSZXF1ZXN0GiYua2IuZG9jdW1lbnQudjEuRGVsZXRlRG9jdW1lbnRSZXNwb25zZRJoChFTZXREb2N1bWVudFN0YXR1cxIoLmtiLmRvY3VtZW50LnYxLlNldERvY3VtZW50U3RhdHVzUmVxdWVzdBopLmtiLmRvY3VtZW50LnYxLlNldERvY3VtZW50U3RhdHVzUmVzcG9uc2USXwoOR2V0RG93bmxvYWRVcmwSJS5rYi5kb2N1bWVudC52MS5HZXREb3dubG9hZFVybFJlcXVlc3QaJi5rYi5kb2N1bWVudC52MS5HZXREb3dubG9hZFVybFJlc3BvbnNlElgKC1JlYWRDb250ZW50EiIua2IuZG9jdW1lbnQudjEuUmVhZENvbnRlbnRSZXF1ZXN0GiMua2IuZG9jdW1lbnQudjEuUmVhZENvbnRlbnRSZXNwb25zZTABElAKCUFkZENodW5rcxIgLmtiLmRvY3VtZW50LnYxLkFkZENodW5rc1JlcXVlc3QaIS5rYi5kb2N1bWVudC52MS5BZGRDaHVua3NSZXNwb25zZRJTCgpMaXN0Q2h1bmtzEiEua2IuZG9jdW1lbnQudjEuTGlzdENodW5rc1JlcXVlc3QaIi5rYi5kb2N1bWVudC52MS5MaXN0Q2h1bmtzUmVzcG9uc2USWQoMU2VhcmNoQ2h1bmtzEiMua2IuZG9jdW1lbnQudjEuU2VhcmNoQ2h1bmtzUmVxdWVzdBokLmtiLmRvY3VtZW50LnYxLlNlYXJjaENodW5rc1Jlc3BvbnNlEmIKD1NlYXJjaERvY3VtZW50cxImLmtiLmRvY3VtZW50LnYxLlNlYXJjaERvY3VtZW50c1JlcXVlc3QaJy5rYi5kb2N1bWVudC52MS5TZWFyY2hEb2N1bWVudHNSZXNwb25zZUJHWkVnaXRodWIuY29tL2NocmlzdG9waC9rYi9tb2R1bGVzL2RvY3VtZW50L2FwaS9nby9kb2N1bWVudHYxO2RvY3VtZW50djFiBnByb3RvMw", [file_google_protobuf_timestamp, file_kb_common_v1_common]);
 
 /**
  * @generated from message kb.document.v1.Document
@@ -90,6 +90,24 @@ export type Document = Message<"kb.document.v1.Document"> & {
    * @generated from field: string sha256 = 13;
    */
   sha256: string;
+
+  /**
+   * Counts the files the document has had: 1 for the first upload,
+   * incremented when a new version from ReplaceContent has been processed.
+   * filename, content_type, size_bytes, sha256, the chunks and the download
+   * are those of this version.
+   *
+   * @generated from field: int32 version = 14;
+   */
+  version: number;
+
+  /**
+   * The new version being uploaded or processed, or the last one that failed;
+   * unset when there is none.
+   *
+   * @generated from field: kb.document.v1.PendingVersion pending_version = 15;
+   */
+  pendingVersion?: PendingVersion | undefined;
 };
 
 /**
@@ -98,6 +116,65 @@ export type Document = Message<"kb.document.v1.Document"> & {
  */
 export const DocumentSchema: GenMessage<Document> = /*@__PURE__*/
   messageDesc(file_kb_document_v1_document, 0);
+
+/**
+ * PendingVersion is a new file for a document, from ReplaceContent. While it
+ * is pending the document stays as it was (status, chunks, download), so it
+ * stays readable and searchable; status changes for the document
+ * (SetDocumentStatus) apply to the pending version instead, and ReadContent
+ * returns its file. Once processed (AddChunks) it becomes the document's
+ * current version and the previous file is removed. When it fails it stays,
+ * FAILED, until the next ReplaceContent.
+ *
+ * @generated from message kb.document.v1.PendingVersion
+ */
+export type PendingVersion = Message<"kb.document.v1.PendingVersion"> & {
+  /**
+   * The version number it becomes: the document's version + 1.
+   *
+   * @generated from field: int32 version = 1;
+   */
+  version: number;
+
+  /**
+   * @generated from field: string filename = 2;
+   */
+  filename: string;
+
+  /**
+   * @generated from field: string content_type = 3;
+   */
+  contentType: string;
+
+  /**
+   * @generated from field: int64 size_bytes = 4;
+   */
+  sizeBytes: bigint;
+
+  /**
+   * PENDING_UPLOAD, UPLOADED, PROCESSING or FAILED.
+   *
+   * @generated from field: kb.document.v1.DocumentStatus status = 5;
+   */
+  status: DocumentStatus;
+
+  /**
+   * @generated from field: string status_detail = 6;
+   */
+  statusDetail: string;
+
+  /**
+   * @generated from field: string sha256 = 7;
+   */
+  sha256: string;
+};
+
+/**
+ * Describes the message kb.document.v1.PendingVersion.
+ * Use `create(PendingVersionSchema)` to create a new message.
+ */
+export const PendingVersionSchema: GenMessage<PendingVersion> = /*@__PURE__*/
+  messageDesc(file_kb_document_v1_document, 1);
 
 /**
  * @generated from message kb.document.v1.Chunk
@@ -129,7 +206,7 @@ export type Chunk = Message<"kb.document.v1.Chunk"> & {
  * Use `create(ChunkSchema)` to create a new message.
  */
 export const ChunkSchema: GenMessage<Chunk> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 1);
+  messageDesc(file_kb_document_v1_document, 2);
 
 /**
  * @generated from message kb.document.v1.ScoredChunk
@@ -158,7 +235,7 @@ export type ScoredChunk = Message<"kb.document.v1.ScoredChunk"> & {
  * Use `create(ScoredChunkSchema)` to create a new message.
  */
 export const ScoredChunkSchema: GenMessage<ScoredChunk> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 2);
+  messageDesc(file_kb_document_v1_document, 3);
 
 /**
  * A document ranked by its most similar chunk.
@@ -194,7 +271,7 @@ export type ScoredDocument = Message<"kb.document.v1.ScoredDocument"> & {
  * Use `create(ScoredDocumentSchema)` to create a new message.
  */
 export const ScoredDocumentSchema: GenMessage<ScoredDocument> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 3);
+  messageDesc(file_kb_document_v1_document, 4);
 
 /**
  * CreateDocument rejects, with field violations, a file that is empty, larger
@@ -247,7 +324,7 @@ export type CreateDocumentRequest = Message<"kb.document.v1.CreateDocumentReques
  * Use `create(CreateDocumentRequestSchema)` to create a new message.
  */
 export const CreateDocumentRequestSchema: GenMessage<CreateDocumentRequest> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 4);
+  messageDesc(file_kb_document_v1_document, 5);
 
 /**
  * @generated from message kb.document.v1.CreateDocumentResponse
@@ -273,7 +350,84 @@ export type CreateDocumentResponse = Message<"kb.document.v1.CreateDocumentRespo
  * Use `create(CreateDocumentResponseSchema)` to create a new message.
  */
 export const CreateDocumentResponseSchema: GenMessage<CreateDocumentResponse> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 5);
+  messageDesc(file_kb_document_v1_document, 6);
+
+/**
+ * ReplaceContent validates the new file like CreateDocument and keeps the
+ * document's title and metadata. It fails with FAILED_PRECONDITION (ErrorInfo
+ * reason DOCUMENT_BUSY) until the document's first upload is READY or FAILED
+ * and while a pending version is UPLOADED or PROCESSING; a pending version
+ * still awaiting its upload, or one that failed, is replaced. Another user's
+ * document is NOT_FOUND.
+ *
+ * @generated from message kb.document.v1.ReplaceContentRequest
+ */
+export type ReplaceContentRequest = Message<"kb.document.v1.ReplaceContentRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string filename = 2;
+   */
+  filename: string;
+
+  /**
+   * Defaults like CreateDocumentRequest.content_type.
+   *
+   * @generated from field: string content_type = 3;
+   */
+  contentType: string;
+
+  /**
+   * The file's exact size; must be greater than 0.
+   *
+   * @generated from field: int64 size_bytes = 4;
+   */
+  sizeBytes: bigint;
+
+  /**
+   * Optional SHA-256 of the file, in hex, checked like CreateDocument's.
+   *
+   * @generated from field: string sha256 = 5;
+   */
+  sha256: string;
+};
+
+/**
+ * Describes the message kb.document.v1.ReplaceContentRequest.
+ * Use `create(ReplaceContentRequestSchema)` to create a new message.
+ */
+export const ReplaceContentRequestSchema: GenMessage<ReplaceContentRequest> = /*@__PURE__*/
+  messageDesc(file_kb_document_v1_document, 7);
+
+/**
+ * @generated from message kb.document.v1.ReplaceContentResponse
+ */
+export type ReplaceContentResponse = Message<"kb.document.v1.ReplaceContentResponse"> & {
+  /**
+   * The document, with the new file as pending_version.
+   *
+   * @generated from field: kb.document.v1.Document document = 1;
+   */
+  document?: Document | undefined;
+
+  /**
+   * A presigned URL to PUT the new file to, sending pending_version's
+   * content_type as Content-Type and exactly size_bytes bytes.
+   *
+   * @generated from field: string upload_url = 2;
+   */
+  uploadUrl: string;
+};
+
+/**
+ * Describes the message kb.document.v1.ReplaceContentResponse.
+ * Use `create(ReplaceContentResponseSchema)` to create a new message.
+ */
+export const ReplaceContentResponseSchema: GenMessage<ReplaceContentResponse> = /*@__PURE__*/
+  messageDesc(file_kb_document_v1_document, 8);
 
 /**
  * @generated from message kb.document.v1.GetDocumentRequest
@@ -290,7 +444,7 @@ export type GetDocumentRequest = Message<"kb.document.v1.GetDocumentRequest"> & 
  * Use `create(GetDocumentRequestSchema)` to create a new message.
  */
 export const GetDocumentRequestSchema: GenMessage<GetDocumentRequest> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 6);
+  messageDesc(file_kb_document_v1_document, 9);
 
 /**
  * @generated from message kb.document.v1.GetDocumentResponse
@@ -307,7 +461,7 @@ export type GetDocumentResponse = Message<"kb.document.v1.GetDocumentResponse"> 
  * Use `create(GetDocumentResponseSchema)` to create a new message.
  */
 export const GetDocumentResponseSchema: GenMessage<GetDocumentResponse> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 7);
+  messageDesc(file_kb_document_v1_document, 10);
 
 /**
  * @generated from message kb.document.v1.ListDocumentsRequest
@@ -324,7 +478,7 @@ export type ListDocumentsRequest = Message<"kb.document.v1.ListDocumentsRequest"
  * Use `create(ListDocumentsRequestSchema)` to create a new message.
  */
 export const ListDocumentsRequestSchema: GenMessage<ListDocumentsRequest> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 8);
+  messageDesc(file_kb_document_v1_document, 11);
 
 /**
  * @generated from message kb.document.v1.ListDocumentsResponse
@@ -346,7 +500,7 @@ export type ListDocumentsResponse = Message<"kb.document.v1.ListDocumentsRespons
  * Use `create(ListDocumentsResponseSchema)` to create a new message.
  */
 export const ListDocumentsResponseSchema: GenMessage<ListDocumentsResponse> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 9);
+  messageDesc(file_kb_document_v1_document, 12);
 
 /**
  * @generated from message kb.document.v1.UpdateDocumentRequest
@@ -380,7 +534,7 @@ export type UpdateDocumentRequest = Message<"kb.document.v1.UpdateDocumentReques
  * Use `create(UpdateDocumentRequestSchema)` to create a new message.
  */
 export const UpdateDocumentRequestSchema: GenMessage<UpdateDocumentRequest> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 10);
+  messageDesc(file_kb_document_v1_document, 13);
 
 /**
  * @generated from message kb.document.v1.UpdateDocumentResponse
@@ -397,7 +551,7 @@ export type UpdateDocumentResponse = Message<"kb.document.v1.UpdateDocumentRespo
  * Use `create(UpdateDocumentResponseSchema)` to create a new message.
  */
 export const UpdateDocumentResponseSchema: GenMessage<UpdateDocumentResponse> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 11);
+  messageDesc(file_kb_document_v1_document, 14);
 
 /**
  * @generated from message kb.document.v1.DeleteDocumentRequest
@@ -414,7 +568,7 @@ export type DeleteDocumentRequest = Message<"kb.document.v1.DeleteDocumentReques
  * Use `create(DeleteDocumentRequestSchema)` to create a new message.
  */
 export const DeleteDocumentRequestSchema: GenMessage<DeleteDocumentRequest> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 12);
+  messageDesc(file_kb_document_v1_document, 15);
 
 /**
  * @generated from message kb.document.v1.DeleteDocumentResponse
@@ -427,7 +581,7 @@ export type DeleteDocumentResponse = Message<"kb.document.v1.DeleteDocumentRespo
  * Use `create(DeleteDocumentResponseSchema)` to create a new message.
  */
 export const DeleteDocumentResponseSchema: GenMessage<DeleteDocumentResponse> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 13);
+  messageDesc(file_kb_document_v1_document, 16);
 
 /**
  * Setting UPLOADED checks the uploaded file: FAILED_PRECONDITION when it is
@@ -459,7 +613,7 @@ export type SetDocumentStatusRequest = Message<"kb.document.v1.SetDocumentStatus
  * Use `create(SetDocumentStatusRequestSchema)` to create a new message.
  */
 export const SetDocumentStatusRequestSchema: GenMessage<SetDocumentStatusRequest> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 14);
+  messageDesc(file_kb_document_v1_document, 17);
 
 /**
  * @generated from message kb.document.v1.SetDocumentStatusResponse
@@ -476,7 +630,7 @@ export type SetDocumentStatusResponse = Message<"kb.document.v1.SetDocumentStatu
  * Use `create(SetDocumentStatusResponseSchema)` to create a new message.
  */
 export const SetDocumentStatusResponseSchema: GenMessage<SetDocumentStatusResponse> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 15);
+  messageDesc(file_kb_document_v1_document, 18);
 
 /**
  * @generated from message kb.document.v1.GetDownloadUrlRequest
@@ -493,7 +647,7 @@ export type GetDownloadUrlRequest = Message<"kb.document.v1.GetDownloadUrlReques
  * Use `create(GetDownloadUrlRequestSchema)` to create a new message.
  */
 export const GetDownloadUrlRequestSchema: GenMessage<GetDownloadUrlRequest> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 16);
+  messageDesc(file_kb_document_v1_document, 19);
 
 /**
  * @generated from message kb.document.v1.GetDownloadUrlResponse
@@ -510,7 +664,7 @@ export type GetDownloadUrlResponse = Message<"kb.document.v1.GetDownloadUrlRespo
  * Use `create(GetDownloadUrlResponseSchema)` to create a new message.
  */
 export const GetDownloadUrlResponseSchema: GenMessage<GetDownloadUrlResponse> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 17);
+  messageDesc(file_kb_document_v1_document, 20);
 
 /**
  * @generated from message kb.document.v1.ReadContentRequest
@@ -527,7 +681,7 @@ export type ReadContentRequest = Message<"kb.document.v1.ReadContentRequest"> & 
  * Use `create(ReadContentRequestSchema)` to create a new message.
  */
 export const ReadContentRequestSchema: GenMessage<ReadContentRequest> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 18);
+  messageDesc(file_kb_document_v1_document, 21);
 
 /**
  * @generated from message kb.document.v1.ReadContentResponse
@@ -544,7 +698,7 @@ export type ReadContentResponse = Message<"kb.document.v1.ReadContentResponse"> 
  * Use `create(ReadContentResponseSchema)` to create a new message.
  */
 export const ReadContentResponseSchema: GenMessage<ReadContentResponse> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 19);
+  messageDesc(file_kb_document_v1_document, 22);
 
 /**
  * @generated from message kb.document.v1.ChunkInput
@@ -576,7 +730,7 @@ export type ChunkInput = Message<"kb.document.v1.ChunkInput"> & {
  * Use `create(ChunkInputSchema)` to create a new message.
  */
 export const ChunkInputSchema: GenMessage<ChunkInput> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 20);
+  messageDesc(file_kb_document_v1_document, 23);
 
 /**
  * @generated from message kb.document.v1.AddChunksRequest
@@ -598,7 +752,7 @@ export type AddChunksRequest = Message<"kb.document.v1.AddChunksRequest"> & {
  * Use `create(AddChunksRequestSchema)` to create a new message.
  */
 export const AddChunksRequestSchema: GenMessage<AddChunksRequest> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 21);
+  messageDesc(file_kb_document_v1_document, 24);
 
 /**
  * @generated from message kb.document.v1.AddChunksResponse
@@ -615,7 +769,7 @@ export type AddChunksResponse = Message<"kb.document.v1.AddChunksResponse"> & {
  * Use `create(AddChunksResponseSchema)` to create a new message.
  */
 export const AddChunksResponseSchema: GenMessage<AddChunksResponse> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 22);
+  messageDesc(file_kb_document_v1_document, 25);
 
 /**
  * @generated from message kb.document.v1.ListChunksRequest
@@ -637,7 +791,7 @@ export type ListChunksRequest = Message<"kb.document.v1.ListChunksRequest"> & {
  * Use `create(ListChunksRequestSchema)` to create a new message.
  */
 export const ListChunksRequestSchema: GenMessage<ListChunksRequest> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 23);
+  messageDesc(file_kb_document_v1_document, 26);
 
 /**
  * @generated from message kb.document.v1.ListChunksResponse
@@ -659,7 +813,7 @@ export type ListChunksResponse = Message<"kb.document.v1.ListChunksResponse"> & 
  * Use `create(ListChunksResponseSchema)` to create a new message.
  */
 export const ListChunksResponseSchema: GenMessage<ListChunksResponse> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 24);
+  messageDesc(file_kb_document_v1_document, 27);
 
 /**
  * @generated from message kb.document.v1.SearchChunksRequest
@@ -688,7 +842,7 @@ export type SearchChunksRequest = Message<"kb.document.v1.SearchChunksRequest"> 
  * Use `create(SearchChunksRequestSchema)` to create a new message.
  */
 export const SearchChunksRequestSchema: GenMessage<SearchChunksRequest> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 25);
+  messageDesc(file_kb_document_v1_document, 28);
 
 /**
  * @generated from message kb.document.v1.SearchChunksResponse
@@ -705,7 +859,7 @@ export type SearchChunksResponse = Message<"kb.document.v1.SearchChunksResponse"
  * Use `create(SearchChunksResponseSchema)` to create a new message.
  */
 export const SearchChunksResponseSchema: GenMessage<SearchChunksResponse> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 26);
+  messageDesc(file_kb_document_v1_document, 29);
 
 /**
  * @generated from message kb.document.v1.SearchDocumentsRequest
@@ -738,7 +892,7 @@ export type SearchDocumentsRequest = Message<"kb.document.v1.SearchDocumentsRequ
  * Use `create(SearchDocumentsRequestSchema)` to create a new message.
  */
 export const SearchDocumentsRequestSchema: GenMessage<SearchDocumentsRequest> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 27);
+  messageDesc(file_kb_document_v1_document, 30);
 
 /**
  * @generated from message kb.document.v1.SearchDocumentsResponse
@@ -765,7 +919,7 @@ export type SearchDocumentsResponse = Message<"kb.document.v1.SearchDocumentsRes
  * Use `create(SearchDocumentsResponseSchema)` to create a new message.
  */
 export const SearchDocumentsResponseSchema: GenMessage<SearchDocumentsResponse> = /*@__PURE__*/
-  messageDesc(file_kb_document_v1_document, 28);
+  messageDesc(file_kb_document_v1_document, 31);
 
 /**
  * @generated from enum kb.document.v1.DocumentStatus
@@ -825,6 +979,19 @@ export const DocumentService: GenService<{
     methodKind: "unary";
     input: typeof CreateDocumentRequestSchema;
     output: typeof CreateDocumentResponseSchema;
+  },
+  /**
+   * ReplaceContent starts a new version of a document: it returns a presigned
+   * URL for the new file, which becomes the document's pending_version. The
+   * document keeps its id and serves its current version until the new one is
+   * processed (AddChunks); see PendingVersion.
+   *
+   * @generated from rpc kb.document.v1.DocumentService.ReplaceContent
+   */
+  replaceContent: {
+    methodKind: "unary";
+    input: typeof ReplaceContentRequestSchema;
+    output: typeof ReplaceContentResponseSchema;
   },
   /**
    * @generated from rpc kb.document.v1.DocumentService.GetDocument
@@ -887,7 +1054,8 @@ export const DocumentService: GenService<{
     output: typeof ReadContentResponseSchema;
   },
   /**
-   * AddChunks replaces all chunks of a document and marks it ready.
+   * AddChunks replaces all chunks of a document and marks it ready. A
+   * pending version that was uploaded becomes the current one.
    *
    * @generated from rpc kb.document.v1.DocumentService.AddChunks
    */

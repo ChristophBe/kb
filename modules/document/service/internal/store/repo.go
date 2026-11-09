@@ -35,7 +35,9 @@ func NewRepo(pool *pgxpool.Pool) *Repo {
 	return &Repo{Queries: New(pool), pool: pool}
 }
 
-// ReplaceChunks atomically swaps a document's chunks and marks it ready.
+// ReplaceChunks atomically swaps a document's chunks and marks it ready. A
+// pending version that was uploaded becomes the current one along with them:
+// the chunks were made from its file.
 func (r *Repo) ReplaceChunks(ctx context.Context, documentID uuid.UUID, chunks []InsertChunksParams, readyStatus int16) (int32, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
@@ -49,6 +51,9 @@ func (r *Repo) ReplaceChunks(ctx context.Context, documentID uuid.UUID, chunks [
 	n, err := q.InsertChunks(ctx, chunks)
 	if err != nil {
 		return 0, fmt.Errorf("insert chunks: %w", err)
+	}
+	if err := q.PromotePendingVersion(ctx, documentID); err != nil {
+		return 0, fmt.Errorf("promote pending version: %w", err)
 	}
 	if err := q.SetChunkCount(ctx, SetChunkCountParams{ID: documentID, ChunkCount: int32(n), Status: readyStatus}); err != nil {
 		return 0, err

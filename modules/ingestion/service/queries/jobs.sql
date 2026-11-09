@@ -9,6 +9,25 @@ RETURNING *;
 -- name: GetJob :one
 SELECT * FROM ingestion.jobs WHERE id = $1 AND owner_id = $2;
 
+-- GetDocumentJob returns the owner's job of a document: the latest, should
+-- there be more than one.
+-- name: GetDocumentJob :one
+SELECT * FROM ingestion.jobs
+WHERE document_id = $1 AND owner_id = $2
+ORDER BY created_at DESC, id DESC
+LIMIT 1;
+
+-- RestartJob is the other transition back, for a new version of the job's
+-- document: a job that is not being processed (PENDING_UPLOAD=1, DONE=4,
+-- FAILED=5) waits for the new file (PENDING_UPLOAD) as a new run, with its
+-- name and type, clearing the result of the previous run.
+-- name: RestartJob :one
+UPDATE ingestion.jobs
+SET status = 1, filename = sqlc.arg(filename), content_type = sqlc.arg(content_type),
+    error = '', chunk_count = 0, progress = 0, stage = 0, run = run + 1, updated_at = now()
+WHERE id = sqlc.arg(id) AND owner_id = sqlc.arg(owner_id) AND status IN (1, 4, 5)
+RETURNING *;
+
 -- name: ListJobs :many
 SELECT * FROM ingestion.jobs
 WHERE owner_id = $1

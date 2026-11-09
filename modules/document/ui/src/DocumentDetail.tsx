@@ -1,16 +1,38 @@
 import { DocumentService } from "@kb/document-api/kb/document/v1/document_pb";
-import { useClient, useQuery } from "@kb/module-sdk";
+import { useClient, useQuery, useQueryClient } from "@kb/module-sdk";
 import { Badge, Card, ChunkStrip, ErrorMessage, formatBytes, formatTime, Spinner } from "@kb/ui";
+import { useEffect, useRef } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import { ChunkList } from "./ChunkList.tsx";
 import { MetadataEditor } from "./MetadataEditor.tsx";
 import { statusLabel } from "./status.ts";
 import { TitleEditor } from "./TitleEditor.tsx";
+import { inProgress, VersionInfo } from "./VersionInfo.tsx";
+
+/** How often the page refreshes while the document or a new version is processed. */
+const PROCESSING_REFRESH_MS = 3000;
 
 export function DocumentDetail() {
   const { id = "" } = useParams();
   const client = useClient(DocumentService);
-  const doc = useQuery({ queryKey: ["documents", id], queryFn: () => client.getDocument({ id }) });
+  const queryClient = useQueryClient();
+  const doc = useQuery({
+    queryKey: ["documents", id],
+    queryFn: () => client.getDocument({ id }),
+    refetchInterval: (query) => {
+      const d = query.state.data?.document;
+      return d && inProgress(d) ? PROCESSING_REFRESH_MS : false;
+    },
+  });
+  // A new version brings new chunks.
+  const version = doc.data?.document?.version;
+  const shownVersion = useRef(version);
+  useEffect(() => {
+    if (shownVersion.current !== undefined && version !== shownVersion.current) {
+      void queryClient.invalidateQueries({ queryKey: ["documents", id, "chunks"] });
+    }
+    shownVersion.current = version;
+  }, [queryClient, id, version]);
   // A link to #chunk-<index> (e.g. from search) opens the list at that chunk.
   const target = /^#chunk-(\d+)$/.exec(useLocation().hash)?.[1];
 
@@ -22,6 +44,7 @@ export function DocumentDetail() {
   const rows: [string, React.ReactNode][] = [
     ["Status", <Badge tone={tone}>{label}</Badge>],
     ["Detail", d.statusDetail || "—"],
+    ["Version", <VersionInfo document={d} />],
     ["Filename", d.filename],
     ["Content type", d.contentType],
     ["Size", formatBytes(d.sizeBytes)],

@@ -210,17 +210,22 @@ func (s *Server) DeleteDocument(ctx context.Context, req *documentv1.DeleteDocum
 	if err != nil {
 		return nil, err
 	}
-	// The object goes first and the row after it, so a failure in between
-	// leaves the row, and the client's retry deletes both: deleting an object
-	// that is already gone succeeds. An object put back by an upload still in
+	// The objects (the file and a pending version's) go first and the row
+	// after them, so a failure in between leaves the row, and the client's
+	// retry deletes all: deleting an object that is already gone succeeds. An object put back by an upload still in
 	// flight is left without a row, which the cleanup sweeper removes.
 	doc, err := s.getOwned(ctx, owner, id)
 	if err != nil {
 		return nil, err
 	}
-	if err := s.objects.Delete(ctx, doc.ObjectKey); err != nil {
-		s.log.ErrorContext(ctx, "delete object", "key", doc.ObjectKey, "error", err)
-		return nil, status.Error(codes.Unavailable, "object storage is unavailable")
+	for _, key := range []string{doc.PendingObjectKey, doc.ObjectKey} {
+		if key == "" {
+			continue // no pending version
+		}
+		if err := s.objects.Delete(ctx, key); err != nil {
+			s.log.ErrorContext(ctx, "delete object", "key", key, "error", err)
+			return nil, status.Error(codes.Unavailable, "object storage is unavailable")
+		}
 	}
 	if _, err := s.repo.DeleteDocument(ctx, store.DeleteDocumentParams{ID: id, OwnerID: owner}); err != nil {
 		return nil, s.notFoundOr("delete document", err)
@@ -239,6 +244,9 @@ func (s *Server) SetDocumentStatus(ctx context.Context, req *documentv1.SetDocum
 	if req.GetStatus() == documentv1.DocumentStatus_DOCUMENT_STATUS_UPLOADED {
 		return s.markUploaded(ctx, id, req)
 	}
+	if resp, ok, err := s.setPendingStatus(ctx, id, req); ok {
+		return resp, err
+	}
 	doc, err := s.repo.SetDocumentStatus(ctx, store.SetDocumentStatusParams{
 		ID: id, Status: int16(req.GetStatus()), StatusDetail: req.GetStatusDetail(),
 	})
@@ -253,31 +261,21 @@ func (s *Server) SetDocumentStatus(ctx context.Context, req *documentv1.SetDocum
 // object over the size limit or not matching the declared checksum fails the
 // document. The upload URL already enforces the declared size; checking here
 // as well keeps the limit with any S3 server and for objects put there by
-// other means.
+// other means. A document with a pending version checks that version's file.
 func (s *Server) markUploaded(ctx context.Context, id uuid.UUID, req *documentv1.SetDocumentStatusRequest) (*documentv1.SetDocumentStatusResponse, error) {
 	doc, err := s.repo.GetAnyDocument(ctx, id)
 	if err != nil {
 		return nil, s.notFoundOr("get document", err)
 	}
-	size, contentType, err := s.objects.Stat(ctx, doc.ObjectKey)
-	if errors.Is(err, fs.ErrNotExist) {
-		return nil, status.Error(codes.FailedPrecondition, "the file has not been uploaded")
+	if pending(doc) {
+		return s.markPendingUploaded(ctx, doc, req)
 	}
+	size, contentType, rejection, err := s.inspectUpload(ctx, doc.ObjectKey, doc.Sha256)
 	if err != nil {
-		s.log.ErrorContext(ctx, "stat object", "key", doc.ObjectKey, "error", err)
-		return nil, status.Error(codes.Unavailable, "object storage is unavailable")
+		return nil, err
 	}
-	if size > s.limits.MaxUploadBytes {
-		return nil, s.reject(ctx, id, fmt.Sprintf("The file is larger than the limit of %s", formatBytes(s.limits.MaxUploadBytes)))
-	}
-	if doc.Sha256 != "" {
-		actual, err := s.checksum(ctx, doc.ObjectKey)
-		if err != nil {
-			return nil, err
-		}
-		if actual != doc.Sha256 {
-			return nil, s.reject(ctx, id, "The uploaded file does not match its checksum")
-		}
+	if rejection != "" {
+		return nil, s.reject(ctx, id, rejection)
 	}
 	if isGenericContentType(contentType) {
 		contentType = doc.ContentType
@@ -315,7 +313,7 @@ func (s *Server) reject(ctx context.Context, id uuid.UUID, reason string) error 
 	}); err != nil {
 		return s.notFoundOr("fail document", err)
 	}
-	return grpcserver.WithDetails(codes.FailedPrecondition, reason, grpcserver.ErrorInfo(domain, "UPLOAD_REJECTED", nil))
+	return errRejected(reason)
 }
 
 func (s *Server) GetDownloadUrl(ctx context.Context, req *documentv1.GetDownloadUrlRequest) (*documentv1.GetDownloadUrlResponse, error) {
@@ -340,7 +338,14 @@ func (s *Server) ReadContent(req *documentv1.ReadContentRequest, stream document
 	if err != nil {
 		return s.notFoundOr("get document", err)
 	}
-	r, err := s.objects.Open(ctx, doc.ObjectKey)
+	key := contentKey(doc)
+	if key != doc.ObjectKey {
+		// A rejected pending file was removed; reading it would fail obscurely.
+		if _, _, err := s.objects.Stat(ctx, key); errors.Is(err, fs.ErrNotExist) {
+			return status.Error(codes.FailedPrecondition, "the file of the new version has not been uploaded")
+		}
+	}
+	r, err := s.objects.Open(ctx, key)
 	if err != nil {
 		return s.internal("open object", err)
 	}
@@ -381,10 +386,16 @@ func (s *Server) AddChunks(ctx context.Context, req *documentv1.AddChunksRequest
 			Embedding:  pgvector.NewVector(c.GetEmbedding()),
 		})
 	}
+	// The document as it was tells whether the chunks bring in a new version.
+	before, err := s.repo.GetAnyDocument(ctx, id)
+	if err != nil {
+		return nil, s.notFoundOr("get document", err)
+	}
 	n, err := s.repo.ReplaceChunks(ctx, id, rows, int16(documentv1.DocumentStatus_DOCUMENT_STATUS_READY))
 	if err != nil {
 		return nil, s.internal("replace chunks", err)
 	}
+	s.removeSuperseded(ctx, before)
 	return &documentv1.AddChunksResponse{ChunkCount: n}, nil
 }
 
@@ -658,18 +669,20 @@ func nonNil(m map[string]string) map[string]string {
 
 func toProto(d store.DocumentDocument) *documentv1.Document {
 	return &documentv1.Document{
-		Id:           d.ID.String(),
-		Title:        d.Title,
-		Filename:     d.Filename,
-		ContentType:  d.ContentType,
-		SizeBytes:    d.SizeBytes,
-		Status:       documentv1.DocumentStatus(d.Status),
-		StatusDetail: d.StatusDetail,
-		ChunkCount:   d.ChunkCount,
-		Metadata:     d.Metadata,
-		CreateTime:   timestamppb.New(d.CreatedAt.Time),
-		UpdateTime:   timestamppb.New(d.UpdatedAt.Time),
-		OwnerId:      d.OwnerID,
-		Sha256:       d.Sha256,
+		Id:             d.ID.String(),
+		Title:          d.Title,
+		Filename:       d.Filename,
+		ContentType:    d.ContentType,
+		SizeBytes:      d.SizeBytes,
+		Status:         documentv1.DocumentStatus(d.Status),
+		StatusDetail:   d.StatusDetail,
+		ChunkCount:     d.ChunkCount,
+		Metadata:       d.Metadata,
+		CreateTime:     timestamppb.New(d.CreatedAt.Time),
+		UpdateTime:     timestamppb.New(d.UpdatedAt.Time),
+		OwnerId:        d.OwnerID,
+		Sha256:         d.Sha256,
+		Version:        d.Version,
+		PendingVersion: pendingProto(d),
 	}
 }

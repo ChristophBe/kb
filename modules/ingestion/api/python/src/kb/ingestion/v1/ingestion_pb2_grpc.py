@@ -46,6 +46,11 @@ class IngestionServiceStub:
                 request_serializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.CompleteUploadRequest.SerializeToString,
                 response_deserializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.CompleteUploadResponse.FromString,
                 _registered_method=True)
+        self.ReplaceUpload = channel.unary_unary(
+                '/kb.ingestion.v1.IngestionService/ReplaceUpload',
+                request_serializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.ReplaceUploadRequest.SerializeToString,
+                response_deserializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.ReplaceUploadResponse.FromString,
+                _registered_method=True)
         self.GetJob = channel.unary_unary(
                 '/kb.ingestion.v1.IngestionService/GetJob',
                 request_serializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.GetJobRequest.SerializeToString,
@@ -92,6 +97,22 @@ class IngestionServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ReplaceUpload(self, request, context):
+        """ReplaceUpload starts uploading a new version of an existing document,
+        which keeps its id, title and metadata. The document's job waits for the
+        file again as a new run (filename and content_type become the new file's);
+        CompleteUpload then queues it, and once processed the new version
+        replaces the document's file and chunks. Until then the document keeps
+        its current version, and keeps it when the new one fails. A file the
+        document module does not accept is rejected with field violations; a
+        document whose job is QUEUED or PROCESSING, or that is still being
+        uploaded or processed, fails with FAILED_PRECONDITION (reason
+        DOCUMENT_BUSY); another user's document is NOT_FOUND.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def GetJob(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -132,6 +153,11 @@ def add_IngestionServiceServicer_to_server(servicer, server):
                     servicer.CompleteUpload,
                     request_deserializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.CompleteUploadRequest.FromString,
                     response_serializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.CompleteUploadResponse.SerializeToString,
+            ),
+            'ReplaceUpload': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReplaceUpload,
+                    request_deserializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.ReplaceUploadRequest.FromString,
+                    response_serializer=kb_dot_ingestion_dot_v1_dot_ingestion__pb2.ReplaceUploadResponse.SerializeToString,
             ),
             'GetJob': grpc.unary_unary_rpc_method_handler(
                     servicer.GetJob,
@@ -210,6 +236,33 @@ class IngestionService:
             '/kb.ingestion.v1.IngestionService/CompleteUpload',
             kb_dot_ingestion_dot_v1_dot_ingestion__pb2.CompleteUploadRequest.SerializeToString,
             kb_dot_ingestion_dot_v1_dot_ingestion__pb2.CompleteUploadResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReplaceUpload(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/kb.ingestion.v1.IngestionService/ReplaceUpload',
+            kb_dot_ingestion_dot_v1_dot_ingestion__pb2.ReplaceUploadRequest.SerializeToString,
+            kb_dot_ingestion_dot_v1_dot_ingestion__pb2.ReplaceUploadResponse.FromString,
             options,
             channel_credentials,
             insecure,

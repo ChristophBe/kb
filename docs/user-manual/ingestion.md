@@ -25,6 +25,8 @@ Several files can be processed at the same time, so more than one row may show *
 
 When a file is done, a notification says "*file* added"; when it fails, it says "Couldn't process *file*". The document also appears under [Documents](documents.md), where its status follows the same steps.
 
+A [new version of a document](documents.md#replace-a-document-with-a-new-version) is uploaded from the document's page. Under **Uploads** it takes over the document's row, with the new file's name, and goes through the same statuses.
+
 ## Who can see your uploads
 
 Your uploads are private: the list under **Uploads** shows only the files you uploaded, and only you can follow or retry their processing. Other people signed in to kb never see your uploads, and you never see theirs.

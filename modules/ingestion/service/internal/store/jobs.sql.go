@@ -136,6 +136,41 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (Ingestion
 	return i, err
 }
 
+const getDocumentJob = `-- name: GetDocumentJob :one
+SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id FROM ingestion.jobs
+WHERE document_id = $1 AND owner_id = $2
+ORDER BY created_at DESC, id DESC
+LIMIT 1
+`
+
+type GetDocumentJobParams struct {
+	DocumentID uuid.UUID
+	OwnerID    string
+}
+
+// GetDocumentJob returns the owner's job of a document: the latest, should
+// there be more than one.
+func (q *Queries) GetDocumentJob(ctx context.Context, arg GetDocumentJobParams) (IngestionJob, error) {
+	row := q.db.QueryRow(ctx, getDocumentJob, arg.DocumentID, arg.OwnerID)
+	var i IngestionJob
+	err := row.Scan(
+		&i.ID,
+		&i.DocumentID,
+		&i.Filename,
+		&i.ContentType,
+		&i.Status,
+		&i.Error,
+		&i.ChunkCount,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Run,
+		&i.Progress,
+		&i.Stage,
+		&i.OwnerID,
+	)
+	return i, err
+}
+
 const getJob = `-- name: GetJob :one
 SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id FROM ingestion.jobs WHERE id = $1 AND owner_id = $2
 `
@@ -275,6 +310,51 @@ type ReprocessJobParams struct {
 // the previous one.
 func (q *Queries) ReprocessJob(ctx context.Context, arg ReprocessJobParams) (IngestionJob, error) {
 	row := q.db.QueryRow(ctx, reprocessJob, arg.ID, arg.OwnerID)
+	var i IngestionJob
+	err := row.Scan(
+		&i.ID,
+		&i.DocumentID,
+		&i.Filename,
+		&i.ContentType,
+		&i.Status,
+		&i.Error,
+		&i.ChunkCount,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Run,
+		&i.Progress,
+		&i.Stage,
+		&i.OwnerID,
+	)
+	return i, err
+}
+
+const restartJob = `-- name: RestartJob :one
+UPDATE ingestion.jobs
+SET status = 1, filename = $1, content_type = $2,
+    error = '', chunk_count = 0, progress = 0, stage = 0, run = run + 1, updated_at = now()
+WHERE id = $3 AND owner_id = $4 AND status IN (1, 4, 5)
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id
+`
+
+type RestartJobParams struct {
+	Filename    string
+	ContentType string
+	ID          uuid.UUID
+	OwnerID     string
+}
+
+// RestartJob is the other transition back, for a new version of the job's
+// document: a job that is not being processed (PENDING_UPLOAD=1, DONE=4,
+// FAILED=5) waits for the new file (PENDING_UPLOAD) as a new run, with its
+// name and type, clearing the result of the previous run.
+func (q *Queries) RestartJob(ctx context.Context, arg RestartJobParams) (IngestionJob, error) {
+	row := q.db.QueryRow(ctx, restartJob,
+		arg.Filename,
+		arg.ContentType,
+		arg.ID,
+		arg.OwnerID,
+	)
 	var i IngestionJob
 	err := row.Scan(
 		&i.ID,

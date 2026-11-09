@@ -98,7 +98,7 @@ func biomeOverrides(bs []boundary) (string, error) {
 	overrides := []override{{
 		Includes: []string{"platform/**"},
 		Linter: rule([]biomePattern{
-			{[]string{"@kb/module-*", "!@kb/module-sdk"}, "platform/ must not import module UIs."},
+			{[]string{"@kb/module-*", "@kb/module-*/**", "!@kb/module-sdk", "!@kb/module-sdk/**"}, "platform/ must not import module UIs."},
 			{[]string{"@kb/*-api", "@kb/*-api/**", "!@kb/common-api", "!@kb/common-api/**"}, "platform/ must not import module APIs."},
 			escape,
 		}),
@@ -114,7 +114,7 @@ func biomeOverrides(bs []boundary) (string, error) {
 		overrides = append(overrides, override{
 			Includes: []string{"modules/" + b.ID + "/ui/**"},
 			Linter: rule([]biomePattern{
-				{[]string{"@kb/module-*", "!@kb/module-sdk", "!@kb/module-" + b.ID}, "A module UI never imports another module's UI; link to its routes instead."},
+				{[]string{"@kb/module-*", "@kb/module-*/**", "!@kb/module-sdk", "!@kb/module-sdk/**", "!@kb/module-" + b.ID, "!@kb/module-" + b.ID + "/**"}, "A module UI never imports another module's UI; link to its routes instead."},
 				{apis, "Only the API packages of modules in depends_on (module.yaml) may be imported."},
 				escape,
 			}),

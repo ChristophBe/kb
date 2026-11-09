@@ -9,20 +9,17 @@ export function passagePath(d: ScoredDocument): { pathname: string; hash: string
   return { pathname: d.documentId, hash: d.bestChunk ? `chunk-${d.bestChunk.index}` : "" };
 }
 
-/** The documents in the global search: each once, opened at its best passage. */
-export const documentSearch: SearchProvider = {
-  label: "Documents",
-  search: async (query, signal, context) => {
-    const resp = await context
-      .client(DocumentService)
-      .searchDocuments({ query, limit: SEARCH_LIMIT }, { signal });
-    return resp.documents.map((d) => {
-      const { pathname, hash } = passagePath(d);
-      return {
-        title: d.title,
-        snippet: d.bestChunk?.text,
-        href: `/m/document/${pathname}${hash ? `#${hash}` : ""}`,
-      };
-    });
-  },
+/** The documents in the global search (see manifest.ts): each once, opened at its best passage. */
+export const documentSearch: SearchProvider["search"] = async (query, signal, context) => {
+  const resp = await context
+    .client(DocumentService)
+    .searchDocuments({ query, limit: SEARCH_LIMIT }, { signal });
+  return resp.documents.map((d) => {
+    const { pathname, hash } = passagePath(d);
+    return {
+      title: d.title,
+      snippet: d.bestChunk?.text,
+      href: `/m/document/${pathname}${hash ? `#${hash}` : ""}`,
+    };
+  });
 };

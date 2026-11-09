@@ -18,9 +18,13 @@ export {
   useToasts,
 } from "./toast.ts";
 export {
+  defineManifest,
   defineModule,
   type Feature,
   type KbModule,
+  type LazyModule,
+  lazySearch,
+  type ModuleManifest,
   type NavItem,
   type SearchContext,
   type SearchHit,

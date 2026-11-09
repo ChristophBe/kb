@@ -51,3 +51,7 @@ More in [Ask a question](chat.md#ask-a-question).
 ## Switch between light and dark mode
 
 The switch at the bottom of the sidebar has three options: **System** (follow your computer's setting), **Light** and **Dark**. kb remembers your choice in this browser.
+
+## When a page can't be loaded
+
+kb loads each area the first time you open it. If that fails, the page says, for example, **Chat couldn't be loaded.** This usually means kb was updated while you had it open. Select **Reload page** to get the current version; the rest of kb keeps working in the meantime.

@@ -1,4 +1,4 @@
-import type { KbModule } from "@kb/module-sdk";
+import type { ModuleManifest } from "@kb/module-sdk";
 import { buttonClass, Card, cn, PageTitle } from "@kb/ui";
 import { ArrowRight, ArrowUp, Sparkles } from "lucide-react";
 import { type CSSProperties, type FormEvent, useId, useState } from "react";
@@ -6,7 +6,7 @@ import { Link, useNavigate } from "react-router";
 import { ModuleBoundary } from "./ModuleBoundary.tsx";
 
 /** A route inside a module; `path` is relative to the module root. */
-function modulePath(m: KbModule, path: string) {
+function modulePath(m: ModuleManifest, path: string) {
   return path ? `/m/${m.id}/${path}` : `/m/${m.id}`;
 }
 
@@ -21,7 +21,7 @@ function rise(delayMs: number): CSSProperties {
  * and the state of things) under their own heading. Everything
  * module-specific comes from `KbModule.feature` and `KbModule.widgets`.
  */
-export function Home({ modules }: { modules: KbModule[] }) {
+export function Home({ modules }: { modules: ModuleManifest[] }) {
   const prompter = modules.find((m) => m.feature?.prompt);
   const actions = modules.filter((m) => m.feature && m !== prompter).slice(0, 2);
   const widgets = modules.flatMap((m) =>
@@ -129,7 +129,7 @@ function HomePrompt({
   label,
   placeholder,
   submit: submitLabel,
-}: { module: KbModule } & NonNullable<NonNullable<KbModule["feature"]>["prompt"]>) {
+}: { module: ModuleManifest } & NonNullable<NonNullable<ModuleManifest["feature"]>["prompt"]>) {
   const navigate = useNavigate();
   const to = modulePath(m, path);
   const [q, setQ] = useState("");
@@ -165,7 +165,7 @@ function HomePrompt({
   );
 }
 
-function FeatureTile({ module: m }: { module: KbModule }) {
+function FeatureTile({ module: m }: { module: ModuleManifest }) {
   const tile = "flex h-full flex-col gap-3 p-5";
   if (!m.feature) {
     return (

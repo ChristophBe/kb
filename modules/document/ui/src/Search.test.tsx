@@ -10,7 +10,7 @@ import { expectNoAxeViolations } from "@kb/ui/testing";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import documents from "./index.tsx";
-import { documentSearch, SEARCH_LIMIT } from "./searchProvider.ts";
+import { SEARCH_LIMIT } from "./searchProvider.ts";
 
 const hit = {
   documentId: "d1",
@@ -124,11 +124,11 @@ describe("Search", () => {
       documents: [hit, other],
     }));
     const signal = new AbortController().signal;
-    const hits = await documentSearch.search("revenue", signal, {
+    // Through the manifest's group, which loads documentSearch on the first search.
+    expect(documents.search?.label).toBe("Documents");
+    const hits = await documents.search?.search("revenue", signal, {
       client: (s) => createClient(s, transport),
     });
-    expect(documents.search).toBe(documentSearch);
-    expect(documentSearch.label).toBe("Documents");
     expect(hits).toEqual([
       {
         title: "Quarterly report",

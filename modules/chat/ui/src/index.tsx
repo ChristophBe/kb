@@ -1,29 +1,11 @@
 import { defineModule } from "@kb/module-sdk";
-import { MessageSquare } from "lucide-react";
 import { ChatIndex, ChatLayout } from "./ChatLayout.tsx";
 import { Conversation } from "./Conversation.tsx";
-import { RecentConversations } from "./RecentConversations.tsx";
+import manifest from "./manifest.ts";
 import { StartChat } from "./StartChat.tsx";
-import { conversationSearch } from "./search.ts";
 
 export default defineModule({
-  id: "chat",
-  title: "Chat",
-  icon: MessageSquare,
-  feature: {
-    headline: "Ask, get cited answers",
-    description:
-      "Ask in plain language and get answers from your documents, with sources you can check.",
-    cta: { label: "Start a chat", path: "new" },
-    prompt: {
-      path: "new",
-      label: "Ask a question",
-      placeholder: "Ask anything about your documents…",
-      submit: "Ask",
-    },
-  },
-  search: conversationSearch,
-  widgets: { recent: RecentConversations },
+  ...manifest,
   routes: [
     {
       element: <ChatLayout />,

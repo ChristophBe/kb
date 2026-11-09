@@ -16,7 +16,9 @@
                   {
                     "group": [
                       "@kb/module-*",
-                      "!@kb/module-sdk"
+                      "@kb/module-*/**",
+                      "!@kb/module-sdk",
+                      "!@kb/module-sdk/**"
                     ],
                     "message": "platform/ must not import module UIs."
                   },
@@ -57,8 +59,11 @@
                   {
                     "group": [
                       "@kb/module-*",
+                      "@kb/module-*/**",
                       "!@kb/module-sdk",
-                      "!@kb/module-chat"
+                      "!@kb/module-sdk/**",
+                      "!@kb/module-chat",
+                      "!@kb/module-chat/**"
                     ],
                     "message": "A module UI never imports another module's UI; link to its routes instead."
                   },
@@ -105,8 +110,11 @@
                   {
                     "group": [
                       "@kb/module-*",
+                      "@kb/module-*/**",
                       "!@kb/module-sdk",
-                      "!@kb/module-document"
+                      "!@kb/module-sdk/**",
+                      "!@kb/module-document",
+                      "!@kb/module-document/**"
                     ],
                     "message": "A module UI never imports another module's UI; link to its routes instead."
                   },
@@ -151,8 +159,11 @@
                   {
                     "group": [
                       "@kb/module-*",
+                      "@kb/module-*/**",
                       "!@kb/module-sdk",
-                      "!@kb/module-ingestion"
+                      "!@kb/module-sdk/**",
+                      "!@kb/module-ingestion",
+                      "!@kb/module-ingestion/**"
                     ],
                     "message": "A module UI never imports another module's UI; link to its routes instead."
                   },
@@ -199,8 +210,11 @@
                   {
                     "group": [
                       "@kb/module-*",
+                      "@kb/module-*/**",
                       "!@kb/module-sdk",
-                      "!@kb/module-llm"
+                      "!@kb/module-sdk/**",
+                      "!@kb/module-llm",
+                      "!@kb/module-llm/**"
                     ],
                     "message": "A module UI never imports another module's UI; link to its routes instead."
                   },

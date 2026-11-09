@@ -1,24 +1,28 @@
 import {
-  type KbModule,
   KbRuntimeProvider,
+  type ModuleManifest,
   type RuntimeAuth,
   type RuntimeConfig,
   type SearchProvider,
 } from "@kb/module-sdk";
 import { Area, IconButton, navItemClass, ThemeToggle } from "@kb/ui";
 import { CircleHelp, CircleUser, Library, LogOut } from "lucide-react";
-import { useMemo } from "react";
+import { lazy, type ReactNode, useMemo } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
 import { AuthGate, useSession } from "./auth/AuthGate.tsx";
 import { createUserManager } from "./auth/session.ts";
 import { Home } from "./Home.tsx";
-import { HelpIndex, HelpPage } from "./help/Help.tsx";
 import { ModuleBoundary } from "./ModuleBoundary.tsx";
+import { ModuleRoutes } from "./ModuleRoutes.tsx";
 import { activeModules, navEntries } from "./registry.ts";
 import { HeaderSearch } from "./search/HeaderSearch.tsx";
 import { searchProviders } from "./search/pages.ts";
 import { SearchPage } from "./search/SearchPage.tsx";
 import { ToastHost } from "./ToastHost.tsx";
+
+// The user manual and its Markdown renderer load on the first visit to /help.
+const HelpIndex = lazy(() => import("./help/Help.tsx").then((m) => ({ default: m.HelpIndex })));
+const HelpPage = lazy(() => import("./help/Help.tsx").then((m) => ({ default: m.HelpPage })));
 
 /**
  * The shell: signs the user in through the OIDC provider in `config.auth`
@@ -44,18 +48,18 @@ function Routes({ config }: { config: RuntimeConfig }) {
         element: <Shell modules={modules} providers={providers} />,
         children: [
           { index: true, element: <Home modules={modules} /> },
+          // A module's code loads on the first visit to its pages.
           ...modules.map((m) => ({
-            path: `m/${m.id}`,
+            path: `m/${m.id}/*`,
             element: (
               <ModuleBoundary title={m.title}>
-                <Outlet />
+                <ModuleRoutes module={m} />
               </ModuleBoundary>
             ),
-            children: m.routes,
           })),
           { path: "search", element: <SearchPage providers={providers} /> },
-          { path: "help", element: <HelpIndex /> },
-          { path: "help/:page", element: <HelpPage /> },
+          { path: "help", element: <Help page={<HelpIndex />} /> },
+          { path: "help/:page", element: <Help page={<HelpPage />} /> },
           { path: "*", element: <p className="text-sm text-fg-muted">Page not found.</p> },
         ],
       },
@@ -64,7 +68,7 @@ function Routes({ config }: { config: RuntimeConfig }) {
   return <RouterProvider router={router} />;
 }
 
-function Shell({ modules, providers }: { modules: KbModule[]; providers: SearchProvider[] }) {
+function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: SearchProvider[] }) {
   return (
     <div className="flex min-h-screen">
       <Area className="sticky top-0 w-60 shrink-0 overflow-y-auto border-r">
@@ -104,6 +108,11 @@ function Shell({ modules, providers }: { modules: KbModule[]; providers: SearchP
       <ToastHost />
     </div>
   );
+}
+
+/** A help page, with the loading and error states of a module's pages. */
+function Help({ page }: { page: ReactNode }) {
+  return <ModuleBoundary title="Help">{page}</ModuleBoundary>;
 }
 
 function SignedInUser() {

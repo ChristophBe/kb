@@ -13,7 +13,7 @@ import {
 } from "@kb/chat-api/kb/chat/v1/chat_pb";
 import type { SearchContext } from "@kb/module-sdk";
 import { describe, expect, it } from "vitest";
-import chat from "./index.tsx";
+import manifest from "./manifest.ts";
 import { conversationSearch, SEARCH_LIMIT } from "./search.ts";
 
 function contextFor(searchConversations: ServiceImpl<typeof ChatService>["searchConversations"]) {
@@ -26,9 +26,14 @@ function contextFor(searchConversations: ServiceImpl<typeof ChatService>["search
 const signal = new AbortController().signal;
 
 describe("conversationSearch", () => {
-  it("is the chat module's search group", () => {
-    expect(chat.search).toBe(conversationSearch);
-    expect(conversationSearch.label).toBe("Conversations");
+  it("is the chat module's search group, loaded on the first search", async () => {
+    expect(manifest.search?.label).toBe("Conversations");
+    const context = contextFor(() => ({
+      results: [{ conversation: create(ConversationSchema, { id: "c1", title: "Lisbon" }) }],
+    }));
+    expect(await manifest.search?.search("lisbon", signal, context)).toEqual([
+      { title: "Lisbon", href: "/m/chat/c1" },
+    ]);
   });
 
   it("returns the matches in order, linking to each conversation", async () => {
@@ -46,7 +51,7 @@ describe("conversationSearch", () => {
       };
     });
 
-    expect(await conversationSearch.search("lisbon", signal, context)).toEqual([
+    expect(await conversationSearch("lisbon", signal, context)).toEqual([
       { title: "Lisbon trip", href: "/m/chat/c1" },
       { title: "New conversation", snippet: "Museums in Lisbon?", href: "/m/chat/c2" },
     ]);
@@ -57,7 +62,7 @@ describe("conversationSearch", () => {
     const context = contextFor(() => {
       throw new ConnectError("down", Code.Unavailable);
     });
-    await expect(conversationSearch.search("x", signal, context)).rejects.toMatchObject({
+    await expect(conversationSearch("x", signal, context)).rejects.toMatchObject({
       code: Code.Unavailable,
     });
   });

@@ -15,6 +15,8 @@ gh api repos/{owner}/{repo}/milestones --jq '.[] | "\(.title): \(.description)"'
 gh issue list --label type:epic --state open
 ```
 
+Milestones are small topics (CONTRIBUTING.md, "Milestones"): put a work item into the open milestone whose goal it serves; if none fits, propose a new milestone (title and one-sentence goal) in the draft.
+
 Look at the code the issue touches so **Changes** can name real file paths (module layout: see CLAUDE.md). Check for duplicates with `gh issue list --search "<keywords>" --state all`.
 
 ## 2. Shape
@@ -37,7 +39,7 @@ Rules (these implement the **Definition of Ready** in CONTRIBUTING.md; read its 
 - Milestone: work items get one (match the phase goals); epics get none.
 - Dependencies and open questions go under Notes with issue links (`Depends on #n`); record dependencies on GitHub too (see section 4). No open question may block the work.
 
-Example work item (title "Global command palette (⌘K) with document search", labels `type:feature area:ui-shell lang:ts`, milestone `M3 – Extended`):
+Example work item (title "Global command palette (⌘K) with document search", labels `type:feature area:ui-shell lang:ts`, milestone `Navigation & UI polish`):
 
 ```markdown
 ## Context

@@ -152,5 +152,5 @@ Find passages across all documents.
 
 ## Open questions
 
-- Should search live inside the Documents module (current proposal, #23) or become the global command palette later (#62)? Proposed: page now, palette reuses the RPC in M3.
+- Should search live inside the Documents module (current proposal, #23) or become the global command palette later (#62)? Proposed: page now, palette reuses the RPC later (#62).
 - Should metadata editing be inline instead of a dialog? Proposed: dialog, since the field list is unbounded.

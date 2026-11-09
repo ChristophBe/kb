@@ -20,7 +20,7 @@ Shared, module-agnostic code lives in `platform/` (`go/`, `python/`, `ui/`, `pro
 - A PR that adds or changes a user-facing feature updates its page in `docs/user-manual/` (rules in its README); a PR removing a feature removes its description.
 
 ## Issues
-Backlog lives in GitHub issues: epics (`type:epic`) per module with sub-issues, phases as GitHub milestones. Conventions in CONTRIBUTING.md.
+Backlog lives in GitHub issues: epics (`type:epic`) per module with sub-issues, small topic-based GitHub milestones. Conventions in CONTRIBUTING.md.
 
 ## Commands (`task` = `go tool -modfile=tools/go.mod task` if not installed)
 - `task setup` · `task gen` · `task lint` · `task test` · `task ci`

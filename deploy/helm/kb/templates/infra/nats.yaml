@@ -1,0 +1,12 @@
+{{- if .Values.infra.enabled }}
+{{- $container := `
+args: ["-js", "-sd", "/data", "-m", "8222"]
+readinessProbe:
+  httpGet: { path: "/healthz?js-enabled-only=true", port: 8222 }
+  periodSeconds: 2
+livenessProbe:
+  httpGet: { path: /healthz, port: 8222 }
+  periodSeconds: 10` -}}
+{{- include "kb.infraServer" (dict "root" . "name" "nats" "image" .Values.infra.images.nats "port" 4222
+  "dataPath" "/data" "container" $container) }}
+{{- end }}

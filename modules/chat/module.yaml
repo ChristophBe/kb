@@ -6,6 +6,7 @@ services:
   - name: chat-service
     language: python
     port: 9003
+    infra: [postgres]
     grpc_services: [kb.chat.v1.ChatService]
 ui: "@kb/module-chat"
 # Retrieval (SearchChunks) and generation/embeddings.

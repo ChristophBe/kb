@@ -1,0 +1,24 @@
+{{- /*
+Whoever reaches a module service directly can claim any user with the
+x-kb-user header (docs/adr/0009), so only the release's own pods (Envoy and
+the other modules) may connect to the module components.
+*/ -}}
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kb-modules
+  labels: {{- include "kb.labels" (dict "root" . "component" "modules") | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+      - { key: kb.dev/module, operator: Exists }
+      - { key: app.kubernetes.io/instance, operator: In, values: [{{ .Release.Name | quote }}] }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: kb
+              app.kubernetes.io/instance: {{ .Release.Name | quote }}
+{{- end }}

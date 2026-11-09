@@ -1,0 +1,13 @@
+kb {{ .Chart.AppVersion }} is starting in namespace {{ .Release.Namespace }}.
+
+Open {{ .Values.publicUrl }} once every pod is ready:
+  kubectl -n {{ .Release.Namespace }} get pods
+{{- if .Values.infra.enabled }}
+
+Dev infrastructure is on (infra.enabled): sign in as alice@example.com or
+bob@example.com with password "password". Not for production.
+{{- end }}
+{{- if not .Values.ingress.enabled }}
+
+The Ingress is off: route {{ .Values.publicUrl }} to the services web and envoy yourself.
+{{- end }}

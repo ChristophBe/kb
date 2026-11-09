@@ -94,6 +94,22 @@ services:
 - `tools/modgen` reads the method names from the module's `.proto` files and fails when a `grpc_services` entry or an `internal` entry names nothing that exists.
 - Every routed call is authenticated by Envoy ([ADR 0009](../adr/0009-oidc-authentication-at-the-gateway.md)). A handler gets the calling user with `grpcserver.UserFromContext(ctx)` (Go) or `kb_platform.grpc.current_user()` (Python). Clients opened with `grpcserver.Dial` / `kb_platform.grpc.channel` pass that user on as `x-kb-user`, so a service calling a peer while handling a user's request acts for the same user; calls made outside a user's request (workers, event consumers) carry no user. User-facing RPCs reject a call without a user with `UNAUTHENTICATED` and report another user's resources as `NOT_FOUND`; pipeline RPCs called without a user act on any resource. Tests set a user with `grpcserver.WithUser` / `kb_platform.grpc.as_user`.
 
+## Deployment settings
+
+The Helm chart ([Kubernetes](../operations/kubernetes.md)) is generated from the manifests too. Two fields per service tell it what compose files spell out by hand:
+
+```yaml
+services:
+  - name: document-service
+    infra: [postgres, s3]        # shared infrastructure it connects to: postgres, nats, s3
+    env:                         # KB_* settings a deployment sets, with defaults
+      KB_MAX_UPLOAD_BYTES: "52428800"
+```
+
+- `infra` gives the component the chart's connection settings: `KB_DATABASE_URL` (in the Go or SQLAlchemy form), `KB_NATS_URL`, `KB_S3_*`. List exactly what the component's compose service has in `depends_on`.
+- `env` becomes the default of `components.<name>.env` in the chart's values. Only list settings whose code default (meant for local development) is wrong in a cluster, or that operators should see; everything else keeps its default.
+- Peer addresses (`KB_<MODULE>_ADDR`) need no field: they follow from `depends_on`.
+
 ## Declared dependencies
 
 `module.yaml` lists what a module uses from other modules:

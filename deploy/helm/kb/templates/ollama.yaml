@@ -1,0 +1,98 @@
+{{- /*
+Local model server for the llm module (KB_LLM_PROVIDER=ollama with
+KB_OLLAMA_URL=http://ollama:11434, the llm-service defaults). The pull Job
+downloads ollama.models; it is named after them, so changing the list runs
+it again.
+*/ -}}
+{{- if .Values.ollama.enabled }}
+{{- $o := .Values.ollama -}}
+{{- if $o.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama
+  labels: {{- include "kb.labels" (dict "root" . "component" "ollama") | nindent 4 }}
+spec:
+  accessModes: [ReadWriteOnce]
+  {{- with $o.persistence.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ $o.persistence.size }}
+---
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  labels: {{- include "kb.labels" (dict "root" . "component" "ollama") | nindent 4 }}
+spec:
+  replicas: 1
+  # The models volume is ReadWriteOnce.
+  strategy: { type: Recreate }
+  selector:
+    matchLabels: {{- include "kb.selectorLabels" (dict "root" . "component" "ollama") | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "kb.labels" (dict "root" . "component" "ollama") | nindent 8 }}
+    spec:
+      {{- with include "kb.podDefaults" . | trim }}{{ . | nindent 6 }}{{ end }}
+      containers:
+        - name: ollama
+          image: {{ $o.image }}
+          ports:
+            - name: http
+              containerPort: 11434
+          readinessProbe:
+            httpGet: { path: /, port: http }
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /, port: http }
+            periodSeconds: 10
+          resources: {{- toYaml $o.resources | nindent 12 }}
+          volumeMounts:
+            - { name: models, mountPath: /root/.ollama }
+      volumes:
+        - name: models
+          {{- if $o.persistence.enabled }}
+          persistentVolumeClaim: { claimName: ollama }
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  labels: {{- include "kb.labels" (dict "root" . "component" "ollama") | nindent 4 }}
+spec:
+  selector: {{- include "kb.selectorLabels" (dict "root" . "component" "ollama") | nindent 4 }}
+  ports:
+    - name: http
+      port: 11434
+      targetPort: http
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ollama-pull-{{ $o.models | join "," | sha256sum | trunc 8 }}
+  labels: {{- include "kb.labels" (dict "root" . "component" "ollama-pull") | nindent 4 }}
+spec:
+  backoffLimit: 10
+  template:
+    metadata:
+      labels: {{- include "kb.labels" (dict "root" . "component" "ollama-pull") | nindent 8 }}
+    spec:
+      {{- with include "kb.podDefaults" . | trim }}{{ . | nindent 6 }}{{ end }}
+      restartPolicy: OnFailure
+      containers:
+        - name: pull
+          image: {{ $o.image }}
+          env:
+            - { name: OLLAMA_HOST, value: "ollama:11434" }
+          command: ["sh", "-c", {{ printf "until ollama list >/dev/null 2>&1; do sleep 2; done%s" (include "kb.ollamaPulls" $o.models) | quote }}]
+{{- end }}
+{{- define "kb.ollamaPulls" -}}
+{{- range . }} && ollama pull {{ . }}{{ end }}
+{{- end -}}

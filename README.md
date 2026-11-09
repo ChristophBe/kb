@@ -46,7 +46,7 @@ open http://localhost:3000
 
 No GPU or want a fast smoke test? Use `KB_LLM_PROVIDER=fake KB_RAG_MIN_SCORE=-1 task up` (deterministic echo answers and hash embeddings, which need the relevance threshold off). To use an Ollama running on the host (faster on macOS), set `KB_OLLAMA_URL=http://host.docker.internal:11434`. To chat with Claude, set `KB_CHAT_PROVIDER=anthropic`, `KB_EMBEDDING_PROVIDER=ollama` and `KB_ANTHROPIC_API_KEY`: Anthropic has no embedding models, so search and document processing keep using Ollama. `KB_CHAT_PROVIDER` and `KB_EMBEDDING_PROVIDER` each fall back to `KB_LLM_PROVIDER`. See `.env.example` for all settings, including the host ports if 8080/3000 are taken.
 
-To run a released version from the published images instead of building, see [Container images](docs/operations/images.md) (`KB_VERSION=<version> docker compose -f compose.yaml -f deploy/release.compose.yaml up`).
+To run a released version from the published images instead of building, see [Container images](docs/operations/images.md) (`KB_VERSION=<version> docker compose -f compose.yaml -f deploy/release.compose.yaml up`). To deploy to Kubernetes, use the Helm chart in `deploy/helm/kb` ([Kubernetes](docs/operations/kubernetes.md)).
 
 To follow a request across the services, start the stack with tracing and Jaeger: `KB_OTEL_ENDPOINT=http://otel-collector:4317 task up -- --profile observability`, then open http://localhost:16686. See [Observability](docs/operations/observability.md).
 

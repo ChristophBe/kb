@@ -51,10 +51,29 @@ type Service struct {
 	// Cmd is the Go main package ("./modules/<id>/service/cmd/<name>"),
 	// found as modules/<id>/*/cmd/<name>; empty for Python components.
 	Cmd string `yaml:"-"`
+	// Infra lists the shared infrastructure the component connects to
+	// (postgres, nats, s3); the Helm chart passes it the matching settings.
+	Infra []string `yaml:"infra"`
+	// Env holds KB_* settings a deployment sets for the component, with
+	// their default values (the chart's components.<name>.env).
+	Env map[string]string `yaml:"env"`
+	// Peers are the addresses of the modules in depends_on that serve gRPC,
+	// as KB_<MODULE>_ADDR settings.
+	Peers []Peer `yaml:"-"`
 }
 
+// Peer is the address setting of one module a component calls.
+type Peer struct {
+	Env  string // "KB_DOCUMENT_ADDR"
+	Addr string // "document-service:9001"
+}
+
+// InfraKinds are the infrastructure servers a component may list in infra.
+var InfraKinds = []string{"postgres", "nats", "s3"}
+
 var (
-	idPattern = regexp.MustCompile(`^[a-z][a-z0-9]*$`)
+	idPattern  = regexp.MustCompile(`^[a-z][a-z0-9]*$`)
+	envPattern = regexp.MustCompile(`^KB_[A-Z0-9_]+$`)
 	// subjectPattern matches kb.<owning module>.<event>.
 	subjectPattern = regexp.MustCompile(`^kb\.([a-z][a-z0-9]*)\.[a-z][a-z0-9_]*$`)
 )
@@ -120,6 +139,7 @@ func LoadModules(dir string) ([]Module, error) {
 	if err := validateDependencies(modules); err != nil {
 		return nil, err
 	}
+	resolvePeers(modules)
 	return modules, nil
 }
 
@@ -210,6 +230,19 @@ func (m Module) validate(dirName string) error {
 		}
 		if len(s.GRPCServices) > 0 && s.Port == 0 {
 			return fmt.Errorf("service %s: grpc_services require a port", s.Name)
+		}
+		for i, kind := range s.Infra {
+			if !slices.Contains(InfraKinds, kind) {
+				return fmt.Errorf("service %s: infra %q is not one of %s", s.Name, kind, strings.Join(InfraKinds, ", "))
+			}
+			if slices.Contains(s.Infra[:i], kind) {
+				return fmt.Errorf("service %s: infra %s listed twice", s.Name, kind)
+			}
+		}
+		for key := range s.Env {
+			if !envPattern.MatchString(key) {
+				return fmt.Errorf("service %s: env %q is not a KB_* setting", s.Name, key)
+			}
 		}
 	}
 	return nil

@@ -17,7 +17,7 @@ services:
   # S3-compatible object storage. Browsers upload to it directly through
   # presigned URLs, so its port must be reachable from the host.
   s3:
-    image: chrislusf/seaweedfs:4.00
+    image: chrislusf/seaweedfs:4.51
     command: server -ip.bind=0.0.0.0 -dir=/data -filer -s3 -s3.config=/etc/seaweedfs/s3.json
     ports: ["8333:8333"]
     volumes:
@@ -42,7 +42,7 @@ services:
   # Envoy fetches its signing keys at dex:5556; browsers and tests reach it at
   # the issuer URL, so the published port must match KB_OIDC_ISSUER.
   dex:
-    image: dexidp/dex:v2.44.0
+    image: dexidp/dex:v2.46.1
     command: ["dex", "serve", "/etc/dex/config.yaml.tpl"]
     environment:
       KB_OIDC_ISSUER: ${KB_OIDC_ISSUER:-http://localhost:5556/dex}

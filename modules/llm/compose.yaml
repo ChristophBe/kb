@@ -33,13 +33,13 @@ services:
   # Local model server; enable with `--profile ollama`, or point
   # KB_OLLAMA_URL at an Ollama running on the host (faster on macOS).
   ollama:
-    image: ollama/ollama:0.12.6
+    image: ollama/ollama:0.40.11
     profiles: [ollama]
     volumes: [ollama:/root/.ollama]
     ports: ["11434:11434"]
 
   ollama-pull:
-    image: ollama/ollama:0.12.6
+    image: ollama/ollama:0.40.11
     profiles: [ollama]
     environment: { OLLAMA_HOST: "ollama:11434" }
     entrypoint: ["sh", "-c", "ollama pull ${KB_CHAT_MODEL:-llama3.2} && ollama pull ${KB_EMBEDDING_MODEL:-nomic-embed-text}"]

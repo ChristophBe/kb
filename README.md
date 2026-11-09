@@ -48,7 +48,7 @@ No GPU or want a fast smoke test? Use `KB_LLM_PROVIDER=fake KB_RAG_MIN_SCORE=-1 
 
 To run a released version from the published images instead of building, see [Container images](docs/operations/images.md) (`KB_VERSION=<version> docker compose -f compose.yaml -f deploy/release.compose.yaml up`). To deploy to Kubernetes, use the Helm chart in `deploy/helm/kb` ([Kubernetes](docs/operations/kubernetes.md)).
 
-To follow a request across the services, start the stack with tracing and Jaeger: `KB_OTEL_ENDPOINT=http://otel-collector:4317 task up -- --profile observability`, then open http://localhost:16686. See [Observability](docs/operations/observability.md).
+To follow a request across the services, start the stack with tracing and Jaeger: `KB_OTEL_ENDPOINT=http://otel-collector:4317 task up -- --profile observability`, then open http://localhost:16686. The same profile runs Prometheus (http://localhost:9090), which scrapes the `/metrics` every component serves ([Metrics](docs/metrics.md)). See [Observability](docs/operations/observability.md).
 
 ## Authentication
 

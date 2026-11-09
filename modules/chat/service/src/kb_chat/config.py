@@ -8,6 +8,7 @@ _ROOT = Path(__file__).resolve().parents[5]
 
 class Settings(PlatformSettings):
     grpc_port: int = 9003
+    metrics_port: int = 9103
     database_url: str = "postgresql+asyncpg://kb:kb@localhost:5432/kb"
     document_addr: str = "localhost:9001"
     llm_addr: str = "localhost:9004"

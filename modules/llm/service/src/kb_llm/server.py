@@ -1,12 +1,14 @@
 import asyncio
 import contextlib
 import logging
+import time
 from collections.abc import AsyncIterator
 from typing import Any
 
 import grpc
 from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_platform.grpc import abort_invalid_argument, violation
+from prometheus_client import Counter, Histogram
 
 from .config import Settings
 from .providers import Providers
@@ -28,6 +30,39 @@ from .providers.base import (
 log = logging.getLogger("kb_llm")
 
 _Context = grpc.aio.ServicerContext[Any, Any]
+
+# Metrics (docs/metrics.md). Only successful calls are recorded, so the model
+# label holds models the provider has; failures are in the gRPC server
+# metrics by status code.
+_LATENCY_BUCKETS = (0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 30, 60, 120, 300, 600)
+GENERATION_SECONDS = Histogram(
+    "kb_llm_generation_duration_seconds",
+    "Time a generation took from the request to the last token.",
+    ["provider", "model"],
+    buckets=_LATENCY_BUCKETS,
+)
+FIRST_TOKEN_SECONDS = Histogram(
+    "kb_llm_generation_first_token_seconds",
+    "Time from a generation request to its first token.",
+    ["provider", "model"],
+    buckets=_LATENCY_BUCKETS,
+)
+TOKENS = Counter(
+    "kb_llm_tokens",
+    "Tokens of generations as the provider reports them, by direction (input or output).",
+    ["provider", "model", "direction"],
+)
+EMBEDDING_SECONDS = Histogram(
+    "kb_llm_embedding_duration_seconds",
+    "Time an Embed call took at the provider, for all its inputs.",
+    ["provider", "model"],
+    buckets=_LATENCY_BUCKETS,
+)
+EMBEDDING_INPUTS = Counter(
+    "kb_llm_embedding_inputs",
+    "Texts embedded (the provider interface reports no token counts for embeddings).",
+    ["provider", "model"],
+)
 
 _ROLES = {
     llm_pb2.ROLE_SYSTEM: Role.SYSTEM,
@@ -123,8 +158,17 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
             contextlib.aclosing(self._chat.generate(model, messages, options)) as chunks,
             _logged_cancel(model),
         ):
+            provider = self._chat.name
+            start = time.perf_counter()
+            first = True
             async for chunk in chunks:
+                if first and (chunk.delta or chunk.done):
+                    FIRST_TOKEN_SECONDS.labels(provider, model).observe(time.perf_counter() - start)
+                    first = False
                 if chunk.done:
+                    GENERATION_SECONDS.labels(provider, model).observe(time.perf_counter() - start)
+                    TOKENS.labels(provider, model, "input").inc(chunk.input_tokens)
+                    TOKENS.labels(provider, model, "output").inc(chunk.output_tokens)
                     yield llm_pb2.GenerateResponse(
                         done=True,
                         model=model,
@@ -144,7 +188,9 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
                 model=model, dimensions=self._settings.embedding_dimensions
             )
         async with _slot(self._embedding_slots, context), _provider_errors(context):
+            start = time.perf_counter()
             vectors = await self._embedding.embed(model, list(request.inputs))
+        elapsed = time.perf_counter() - start
         dims = len(vectors[0])
         if dims != self._settings.embedding_dimensions:
             await context.abort(
@@ -152,6 +198,8 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
                 f"model {model} returned {dims}-dim vectors, expected "
                 f"{self._settings.embedding_dimensions} (KB_EMBEDDING_DIMENSIONS)",
             )
+        EMBEDDING_SECONDS.labels(self._embedding.name, model).observe(elapsed)
+        EMBEDDING_INPUTS.labels(self._embedding.name, model).inc(len(request.inputs))
         return llm_pb2.EmbedResponse(
             model=model,
             dimensions=dims,

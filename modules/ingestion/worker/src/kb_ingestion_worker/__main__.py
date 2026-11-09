@@ -7,6 +7,7 @@ from kb.document.v1 import document_pb2_grpc
 from kb.llm.v1 import llm_pb2_grpc
 from kb_platform.grpc import channel, is_serving
 from kb_platform.logging import setup_logging
+from kb_platform.metrics import start_metrics_server
 from kb_platform.nats import connect, ensure_stream
 from kb_platform.nats import publish as publish_event
 from kb_platform.telemetry import setup_tracing
@@ -31,6 +32,7 @@ async def run() -> None:
     settings = Settings()
     setup_logging(settings.log_level, settings.log_format)
     setup_tracing(settings.otel_endpoint, "ingestion-worker")
+    start_metrics_server(settings.metrics_port)
 
     nc = await connect(settings.nats_url, "ingestion-worker")
     js = nc.jetstream()

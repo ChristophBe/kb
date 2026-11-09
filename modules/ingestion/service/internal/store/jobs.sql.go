@@ -59,6 +59,37 @@ func (q *Queries) AdvanceJob(ctx context.Context, arg AdvanceJobParams) (Ingesti
 	return i, err
 }
 
+const countJobsByStatus = `-- name: CountJobsByStatus :many
+SELECT status, count(*)::bigint AS jobs FROM ingestion.jobs GROUP BY status
+`
+
+type CountJobsByStatusRow struct {
+	Status int16
+	Jobs   int64
+}
+
+// CountJobsByStatus counts all jobs per status, for the kb_ingestion_jobs
+// metric (docs/metrics.md).
+func (q *Queries) CountJobsByStatus(ctx context.Context) ([]CountJobsByStatusRow, error) {
+	rows, err := q.db.Query(ctx, countJobsByStatus)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CountJobsByStatusRow{}
+	for rows.Next() {
+		var i CountJobsByStatusRow
+		if err := rows.Scan(&i.Status, &i.Jobs); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const createJob = `-- name: CreateJob :one
 
 INSERT INTO ingestion.jobs (id, owner_id, document_id, filename, content_type, status)

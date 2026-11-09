@@ -6,7 +6,8 @@ import contextvars
 import inspect
 import logging
 import signal
-from collections.abc import Awaitable, Callable, Iterable, Iterator, Mapping
+import time
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterable, Iterator, Mapping
 from typing import Any, NoReturn
 
 import grpc
@@ -17,7 +18,7 @@ from grpc_health.v1 import health, health_pb2, health_pb2_grpc
 from grpc_reflection.v1alpha import reflection
 from grpc_status import rpc_status
 
-from kb_platform import telemetry
+from kb_platform import metrics, telemetry
 
 log = logging.getLogger(__name__)
 
@@ -79,13 +80,27 @@ def _with_user(
 ) -> grpc.RpcMethodHandler[Any, Any]:
     """Wraps the behaviour of `handler` so it runs with `current_user()` set."""
 
+    @contextlib.asynccontextmanager
+    async def scope(_context: Any) -> AsyncIterator[None]:
+        with as_user(user):
+            yield
+
+    return _wrap(handler, scope)
+
+
+_Scope = Callable[[Any], contextlib.AbstractAsyncContextManager[None]]
+
+
+def _wrap(
+    handler: grpc.RpcMethodHandler[Any, Any], scope: _Scope
+) -> grpc.RpcMethodHandler[Any, Any]:
+    """Wraps the behaviour of `handler` so each call runs inside
+    `scope(context)`, streamed responses included."""
+
     def unary(behavior: Callable[..., Any]) -> Callable[..., Any]:
         async def run(request: Any, context: Any) -> Any:
-            token = _user.set(user)
-            try:
+            async with scope(context):
                 return await behavior(request, context)
-            finally:
-                _user.reset(token)
 
         return run
 
@@ -96,12 +111,9 @@ def _with_user(
             return unary(behavior)
 
         async def run(request: Any, context: Any) -> Any:
-            token = _user.set(user)
-            try:
+            async with scope(context):
                 async for response in behavior(request, context):
                     yield response
-            finally:
-                _user.reset(token)
 
         return run
 
@@ -123,6 +135,90 @@ def _with_user(
     )
 
 
+# Status code names as Go's codes.Code.String() spells them, so both
+# languages report the same grpc_code labels.
+_CODE_NAMES = {
+    grpc.StatusCode.OK: "OK",
+    grpc.StatusCode.CANCELLED: "Canceled",
+    grpc.StatusCode.UNKNOWN: "Unknown",
+    grpc.StatusCode.INVALID_ARGUMENT: "InvalidArgument",
+    grpc.StatusCode.DEADLINE_EXCEEDED: "DeadlineExceeded",
+    grpc.StatusCode.NOT_FOUND: "NotFound",
+    grpc.StatusCode.ALREADY_EXISTS: "AlreadyExists",
+    grpc.StatusCode.PERMISSION_DENIED: "PermissionDenied",
+    grpc.StatusCode.RESOURCE_EXHAUSTED: "ResourceExhausted",
+    grpc.StatusCode.FAILED_PRECONDITION: "FailedPrecondition",
+    grpc.StatusCode.ABORTED: "Aborted",
+    grpc.StatusCode.OUT_OF_RANGE: "OutOfRange",
+    grpc.StatusCode.UNIMPLEMENTED: "Unimplemented",
+    grpc.StatusCode.INTERNAL: "Internal",
+    grpc.StatusCode.UNAVAILABLE: "Unavailable",
+    grpc.StatusCode.DATA_LOSS: "DataLoss",
+    grpc.StatusCode.UNAUTHENTICATED: "Unauthenticated",
+}
+_CODES_BY_VALUE = {code.value[0]: code for code in grpc.StatusCode}
+
+
+def _code_of(context: Any, default: grpc.StatusCode) -> str:
+    """The status the handler set or aborted with, else `default`."""
+    code = context.code()
+    if isinstance(code, int):
+        code = _CODES_BY_VALUE.get(code)
+    return _CODE_NAMES.get(code or default, "Unknown")
+
+
+class MetricsInterceptor(grpc.aio.ServerInterceptor):
+    """Records grpc_server_handled_total and grpc_server_handling_seconds for
+    every call except health checks (`kb_platform.metrics`). `serve` installs
+    it."""
+
+    async def intercept_service(
+        self,
+        continuation: Callable[
+            [grpc.HandlerCallDetails], Awaitable[grpc.RpcMethodHandler[Any, Any] | None]
+        ],
+        handler_call_details: grpc.HandlerCallDetails,
+    ) -> grpc.RpcMethodHandler[Any, Any] | None:
+        handler = await continuation(handler_call_details)
+        full_method: str = handler_call_details.method or ""
+        service, _, method = full_method.lstrip("/").partition("/")
+        if handler is None or service == health.SERVICE_NAME:
+            return handler
+        h: Any = handler
+        kind = (
+            "unary"
+            if h.unary_unary
+            else "server_stream"
+            if h.unary_stream
+            else "client_stream"
+            if h.stream_unary
+            else "bidi_stream"
+        )
+
+        @contextlib.asynccontextmanager
+        async def observed(context: Any) -> AsyncIterator[None]:
+            start = time.perf_counter()
+            code = "OK"
+            try:
+                yield
+            except asyncio.CancelledError:
+                code = "Canceled"
+                raise
+            except BaseException:
+                # context.abort raises after setting the code; anything else is UNKNOWN.
+                code = _code_of(context, grpc.StatusCode.UNKNOWN)
+                raise
+            else:
+                code = _code_of(context, grpc.StatusCode.OK)
+            finally:
+                metrics.GRPC_HANDLED.labels(kind, service, method, code).inc()
+                metrics.GRPC_HANDLING_SECONDS.labels(kind, service, method).observe(
+                    time.perf_counter() - start
+                )
+
+        return _wrap(handler, observed)
+
+
 async def serve(
     port: int,
     register: Iterable[Registrar],
@@ -133,9 +229,13 @@ async def serve(
     """Run a grpc.aio server with health checking and reflection until SIGINT
     or SIGTERM. `service_names` are the fully qualified names reported as
     SERVING and exposed via reflection. Handlers read the calling user with
-    `current_user()`. With tracing on (`kb_platform.telemetry`), each call
-    continues the caller's trace in a server span."""
-    server = grpc.aio.server(interceptors=[*telemetry.server_interceptors(), UserInterceptor()])
+    `current_user()`. Each call is counted in the gRPC server metrics
+    (`kb_platform.metrics`; serve them with `start_metrics_server`). With
+    tracing on (`kb_platform.telemetry`), each call continues the caller's
+    trace in a server span."""
+    server = grpc.aio.server(
+        interceptors=[MetricsInterceptor(), *telemetry.server_interceptors(), UserInterceptor()]
+    )
     for reg in register:
         reg(server)
 

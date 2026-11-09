@@ -6,6 +6,7 @@ services:
   - name: document-service
     language: go
     port: 9001
+    metrics_port: 9101
     infra: [postgres, s3]
     # Deployment defaults (Helm components.document-service.env): upload
     # limits, and the cleanup of abandoned uploads and orphaned files.

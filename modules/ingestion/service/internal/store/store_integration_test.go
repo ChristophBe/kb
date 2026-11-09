@@ -13,8 +13,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 
+	ingestionv1 "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1"
 	"github.com/christoph/kb/modules/ingestion/migrations"
+	"github.com/christoph/kb/modules/ingestion/service/internal/app"
 	"github.com/christoph/kb/platform/go/postgres"
 	"github.com/christoph/kb/platform/go/postgres/pgtest"
 )
@@ -342,5 +346,45 @@ func TestOwnerMigrationGivesExistingJobsToAlice(t *testing.T) {
 		VALUES ($1, $2, 'new.md', 'text/markdown', 1)`, uuid.New(), uuid.New())
 	if err == nil || !strings.Contains(err.Error(), "owner_id") {
 		t.Errorf("job without an owner: err = %v, want a not-null violation", err)
+	}
+}
+
+func TestJobMetrics(t *testing.T) {
+	q := New(pgtest.Start(t, "ingestion", migrations.FS))
+	ctx := t.Context()
+	jobs := NewJobs(q)
+	transitions := func(status string) float64 {
+		return testutil.ToFloat64(jobTransitions.WithLabelValues(status))
+	}
+	queuedBefore, doneBefore := transitions("queued"), transitions("done")
+
+	job, err := jobs.Create(ctx, app.Job{ID: uuid.New(), OwnerID: owner, DocumentID: uuid.New(), Filename: "a.md", Status: pendingUpload})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, status := range []ingestionv1.JobStatus{queued, done, done} { // the second DONE is a redelivery
+		_, _ = jobs.Advance(ctx, app.Transition{ID: job.ID, Run: 1, Status: status})
+	}
+	newJob(t, q, queued)
+	if got := transitions("queued") - queuedBefore; got != 1 {
+		t.Errorf("queued transitions = %v, want 1", got)
+	}
+	if got := transitions("done") - doneBefore; got != 1 {
+		t.Errorf("done transitions = %v, want 1 (a redelivered event must not count)", got)
+	}
+
+	reg := prometheus.NewPedanticRegistry()
+	reg.MustRegister(NewJobsCollector(q))
+	want := `
+# HELP kb_ingestion_jobs Jobs per status in the database, counted at scrape time (queue depth: status="queued").
+# TYPE kb_ingestion_jobs gauge
+kb_ingestion_jobs{status="done"} 1
+kb_ingestion_jobs{status="failed"} 0
+kb_ingestion_jobs{status="pending_upload"} 0
+kb_ingestion_jobs{status="processing"} 0
+kb_ingestion_jobs{status="queued"} 1
+`
+	if err := testutil.GatherAndCompare(reg, strings.NewReader(want), "kb_ingestion_jobs"); err != nil {
+		t.Error(err)
 	}
 }

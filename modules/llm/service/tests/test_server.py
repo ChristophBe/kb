@@ -1,6 +1,7 @@
 from collections.abc import AsyncIterator
 
 import grpc
+import prometheus_client
 import pytest
 from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_llm.config import Settings
@@ -74,3 +75,28 @@ async def test_generate_without_messages_is_rejected(stub: llm_pb2_grpc.LlmServi
         _ = [r async for r in stub.Generate(llm_pb2.GenerateRequest())]
     assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
     assert [v.field for v in field_violations(err.value)] == ["messages"]
+
+
+async def test_generate_and_embed_record_metrics(stub: llm_pb2_grpc.LlmServiceStub) -> None:
+    labels = {"provider": "fake", "model": "fake-chat"}
+
+    def sample(name: str, **extra: str) -> float:
+        return prometheus_client.REGISTRY.get_sample_value(name, {**labels, **extra}) or 0
+
+    before = sample("kb_llm_tokens_total", direction="output")
+    request = llm_pb2.GenerateRequest(
+        model="fake-chat",
+        messages=[llm_pb2.Message(role=llm_pb2.ROLE_USER, content="hello there")],
+    )
+    responses = [r async for r in stub.Generate(request)]
+    assert sample("kb_llm_tokens_total", direction="output") - before == (
+        responses[-1].usage.output_tokens
+    )
+    assert sample("kb_llm_generation_duration_seconds_count") >= 1
+    assert sample("kb_llm_generation_first_token_seconds_count") >= 1
+
+    labels["model"] = "fake-embed"
+    inputs_before = sample("kb_llm_embedding_inputs_total")
+    await stub.Embed(llm_pb2.EmbedRequest(model="fake-embed", inputs=["a", "b"]))
+    assert sample("kb_llm_embedding_inputs_total") - inputs_before == 2
+    assert sample("kb_llm_embedding_duration_seconds_count") >= 1

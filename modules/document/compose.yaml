@@ -19,7 +19,8 @@ services:
       KB_CLEANUP_INTERVAL: ${KB_CLEANUP_INTERVAL:-1h}
       KB_UPLOAD_TTL: ${KB_UPLOAD_TTL:-24h}
       KB_ORPHAN_GRACE: ${KB_ORPHAN_GRACE:-1h}
-    ports: ["9001:9001"]
+    # gRPC and Prometheus /metrics (docs/metrics.md).
+    ports: ["9001:9001", "9101:9101"]
     depends_on:
       postgres: { condition: service_healthy }
       s3: { condition: service_healthy }

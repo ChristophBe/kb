@@ -10,7 +10,8 @@ services:
       KB_DATABASE_URL: postgres://kb:kb@postgres:5432/kb?sslmode=disable
       KB_NATS_URL: nats://nats:4222
       KB_DOCUMENT_ADDR: document-service:9001
-    ports: ["9002:9002"]
+    # gRPC and Prometheus /metrics (docs/metrics.md).
+    ports: ["9002:9002", "9102:9102"]
     # Infrastructure only: other modules are soft dependencies (docs/architecture/module.md).
     depends_on:
       postgres: { condition: service_healthy }
@@ -41,6 +42,8 @@ services:
       KB_CHUNK_OVERLAP_TOKENS: ${KB_CHUNK_OVERLAP_TOKENS:-32}
       KB_EMBEDDING_MAX_TOKENS: ${KB_EMBEDDING_MAX_TOKENS:-2048}
       KB_WORKER_CONCURRENCY: ${KB_WORKER_CONCURRENCY:-2}
+    # Prometheus /metrics (docs/metrics.md).
+    ports: ["9105:9105"]
     # The worker pauses job intake while document or llm is down.
     depends_on:
       nats: { condition: service_healthy }

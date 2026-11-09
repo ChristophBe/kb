@@ -4,6 +4,7 @@ from pydantic import SecretStr
 
 class Settings(PlatformSettings):
     grpc_port: int = 9004
+    metrics_port: int = 9104
     # Provider selection; see kb_llm.providers.REGISTRY. KB_CHAT_PROVIDER and
     # KB_EMBEDDING_PROVIDER pick one per task (e.g. Claude chat with Ollama
     # embeddings); either one left empty falls back to KB_LLM_PROVIDER.

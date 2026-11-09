@@ -1,6 +1,7 @@
 // Package grpcserver builds gRPC servers with the defaults every service
-// needs: request logging, panic recovery, health checking, reflection and,
-// when tracing is on (see package telemetry), a span per call.
+// needs: request logging, panic recovery, Prometheus metrics (served by package
+// metrics), health checking, reflection and, when tracing is on (see package
+// telemetry), a span per call.
 package grpcserver
 
 import (
@@ -31,12 +32,13 @@ type Server struct {
 	log    *slog.Logger
 }
 
-// New creates a server with logging and recovery interceptors installed. With
-// tracing on, each call continues the caller's trace in a server span.
+// New creates a server with logging, metrics and recovery interceptors
+// installed. With tracing on, each call continues the caller's trace in a
+// server span.
 func New(log *slog.Logger, opts ...grpc.ServerOption) *Server {
 	defaults := []grpc.ServerOption{
-		grpc.ChainUnaryInterceptor(recoverUnary(log), userUnary, logUnary(log)),
-		grpc.ChainStreamInterceptor(recoverStream(log), userStream, logStream(log)),
+		grpc.ChainUnaryInterceptor(metricsUnary, recoverUnary(log), userUnary, logUnary(log)),
+		grpc.ChainStreamInterceptor(metricsStream, recoverStream(log), userStream, logStream(log)),
 	}
 	if telemetry.Enabled() {
 		defaults = append(defaults, grpc.StatsHandler(otelgrpc.NewServerHandler(otelgrpc.WithFilter(notHealth))))

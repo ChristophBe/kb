@@ -8,6 +8,7 @@ dependencies = [
     "kb-ingestion-api",
     "kb-llm-api",
     "kb-platform",
+    "prometheus-client>=0.26",
     "pypdf>=6.0",
     "tokenizers>=0.22",
 ]

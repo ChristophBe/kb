@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/sync/errgroup"
 
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
@@ -22,6 +23,7 @@ import (
 	"github.com/christoph/kb/platform/go/config"
 	"github.com/christoph/kb/platform/go/grpcserver"
 	"github.com/christoph/kb/platform/go/logging"
+	"github.com/christoph/kb/platform/go/metrics"
 	"github.com/christoph/kb/platform/go/natsx"
 	"github.com/christoph/kb/platform/go/postgres"
 	"github.com/christoph/kb/platform/go/telemetry"
@@ -49,6 +51,9 @@ func run() error {
 	if cfg.GRPCPort == 0 {
 		cfg.GRPCPort = 9002
 	}
+	if cfg.MetricsPort == 0 {
+		cfg.MetricsPort = 9102
+	}
 	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
 		return grpcserver.Probe(cfg.GRPCPort)
 	}
@@ -60,6 +65,9 @@ func run() error {
 		return err
 	}
 	defer shutdown()
+	if err := metrics.Start(ctx, cfg.MetricsPort, log); err != nil {
+		return err
+	}
 
 	pool, err := postgres.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -85,8 +93,10 @@ func run() error {
 	}
 	defer conn.Close()
 
+	queries := store.New(pool)
+	prometheus.MustRegister(store.NewJobsCollector(queries))
 	service := app.New(
-		store.NewJobs(store.New(pool)),
+		store.NewJobs(queries),
 		documents.New(documentv1.NewDocumentServiceClient(conn)),
 		events.NewPublisher(events.NewJetStream(js)),
 	)

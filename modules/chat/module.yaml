@@ -6,6 +6,7 @@ services:
   - name: chat-service
     language: python
     port: 9003
+    metrics_port: 9103
     infra: [postgres]
     grpc_services: [kb.chat.v1.ChatService]
 ui: "@kb/module-chat"

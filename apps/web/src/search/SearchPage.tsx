@@ -1,8 +1,13 @@
 import type { SearchHit, SearchProvider } from "@kb/module-sdk";
 import { Button, Card, DelayedLoading, EmptyState, Input, PageHeader, SkeletonRows } from "@kb/ui";
-import { type FormEvent, useEffect, useId, useState } from "react";
+import { Search } from "lucide-react";
+import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
+import type { NavEntry } from "../registry.ts";
 import { resultCount, type SearchGroup, useSearch } from "./useSearch.ts";
+
+/** The search page's entry in the sidebar, above the modules' pages. */
+export const searchNavEntry: NavEntry = { to: "/search", label: "Search", icon: Search, end: true };
 
 /**
  * Every provider's hits for `?q=`, grouped, so a search can be shared as a
@@ -12,7 +17,10 @@ export function SearchPage({ providers }: { providers: SearchProvider[] }) {
   const [params, setParams] = useSearchParams();
   const q = params.get("q")?.trim() ?? "";
   const [draft, setDraft] = useState(q);
+  const [invalid, setInvalid] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
   const inputId = useId();
+  const errorId = `${inputId}-error`;
   // Back and Forward change the URL; the field follows.
   useEffect(() => setDraft(q), [q]);
   const groups = useSearch(providers, q, 0);
@@ -20,7 +28,13 @@ export function SearchPage({ providers }: { providers: SearchProvider[] }) {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const query = draft.trim();
-    setParams(query ? { q: query } : {});
+    if (!query) {
+      setInvalid(true);
+      input.current?.focus();
+      return;
+    }
+    setInvalid(false);
+    setParams({ q: query });
   };
 
   const total = groups.reduce((n, g) => n + g.hits.length, 0);
@@ -37,18 +51,31 @@ export function SearchPage({ providers }: { providers: SearchProvider[] }) {
         description="Results from every area of kb."
       />
       <search className="mb-4 block">
-        <form onSubmit={submit} className="flex gap-2">
+        <form noValidate onSubmit={submit}>
           <label htmlFor={inputId} className="sr-only">
             Search kb
           </label>
-          <Input
-            id={inputId}
-            type="search"
-            placeholder="Search kb"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-          />
-          <Button type="submit">Search</Button>
+          <div className="flex gap-2">
+            <Input
+              ref={input}
+              id={inputId}
+              type="search"
+              placeholder="Search kb"
+              value={draft}
+              onChange={(e) => {
+                setDraft(e.target.value);
+                if (invalid && e.target.value.trim()) setInvalid(false);
+              }}
+              aria-invalid={invalid || undefined}
+              aria-describedby={invalid ? errorId : undefined}
+            />
+            <Button type="submit">Search</Button>
+          </div>
+          {invalid && (
+            <p id={errorId} className="mt-1 text-sm text-danger">
+              Enter a search term
+            </p>
+          )}
         </form>
       </search>
       <p role="status" className="mb-6 font-mono text-xs text-fg-muted">

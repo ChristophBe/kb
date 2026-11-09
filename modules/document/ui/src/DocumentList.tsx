@@ -54,7 +54,7 @@ export function DocumentList() {
         title="Documents"
         description="Everything in your knowledge base."
         actions={
-          <Link to="search" className={buttonClass("secondary")}>
+          <Link to="/search" className={buttonClass("secondary")}>
             <SearchIcon className="size-4" aria-hidden="true" /> Search
           </Link>
         }

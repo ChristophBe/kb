@@ -69,7 +69,7 @@ export function Home({ modules }: { modules: ModuleManifest[] }) {
                 m.feature ? (
                   <Link
                     key={m.id}
-                    to={modulePath(m, m.feature.cta.path)}
+                    to={ctaPath(m, m.feature.cta.path)}
                     className={buttonClass("secondary", "px-5 py-2")}
                   >
                     <m.icon className="size-4" />
@@ -179,7 +179,7 @@ function FeatureTile({ module: m }: { module: ModuleManifest }) {
   }
   const { headline, description, cta } = m.feature;
   return (
-    <Link to={modulePath(m, cta.path)} className="block h-full">
+    <Link to={ctaPath(m, cta.path)} className="block h-full">
       <Card className={tile}>
         <span className="inline-flex size-10 items-center justify-center rounded-card bg-accent-subtle text-accent">
           <m.icon className="size-5" />
@@ -193,4 +193,9 @@ function FeatureTile({ module: m }: { module: ModuleManifest }) {
       </Card>
     </Link>
   );
+}
+
+/** A feature's entry point: relative to the module root, or absolute (e.g. "/search"). */
+function ctaPath(m: ModuleManifest, path: string) {
+  return path.startsWith("/") ? path : modulePath(m, path);
 }

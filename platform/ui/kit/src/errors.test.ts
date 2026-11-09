@@ -1,7 +1,7 @@
 import { BinaryWriter } from "@bufbuild/protobuf/wire";
 import { describe, expect, it } from "vitest";
-import { fieldError, fieldViolations } from "./errors.ts";
-import { badRequestDetail } from "./testing/errors.ts";
+import { errorInfo, fieldError, fieldViolations } from "./errors.ts";
+import { badRequestDetail, errorInfoDetail } from "./testing/errors.ts";
 
 /** An error shaped like a ConnectError with decoded details. */
 function rejected(details: unknown[], rawMessage = "invalid") {
@@ -47,5 +47,31 @@ describe("fieldViolations", () => {
         rejected([{ type: "google.rpc.BadRequest", value: new Uint8Array([10, 9]) }]),
       ),
     ).toEqual([]);
+  });
+});
+
+describe("errorInfo", () => {
+  it("decodes the ErrorInfo detail", () => {
+    const err = rejected([
+      badRequestDetail([{ field: "title", description: "Title must not be empty" }]),
+      errorInfoDetail({
+        reason: "LLM_UNAVAILABLE",
+        domain: "kb.document.v1",
+        metadata: { service: "llm", retry: "later" },
+      }),
+    ]);
+    expect(errorInfo(err)).toEqual({
+      reason: "LLM_UNAVAILABLE",
+      domain: "kb.document.v1",
+      metadata: { service: "llm", retry: "later" },
+    });
+  });
+
+  it("is undefined for errors without one", () => {
+    expect(errorInfo(null)).toBeUndefined();
+    expect(errorInfo(new Error("boom"))).toBeUndefined();
+    expect(
+      errorInfo(rejected([badRequestDetail([{ field: "q", description: "Required" }])])),
+    ).toBeUndefined();
   });
 });

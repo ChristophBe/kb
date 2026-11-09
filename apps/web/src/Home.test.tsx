@@ -27,7 +27,7 @@ const document = module("document", {
   feature: {
     headline: "Search by meaning",
     description: "Find the passage.",
-    cta: { label: "Search documents", path: "search" },
+    cta: { label: "Search documents", path: "/search" },
   },
 });
 const ingestion = module("ingestion", {
@@ -63,7 +63,7 @@ describe("Home", () => {
 
     const features = screen.getByRole("region", { name: "One place for everything you know" });
     const links = [...features.querySelectorAll("a")].map((a) => a.getAttribute("href"));
-    expect(links).toEqual(["/m/chat/new", "/m/document/search", "/m/ingestion", "/m/llm"]);
+    expect(links).toEqual(["/m/chat/new", "/search", "/m/ingestion", "/m/llm"]);
     expect(features.textContent).toContain("Models"); // fallback tile without a feature
     // The halo is decoration only.
     expect(container.querySelector("header > [aria-hidden='true']")).toBeTruthy();
@@ -78,7 +78,7 @@ describe("Home", () => {
       a.getAttribute("href"),
     ]);
     expect(actions).toEqual([
-      ["Search documents", "/m/document/search"],
+      ["Search documents", "/search"],
       ["Upload documents", "/m/ingestion"],
     ]);
   });

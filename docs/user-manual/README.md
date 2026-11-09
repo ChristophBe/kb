@@ -29,6 +29,6 @@ The design drafts in [`docs/ux/`](../ux/) are for contributors; this manual is f
 - [Sign in](sign-in.md) — signing in, coming back to the page you asked for, expired sessions, seeing who is signed in, signing out
 - [Ingestion](ingestion.md) — uploading files, following their processing, retrying failed uploads and processing
 - [Documents](documents.md) — browsing, opening and reading documents, renaming, metadata, downloading, replacing, deleting
-- [Search](search.md) — the search box in the sidebar (also finds help sections), finding documents by their best matching passage and opening them at that passage
+- [Search](search.md) — one search, from the box in the sidebar or the Search page: documents by their best matching passage, conversations, pages and help sections, and opening a document at that passage
 - [Chat](chat.md) — asking questions, sources, choosing the model, restricting to documents, stopping and retrying answers, managing conversations
 - [Models](models.md) — whether the chat and embedding providers are available and which models are installed

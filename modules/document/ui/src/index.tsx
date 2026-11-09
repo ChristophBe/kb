@@ -8,6 +8,7 @@ export default defineModule({
   ...manifest,
   routes: [
     { index: true, element: <DocumentList /> },
+    // The shell's search page searches documents; old links lead there.
     { path: "search", element: <Search /> },
     { path: ":id", element: <DocumentDetail /> },
   ],

@@ -10,7 +10,7 @@ const document: KbModule = {
   routes: [],
   nav: [
     { path: "", label: "Documents" },
-    { path: "search", label: "Search" },
+    { path: "upload", label: "Upload" },
   ],
 };
 const chat: KbModule = { id: "chat", title: "Chat", icon: Icon, routes: [] };
@@ -33,8 +33,14 @@ describe("pagesProvider", () => {
   });
 
   it("names the area of a page whose label differs from its module's", async () => {
+    expect(await pages.search("upl", signal, context)).toEqual([
+      { title: "Upload", snippet: "Documents", href: "/m/document/upload" },
+    ]);
+  });
+
+  it("lists the search page", async () => {
     expect(await pages.search("search", signal, context)).toEqual([
-      { title: "Search", snippet: "Documents", href: "/m/document/search" },
+      { title: "Search", href: "/search" },
     ]);
   });
 });

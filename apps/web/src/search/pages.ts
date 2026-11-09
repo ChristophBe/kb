@@ -12,13 +12,14 @@ const helpProvider = lazySearch("Help", () =>
 );
 
 /**
- * The shell's own search group: the pages in the sidebar (the modules' nav
- * items, then Help), matched by their label. Labels that start with the query
+ * The shell's own search group: the pages in the sidebar (Home, Search, the
+ * modules' nav items, then Help), matched by their label. Labels that start with the query
  * come first.
  */
 export function pagesProvider(modules: ModuleManifest[]): SearchProvider {
   const pages: SearchHit[] = [
     { title: "Home", href: "/" },
+    { title: "Search", href: "/search" },
     ...navEntries(modules).map(({ to, label }) => {
       const module = modules.find((m) => to === `/m/${m.id}` || to.startsWith(`/m/${m.id}/`));
       return {

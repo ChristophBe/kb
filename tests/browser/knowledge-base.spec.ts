@@ -35,6 +35,34 @@ test("an uploaded document becomes ready", async ({ page }) => {
   await expect(row.getByText("Ready")).toBeVisible();
 });
 
+test("the sidebar's search and the search page are one search", async ({ page }) => {
+  // The old document search page leads to the shared one.
+  await page.goto("/m/document/search?q=aurora");
+  await expect(page).toHaveURL(/\/search\?q=aurora$/);
+  const documents = page.getByRole("region", { name: /^Documents/ });
+  const pageHits = documents.getByRole("link");
+  await expect(pageHits.first()).toBeVisible();
+  const pageTitles = await pageHits.allTextContents();
+
+  const field = page.getByRole("combobox", { name: "Search kb" });
+  await field.fill("aurora");
+  const popup = page.getByRole("listbox", { name: "Search results" });
+  const popupHits = popup.getByRole("group", { name: "Documents" }).getByRole("option");
+  await expect(popupHits).toHaveCount(Math.min(5, pageTitles.length));
+  const popupTitles = await popupHits.locator("span:first-child").allTextContents();
+  expect(popupTitles).toEqual(pageTitles.slice(0, 5));
+
+  // "See all results" leads to the same address the page's own field does.
+  await popup.getByRole("option", { name: /See all results/ }).click();
+  await expect(page).toHaveURL(/\/search\?q=aurora$/);
+
+  // A document hit opens the document at its passage. With the fake provider
+  // any document may rank first, so this checks the first one.
+  await pageHits.first().click();
+  await expect(page).toHaveURL(/\/m\/document\/[^/#]+#chunk-\d+$/);
+  await expect(page.getByRole("heading", { name: pageTitles[0] })).toBeVisible();
+});
+
 test("a chat answer cites the document and opens the passage", async ({ page }) => {
   await page.goto("/");
   await page.getByLabel("Ask a question").fill("When does the aurora borealis appear?");

@@ -630,6 +630,9 @@ func TestSearchDocumentsWithLLMDown(t *testing.T) {
 	if status.Code(err) != codes.Unavailable {
 		t.Errorf("search: err = %v, want Unavailable", err)
 	}
+	if reason := errorReason(err); reason != "LLM_UNAVAILABLE" {
+		t.Errorf("search: ErrorInfo reason = %q, want LLM_UNAVAILABLE", reason)
+	}
 	resp, err := srv.ListDocuments(asAlice(t), &documentv1.ListDocumentsRequest{})
 	if err != nil || len(resp.GetDocuments()) != 1 {
 		t.Errorf("list: %v, %v", resp, err)

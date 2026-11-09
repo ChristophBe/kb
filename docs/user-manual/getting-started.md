@@ -10,14 +10,14 @@ kb asks you to sign in when you open it, and shows who is signed in at the botto
 
 The sidebar on the left leads to every area:
 
+- **Search**: find documents, conversations, pages and help in one place. See [Search](search.md).
 - **Chat**: ask questions about your documents. See [Chat](chat.md).
 - **Documents**: everything in your knowledge base. See [Documents](documents.md).
-- **Search**: find passages across all documents. See [Search](search.md).
 - **Ingestion**: upload files to add them. See [Ingestion](ingestion.md).
 - **Models**: check that the language model behind search and chat is available. See [Models](models.md).
 - **Help**, at the bottom of the sidebar: this manual, one page per area.
 
-The search box at the top of the sidebar finds pages from anywhere; press ⌘K or Ctrl+K to jump into it. See [Search from any page](search.md#search-from-any-page).
+The search box at the top of the sidebar searches from anywhere; press ⌘K or Ctrl+K to jump into it. See [Search from any page](search.md#search-from-any-page).
 
 **kb / Knowledge Base** at the top of the sidebar takes you to the home page. Type a question into its box and press Enter to start a new chat with it. Below the box are shortcuts to **Search documents** and **Upload documents**, and cards that lead to chatting, searching, uploading and the models.
 

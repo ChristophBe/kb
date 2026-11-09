@@ -11,7 +11,7 @@ export function activeModules(config: RuntimeConfig): LazyModule[] {
 }
 
 export interface NavEntry {
-  /** Absolute path, e.g. "/m/document/search". */
+  /** Absolute path, e.g. "/m/chat/new". */
   to: string;
   label: string;
   icon: NonNullable<NavItem["icon"]>;

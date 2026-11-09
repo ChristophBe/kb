@@ -25,7 +25,6 @@ describe("navEntries", () => {
     expect(entries.map((e) => [e.label, e.to, e.end])).toEqual([
       ["Chat", "/m/chat", true],
       ["Documents", "/m/document", true],
-      ["Search", "/m/document/search", false],
       ["Ingestion", "/m/ingestion", true],
       ["Models", "/m/llm", true],
     ]);

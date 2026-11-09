@@ -16,7 +16,10 @@ export interface Feature {
   headline: string;
   /** One sentence on what it does for the user. */
   description: string;
-  /** The entry point; `path` is relative to the module root, like `NavItem.path`. */
+  /**
+   * The entry point; `path` is relative to the module root, like `NavItem.path`,
+   * or absolute when it starts with "/" (e.g. "/search" for the shell's search page).
+   */
   cta: { label: string; path: string };
   /**
    * The home page's main input. Submitting it opens `path` (relative to the
@@ -45,7 +48,8 @@ export interface SearchContext {
  * every provider in parallel as the user types, aborts `signal` when the query
  * changes, shows the first five hits under `label` in the header's popup and
  * all of them on the search page, so return the best hits first and cap them
- * (around 20). A rejected promise shows an error in this group only.
+ * (around 20). A rejected promise shows an error in this group only: a
+ * `SearchError`'s message as it is, otherwise a generic one.
  */
 export interface SearchProvider {
   /** The group heading, e.g. "Documents". */

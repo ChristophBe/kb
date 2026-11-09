@@ -22,7 +22,13 @@ export {
 } from "./components.tsx";
 export { ConfirmDialog } from "./confirm-dialog.tsx";
 export { Dialog } from "./dialog.tsx";
-export { type FieldViolation, fieldError, fieldViolations } from "./errors.ts";
+export {
+  type ErrorInfo,
+  errorInfo,
+  type FieldViolation,
+  fieldError,
+  fieldViolations,
+} from "./errors.ts";
 export { formatBytes, formatRelativeTime, formatTime } from "./format.ts";
 export { DelayedLoading, Skeleton, SkeletonRows } from "./loading.tsx";
 export { headingSlug } from "./slug.ts";

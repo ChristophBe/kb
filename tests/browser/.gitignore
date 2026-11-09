@@ -1,0 +1,4 @@
+# Sign-in state, reports and traces of a run.
+/.auth/
+/test-results/
+/playwright-report/

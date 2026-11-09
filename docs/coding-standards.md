@@ -64,6 +64,7 @@ Conventions for Go, Python and TypeScript in kb. Most of them are enforced by `t
 | Unit tests + coverage minimums | `task test` | CI |
 | Go integration tests against real Postgres (needs Docker) | `task test:integration` | CI |
 | End-to-end smoke test: upload → processing → RAG chat over gRPC-Web, own compose project `kb-e2e` on ports 21xxx (needs Docker) | `task e2e` | CI |
+| Browser tests (Playwright, Chromium): sign-in through Dex, upload, cited chat, a module disabled in the runtime config, ownership; own compose project `kb-browser` on ports 22xxx (needs Docker; Chromium is installed on first run). Failed tests keep a trace and a screenshot in `tests/browser/test-results`; open one with `pnpm --filter @kb/browser-tests exec playwright show-trace <trace.zip>` | `task e2e:browser` | CI (job `browser`, on changes to `apps/`, `platform/ui/`, `modules/*/ui/`; report and traces uploaded as artifact `playwright-report` on failure) |
 
 Every linter is pinned (`tools/go.mod`, `uv.lock`, `pnpm-lock.yaml`) and mandatory: `task lint` fails if one can't run.
 

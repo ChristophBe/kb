@@ -188,6 +188,44 @@ tasks:
       - go vet -tags e2e ./tests/e2e/...
       - go test -tags e2e -count=1 -timeout 15m -v ./tests/e2e/... {{.CLI_ARGS}}
 
+  e2e:browser:
+    desc: >-
+      Browser tests (Playwright, Chromium; needs Docker; not part of `test`): builds and starts the
+      stack with the web shell as compose project kb-browser on ports 22xxx, signs in through Dex
+      and drives the UI, tears it down (KB_E2E_KEEP=1 keeps it). With KB_E2E_WEB set it tests that
+      running web shell instead. Arguments after -- go to `playwright test`.
+    vars:
+      PROJECT: '{{.KB_E2E_PROJECT | default "kb-browser"}}'
+      GATEWAY_PORT: '{{.KB_GATEWAY_PORT | default "22080"}}'
+      S3_PORT: '{{.KB_E2E_S3_PORT | default "22333"}}'
+      WEB_PORT: '{{.KB_WEB_PORT | default "22300"}}'
+      DEX_PORT: '{{.KB_DEX_PORT | default "22556"}}'
+      # The override of `task e2e`: only the gateway, S3, Dex and the web shell are published.
+      COMPOSE: docker compose -p {{.PROJECT}} -f compose.yaml -f tests/e2e/compose.e2e.yaml
+    env:
+      KB_LLM_PROVIDER: fake
+      # Hash embeddings score like noise; keep every retrieved chunk.
+      KB_RAG_MIN_SCORE: "-1"
+      KB_GATEWAY_PORT: "{{.GATEWAY_PORT}}"
+      KB_E2E_S3_PORT: "{{.S3_PORT}}"
+      KB_WEB_PORT: "{{.WEB_PORT}}"
+      KB_DEX_PORT: "{{.DEX_PORT}}"
+      KB_API_BASE_URL: http://localhost:{{.GATEWAY_PORT}}
+      KB_S3_PUBLIC_ENDPOINT: localhost:{{.S3_PORT}}
+      KB_OIDC_ISSUER: http://localhost:{{.DEX_PORT}}/dex
+    preconditions:
+      - sh: '[ "{{.PROJECT}}" != kb ]'
+        msg: "KB_E2E_PROJECT must not be kb: the run deletes the project's volumes"
+    cmds:
+      - defer: |
+          [ -n "$KB_E2E_WEB" ] && exit 0
+          {{if .EXIT_CODE}}{{.COMPOSE}} ps --all; {{.COMPOSE}} logs --no-color --timestamps --tail 300{{end}}
+          [ -n "$KB_E2E_KEEP" ] && { echo "KB_E2E_KEEP is set, leaving compose project {{.PROJECT}} running"; exit 0; }
+          {{.COMPOSE}} down --volumes --remove-orphans --timeout 10 >/dev/null 2>&1 || true
+      - pnpm --filter @kb/browser-tests exec playwright install chromium
+      - '[ -n "$KB_E2E_WEB" ] || {{.COMPOSE}} up --detach --build --wait --wait-timeout 600'
+      - pnpm --filter @kb/browser-tests exec playwright test {{.CLI_ARGS}}
+
   test:fast:
     desc: Unit tests without coverage (pre-push hook).
     cmds:

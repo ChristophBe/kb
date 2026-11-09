@@ -469,7 +469,8 @@ func (s *Server) SearchDocuments(ctx context.Context, req *documentv1.SearchDocu
 		// is passed on.
 		if code := status.Code(err); code == codes.Unavailable || code == codes.DeadlineExceeded {
 			s.log.WarnContext(ctx, "embed query", "error", err)
-			return nil, status.Error(codes.Unavailable, "the llm service is unavailable")
+			return nil, grpcserver.WithDetails(codes.Unavailable, "the llm service is unavailable",
+				grpcserver.ErrorInfo(domain, "LLM_UNAVAILABLE", nil))
 		}
 		return nil, s.internal("embed query", err)
 	}

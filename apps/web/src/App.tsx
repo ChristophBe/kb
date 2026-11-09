@@ -17,7 +17,7 @@ import { ModuleBoundary } from "./ModuleBoundary.tsx";
 import { activeModules, navEntries } from "./registry.ts";
 import { HeaderSearch } from "./search/HeaderSearch.tsx";
 import { searchProviders } from "./search/pages.ts";
-import { SearchPage } from "./search/SearchPage.tsx";
+import { SearchPage, searchNavEntry } from "./search/SearchPage.tsx";
 import { ToastHost } from "./ToastHost.tsx";
 
 /**
@@ -77,7 +77,7 @@ function Shell({ modules, providers }: { modules: KbModule[]; providers: SearchP
           <HeaderSearch providers={providers} />
         </div>
         <nav className="flex flex-col gap-0.5 px-3">
-          {navEntries(modules).map(({ to, label, icon: Icon, end }) => (
+          {[searchNavEntry, ...navEntries(modules)].map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}

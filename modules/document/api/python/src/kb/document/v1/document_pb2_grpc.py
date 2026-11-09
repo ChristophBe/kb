@@ -178,7 +178,8 @@ class DocumentServiceServicer:
     def SearchDocuments(self, request, context):
         """SearchDocuments embeds a text query through the llm module and returns
         the most similar documents, each with its best chunk, and the most
-        similar chunks. It fails with UNAVAILABLE while llm is down.
+        similar chunks. It fails with UNAVAILABLE and ErrorInfo reason
+        LLM_UNAVAILABLE while llm is down.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')

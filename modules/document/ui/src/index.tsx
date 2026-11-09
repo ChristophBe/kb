@@ -1,5 +1,5 @@
 import { defineModule } from "@kb/module-sdk";
-import { FileText, Search as SearchIcon } from "lucide-react";
+import { FileText } from "lucide-react";
 import { DocumentDetail } from "./DocumentDetail.tsx";
 import { DocumentList } from "./DocumentList.tsx";
 import { RecentDocuments } from "./RecentDocuments.tsx";
@@ -13,16 +13,13 @@ export default defineModule({
   feature: {
     headline: "Search by meaning",
     description: "Find the passage you need, even when you don't remember the exact words.",
-    cta: { label: "Search documents", path: "search" },
+    cta: { label: "Search documents", path: "/search" },
   },
   routes: [
     { index: true, element: <DocumentList /> },
+    // The shell's search page searches documents; old links lead there.
     { path: "search", element: <Search /> },
     { path: ":id", element: <DocumentDetail /> },
-  ],
-  nav: [
-    { path: "", label: "Documents", icon: FileText },
-    { path: "search", label: "Search", icon: SearchIcon },
   ],
   search: documentSearch,
   widgets: { recent: RecentDocuments },

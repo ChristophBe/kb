@@ -1,10 +1,12 @@
 import {
   Code,
   ConnectError,
+  SearchError,
   type SearchHit,
   type SearchProvider,
   useSearchContext,
 } from "@kb/module-sdk";
+import { fieldViolations } from "@kb/ui";
 import { useEffect, useState } from "react";
 
 /** One provider's results for the current query. */
@@ -64,7 +66,15 @@ export function useSearch(providers: SearchProvider[], query: string, delay = SE
   return groups;
 }
 
-function errorMessage(label: string, err: unknown): string {
+/**
+ * What a group says when its search failed: the provider's own message, a
+ * rejected query's field violation (e.g. "A query is required"), or a generic
+ * one by status.
+ */
+export function errorMessage(label: string, err: unknown): string {
+  if (err instanceof SearchError) return err.message;
+  const violation = fieldViolations(err)[0];
+  if (violation) return violation.description;
   if (err instanceof ConnectError && err.code === Code.Unavailable)
     return `${label} isn't available right now.`;
   return `Couldn't search ${label}.`;

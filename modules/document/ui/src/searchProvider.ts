@@ -1,7 +1,8 @@
 import { DocumentService, type ScoredDocument } from "@kb/document-api/kb/document/v1/document_pb";
-import type { SearchProvider } from "@kb/module-sdk";
+import { SearchError, type SearchProvider } from "@kb/module-sdk";
+import { errorInfo } from "@kb/ui";
 
-/** How many documents a search asks for, on the Search page and in the global search. */
+/** How many documents the global search asks for. */
 export const SEARCH_LIMIT = 20;
 
 /** The document, opened at its best passage, relative to the module root. */
@@ -15,7 +16,8 @@ export const documentSearch: SearchProvider = {
   search: async (query, signal, context) => {
     const resp = await context
       .client(DocumentService)
-      .searchDocuments({ query, limit: SEARCH_LIMIT }, { signal });
+      .searchDocuments({ query, limit: SEARCH_LIMIT }, { signal })
+      .catch(readableError);
     return resp.documents.map((d) => {
       const { pathname, hash } = passagePath(d);
       return {
@@ -26,3 +28,12 @@ export const documentSearch: SearchProvider = {
     });
   },
 };
+
+/** Search embeds the query with the Models service; say so when that is what's down. */
+function readableError(err: unknown): never {
+  if (errorInfo(err)?.reason === "LLM_UNAVAILABLE")
+    throw new SearchError("Search needs the Models service, which isn't available right now.", {
+      cause: err,
+    });
+  throw err;
+}

@@ -9,6 +9,7 @@ export {
   useRuntimeConfig,
   useSearchContext,
 } from "./runtime.tsx";
+export { SearchError } from "./search.ts";
 export {
   dismissToast,
   type Toast,

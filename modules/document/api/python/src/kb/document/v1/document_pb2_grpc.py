@@ -41,6 +41,11 @@ class DocumentServiceStub:
                 request_serializer=kb_dot_document_dot_v1_dot_document__pb2.CreateDocumentRequest.SerializeToString,
                 response_deserializer=kb_dot_document_dot_v1_dot_document__pb2.CreateDocumentResponse.FromString,
                 _registered_method=True)
+        self.ReplaceContent = channel.unary_unary(
+                '/kb.document.v1.DocumentService/ReplaceContent',
+                request_serializer=kb_dot_document_dot_v1_dot_document__pb2.ReplaceContentRequest.SerializeToString,
+                response_deserializer=kb_dot_document_dot_v1_dot_document__pb2.ReplaceContentResponse.FromString,
+                _registered_method=True)
         self.GetDocument = channel.unary_unary(
                 '/kb.document.v1.DocumentService/GetDocument',
                 request_serializer=kb_dot_document_dot_v1_dot_document__pb2.GetDocumentRequest.SerializeToString,
@@ -111,6 +116,16 @@ class DocumentServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ReplaceContent(self, request, context):
+        """ReplaceContent starts a new version of a document: it returns a presigned
+        URL for the new file, which becomes the document's pending_version. The
+        document keeps its id and serves its current version until the new one is
+        processed (AddChunks); see PendingVersion.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def GetDocument(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -156,7 +171,8 @@ class DocumentServiceServicer:
         raise NotImplementedError('Method not implemented!')
 
     def AddChunks(self, request, context):
-        """AddChunks replaces all chunks of a document and marks it ready.
+        """AddChunks replaces all chunks of a document and marks it ready. A
+        pending version that was uploaded becomes the current one.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -191,6 +207,11 @@ def add_DocumentServiceServicer_to_server(servicer, server):
                     servicer.CreateDocument,
                     request_deserializer=kb_dot_document_dot_v1_dot_document__pb2.CreateDocumentRequest.FromString,
                     response_serializer=kb_dot_document_dot_v1_dot_document__pb2.CreateDocumentResponse.SerializeToString,
+            ),
+            'ReplaceContent': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReplaceContent,
+                    request_deserializer=kb_dot_document_dot_v1_dot_document__pb2.ReplaceContentRequest.FromString,
+                    response_serializer=kb_dot_document_dot_v1_dot_document__pb2.ReplaceContentResponse.SerializeToString,
             ),
             'GetDocument': grpc.unary_unary_rpc_method_handler(
                     servicer.GetDocument,
@@ -277,6 +298,33 @@ class DocumentService:
             '/kb.document.v1.DocumentService/CreateDocument',
             kb_dot_document_dot_v1_dot_document__pb2.CreateDocumentRequest.SerializeToString,
             kb_dot_document_dot_v1_dot_document__pb2.CreateDocumentResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReplaceContent(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/kb.document.v1.DocumentService/ReplaceContent',
+            kb_dot_document_dot_v1_dot_document__pb2.ReplaceContentRequest.SerializeToString,
+            kb_dot_document_dot_v1_dot_document__pb2.ReplaceContentResponse.FromString,
             options,
             channel_credentials,
             insecure,

@@ -16,10 +16,11 @@ services:
       KB_UPLOAD_TTL: 24h
       KB_ORPHAN_GRACE: 1h
     grpc_services: [kb.document.v1.DocumentService]
-    # Called only by other modules' services (ingestion creates and fills
-    # documents, chat retrieves chunks); Envoy does not route them.
+    # Called only by other modules' services (ingestion creates, replaces and
+    # fills documents, chat retrieves chunks); Envoy does not route them.
     internal:
       - kb.document.v1.DocumentService/CreateDocument
+      - kb.document.v1.DocumentService/ReplaceContent
       - kb.document.v1.DocumentService/SetDocumentStatus
       - kb.document.v1.DocumentService/ReadContent
       - kb.document.v1.DocumentService/AddChunks

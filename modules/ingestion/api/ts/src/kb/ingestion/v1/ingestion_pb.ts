@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file kb/ingestion/v1/ingestion.proto.
  */
 export const file_kb_ingestion_v1_ingestion: GenFile = /*@__PURE__*/
-  fileDesc("Ch9rYi9pbmdlc3Rpb24vdjEvaW5nZXN0aW9uLnByb3RvEg9rYi5pbmdlc3Rpb24udjEizgIKA0pvYhIKCgJpZBgBIAEoCRITCgtkb2N1bWVudF9pZBgCIAEoCRIQCghmaWxlbmFtZRgDIAEoCRIUCgxjb250ZW50X3R5cGUYBCABKAkSKgoGc3RhdHVzGAUgASgOMhoua2IuaW5nZXN0aW9uLnYxLkpvYlN0YXR1cxINCgVlcnJvchgGIAEoCRITCgtjaHVua19jb3VudBgHIAEoBRIvCgtjcmVhdGVfdGltZRgIIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLwoLdXBkYXRlX3RpbWUYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhAKCHByb2dyZXNzGAogASgFEigKBXN0YWdlGAsgASgOMhkua2IuaW5nZXN0aW9uLnYxLkpvYlN0YWdlEhAKCG93bmVyX2lkGAwgASgJInAKE0NyZWF0ZVVwbG9hZFJlcXVlc3QSEAoIZmlsZW5hbWUYASABKAkSFAoMY29udGVudF90eXBlGAIgASgJEhIKCnNpemVfYnl0ZXMYAyABKAMSDQoFdGl0bGUYBCABKAkSDgoGc2hhMjU2GAUgASgJIk0KFENyZWF0ZVVwbG9hZFJlc3BvbnNlEiEKA2pvYhgBIAEoCzIULmtiLmluZ2VzdGlvbi52MS5Kb2ISEgoKdXBsb2FkX3VybBgCIAEoCSInChVDb21wbGV0ZVVwbG9hZFJlcXVlc3QSDgoGam9iX2lkGAEgASgJIjsKFkNvbXBsZXRlVXBsb2FkUmVzcG9uc2USIQoDam9iGAEgASgLMhQua2IuaW5nZXN0aW9uLnYxLkpvYiIbCg1HZXRKb2JSZXF1ZXN0EgoKAmlkGAEgASgJIjMKDkdldEpvYlJlc3BvbnNlEiEKA2pvYhgBIAEoCzIULmtiLmluZ2VzdGlvbi52MS5Kb2IiOgoPTGlzdEpvYnNSZXF1ZXN0EicKBHBhZ2UYASABKAsyGS5rYi5jb21tb24udjEuUGFnZVJlcXVlc3QiYAoQTGlzdEpvYnNSZXNwb25zZRIiCgRqb2JzGAEgAygLMhQua2IuaW5nZXN0aW9uLnYxLkpvYhIoCgRwYWdlGAIgASgLMhoua2IuY29tbW9uLnYxLlBhZ2VSZXNwb25zZSIdCg9XYXRjaEpvYlJlcXVlc3QSCgoCaWQYASABKAkiNQoQV2F0Y2hKb2JSZXNwb25zZRIhCgNqb2IYASABKAsyFC5rYi5pbmdlc3Rpb24udjEuSm9iIiEKE1JlcHJvY2Vzc0pvYlJlcXVlc3QSCgoCaWQYASABKAkiOQoUUmVwcm9jZXNzSm9iUmVzcG9uc2USIQoDam9iGAEgASgLMhQua2IuaW5nZXN0aW9uLnYxLkpvYiqkAQoJSm9iU3RhdHVzEhoKFkpPQl9TVEFUVVNfVU5TUEVDSUZJRUQQABIdChlKT0JfU1RBVFVTX1BFTkRJTkdfVVBMT0FEEAESFQoRSk9CX1NUQVRVU19RVUVVRUQQAhIZChVKT0JfU1RBVFVTX1BST0NFU1NJTkcQAxITCg9KT0JfU1RBVFVTX0RPTkUQBBIVChFKT0JfU1RBVFVTX0ZBSUxFRBAFKocBCghKb2JTdGFnZRIZChVKT0JfU1RBR0VfVU5TUEVDSUZJRUQQABIYChRKT0JfU1RBR0VfRVhUUkFDVElORxABEhYKEkpPQl9TVEFHRV9DSFVOS0lORxACEhcKE0pPQl9TVEFHRV9FTUJFRERJTkcQAxIVChFKT0JfU1RBR0VfU1RPUklORxAEMp4EChBJbmdlc3Rpb25TZXJ2aWNlElsKDENyZWF0ZVVwbG9hZBIkLmtiLmluZ2VzdGlvbi52MS5DcmVhdGVVcGxvYWRSZXF1ZXN0GiUua2IuaW5nZXN0aW9uLnYxLkNyZWF0ZVVwbG9hZFJlc3BvbnNlEmEKDkNvbXBsZXRlVXBsb2FkEiYua2IuaW5nZXN0aW9uLnYxLkNvbXBsZXRlVXBsb2FkUmVxdWVzdBonLmtiLmluZ2VzdGlvbi52MS5Db21wbGV0ZVVwbG9hZFJlc3BvbnNlEkkKBkdldEpvYhIeLmtiLmluZ2VzdGlvbi52MS5HZXRKb2JSZXF1ZXN0Gh8ua2IuaW5nZXN0aW9uLnYxLkdldEpvYlJlc3BvbnNlEk8KCExpc3RKb2JzEiAua2IuaW5nZXN0aW9uLnYxLkxpc3RKb2JzUmVxdWVzdBohLmtiLmluZ2VzdGlvbi52MS5MaXN0Sm9ic1Jlc3BvbnNlElEKCFdhdGNoSm9iEiAua2IuaW5nZXN0aW9uLnYxLldhdGNoSm9iUmVxdWVzdBohLmtiLmluZ2VzdGlvbi52MS5XYXRjaEpvYlJlc3BvbnNlMAESWwoMUmVwcm9jZXNzSm9iEiQua2IuaW5nZXN0aW9uLnYxLlJlcHJvY2Vzc0pvYlJlcXVlc3QaJS5rYi5pbmdlc3Rpb24udjEuUmVwcm9jZXNzSm9iUmVzcG9uc2VCSlpIZ2l0aHViLmNvbS9jaHJpc3RvcGgva2IvbW9kdWxlcy9pbmdlc3Rpb24vYXBpL2dvL2luZ2VzdGlvbnYxO2luZ2VzdGlvbnYxYgZwcm90bzM", [file_google_protobuf_timestamp, file_kb_common_v1_common]);
+  fileDesc("Ch9rYi9pbmdlc3Rpb24vdjEvaW5nZXN0aW9uLnByb3RvEg9rYi5pbmdlc3Rpb24udjEizgIKA0pvYhIKCgJpZBgBIAEoCRITCgtkb2N1bWVudF9pZBgCIAEoCRIQCghmaWxlbmFtZRgDIAEoCRIUCgxjb250ZW50X3R5cGUYBCABKAkSKgoGc3RhdHVzGAUgASgOMhoua2IuaW5nZXN0aW9uLnYxLkpvYlN0YXR1cxINCgVlcnJvchgGIAEoCRITCgtjaHVua19jb3VudBgHIAEoBRIvCgtjcmVhdGVfdGltZRgIIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLwoLdXBkYXRlX3RpbWUYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhAKCHByb2dyZXNzGAogASgFEigKBXN0YWdlGAsgASgOMhkua2IuaW5nZXN0aW9uLnYxLkpvYlN0YWdlEhAKCG93bmVyX2lkGAwgASgJInAKE0NyZWF0ZVVwbG9hZFJlcXVlc3QSEAoIZmlsZW5hbWUYASABKAkSFAoMY29udGVudF90eXBlGAIgASgJEhIKCnNpemVfYnl0ZXMYAyABKAMSDQoFdGl0bGUYBCABKAkSDgoGc2hhMjU2GAUgASgJIk0KFENyZWF0ZVVwbG9hZFJlc3BvbnNlEiEKA2pvYhgBIAEoCzIULmtiLmluZ2VzdGlvbi52MS5Kb2ISEgoKdXBsb2FkX3VybBgCIAEoCSJ3ChRSZXBsYWNlVXBsb2FkUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCRIQCghmaWxlbmFtZRgCIAEoCRIUCgxjb250ZW50X3R5cGUYAyABKAkSEgoKc2l6ZV9ieXRlcxgEIAEoAxIOCgZzaGEyNTYYBSABKAkiTgoVUmVwbGFjZVVwbG9hZFJlc3BvbnNlEiEKA2pvYhgBIAEoCzIULmtiLmluZ2VzdGlvbi52MS5Kb2ISEgoKdXBsb2FkX3VybBgCIAEoCSInChVDb21wbGV0ZVVwbG9hZFJlcXVlc3QSDgoGam9iX2lkGAEgASgJIjsKFkNvbXBsZXRlVXBsb2FkUmVzcG9uc2USIQoDam9iGAEgASgLMhQua2IuaW5nZXN0aW9uLnYxLkpvYiIbCg1HZXRKb2JSZXF1ZXN0EgoKAmlkGAEgASgJIjMKDkdldEpvYlJlc3BvbnNlEiEKA2pvYhgBIAEoCzIULmtiLmluZ2VzdGlvbi52MS5Kb2IiOgoPTGlzdEpvYnNSZXF1ZXN0EicKBHBhZ2UYASABKAsyGS5rYi5jb21tb24udjEuUGFnZVJlcXVlc3QiYAoQTGlzdEpvYnNSZXNwb25zZRIiCgRqb2JzGAEgAygLMhQua2IuaW5nZXN0aW9uLnYxLkpvYhIoCgRwYWdlGAIgASgLMhoua2IuY29tbW9uLnYxLlBhZ2VSZXNwb25zZSIdCg9XYXRjaEpvYlJlcXVlc3QSCgoCaWQYASABKAkiNQoQV2F0Y2hKb2JSZXNwb25zZRIhCgNqb2IYASABKAsyFC5rYi5pbmdlc3Rpb24udjEuSm9iIiEKE1JlcHJvY2Vzc0pvYlJlcXVlc3QSCgoCaWQYASABKAkiOQoUUmVwcm9jZXNzSm9iUmVzcG9uc2USIQoDam9iGAEgASgLMhQua2IuaW5nZXN0aW9uLnYxLkpvYiqkAQoJSm9iU3RhdHVzEhoKFkpPQl9TVEFUVVNfVU5TUEVDSUZJRUQQABIdChlKT0JfU1RBVFVTX1BFTkRJTkdfVVBMT0FEEAESFQoRSk9CX1NUQVRVU19RVUVVRUQQAhIZChVKT0JfU1RBVFVTX1BST0NFU1NJTkcQAxITCg9KT0JfU1RBVFVTX0RPTkUQBBIVChFKT0JfU1RBVFVTX0ZBSUxFRBAFKocBCghKb2JTdGFnZRIZChVKT0JfU1RBR0VfVU5TUEVDSUZJRUQQABIYChRKT0JfU1RBR0VfRVhUUkFDVElORxABEhYKEkpPQl9TVEFHRV9DSFVOS0lORxACEhcKE0pPQl9TVEFHRV9FTUJFRERJTkcQAxIVChFKT0JfU1RBR0VfU1RPUklORxAEMv4EChBJbmdlc3Rpb25TZXJ2aWNlElsKDENyZWF0ZVVwbG9hZBIkLmtiLmluZ2VzdGlvbi52MS5DcmVhdGVVcGxvYWRSZXF1ZXN0GiUua2IuaW5nZXN0aW9uLnYxLkNyZWF0ZVVwbG9hZFJlc3BvbnNlEmEKDkNvbXBsZXRlVXBsb2FkEiYua2IuaW5nZXN0aW9uLnYxLkNvbXBsZXRlVXBsb2FkUmVxdWVzdBonLmtiLmluZ2VzdGlvbi52MS5Db21wbGV0ZVVwbG9hZFJlc3BvbnNlEl4KDVJlcGxhY2VVcGxvYWQSJS5rYi5pbmdlc3Rpb24udjEuUmVwbGFjZVVwbG9hZFJlcXVlc3QaJi5rYi5pbmdlc3Rpb24udjEuUmVwbGFjZVVwbG9hZFJlc3BvbnNlEkkKBkdldEpvYhIeLmtiLmluZ2VzdGlvbi52MS5HZXRKb2JSZXF1ZXN0Gh8ua2IuaW5nZXN0aW9uLnYxLkdldEpvYlJlc3BvbnNlEk8KCExpc3RKb2JzEiAua2IuaW5nZXN0aW9uLnYxLkxpc3RKb2JzUmVxdWVzdBohLmtiLmluZ2VzdGlvbi52MS5MaXN0Sm9ic1Jlc3BvbnNlElEKCFdhdGNoSm9iEiAua2IuaW5nZXN0aW9uLnYxLldhdGNoSm9iUmVxdWVzdBohLmtiLmluZ2VzdGlvbi52MS5XYXRjaEpvYlJlc3BvbnNlMAESWwoMUmVwcm9jZXNzSm9iEiQua2IuaW5nZXN0aW9uLnYxLlJlcHJvY2Vzc0pvYlJlcXVlc3QaJS5rYi5pbmdlc3Rpb24udjEuUmVwcm9jZXNzSm9iUmVzcG9uc2VCSlpIZ2l0aHViLmNvbS9jaHJpc3RvcGgva2IvbW9kdWxlcy9pbmdlc3Rpb24vYXBpL2dvL2luZ2VzdGlvbnYxO2luZ2VzdGlvbnYxYgZwcm90bzM", [file_google_protobuf_timestamp, file_kb_common_v1_common]);
 
 /**
  * @generated from message kb.ingestion.v1.Job
@@ -167,6 +167,72 @@ export const CreateUploadResponseSchema: GenMessage<CreateUploadResponse> = /*@_
   messageDesc(file_kb_ingestion_v1_ingestion, 2);
 
 /**
+ * @generated from message kb.ingestion.v1.ReplaceUploadRequest
+ */
+export type ReplaceUploadRequest = Message<"kb.ingestion.v1.ReplaceUploadRequest"> & {
+  /**
+   * @generated from field: string document_id = 1;
+   */
+  documentId: string;
+
+  /**
+   * @generated from field: string filename = 2;
+   */
+  filename: string;
+
+  /**
+   * @generated from field: string content_type = 3;
+   */
+  contentType: string;
+
+  /**
+   * The new file's size; must be greater than 0.
+   *
+   * @generated from field: int64 size_bytes = 4;
+   */
+  sizeBytes: bigint;
+
+  /**
+   * Optional SHA-256 of the new file, in hex, checked like CreateUpload's.
+   *
+   * @generated from field: string sha256 = 5;
+   */
+  sha256: string;
+};
+
+/**
+ * Describes the message kb.ingestion.v1.ReplaceUploadRequest.
+ * Use `create(ReplaceUploadRequestSchema)` to create a new message.
+ */
+export const ReplaceUploadRequestSchema: GenMessage<ReplaceUploadRequest> = /*@__PURE__*/
+  messageDesc(file_kb_ingestion_v1_ingestion, 3);
+
+/**
+ * @generated from message kb.ingestion.v1.ReplaceUploadResponse
+ */
+export type ReplaceUploadResponse = Message<"kb.ingestion.v1.ReplaceUploadResponse"> & {
+  /**
+   * @generated from field: kb.ingestion.v1.Job job = 1;
+   */
+  job?: Job | undefined;
+
+  /**
+   * A presigned URL to PUT the new file to, sending the job's content_type as
+   * Content-Type and exactly size_bytes bytes.
+   *
+   * @generated from field: string upload_url = 2;
+   */
+  uploadUrl: string;
+};
+
+/**
+ * Describes the message kb.ingestion.v1.ReplaceUploadResponse.
+ * Use `create(ReplaceUploadResponseSchema)` to create a new message.
+ */
+export const ReplaceUploadResponseSchema: GenMessage<ReplaceUploadResponse> = /*@__PURE__*/
+  messageDesc(file_kb_ingestion_v1_ingestion, 4);
+
+/**
  * @generated from message kb.ingestion.v1.CompleteUploadRequest
  */
 export type CompleteUploadRequest = Message<"kb.ingestion.v1.CompleteUploadRequest"> & {
@@ -181,7 +247,7 @@ export type CompleteUploadRequest = Message<"kb.ingestion.v1.CompleteUploadReque
  * Use `create(CompleteUploadRequestSchema)` to create a new message.
  */
 export const CompleteUploadRequestSchema: GenMessage<CompleteUploadRequest> = /*@__PURE__*/
-  messageDesc(file_kb_ingestion_v1_ingestion, 3);
+  messageDesc(file_kb_ingestion_v1_ingestion, 5);
 
 /**
  * @generated from message kb.ingestion.v1.CompleteUploadResponse
@@ -198,7 +264,7 @@ export type CompleteUploadResponse = Message<"kb.ingestion.v1.CompleteUploadResp
  * Use `create(CompleteUploadResponseSchema)` to create a new message.
  */
 export const CompleteUploadResponseSchema: GenMessage<CompleteUploadResponse> = /*@__PURE__*/
-  messageDesc(file_kb_ingestion_v1_ingestion, 4);
+  messageDesc(file_kb_ingestion_v1_ingestion, 6);
 
 /**
  * @generated from message kb.ingestion.v1.GetJobRequest
@@ -215,7 +281,7 @@ export type GetJobRequest = Message<"kb.ingestion.v1.GetJobRequest"> & {
  * Use `create(GetJobRequestSchema)` to create a new message.
  */
 export const GetJobRequestSchema: GenMessage<GetJobRequest> = /*@__PURE__*/
-  messageDesc(file_kb_ingestion_v1_ingestion, 5);
+  messageDesc(file_kb_ingestion_v1_ingestion, 7);
 
 /**
  * @generated from message kb.ingestion.v1.GetJobResponse
@@ -232,7 +298,7 @@ export type GetJobResponse = Message<"kb.ingestion.v1.GetJobResponse"> & {
  * Use `create(GetJobResponseSchema)` to create a new message.
  */
 export const GetJobResponseSchema: GenMessage<GetJobResponse> = /*@__PURE__*/
-  messageDesc(file_kb_ingestion_v1_ingestion, 6);
+  messageDesc(file_kb_ingestion_v1_ingestion, 8);
 
 /**
  * @generated from message kb.ingestion.v1.ListJobsRequest
@@ -249,7 +315,7 @@ export type ListJobsRequest = Message<"kb.ingestion.v1.ListJobsRequest"> & {
  * Use `create(ListJobsRequestSchema)` to create a new message.
  */
 export const ListJobsRequestSchema: GenMessage<ListJobsRequest> = /*@__PURE__*/
-  messageDesc(file_kb_ingestion_v1_ingestion, 7);
+  messageDesc(file_kb_ingestion_v1_ingestion, 9);
 
 /**
  * @generated from message kb.ingestion.v1.ListJobsResponse
@@ -271,7 +337,7 @@ export type ListJobsResponse = Message<"kb.ingestion.v1.ListJobsResponse"> & {
  * Use `create(ListJobsResponseSchema)` to create a new message.
  */
 export const ListJobsResponseSchema: GenMessage<ListJobsResponse> = /*@__PURE__*/
-  messageDesc(file_kb_ingestion_v1_ingestion, 8);
+  messageDesc(file_kb_ingestion_v1_ingestion, 10);
 
 /**
  * @generated from message kb.ingestion.v1.WatchJobRequest
@@ -288,7 +354,7 @@ export type WatchJobRequest = Message<"kb.ingestion.v1.WatchJobRequest"> & {
  * Use `create(WatchJobRequestSchema)` to create a new message.
  */
 export const WatchJobRequestSchema: GenMessage<WatchJobRequest> = /*@__PURE__*/
-  messageDesc(file_kb_ingestion_v1_ingestion, 9);
+  messageDesc(file_kb_ingestion_v1_ingestion, 11);
 
 /**
  * @generated from message kb.ingestion.v1.WatchJobResponse
@@ -305,7 +371,7 @@ export type WatchJobResponse = Message<"kb.ingestion.v1.WatchJobResponse"> & {
  * Use `create(WatchJobResponseSchema)` to create a new message.
  */
 export const WatchJobResponseSchema: GenMessage<WatchJobResponse> = /*@__PURE__*/
-  messageDesc(file_kb_ingestion_v1_ingestion, 10);
+  messageDesc(file_kb_ingestion_v1_ingestion, 12);
 
 /**
  * @generated from message kb.ingestion.v1.ReprocessJobRequest
@@ -322,7 +388,7 @@ export type ReprocessJobRequest = Message<"kb.ingestion.v1.ReprocessJobRequest">
  * Use `create(ReprocessJobRequestSchema)` to create a new message.
  */
 export const ReprocessJobRequestSchema: GenMessage<ReprocessJobRequest> = /*@__PURE__*/
-  messageDesc(file_kb_ingestion_v1_ingestion, 11);
+  messageDesc(file_kb_ingestion_v1_ingestion, 13);
 
 /**
  * @generated from message kb.ingestion.v1.ReprocessJobResponse
@@ -339,7 +405,7 @@ export type ReprocessJobResponse = Message<"kb.ingestion.v1.ReprocessJobResponse
  * Use `create(ReprocessJobResponseSchema)` to create a new message.
  */
 export const ReprocessJobResponseSchema: GenMessage<ReprocessJobResponse> = /*@__PURE__*/
-  messageDesc(file_kb_ingestion_v1_ingestion, 12);
+  messageDesc(file_kb_ingestion_v1_ingestion, 14);
 
 /**
  * @generated from enum kb.ingestion.v1.JobStatus
@@ -459,6 +525,25 @@ export const IngestionService: GenService<{
     methodKind: "unary";
     input: typeof CompleteUploadRequestSchema;
     output: typeof CompleteUploadResponseSchema;
+  },
+  /**
+   * ReplaceUpload starts uploading a new version of an existing document,
+   * which keeps its id, title and metadata. The document's job waits for the
+   * file again as a new run (filename and content_type become the new file's);
+   * CompleteUpload then queues it, and once processed the new version
+   * replaces the document's file and chunks. Until then the document keeps
+   * its current version, and keeps it when the new one fails. A file the
+   * document module does not accept is rejected with field violations; a
+   * document whose job is QUEUED or PROCESSING, or that is still being
+   * uploaded or processed, fails with FAILED_PRECONDITION (reason
+   * DOCUMENT_BUSY); another user's document is NOT_FOUND.
+   *
+   * @generated from rpc kb.ingestion.v1.IngestionService.ReplaceUpload
+   */
+  replaceUpload: {
+    methodKind: "unary";
+    input: typeof ReplaceUploadRequestSchema;
+    output: typeof ReplaceUploadResponseSchema;
   },
   /**
    * @generated from rpc kb.ingestion.v1.IngestionService.GetJob

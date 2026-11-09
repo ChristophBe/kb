@@ -58,6 +58,43 @@ func (c *Client) Create(ctx context.Context, upload app.NewUpload) (app.Document
 	}, nil
 }
 
+func (c *Client) Replace(ctx context.Context, id uuid.UUID, upload app.NewUpload) (app.Document, error) {
+	replaced, err := c.client.ReplaceContent(ctx, &documentv1.ReplaceContentRequest{
+		Id:          id.String(),
+		Filename:    upload.Filename,
+		ContentType: upload.ContentType,
+		SizeBytes:   upload.SizeBytes,
+		Sha256:      upload.SHA256,
+	})
+	if violations := grpcserver.FieldViolations(err); status.Code(err) == codes.InvalidArgument && len(violations) > 0 {
+		// Named as in ReplaceUploadRequest, but for the document's id.
+		invalid := &app.InvalidUploadError{}
+		for _, v := range violations {
+			field := v.GetField()
+			if field == "id" {
+				field = "document_id"
+			}
+			invalid.Violations = append(invalid.Violations, app.FieldViolation{Field: field, Description: v.GetDescription()})
+		}
+		return app.Document{}, invalid
+	}
+	switch {
+	case status.Code(err) == codes.NotFound:
+		return app.Document{}, app.ErrDocumentNotFound
+	case status.Code(err) == codes.FailedPrecondition && hasReason(err, "DOCUMENT_BUSY"):
+		return app.Document{}, app.ErrDocumentBusy
+	case err != nil:
+		return app.Document{}, peerError("replace content", err)
+	}
+	pending := replaced.GetDocument().GetPendingVersion()
+	return app.Document{
+		ID:          id,
+		Filename:    pending.GetFilename(),
+		ContentType: pending.GetContentType(),
+		UploadURL:   replaced.GetUploadUrl(),
+	}, nil
+}
+
 func (c *Client) MarkUploaded(ctx context.Context, id uuid.UUID) error {
 	_, err := c.client.SetDocumentStatus(ctx, &documentv1.SetDocumentStatusRequest{
 		Id: id.String(), Status: documentv1.DocumentStatus_DOCUMENT_STATUS_UPLOADED,

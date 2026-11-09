@@ -39,6 +39,47 @@ SET status = $2, status_detail = $3, size_bytes = $4, content_type = $5, updated
 WHERE id = $1
 RETURNING *;
 
+-- The pending version's queries: a new file from ReplaceContent that becomes
+-- the document's current one once it has been processed.
+
+-- StartPendingVersion records a new file for a READY (4) or FAILED (5)
+-- document, replacing a pending version that awaits its upload (1) or failed
+-- (5). The document itself is left as it is. No row means the document is
+-- not the owner's, or busy.
+-- name: StartPendingVersion :one
+UPDATE document.documents
+SET pending_status = sqlc.arg(pending_status), pending_status_detail = '',
+    pending_object_key = sqlc.arg(pending_object_key), pending_filename = sqlc.arg(pending_filename),
+    pending_content_type = sqlc.arg(pending_content_type), pending_size_bytes = sqlc.arg(pending_size_bytes),
+    pending_sha256 = sqlc.arg(pending_sha256), updated_at = now()
+WHERE id = sqlc.arg(id) AND owner_id = sqlc.arg(owner_id)
+  AND status IN (4, 5) AND pending_status IN (0, 1, 5)
+RETURNING *;
+
+-- name: SetPendingStatus :one
+UPDATE document.documents
+SET pending_status = $2, pending_status_detail = $3, updated_at = now()
+WHERE id = $1 AND pending_status <> 0
+RETURNING *;
+
+-- name: MarkPendingUploaded :one
+UPDATE document.documents
+SET pending_status = $2, pending_status_detail = $3, pending_size_bytes = $4, pending_content_type = $5,
+    updated_at = now()
+WHERE id = $1 AND pending_status <> 0
+RETURNING *;
+
+-- PromotePendingVersion makes an uploaded or processing (UPLOADED=2,
+-- PROCESSING=3) pending version the document's current one. It runs with the
+-- chunks of that version replacing the old ones (store.Repo.ReplaceChunks).
+-- name: PromotePendingVersion :exec
+UPDATE document.documents
+SET version = version + 1, object_key = pending_object_key, filename = pending_filename,
+    content_type = pending_content_type, size_bytes = pending_size_bytes, sha256 = pending_sha256,
+    pending_status = 0, pending_status_detail = '', pending_object_key = '', pending_filename = '',
+    pending_content_type = '', pending_size_bytes = 0, pending_sha256 = ''
+WHERE id = $1 AND pending_status IN (2, 3);
+
 -- name: SetChunkCount :exec
 UPDATE document.documents
 SET chunk_count = $2, status = $3, status_detail = '', updated_at = now()
@@ -62,6 +103,9 @@ WHERE d.status = sqlc.arg(status) AND d.id IN (
 )
 RETURNING d.object_key;
 
--- ExistingObjectKeys returns those of keys that belong to a document.
+-- ExistingObjectKeys returns those of keys that belong to a document, as its
+-- file or as the file of its pending version.
 -- name: ExistingObjectKeys :many
-SELECT object_key FROM document.documents WHERE object_key = ANY(sqlc.arg(keys)::text[]);
+SELECT object_key FROM document.documents WHERE object_key = ANY(sqlc.arg(keys)::text[])
+UNION
+SELECT pending_object_key FROM document.documents WHERE pending_object_key = ANY(sqlc.arg(keys)::text[]);

@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	IngestionService_CreateUpload_FullMethodName   = "/kb.ingestion.v1.IngestionService/CreateUpload"
 	IngestionService_CompleteUpload_FullMethodName = "/kb.ingestion.v1.IngestionService/CompleteUpload"
+	IngestionService_ReplaceUpload_FullMethodName  = "/kb.ingestion.v1.IngestionService/ReplaceUpload"
 	IngestionService_GetJob_FullMethodName         = "/kb.ingestion.v1.IngestionService/GetJob"
 	IngestionService_ListJobs_FullMethodName       = "/kb.ingestion.v1.IngestionService/ListJobs"
 	IngestionService_WatchJob_FullMethodName       = "/kb.ingestion.v1.IngestionService/WatchJob"
@@ -43,6 +44,17 @@ type IngestionServiceClient interface {
 	// file the document module rejects once uploaded (too large, not matching
 	// its sha256) fails the job instead, with the reason in error.
 	CompleteUpload(ctx context.Context, in *CompleteUploadRequest, opts ...grpc.CallOption) (*CompleteUploadResponse, error)
+	// ReplaceUpload starts uploading a new version of an existing document,
+	// which keeps its id, title and metadata. The document's job waits for the
+	// file again as a new run (filename and content_type become the new file's);
+	// CompleteUpload then queues it, and once processed the new version
+	// replaces the document's file and chunks. Until then the document keeps
+	// its current version, and keeps it when the new one fails. A file the
+	// document module does not accept is rejected with field violations; a
+	// document whose job is QUEUED or PROCESSING, or that is still being
+	// uploaded or processed, fails with FAILED_PRECONDITION (reason
+	// DOCUMENT_BUSY); another user's document is NOT_FOUND.
+	ReplaceUpload(ctx context.Context, in *ReplaceUploadRequest, opts ...grpc.CallOption) (*ReplaceUploadResponse, error)
 	GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error)
 	ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
 	// WatchJob streams the job every time it changes until it is terminal.
@@ -75,6 +87,16 @@ func (c *ingestionServiceClient) CompleteUpload(ctx context.Context, in *Complet
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CompleteUploadResponse)
 	err := c.cc.Invoke(ctx, IngestionService_CompleteUpload_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ingestionServiceClient) ReplaceUpload(ctx context.Context, in *ReplaceUploadRequest, opts ...grpc.CallOption) (*ReplaceUploadResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReplaceUploadResponse)
+	err := c.cc.Invoke(ctx, IngestionService_ReplaceUpload_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -146,6 +168,17 @@ type IngestionServiceServer interface {
 	// file the document module rejects once uploaded (too large, not matching
 	// its sha256) fails the job instead, with the reason in error.
 	CompleteUpload(context.Context, *CompleteUploadRequest) (*CompleteUploadResponse, error)
+	// ReplaceUpload starts uploading a new version of an existing document,
+	// which keeps its id, title and metadata. The document's job waits for the
+	// file again as a new run (filename and content_type become the new file's);
+	// CompleteUpload then queues it, and once processed the new version
+	// replaces the document's file and chunks. Until then the document keeps
+	// its current version, and keeps it when the new one fails. A file the
+	// document module does not accept is rejected with field violations; a
+	// document whose job is QUEUED or PROCESSING, or that is still being
+	// uploaded or processed, fails with FAILED_PRECONDITION (reason
+	// DOCUMENT_BUSY); another user's document is NOT_FOUND.
+	ReplaceUpload(context.Context, *ReplaceUploadRequest) (*ReplaceUploadResponse, error)
 	GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error)
 	ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
 	// WatchJob streams the job every time it changes until it is terminal.
@@ -169,6 +202,9 @@ func (UnimplementedIngestionServiceServer) CreateUpload(context.Context, *Create
 }
 func (UnimplementedIngestionServiceServer) CompleteUpload(context.Context, *CompleteUploadRequest) (*CompleteUploadResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CompleteUpload not implemented")
+}
+func (UnimplementedIngestionServiceServer) ReplaceUpload(context.Context, *ReplaceUploadRequest) (*ReplaceUploadResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReplaceUpload not implemented")
 }
 func (UnimplementedIngestionServiceServer) GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetJob not implemented")
@@ -235,6 +271,24 @@ func _IngestionService_CompleteUpload_Handler(srv interface{}, ctx context.Conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(IngestionServiceServer).CompleteUpload(ctx, req.(*CompleteUploadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IngestionService_ReplaceUpload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReplaceUploadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IngestionServiceServer).ReplaceUpload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IngestionService_ReplaceUpload_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IngestionServiceServer).ReplaceUpload(ctx, req.(*ReplaceUploadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -318,6 +372,10 @@ var IngestionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CompleteUpload",
 			Handler:    _IngestionService_CompleteUpload_Handler,
+		},
+		{
+			MethodName: "ReplaceUpload",
+			Handler:    _IngestionService_ReplaceUpload_Handler,
 		},
 		{
 			MethodName: "GetJob",

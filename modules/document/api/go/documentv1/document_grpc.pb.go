@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	DocumentService_CreateDocument_FullMethodName    = "/kb.document.v1.DocumentService/CreateDocument"
+	DocumentService_ReplaceContent_FullMethodName    = "/kb.document.v1.DocumentService/ReplaceContent"
 	DocumentService_GetDocument_FullMethodName       = "/kb.document.v1.DocumentService/GetDocument"
 	DocumentService_ListDocuments_FullMethodName     = "/kb.document.v1.DocumentService/ListDocuments"
 	DocumentService_UpdateDocument_FullMethodName    = "/kb.document.v1.DocumentService/UpdateDocument"
@@ -43,6 +44,11 @@ type DocumentServiceClient interface {
 	// CreateDocument registers a document and returns a presigned URL the
 	// client uploads the raw file to.
 	CreateDocument(ctx context.Context, in *CreateDocumentRequest, opts ...grpc.CallOption) (*CreateDocumentResponse, error)
+	// ReplaceContent starts a new version of a document: it returns a presigned
+	// URL for the new file, which becomes the document's pending_version. The
+	// document keeps its id and serves its current version until the new one is
+	// processed (AddChunks); see PendingVersion.
+	ReplaceContent(ctx context.Context, in *ReplaceContentRequest, opts ...grpc.CallOption) (*ReplaceContentResponse, error)
 	GetDocument(ctx context.Context, in *GetDocumentRequest, opts ...grpc.CallOption) (*GetDocumentResponse, error)
 	ListDocuments(ctx context.Context, in *ListDocumentsRequest, opts ...grpc.CallOption) (*ListDocumentsResponse, error)
 	UpdateDocument(ctx context.Context, in *UpdateDocumentRequest, opts ...grpc.CallOption) (*UpdateDocumentResponse, error)
@@ -52,7 +58,8 @@ type DocumentServiceClient interface {
 	GetDownloadUrl(ctx context.Context, in *GetDownloadUrlRequest, opts ...grpc.CallOption) (*GetDownloadUrlResponse, error)
 	// ReadContent streams the raw file for backend consumers.
 	ReadContent(ctx context.Context, in *ReadContentRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ReadContentResponse], error)
-	// AddChunks replaces all chunks of a document and marks it ready.
+	// AddChunks replaces all chunks of a document and marks it ready. A
+	// pending version that was uploaded becomes the current one.
 	AddChunks(ctx context.Context, in *AddChunksRequest, opts ...grpc.CallOption) (*AddChunksResponse, error)
 	// ListChunks returns a document's chunks in index order.
 	ListChunks(ctx context.Context, in *ListChunksRequest, opts ...grpc.CallOption) (*ListChunksResponse, error)
@@ -75,6 +82,16 @@ func (c *documentServiceClient) CreateDocument(ctx context.Context, in *CreateDo
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateDocumentResponse)
 	err := c.cc.Invoke(ctx, DocumentService_CreateDocument_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *documentServiceClient) ReplaceContent(ctx context.Context, in *ReplaceContentRequest, opts ...grpc.CallOption) (*ReplaceContentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReplaceContentResponse)
+	err := c.cc.Invoke(ctx, DocumentService_ReplaceContent_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -210,6 +227,11 @@ type DocumentServiceServer interface {
 	// CreateDocument registers a document and returns a presigned URL the
 	// client uploads the raw file to.
 	CreateDocument(context.Context, *CreateDocumentRequest) (*CreateDocumentResponse, error)
+	// ReplaceContent starts a new version of a document: it returns a presigned
+	// URL for the new file, which becomes the document's pending_version. The
+	// document keeps its id and serves its current version until the new one is
+	// processed (AddChunks); see PendingVersion.
+	ReplaceContent(context.Context, *ReplaceContentRequest) (*ReplaceContentResponse, error)
 	GetDocument(context.Context, *GetDocumentRequest) (*GetDocumentResponse, error)
 	ListDocuments(context.Context, *ListDocumentsRequest) (*ListDocumentsResponse, error)
 	UpdateDocument(context.Context, *UpdateDocumentRequest) (*UpdateDocumentResponse, error)
@@ -219,7 +241,8 @@ type DocumentServiceServer interface {
 	GetDownloadUrl(context.Context, *GetDownloadUrlRequest) (*GetDownloadUrlResponse, error)
 	// ReadContent streams the raw file for backend consumers.
 	ReadContent(*ReadContentRequest, grpc.ServerStreamingServer[ReadContentResponse]) error
-	// AddChunks replaces all chunks of a document and marks it ready.
+	// AddChunks replaces all chunks of a document and marks it ready. A
+	// pending version that was uploaded becomes the current one.
 	AddChunks(context.Context, *AddChunksRequest) (*AddChunksResponse, error)
 	// ListChunks returns a document's chunks in index order.
 	ListChunks(context.Context, *ListChunksRequest) (*ListChunksResponse, error)
@@ -240,6 +263,9 @@ type UnimplementedDocumentServiceServer struct{}
 
 func (UnimplementedDocumentServiceServer) CreateDocument(context.Context, *CreateDocumentRequest) (*CreateDocumentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateDocument not implemented")
+}
+func (UnimplementedDocumentServiceServer) ReplaceContent(context.Context, *ReplaceContentRequest) (*ReplaceContentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReplaceContent not implemented")
 }
 func (UnimplementedDocumentServiceServer) GetDocument(context.Context, *GetDocumentRequest) (*GetDocumentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetDocument not implemented")
@@ -309,6 +335,24 @@ func _DocumentService_CreateDocument_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DocumentServiceServer).CreateDocument(ctx, req.(*CreateDocumentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DocumentService_ReplaceContent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReplaceContentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DocumentServiceServer).ReplaceContent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DocumentService_ReplaceContent_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DocumentServiceServer).ReplaceContent(ctx, req.(*ReplaceContentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -514,6 +558,10 @@ var DocumentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateDocument",
 			Handler:    _DocumentService_CreateDocument_Handler,
+		},
+		{
+			MethodName: "ReplaceContent",
+			Handler:    _DocumentService_ReplaceContent_Handler,
 		},
 		{
 			MethodName: "GetDocument",

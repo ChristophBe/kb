@@ -1,6 +1,6 @@
 # Documents
 
-Documents lists everything in your knowledge base. From here you open a document to see its details and passages, rename it, add metadata, download the original file or delete it.
+Documents lists everything in your knowledge base. From here you open a document to see its details and passages, rename it, add metadata, download the original file, upload a new version of it or delete it.
 
 ## Browse your documents
 
@@ -24,7 +24,7 @@ Only **Ready** documents show up in search results and chat answers.
 
 ## Open a document
 
-Select a document's title. The page shows its **Status**, **Detail** (the reason when processing failed), **Filename**, **Content type**, **Size**, **Chunks**, when it was **Created** and **Updated**, its **Metadata** and its **ID**.
+Select a document's title. The page shows its **Status**, **Detail** (the reason when processing failed), its **Version** (1 for the first upload, one more for every [new version](#replace-a-document-with-a-new-version)), **Filename**, **Content type**, **Size**, **Chunks**, when it was **Created** and **Updated**, its **Metadata** and its **ID**.
 
 Select **← Documents** to go back to the list.
 
@@ -64,12 +64,17 @@ Select the download button in the document's row in **Documents**. The original 
 
 ## Replace a document with a new version
 
-kb has no way to swap the file of an existing document. To bring in a new version:
+When a file changes, upload its new version into the same document instead of adding a second one. The document keeps its title, metadata and ID, so links to it and chat sources that cite it keep working.
 
-1. Upload the new file in [Ingestion](ingestion.md#upload-documents) and wait until it is **Done**.
-2. [Delete](#delete-a-document) the old document.
+1. Open the document and select **Upload new version** next to **Version**.
+2. Select **Choose file** and pick the new file. It can be of another type than the old one, as long as kb can read it (PDF, Markdown or plain text).
+3. When the upload is done, kb takes you back to the document, which shows the new version as **Processing** next to **Version**.
 
-Chats that were [restricted](chat.md#restrict-a-chat-to-some-documents) to the old document then show it as **Deleted document**; remove it and choose the new one.
+While the new version is processed, the document stays as it was: search, chat and **Download** use the current version. Once the new version is ready, its passages, file name and size replace the old ones and **Version** goes up by one; the old file is removed.
+
+If the new version can't be processed, it shows as **Failed** with the reason, and the document keeps its current version. Select **Upload new version** to try another file, or retry processing in [Ingestion](ingestion.md#retry-processing).
+
+**Upload new version** isn't offered while the document or a new version of it is still being uploaded or processed. If a file is too large or of a type kb doesn't read, the upload page says so; choose another file. Select **← Back to the document** to leave without uploading.
 
 ## Delete a document
 

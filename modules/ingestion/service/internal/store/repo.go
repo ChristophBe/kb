@@ -46,6 +46,28 @@ func (j *Jobs) Get(ctx context.Context, owner string, id uuid.UUID) (app.Job, er
 	return toJob(row), nil
 }
 
+func (j *Jobs) GetByDocument(ctx context.Context, owner string, documentID uuid.UUID) (app.Job, error) {
+	row, err := j.q.GetDocumentJob(ctx, GetDocumentJobParams{DocumentID: documentID, OwnerID: owner})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return app.Job{}, app.ErrNotFound
+	}
+	if err != nil {
+		return app.Job{}, err
+	}
+	return toJob(row), nil
+}
+
+func (j *Jobs) Restart(ctx context.Context, owner string, id uuid.UUID, filename, contentType string) (app.Job, error) {
+	row, err := j.q.RestartJob(ctx, RestartJobParams{ID: id, OwnerID: owner, Filename: filename, ContentType: contentType})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return app.Job{}, app.ErrNotAdvanced
+	}
+	if err != nil {
+		return app.Job{}, err
+	}
+	return toJob(row), nil
+}
+
 func (j *Jobs) List(ctx context.Context, owner string, limit, offset int32) ([]app.Job, error) {
 	rows, err := j.q.ListJobs(ctx, ListJobsParams{OwnerID: owner, Limit: limit, Offset: offset})
 	if err != nil {

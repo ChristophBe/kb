@@ -72,6 +72,38 @@ func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUpload
 	return &ingestionv1.CreateUploadResponse{Job: toProto(job), UploadUrl: uploadURL}, nil
 }
 
+// ReplaceUpload starts a new version of the calling user's document.
+func (s *Server) ReplaceUpload(ctx context.Context, req *ingestionv1.ReplaceUploadRequest) (*ingestionv1.ReplaceUploadResponse, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var violations []*errdetails.BadRequest_FieldViolation
+	documentID, err := uuid.Parse(req.GetDocumentId())
+	if err != nil {
+		violations = append(violations, grpcserver.Violation("document_id", fmt.Sprintf("Invalid document id %q", req.GetDocumentId())))
+	}
+	if req.GetFilename() == "" {
+		violations = append(violations, grpcserver.Violation("filename", "A filename is required"))
+	}
+	if req.GetSizeBytes() <= 0 {
+		violations = append(violations, grpcserver.Violation("size_bytes", "The file is empty"))
+	}
+	if len(violations) > 0 {
+		return nil, grpcserver.InvalidArgument(violations...)
+	}
+	job, uploadURL, err := s.app.ReplaceUpload(ctx, owner, documentID, app.NewUpload{
+		Filename:    req.GetFilename(),
+		ContentType: req.GetContentType(),
+		SizeBytes:   req.GetSizeBytes(),
+		SHA256:      req.GetSha256(),
+	})
+	if err != nil {
+		return nil, s.toStatus("replace upload", err)
+	}
+	return &ingestionv1.ReplaceUploadResponse{Job: toProto(job), UploadUrl: uploadURL}, nil
+}
+
 func (s *Server) CompleteUpload(ctx context.Context, req *ingestionv1.CompleteUploadRequest) (*ingestionv1.CompleteUploadResponse, error) {
 	owner, err := caller(ctx)
 	if err != nil {
@@ -226,6 +258,10 @@ func (s *Server) toStatus(op string, err error) error {
 		return failedPrecondition("UPLOAD_MISSING", app.ErrUploadMissing)
 	case errors.Is(err, app.ErrNotReprocessable):
 		return failedPrecondition("JOB_NOT_REPROCESSABLE", app.ErrNotReprocessable)
+	case errors.Is(err, app.ErrDocumentNotFound):
+		return status.Error(codes.NotFound, app.ErrDocumentNotFound.Error())
+	case errors.Is(err, app.ErrDocumentBusy):
+		return failedPrecondition("DOCUMENT_BUSY", app.ErrDocumentBusy)
 	case errors.Is(err, app.ErrDocumentsUnavailable):
 		s.log.Warn(op, "error", err)
 		return status.Error(codes.Unavailable, app.ErrDocumentsUnavailable.Error())

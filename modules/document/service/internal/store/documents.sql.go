@@ -16,7 +16,7 @@ const createDocument = `-- name: CreateDocument :one
 
 INSERT INTO document.documents (id, owner_id, title, filename, content_type, size_bytes, object_key, status, metadata, sha256)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256, version, pending_status, pending_status_detail, pending_object_key, pending_filename, pending_content_type, pending_size_bytes, pending_sha256
 `
 
 type CreateDocumentParams struct {
@@ -64,6 +64,14 @@ func (q *Queries) CreateDocument(ctx context.Context, arg CreateDocumentParams) 
 		&i.UpdatedAt,
 		&i.OwnerID,
 		&i.Sha256,
+		&i.Version,
+		&i.PendingStatus,
+		&i.PendingStatusDetail,
+		&i.PendingObjectKey,
+		&i.PendingFilename,
+		&i.PendingContentType,
+		&i.PendingSizeBytes,
+		&i.PendingSha256,
 	)
 	return i, err
 }
@@ -128,9 +136,12 @@ func (q *Queries) DeleteStaleUploads(ctx context.Context, arg DeleteStaleUploads
 
 const existingObjectKeys = `-- name: ExistingObjectKeys :many
 SELECT object_key FROM document.documents WHERE object_key = ANY($1::text[])
+UNION
+SELECT pending_object_key FROM document.documents WHERE pending_object_key = ANY($1::text[])
 `
 
-// ExistingObjectKeys returns those of keys that belong to a document.
+// ExistingObjectKeys returns those of keys that belong to a document, as its
+// file or as the file of its pending version.
 func (q *Queries) ExistingObjectKeys(ctx context.Context, keys []string) ([]string, error) {
 	rows, err := q.db.Query(ctx, existingObjectKeys, keys)
 	if err != nil {
@@ -152,7 +163,7 @@ func (q *Queries) ExistingObjectKeys(ctx context.Context, keys []string) ([]stri
 }
 
 const getAnyDocument = `-- name: GetAnyDocument :one
-SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256 FROM document.documents WHERE id = $1
+SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256, version, pending_status, pending_status_detail, pending_object_key, pending_filename, pending_content_type, pending_size_bytes, pending_sha256 FROM document.documents WHERE id = $1
 `
 
 func (q *Queries) GetAnyDocument(ctx context.Context, id uuid.UUID) (DocumentDocument, error) {
@@ -173,12 +184,20 @@ func (q *Queries) GetAnyDocument(ctx context.Context, id uuid.UUID) (DocumentDoc
 		&i.UpdatedAt,
 		&i.OwnerID,
 		&i.Sha256,
+		&i.Version,
+		&i.PendingStatus,
+		&i.PendingStatusDetail,
+		&i.PendingObjectKey,
+		&i.PendingFilename,
+		&i.PendingContentType,
+		&i.PendingSizeBytes,
+		&i.PendingSha256,
 	)
 	return i, err
 }
 
 const getDocument = `-- name: GetDocument :one
-SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256 FROM document.documents WHERE id = $1 AND owner_id = $2
+SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256, version, pending_status, pending_status_detail, pending_object_key, pending_filename, pending_content_type, pending_size_bytes, pending_sha256 FROM document.documents WHERE id = $1 AND owner_id = $2
 `
 
 type GetDocumentParams struct {
@@ -204,12 +223,20 @@ func (q *Queries) GetDocument(ctx context.Context, arg GetDocumentParams) (Docum
 		&i.UpdatedAt,
 		&i.OwnerID,
 		&i.Sha256,
+		&i.Version,
+		&i.PendingStatus,
+		&i.PendingStatusDetail,
+		&i.PendingObjectKey,
+		&i.PendingFilename,
+		&i.PendingContentType,
+		&i.PendingSizeBytes,
+		&i.PendingSha256,
 	)
 	return i, err
 }
 
 const listDocuments = `-- name: ListDocuments :many
-SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256 FROM document.documents
+SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256, version, pending_status, pending_status_detail, pending_object_key, pending_filename, pending_content_type, pending_size_bytes, pending_sha256 FROM document.documents
 WHERE owner_id = $1
 ORDER BY created_at DESC, id DESC
 LIMIT $2 OFFSET $3
@@ -245,6 +272,14 @@ func (q *Queries) ListDocuments(ctx context.Context, arg ListDocumentsParams) ([
 			&i.UpdatedAt,
 			&i.OwnerID,
 			&i.Sha256,
+			&i.Version,
+			&i.PendingStatus,
+			&i.PendingStatusDetail,
+			&i.PendingObjectKey,
+			&i.PendingFilename,
+			&i.PendingContentType,
+			&i.PendingSizeBytes,
+			&i.PendingSha256,
 		); err != nil {
 			return nil, err
 		}
@@ -260,7 +295,7 @@ const markDocumentUploaded = `-- name: MarkDocumentUploaded :one
 UPDATE document.documents
 SET status = $2, status_detail = $3, size_bytes = $4, content_type = $5, updated_at = now()
 WHERE id = $1
-RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256, version, pending_status, pending_status_detail, pending_object_key, pending_filename, pending_content_type, pending_size_bytes, pending_sha256
 `
 
 type MarkDocumentUploadedParams struct {
@@ -295,8 +330,85 @@ func (q *Queries) MarkDocumentUploaded(ctx context.Context, arg MarkDocumentUplo
 		&i.UpdatedAt,
 		&i.OwnerID,
 		&i.Sha256,
+		&i.Version,
+		&i.PendingStatus,
+		&i.PendingStatusDetail,
+		&i.PendingObjectKey,
+		&i.PendingFilename,
+		&i.PendingContentType,
+		&i.PendingSizeBytes,
+		&i.PendingSha256,
 	)
 	return i, err
+}
+
+const markPendingUploaded = `-- name: MarkPendingUploaded :one
+UPDATE document.documents
+SET pending_status = $2, pending_status_detail = $3, pending_size_bytes = $4, pending_content_type = $5,
+    updated_at = now()
+WHERE id = $1 AND pending_status <> 0
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256, version, pending_status, pending_status_detail, pending_object_key, pending_filename, pending_content_type, pending_size_bytes, pending_sha256
+`
+
+type MarkPendingUploadedParams struct {
+	ID                  uuid.UUID
+	PendingStatus       int16
+	PendingStatusDetail string
+	PendingSizeBytes    int64
+	PendingContentType  string
+}
+
+func (q *Queries) MarkPendingUploaded(ctx context.Context, arg MarkPendingUploadedParams) (DocumentDocument, error) {
+	row := q.db.QueryRow(ctx, markPendingUploaded,
+		arg.ID,
+		arg.PendingStatus,
+		arg.PendingStatusDetail,
+		arg.PendingSizeBytes,
+		arg.PendingContentType,
+	)
+	var i DocumentDocument
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Filename,
+		&i.ContentType,
+		&i.SizeBytes,
+		&i.ObjectKey,
+		&i.Status,
+		&i.StatusDetail,
+		&i.ChunkCount,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.OwnerID,
+		&i.Sha256,
+		&i.Version,
+		&i.PendingStatus,
+		&i.PendingStatusDetail,
+		&i.PendingObjectKey,
+		&i.PendingFilename,
+		&i.PendingContentType,
+		&i.PendingSizeBytes,
+		&i.PendingSha256,
+	)
+	return i, err
+}
+
+const promotePendingVersion = `-- name: PromotePendingVersion :exec
+UPDATE document.documents
+SET version = version + 1, object_key = pending_object_key, filename = pending_filename,
+    content_type = pending_content_type, size_bytes = pending_size_bytes, sha256 = pending_sha256,
+    pending_status = 0, pending_status_detail = '', pending_object_key = '', pending_filename = '',
+    pending_content_type = '', pending_size_bytes = 0, pending_sha256 = ''
+WHERE id = $1 AND pending_status IN (2, 3)
+`
+
+// PromotePendingVersion makes an uploaded or processing (UPLOADED=2,
+// PROCESSING=3) pending version the document's current one. It runs with the
+// chunks of that version replacing the old ones (store.Repo.ReplaceChunks).
+func (q *Queries) PromotePendingVersion(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, promotePendingVersion, id)
+	return err
 }
 
 const setChunkCount = `-- name: SetChunkCount :exec
@@ -320,7 +432,7 @@ const setDocumentStatus = `-- name: SetDocumentStatus :one
 UPDATE document.documents
 SET status = $2, status_detail = $3, updated_at = now()
 WHERE id = $1
-RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256, version, pending_status, pending_status_detail, pending_object_key, pending_filename, pending_content_type, pending_size_bytes, pending_sha256
 `
 
 type SetDocumentStatusParams struct {
@@ -347,6 +459,125 @@ func (q *Queries) SetDocumentStatus(ctx context.Context, arg SetDocumentStatusPa
 		&i.UpdatedAt,
 		&i.OwnerID,
 		&i.Sha256,
+		&i.Version,
+		&i.PendingStatus,
+		&i.PendingStatusDetail,
+		&i.PendingObjectKey,
+		&i.PendingFilename,
+		&i.PendingContentType,
+		&i.PendingSizeBytes,
+		&i.PendingSha256,
+	)
+	return i, err
+}
+
+const setPendingStatus = `-- name: SetPendingStatus :one
+UPDATE document.documents
+SET pending_status = $2, pending_status_detail = $3, updated_at = now()
+WHERE id = $1 AND pending_status <> 0
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256, version, pending_status, pending_status_detail, pending_object_key, pending_filename, pending_content_type, pending_size_bytes, pending_sha256
+`
+
+type SetPendingStatusParams struct {
+	ID                  uuid.UUID
+	PendingStatus       int16
+	PendingStatusDetail string
+}
+
+func (q *Queries) SetPendingStatus(ctx context.Context, arg SetPendingStatusParams) (DocumentDocument, error) {
+	row := q.db.QueryRow(ctx, setPendingStatus, arg.ID, arg.PendingStatus, arg.PendingStatusDetail)
+	var i DocumentDocument
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Filename,
+		&i.ContentType,
+		&i.SizeBytes,
+		&i.ObjectKey,
+		&i.Status,
+		&i.StatusDetail,
+		&i.ChunkCount,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.OwnerID,
+		&i.Sha256,
+		&i.Version,
+		&i.PendingStatus,
+		&i.PendingStatusDetail,
+		&i.PendingObjectKey,
+		&i.PendingFilename,
+		&i.PendingContentType,
+		&i.PendingSizeBytes,
+		&i.PendingSha256,
+	)
+	return i, err
+}
+
+const startPendingVersion = `-- name: StartPendingVersion :one
+
+UPDATE document.documents
+SET pending_status = $1, pending_status_detail = '',
+    pending_object_key = $2, pending_filename = $3,
+    pending_content_type = $4, pending_size_bytes = $5,
+    pending_sha256 = $6, updated_at = now()
+WHERE id = $7 AND owner_id = $8
+  AND status IN (4, 5) AND pending_status IN (0, 1, 5)
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256, version, pending_status, pending_status_detail, pending_object_key, pending_filename, pending_content_type, pending_size_bytes, pending_sha256
+`
+
+type StartPendingVersionParams struct {
+	PendingStatus      int16
+	PendingObjectKey   string
+	PendingFilename    string
+	PendingContentType string
+	PendingSizeBytes   int64
+	PendingSha256      string
+	ID                 uuid.UUID
+	OwnerID            string
+}
+
+// The pending version's queries: a new file from ReplaceContent that becomes
+// the document's current one once it has been processed.
+// StartPendingVersion records a new file for a READY (4) or FAILED (5)
+// document, replacing a pending version that awaits its upload (1) or failed
+// (5). The document itself is left as it is. No row means the document is
+// not the owner's, or busy.
+func (q *Queries) StartPendingVersion(ctx context.Context, arg StartPendingVersionParams) (DocumentDocument, error) {
+	row := q.db.QueryRow(ctx, startPendingVersion,
+		arg.PendingStatus,
+		arg.PendingObjectKey,
+		arg.PendingFilename,
+		arg.PendingContentType,
+		arg.PendingSizeBytes,
+		arg.PendingSha256,
+		arg.ID,
+		arg.OwnerID,
+	)
+	var i DocumentDocument
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Filename,
+		&i.ContentType,
+		&i.SizeBytes,
+		&i.ObjectKey,
+		&i.Status,
+		&i.StatusDetail,
+		&i.ChunkCount,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.OwnerID,
+		&i.Sha256,
+		&i.Version,
+		&i.PendingStatus,
+		&i.PendingStatusDetail,
+		&i.PendingObjectKey,
+		&i.PendingFilename,
+		&i.PendingContentType,
+		&i.PendingSizeBytes,
+		&i.PendingSha256,
 	)
 	return i, err
 }
@@ -357,7 +588,7 @@ SET title      = coalesce($3, title),
     metadata   = coalesce($4, metadata),
     updated_at = now()
 WHERE id = $1 AND owner_id = $2
-RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256
+RETURNING id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256, version, pending_status, pending_status_detail, pending_object_key, pending_filename, pending_content_type, pending_size_bytes, pending_sha256
 `
 
 type UpdateDocumentParams struct {
@@ -390,6 +621,14 @@ func (q *Queries) UpdateDocument(ctx context.Context, arg UpdateDocumentParams) 
 		&i.UpdatedAt,
 		&i.OwnerID,
 		&i.Sha256,
+		&i.Version,
+		&i.PendingStatus,
+		&i.PendingStatusDetail,
+		&i.PendingObjectKey,
+		&i.PendingFilename,
+		&i.PendingContentType,
+		&i.PendingSizeBytes,
+		&i.PendingSha256,
 	)
 	return i, err
 }

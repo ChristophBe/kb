@@ -19,18 +19,26 @@ type DocumentChunk struct {
 }
 
 type DocumentDocument struct {
-	ID           uuid.UUID
-	Title        string
-	Filename     string
-	ContentType  string
-	SizeBytes    int64
-	ObjectKey    string
-	Status       int16
-	StatusDetail string
-	ChunkCount   int32
-	Metadata     map[string]string
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
-	OwnerID      string
-	Sha256       string
+	ID                  uuid.UUID
+	Title               string
+	Filename            string
+	ContentType         string
+	SizeBytes           int64
+	ObjectKey           string
+	Status              int16
+	StatusDetail        string
+	ChunkCount          int32
+	Metadata            map[string]string
+	CreatedAt           pgtype.Timestamptz
+	UpdatedAt           pgtype.Timestamptz
+	OwnerID             string
+	Sha256              string
+	Version             int32
+	PendingStatus       int16
+	PendingStatusDetail string
+	PendingObjectKey    string
+	PendingFilename     string
+	PendingContentType  string
+	PendingSizeBytes    int64
+	PendingSha256       string
 }

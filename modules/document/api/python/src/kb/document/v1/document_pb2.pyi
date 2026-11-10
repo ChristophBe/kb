@@ -27,7 +27,7 @@ DOCUMENT_STATUS_READY: DocumentStatus
 DOCUMENT_STATUS_FAILED: DocumentStatus
 
 class Document(_message.Message):
-    __slots__ = ("id", "title", "filename", "content_type", "size_bytes", "status", "status_detail", "chunk_count", "metadata", "create_time", "update_time", "owner_id", "sha256")
+    __slots__ = ("id", "title", "filename", "content_type", "size_bytes", "status", "status_detail", "chunk_count", "metadata", "create_time", "update_time", "owner_id", "sha256", "version", "pending_version")
     class MetadataEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -48,6 +48,8 @@ class Document(_message.Message):
     UPDATE_TIME_FIELD_NUMBER: _ClassVar[int]
     OWNER_ID_FIELD_NUMBER: _ClassVar[int]
     SHA256_FIELD_NUMBER: _ClassVar[int]
+    VERSION_FIELD_NUMBER: _ClassVar[int]
+    PENDING_VERSION_FIELD_NUMBER: _ClassVar[int]
     id: str
     title: str
     filename: str
@@ -61,7 +63,27 @@ class Document(_message.Message):
     update_time: _timestamp_pb2.Timestamp
     owner_id: str
     sha256: str
-    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., status: _Optional[_Union[DocumentStatus, str]] = ..., status_detail: _Optional[str] = ..., chunk_count: _Optional[int] = ..., metadata: _Optional[_Mapping[str, str]] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., owner_id: _Optional[str] = ..., sha256: _Optional[str] = ...) -> None: ...
+    version: int
+    pending_version: PendingVersion
+    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., status: _Optional[_Union[DocumentStatus, str]] = ..., status_detail: _Optional[str] = ..., chunk_count: _Optional[int] = ..., metadata: _Optional[_Mapping[str, str]] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., owner_id: _Optional[str] = ..., sha256: _Optional[str] = ..., version: _Optional[int] = ..., pending_version: _Optional[_Union[PendingVersion, _Mapping]] = ...) -> None: ...
+
+class PendingVersion(_message.Message):
+    __slots__ = ("version", "filename", "content_type", "size_bytes", "status", "status_detail", "sha256")
+    VERSION_FIELD_NUMBER: _ClassVar[int]
+    FILENAME_FIELD_NUMBER: _ClassVar[int]
+    CONTENT_TYPE_FIELD_NUMBER: _ClassVar[int]
+    SIZE_BYTES_FIELD_NUMBER: _ClassVar[int]
+    STATUS_FIELD_NUMBER: _ClassVar[int]
+    STATUS_DETAIL_FIELD_NUMBER: _ClassVar[int]
+    SHA256_FIELD_NUMBER: _ClassVar[int]
+    version: int
+    filename: str
+    content_type: str
+    size_bytes: int
+    status: DocumentStatus
+    status_detail: str
+    sha256: str
+    def __init__(self, version: _Optional[int] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., status: _Optional[_Union[DocumentStatus, str]] = ..., status_detail: _Optional[str] = ..., sha256: _Optional[str] = ...) -> None: ...
 
 class Chunk(_message.Message):
     __slots__ = ("document_id", "index", "text", "metadata")
@@ -128,6 +150,28 @@ class CreateDocumentRequest(_message.Message):
     def __init__(self, title: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., metadata: _Optional[_Mapping[str, str]] = ..., sha256: _Optional[str] = ...) -> None: ...
 
 class CreateDocumentResponse(_message.Message):
+    __slots__ = ("document", "upload_url")
+    DOCUMENT_FIELD_NUMBER: _ClassVar[int]
+    UPLOAD_URL_FIELD_NUMBER: _ClassVar[int]
+    document: Document
+    upload_url: str
+    def __init__(self, document: _Optional[_Union[Document, _Mapping]] = ..., upload_url: _Optional[str] = ...) -> None: ...
+
+class ReplaceContentRequest(_message.Message):
+    __slots__ = ("id", "filename", "content_type", "size_bytes", "sha256")
+    ID_FIELD_NUMBER: _ClassVar[int]
+    FILENAME_FIELD_NUMBER: _ClassVar[int]
+    CONTENT_TYPE_FIELD_NUMBER: _ClassVar[int]
+    SIZE_BYTES_FIELD_NUMBER: _ClassVar[int]
+    SHA256_FIELD_NUMBER: _ClassVar[int]
+    id: str
+    filename: str
+    content_type: str
+    size_bytes: int
+    sha256: str
+    def __init__(self, id: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., sha256: _Optional[str] = ...) -> None: ...
+
+class ReplaceContentResponse(_message.Message):
     __slots__ = ("document", "upload_url")
     DOCUMENT_FIELD_NUMBER: _ClassVar[int]
     UPLOAD_URL_FIELD_NUMBER: _ClassVar[int]

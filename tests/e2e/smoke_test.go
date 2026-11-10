@@ -127,6 +127,11 @@ func TestInternalRPCsAreNotRouted(t *testing.T) {
 			_, err := client.CallUnary(ctx, connect.NewRequest(&documentv1.SetDocumentStatusRequest{}))
 			return err
 		},
+		documentv1.DocumentService_ReplaceContent_FullMethodName: func(ctx context.Context) error {
+			client := connect.NewClient[documentv1.ReplaceContentRequest, documentv1.ReplaceContentResponse](h, kb.gateway+documentv1.DocumentService_ReplaceContent_FullMethodName, opt)
+			_, err := client.CallUnary(ctx, connect.NewRequest(&documentv1.ReplaceContentRequest{}))
+			return err
+		},
 		llmv1.LlmService_Embed_FullMethodName: func(ctx context.Context) error {
 			client := connect.NewClient[llmv1.EmbedRequest, llmv1.EmbedResponse](h, kb.gateway+llmv1.LlmService_Embed_FullMethodName, opt)
 			_, err := client.CallUnary(ctx, connect.NewRequest(&llmv1.EmbedRequest{Inputs: []string{"x"}}))

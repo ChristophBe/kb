@@ -19,6 +19,17 @@ service IngestionService {
   // file the document module rejects once uploaded (too large, not matching
   // its sha256) fails the job instead, with the reason in error.
   rpc CompleteUpload(CompleteUploadRequest) returns (CompleteUploadResponse);
+  // ReplaceUpload starts uploading a new version of an existing document,
+  // which keeps its id, title and metadata. The document's job waits for the
+  // file again as a new run (filename and content_type become the new file's);
+  // CompleteUpload then queues it, and once processed the new version
+  // replaces the document's file and chunks. Until then the document keeps
+  // its current version, and keeps it when the new one fails. A file the
+  // document module does not accept is rejected with field violations; a
+  // document whose job is QUEUED or PROCESSING, or that is still being
+  // uploaded or processed, fails with FAILED_PRECONDITION (reason
+  // DOCUMENT_BUSY); another user's document is NOT_FOUND.
+  rpc ReplaceUpload(ReplaceUploadRequest) returns (ReplaceUploadResponse);
   rpc GetJob(GetJobRequest) returns (GetJobResponse);
   rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
   // WatchJob streams the job every time it changes until it is terminal.
@@ -88,6 +99,23 @@ message CreateUploadResponse {
   Job job = 1;
   // A presigned URL to PUT the file to, sending the job's content_type as
   // Content-Type and exactly size_bytes bytes; other uploads are refused.
+  string upload_url = 2;
+}
+
+message ReplaceUploadRequest {
+  string document_id = 1;
+  string filename = 2;
+  string content_type = 3;
+  // The new file's size; must be greater than 0.
+  int64 size_bytes = 4;
+  // Optional SHA-256 of the new file, in hex, checked like CreateUpload's.
+  string sha256 = 5;
+}
+
+message ReplaceUploadResponse {
+  Job job = 1;
+  // A presigned URL to PUT the new file to, sending the job's content_type as
+  // Content-Type and exactly size_bytes bytes.
   string upload_url = 2;
 }
 

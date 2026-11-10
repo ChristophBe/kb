@@ -20,6 +20,9 @@ type Querier interface {
 	// Queries taking an owner_id act for that user and find only their jobs. The
 	// others apply the worker's events, which carry no user, and act on any job.
 	CreateJob(ctx context.Context, arg CreateJobParams) (IngestionJob, error)
+	// GetDocumentJob returns the owner's job of a document: the latest, should
+	// there be more than one.
+	GetDocumentJob(ctx context.Context, arg GetDocumentJobParams) (IngestionJob, error)
 	GetJob(ctx context.Context, arg GetJobParams) (IngestionJob, error)
 	ListJobs(ctx context.Context, arg ListJobsParams) ([]IngestionJob, error)
 	// ReportProgress records the stage and progress of a job's current run. A
@@ -31,6 +34,11 @@ type Querier interface {
 	// (DONE=4, FAILED=5) again (QUEUED=2) as a new run, clearing the result of
 	// the previous one.
 	ReprocessJob(ctx context.Context, arg ReprocessJobParams) (IngestionJob, error)
+	// RestartJob is the other transition back, for a new version of the job's
+	// document: a job that is not being processed (PENDING_UPLOAD=1, DONE=4,
+	// FAILED=5) waits for the new file (PENDING_UPLOAD) as a new run, with its
+	// name and type, clearing the result of the previous run.
+	RestartJob(ctx context.Context, arg RestartJobParams) (IngestionJob, error)
 }
 
 var _ Querier = (*Queries)(nil)

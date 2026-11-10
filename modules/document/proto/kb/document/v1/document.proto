@@ -13,6 +13,11 @@ service DocumentService {
   // CreateDocument registers a document and returns a presigned URL the
   // client uploads the raw file to.
   rpc CreateDocument(CreateDocumentRequest) returns (CreateDocumentResponse);
+  // ReplaceContent starts a new version of a document: it returns a presigned
+  // URL for the new file, which becomes the document's pending_version. The
+  // document keeps its id and serves its current version until the new one is
+  // processed (AddChunks); see PendingVersion.
+  rpc ReplaceContent(ReplaceContentRequest) returns (ReplaceContentResponse);
   rpc GetDocument(GetDocumentRequest) returns (GetDocumentResponse);
   rpc ListDocuments(ListDocumentsRequest) returns (ListDocumentsResponse);
   rpc UpdateDocument(UpdateDocumentRequest) returns (UpdateDocumentResponse);
@@ -22,7 +27,8 @@ service DocumentService {
   rpc GetDownloadUrl(GetDownloadUrlRequest) returns (GetDownloadUrlResponse);
   // ReadContent streams the raw file for backend consumers.
   rpc ReadContent(ReadContentRequest) returns (stream ReadContentResponse);
-  // AddChunks replaces all chunks of a document and marks it ready.
+  // AddChunks replaces all chunks of a document and marks it ready. A
+  // pending version that was uploaded becomes the current one.
   rpc AddChunks(AddChunksRequest) returns (AddChunksResponse);
   // ListChunks returns a document's chunks in index order.
   rpc ListChunks(ListChunksRequest) returns (ListChunksResponse);
@@ -61,6 +67,33 @@ message Document {
   // The SHA-256 of the file as declared at creation, in lowercase hex; empty
   // when none was declared.
   string sha256 = 13;
+  // Counts the files the document has had: 1 for the first upload,
+  // incremented when a new version from ReplaceContent has been processed.
+  // filename, content_type, size_bytes, sha256, the chunks and the download
+  // are those of this version.
+  int32 version = 14;
+  // The new version being uploaded or processed, or the last one that failed;
+  // unset when there is none.
+  PendingVersion pending_version = 15;
+}
+
+// PendingVersion is a new file for a document, from ReplaceContent. While it
+// is pending the document stays as it was (status, chunks, download), so it
+// stays readable and searchable; status changes for the document
+// (SetDocumentStatus) apply to the pending version instead, and ReadContent
+// returns its file. Once processed (AddChunks) it becomes the document's
+// current version and the previous file is removed. When it fails it stays,
+// FAILED, until the next ReplaceContent.
+message PendingVersion {
+  // The version number it becomes: the document's version + 1.
+  int32 version = 1;
+  string filename = 2;
+  string content_type = 3;
+  int64 size_bytes = 4;
+  // PENDING_UPLOAD, UPLOADED, PROCESSING or FAILED.
+  DocumentStatus status = 5;
+  string status_detail = 6;
+  string sha256 = 7;
 }
 
 message Chunk {
@@ -107,6 +140,31 @@ message CreateDocumentResponse {
   // A presigned URL to PUT the file to. The request must send the
   // document's content_type as Content-Type and exactly size_bytes bytes;
   // the storage server refuses any other upload.
+  string upload_url = 2;
+}
+
+// ReplaceContent validates the new file like CreateDocument and keeps the
+// document's title and metadata. It fails with FAILED_PRECONDITION (ErrorInfo
+// reason DOCUMENT_BUSY) until the document's first upload is READY or FAILED
+// and while a pending version is UPLOADED or PROCESSING; a pending version
+// still awaiting its upload, or one that failed, is replaced. Another user's
+// document is NOT_FOUND.
+message ReplaceContentRequest {
+  string id = 1;
+  string filename = 2;
+  // Defaults like CreateDocumentRequest.content_type.
+  string content_type = 3;
+  // The file's exact size; must be greater than 0.
+  int64 size_bytes = 4;
+  // Optional SHA-256 of the file, in hex, checked like CreateDocument's.
+  string sha256 = 5;
+}
+
+message ReplaceContentResponse {
+  // The document, with the new file as pending_version.
+  Document document = 1;
+  // A presigned URL to PUT the new file to, sending pending_version's
+  // content_type as Content-Type and exactly size_bytes bytes.
   string upload_url = 2;
 }
 

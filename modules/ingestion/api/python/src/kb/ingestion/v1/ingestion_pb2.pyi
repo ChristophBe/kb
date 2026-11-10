@@ -89,6 +89,28 @@ class CreateUploadResponse(_message.Message):
     upload_url: str
     def __init__(self, job: _Optional[_Union[Job, _Mapping]] = ..., upload_url: _Optional[str] = ...) -> None: ...
 
+class ReplaceUploadRequest(_message.Message):
+    __slots__ = ("document_id", "filename", "content_type", "size_bytes", "sha256")
+    DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
+    FILENAME_FIELD_NUMBER: _ClassVar[int]
+    CONTENT_TYPE_FIELD_NUMBER: _ClassVar[int]
+    SIZE_BYTES_FIELD_NUMBER: _ClassVar[int]
+    SHA256_FIELD_NUMBER: _ClassVar[int]
+    document_id: str
+    filename: str
+    content_type: str
+    size_bytes: int
+    sha256: str
+    def __init__(self, document_id: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., sha256: _Optional[str] = ...) -> None: ...
+
+class ReplaceUploadResponse(_message.Message):
+    __slots__ = ("job", "upload_url")
+    JOB_FIELD_NUMBER: _ClassVar[int]
+    UPLOAD_URL_FIELD_NUMBER: _ClassVar[int]
+    job: Job
+    upload_url: str
+    def __init__(self, job: _Optional[_Union[Job, _Mapping]] = ..., upload_url: _Optional[str] = ...) -> None: ...
+
 class CompleteUploadRequest(_message.Message):
     __slots__ = ("job_id",)
     JOB_ID_FIELD_NUMBER: _ClassVar[int]

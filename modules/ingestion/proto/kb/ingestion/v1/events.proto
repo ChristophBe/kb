@@ -10,7 +10,7 @@ option go_package = "github.com/christoph/kb/modules/ingestion/api/go/ingestionv
 // message is noted on the message. Payloads are binary-encoded protobuf.
 //
 // run counts the processing runs of a job: 1 for the upload, incremented by
-// every ReprocessJob. The worker copies it from DocumentUploaded to the events
+// every ReprocessJob and ReplaceUpload. The worker copies it from DocumentUploaded to the events
 // it publishes, so events of an earlier run are ignored and message ids stay
 // unique per run. 0 (events from before runs existed) means run 1.
 

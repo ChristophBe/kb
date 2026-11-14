@@ -1,4 +1,4 @@
-import { Badge, Card, ChunkStrip, type Tone } from "@kb/ui";
+import { Badge, Card, ChunkStrip, type Tone } from "@knowcel/ui";
 import {
   CircleHelp,
   Cpu,

@@ -19,4 +19,4 @@ services:
     internal:
       - knowcel.llm.v1.LlmService/Generate
       - knowcel.llm.v1.LlmService/Embed
-ui: "@kb/module-llm"
+ui: "@knowcel/module-llm"

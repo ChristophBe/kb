@@ -1,10 +1,10 @@
 import { create } from "@bufbuild/protobuf";
 import { Code, ConnectError } from "@connectrpc/connect";
-import { ConversationSchema } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import { DocumentSchema } from "@kb/document-api/knowcel/document/v1/document_pb";
-import { KbRuntimeProvider, useQueryClient, useToasts } from "@kb/module-sdk";
-import { expectNoAxeViolations } from "@kb/ui/testing";
-import { polyfillDialog } from "@kb/ui/testing/dialog";
+import { ConversationSchema } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { DocumentSchema } from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import { KbRuntimeProvider, useQueryClient, useToasts } from "@knowcel/module-sdk";
+import { expectNoAxeViolations } from "@knowcel/ui/testing";
+import { polyfillDialog } from "@knowcel/ui/testing/dialog";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -15,8 +15,8 @@ const getDocument = vi.fn();
 const listDocuments = vi.fn();
 
 // The real runtime, except that the chat and document clients are one fake.
-vi.mock("@kb/module-sdk", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@kb/module-sdk")>()),
+vi.mock("@knowcel/module-sdk", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@knowcel/module-sdk")>()),
   useClient: () => ({ updateConversation, getDocument, listDocuments }),
 }));
 

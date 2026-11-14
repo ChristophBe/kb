@@ -42,10 +42,10 @@ Conventions for Go, Python and TypeScript in kb. Most of them are enforced by `t
 
 | Topic | Convention |
 |---|---|
-| Layout | One package per module UI (`modules/<id>/ui`) exporting a `KbModule`; shared components in `@kb/ui` (`platform/ui/kit`), runtime and data hooks in `@kb/module-sdk`. |
+| Layout | One package per module UI (`modules/<id>/ui`) exporting a `KbModule`; shared components in `@knowcel/ui` (`platform/ui/kit`), runtime and data hooks in `@knowcel/module-sdk`. |
 | Naming | Components and their files in `PascalCase.tsx`, other modules `camelCase.ts`; hooks start with `use`. |
 | Types | `strict` TypeScript (`tsconfig.base.json`); no `any` (`noExplicitAny`), no non-null assertions (`!`), `import type` for type-only imports. |
-| Data | Server state through `useClient` + `useQuery` / `useMutation` from `@kb/module-sdk`; no hand-rolled fetch. |
+| Data | Server state through `useClient` + `useQuery` / `useMutation` from `@knowcel/module-sdk`; no hand-rolled fetch. |
 | Effects | Dependency arrays are exhaustive; an intentional exception gets a `biome-ignore` comment with the reason. |
 | Logging | No `console.log` (`console.warn` / `console.error` allowed). |
 | Tests | Vitest (`*.test.ts(x)` next to the code, root `vitest.config.ts`) with Testing Library for components. |
@@ -64,7 +64,7 @@ Conventions for Go, Python and TypeScript in kb. Most of them are enforced by `t
 | Unit tests + coverage minimums | `task test` | CI |
 | Go integration tests against real Postgres (needs Docker) | `task test:integration` | CI |
 | End-to-end smoke test: upload → processing → RAG chat over gRPC-Web, own compose project `kb-e2e` on ports 21xxx (needs Docker) | `task e2e` | CI |
-| Browser tests (Playwright, Chromium): sign-in through Dex, upload, cited chat, a module disabled in the runtime config, ownership; own compose project `kb-browser` on ports 22xxx (needs Docker; Chromium is installed on first run). Failed tests keep a trace and a screenshot in `tests/browser/test-results`; open one with `pnpm --filter @kb/browser-tests exec playwright show-trace <trace.zip>` | `task e2e:browser` | CI (job `browser`, on changes to `apps/`, `platform/ui/`, `modules/*/ui/`; report and traces uploaded as artifact `playwright-report` on failure) |
+| Browser tests (Playwright, Chromium): sign-in through Dex, upload, cited chat, a module disabled in the runtime config, ownership; own compose project `kb-browser` on ports 22xxx (needs Docker; Chromium is installed on first run). Failed tests keep a trace and a screenshot in `tests/browser/test-results`; open one with `pnpm --filter @knowcel/browser-tests exec playwright show-trace <trace.zip>` | `task e2e:browser` | CI (job `browser`, on changes to `apps/`, `platform/ui/`, `modules/*/ui/`; report and traces uploaded as artifact `playwright-report` on failure) |
 
 Every linter is pinned (`tools/go.mod`, `uv.lock`, `pnpm-lock.yaml`) and mandatory: `task lint` fails if one can't run.
 

@@ -15,19 +15,19 @@
                 "patterns": [
                   {
                     "group": [
-                      "@kb/module-*",
-                      "@kb/module-*/**",
-                      "!@kb/module-sdk",
-                      "!@kb/module-sdk/**"
+                      "@knowcel/module-*",
+                      "@knowcel/module-*/**",
+                      "!@knowcel/module-sdk",
+                      "!@knowcel/module-sdk/**"
                     ],
                     "message": "platform/ must not import module UIs."
                   },
                   {
                     "group": [
-                      "@kb/*-api",
-                      "@kb/*-api/**",
-                      "!@kb/common-api",
-                      "!@kb/common-api/**"
+                      "@knowcel/*-api",
+                      "@knowcel/*-api/**",
+                      "!@knowcel/common-api",
+                      "!@knowcel/common-api/**"
                     ],
                     "message": "platform/ must not import module APIs."
                   },
@@ -58,27 +58,27 @@
                 "patterns": [
                   {
                     "group": [
-                      "@kb/module-*",
-                      "@kb/module-*/**",
-                      "!@kb/module-sdk",
-                      "!@kb/module-sdk/**",
-                      "!@kb/module-chat",
-                      "!@kb/module-chat/**"
+                      "@knowcel/module-*",
+                      "@knowcel/module-*/**",
+                      "!@knowcel/module-sdk",
+                      "!@knowcel/module-sdk/**",
+                      "!@knowcel/module-chat",
+                      "!@knowcel/module-chat/**"
                     ],
                     "message": "A module UI never imports another module's UI; link to its routes instead."
                   },
                   {
                     "group": [
-                      "@kb/*-api",
-                      "@kb/*-api/**",
-                      "!@kb/common-api",
-                      "!@kb/common-api/**",
-                      "!@kb/chat-api",
-                      "!@kb/chat-api/**",
-                      "!@kb/document-api",
-                      "!@kb/document-api/**",
-                      "!@kb/llm-api",
-                      "!@kb/llm-api/**"
+                      "@knowcel/*-api",
+                      "@knowcel/*-api/**",
+                      "!@knowcel/common-api",
+                      "!@knowcel/common-api/**",
+                      "!@knowcel/chat-api",
+                      "!@knowcel/chat-api/**",
+                      "!@knowcel/document-api",
+                      "!@knowcel/document-api/**",
+                      "!@knowcel/llm-api",
+                      "!@knowcel/llm-api/**"
                     ],
                     "message": "Only the API packages of modules in depends_on (module.yaml) may be imported."
                   },
@@ -109,25 +109,25 @@
                 "patterns": [
                   {
                     "group": [
-                      "@kb/module-*",
-                      "@kb/module-*/**",
-                      "!@kb/module-sdk",
-                      "!@kb/module-sdk/**",
-                      "!@kb/module-document",
-                      "!@kb/module-document/**"
+                      "@knowcel/module-*",
+                      "@knowcel/module-*/**",
+                      "!@knowcel/module-sdk",
+                      "!@knowcel/module-sdk/**",
+                      "!@knowcel/module-document",
+                      "!@knowcel/module-document/**"
                     ],
                     "message": "A module UI never imports another module's UI; link to its routes instead."
                   },
                   {
                     "group": [
-                      "@kb/*-api",
-                      "@kb/*-api/**",
-                      "!@kb/common-api",
-                      "!@kb/common-api/**",
-                      "!@kb/document-api",
-                      "!@kb/document-api/**",
-                      "!@kb/llm-api",
-                      "!@kb/llm-api/**"
+                      "@knowcel/*-api",
+                      "@knowcel/*-api/**",
+                      "!@knowcel/common-api",
+                      "!@knowcel/common-api/**",
+                      "!@knowcel/document-api",
+                      "!@knowcel/document-api/**",
+                      "!@knowcel/llm-api",
+                      "!@knowcel/llm-api/**"
                     ],
                     "message": "Only the API packages of modules in depends_on (module.yaml) may be imported."
                   },
@@ -158,27 +158,27 @@
                 "patterns": [
                   {
                     "group": [
-                      "@kb/module-*",
-                      "@kb/module-*/**",
-                      "!@kb/module-sdk",
-                      "!@kb/module-sdk/**",
-                      "!@kb/module-ingestion",
-                      "!@kb/module-ingestion/**"
+                      "@knowcel/module-*",
+                      "@knowcel/module-*/**",
+                      "!@knowcel/module-sdk",
+                      "!@knowcel/module-sdk/**",
+                      "!@knowcel/module-ingestion",
+                      "!@knowcel/module-ingestion/**"
                     ],
                     "message": "A module UI never imports another module's UI; link to its routes instead."
                   },
                   {
                     "group": [
-                      "@kb/*-api",
-                      "@kb/*-api/**",
-                      "!@kb/common-api",
-                      "!@kb/common-api/**",
-                      "!@kb/document-api",
-                      "!@kb/document-api/**",
-                      "!@kb/ingestion-api",
-                      "!@kb/ingestion-api/**",
-                      "!@kb/llm-api",
-                      "!@kb/llm-api/**"
+                      "@knowcel/*-api",
+                      "@knowcel/*-api/**",
+                      "!@knowcel/common-api",
+                      "!@knowcel/common-api/**",
+                      "!@knowcel/document-api",
+                      "!@knowcel/document-api/**",
+                      "!@knowcel/ingestion-api",
+                      "!@knowcel/ingestion-api/**",
+                      "!@knowcel/llm-api",
+                      "!@knowcel/llm-api/**"
                     ],
                     "message": "Only the API packages of modules in depends_on (module.yaml) may be imported."
                   },
@@ -209,23 +209,23 @@
                 "patterns": [
                   {
                     "group": [
-                      "@kb/module-*",
-                      "@kb/module-*/**",
-                      "!@kb/module-sdk",
-                      "!@kb/module-sdk/**",
-                      "!@kb/module-llm",
-                      "!@kb/module-llm/**"
+                      "@knowcel/module-*",
+                      "@knowcel/module-*/**",
+                      "!@knowcel/module-sdk",
+                      "!@knowcel/module-sdk/**",
+                      "!@knowcel/module-llm",
+                      "!@knowcel/module-llm/**"
                     ],
                     "message": "A module UI never imports another module's UI; link to its routes instead."
                   },
                   {
                     "group": [
-                      "@kb/*-api",
-                      "@kb/*-api/**",
-                      "!@kb/common-api",
-                      "!@kb/common-api/**",
-                      "!@kb/llm-api",
-                      "!@kb/llm-api/**"
+                      "@knowcel/*-api",
+                      "@knowcel/*-api/**",
+                      "!@knowcel/common-api",
+                      "!@knowcel/common-api/**",
+                      "!@knowcel/llm-api",
+                      "!@knowcel/llm-api/**"
                     ],
                     "message": "Only the API packages of modules in depends_on (module.yaml) may be imported."
                   },

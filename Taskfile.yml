@@ -222,9 +222,9 @@ tasks:
           {{if .EXIT_CODE}}{{.COMPOSE}} ps --all; {{.COMPOSE}} logs --no-color --timestamps --tail 300{{end}}
           [ -n "$KB_E2E_KEEP" ] && { echo "KB_E2E_KEEP is set, leaving compose project {{.PROJECT}} running"; exit 0; }
           {{.COMPOSE}} down --volumes --remove-orphans --timeout 10 >/dev/null 2>&1 || true
-      - pnpm --filter @kb/browser-tests exec playwright install chromium
+      - pnpm --filter @knowcel/browser-tests exec playwright install chromium
       - '[ -n "$KB_E2E_WEB" ] || {{.COMPOSE}} up --detach --build --wait --wait-timeout 600'
-      - pnpm --filter @kb/browser-tests exec playwright test {{.CLI_ARGS}}
+      - pnpm --filter @knowcel/browser-tests exec playwright test {{.CLI_ARGS}}
 
   test:fast:
     desc: Unit tests without coverage (pre-push hook).

@@ -6,8 +6,8 @@ import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobu
 import { enumDesc, fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Timestamp } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
-import type { PageRequest, PageResponse } from "@kb/common-api/knowcel/common/v1/common_pb.js";
-import { file_knowcel_common_v1_common } from "@kb/common-api/knowcel/common/v1/common_pb.js";
+import type { PageRequest, PageResponse } from "@knowcel/common-api/knowcel/common/v1/common_pb.js";
+import { file_knowcel_common_v1_common } from "@knowcel/common-api/knowcel/common/v1/common_pb.js";
 import type { Message } from "@bufbuild/protobuf";
 
 /**

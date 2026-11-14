@@ -1,4 +1,4 @@
-import { Button, buttonClass, Card, DelayedLoading, SkeletonRows } from "@kb/ui";
+import { Button, buttonClass, Card, DelayedLoading, SkeletonRows } from "@knowcel/ui";
 import { Component, type ReactNode, Suspense, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router";
 

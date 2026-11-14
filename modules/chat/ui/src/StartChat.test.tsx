@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf";
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
-import { ChatService, ConversationSchema } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import { renderModule } from "@kb/module-sdk/testing";
+import { ChatService, ConversationSchema } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { renderModule } from "@knowcel/module-sdk/testing";
 import { screen, waitFor, within } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import chat from "./index.tsx";

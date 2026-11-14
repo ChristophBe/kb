@@ -1,5 +1,5 @@
-import { DocumentService } from "@kb/document-api/knowcel/document/v1/document_pb";
-import { toast, useClient, useMutation, useQuery, useQueryClient } from "@kb/module-sdk";
+import { DocumentService } from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import { toast, useClient, useMutation, useQuery, useQueryClient } from "@knowcel/module-sdk";
 import {
   Badge,
   buttonClass,
@@ -14,7 +14,7 @@ import {
   IconButton,
   PageHeader,
   SkeletonRows,
-} from "@kb/ui";
+} from "@knowcel/ui";
 import { Download, Search as SearchIcon, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Link } from "react-router";

@@ -1,6 +1,6 @@
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
-import { LlmService, ModelKind } from "@kb/llm-api/knowcel/llm/v1/llm_pb";
-import { renderModule } from "@kb/module-sdk/testing";
+import { LlmService, ModelKind } from "@knowcel/llm-api/knowcel/llm/v1/llm_pb";
+import { renderModule } from "@knowcel/module-sdk/testing";
 import { act, cleanup, fireEvent, screen } from "@testing-library/react";
 import { MessageSquare } from "lucide-react";
 import { afterEach, describe, expect, it, vi } from "vitest";

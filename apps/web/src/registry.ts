@@ -1,4 +1,4 @@
-import type { LazyModule, ModuleManifest, NavItem, RuntimeConfig } from "@kb/module-sdk";
+import type { LazyModule, ModuleManifest, NavItem, RuntimeConfig } from "@knowcel/module-sdk";
 import { modules } from "./modules.gen.ts";
 
 /**

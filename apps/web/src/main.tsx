@@ -1,4 +1,4 @@
-import type { RuntimeConfig } from "@kb/module-sdk";
+import type { RuntimeConfig } from "@knowcel/module-sdk";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.tsx";

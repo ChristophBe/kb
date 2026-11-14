@@ -1,5 +1,13 @@
-import type { SearchHit, SearchProvider } from "@kb/module-sdk";
-import { Button, Card, DelayedLoading, EmptyState, Input, PageHeader, SkeletonRows } from "@kb/ui";
+import type { SearchHit, SearchProvider } from "@knowcel/module-sdk";
+import {
+  Button,
+  Card,
+  DelayedLoading,
+  EmptyState,
+  Input,
+  PageHeader,
+  SkeletonRows,
+} from "@knowcel/ui";
 import { Search } from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";

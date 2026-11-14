@@ -1,4 +1,4 @@
-import { defineModule } from "@kb/module-sdk";
+import { defineModule } from "@knowcel/module-sdk";
 import { ChatIndex, ChatLayout } from "./ChatLayout.tsx";
 import { Conversation } from "./Conversation.tsx";
 import manifest from "./manifest.ts";

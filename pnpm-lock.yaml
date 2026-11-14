@@ -131,7 +131,7 @@ importers:
 
   apps/site:
     dependencies:
-      '@kb/ui':
+      '@knowcel/ui':
         specifier: workspace:*
         version: link:../../platform/ui/kit
       lucide-react:
@@ -180,22 +180,22 @@ importers:
 
   apps/web:
     dependencies:
-      '@kb/module-chat':
+      '@knowcel/module-chat':
         specifier: workspace:*
         version: link:../../modules/chat/ui
-      '@kb/module-document':
+      '@knowcel/module-document':
         specifier: workspace:*
         version: link:../../modules/document/ui
-      '@kb/module-ingestion':
+      '@knowcel/module-ingestion':
         specifier: workspace:*
         version: link:../../modules/ingestion/ui
-      '@kb/module-llm':
+      '@knowcel/module-llm':
         specifier: workspace:*
         version: link:../../modules/llm/ui
-      '@kb/module-sdk':
+      '@knowcel/module-sdk':
         specifier: workspace:*
         version: link:../../platform/ui/module-sdk
-      '@kb/ui':
+      '@knowcel/ui':
         specifier: workspace:*
         version: link:../../platform/ui/kit
       lucide-react:
@@ -262,25 +262,25 @@ importers:
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.16.0
-      '@kb/common-api':
+      '@knowcel/common-api':
         specifier: workspace:*
         version: link:../../../../platform/api/ts
 
   modules/chat/ui:
     dependencies:
-      '@kb/chat-api':
+      '@knowcel/chat-api':
         specifier: workspace:*
         version: link:../api/ts
-      '@kb/document-api':
+      '@knowcel/document-api':
         specifier: workspace:*
         version: link:../../document/api/ts
-      '@kb/llm-api':
+      '@knowcel/llm-api':
         specifier: workspace:*
         version: link:../../llm/api/ts
-      '@kb/module-sdk':
+      '@knowcel/module-sdk':
         specifier: workspace:*
         version: link:../../../platform/ui/module-sdk
-      '@kb/ui':
+      '@knowcel/ui':
         specifier: workspace:*
         version: link:../../../platform/ui/kit
       lucide-react:
@@ -332,19 +332,19 @@ importers:
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.16.0
-      '@kb/common-api':
+      '@knowcel/common-api':
         specifier: workspace:*
         version: link:../../../../platform/api/ts
 
   modules/document/ui:
     dependencies:
-      '@kb/document-api':
+      '@knowcel/document-api':
         specifier: workspace:*
         version: link:../api/ts
-      '@kb/module-sdk':
+      '@knowcel/module-sdk':
         specifier: workspace:*
         version: link:../../../platform/ui/module-sdk
-      '@kb/ui':
+      '@knowcel/ui':
         specifier: workspace:*
         version: link:../../../platform/ui/kit
       lucide-react:
@@ -387,19 +387,19 @@ importers:
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.16.0
-      '@kb/common-api':
+      '@knowcel/common-api':
         specifier: workspace:*
         version: link:../../../../platform/api/ts
 
   modules/ingestion/ui:
     dependencies:
-      '@kb/ingestion-api':
+      '@knowcel/ingestion-api':
         specifier: workspace:*
         version: link:../api/ts
-      '@kb/module-sdk':
+      '@knowcel/module-sdk':
         specifier: workspace:*
         version: link:../../../platform/ui/module-sdk
-      '@kb/ui':
+      '@knowcel/ui':
         specifier: workspace:*
         version: link:../../../platform/ui/kit
       lucide-react:
@@ -442,19 +442,19 @@ importers:
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.16.0
-      '@kb/common-api':
+      '@knowcel/common-api':
         specifier: workspace:*
         version: link:../../../../platform/api/ts
 
   modules/llm/ui:
     dependencies:
-      '@kb/llm-api':
+      '@knowcel/llm-api':
         specifier: workspace:*
         version: link:../api/ts
-      '@kb/module-sdk':
+      '@knowcel/module-sdk':
         specifier: workspace:*
         version: link:../../../platform/ui/module-sdk
-      '@kb/ui':
+      '@knowcel/ui':
         specifier: workspace:*
         version: link:../../../platform/ui/kit
       lucide-react:

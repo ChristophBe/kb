@@ -1,6 +1,6 @@
 # UX and accessibility standards
 
-Rules for every UI in kb: the shell (`apps/web`), the marketing site (`apps/site`), the shared kit (`platform/ui/kit`, package `@kb/ui`) and module UIs (`modules/*/ui`). New UI work follows them and reviews check against them, using the UI checklist in the PR template. Code conventions for the TypeScript side are in the [coding standards](coding-standards.md); the automated gates are listed under [Automated checks](#automated-checks).
+Rules for every UI in kb: the shell (`apps/web`), the marketing site (`apps/site`), the shared kit (`platform/ui/kit`, package `@knowcel/ui`) and module UIs (`modules/*/ui`). New UI work follows them and reviews check against them, using the UI checklist in the PR template. Code conventions for the TypeScript side are in the [coding standards](coding-standards.md); the automated gates are listed under [Automated checks](#automated-checks).
 
 ## Accessibility target
 
@@ -23,7 +23,7 @@ kb meets **[WCAG 2.2](https://www.w3.org/TR/WCAG22/) level AA**. These success c
 
 ## Interaction patterns
 
-Follow the [WAI-ARIA Authoring Practices (APG)](https://www.w3.org/WAI/ARIA/apg/patterns/). **Native elements first**: a `<button>`, `<a>`, `<select>`, `<dialog>` or `<details>` beats ARIA on a `<div>`. Add ARIA only when no native element fits, and then implement the full APG keyboard model. Shared patterns live in `@kb/ui`, so modules don't each re-implement them.
+Follow the [WAI-ARIA Authoring Practices (APG)](https://www.w3.org/WAI/ARIA/apg/patterns/). **Native elements first**: a `<button>`, `<a>`, `<select>`, `<dialog>` or `<details>` beats ARIA on a `<div>`. Add ARIA only when no native element fits, and then implement the full APG keyboard model. Shared patterns live in `@knowcel/ui`, so modules don't each re-implement them.
 
 | Pattern | Use for | Rules |
 |---|---|---|
@@ -38,7 +38,7 @@ Follow the [WAI-ARIA Authoring Practices (APG)](https://www.w3.org/WAI/ARIA/apg/
 
 Tokens are Tailwind theme variables defined in [`platform/ui/kit/src/theme.css`](../platform/ui/kit/src/theme.css), imported once by the shell (`apps/web/src/index.css`). **Module UIs use token utilities only**: no raw palette classes (`zinc-500`, `red-50`, `bg-white`, …), no `dark:` variants, and no arbitrary colour values. The one exception is a dialog backdrop (`backdrop:bg-black/30`), which is a dimming layer, not a colour role.
 
-Every colour role is written once as `light-dark(<light>, <dark>)`. The mode follows the OS (`prefers-color-scheme`) unless the user pins one with the theme switch at the bottom of the sidebar, which sets `<html data-theme="light|dark">` (stored in `localStorage` as `kb.theme`, applied before first paint by `apps/web/index.html`). Components need no extra classes for dark mode, because the tokens switch.
+Every colour role is written once as `light-dark(<light>, <dark>)`. The mode follows the OS (`prefers-color-scheme`) unless the user pins one with the theme switch at the bottom of the sidebar, which sets `<html data-theme="light|dark">` (stored in `localStorage` as `knowcel.theme`, applied before first paint by `apps/web/index.html`). Components need no extra classes for dark mode, because the tokens switch.
 
 **The aesthetic is a frosted instrument**: calm and precise. Soil neutrals on a softly lit canvas, frosted layout areas divided by hairlines, and floating glass only where something truly floats, soft concentric corners, IBM Plex Sans for the interface and IBM Plex Mono for data, and **one moss accent**. The accent marks the primary action, the current place (the active nav item or conversation, as an `accent-subtle` pill), the user's own voice (their chat messages) and a citation while it's linked to its note; use it nowhere else, so it keeps its meaning. Other hues are reserved for status. Content sits on solid surfaces; only chrome and overlays are glass.
 
@@ -141,7 +141,7 @@ These run in `task lint` / `task test` and fail CI:
 | axe-core on every kit component | `platform/ui/kit/src/components.test.tsx`, `task test` | Rendered accessibility violations (names, roles, ARIA, structure). |
 | Token contrast | `platform/ui/kit/src/theme.test.ts`, `task test` | Every text/background (4.5:1) and control/focus (3:1) pair in light and dark mode, resolved against Tailwind's palette; glass is composited over canvas, surface and `accent-subtle`. |
 
-Module UI tests use the same helper: `import { expectNoAxeViolations } from "@kb/ui/testing"` after rendering. It turns off the page-level `region` rule and `color-contrast`, which jsdom can't compute; contrast is covered by the token check. Full-page scans against the running stack are part of the end-to-end tests (#14).
+Module UI tests use the same helper: `import { expectNoAxeViolations } from "@knowcel/ui/testing"` after rendering. It turns off the page-level `region` rule and `color-contrast`, which jsdom can't compute; contrast is covered by the token check. Full-page scans against the running stack are part of the end-to-end tests (#14).
 
 A new kit component gets an axe test. A new colour token gets pairs in `theme.test.ts`.
 

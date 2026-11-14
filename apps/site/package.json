@@ -1,5 +1,5 @@
 {
-  "name": "@kb/site",
+  "name": "@knowcel/site",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
-    "@kb/ui": "workspace:*",
+    "@knowcel/ui": "workspace:*",
     "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

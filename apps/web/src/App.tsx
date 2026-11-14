@@ -4,8 +4,8 @@ import {
   type RuntimeAuth,
   type RuntimeConfig,
   type SearchProvider,
-} from "@kb/module-sdk";
-import { Area, IconButton, Logo, navItemClass, ThemeToggle } from "@kb/ui";
+} from "@knowcel/module-sdk";
+import { Area, IconButton, Logo, navItemClass, ThemeToggle } from "@knowcel/ui";
 import { CircleHelp, CircleUser, LogOut } from "lucide-react";
 import { lazy, type ReactNode, useMemo } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";

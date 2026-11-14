@@ -5,9 +5,9 @@ import {
   type GetConversationResponse,
   MessageRole,
   MessageStatus,
-} from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import { Code, ConnectError, useClient, useQuery, useQueryClient } from "@kb/module-sdk";
-import { Button, buttonClass, ErrorMessage, Spinner } from "@kb/ui";
+} from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { Code, ConnectError, useClient, useQuery, useQueryClient } from "@knowcel/module-sdk";
+import { Button, buttonClass, ErrorMessage, Spinner } from "@knowcel/ui";
 import { ArrowUp, MessageSquare, RotateCcw, Square, TriangleAlert } from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";

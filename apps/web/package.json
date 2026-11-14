@@ -1,5 +1,5 @@
 {
-  "name": "@kb/web",
+  "name": "@knowcel/web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,12 +10,12 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
-    "@kb/module-chat": "workspace:*",
-    "@kb/module-document": "workspace:*",
-    "@kb/module-ingestion": "workspace:*",
-    "@kb/module-llm": "workspace:*",
-    "@kb/module-sdk": "workspace:*",
-    "@kb/ui": "workspace:*",
+    "@knowcel/module-chat": "workspace:*",
+    "@knowcel/module-document": "workspace:*",
+    "@knowcel/module-ingestion": "workspace:*",
+    "@knowcel/module-llm": "workspace:*",
+    "@knowcel/module-sdk": "workspace:*",
+    "@knowcel/ui": "workspace:*",
     "lucide-react": "catalog:",
     "oidc-client-ts": "catalog:",
     "react": "catalog:",

@@ -1,5 +1,5 @@
 import { create } from "@bufbuild/protobuf";
-import { type Citation, CitationSchema } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
+import { type Citation, CitationSchema } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";

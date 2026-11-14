@@ -1,4 +1,4 @@
-import { dismissToast, toast } from "@kb/module-sdk";
+import { dismissToast, toast } from "@knowcel/module-sdk";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ToastHost } from "./ToastHost.tsx";

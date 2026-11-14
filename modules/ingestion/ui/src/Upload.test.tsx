@@ -3,8 +3,8 @@ import {
   IngestionService,
   JobStage,
   JobStatus,
-} from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
-import { renderModule } from "@kb/module-sdk/testing";
+} from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
+import { renderModule } from "@knowcel/module-sdk/testing";
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import ingestion from "./index.tsx";

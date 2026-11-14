@@ -33,7 +33,7 @@ option go_package = "github.com/ChristophBe/knowcelium/platform/api/go/commonv1;
 // Helpers: grpcserver.InvalidArgument / Violation / ErrorInfo / WithDetails
 // (platform/go/grpcserver), kb_platform.grpc.abort_invalid_argument /
 // violation / error_info / abort_with_details (platform/python), and
-// fieldViolations / ErrorMessage in @kb/ui (platform/ui/kit).
+// fieldViolations / ErrorMessage in @knowcel/ui (platform/ui/kit).
 
 // PageRequest is embedded in list requests that support cursor pagination.
 message PageRequest {

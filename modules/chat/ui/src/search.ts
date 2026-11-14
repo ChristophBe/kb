@@ -1,5 +1,5 @@
-import { ChatService } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import type { SearchProvider } from "@kb/module-sdk";
+import { ChatService } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import type { SearchProvider } from "@knowcel/module-sdk";
 import { UNTITLED } from "./ConversationHeader.tsx";
 
 /** How many conversations the global search asks for. */

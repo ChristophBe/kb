@@ -1,6 +1,9 @@
-import { IngestionService, JobStatus } from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
-import { useClient, useQuery } from "@kb/module-sdk";
-import { Badge, DelayedLoading, SkeletonRows, Widget, WidgetMessage } from "@kb/ui";
+import {
+  IngestionService,
+  JobStatus,
+} from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
+import { useClient, useQuery } from "@knowcel/module-sdk";
+import { Badge, DelayedLoading, SkeletonRows, Widget, WidgetMessage } from "@knowcel/ui";
 import { Upload as UploadIcon } from "lucide-react";
 import { Link } from "react-router";
 import { active, ProgressBar, stageLabel } from "./progress.tsx";

@@ -1,7 +1,10 @@
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
-import { DocumentService, DocumentStatus } from "@kb/document-api/knowcel/document/v1/document_pb";
-import { renderWidget } from "@kb/module-sdk/testing";
-import { expectNoAxeViolations } from "@kb/ui/testing";
+import {
+  DocumentService,
+  DocumentStatus,
+} from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import { renderWidget } from "@knowcel/module-sdk/testing";
+import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { RecentDocuments } from "./RecentDocuments.tsx";

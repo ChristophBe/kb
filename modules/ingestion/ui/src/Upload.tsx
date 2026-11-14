@@ -2,8 +2,8 @@ import {
   IngestionService,
   type Job,
   JobStatus,
-} from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
-import { toast, useClient, useQuery, useQueryClient } from "@kb/module-sdk";
+} from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
+import { toast, useClient, useQuery, useQueryClient } from "@knowcel/module-sdk";
 import {
   Badge,
   Button,
@@ -16,7 +16,7 @@ import {
   PageHeader,
   SkeletonRows,
   type Tone,
-} from "@kb/ui";
+} from "@knowcel/ui";
 import { AlertTriangle, Upload as UploadIcon, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SUPPORTED_FORMATS } from "./files.ts";

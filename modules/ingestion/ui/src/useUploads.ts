@@ -1,7 +1,7 @@
-import type { Job } from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
-import { JobStatus } from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
-import { Code, ConnectError } from "@kb/module-sdk";
-import { fieldViolations } from "@kb/ui";
+import type { Job } from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
+import { JobStatus } from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
+import { Code, ConnectError } from "@knowcel/module-sdk";
+import { fieldViolations } from "@knowcel/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isSupported, SUPPORTED_FORMATS, sha256 } from "./files.ts";
 import { type Put, UploadError } from "./put.ts";

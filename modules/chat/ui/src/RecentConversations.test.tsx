@@ -1,8 +1,8 @@
 import { timestampFromDate } from "@bufbuild/protobuf/wkt";
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
-import { ChatService } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import { renderWidget } from "@kb/module-sdk/testing";
-import { expectNoAxeViolations } from "@kb/ui/testing";
+import { ChatService } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { renderWidget } from "@knowcel/module-sdk/testing";
+import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { RecentConversations } from "./RecentConversations.tsx";

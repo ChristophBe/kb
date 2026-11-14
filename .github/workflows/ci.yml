@@ -188,11 +188,11 @@ jobs:
       - uses: pnpm/action-setup@v5
       - uses: actions/setup-node@v7
         with: { node-version: 24, cache: pnpm }
-      - run: pnpm install --frozen-lockfile --filter @kb/browser-tests
+      - run: pnpm install --frozen-lockfile --filter @knowcel/browser-tests
       # Each Playwright release needs its own browser build; the catalog pins the version.
       - name: Playwright version
         id: playwright
-        run: echo "version=$(pnpm --filter @kb/browser-tests exec playwright --version | cut -d' ' -f2)" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(pnpm --filter @knowcel/browser-tests exec playwright --version | cut -d' ' -f2)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v6
         id: browsers
         with:
@@ -200,10 +200,10 @@ jobs:
           key: playwright-chromium-${{ runner.os }}-${{ steps.playwright.outputs.version }}
       - name: Chromium
         if: steps.browsers.outputs.cache-hit != 'true'
-        run: pnpm --filter @kb/browser-tests exec playwright install --with-deps chromium
+        run: pnpm --filter @knowcel/browser-tests exec playwright install --with-deps chromium
       - name: Chromium system libraries
         if: steps.browsers.outputs.cache-hit == 'true'
-        run: pnpm --filter @kb/browser-tests exec playwright install-deps chromium
+        run: pnpm --filter @knowcel/browser-tests exec playwright install-deps chromium
       - run: go tool -modfile=tools/go.mod task e2e:browser
       - uses: actions/upload-artifact@v7
         if: failure()

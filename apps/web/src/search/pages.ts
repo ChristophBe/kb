@@ -3,7 +3,7 @@ import {
   type ModuleManifest,
   type SearchHit,
   type SearchProvider,
-} from "@kb/module-sdk";
+} from "@knowcel/module-sdk";
 import { navEntries } from "../registry.ts";
 
 /** The user manual's group; the manual loads with the first search, like the help pages. */

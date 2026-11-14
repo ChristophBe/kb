@@ -1,6 +1,6 @@
-import { ChatService, type Conversation } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import { ConnectError, toast, useClient, useMutation, useQueryClient } from "@kb/module-sdk";
-import { Button, Input } from "@kb/ui";
+import { ChatService, type Conversation } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { ConnectError, toast, useClient, useMutation, useQueryClient } from "@knowcel/module-sdk";
+import { Button, Input } from "@knowcel/ui";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { ScopeChips } from "./scope.tsx";
 

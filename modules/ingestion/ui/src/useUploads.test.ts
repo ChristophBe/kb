@@ -3,9 +3,9 @@ import {
   type Job,
   JobSchema,
   JobStatus,
-} from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
-import { Code, ConnectError } from "@kb/module-sdk";
-import { badRequestDetail } from "@kb/ui/testing/errors";
+} from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
+import { Code, ConnectError } from "@knowcel/module-sdk";
+import { badRequestDetail } from "@knowcel/ui/testing/errors";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { type Put, UploadError } from "./put.ts";

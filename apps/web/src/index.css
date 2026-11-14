@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "@kb/ui/theme.css";
+@import "@knowcel/ui/theme.css";
 
 /* Classes used by shared UI packages and module UIs. */
 @source "../../../platform/ui/kit/src";

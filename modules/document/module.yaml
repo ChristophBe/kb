@@ -26,6 +26,6 @@ services:
       - knowcel.document.v1.DocumentService/ReadContent
       - knowcel.document.v1.DocumentService/AddChunks
       - knowcel.document.v1.DocumentService/SearchChunks
-ui: "@kb/module-document"
+ui: "@knowcel/module-document"
 # SearchDocuments embeds queries through llm; everything else works without it.
 depends_on: [llm]

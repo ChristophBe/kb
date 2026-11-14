@@ -1,5 +1,5 @@
-import { ChatService, type Conversation } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import { DocumentService } from "@kb/document-api/knowcel/document/v1/document_pb";
+import { ChatService, type Conversation } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { DocumentService } from "@knowcel/document-api/knowcel/document/v1/document_pb";
 import {
   Code,
   ConnectError,
@@ -8,8 +8,8 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
-} from "@kb/module-sdk";
-import { Button, Dialog, ErrorMessage, IconButton, Input, Spinner } from "@kb/ui";
+} from "@knowcel/module-sdk";
+import { Button, Dialog, ErrorMessage, IconButton, Input, Spinner } from "@knowcel/ui";
 import { FileText, X } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { Link } from "react-router";

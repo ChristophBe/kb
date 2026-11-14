@@ -1,9 +1,9 @@
 import {
   DocumentService,
   type ScoredDocument,
-} from "@kb/document-api/knowcel/document/v1/document_pb";
-import { SearchError, type SearchProvider } from "@kb/module-sdk";
-import { errorInfo } from "@kb/ui";
+} from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import { SearchError, type SearchProvider } from "@knowcel/module-sdk";
+import { errorInfo } from "@knowcel/ui";
 
 /** How many documents the global search asks for. */
 export const SEARCH_LIMIT = 20;

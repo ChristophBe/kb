@@ -1,4 +1,4 @@
-import { defineModule } from "@kb/module-sdk";
+import { defineModule } from "@knowcel/module-sdk";
 import { Models } from "./Models.tsx";
 import manifest from "./manifest.ts";
 

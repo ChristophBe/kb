@@ -1,4 +1,4 @@
-import { buttonClass, PageTitle } from "@kb/ui";
+import { buttonClass, PageTitle } from "@knowcel/ui";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { ChatDemo } from "./ChatDemo.tsx";
 import { GithubMark } from "./GithubMark.tsx";

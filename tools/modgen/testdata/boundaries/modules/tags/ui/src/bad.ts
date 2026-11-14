@@ -1,1 +1,1 @@
-import "@kb/notes-api";
+import "@knowcel/notes-api";

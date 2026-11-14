@@ -2,9 +2,9 @@ import {
   type Chunk,
   DocumentService,
   DocumentStatus,
-} from "@kb/document-api/knowcel/document/v1/document_pb";
-import { useClient, useQuery, useQueryClient } from "@kb/module-sdk";
-import { Button, Card, DelayedLoading, EmptyState, ErrorMessage, SkeletonRows } from "@kb/ui";
+} from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import { useClient, useQuery, useQueryClient } from "@knowcel/module-sdk";
+import { Button, Card, DelayedLoading, EmptyState, ErrorMessage, SkeletonRows } from "@knowcel/ui";
 import { useEffect, useRef, useState } from "react";
 
 export const CHUNK_PAGE_SIZE = 20;

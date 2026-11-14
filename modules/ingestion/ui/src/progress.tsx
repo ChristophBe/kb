@@ -1,4 +1,8 @@
-import { type Job, JobStage, JobStatus } from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
+import {
+  type Job,
+  JobStage,
+  JobStatus,
+} from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 
 /** A job that is waiting for or in processing. */
 export const active = (job: Job) =>

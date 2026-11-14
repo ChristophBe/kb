@@ -1,13 +1,13 @@
-import { DocumentStatus } from "@kb/document-api/knowcel/document/v1/document_pb";
-import { KbRuntimeProvider } from "@kb/module-sdk";
+import { DocumentStatus } from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import { KbRuntimeProvider } from "@knowcel/module-sdk";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CHUNK_PAGE_SIZE, ChunkList } from "./ChunkList.tsx";
 
 const listChunks = vi.fn();
 
-vi.mock("@kb/module-sdk", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@kb/module-sdk")>()),
+vi.mock("@knowcel/module-sdk", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@knowcel/module-sdk")>()),
   useClient: () => ({ listChunks }),
 }));
 

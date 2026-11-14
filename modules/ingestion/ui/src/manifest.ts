@@ -1,4 +1,4 @@
-import { defineManifest } from "@kb/module-sdk";
+import { defineManifest } from "@knowcel/module-sdk";
 import { Upload } from "lucide-react";
 import { lazy } from "react";
 

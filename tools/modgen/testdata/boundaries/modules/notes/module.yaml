@@ -6,4 +6,4 @@ services:
     port: 9101
     metrics_port: 9201
     grpc_services: [knowcel.notes.v1.NotesService]
-ui: "@kb/module-notes"
+ui: "@knowcel/module-notes"

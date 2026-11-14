@@ -1,6 +1,6 @@
-import { ChatService } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import { useClient, useQuery } from "@kb/module-sdk";
-import { DelayedLoading, RelativeTime, SkeletonRows, Widget, WidgetMessage } from "@kb/ui";
+import { ChatService } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { useClient, useQuery } from "@knowcel/module-sdk";
+import { DelayedLoading, RelativeTime, SkeletonRows, Widget, WidgetMessage } from "@knowcel/ui";
 import { MessageSquare } from "lucide-react";
 import { Link } from "react-router";
 import { UNTITLED } from "./ConversationHeader.tsx";

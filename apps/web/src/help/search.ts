@@ -1,5 +1,5 @@
-import type { SearchHit, SearchProvider } from "@kb/module-sdk";
-import { headingSlug } from "@kb/ui";
+import type { SearchHit, SearchProvider } from "@knowcel/module-sdk";
+import { headingSlug } from "@knowcel/ui";
 import { type ManualPage, manualPages } from "./manual.ts";
 
 /** How many sections the global search lists at most. */

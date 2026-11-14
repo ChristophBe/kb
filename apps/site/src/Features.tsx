@@ -2,10 +2,13 @@ import { Badge, Card, ChunkStrip, type Tone } from "@kb/ui";
 import {
   CircleHelp,
   Cpu,
+  Download,
   FileText,
   type LucideIcon,
   MessageSquare,
+  RefreshCw,
   Search,
+  Share2,
   Upload,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -28,7 +31,7 @@ const FEATURES: Feature[] = [
   {
     icon: Search,
     title: "Search by meaning",
-    text: "Describe what you are looking for in your own words. kb finds the passages that mean it, even when they use none of your keywords.",
+    text: "Describe what you are looking for in your own words. Knowcelium finds the passages that mean it, even when they use none of your keywords.",
     demo: (
       <ul className="space-y-1.5 text-xs">
         <SearchHit title="Remote work policy 2026" chunk={4} score={0.82} />
@@ -52,7 +55,7 @@ const FEATURES: Feature[] = [
   {
     icon: FileText,
     title: "Read every passage",
-    text: "kb splits each document into passages. Open a document to read them in order, with the page each comes from. Search results and chat sources jump straight to theirs.",
+    text: "Knowcelium splits each document into passages. Open a document to read them in order, with the page each comes from. Search results and chat sources jump straight to theirs.",
     demo: <ChunkStrip count={42} />,
   },
   {
@@ -70,7 +73,7 @@ const FEATURES: Feature[] = [
   {
     icon: CircleHelp,
     title: "Help that answers back",
-    text: "Not sure how something works? Ask the chat. It knows kb's own manual and links you to the section it used.",
+    text: "Not sure how something works? Ask the chat. It knows Knowcelium's own manual and links you to the section it used.",
     demo: (
       <p className="text-xs">
         <span className="font-mono text-accent">[1]</span>{" "}
@@ -81,7 +84,7 @@ const FEATURES: Feature[] = [
   },
 ];
 
-/** The six things kb does, each with a small piece of its UI. */
+/** The three pillars, then the six things Knowcelium does today, each with a small piece of its UI. */
 export function Features() {
   return (
     <section id="features" aria-labelledby="features-title" className="px-4 py-20 sm:px-8">
@@ -89,9 +92,11 @@ export function Features() {
         <SectionTitle
           id="features-title"
           eyebrow="Features"
-          title="Everything you know, one question away"
-          text="Stop digging through folders and PDFs. kb keeps your documents in one place and lets you search them and ask them questions like you would ask a colleague who has read them all."
+          title="One backbone for what your organization knows"
+          text="Stop digging through folders and PDFs. Knowcelium takes in your documents, makes them searchable and answers questions like a colleague who has read them all."
         />
+        <Pillars />
+        <h3 className="mt-16 mb-6 text-lg font-medium">What you can do today</h3>
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
             <li key={f.title}>
@@ -113,6 +118,47 @@ export function Features() {
         </ul>
       </div>
     </section>
+  );
+}
+
+const PILLARS: { icon: LucideIcon; title: string; text: string; roadmap?: boolean }[] = [
+  {
+    icon: Download,
+    title: "Absorb",
+    text: "Ingest documents today, with connectors to the systems you already use to come.",
+  },
+  {
+    icon: Share2,
+    title: "Connect",
+    text: "Search by meaning, chat with sources, and an API for your other systems.",
+  },
+  {
+    icon: RefreshCw,
+    title: "Renew",
+    text: "Curation and content generation tied to their sources.",
+    roadmap: true,
+  },
+];
+
+/** The three pillars; Renew is not built yet and says so. */
+function Pillars() {
+  return (
+    <ul className="grid gap-4 md:grid-cols-3">
+      {PILLARS.map((p) => (
+        <li key={p.title}>
+          <Card className="flex h-full flex-col gap-3 p-5">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex size-10 items-center justify-center rounded-card bg-accent-subtle text-accent">
+                <p.icon className="size-5" aria-hidden="true" />
+              </span>
+              {p.roadmap && <Badge tone="info">On the roadmap</Badge>}
+            </div>
+            <h3 className="font-medium">{p.title}</h3>
+            <p className="text-sm text-fg-muted">{p.text}</p>
+          </Card>
+        </li>
+      ))}
+    </ul>
   );
 }
 

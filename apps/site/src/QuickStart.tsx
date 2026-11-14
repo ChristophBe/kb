@@ -14,7 +14,7 @@ const COMMANDS = [
   "open http://localhost:3000",
 ];
 
-/** How to get kb running, with the commands ready to copy. */
+/** How to get Knowcelium running, with the commands ready to copy. */
 export function QuickStart() {
   return (
     <section
@@ -31,7 +31,7 @@ export function QuickStart() {
           <SectionTitle
             id="start-title"
             eyebrow="Quick start"
-            title="Your own knowledge base in a few minutes"
+            title="Your own Knowcelium in a few minutes"
             text="You need Go, uv, Node with pnpm, and Docker. The first start downloads a chat model and an embedding model for Ollama."
           />
         </div>
@@ -46,7 +46,7 @@ export function QuickStart() {
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <a href={REPO} className={buttonClass("primary", "px-5 py-2.5")}>
             <GithubMark className="size-4" />
-            Get kb on GitHub
+            Get Knowcelium on GitHub
           </a>
           <a
             href={repoPath("docs/user-manual/getting-started.md")}

@@ -1,4 +1,4 @@
-import { Library } from "lucide-react";
+import { Mark } from "@kb/ui";
 import { Developers } from "./Developers.tsx";
 import { Features } from "./Features.tsx";
 import { Hero } from "./Hero.tsx";
@@ -35,8 +35,9 @@ export function App() {
       <footer className="border-t border-border px-4 py-10 sm:px-8">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 text-sm text-fg-muted">
           <p className="flex items-center gap-2">
-            <Library className="size-4 text-accent" aria-hidden="true" />
-            <span className="font-mono">kb</span> · modular knowledge management
+            <Mark size={20} className="text-accent" />
+            <span className="font-medium text-fg">Knowcelium</span> · the knowledge backbone of your
+            organization
           </p>
           <ul className="flex flex-wrap gap-x-5 gap-y-2">
             {FOOTER_LINKS.map((l) => (

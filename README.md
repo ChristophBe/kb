@@ -1,6 +1,13 @@
-# kb — modular knowledge management
+<h1 align="center">
+  <img src="apps/site/public/favicon.svg" alt="" width="48" height="48"><br>
+  Knowcelium: the knowledge backbone of your organization
+</h1>
 
-A modular knowledge-management system: ingest documents, manage them, and chat with them.
+Under every forest runs a mycelium that links tree to tree, carries what each one needs, and turns what has fallen into new growth. Knowcelium does the same for an organization's knowledge, through modules. Formerly kb.
+
+> **Renaming in progress:** the product is Knowcelium, but code identifiers (packages, environment variables such as `KB_*`, the repository URL) still say `kb` until the rename issues #188 to #191 land.
+
+An open-source, modular knowledge backbone: ingest documents, manage them, and chat with them.
 
 Name, story and voice: [Brand](docs/brand.md).
 

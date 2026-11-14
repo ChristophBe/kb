@@ -19,7 +19,7 @@ const STEPS: { icon: LucideIcon; title: string; text: string }[] = [
   },
   {
     icon: ScanText,
-    title: "kb reads them",
+    title: "Knowcelium reads them",
     text: "Each file is split into passages, and a local model captures what every passage means.",
   },
   {
@@ -38,7 +38,7 @@ const PROMISES: { icon: LucideIcon; title: string; text: string }[] = [
   {
     icon: ShieldCheck,
     title: "Open and inspectable",
-    text: "Every line of kb is on GitHub. Run it, read it, change it.",
+    text: "Every line of Knowcelium is on GitHub. Run it, read it, change it.",
   },
   {
     icon: Contrast,
@@ -47,7 +47,7 @@ const PROMISES: { icon: LucideIcon; title: string; text: string }[] = [
   },
 ];
 
-/** The three steps from file to answer, and why it is safe to give kb your documents. */
+/** The three steps from file to answer, and why it is safe to give Knowcelium your documents. */
 export function HowItWorks() {
   return (
     <section id="how-it-works" aria-labelledby="how-title" className="px-4 py-20 sm:px-8">

@@ -16,7 +16,7 @@ By default it runs the [published images](images.md) of the release in the chart
 | With `infra.enabled`: StatefulSets `postgres`, `nats`, `s3` (SeaweedFS), Deployment `dex`, Secret `kb-infra` | Dev credentials, one replica each, 1 GiB volumes (`infra.persistence`) |
 | With `ollama.enabled`: Deployment `ollama`, a PVC and a Job pulling `ollama.models` | |
 
-Resources are named without the release name, so install one release per namespace. Services apply their own database migrations at startup (as in compose); there is no migration Job, so keep `replicas: 1` for services with migrations unless you roll out new versions one pod at a time.
+Resources are named without the release name, so install one release per namespace. Services apply their own database migrations at startup (as in compose); there is no migration Job, so keep `replicas: 1` for services with migrations unless you roll out new versions one pod at a time. Backups and rollbacks: [Backup, restore and migrations](backup-restore.md).
 
 ## Install a release
 

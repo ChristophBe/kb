@@ -1,0 +1,23 @@
+{
+  "valid": [
+    {
+      "token": "eyJ2IjoxLCJ0IjoxNzkzMDAwMDAwMTIzNDU2LCJpIjoiMDE5MmEzYjQtYzVkNi03ZTg5LWEwYjEtYzJkM2U0ZjVhNmI3In0",
+      "unix_micros": 1793000000123456,
+      "id": "0192a3b4-c5d6-7e89-a0b1-c2d3e4f5a6b7"
+    }
+  ],
+  "invalid": [
+    { "name": "not base64", "token": "!!!" },
+    { "name": "not json", "token": "bm90IGpzb24" },
+    {
+      "name": "wrong version",
+      "token": "eyJ2IjoyLCJ0IjoxLCJpIjoiMDE5MmEzYjQtYzVkNi03ZTg5LWEwYjEtYzJkM2U0ZjVhNmI3In0"
+    },
+    { "name": "bad id", "token": "eyJ2IjoxLCJ0IjoxLCJpIjoieCJ9" },
+    {
+      "name": "missing time",
+      "token": "eyJ2IjoxLCJpIjoiMDE5MmEzYjQtYzVkNi03ZTg5LWEwYjEtYzJkM2U0ZjVhNmI3In0"
+    },
+    { "name": "legacy offset", "token": "50" }
+  ]
+}

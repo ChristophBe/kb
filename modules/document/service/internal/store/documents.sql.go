@@ -238,18 +238,31 @@ func (q *Queries) GetDocument(ctx context.Context, arg GetDocumentParams) (Docum
 const listDocuments = `-- name: ListDocuments :many
 SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256, version, pending_status, pending_status_detail, pending_object_key, pending_filename, pending_content_type, pending_size_bytes, pending_sha256 FROM document.documents
 WHERE owner_id = $1
+  AND (created_at, id) < (
+    coalesce($2::timestamptz, 'infinity'),
+    coalesce($3::uuid, 'ffffffff-ffff-ffff-ffff-ffffffffffff')
+  )
 ORDER BY created_at DESC, id DESC
-LIMIT $2 OFFSET $3
+LIMIT $4
 `
 
 type ListDocumentsParams struct {
-	OwnerID string
-	Limit   int32
-	Offset  int32
+	OwnerID        string
+	AfterCreatedAt pgtype.Timestamptz
+	AfterID        pgtype.UUID
+	MaxResults     int32
 }
 
+// ListDocuments is keyset-paginated: a page continues after the (created_at, id) of
+// the last row of the previous one (both after_* NULL for the first page), so
+// rows inserted meanwhile never shift it. It walks the owner's index.
 func (q *Queries) ListDocuments(ctx context.Context, arg ListDocumentsParams) ([]DocumentDocument, error) {
-	rows, err := q.db.Query(ctx, listDocuments, arg.OwnerID, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listDocuments,
+		arg.OwnerID,
+		arg.AfterCreatedAt,
+		arg.AfterID,
+		arg.MaxResults,
+	)
 	if err != nil {
 		return nil, err
 	}

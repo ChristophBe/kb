@@ -27,6 +27,9 @@ type PageRequest struct {
 	// Maximum number of items to return. The server applies a default when 0.
 	PageSize int32 `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque cursor returned by a previous call; empty for the first page.
+	// Clients must not parse or build it. Lists page by keyset (the ordering
+	// time and id of the last item), so items added meanwhile never repeat or
+	// skip items. A malformed token is INVALID_ARGUMENT on "page.page_token".
 	PageToken     string `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

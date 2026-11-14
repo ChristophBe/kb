@@ -28,6 +28,7 @@ import (
 	llmv1 "github.com/christoph/kb/modules/llm/api/go/llmv1"
 	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
 	"github.com/christoph/kb/platform/go/grpcserver"
+	"github.com/christoph/kb/platform/go/postgres"
 )
 
 const (
@@ -146,18 +147,22 @@ func (s *Server) ListDocuments(ctx context.Context, req *documentv1.ListDocument
 	if err != nil {
 		return nil, err
 	}
-	limit, offset, err := pageParams(req.GetPage())
+	limit := pageSize(req.GetPage())
+	afterTime, afterID, err := postgres.After(req.GetPage().GetPageToken())
 	if err != nil {
-		return nil, err
+		return nil, errInvalidPageToken()
 	}
-	docs, err := s.repo.ListDocuments(ctx, store.ListDocumentsParams{OwnerID: owner, Limit: limit + 1, Offset: offset})
+	docs, err := s.repo.ListDocuments(ctx, store.ListDocumentsParams{
+		OwnerID: owner, AfterCreatedAt: afterTime, AfterID: afterID, MaxResults: limit + 1,
+	})
 	if err != nil {
 		return nil, s.internal("list documents", err)
 	}
 	resp := &documentv1.ListDocumentsResponse{Page: &commonv1.PageResponse{}}
 	if len(docs) > int(limit) {
 		docs = docs[:limit]
-		resp.Page.NextPageToken = strconv.Itoa(int(offset + limit))
+		last := docs[len(docs)-1]
+		resp.Page.NextPageToken = postgres.Cursor{Time: last.CreatedAt.Time, ID: last.ID}.Encode()
 	}
 	for _, d := range docs {
 		resp.Documents = append(resp.Documents, toProto(d))
@@ -611,18 +616,6 @@ func pageSize(p *commonv1.PageRequest) int32 {
 		return min(n, maxPageSize)
 	}
 	return defaultPageSize
-}
-
-func pageParams(p *commonv1.PageRequest) (limit, offset int32, err error) {
-	limit = pageSize(p)
-	if tok := p.GetPageToken(); tok != "" {
-		o, perr := strconv.Atoi(tok)
-		if perr != nil || o < 0 {
-			return 0, 0, errInvalidPageToken()
-		}
-		offset = int32(o)
-	}
-	return limit, offset, nil
 }
 
 // encodeChunkToken makes the last index of a page an opaque cursor.

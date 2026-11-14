@@ -27,6 +27,9 @@ export type PageRequest = Message<"kb.common.v1.PageRequest"> & {
 
   /**
    * Opaque cursor returned by a previous call; empty for the first page.
+   * Clients must not parse or build it. Lists page by keyset (the ordering
+   * time and id of the last item), so items added meanwhile never repeat or
+   * skip items. A malformed token is INVALID_ARGUMENT on "page.page_token".
    *
    * @generated from field: string page_token = 2;
    */

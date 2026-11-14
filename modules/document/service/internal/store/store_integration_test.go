@@ -5,8 +5,12 @@ package store
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand/v2"
+	"slices"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -280,7 +284,7 @@ func TestDocumentQueriesFindOnlyTheOwnersDocuments(t *testing.T) {
 	ctx := t.Context()
 	mine, theirs := newOwnedDocument(t, r, "alice", "mine.md"), newOwnedDocument(t, r, "bob", "theirs.md")
 
-	docs, err := r.ListDocuments(ctx, ListDocumentsParams{OwnerID: "alice", Limit: 10})
+	docs, err := r.ListDocuments(ctx, ListDocumentsParams{OwnerID: "alice", MaxResults: 10})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -387,5 +391,71 @@ func TestSearchChunksFindsTheOwnersChunksBehindOtherUsersChunks(t *testing.T) {
 	}
 	if len(rows) != 2 {
 		t.Errorf("alice finds %d chunks, want both of hers: %+v", len(rows), rows)
+	}
+}
+
+// Paging while documents are inserted neither repeats nor skips documents: a
+// page continues after the (created_at, id) of the last one it returned.
+func TestListDocumentsKeysetPagingIgnoresConcurrentInserts(t *testing.T) {
+	r := newRepo(t)
+	ctx := t.Context()
+	var want []uuid.UUID // newest first
+	for i := range 7 {
+		want = append([]uuid.UUID{newOwnedDocument(t, r, "alice", fmt.Sprintf("old-%d.md", i))}, want...)
+	}
+	newOwnedDocument(t, r, "bob", "bob.md")
+
+	var got []uuid.UUID
+	var after DocumentDocument
+	for {
+		params := ListDocumentsParams{OwnerID: "alice", MaxResults: 3}
+		if len(got) > 0 {
+			params.AfterCreatedAt = after.CreatedAt
+			params.AfterID = pgtype.UUID{Bytes: after.ID, Valid: true}
+		}
+		page, err := r.ListDocuments(ctx, params)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, d := range page {
+			got = append(got, d.ID)
+			after = d
+		}
+		newOwnedDocument(t, r, "alice", "inserted-while-paging.md") // lands before the cursor
+		if len(page) < 3 {
+			break
+		}
+	}
+	if !slices.Equal(got, want) {
+		t.Errorf("paged %v, want %v", got, want)
+	}
+}
+
+func TestListDocumentsUsesTheOwnerIndex(t *testing.T) {
+	pool := pgtest.Start(t, "document", migrations.FS)
+	tx, err := pool.Begin(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback(t.Context()) //nolint:errcheck
+	// A tiny table prefers a sequential scan; the question is what is possible.
+	if _, err := tx.Exec(t.Context(), "SET LOCAL enable_seqscan = off"); err != nil {
+		t.Fatal(err)
+	}
+	rows, err := tx.Query(t.Context(), "EXPLAIN "+listDocuments, "alice", pgtype.Timestamptz{Time: time.Now(), Valid: true}, pgtype.UUID{Valid: true}, 51)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var plan strings.Builder
+	for rows.Next() {
+		var line string
+		if err := rows.Scan(&line); err != nil {
+			t.Fatal(err)
+		}
+		plan.WriteString(line + "\n")
+	}
+	rows.Close()
+	if !strings.Contains(plan.String(), "documents_owner_created_at_idx") {
+		t.Errorf("plan does not use the owner index:\n%s", plan.String())
 	}
 }

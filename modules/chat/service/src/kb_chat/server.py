@@ -11,6 +11,7 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from kb.chat.v1 import chat_pb2, chat_pb2_grpc
 from kb.common.v1 import common_pb2
 from kb_platform.grpc import abort_invalid_argument, current_user, violation
+from kb_platform.pagination import InvalidCursorError, decode_cursor
 
 from .chat import (
     AnswerDelta,
@@ -71,16 +72,19 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
     ) -> chat_pb2.ListConversationsResponse:
         owner = await _owner(context)
         limit = min(request.page.page_size or DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE)
-        try:
-            offset = int(request.page.page_token or 0)
-        except ValueError:
-            await abort_invalid_argument(
-                context, violation("page.page_token", "The page token is invalid")
-            )
-        rows = await self._repo.list_conversations(owner, limit + 1, offset)
-        token = str(offset + limit) if len(rows) > limit else ""
+        after = None
+        if request.page.page_token:
+            try:
+                after = decode_cursor(request.page.page_token)
+            except InvalidCursorError:
+                await abort_invalid_argument(
+                    context, violation("page.page_token", "The page token is invalid")
+                )
+        rows = await self._repo.list_conversations(owner, limit + 1, after)
+        page = rows[:limit]
+        token = page[-1].cursor.encode() if len(rows) > limit else ""
         return chat_pb2.ListConversationsResponse(
-            conversations=[_conversation(c) for c in rows[:limit]],
+            conversations=[_conversation(c) for c in page],
             page=common_pb2.PageResponse(next_page_token=token),
         )
 

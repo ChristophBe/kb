@@ -23,6 +23,7 @@ import (
 	"github.com/christoph/kb/modules/ingestion/service/internal/documents"
 	"github.com/christoph/kb/modules/ingestion/service/internal/events"
 	"github.com/christoph/kb/modules/ingestion/service/internal/store"
+	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
 	"github.com/christoph/kb/platform/go/grpcserver"
 )
 
@@ -560,5 +561,16 @@ func TestUsersOnlySeeTheirOwnJobs(t *testing.T) {
 	}
 	if _, err := srv.ReprocessJob(as(t, alice), &ingestionv1.ReprocessJobRequest{Id: job.GetId()}); err != nil {
 		t.Errorf("alice reprocess: %v", err)
+	}
+}
+
+func TestListJobsRejectsInvalidPageTokens(t *testing.T) {
+	srv := New(app.New(store.NewJobs(&fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}), documents.New(&fakeDocuments{}), events.NewPublisher(&fakePublisher{})), slog.New(slog.DiscardHandler))
+	for _, token := range []string{"50", "!!!", "bm90IGpzb24"} {
+		_, err := srv.ListJobs(as(t, alice), &ingestionv1.ListJobsRequest{Page: &commonv1.PageRequest{PageToken: token}})
+		got := grpcserver.FieldViolations(err)
+		if status.Code(err) != codes.InvalidArgument || len(got) != 1 || got[0].GetField() != "page.page_token" {
+			t.Errorf("token %q: err = %v, want InvalidArgument on page.page_token", token, err)
+		}
 	}
 }

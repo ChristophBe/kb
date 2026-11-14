@@ -8,6 +8,7 @@ from typing import Any
 import grpc
 import pytest
 from kb.chat.v1 import chat_pb2, chat_pb2_grpc
+from kb.common.v1 import common_pb2
 from kb.document.v1 import document_pb2
 from kb.llm.v1 import llm_pb2
 from kb_chat.chat import Chat
@@ -17,6 +18,7 @@ from kb_chat.preview import preview
 from kb_chat.repository import ConversationMatch, ConversationRow, MessageRow
 from kb_chat.server import ChatServicer
 from kb_platform.grpc import USER_HEADER, UserInterceptor, field_violations
+from kb_platform.pagination import Cursor
 
 ALICE, BOB = "alice", "bob"
 
@@ -96,13 +98,11 @@ class MemoryRepo:
         conv = self.conversations.get(id)
         return conv if conv is not None and conv.owner_id == owner else None
 
-    async def list_conversations(self, owner: str, limit: int, offset: int):
-        convs = sorted(
-            self._owned(owner),
-            key=lambda c: c.last_message_time or c.created_at,
-            reverse=True,
-        )
-        return convs[offset : offset + limit]
+    async def list_conversations(self, owner: str, limit: int, after: Cursor | None = None):
+        convs = sorted(self._owned(owner), key=lambda c: c.cursor.time, reverse=True)
+        if after is not None:
+            convs = [c for c in convs if (c.cursor.time, c.id) < (after.time, after.id)]
+        return convs[:limit]
 
     async def search_conversations(self, owner: str, query: str, limit: int):
         """Substring matches: titles first, then the first matching message."""
@@ -729,3 +729,35 @@ async def test_calls_without_a_user_are_unauthenticated(served: Served) -> None:
         ]
     assert err.value.code() == grpc.StatusCode.UNAUTHENTICATED
     assert list(repo.conversations) == [conv.id]
+
+
+async def test_list_conversations_pages_with_opaque_tokens(env: Env) -> None:
+    stub, *_ = env
+    for title in ["a", "b", "c"]:
+        await stub.CreateConversation(chat_pb2.CreateConversationRequest(title=title))
+
+    first = await stub.ListConversations(
+        chat_pb2.ListConversationsRequest(page=common_pb2.PageRequest(page_size=2))
+    )
+    assert first.page.next_page_token
+    second = await stub.ListConversations(
+        chat_pb2.ListConversationsRequest(
+            page=common_pb2.PageRequest(page_size=2, page_token=first.page.next_page_token)
+        )
+    )
+
+    assert [c.title for c in first.conversations] == ["c", "b"]
+    assert [c.title for c in second.conversations] == ["a"]
+    assert second.page.next_page_token == ""
+
+
+@pytest.mark.parametrize("token", ["2", "!!!", "bm90IGpzb24"])
+async def test_list_conversations_rejects_invalid_page_tokens(env: Env, token: str) -> None:
+    stub, *_ = env
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.ListConversations(
+            chat_pb2.ListConversationsRequest(page=common_pb2.PageRequest(page_token=token))
+        )
+
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    assert [v.field for v in field_violations(err.value)] == ["page.page_token"]

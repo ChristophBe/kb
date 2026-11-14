@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	ingestionv1 "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1"
 	"github.com/christoph/kb/modules/ingestion/service/internal/app"
@@ -72,8 +73,13 @@ func (j *Jobs) Restart(ctx context.Context, owner string, id uuid.UUID, filename
 	return toJob(row), nil
 }
 
-func (j *Jobs) List(ctx context.Context, owner string, limit, offset int32) ([]app.Job, error) {
-	rows, err := j.q.ListJobs(ctx, ListJobsParams{OwnerID: owner, Limit: limit, Offset: offset})
+func (j *Jobs) List(ctx context.Context, owner string, after *app.JobCursor, limit int32) ([]app.Job, error) {
+	params := ListJobsParams{OwnerID: owner, MaxResults: limit}
+	if after != nil {
+		params.AfterCreatedAt = pgtype.Timestamptz{Time: after.CreatedAt, Valid: true}
+		params.AfterID = pgtype.UUID{Bytes: after.ID, Valid: true}
+	}
+	rows, err := j.q.ListJobs(ctx, params)
 	if err != nil {
 		return nil, err
 	}

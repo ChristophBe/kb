@@ -123,7 +123,7 @@ type Progress struct {
 type Jobs interface {
 	Create(ctx context.Context, job Job) (Job, error)
 	Get(ctx context.Context, owner string, id uuid.UUID) (Job, error)
-	List(ctx context.Context, owner string, limit, offset int32) ([]Job, error)
+	List(ctx context.Context, owner string, after *JobCursor, limit int32) ([]Job, error)
 	Advance(ctx context.Context, t Transition) (Job, error)
 	ReportProgress(ctx context.Context, p Progress) (Job, error)
 	Reprocess(ctx context.Context, owner string, id uuid.UUID) (Job, error)
@@ -314,9 +314,17 @@ func (s *Service) GetJob(ctx context.Context, owner string, id uuid.UUID) (Job, 
 	return s.jobs.Get(ctx, owner, id)
 }
 
-// ListJobs returns a page of owner's jobs, newest first.
-func (s *Service) ListJobs(ctx context.Context, owner string, limit, offset int32) ([]Job, error) {
-	return s.jobs.List(ctx, owner, limit, offset)
+// JobCursor is the position a job list continues after: the (CreatedAt, ID)
+// of the last job of the previous page.
+type JobCursor struct {
+	CreatedAt time.Time
+	ID        uuid.UUID
+}
+
+// ListJobs returns up to limit of owner's jobs, newest first, after the given
+// cursor (nil for the first page).
+func (s *Service) ListJobs(ctx context.Context, owner string, after *JobCursor, limit int32) ([]Job, error) {
+	return s.jobs.List(ctx, owner, after, limit)
 }
 
 // ApplyStarted records that the worker picked up run run of a job.

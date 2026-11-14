@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"slices"
 	"strings"
 	"testing"
 	"testing/fstest"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 
@@ -261,22 +264,68 @@ func TestReprocessJob(t *testing.T) {
 	})
 }
 
-func TestListJobsPagesNewestFirst(t *testing.T) {
+// Paging while jobs are inserted neither repeats nor skips jobs: a page
+// continues after the (created_at, id) of the last one it returned.
+func TestListJobsKeysetPagingIgnoresConcurrentInserts(t *testing.T) {
 	q := New(pgtest.Start(t, "ingestion", migrations.FS))
-	first, second := newJob(t, q, queued), newJob(t, q, queued)
-	jobs, err := q.ListJobs(t.Context(), ListJobsParams{OwnerID: owner, Limit: 1, Offset: 0})
+	var want []uuid.UUID // newest first
+	for range 7 {
+		want = append([]uuid.UUID{newJob(t, q, queued)}, want...)
+	}
+	newOwnedJob(t, q, "bob", queued)
+
+	var got []uuid.UUID
+	var after IngestionJob
+	for {
+		params := ListJobsParams{OwnerID: owner, MaxResults: 3}
+		if len(got) > 0 {
+			params.AfterCreatedAt = after.CreatedAt
+			params.AfterID = pgtype.UUID{Bytes: after.ID, Valid: true}
+		}
+		page, err := q.ListJobs(t.Context(), params)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, j := range page {
+			got = append(got, j.ID)
+			after = j
+		}
+		newJob(t, q, queued) // lands before the cursor
+		if len(page) < 3 {
+			break
+		}
+	}
+	if !slices.Equal(got, want) {
+		t.Errorf("paged %v, want %v", got, want)
+	}
+}
+
+func TestListJobsUsesTheOwnerIndex(t *testing.T) {
+	pool := pgtest.Start(t, "ingestion", migrations.FS)
+	tx, err := pool.Begin(t.Context())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(jobs) != 1 || jobs[0].ID != second {
-		t.Errorf("first page = %+v, want job %v", jobs, second)
+	defer tx.Rollback(t.Context()) //nolint:errcheck
+	// A tiny table prefers a sequential scan; the question is what is possible.
+	if _, err := tx.Exec(t.Context(), "SET LOCAL enable_seqscan = off"); err != nil {
+		t.Fatal(err)
 	}
-	jobs, err = q.ListJobs(t.Context(), ListJobsParams{OwnerID: owner, Limit: 1, Offset: 1})
+	rows, err := tx.Query(t.Context(), "EXPLAIN "+listJobs, "alice", pgtype.Timestamptz{Time: time.Now(), Valid: true}, pgtype.UUID{Valid: true}, 51)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(jobs) != 1 || jobs[0].ID != first {
-		t.Errorf("second page = %+v, want job %v", jobs, first)
+	var plan strings.Builder
+	for rows.Next() {
+		var line string
+		if err := rows.Scan(&line); err != nil {
+			t.Fatal(err)
+		}
+		plan.WriteString(line + "\n")
+	}
+	rows.Close()
+	if !strings.Contains(plan.String(), "jobs_owner_created_at_idx") {
+		t.Errorf("plan does not use the owner index:\n%s", plan.String())
 	}
 }
 
@@ -285,7 +334,7 @@ func TestJobQueriesFindOnlyTheOwnersJobs(t *testing.T) {
 	ctx := t.Context()
 	mine, theirs := newOwnedJob(t, q, "alice", failed), newOwnedJob(t, q, "bob", failed)
 
-	jobs, err := q.ListJobs(ctx, ListJobsParams{OwnerID: "alice", Limit: 10})
+	jobs, err := q.ListJobs(ctx, ListJobsParams{OwnerID: "alice", MaxResults: 10})
 	if err != nil {
 		t.Fatal(err)
 	}

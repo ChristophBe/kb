@@ -13,11 +13,18 @@ SELECT * FROM document.documents WHERE id = $1 AND owner_id = $2;
 -- name: GetAnyDocument :one
 SELECT * FROM document.documents WHERE id = $1;
 
+-- ListDocuments is keyset-paginated: a page continues after the (created_at, id) of
+-- the last row of the previous one (both after_* NULL for the first page), so
+-- rows inserted meanwhile never shift it. It walks the owner's index.
 -- name: ListDocuments :many
 SELECT * FROM document.documents
-WHERE owner_id = $1
+WHERE owner_id = sqlc.arg(owner_id)
+  AND (created_at, id) < (
+    coalesce(sqlc.narg(after_created_at)::timestamptz, 'infinity'),
+    coalesce(sqlc.narg(after_id)::uuid, 'ffffffff-ffff-ffff-ffff-ffffffffffff')
+  )
 ORDER BY created_at DESC, id DESC
-LIMIT $2 OFFSET $3;
+LIMIT sqlc.arg(max_results);
 
 -- name: UpdateDocument :one
 UPDATE document.documents

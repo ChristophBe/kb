@@ -9,11 +9,15 @@ import (
 	"iter"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+
+	"github.com/christoph/kb/platform/go/config"
 )
 
 // PresignExpiry bounds how long upload/download URLs stay valid.
@@ -22,13 +26,46 @@ const PresignExpiry = 15 * time.Minute
 // Config describes the object store. PublicEndpoint is the address browsers
 // use; presigned URLs are signed for it.
 type Config struct {
-	Endpoint       string `env:"ENDPOINT" envDefault:"localhost:8333"`
+	// Endpoint is the S3 server the service reads and writes, host:port
+	// without a scheme.
+	Endpoint string `env:"ENDPOINT" envDefault:"localhost:8333"`
+	// PublicEndpoint is the S3 address browsers use, host:port without a
+	// scheme; upload and download URLs are signed for it.
 	PublicEndpoint string `env:"PUBLIC_ENDPOINT" envDefault:"localhost:8333"`
-	AccessKey      string `env:"ACCESS_KEY" envDefault:"kb"`
-	SecretKey      string `env:"SECRET_KEY" envDefault:"kb-secret-key"`
-	Bucket         string `env:"BUCKET" envDefault:"documents"`
-	UseSSL         bool   `env:"USE_SSL"`
-	Region         string `env:"REGION" envDefault:"us-east-1"`
+	// AccessKey is the S3 access key id.
+	AccessKey string `env:"ACCESS_KEY" envDefault:"kb"`
+	// SecretKey is the S3 secret access key.
+	SecretKey string `env:"SECRET_KEY" envDefault:"kb-secret-key"`
+	// Bucket holds the document files; the service creates it if missing.
+	Bucket string `env:"BUCKET" envDefault:"documents"`
+	// UseSSL talks HTTPS to both endpoints.
+	UseSSL bool `env:"USE_SSL"`
+	// Region is the S3 region URLs are signed for.
+	Region string `env:"REGION" envDefault:"us-east-1"`
+}
+
+// bucketName follows the S3 naming rules (lowercase, 3-63 characters).
+var bucketName = regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`)
+
+// Validate checks the settings (KB_S3_*).
+func (c Config) Validate(p *config.Problems) {
+	for _, e := range [][2]string{{"KB_S3_ENDPOINT", c.Endpoint}, {"KB_S3_PUBLIC_ENDPOINT", c.PublicEndpoint}} {
+		if e[1] == "" || strings.Contains(e[1], "/") {
+			p.Addf(e[0], "must be host or host:port without a scheme, got %q", e[1])
+		}
+	}
+	if c.AccessKey == "" {
+		p.Addf("KB_S3_ACCESS_KEY", "must be set")
+	}
+	if c.SecretKey == "" {
+		p.Addf("KB_S3_SECRET_KEY", "must be set")
+	}
+	if !bucketName.MatchString(c.Bucket) {
+		p.Addf("KB_S3_BUCKET", "must be a bucket name (3-63 lowercase letters, digits, dots, hyphens), got %q", c.Bucket)
+	}
+	if c.Region == "" {
+		p.Addf("KB_S3_REGION", "must be set")
+	}
 }
 
 // S3 implements object storage on any S3-compatible server (SeaweedFS

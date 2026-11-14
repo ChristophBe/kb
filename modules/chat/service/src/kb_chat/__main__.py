@@ -4,6 +4,7 @@ import logging
 from kb.chat.v1 import chat_pb2, chat_pb2_grpc
 from kb.document.v1 import document_pb2_grpc
 from kb.llm.v1 import llm_pb2_grpc
+from kb_platform.config import load_settings
 from kb_platform.grpc import channel, serve
 from kb_platform.logging import setup_logging
 from kb_platform.metrics import start_metrics_server
@@ -21,7 +22,7 @@ log = logging.getLogger("kb_chat")
 
 
 async def run() -> None:
-    settings = Settings()
+    settings = load_settings(Settings, "chat-service")
     setup_logging(settings.log_level, settings.log_format)
     setup_tracing(settings.otel_endpoint, "chat-service")
     start_metrics_server(settings.metrics_port)

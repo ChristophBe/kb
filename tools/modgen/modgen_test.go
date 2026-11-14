@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"os"
 	"path/filepath"
@@ -181,5 +182,80 @@ func TestLoadModulesResolvesGoMainPackage(t *testing.T) {
 	}
 	if got, want := modules[0].Services[0].Cmd, "./modules/x/service/cmd/x-service"; got != want {
 		t.Errorf("Cmd = %q, want %q", got, want)
+	}
+}
+
+// fakePython stands in for `uv run settings.py` with testdata/pysettings.json.
+func fakePython(t *testing.T) PyRunner {
+	t.Helper()
+	return func(root string, args []string) (map[string][]PySetting, error) {
+		raw, err := os.ReadFile(filepath.Join(root, "pysettings.json"))
+		if err != nil {
+			return nil, err
+		}
+		var all map[string][]PySetting
+		return all, json.Unmarshal(raw, &all)
+	}
+}
+
+func TestConfigDocGolden(t *testing.T) {
+	modules, err := LoadModules("testdata/modules")
+	if err != nil {
+		t.Fatal(err)
+	}
+	groups, err := CollectSettings("testdata", modules, fakePython(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := ConfigDoc(groups)
+	if err != nil {
+		t.Fatal(err)
+	}
+	golden := filepath.Join("testdata/golden", ConfigDocPath)
+	if *update {
+		if err := os.MkdirAll(filepath.Dir(golden), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(golden, got, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return
+	}
+	want, err := os.ReadFile(golden)
+	if err != nil {
+		t.Fatalf("%v (run go test ./modgen -update)", err)
+	}
+	if string(want) != string(got) {
+		t.Errorf("%s differs from golden file; run go test ./modgen -update and review the diff", ConfigDocPath)
+	}
+}
+
+func TestConfigDocRejectsUndescribedSettings(t *testing.T) {
+	modules, err := LoadModules("testdata/modules")
+	if err != nil {
+		t.Fatal(err)
+	}
+	py := func(root string, args []string) (map[string][]PySetting, error) {
+		all, err := fakePython(t)(root, args)
+		all["search-worker"] = append(all["search-worker"], PySetting{Field: "x", Env: "KB_X", Own: true})
+		return all, err
+	}
+	if _, err := CollectSettings("testdata", modules, py); err == nil || !strings.Contains(err.Error(), "KB_X has no description") {
+		t.Fatalf("err = %v, want a missing description error", err)
+	}
+}
+
+func TestConfigDocRejectsPortMismatch(t *testing.T) {
+	modules, err := LoadModules("testdata/modules")
+	if err != nil {
+		t.Fatal(err)
+	}
+	py := func(root string, args []string) (map[string][]PySetting, error) {
+		all, err := fakePython(t)(root, args)
+		all["search-worker"][2].Default = "9999"
+		return all, err
+	}
+	if _, err := CollectSettings("testdata", modules, py); err == nil || !strings.Contains(err.Error(), "module.yaml says 9202") {
+		t.Fatalf("err = %v, want a port mismatch error", err)
 	}
 }

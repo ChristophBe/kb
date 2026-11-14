@@ -14,6 +14,7 @@ var templateFS embed.FS
 
 var templates = template.Must(template.New("").Funcs(template.FuncMap{
 	"camel":  camel,
+	"cell":   cell,
 	"args":   args,
 	"append": func(s []string, v ...string) []string { return append(slices.Clone(s), v...) },
 }).ParseFS(templateFS, "templates/*.tmpl"))

@@ -16,6 +16,7 @@ import (
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	"github.com/christoph/kb/modules/document/service/internal/storage"
 	"github.com/christoph/kb/modules/document/service/internal/store"
+	"github.com/christoph/kb/platform/go/config"
 )
 
 const (
@@ -31,11 +32,26 @@ type Config struct {
 	// Interval is the time between sweeps; 0 turns the sweeper off.
 	Interval time.Duration `env:"CLEANUP_INTERVAL" envDefault:"1h"`
 	// UploadTTL is how long a document may wait for its upload before it is
-	// removed. It should be longer than upload URLs stay valid (15 minutes).
+	// removed. It must be longer than upload URLs stay valid (15 minutes).
 	UploadTTL time.Duration `env:"UPLOAD_TTL" envDefault:"24h"`
 	// OrphanGrace is how old an object without a document must be before it
 	// is removed, so that an upload racing a delete is not judged too early.
 	OrphanGrace time.Duration `env:"ORPHAN_GRACE" envDefault:"1h"`
+}
+
+// Validate checks the durations (KB_CLEANUP_INTERVAL, KB_UPLOAD_TTL,
+// KB_ORPHAN_GRACE).
+func (c Config) Validate(p *config.Problems) {
+	if c.Interval < 0 {
+		p.Addf("KB_CLEANUP_INTERVAL", "must not be negative (0 turns cleanup off), got %s", c.Interval)
+	}
+	// A shorter TTL would remove documents whose upload is still allowed.
+	if c.UploadTTL <= storage.PresignExpiry {
+		p.Addf("KB_UPLOAD_TTL", "must be longer than upload URLs stay valid (%s), got %s", storage.PresignExpiry, c.UploadTTL)
+	}
+	if c.OrphanGrace < 0 {
+		p.Addf("KB_ORPHAN_GRACE", "must not be negative, got %s", c.OrphanGrace)
+	}
 }
 
 // Store is the part of the repository the sweeper needs.

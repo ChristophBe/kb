@@ -5,6 +5,7 @@ import signal
 from google.protobuf.message import Message
 from kb.document.v1 import document_pb2_grpc
 from kb.llm.v1 import llm_pb2_grpc
+from kb_platform.config import load_settings
 from kb_platform.grpc import channel, is_serving
 from kb_platform.logging import setup_logging
 from kb_platform.metrics import start_metrics_server
@@ -29,7 +30,7 @@ log = logging.getLogger("kb_ingestion_worker")
 
 
 async def run() -> None:
-    settings = Settings()
+    settings = load_settings(Settings, "ingestion-worker")
     setup_logging(settings.log_level, settings.log_format)
     setup_tracing(settings.otel_endpoint, "ingestion-worker")
     start_metrics_server(settings.metrics_port)

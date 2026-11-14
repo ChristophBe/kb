@@ -4,9 +4,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -31,29 +33,45 @@ import (
 
 type Config struct {
 	config.Base
-	DatabaseURL  string `env:"DATABASE_URL" envDefault:"postgres://kb:kb@localhost:5432/kb?sslmode=disable"`
-	NATSURL      string `env:"NATS_URL" envDefault:"nats://localhost:4222"`
+	// DatabaseURL is the Postgres database holding the ingestion schema.
+	DatabaseURL string `env:"DATABASE_URL" envDefault:"postgres://kb:kb@localhost:5432/kb?sslmode=disable"`
+	// NATSURL is the NATS server with JetStream that carries the
+	// kb.ingestion.* events (comma-separated for a cluster).
+	NATSURL string `env:"NATS_URL" envDefault:"nats://localhost:4222"`
+	// DocumentAddr is the document module (host:port), where uploads are
+	// created and their status is set.
 	DocumentAddr string `env:"DOCUMENT_ADDR" envDefault:"localhost:9001"`
 }
 
+func (c Config) Validate(p *config.Problems) {
+	c.Base.Validate(p)
+	p.URL("KB_DATABASE_URL", c.DatabaseURL, "postgres", "postgresql")
+	// A comma-separated list names several servers of one cluster.
+	for _, server := range strings.Split(c.NATSURL, ",") {
+		p.URL("KB_NATS_URL", strings.TrimSpace(server), "nats", "tls", "ws", "wss")
+	}
+	p.Addr("KB_DOCUMENT_ADDR", c.DocumentAddr)
+}
+
+// loadConfig reads the configuration with the ports of module.yaml as defaults.
+func loadConfig() (Config, error) {
+	return config.Load(func(c *Config) { c.DefaultPorts(9002, 9102) })
+}
+
 func main() {
-	if err := run(); err != nil {
+	cfg, err := loadConfig()
+	if err != nil {
+		// Before logging is set up: one plain message listing every problem.
+		fmt.Fprintln(os.Stderr, "ingestion-service:", err)
+		os.Exit(1)
+	}
+	if err := run(cfg); err != nil {
 		slog.Error("fatal", "error", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
-	cfg, err := config.Load[Config]()
-	if err != nil {
-		return err
-	}
-	if cfg.GRPCPort == 0 {
-		cfg.GRPCPort = 9002
-	}
-	if cfg.MetricsPort == 0 {
-		cfg.MetricsPort = 9102
-	}
+func run(cfg Config) error {
 	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
 		return grpcserver.Probe(cfg.GRPCPort)
 	}

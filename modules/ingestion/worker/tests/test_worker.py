@@ -22,6 +22,7 @@ from kb_ingestion_worker.worker import (
     deliver,
     is_transient,
 )
+from kb_platform.config import Problems
 from prometheus_client import REGISTRY
 
 
@@ -101,9 +102,55 @@ def uploaded(filename: str, content_type: str = "text/markdown") -> events_pb2.D
     )
 
 
-def test_chunk_overlap_must_be_below_chunk_size() -> None:
-    with pytest.raises(ValueError, match="KB_CHUNK_OVERLAP_TOKENS"):
-        Settings(chunk_tokens=100, chunk_overlap_tokens=100)
+def problems(**settings: Any) -> list[str]:
+    found = Problems()
+    Settings(**settings).check(found)
+    return found.items
+
+
+def test_default_settings_are_valid() -> None:
+    assert problems() == []
+
+
+@pytest.mark.parametrize(
+    ("settings", "problem"),
+    [
+        ({"document_addr": "document"}, "KB_DOCUMENT_ADDR: must be host:port, got 'document'"),
+        ({"llm_addr": "llm:x"}, "KB_LLM_ADDR: must be host:port, got 'llm:x'"),
+        (
+            {"chunk_tokens": 100, "chunk_overlap_tokens": 100},
+            "KB_CHUNK_OVERLAP_TOKENS: must be at least 0 and below KB_CHUNK_TOKENS (100), got 100",
+        ),
+        (
+            {"chunk_min_section_tokens": -1},
+            "KB_CHUNK_MIN_SECTION_TOKENS: must be at least 0, got -1",
+        ),
+        (
+            {"chunk_tokens": 511, "embedding_max_tokens": 512},
+            "KB_CHUNK_TOKENS: 511 exceeds the embedding model's input limit of 510 tokens "
+            "(KB_EMBEDDING_MAX_TOKENS 512 minus 2 special tokens)",
+        ),
+        ({"embed_batch_size": 0}, "KB_EMBED_BATCH_SIZE: must be at least 1, got 0"),
+        ({"max_deliver": 0}, "KB_MAX_DELIVER: must be at least 1, got 0"),
+        ({"retry_delay": -1}, "KB_RETRY_DELAY: must be at least 0, got -1.0"),
+        (
+            {"retry_max_delay": 1},
+            "KB_RETRY_MAX_DELAY: must be at least KB_RETRY_DELAY (5.0), got 1.0",
+        ),
+    ],
+)
+def test_each_setting_rule(settings: dict[str, Any], problem: str) -> None:
+    assert problems(**settings) == [problem]
+
+
+def test_setting_problems_are_reported_together() -> None:
+    found = problems(chunk_tokenizer="nope", chunk_tokens=0, max_deliver=0)
+    assert [p.split(":")[0] for p in found] == [
+        "KB_CHUNK_TOKENS",
+        "KB_CHUNK_OVERLAP_TOKENS",
+        "KB_CHUNK_TOKENIZER",
+        "KB_MAX_DELIVER",
+    ]
 
 
 def test_chunks_must_fit_the_embedding_model_input() -> None:

@@ -7,6 +7,7 @@ from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_llm.config import Settings
 from kb_llm.providers import REGISTRY, build_provider, build_providers
 from kb_llm.server import LlmServicer
+from kb_platform.config import Problems
 from kb_platform.grpc import field_violations
 
 
@@ -100,3 +101,65 @@ async def test_generate_and_embed_record_metrics(stub: llm_pb2_grpc.LlmServiceSt
     await stub.Embed(llm_pb2.EmbedRequest(model="fake-embed", inputs=["a", "b"]))
     assert sample("kb_llm_embedding_inputs_total") - inputs_before == 2
     assert sample("kb_llm_embedding_duration_seconds_count") >= 1
+
+
+def _problems(**settings: object) -> list[str]:
+    found = Problems()
+    Settings(**settings).check(found)  # type: ignore[arg-type]
+    return found.items
+
+
+def test_default_settings_are_valid() -> None:
+    assert _problems() == []
+
+
+@pytest.mark.parametrize(
+    ("settings", "problem"),
+    [
+        (
+            {"llm_provider": "openai"},
+            "KB_LLM_PROVIDER: must be one of anthropic, fake, ollama, got 'openai'",
+        ),
+        (
+            {"chat_provider": "nope"},
+            "KB_CHAT_PROVIDER: must be one of anthropic, fake, ollama, got 'nope'",
+        ),
+        (
+            {"embedding_provider": "nope"},
+            "KB_EMBEDDING_PROVIDER: must be one of anthropic, fake, ollama, got 'nope'",
+        ),
+        (
+            {"chat_provider": "anthropic"},
+            "KB_ANTHROPIC_API_KEY: must be set for the anthropic provider",
+        ),
+        (
+            {"ollama_url": "ollama:11434"},
+            "KB_OLLAMA_URL: must be a URL with a host and scheme http or https, got 'ollama:11434'",
+        ),
+        ({"anthropic_max_tokens": 0}, "KB_ANTHROPIC_MAX_TOKENS: must be at least 1, got 0"),
+        ({"provider_embed_timeout": 0}, "KB_PROVIDER_EMBED_TIMEOUT: must be positive, got 0.0"),
+        ({"provider_attempts": 0}, "KB_PROVIDER_ATTEMPTS: must be at least 1, got 0"),
+        ({"provider_retry_delay": -1}, "KB_PROVIDER_RETRY_DELAY: must be at least 0, got -1.0"),
+        (
+            {"provider_max_concurrency": 0},
+            "KB_PROVIDER_MAX_CONCURRENCY: must be at least 1, got 0",
+        ),
+        ({"fake_token_delay": -1}, "KB_FAKE_TOKEN_DELAY: must be at least 0, got -1.0"),
+        (
+            {"embedding_dimensions": 0},
+            "KB_EMBEDDING_DIMENSIONS: must be between 1 and 2000, got 0",
+        ),
+    ],
+)
+def test_each_setting_rule(settings: dict[str, object], problem: str) -> None:
+    assert _problems(**settings) == [problem]
+
+
+def test_fake_needs_no_ollama_url_and_problems_come_together() -> None:
+    assert _problems(llm_provider="fake", ollama_url="") == []
+    found = _problems(llm_provider="anthropic", provider_attempts=0, embedding_dimensions=0)
+    assert [p.split(":")[0] for p in found] == [
+        "KB_ANTHROPIC_API_KEY",
+        "KB_PROVIDER_ATTEMPTS",
+        "KB_EMBEDDING_DIMENSIONS",
+    ]

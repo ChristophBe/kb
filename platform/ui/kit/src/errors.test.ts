@@ -56,13 +56,13 @@ describe("errorInfo", () => {
       badRequestDetail([{ field: "title", description: "Title must not be empty" }]),
       errorInfoDetail({
         reason: "LLM_UNAVAILABLE",
-        domain: "kb.document.v1",
+        domain: "knowcel.document.v1",
         metadata: { service: "llm", retry: "later" },
       }),
     ]);
     expect(errorInfo(err)).toEqual({
       reason: "LLM_UNAVAILABLE",
-      domain: "kb.document.v1",
+      domain: "knowcel.document.v1",
       metadata: { service: "llm", retry: "later" },
     });
   });

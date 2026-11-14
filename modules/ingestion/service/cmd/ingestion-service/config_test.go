@@ -5,7 +5,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/christoph/kb/platform/go/config"
+	"github.com/ChristophBe/knowcelium/platform/go/config"
 )
 
 func TestDefaultConfigIsValid(t *testing.T) {

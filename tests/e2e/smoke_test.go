@@ -15,10 +15,10 @@ import (
 
 	"connectrpc.com/connect"
 
-	chatv1 "github.com/christoph/kb/modules/chat/api/go/chatv1"
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
-	ingestionv1 "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1"
-	llmv1 "github.com/christoph/kb/modules/llm/api/go/llmv1"
+	chatv1 "github.com/ChristophBe/knowcelium/modules/chat/api/go/chatv1"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
+	ingestionv1 "github.com/ChristophBe/knowcelium/modules/ingestion/api/go/ingestionv1"
+	llmv1 "github.com/ChristophBe/knowcelium/modules/llm/api/go/llmv1"
 )
 
 const (

@@ -1,5 +1,5 @@
 -- +goose Up
--- progress (0–100) and stage (kb.ingestion.v1.JobStage) of the job's current
+-- progress (0–100) and stage (knowcel.ingestion.v1.JobStage) of the job's current
 -- run, reported by the worker while it processes the job.
 ALTER TABLE ingestion.jobs
     ADD COLUMN progress smallint NOT NULL DEFAULT 0,

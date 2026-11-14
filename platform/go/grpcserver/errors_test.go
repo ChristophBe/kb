@@ -26,13 +26,13 @@ func TestInvalidArgumentCarriesViolations(t *testing.T) {
 
 func TestWithDetailsAttachesErrorInfo(t *testing.T) {
 	err := WithDetails(codes.FailedPrecondition, "upload already completed",
-		ErrorInfo("kb.ingestion.v1", "UPLOAD_ALREADY_COMPLETED", map[string]string{"job_id": "1"}))
+		ErrorInfo("knowcel.ingestion.v1", "UPLOAD_ALREADY_COMPLETED", map[string]string{"job_id": "1"}))
 	details := status.Convert(err).Details()
 	if len(details) != 1 {
 		t.Fatalf("details %v, want one", details)
 	}
 	info, ok := details[0].(*errdetails.ErrorInfo)
-	if !ok || info.GetReason() != "UPLOAD_ALREADY_COMPLETED" || info.GetDomain() != "kb.ingestion.v1" || info.GetMetadata()["job_id"] != "1" {
+	if !ok || info.GetReason() != "UPLOAD_ALREADY_COMPLETED" || info.GetDomain() != "knowcel.ingestion.v1" || info.GetMetadata()["job_id"] != "1" {
 		t.Errorf("detail %v", details[0])
 	}
 }

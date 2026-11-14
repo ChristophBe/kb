@@ -3,12 +3,12 @@ from collections.abc import AsyncIterator
 import grpc
 import prometheus_client
 import pytest
-from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_llm.config import Settings
 from kb_llm.providers import REGISTRY, build_provider, build_providers
 from kb_llm.server import LlmServicer
 from kb_platform.config import Problems
 from kb_platform.grpc import field_violations
+from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
 
 
 @pytest.fixture

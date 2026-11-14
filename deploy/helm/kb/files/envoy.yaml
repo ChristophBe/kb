@@ -34,53 +34,53 @@ static_resources:
                           expose_headers: grpc-status,grpc-message,grpc-status-details-bin
                           max_age: "1728000"
                       routes:
-                        - match: { path: "/kb.chat.v1.ChatService/CreateConversation" }
+                        - match: { path: "/knowcel.chat.v1.ChatService/CreateConversation" }
                           route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.chat.v1.ChatService/GetConversation" }
+                        - match: { path: "/knowcel.chat.v1.ChatService/GetConversation" }
                           route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.chat.v1.ChatService/ListConversations" }
+                        - match: { path: "/knowcel.chat.v1.ChatService/ListConversations" }
                           route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.chat.v1.ChatService/DeleteConversation" }
+                        - match: { path: "/knowcel.chat.v1.ChatService/DeleteConversation" }
                           route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.chat.v1.ChatService/UpdateConversation" }
+                        - match: { path: "/knowcel.chat.v1.ChatService/UpdateConversation" }
                           route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.chat.v1.ChatService/SearchConversations" }
+                        - match: { path: "/knowcel.chat.v1.ChatService/SearchConversations" }
                           route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.chat.v1.ChatService/StreamChat" }
+                        - match: { path: "/knowcel.chat.v1.ChatService/StreamChat" }
                           route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.document.v1.DocumentService/GetDocument" }
+                        - match: { path: "/knowcel.document.v1.DocumentService/GetDocument" }
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.document.v1.DocumentService/ListDocuments" }
+                        - match: { path: "/knowcel.document.v1.DocumentService/ListDocuments" }
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.document.v1.DocumentService/UpdateDocument" }
+                        - match: { path: "/knowcel.document.v1.DocumentService/UpdateDocument" }
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.document.v1.DocumentService/DeleteDocument" }
+                        - match: { path: "/knowcel.document.v1.DocumentService/DeleteDocument" }
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.document.v1.DocumentService/GetDownloadUrl" }
+                        - match: { path: "/knowcel.document.v1.DocumentService/GetDownloadUrl" }
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.document.v1.DocumentService/ListChunks" }
+                        - match: { path: "/knowcel.document.v1.DocumentService/ListChunks" }
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.document.v1.DocumentService/SearchDocuments" }
+                        - match: { path: "/knowcel.document.v1.DocumentService/SearchDocuments" }
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.document.v1.DocumentService/ReindexDocuments" }
+                        - match: { path: "/knowcel.document.v1.DocumentService/ReindexDocuments" }
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.ingestion.v1.IngestionService/CreateUpload" }
+                        - match: { path: "/knowcel.ingestion.v1.IngestionService/CreateUpload" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.ingestion.v1.IngestionService/CompleteUpload" }
+                        - match: { path: "/knowcel.ingestion.v1.IngestionService/CompleteUpload" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.ingestion.v1.IngestionService/ReplaceUpload" }
+                        - match: { path: "/knowcel.ingestion.v1.IngestionService/ReplaceUpload" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.ingestion.v1.IngestionService/GetJob" }
+                        - match: { path: "/knowcel.ingestion.v1.IngestionService/GetJob" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.ingestion.v1.IngestionService/ListJobs" }
+                        - match: { path: "/knowcel.ingestion.v1.IngestionService/ListJobs" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.ingestion.v1.IngestionService/WatchJob" }
+                        - match: { path: "/knowcel.ingestion.v1.IngestionService/WatchJob" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.ingestion.v1.IngestionService/ReprocessJob" }
+                        - match: { path: "/knowcel.ingestion.v1.IngestionService/ReprocessJob" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.llm.v1.LlmService/ListModels" }
+                        - match: { path: "/knowcel.llm.v1.LlmService/ListModels" }
                           route: { cluster: llm-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/kb.llm.v1.LlmService/GetProviderStatus" }
+                        - match: { path: "/knowcel.llm.v1.LlmService/GetProviderStatus" }
                           route: { cluster: llm-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                 http_filters:
                   - name: envoy.filters.http.grpc_web

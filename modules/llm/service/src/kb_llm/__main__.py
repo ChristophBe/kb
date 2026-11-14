@@ -1,12 +1,12 @@
 import asyncio
 import logging
 
-from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_platform.config import ConfigError, load_settings
 from kb_platform.grpc import serve
 from kb_platform.logging import setup_logging
 from kb_platform.metrics import start_metrics_server
 from kb_platform.telemetry import setup_tracing
+from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
 
 from .config import Settings
 from .providers import build_providers

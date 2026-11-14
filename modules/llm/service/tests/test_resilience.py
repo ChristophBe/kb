@@ -6,7 +6,6 @@ from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
 import grpc
 import httpx
 import pytest
-from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_llm.config import Settings
 from kb_llm.providers import Providers
 from kb_llm.providers.base import (
@@ -24,6 +23,7 @@ from kb_llm.providers.base import (
 from kb_llm.providers.fake import FakeProvider
 from kb_llm.providers.ollama import OllamaLimits, OllamaProvider
 from kb_llm.server import LlmServicer
+from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
 
 FAST_RETRIES = OllamaLimits(retry_delay=0)
 HELLO = llm_pb2.GenerateRequest(messages=[llm_pb2.Message(role=llm_pb2.ROLE_USER, content="hi")])

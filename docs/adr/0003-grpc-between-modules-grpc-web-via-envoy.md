@@ -9,7 +9,7 @@ Modules are written in Go and Python and consumed by a TypeScript UI. We need on
 
 ## Decision
 
-We will define every module API in protobuf (`modules/<id>/proto/kb/<id>/v1/`) and serve it over gRPC. Code for Go, Python and TypeScript is generated with buf. The browser reaches the services through Envoy (`deploy/envoy/envoy.yaml`, generated from the manifests), which translates gRPC-Web and handles CORS; the UI uses Connect's gRPC-Web transport (`platform/ui/module-sdk`). Services call each other directly over gRPC, not through Envoy.
+We will define every module API in protobuf (`modules/<id>/proto/knowcel/<id>/v1/`) and serve it over gRPC. Code for Go, Python and TypeScript is generated with buf. The browser reaches the services through Envoy (`deploy/envoy/envoy.yaml`, generated from the manifests), which translates gRPC-Web and handles CORS; the UI uses Connect's gRPC-Web transport (`platform/ui/module-sdk`). Services call each other directly over gRPC, not through Envoy.
 
 ## Consequences
 

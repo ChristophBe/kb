@@ -1,4 +1,4 @@
-import { DocumentService } from "@kb/document-api/kb/document/v1/document_pb";
+import { DocumentService } from "@kb/document-api/knowcel/document/v1/document_pb";
 import { ConnectError, toast, useClient, useMutation, useQueryClient } from "@kb/module-sdk";
 import { Button, Dialog, ErrorMessage, fieldViolations, Input } from "@kb/ui";
 import { Plus, X } from "lucide-react";

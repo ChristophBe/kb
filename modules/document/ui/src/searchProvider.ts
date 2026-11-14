@@ -1,4 +1,7 @@
-import { DocumentService, type ScoredDocument } from "@kb/document-api/kb/document/v1/document_pb";
+import {
+  DocumentService,
+  type ScoredDocument,
+} from "@kb/document-api/knowcel/document/v1/document_pb";
 import { SearchError, type SearchProvider } from "@kb/module-sdk";
 import { errorInfo } from "@kb/ui";
 

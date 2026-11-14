@@ -9,7 +9,7 @@ Several modules need generation or embeddings (chat answers, ingestion embedding
 
 ## Decision
 
-We will route every LLM call through the `llm` module (`kb.llm.v1.LlmService`: `Generate`, `Embed`, `ListModels`, `GetProviderStatus`). Providers are implemented in `modules/llm/service/src/kb_llm/providers/` and registered in `REGISTRY`; Ollama is the default and `fake` gives deterministic answers and embeddings for tests and smoke runs.
+We will route every LLM call through the `llm` module (`knowcel.llm.v1.LlmService`: `Generate`, `Embed`, `ListModels`, `GetProviderStatus`). Providers are implemented in `modules/llm/service/src/kb_llm/providers/` and registered in `REGISTRY`; Ollama is the default and `fake` gives deterministic answers and embeddings for tests and smoke runs.
 
 ## Consequences
 

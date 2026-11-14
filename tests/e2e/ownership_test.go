@@ -9,8 +9,8 @@ import (
 
 	"connectrpc.com/connect"
 
-	chatv1 "github.com/christoph/kb/modules/chat/api/go/chatv1"
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
+	chatv1 "github.com/ChristophBe/knowcelium/modules/chat/api/go/chatv1"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
 )
 
 // otherUser is a second static user of the dev Dex.

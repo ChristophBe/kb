@@ -46,7 +46,7 @@ func boundaries(modules []Module) []boundary {
 			} else {
 				b.GoDeny = append(b.GoDeny, goRule{root, other.ID + " is not in depends_on of " + m.ID})
 				if other.HasProto {
-					b.PyForbidden = append(b.PyForbidden, "kb."+other.ID)
+					b.PyForbidden = append(b.PyForbidden, "knowcel."+other.ID)
 				}
 			}
 			b.PyForbidden = append(b.PyForbidden, other.PyPackages...)
@@ -62,7 +62,7 @@ func pyPlatformForbidden(modules []Module) []string {
 	var out []string
 	for _, m := range modules {
 		if m.HasProto {
-			out = append(out, "kb."+m.ID)
+			out = append(out, "knowcel."+m.ID)
 		}
 		out = append(out, m.PyPackages...)
 	}

@@ -8,10 +8,10 @@ from typing import Any
 
 import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
-from kb.chat.v1 import chat_pb2, chat_pb2_grpc
-from kb.common.v1 import common_pb2
 from kb_platform.grpc import abort_invalid_argument, current_user, violation
 from kb_platform.pagination import InvalidCursorError, decode_cursor
+from knowcel.chat.v1 import chat_pb2, chat_pb2_grpc
+from knowcel.common.v1 import common_pb2
 
 from .chat import (
     AnswerDelta,

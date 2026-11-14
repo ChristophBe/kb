@@ -11,8 +11,8 @@ import (
 
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 
-	"github.com/christoph/kb/platform/go/config"
-	"github.com/christoph/kb/platform/go/grpcserver"
+	"github.com/ChristophBe/knowcelium/platform/go/config"
+	"github.com/ChristophBe/knowcelium/platform/go/grpcserver"
 )
 
 // Limits bounds the files CreateDocument accepts.

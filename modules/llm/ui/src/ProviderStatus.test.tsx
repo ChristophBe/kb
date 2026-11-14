@@ -1,5 +1,5 @@
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
-import { LlmService } from "@kb/llm-api/kb/llm/v1/llm_pb";
+import { LlmService } from "@kb/llm-api/knowcel/llm/v1/llm_pb";
 import { renderWidget } from "@kb/module-sdk/testing";
 import { expectNoAxeViolations } from "@kb/ui/testing";
 import { screen } from "@testing-library/react";

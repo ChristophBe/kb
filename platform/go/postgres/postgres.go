@@ -13,7 +13,7 @@ import (
 	"github.com/pressly/goose/v3"
 	"github.com/pressly/goose/v3/database"
 
-	"github.com/christoph/kb/platform/go/telemetry"
+	"github.com/ChristophBe/knowcelium/platform/go/telemetry"
 )
 
 // Connect opens a connection pool and verifies it with a ping. Options can

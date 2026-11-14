@@ -17,14 +17,14 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
-	ingestionv1 "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1"
-	"github.com/christoph/kb/modules/ingestion/service/internal/app"
-	"github.com/christoph/kb/modules/ingestion/service/internal/documents"
-	"github.com/christoph/kb/modules/ingestion/service/internal/events"
-	"github.com/christoph/kb/modules/ingestion/service/internal/store"
-	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
-	"github.com/christoph/kb/platform/go/grpcserver"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
+	ingestionv1 "github.com/ChristophBe/knowcelium/modules/ingestion/api/go/ingestionv1"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/app"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/documents"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/events"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/store"
+	commonv1 "github.com/ChristophBe/knowcelium/platform/api/go/commonv1"
+	"github.com/ChristophBe/knowcelium/platform/go/grpcserver"
 )
 
 // alice and bob are two users; the tests call as alice unless they say otherwise.
@@ -306,7 +306,7 @@ func TestCompleteUploadFailsTheJobOfARejectedFile(t *testing.T) {
 	}}
 	reason := "The uploaded file does not match its checksum"
 	docs := &peerFailure{err: grpcserver.WithDetails(codes.FailedPrecondition, reason,
-		grpcserver.ErrorInfo("kb.document.v1", "UPLOAD_REJECTED", nil))}
+		grpcserver.ErrorInfo("knowcel.document.v1", "UPLOAD_REJECTED", nil))}
 	pub := &fakePublisher{}
 	srv := New(app.New(store.NewJobs(repo), documents.New(docs), events.NewPublisher(pub)), slog.New(slog.DiscardHandler))
 
@@ -367,7 +367,7 @@ func TestReprocessJob(t *testing.T) {
 			}
 			if tc.want == codes.FailedPrecondition {
 				details := status.Convert(err).Details()
-				if info, ok := firstOf[*errdetails.ErrorInfo](details); !ok || info.GetReason() != "JOB_NOT_REPROCESSABLE" || info.GetDomain() != "kb.ingestion.v1" {
+				if info, ok := firstOf[*errdetails.ErrorInfo](details); !ok || info.GetReason() != "JOB_NOT_REPROCESSABLE" || info.GetDomain() != "knowcel.ingestion.v1" {
 					t.Errorf("details = %v, want ErrorInfo JOB_NOT_REPROCESSABLE", details)
 				}
 			}

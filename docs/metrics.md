@@ -24,7 +24,7 @@ Recorded for every RPC except health checks by `platform/go/grpcserver` and `kb_
 | `grpc_server_handling_seconds` | histogram | `grpc_type`, `grpc_service`, `grpc_method` | Time to complete an RPC; for streams until the last message |
 
 - `grpc_type`: `unary`, `server_stream`, `client_stream` or `bidi_stream`.
-- `grpc_service`, `grpc_method`: e.g. `kb.document.v1.DocumentService`, `SearchChunks`.
+- `grpc_service`, `grpc_method`: e.g. `knowcel.document.v1.DocumentService`, `SearchChunks`.
 - `grpc_code`: the status code as Go spells it: `OK`, `NotFound`, `InvalidArgument`, `Unavailable`, `ResourceExhausted`, `Canceled`, …
 
 Error rate of a service: `sum by (grpc_method) (rate(grpc_server_handled_total{job="document-service", grpc_code!="OK"}[5m]))`.

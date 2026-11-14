@@ -1,4 +1,4 @@
-import { DocumentStatus } from "@kb/document-api/kb/document/v1/document_pb";
+import { DocumentStatus } from "@kb/document-api/knowcel/document/v1/document_pb";
 import type { Tone } from "@kb/ui";
 
 export const statusLabel: Record<DocumentStatus, [string, Tone]> = {

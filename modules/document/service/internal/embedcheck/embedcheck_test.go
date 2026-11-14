@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	llmv1 "github.com/christoph/kb/modules/llm/api/go/llmv1"
+	llmv1 "github.com/ChristophBe/knowcelium/modules/llm/api/go/llmv1"
 )
 
 // fakeLLM is unavailable for the first `down` calls, then reports dims.

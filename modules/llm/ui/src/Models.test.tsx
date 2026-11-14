@@ -1,5 +1,5 @@
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
-import { LlmService, ModelKind } from "@kb/llm-api/kb/llm/v1/llm_pb";
+import { LlmService, ModelKind } from "@kb/llm-api/knowcel/llm/v1/llm_pb";
 import { renderModule } from "@kb/module-sdk/testing";
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";

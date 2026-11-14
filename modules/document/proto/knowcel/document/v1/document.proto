@@ -1,0 +1,329 @@
+syntax = "proto3";
+
+package knowcel.document.v1;
+
+import "google/protobuf/timestamp.proto";
+import "knowcel/common/v1/common.proto";
+
+option go_package = "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1;documentv1";
+
+// DocumentService owns document metadata, raw file storage and the chunk /
+// vector index. Other modules access documents only through this service.
+service DocumentService {
+  // CreateDocument registers a document and returns a presigned URL the
+  // client uploads the raw file to.
+  rpc CreateDocument(CreateDocumentRequest) returns (CreateDocumentResponse);
+  // ReplaceContent starts a new version of a document: it returns a presigned
+  // URL for the new file, which becomes the document's pending_version. The
+  // document keeps its id and serves its current version until the new one is
+  // processed (AddChunks); see PendingVersion.
+  rpc ReplaceContent(ReplaceContentRequest) returns (ReplaceContentResponse);
+  rpc GetDocument(GetDocumentRequest) returns (GetDocumentResponse);
+  rpc ListDocuments(ListDocumentsRequest) returns (ListDocumentsResponse);
+  rpc UpdateDocument(UpdateDocumentRequest) returns (UpdateDocumentResponse);
+  rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
+  rpc SetDocumentStatus(SetDocumentStatusRequest) returns (SetDocumentStatusResponse);
+  // GetDownloadUrl returns a short-lived URL for downloading the raw file.
+  rpc GetDownloadUrl(GetDownloadUrlRequest) returns (GetDownloadUrlResponse);
+  // ReadContent streams the raw file for backend consumers.
+  rpc ReadContent(ReadContentRequest) returns (stream ReadContentResponse);
+  // AddChunks replaces all chunks of a document and marks it ready. A
+  // pending version that was uploaded becomes the current one.
+  rpc AddChunks(AddChunksRequest) returns (AddChunksResponse);
+  // ListChunks returns a document's chunks in index order.
+  rpc ListChunks(ListChunksRequest) returns (ListChunksResponse);
+  rpc SearchChunks(SearchChunksRequest) returns (SearchChunksResponse);
+  // SearchDocuments embeds a text query through the llm module and returns
+  // the most similar documents, each with its best chunk, and the most
+  // similar chunks. It fails with UNAVAILABLE and ErrorInfo reason
+  // LLM_UNAVAILABLE while llm is down.
+  rpc SearchDocuments(SearchDocumentsRequest) returns (SearchDocumentsResponse);
+  // ReindexDocuments re-embeds the caller's documents with the llm module's
+  // current embedding model, after it was changed (KB_EMBEDDING_MODEL). It
+  // publishes one DocumentReindexRequested event per document (events.proto)
+  // that the ingestion module processes again, and returns without waiting
+  // for them. A document keeps its old chunks until its new ones are stored,
+  // but searches only compare vectors of the query's model, so a document
+  // shows up in search again once it is reindexed. See ReindexDocumentsRequest
+  // for who may call it. Fails with UNAVAILABLE (reason LLM_UNAVAILABLE) while
+  // llm is down, to learn the current model.
+  rpc ReindexDocuments(ReindexDocumentsRequest) returns (ReindexDocumentsResponse);
+}
+
+enum DocumentStatus {
+  DOCUMENT_STATUS_UNSPECIFIED = 0;
+  DOCUMENT_STATUS_PENDING_UPLOAD = 1;
+  DOCUMENT_STATUS_UPLOADED = 2;
+  DOCUMENT_STATUS_PROCESSING = 3;
+  DOCUMENT_STATUS_READY = 4;
+  DOCUMENT_STATUS_FAILED = 5;
+}
+
+message Document {
+  string id = 1;
+  string title = 2;
+  string filename = 3;
+  string content_type = 4;
+  int64 size_bytes = 5;
+  DocumentStatus status = 6;
+  string status_detail = 7;
+  int32 chunk_count = 8;
+  map<string, string> metadata = 9;
+  google.protobuf.Timestamp create_time = 10;
+  google.protobuf.Timestamp update_time = 11;
+  // The user who uploaded the document, as the subject of their token. Set by
+  // the service; only this user can see the document.
+  string owner_id = 12;
+  // The SHA-256 of the file as declared at creation, in lowercase hex; empty
+  // when none was declared.
+  string sha256 = 13;
+  // Counts the files the document has had: 1 for the first upload,
+  // incremented when a new version from ReplaceContent has been processed.
+  // filename, content_type, size_bytes, sha256, the chunks and the download
+  // are those of this version.
+  int32 version = 14;
+  // The new version being uploaded or processed, or the last one that failed;
+  // unset when there is none.
+  PendingVersion pending_version = 15;
+}
+
+// PendingVersion is a new file for a document, from ReplaceContent. While it
+// is pending the document stays as it was (status, chunks, download), so it
+// stays readable and searchable; status changes for the document
+// (SetDocumentStatus) apply to the pending version instead, and ReadContent
+// returns its file. Once processed (AddChunks) it becomes the document's
+// current version and the previous file is removed. When it fails it stays,
+// FAILED, until the next ReplaceContent.
+message PendingVersion {
+  // The version number it becomes: the document's version + 1.
+  int32 version = 1;
+  string filename = 2;
+  string content_type = 3;
+  int64 size_bytes = 4;
+  // PENDING_UPLOAD, UPLOADED, PROCESSING or FAILED.
+  DocumentStatus status = 5;
+  string status_detail = 6;
+  string sha256 = 7;
+}
+
+message Chunk {
+  string document_id = 1;
+  int32 index = 2;
+  string text = 3;
+  map<string, string> metadata = 4;
+}
+
+message ScoredChunk {
+  Chunk chunk = 1;
+  string document_title = 2;
+  // Cosine similarity in [-1, 1]; higher is more similar.
+  float score = 3;
+}
+
+// A document ranked by its most similar chunk.
+message ScoredDocument {
+  string document_id = 1;
+  string title = 2;
+  // The best chunk's cosine similarity in [-1, 1]; higher is more similar.
+  float score = 3;
+  Chunk best_chunk = 4;
+}
+
+// CreateDocument rejects, with field violations, a file that is empty, larger
+// than the service's upload limit or of a type it does not accept.
+message CreateDocumentRequest {
+  string title = 1;
+  string filename = 2;
+  // A missing or generic type (application/octet-stream) is replaced by the
+  // type the filename's extension stands for, if the service knows one.
+  string content_type = 3;
+  // The file's exact size; must be greater than 0.
+  int64 size_bytes = 4;
+  map<string, string> metadata = 5;
+  // Optional SHA-256 of the file, in hex. When set, SetDocumentStatus(UPLOADED)
+  // checks the uploaded file against it and fails the document on a mismatch.
+  string sha256 = 6;
+}
+
+message CreateDocumentResponse {
+  Document document = 1;
+  // A presigned URL to PUT the file to. The request must send the
+  // document's content_type as Content-Type and exactly size_bytes bytes;
+  // the storage server refuses any other upload.
+  string upload_url = 2;
+}
+
+// ReplaceContent validates the new file like CreateDocument and keeps the
+// document's title and metadata. It fails with FAILED_PRECONDITION (ErrorInfo
+// reason DOCUMENT_BUSY) until the document's first upload is READY or FAILED
+// and while a pending version is UPLOADED or PROCESSING; a pending version
+// still awaiting its upload, or one that failed, is replaced. Another user's
+// document is NOT_FOUND.
+message ReplaceContentRequest {
+  string id = 1;
+  string filename = 2;
+  // Defaults like CreateDocumentRequest.content_type.
+  string content_type = 3;
+  // The file's exact size; must be greater than 0.
+  int64 size_bytes = 4;
+  // Optional SHA-256 of the file, in hex, checked like CreateDocument's.
+  string sha256 = 5;
+}
+
+message ReplaceContentResponse {
+  // The document, with the new file as pending_version.
+  Document document = 1;
+  // A presigned URL to PUT the new file to, sending pending_version's
+  // content_type as Content-Type and exactly size_bytes bytes.
+  string upload_url = 2;
+}
+
+message GetDocumentRequest {
+  string id = 1;
+}
+
+message GetDocumentResponse {
+  Document document = 1;
+}
+
+message ListDocumentsRequest {
+  knowcel.common.v1.PageRequest page = 1;
+}
+
+message ListDocumentsResponse {
+  repeated Document documents = 1;
+  knowcel.common.v1.PageResponse page = 2;
+}
+
+message UpdateDocumentRequest {
+  string id = 1;
+  optional string title = 2;
+  // Replaces the metadata map when set_metadata is true.
+  map<string, string> metadata = 3;
+  bool set_metadata = 4;
+}
+
+message UpdateDocumentResponse {
+  Document document = 1;
+}
+
+message DeleteDocumentRequest {
+  string id = 1;
+}
+
+message DeleteDocumentResponse {}
+
+// Setting UPLOADED checks the uploaded file: FAILED_PRECONDITION when it is
+// missing. A file larger than the upload limit or not matching the declared
+// sha256 sets the document FAILED, with the reason in status_detail, and
+// fails with FAILED_PRECONDITION and ErrorInfo reason UPLOAD_REJECTED.
+message SetDocumentStatusRequest {
+  string id = 1;
+  DocumentStatus status = 2;
+  string status_detail = 3;
+}
+
+message SetDocumentStatusResponse {
+  Document document = 1;
+}
+
+message GetDownloadUrlRequest {
+  string id = 1;
+}
+
+message GetDownloadUrlResponse {
+  string url = 1;
+}
+
+message ReadContentRequest {
+  string id = 1;
+}
+
+message ReadContentResponse {
+  bytes data = 1;
+}
+
+message ChunkInput {
+  int32 index = 1;
+  string text = 2;
+  repeated float embedding = 3;
+  map<string, string> metadata = 4;
+  // The embedding model that made `embedding` (EmbedResponse.model); required.
+  // All chunks of a document must come from the same model.
+  string embedding_model = 5;
+}
+
+message AddChunksRequest {
+  string document_id = 1;
+  repeated ChunkInput chunks = 2;
+}
+
+message AddChunksResponse {
+  int32 chunk_count = 1;
+}
+
+message ListChunksRequest {
+  string document_id = 1;
+  knowcel.common.v1.PageRequest page = 2;
+}
+
+message ListChunksResponse {
+  repeated Chunk chunks = 1;
+  knowcel.common.v1.PageResponse page = 2;
+}
+
+message SearchChunksRequest {
+  repeated float embedding = 1;
+  int32 limit = 2;
+  // Restricts the search to these documents when non-empty.
+  repeated string document_ids = 3;
+  // The model that made `embedding`; only chunks embedded by it are searched.
+  // Empty means the llm module's current default embedding model, which is
+  // what an Embed call without a model uses.
+  string embedding_model = 4;
+}
+
+message SearchChunksResponse {
+  repeated ScoredChunk results = 1;
+}
+
+message SearchDocumentsRequest {
+  // The text to search for; must not be blank.
+  string query = 1;
+  // How many documents to return; also caps `results`.
+  int32 limit = 2;
+  // Restricts the search to these documents when non-empty.
+  repeated string document_ids = 3;
+}
+
+message SearchDocumentsResponse {
+  // The most similar chunks, most similar first; a document can appear more
+  // than once.
+  repeated ScoredChunk results = 1;
+  // The most similar documents, each once, ordered by their best chunk.
+  repeated ScoredDocument documents = 2;
+}
+
+// ReindexDocuments is a public RPC that acts on the caller's own documents
+// only, since there are no roles yet: the embedding model is one setting for
+// the deployment, but every user's index is their own, so each user reindexes
+// their documents, and nobody can spend processing on another user's. A call
+// without a user is UNAUTHENTICATED.
+message ReindexDocumentsRequest {
+  // The documents to reindex; empty means all of the caller's documents. An
+  // unknown id (or another user's) is NOT_FOUND.
+  repeated string document_ids = 1;
+  // Reindex documents that are already on the current model too. Without it
+  // only documents with chunks of another model are. Use it after a change of
+  // chunking, or when the chunks' recorded model is wrong (see
+  // docs/operations/embedding-model.md).
+  bool force = 2;
+}
+
+message ReindexDocumentsResponse {
+  // How many documents were queued; ready documents already on the current
+  // model, and documents with a new version in progress, are not.
+  int32 requested = 1;
+  // The current embedding model, the one they are reindexed to.
+  string embedding_model = 2;
+}

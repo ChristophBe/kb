@@ -1,4 +1,4 @@
-import { IngestionService, JobStatus } from "@kb/ingestion-api/kb/ingestion/v1/ingestion_pb";
+import { IngestionService, JobStatus } from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 import { useClient, useQuery } from "@kb/module-sdk";
 import { Badge, DelayedLoading, SkeletonRows, Widget, WidgetMessage } from "@kb/ui";
 import { Upload as UploadIcon } from "lucide-react";

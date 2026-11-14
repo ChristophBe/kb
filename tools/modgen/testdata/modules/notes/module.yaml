@@ -8,8 +8,8 @@ services:
     infra: [postgres, s3]
     env:
       KB_NOTES_LIMIT: "100"
-    grpc_services: [kb.notes.v1.NotesService, kb.notes.v1.NotesAdminService]
+    grpc_services: [knowcel.notes.v1.NotesService, knowcel.notes.v1.NotesAdminService]
     internal:
-      - kb.notes.v1.NotesService/IndexNote
-      - kb.notes.v1.NotesAdminService
+      - knowcel.notes.v1.NotesService/IndexNote
+      - knowcel.notes.v1.NotesAdminService
 ui: "@kb/module-notes"

@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
-from kb.chat.v1 import chat_pb2
+from knowcel.chat.v1 import chat_pb2
 
 from .chat import PeerError
 

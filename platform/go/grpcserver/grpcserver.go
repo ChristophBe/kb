@@ -22,7 +22,7 @@ import (
 	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
 
-	"github.com/christoph/kb/platform/go/telemetry"
+	"github.com/ChristophBe/knowcelium/platform/go/telemetry"
 )
 
 // Server wraps a grpc.Server together with its health service.

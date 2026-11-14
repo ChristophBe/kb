@@ -18,7 +18,7 @@ var (
 )
 
 // protoMethods maps every gRPC service defined in the .proto files below dir
-// (fully qualified, e.g. "kb.notes.v1.NotesService") to its method names in
+// (fully qualified, e.g. "knowcel.notes.v1.NotesService") to its method names in
 // declaration order. It understands the subset of the proto grammar modgen
 // needs: comments, the package statement and service blocks with rpcs.
 func protoMethods(dir string) (map[string][]string, error) {

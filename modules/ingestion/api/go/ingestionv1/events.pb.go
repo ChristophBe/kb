@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.12
 // 	protoc        (unknown)
-// source: kb/ingestion/v1/events.proto
+// source: knowcel/ingestion/v1/events.proto
 
 package ingestionv1
 
@@ -21,7 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Subject: kb.ingestion.uploaded
+// Subject: knowcel.ingestion.uploaded
 type DocumentUploaded struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
@@ -35,7 +35,7 @@ type DocumentUploaded struct {
 
 func (x *DocumentUploaded) Reset() {
 	*x = DocumentUploaded{}
-	mi := &file_kb_ingestion_v1_events_proto_msgTypes[0]
+	mi := &file_knowcel_ingestion_v1_events_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -47,7 +47,7 @@ func (x *DocumentUploaded) String() string {
 func (*DocumentUploaded) ProtoMessage() {}
 
 func (x *DocumentUploaded) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_ingestion_v1_events_proto_msgTypes[0]
+	mi := &file_knowcel_ingestion_v1_events_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -60,7 +60,7 @@ func (x *DocumentUploaded) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DocumentUploaded.ProtoReflect.Descriptor instead.
 func (*DocumentUploaded) Descriptor() ([]byte, []int) {
-	return file_kb_ingestion_v1_events_proto_rawDescGZIP(), []int{0}
+	return file_knowcel_ingestion_v1_events_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *DocumentUploaded) GetJobId() string {
@@ -98,7 +98,7 @@ func (x *DocumentUploaded) GetRun() int32 {
 	return 0
 }
 
-// Subject: kb.ingestion.started
+// Subject: knowcel.ingestion.started
 type ProcessingStarted struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
@@ -110,7 +110,7 @@ type ProcessingStarted struct {
 
 func (x *ProcessingStarted) Reset() {
 	*x = ProcessingStarted{}
-	mi := &file_kb_ingestion_v1_events_proto_msgTypes[1]
+	mi := &file_knowcel_ingestion_v1_events_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -122,7 +122,7 @@ func (x *ProcessingStarted) String() string {
 func (*ProcessingStarted) ProtoMessage() {}
 
 func (x *ProcessingStarted) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_ingestion_v1_events_proto_msgTypes[1]
+	mi := &file_knowcel_ingestion_v1_events_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -135,7 +135,7 @@ func (x *ProcessingStarted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProcessingStarted.ProtoReflect.Descriptor instead.
 func (*ProcessingStarted) Descriptor() ([]byte, []int) {
-	return file_kb_ingestion_v1_events_proto_rawDescGZIP(), []int{1}
+	return file_knowcel_ingestion_v1_events_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *ProcessingStarted) GetJobId() string {
@@ -159,7 +159,7 @@ func (x *ProcessingStarted) GetRun() int32 {
 	return 0
 }
 
-// Subject: kb.ingestion.progress
+// Subject: knowcel.ingestion.progress
 // Published while a job is processed: when a stage starts and after every
 // embedding batch. Best effort: a lost event only delays the next update.
 type ProcessingProgress struct {
@@ -167,7 +167,7 @@ type ProcessingProgress struct {
 	JobId      string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	DocumentId string                 `protobuf:"bytes,2,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
 	Run        int32                  `protobuf:"varint,3,opt,name=run,proto3" json:"run,omitempty"`
-	Stage      JobStage               `protobuf:"varint,4,opt,name=stage,proto3,enum=kb.ingestion.v1.JobStage" json:"stage,omitempty"`
+	Stage      JobStage               `protobuf:"varint,4,opt,name=stage,proto3,enum=knowcel.ingestion.v1.JobStage" json:"stage,omitempty"`
 	// 0–100, see Job.progress.
 	Progress      int32 `protobuf:"varint,5,opt,name=progress,proto3" json:"progress,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -176,7 +176,7 @@ type ProcessingProgress struct {
 
 func (x *ProcessingProgress) Reset() {
 	*x = ProcessingProgress{}
-	mi := &file_kb_ingestion_v1_events_proto_msgTypes[2]
+	mi := &file_knowcel_ingestion_v1_events_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -188,7 +188,7 @@ func (x *ProcessingProgress) String() string {
 func (*ProcessingProgress) ProtoMessage() {}
 
 func (x *ProcessingProgress) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_ingestion_v1_events_proto_msgTypes[2]
+	mi := &file_knowcel_ingestion_v1_events_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -201,7 +201,7 @@ func (x *ProcessingProgress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProcessingProgress.ProtoReflect.Descriptor instead.
 func (*ProcessingProgress) Descriptor() ([]byte, []int) {
-	return file_kb_ingestion_v1_events_proto_rawDescGZIP(), []int{2}
+	return file_knowcel_ingestion_v1_events_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ProcessingProgress) GetJobId() string {
@@ -239,7 +239,7 @@ func (x *ProcessingProgress) GetProgress() int32 {
 	return 0
 }
 
-// Subject: kb.ingestion.processed
+// Subject: knowcel.ingestion.processed
 type DocumentProcessed struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
@@ -252,7 +252,7 @@ type DocumentProcessed struct {
 
 func (x *DocumentProcessed) Reset() {
 	*x = DocumentProcessed{}
-	mi := &file_kb_ingestion_v1_events_proto_msgTypes[3]
+	mi := &file_knowcel_ingestion_v1_events_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -264,7 +264,7 @@ func (x *DocumentProcessed) String() string {
 func (*DocumentProcessed) ProtoMessage() {}
 
 func (x *DocumentProcessed) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_ingestion_v1_events_proto_msgTypes[3]
+	mi := &file_knowcel_ingestion_v1_events_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -277,7 +277,7 @@ func (x *DocumentProcessed) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DocumentProcessed.ProtoReflect.Descriptor instead.
 func (*DocumentProcessed) Descriptor() ([]byte, []int) {
-	return file_kb_ingestion_v1_events_proto_rawDescGZIP(), []int{3}
+	return file_knowcel_ingestion_v1_events_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *DocumentProcessed) GetJobId() string {
@@ -308,7 +308,7 @@ func (x *DocumentProcessed) GetRun() int32 {
 	return 0
 }
 
-// Subject: kb.ingestion.failed
+// Subject: knowcel.ingestion.failed
 type ProcessingFailed struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
@@ -321,7 +321,7 @@ type ProcessingFailed struct {
 
 func (x *ProcessingFailed) Reset() {
 	*x = ProcessingFailed{}
-	mi := &file_kb_ingestion_v1_events_proto_msgTypes[4]
+	mi := &file_knowcel_ingestion_v1_events_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -333,7 +333,7 @@ func (x *ProcessingFailed) String() string {
 func (*ProcessingFailed) ProtoMessage() {}
 
 func (x *ProcessingFailed) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_ingestion_v1_events_proto_msgTypes[4]
+	mi := &file_knowcel_ingestion_v1_events_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -346,7 +346,7 @@ func (x *ProcessingFailed) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProcessingFailed.ProtoReflect.Descriptor instead.
 func (*ProcessingFailed) Descriptor() ([]byte, []int) {
-	return file_kb_ingestion_v1_events_proto_rawDescGZIP(), []int{4}
+	return file_knowcel_ingestion_v1_events_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ProcessingFailed) GetJobId() string {
@@ -377,11 +377,11 @@ func (x *ProcessingFailed) GetRun() int32 {
 	return 0
 }
 
-var File_kb_ingestion_v1_events_proto protoreflect.FileDescriptor
+var File_knowcel_ingestion_v1_events_proto protoreflect.FileDescriptor
 
-const file_kb_ingestion_v1_events_proto_rawDesc = "" +
+const file_knowcel_ingestion_v1_events_proto_rawDesc = "" +
 	"\n" +
-	"\x1ckb/ingestion/v1/events.proto\x12\x0fkb.ingestion.v1\x1a\x1fkb/ingestion/v1/ingestion.proto\"\x9b\x01\n" +
+	"!knowcel/ingestion/v1/events.proto\x12\x14knowcel.ingestion.v1\x1a$knowcel/ingestion/v1/ingestion.proto\"\x9b\x01\n" +
 	"\x10DocumentUploaded\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n" +
 	"\vdocument_id\x18\x02 \x01(\tR\n" +
@@ -393,13 +393,13 @@ const file_kb_ingestion_v1_events_proto_rawDesc = "" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n" +
 	"\vdocument_id\x18\x02 \x01(\tR\n" +
 	"documentId\x12\x10\n" +
-	"\x03run\x18\x03 \x01(\x05R\x03run\"\xab\x01\n" +
+	"\x03run\x18\x03 \x01(\x05R\x03run\"\xb0\x01\n" +
 	"\x12ProcessingProgress\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n" +
 	"\vdocument_id\x18\x02 \x01(\tR\n" +
 	"documentId\x12\x10\n" +
-	"\x03run\x18\x03 \x01(\x05R\x03run\x12/\n" +
-	"\x05stage\x18\x04 \x01(\x0e2\x19.kb.ingestion.v1.JobStageR\x05stage\x12\x1a\n" +
+	"\x03run\x18\x03 \x01(\x05R\x03run\x124\n" +
+	"\x05stage\x18\x04 \x01(\x0e2\x1e.knowcel.ingestion.v1.JobStageR\x05stage\x12\x1a\n" +
 	"\bprogress\x18\x05 \x01(\x05R\bprogress\"~\n" +
 	"\x11DocumentProcessed\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n" +
@@ -413,31 +413,31 @@ const file_kb_ingestion_v1_events_proto_rawDesc = "" +
 	"\vdocument_id\x18\x02 \x01(\tR\n" +
 	"documentId\x12\x14\n" +
 	"\x05error\x18\x03 \x01(\tR\x05error\x12\x10\n" +
-	"\x03run\x18\x04 \x01(\x05R\x03runBJZHgithub.com/christoph/kb/modules/ingestion/api/go/ingestionv1;ingestionv1b\x06proto3"
+	"\x03run\x18\x04 \x01(\x05R\x03runBTZRgithub.com/ChristophBe/knowcelium/modules/ingestion/api/go/ingestionv1;ingestionv1b\x06proto3"
 
 var (
-	file_kb_ingestion_v1_events_proto_rawDescOnce sync.Once
-	file_kb_ingestion_v1_events_proto_rawDescData []byte
+	file_knowcel_ingestion_v1_events_proto_rawDescOnce sync.Once
+	file_knowcel_ingestion_v1_events_proto_rawDescData []byte
 )
 
-func file_kb_ingestion_v1_events_proto_rawDescGZIP() []byte {
-	file_kb_ingestion_v1_events_proto_rawDescOnce.Do(func() {
-		file_kb_ingestion_v1_events_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_kb_ingestion_v1_events_proto_rawDesc), len(file_kb_ingestion_v1_events_proto_rawDesc)))
+func file_knowcel_ingestion_v1_events_proto_rawDescGZIP() []byte {
+	file_knowcel_ingestion_v1_events_proto_rawDescOnce.Do(func() {
+		file_knowcel_ingestion_v1_events_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_knowcel_ingestion_v1_events_proto_rawDesc), len(file_knowcel_ingestion_v1_events_proto_rawDesc)))
 	})
-	return file_kb_ingestion_v1_events_proto_rawDescData
+	return file_knowcel_ingestion_v1_events_proto_rawDescData
 }
 
-var file_kb_ingestion_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
-var file_kb_ingestion_v1_events_proto_goTypes = []any{
-	(*DocumentUploaded)(nil),   // 0: kb.ingestion.v1.DocumentUploaded
-	(*ProcessingStarted)(nil),  // 1: kb.ingestion.v1.ProcessingStarted
-	(*ProcessingProgress)(nil), // 2: kb.ingestion.v1.ProcessingProgress
-	(*DocumentProcessed)(nil),  // 3: kb.ingestion.v1.DocumentProcessed
-	(*ProcessingFailed)(nil),   // 4: kb.ingestion.v1.ProcessingFailed
-	(JobStage)(0),              // 5: kb.ingestion.v1.JobStage
+var file_knowcel_ingestion_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_knowcel_ingestion_v1_events_proto_goTypes = []any{
+	(*DocumentUploaded)(nil),   // 0: knowcel.ingestion.v1.DocumentUploaded
+	(*ProcessingStarted)(nil),  // 1: knowcel.ingestion.v1.ProcessingStarted
+	(*ProcessingProgress)(nil), // 2: knowcel.ingestion.v1.ProcessingProgress
+	(*DocumentProcessed)(nil),  // 3: knowcel.ingestion.v1.DocumentProcessed
+	(*ProcessingFailed)(nil),   // 4: knowcel.ingestion.v1.ProcessingFailed
+	(JobStage)(0),              // 5: knowcel.ingestion.v1.JobStage
 }
-var file_kb_ingestion_v1_events_proto_depIdxs = []int32{
-	5, // 0: kb.ingestion.v1.ProcessingProgress.stage:type_name -> kb.ingestion.v1.JobStage
+var file_knowcel_ingestion_v1_events_proto_depIdxs = []int32{
+	5, // 0: knowcel.ingestion.v1.ProcessingProgress.stage:type_name -> knowcel.ingestion.v1.JobStage
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -445,27 +445,27 @@ var file_kb_ingestion_v1_events_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_kb_ingestion_v1_events_proto_init() }
-func file_kb_ingestion_v1_events_proto_init() {
-	if File_kb_ingestion_v1_events_proto != nil {
+func init() { file_knowcel_ingestion_v1_events_proto_init() }
+func file_knowcel_ingestion_v1_events_proto_init() {
+	if File_knowcel_ingestion_v1_events_proto != nil {
 		return
 	}
-	file_kb_ingestion_v1_ingestion_proto_init()
+	file_knowcel_ingestion_v1_ingestion_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kb_ingestion_v1_events_proto_rawDesc), len(file_kb_ingestion_v1_events_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_knowcel_ingestion_v1_events_proto_rawDesc), len(file_knowcel_ingestion_v1_events_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_kb_ingestion_v1_events_proto_goTypes,
-		DependencyIndexes: file_kb_ingestion_v1_events_proto_depIdxs,
-		MessageInfos:      file_kb_ingestion_v1_events_proto_msgTypes,
+		GoTypes:           file_knowcel_ingestion_v1_events_proto_goTypes,
+		DependencyIndexes: file_knowcel_ingestion_v1_events_proto_depIdxs,
+		MessageInfos:      file_knowcel_ingestion_v1_events_proto_msgTypes,
 	}.Build()
-	File_kb_ingestion_v1_events_proto = out.File
-	file_kb_ingestion_v1_events_proto_goTypes = nil
-	file_kb_ingestion_v1_events_proto_depIdxs = nil
+	File_knowcel_ingestion_v1_events_proto = out.File
+	file_knowcel_ingestion_v1_events_proto_goTypes = nil
+	file_knowcel_ingestion_v1_events_proto_depIdxs = nil
 }

@@ -10,8 +10,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"github.com/christoph/kb/modules/ingestion/migrations"
-	"github.com/christoph/kb/platform/go/postgres/pgtest"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/migrations"
+	"github.com/ChristophBe/knowcelium/platform/go/postgres/pgtest"
 )
 
 func TestGetDocumentJob(t *testing.T) {

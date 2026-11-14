@@ -44,11 +44,11 @@ type Service struct {
 	// serves; Envoy routes their public methods to the browser.
 	GRPCServices []string `yaml:"grpc_services"`
 	// Internal lists what only other modules' services may call: whole
-	// services ("kb.x.v1.XService") or methods ("kb.x.v1.XService/Method").
+	// services ("knowcel.x.v1.XService") or methods ("knowcel.x.v1.XService/Method").
 	// Envoy has no route for them, so browsers get 404 (UNIMPLEMENTED);
 	// services reach each other directly, not through Envoy.
 	Internal []string `yaml:"internal"`
-	// Routes are the gRPC paths ("/kb.x.v1.XService/Method") Envoy routes to
+	// Routes are the gRPC paths ("/knowcel.x.v1.XService/Method") Envoy routes to
 	// the component: every method of GRPCServices that is not internal.
 	Routes []string `yaml:"-"`
 	// Cmd is the Go main package ("./modules/<id>/service/cmd/<name>"),
@@ -77,8 +77,8 @@ var InfraKinds = []string{"postgres", "nats", "s3"}
 var (
 	idPattern  = regexp.MustCompile(`^[a-z][a-z0-9]*$`)
 	envPattern = regexp.MustCompile(`^KB_[A-Z0-9_]+$`)
-	// subjectPattern matches kb.<owning module>.<event>.
-	subjectPattern = regexp.MustCompile(`^kb\.([a-z][a-z0-9]*)\.[a-z][a-z0-9_]*$`)
+	// subjectPattern matches knowcel.<owning module>.<event>.
+	subjectPattern = regexp.MustCompile(`^knowcel\.([a-z][a-z0-9]*)\.[a-z][a-z0-9_]*$`)
 )
 
 // LoadModules reads every modules/*/module.yaml, sorted by id.
@@ -173,7 +173,7 @@ func validateDependencies(modules []Module) error {
 		for _, subject := range m.Consumes {
 			match := subjectPattern.FindStringSubmatch(subject)
 			if match == nil {
-				return fmt.Errorf("module %s: consumed subject %q is not kb.<module>.<event>", m.ID, subject)
+				return fmt.Errorf("module %s: consumed subject %q is not knowcel.<module>.<event>", m.ID, subject)
 			}
 			if owner := match[1]; owner != m.ID && !seen[owner] {
 				return fmt.Errorf("module %s: consumes %s, but %s is not in depends_on", m.ID, subject, owner)

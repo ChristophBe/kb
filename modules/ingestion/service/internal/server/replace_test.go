@@ -12,13 +12,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
-	ingestionv1 "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1"
-	"github.com/christoph/kb/modules/ingestion/service/internal/app"
-	"github.com/christoph/kb/modules/ingestion/service/internal/documents"
-	"github.com/christoph/kb/modules/ingestion/service/internal/events"
-	"github.com/christoph/kb/modules/ingestion/service/internal/store"
-	"github.com/christoph/kb/platform/go/grpcserver"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
+	ingestionv1 "github.com/ChristophBe/knowcelium/modules/ingestion/api/go/ingestionv1"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/app"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/documents"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/events"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/store"
+	"github.com/ChristophBe/knowcelium/platform/go/grpcserver"
 )
 
 func (f *fakeRepo) GetDocumentJob(_ context.Context, p store.GetDocumentJobParams) (store.IngestionJob, error) {
@@ -130,7 +130,7 @@ func TestReplaceUploadMapsTheDocumentModulesAnswers(t *testing.T) {
 		field  string
 	}{
 		{"another user's or unknown", status.Error(codes.NotFound, "document not found"), codes.NotFound, "", ""},
-		{"busy", grpcserver.WithDetails(codes.FailedPrecondition, "busy", grpcserver.ErrorInfo("kb.document.v1", "DOCUMENT_BUSY", nil)), codes.FailedPrecondition, "DOCUMENT_BUSY", ""},
+		{"busy", grpcserver.WithDetails(codes.FailedPrecondition, "busy", grpcserver.ErrorInfo("knowcel.document.v1", "DOCUMENT_BUSY", nil)), codes.FailedPrecondition, "DOCUMENT_BUSY", ""},
 		{"file not accepted", grpcserver.InvalidArgument(grpcserver.Violation("size_bytes", "The file is larger than the limit of 50 MiB")), codes.InvalidArgument, "", "size_bytes"},
 		{"peer down", status.Error(codes.Unavailable, "down"), codes.Unavailable, "", ""},
 		{"peer internal", status.Error(codes.Internal, "boom"), codes.Internal, "", ""},
@@ -144,7 +144,7 @@ func TestReplaceUploadMapsTheDocumentModulesAnswers(t *testing.T) {
 			}
 			if tc.reason != "" {
 				info, _ := firstOf[*errdetails.ErrorInfo](status.Convert(err).Details())
-				if info.GetReason() != tc.reason || info.GetDomain() != "kb.ingestion.v1" {
+				if info.GetReason() != tc.reason || info.GetDomain() != "knowcel.ingestion.v1" {
 					t.Errorf("error info = %v", info)
 				}
 			}

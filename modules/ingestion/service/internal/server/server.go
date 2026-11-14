@@ -1,4 +1,4 @@
-// Package server implements kb.ingestion.v1.IngestionService.
+// Package server implements knowcel.ingestion.v1.IngestionService.
 package server
 
 import (
@@ -14,18 +14,18 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	ingestionv1 "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1"
-	"github.com/christoph/kb/modules/ingestion/service/internal/app"
-	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
-	"github.com/christoph/kb/platform/go/grpcserver"
-	"github.com/christoph/kb/platform/go/postgres"
+	ingestionv1 "github.com/ChristophBe/knowcelium/modules/ingestion/api/go/ingestionv1"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/app"
+	commonv1 "github.com/ChristophBe/knowcelium/platform/api/go/commonv1"
+	"github.com/ChristophBe/knowcelium/platform/go/grpcserver"
+	"github.com/ChristophBe/knowcelium/platform/go/postgres"
 )
 
 const (
 	defaultPageSize = 50
 	maxPageSize     = 200
 	// domain is the ErrorInfo domain of this module's errors.
-	domain = "kb.ingestion.v1"
+	domain = "knowcel.ingestion.v1"
 )
 
 // Server implements IngestionService. Jobs belong to the user who created the

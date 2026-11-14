@@ -5,8 +5,8 @@ package embedcheck
 import (
 	"testing"
 
-	"github.com/christoph/kb/modules/document/migrations"
-	"github.com/christoph/kb/platform/go/postgres/pgtest"
+	"github.com/ChristophBe/knowcelium/modules/document/migrations"
+	"github.com/ChristophBe/knowcelium/platform/go/postgres/pgtest"
 )
 
 func TestColumnDimensionsReadsTheMigratedColumn(t *testing.T) {

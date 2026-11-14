@@ -56,7 +56,7 @@ Jaeger keeps traces in memory; they are gone after a restart. To send traces els
 - **Postgres** queries of the Go services (`platform/go/postgres.Connect`, via `otelpgx`).
 - **NATS messages**: publishers put the W3C trace context (`traceparent`, `tracestate`) into the message headers in a `send <subject>` producer span, and consumers continue it in a `process <subject>` consumer span (Go `natsx.Publish` / `natsx.Receive`, Python `kb_platform.nats.publish` / `receive`). A new publisher or consumer uses these helpers, so its messages stay in the trace.
 
-So completing an upload gives one trace: the `CompleteUpload` call on `ingestion-service` with its call to `document-service`, the `kb.ingestion.uploaded` message to `ingestion-worker`, the worker's calls to `document-service` and `llm-service` (`ReadContent`, `Embed`, `AddChunks`, …) and its started/progress/processed events, which `ingestion-service` applies to the job. Envoy doesn't trace yet, so each call from the browser starts a new trace.
+So completing an upload gives one trace: the `CompleteUpload` call on `ingestion-service` with its call to `document-service`, the `knowcel.ingestion.uploaded` message to `ingestion-worker`, the worker's calls to `document-service` and `llm-service` (`ReadContent`, `Embed`, `AddChunks`, …) and its started/progress/processed events, which `ingestion-service` applies to the job. Envoy doesn't trace yet, so each call from the browser starts a new trace.
 
 ### Trace ids in logs
 

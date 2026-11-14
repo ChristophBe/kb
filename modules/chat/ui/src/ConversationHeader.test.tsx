@@ -1,6 +1,6 @@
 import { create } from "@bufbuild/protobuf";
 import { Code, ConnectError } from "@connectrpc/connect";
-import { ConversationSchema } from "@kb/chat-api/kb/chat/v1/chat_pb";
+import { ConversationSchema } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
 import { KbRuntimeProvider, useToasts } from "@kb/module-sdk";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";

@@ -2,7 +2,7 @@
 [project]
 name = "kb-{{.Pkg.Name}}-api"
 version = "0.1.0"
-description = "Generated protobuf/gRPC bindings for kb.{{.Pkg.Name}}"
+description = "Generated protobuf/gRPC bindings for knowcel.{{.Pkg.Name}}"
 requires-python = ">=3.13"
 dependencies = [
     "grpcio>=1.85.0",
@@ -22,5 +22,5 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-# "kb" is a PEP 420 namespace package shared by all *-api distributions.
-packages = ["src/kb"]
+# "knowcel" is a PEP 420 namespace package shared by all *-api distributions.
+packages = ["src/knowcel"]

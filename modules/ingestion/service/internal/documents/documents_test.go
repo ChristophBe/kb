@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
-	"github.com/christoph/kb/modules/ingestion/service/internal/app"
-	"github.com/christoph/kb/platform/go/grpcserver"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/app"
+	"github.com/ChristophBe/knowcelium/platform/go/grpcserver"
 )
 
 type fakeClient struct {
@@ -55,7 +55,7 @@ func TestMissingFileIsAnApplicationError(t *testing.T) {
 
 func TestRejectedFileIsAnApplicationError(t *testing.T) {
 	c := New(fakeClient{err: grpcserver.WithDetails(codes.FailedPrecondition, "The uploaded file does not match its checksum",
-		grpcserver.ErrorInfo("kb.document.v1", "UPLOAD_REJECTED", nil))})
+		grpcserver.ErrorInfo("knowcel.document.v1", "UPLOAD_REJECTED", nil))})
 	var rejected *app.UploadRejectedError
 	if err := c.MarkUploaded(t.Context(), uuid.New()); !errors.As(err, &rejected) || rejected.Reason != "The uploaded file does not match its checksum" {
 		t.Fatalf("err = %v, want the rejection with its reason", err)
@@ -120,7 +120,7 @@ func TestReplaceMapsTheDocumentModulesErrors(t *testing.T) {
 		want error
 	}{
 		{"not found", status.Error(codes.NotFound, "document not found"), app.ErrDocumentNotFound},
-		{"busy", grpcserver.WithDetails(codes.FailedPrecondition, "busy", grpcserver.ErrorInfo("kb.document.v1", "DOCUMENT_BUSY", nil)), app.ErrDocumentBusy},
+		{"busy", grpcserver.WithDetails(codes.FailedPrecondition, "busy", grpcserver.ErrorInfo("knowcel.document.v1", "DOCUMENT_BUSY", nil)), app.ErrDocumentBusy},
 		{"down", status.Error(codes.Unavailable, "down"), app.ErrDocumentsUnavailable},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

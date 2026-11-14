@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf";
 import { Code, ConnectError } from "@connectrpc/connect";
-import { ConversationSchema } from "@kb/chat-api/kb/chat/v1/chat_pb";
-import { DocumentSchema } from "@kb/document-api/kb/document/v1/document_pb";
+import { ConversationSchema } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
+import { DocumentSchema } from "@kb/document-api/knowcel/document/v1/document_pb";
 import { KbRuntimeProvider, useQueryClient, useToasts } from "@kb/module-sdk";
 import { expectNoAxeViolations } from "@kb/ui/testing";
 import { polyfillDialog } from "@kb/ui/testing/dialog";

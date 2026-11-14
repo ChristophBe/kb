@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             (unknown)
-// source: kb/llm/v1/llm.proto
+// source: knowcel/llm/v1/llm.proto
 
 package llmv1
 
@@ -19,10 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	LlmService_ListModels_FullMethodName        = "/kb.llm.v1.LlmService/ListModels"
-	LlmService_GetProviderStatus_FullMethodName = "/kb.llm.v1.LlmService/GetProviderStatus"
-	LlmService_Generate_FullMethodName          = "/kb.llm.v1.LlmService/Generate"
-	LlmService_Embed_FullMethodName             = "/kb.llm.v1.LlmService/Embed"
+	LlmService_ListModels_FullMethodName        = "/knowcel.llm.v1.LlmService/ListModels"
+	LlmService_GetProviderStatus_FullMethodName = "/knowcel.llm.v1.LlmService/GetProviderStatus"
+	LlmService_Generate_FullMethodName          = "/knowcel.llm.v1.LlmService/Generate"
+	LlmService_Embed_FullMethodName             = "/knowcel.llm.v1.LlmService/Embed"
 )
 
 // LlmServiceClient is the client API for LlmService service.
@@ -222,7 +222,7 @@ func _LlmService_Embed_Handler(srv interface{}, ctx context.Context, dec func(in
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var LlmService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "kb.llm.v1.LlmService",
+	ServiceName: "knowcel.llm.v1.LlmService",
 	HandlerType: (*LlmServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -245,5 +245,5 @@ var LlmService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "kb/llm/v1/llm.proto",
+	Metadata: "knowcel/llm/v1/llm.proto",
 }

@@ -18,7 +18,7 @@ interface IncomingDetail {
 export interface ErrorInfo {
   /** A stable UPPER_SNAKE_CASE identifier, e.g. "LLM_UNAVAILABLE". */
   reason: string;
-  /** The proto package of the module that defines `reason`, e.g. "kb.document.v1". */
+  /** The proto package of the module that defines `reason`, e.g. "knowcel.document.v1". */
   domain: string;
   metadata: Record<string, string>;
 }

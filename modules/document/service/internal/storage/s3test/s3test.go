@@ -12,7 +12,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 
-	"github.com/christoph/kb/modules/document/service/internal/storage"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/storage"
 )
 
 // Image is the image of deploy/infra.compose.yaml.

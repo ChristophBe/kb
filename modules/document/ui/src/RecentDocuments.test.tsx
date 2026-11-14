@@ -1,5 +1,5 @@
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
-import { DocumentService, DocumentStatus } from "@kb/document-api/kb/document/v1/document_pb";
+import { DocumentService, DocumentStatus } from "@kb/document-api/knowcel/document/v1/document_pb";
 import { renderWidget } from "@kb/module-sdk/testing";
 import { expectNoAxeViolations } from "@kb/ui/testing";
 import { fireEvent, screen } from "@testing-library/react";

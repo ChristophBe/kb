@@ -7,10 +7,10 @@ from typing import Protocol
 
 import grpc
 from google.protobuf.message import Message
-from kb.document.v1 import document_pb2, document_pb2_grpc
-from kb.ingestion.v1 import events_pb2, ingestion_pb2
-from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_platform.nats import receive
+from knowcel.document.v1 import document_pb2, document_pb2_grpc
+from knowcel.ingestion.v1 import events_pb2, ingestion_pb2
+from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
 from prometheus_client import Counter, Gauge, Histogram
 
 from .chunking import chunk_markdown, chunk_pages
@@ -21,11 +21,11 @@ from .tokens import load as load_tokenizer
 log = logging.getLogger(__name__)
 
 STREAM = "INGESTION"
-SUBJECT_UPLOADED = "kb.ingestion.uploaded"
-SUBJECT_STARTED = "kb.ingestion.started"
-SUBJECT_PROGRESS = "kb.ingestion.progress"
-SUBJECT_PROCESSED = "kb.ingestion.processed"
-SUBJECT_FAILED = "kb.ingestion.failed"
+SUBJECT_UPLOADED = "knowcel.ingestion.uploaded"
+SUBJECT_STARTED = "knowcel.ingestion.started"
+SUBJECT_PROGRESS = "knowcel.ingestion.progress"
+SUBJECT_PROCESSED = "knowcel.ingestion.processed"
+SUBJECT_FAILED = "knowcel.ingestion.failed"
 
 # Metrics (docs/metrics.md). An attempt ends processed, failed (for good) or
 # retried (a transient error; the upload is delivered again later).

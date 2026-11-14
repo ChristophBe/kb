@@ -1,3 +1,3 @@
-module github.com/christoph/kb
+module github.com/ChristophBe/knowcelium
 
 go 1.26

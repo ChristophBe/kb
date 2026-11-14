@@ -5,7 +5,7 @@
 # `lint-imports` in `task lint`.
 [importlinter]
 root_packages =
-    kb
+    knowcel
     kb_platform
 
 [importlinter:contract:platform]
@@ -14,4 +14,4 @@ type = forbidden
 source_modules =
     kb_platform
 forbidden_modules =
-    kb.notes
+    knowcel.notes

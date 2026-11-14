@@ -25,7 +25,7 @@ linters:
         platform:
           files: ["**/platform/**"]
           deny:
-            - pkg: github.com/christoph/kb/modules
+            - pkg: github.com/ChristophBe/knowcelium/modules
               desc: platform/ must not import modules
         module-notes:
           files: ["**/modules/notes/**"]
@@ -33,7 +33,7 @@ linters:
           # allow and a deny entry wins (a dependency's api/ under its denied root).
           list-mode: lax
           deny:
-            - pkg: github.com/christoph/kb/modules/search
+            - pkg: github.com/ChristophBe/knowcelium/modules/search
               desc: search is not in depends_on of notes
         module-search:
           files: ["**/modules/search/**"]
@@ -41,9 +41,9 @@ linters:
           # allow and a deny entry wins (a dependency's api/ under its denied root).
           list-mode: lax
           allow:
-            - github.com/christoph/kb/modules/notes/api/go
+            - github.com/ChristophBe/knowcelium/modules/notes/api/go
           deny:
-            - pkg: github.com/christoph/kb/modules/notes
+            - pkg: github.com/ChristophBe/knowcelium/modules/notes
               desc: only the api/ of a module in depends_on may be imported
     errcheck:
       # Deferred closes of read-side resources have nothing useful to report.
@@ -64,4 +64,4 @@ formatters:
     - goimports
   settings:
     goimports:
-      local-prefixes: [github.com/christoph/kb]
+      local-prefixes: [github.com/ChristophBe/knowcelium]

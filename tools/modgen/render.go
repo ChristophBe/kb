@@ -24,7 +24,7 @@ var templates = template.Must(template.New("").Funcs(template.FuncMap{
 var Areas = []string{"platform", "ui-shell", "infra"}
 
 // GoModule is the root Go module path; generated Go code lives below it.
-const GoModule = "github.com/christoph/kb"
+const GoModule = "github.com/ChristophBe/knowcelium"
 
 // File is one generated output, relative to the repository root.
 type File struct {

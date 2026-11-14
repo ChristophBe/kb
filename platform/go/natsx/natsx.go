@@ -13,10 +13,10 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/christoph/kb/platform/go/telemetry"
+	"github.com/ChristophBe/knowcelium/platform/go/telemetry"
 )
 
-const tracerName = "github.com/christoph/kb/platform/go/natsx"
+const tracerName = "github.com/ChristophBe/knowcelium/platform/go/natsx"
 
 // Connect opens a NATS connection that reconnects forever.
 func Connect(url, name string) (*nats.Conn, jetstream.JetStream, error) {

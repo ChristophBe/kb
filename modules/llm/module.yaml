@@ -13,10 +13,10 @@ services:
     env:
       KB_LLM_PROVIDER: ollama
       KB_OLLAMA_URL: http://ollama:11434
-    grpc_services: [kb.llm.v1.LlmService]
+    grpc_services: [knowcel.llm.v1.LlmService]
     # Generation and embeddings are for other modules' services only (chat,
     # document search, ingestion worker); Envoy does not route them.
     internal:
-      - kb.llm.v1.LlmService/Generate
-      - kb.llm.v1.LlmService/Embed
+      - knowcel.llm.v1.LlmService/Generate
+      - knowcel.llm.v1.LlmService/Embed
 ui: "@kb/module-llm"

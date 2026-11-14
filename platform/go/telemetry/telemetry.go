@@ -17,7 +17,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.43.0"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/christoph/kb/platform/go/version"
+	"github.com/ChristophBe/knowcelium/platform/go/version"
 )
 
 var enabled atomic.Bool

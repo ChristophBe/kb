@@ -11,7 +11,7 @@ import (
 
 // Violation describes one invalid field of a request, for InvalidArgument.
 // Field is the path of the field in the request message, in proto field
-// names (see kb.common.v1); Description is a sentence a user can act on.
+// names (see knowcel.common.v1); Description is a sentence a user can act on.
 func Violation(field, description string) *errdetails.BadRequest_FieldViolation {
 	return &errdetails.BadRequest_FieldViolation{Field: field, Description: description}
 }
@@ -30,7 +30,7 @@ func InvalidArgument(violations ...*errdetails.BadRequest_FieldViolation) error 
 
 // ErrorInfo is a google.rpc.ErrorInfo detail: reason is a stable
 // UPPER_SNAKE_CASE identifier clients may branch on, domain the proto package
-// of the module that defines it (e.g. "kb.ingestion.v1").
+// of the module that defines it (e.g. "knowcel.ingestion.v1").
 func ErrorInfo(domain, reason string, metadata map[string]string) *errdetails.ErrorInfo {
 	return &errdetails.ErrorInfo{Domain: domain, Reason: reason, Metadata: metadata}
 }

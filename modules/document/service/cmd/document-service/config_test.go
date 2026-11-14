@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/christoph/kb/platform/go/config"
+	"github.com/ChristophBe/knowcelium/platform/go/config"
 )
 
 func TestLimitsComeFromTheEnvironment(t *testing.T) {

@@ -4,7 +4,7 @@ import {
   DocumentService,
   type SearchDocumentsRequest,
   type SearchDocumentsResponseSchema,
-} from "@kb/document-api/kb/document/v1/document_pb";
+} from "@kb/document-api/knowcel/document/v1/document_pb";
 import { SearchError } from "@kb/module-sdk";
 import { renderWithRuntime } from "@kb/module-sdk/testing";
 import { errorInfoDetail } from "@kb/ui/testing/errors";
@@ -99,7 +99,9 @@ describe("Search", () => {
   it("explains that search needs the Models service while it is down", async () => {
     const { transport } = searchService(() => {
       const err = new ConnectError("the llm service is unavailable", Code.Unavailable);
-      err.details.push(errorInfoDetail({ reason: "LLM_UNAVAILABLE", domain: "kb.document.v1" }));
+      err.details.push(
+        errorInfoDetail({ reason: "LLM_UNAVAILABLE", domain: "knowcel.document.v1" }),
+      );
       throw err;
     });
     const err = await search(transport)?.catch((e: unknown) => e);

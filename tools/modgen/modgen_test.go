@@ -91,7 +91,7 @@ func TestLoadModulesValidatesDependencies(t *testing.T) {
 		"duplicate":          {"a": "depends_on: [b, b]\n", "b": ""},
 		"cycle":              {"a": "depends_on: [b]\n", "b": "depends_on: [c]\n", "c": "depends_on: [a]\n"},
 		"bad subject":        {"a": "consumes: [ingestion.uploaded]\n"},
-		"undeclared subject": {"a": "consumes: [kb.b.created]\n", "b": ""},
+		"undeclared subject": {"a": "consumes: [knowcel.b.created]\n", "b": ""},
 	}
 	for name, manifests := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -108,7 +108,7 @@ func TestLoadModulesValidatesDependencies(t *testing.T) {
 
 func TestLoadModulesAcceptsDeclaredDependencies(t *testing.T) {
 	dir := t.TempDir()
-	writeManifest(t, dir, "a", "id: a\ntitle: A\ndepends_on: [b]\nconsumes: [kb.a.done, kb.b.created]\n")
+	writeManifest(t, dir, "a", "id: a\ntitle: A\ndepends_on: [b]\nconsumes: [knowcel.a.done, knowcel.b.created]\n")
 	writeManifest(t, dir, "b", "id: b\ntitle: B\n")
 	modules, err := LoadModules(dir)
 	if err != nil {
@@ -135,25 +135,25 @@ func TestLoadModulesResolvesPublicRoutes(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := strings.Join(modules[0].Services[0].Routes, " ")
-	want := "/kb.notes.v1.NotesService/GetNote /kb.notes.v1.NotesService/ListNotes"
+	want := "/knowcel.notes.v1.NotesService/GetNote /knowcel.notes.v1.NotesService/ListNotes"
 	if got != want {
 		t.Errorf("routes = %q, want %q (internal methods and services must be left out)", got, want)
 	}
 }
 
 func TestLoadModulesValidatesInternal(t *testing.T) {
-	const proto = "package kb.x.v1;\nservice XService {\n  rpc Get(A) returns (B);\n  rpc Put(A) returns (B);\n}\n"
+	const proto = "package knowcel.x.v1;\nservice XService {\n  rpc Get(A) returns (B);\n  rpc Put(A) returns (B);\n}\n"
 	cases := map[string]string{
-		"undefined service": "grpc_services: [kb.x.v1.Other]",
-		"unknown method":    "grpc_services: [kb.x.v1.XService]\n    internal: [kb.x.v1.XService/Nope]",
-		"unrouted service":  "grpc_services: []\n    internal: [kb.x.v1.XService]",
-		"redundant method":  "grpc_services: [kb.x.v1.XService]\n    internal: [kb.x.v1.XService, kb.x.v1.XService/Get]",
+		"undefined service": "grpc_services: [knowcel.x.v1.Other]",
+		"unknown method":    "grpc_services: [knowcel.x.v1.XService]\n    internal: [knowcel.x.v1.XService/Nope]",
+		"unrouted service":  "grpc_services: []\n    internal: [knowcel.x.v1.XService]",
+		"redundant method":  "grpc_services: [knowcel.x.v1.XService]\n    internal: [knowcel.x.v1.XService, knowcel.x.v1.XService/Get]",
 	}
 	for name, extra := range cases {
 		t.Run(name, func(t *testing.T) {
 			dir := t.TempDir()
 			writeManifest(t, dir, "x", "id: x\ntitle: X\nservices:\n  - name: x-service\n    language: python\n    port: 9000\n    metrics_port: 9100\n    "+extra+"\n")
-			protoDir := filepath.Join(dir, "x", "proto", "kb", "x", "v1")
+			protoDir := filepath.Join(dir, "x", "proto", "knowcel", "x", "v1")
 			if err := os.MkdirAll(protoDir, 0o755); err != nil {
 				t.Fatal(err)
 			}

@@ -10,19 +10,19 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"google.golang.org/protobuf/proto"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
-	"github.com/christoph/kb/platform/go/natsx"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
+	"github.com/ChristophBe/knowcelium/platform/go/natsx"
 )
 
 const (
 	Stream = "DOCUMENT"
 
-	SubjectReindexRequested = "kb.document.reindex_requested"
+	SubjectReindexRequested = "knowcel.document.reindex_requested"
 )
 
 // EnsureStream creates the module's stream.
 func EnsureStream(ctx context.Context, js jetstream.JetStream) error {
-	_, err := natsx.EnsureStream(ctx, js, Stream, "kb.document.>")
+	_, err := natsx.EnsureStream(ctx, js, Stream, "knowcel.document.>")
 	return err
 }
 

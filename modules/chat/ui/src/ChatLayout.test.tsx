@@ -5,7 +5,7 @@ import {
   type Conversation,
   ConversationSchema,
   MessageRole,
-} from "@kb/chat-api/kb/chat/v1/chat_pb";
+} from "@kb/chat-api/knowcel/chat/v1/chat_pb";
 import { renderModule } from "@kb/module-sdk/testing";
 import { polyfillDialog } from "@kb/ui/testing/dialog";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";

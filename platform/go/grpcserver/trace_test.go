@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	reflectionpb "google.golang.org/grpc/reflection/grpc_reflection_v1"
 
-	"github.com/christoph/kb/platform/go/telemetry"
+	"github.com/ChristophBe/knowcelium/platform/go/telemetry"
 )
 
 // TestTracingSpansDialAndNew calls a server built by New through Dial with

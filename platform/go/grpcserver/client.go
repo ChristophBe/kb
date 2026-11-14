@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/christoph/kb/platform/go/telemetry"
+	"github.com/ChristophBe/knowcelium/platform/go/telemetry"
 )
 
 // Dial opens a client connection to another module's service. Calls made with

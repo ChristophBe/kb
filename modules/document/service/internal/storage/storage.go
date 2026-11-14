@@ -17,7 +17,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 
-	"github.com/christoph/kb/platform/go/config"
+	"github.com/ChristophBe/knowcelium/platform/go/config"
 )
 
 // PresignExpiry bounds how long upload/download URLs stay valid.

@@ -1,4 +1,4 @@
-module github.com/christoph/kb/tools
+module github.com/ChristophBe/knowcelium/tools
 
 go 1.26.7
 

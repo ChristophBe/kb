@@ -21,7 +21,7 @@ TOKEN=$(curl -s -d grant_type=password -d client_id=kb-cli -d username=alice@exa
   -d password=password -d 'scope=openid email profile' "$KB_OIDC_ISSUER/token" | jq -r .access_token)
 buf curl --protocol grpcweb -H "Authorization: Bearer $TOKEN" -d '{}' \
   --schema modules/document/proto \
-  http://localhost:8080/kb.document.v1.DocumentService/ReindexDocuments
+  http://localhost:8080/knowcel.document.v1.DocumentService/ReindexDocuments
 ```
 
 (`go tool -modfile=tools/go.mod buf curl ...` in a checkout without `buf`.) Request fields: `document_ids` limits it to some documents, `force: true` reindexes documents already on the current model too (after changing the chunk sizes, or when the recorded model is wrong).
@@ -33,7 +33,7 @@ What the reindex does and doesn't do:
 - It is idempotent: calling it again queues the documents that are still on another model (or all with `force`), so repeating it after an outage is safe.
 - It needs `llm-service` (to learn the current model) and NATS: it answers `UNAVAILABLE` otherwise. Nothing is queued then, or only a first part of the documents.
 
-The request travels as the event `kb.document.reindex_requested` on the `DOCUMENT` stream (one message per document, with the owner), which the ingestion service consumes. Ingestion can't be called from the document service (it depends on it), hence the event.
+The request travels as the event `knowcel.document.reindex_requested` on the `DOCUMENT` stream (one message per document, with the owner), which the ingestion service consumes. Ingestion can't be called from the document service (it depends on it), hence the event.
 
 ## A model with another dimension
 

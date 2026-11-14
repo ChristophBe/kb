@@ -11,9 +11,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
-	"github.com/christoph/kb/modules/ingestion/service/internal/app"
-	"github.com/christoph/kb/platform/go/grpcserver"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/app"
+	"github.com/ChristophBe/knowcelium/platform/go/grpcserver"
 )
 
 // Client implements app.Documents.
@@ -112,7 +112,7 @@ func (c *Client) MarkUploaded(ctx context.Context, id uuid.UUID) error {
 // with this reason.
 func hasReason(err error, reason string) bool {
 	for _, d := range status.Convert(err).Details() {
-		if info, ok := d.(*errdetails.ErrorInfo); ok && info.GetDomain() == "kb.document.v1" && info.GetReason() == reason {
+		if info, ok := d.(*errdetails.ErrorInfo); ok && info.GetDomain() == "knowcel.document.v1" && info.GetReason() == reason {
 			return true
 		}
 	}

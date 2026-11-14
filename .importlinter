@@ -5,7 +5,7 @@
 # `lint-imports` in `task lint`.
 [importlinter]
 root_packages =
-    kb
+    knowcel
     kb_platform
     kb_chat
     kb_ingestion_worker
@@ -17,12 +17,12 @@ type = forbidden
 source_modules =
     kb_platform
 forbidden_modules =
-    kb.chat
+    knowcel.chat
     kb_chat
-    kb.document
-    kb.ingestion
+    knowcel.document
+    knowcel.ingestion
     kb_ingestion_worker
-    kb.llm
+    knowcel.llm
     kb_llm
 
 [importlinter:contract:module-chat]
@@ -31,7 +31,7 @@ type = forbidden
 source_modules =
     kb_chat
 forbidden_modules =
-    kb.ingestion
+    knowcel.ingestion
     kb_ingestion_worker
     kb_llm
 
@@ -41,7 +41,7 @@ type = forbidden
 source_modules =
     kb_ingestion_worker
 forbidden_modules =
-    kb.chat
+    knowcel.chat
     kb_chat
     kb_llm
 
@@ -51,8 +51,8 @@ type = forbidden
 source_modules =
     kb_llm
 forbidden_modules =
-    kb.chat
+    knowcel.chat
     kb_chat
-    kb.document
-    kb.ingestion
+    knowcel.document
+    knowcel.ingestion
     kb_ingestion_worker

@@ -7,10 +7,6 @@ from typing import Any
 
 import grpc
 import pytest
-from kb.chat.v1 import chat_pb2, chat_pb2_grpc
-from kb.common.v1 import common_pb2
-from kb.document.v1 import document_pb2
-from kb.llm.v1 import llm_pb2
 from kb_chat.chat import Chat
 from kb_chat.config import Settings
 from kb_chat.peers import PeerGenerator, PeerRetriever
@@ -19,6 +15,10 @@ from kb_chat.repository import ConversationMatch, ConversationRow, MessageRow
 from kb_chat.server import ChatServicer
 from kb_platform.grpc import USER_HEADER, UserInterceptor, field_violations
 from kb_platform.pagination import Cursor
+from knowcel.chat.v1 import chat_pb2, chat_pb2_grpc
+from knowcel.common.v1 import common_pb2
+from knowcel.document.v1 import document_pb2
+from knowcel.llm.v1 import llm_pb2
 
 ALICE, BOB = "alice", "bob"
 

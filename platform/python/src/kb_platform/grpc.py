@@ -338,7 +338,7 @@ FieldViolation = error_details_pb2.BadRequest.FieldViolation
 def violation(field: str, description: str) -> FieldViolation:
     """One invalid field of a request, for `abort_invalid_argument`. `field` is
     the field's path in the request message, in proto field names (see
-    kb.common.v1); `description` is a sentence a user can act on."""
+    knowcel.common.v1); `description` is a sentence a user can act on."""
     return FieldViolation(field=field, description=description)
 
 
@@ -347,7 +347,7 @@ def error_info(
 ) -> error_details_pb2.ErrorInfo:
     """A google.rpc.ErrorInfo detail: `reason` is a stable UPPER_SNAKE_CASE
     identifier clients may branch on, `domain` the proto package of the module
-    that defines it (e.g. "kb.chat.v1")."""
+    that defines it (e.g. "knowcel.chat.v1")."""
     return error_details_pb2.ErrorInfo(domain=domain, reason=reason, metadata=metadata or {})
 
 

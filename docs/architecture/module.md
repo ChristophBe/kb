@@ -8,7 +8,7 @@ Every module in `modules/<id>/` follows this architecture, whatever its language
 
 ```mermaid
 flowchart LR
-    contract["Contract<br/>proto/kb/&lt;id&gt;/v1"]
+    contract["Contract<br/>proto/knowcel/&lt;id&gt;/v1"]
     transport["Transport<br/>gRPC handlers, event consumers"]
     app["Application logic<br/>use cases, ports"]
     adapters["Adapters<br/>store, storage, providers,<br/>peer clients, event publishers"]
@@ -24,7 +24,7 @@ flowchart LR
 
 | Layer | Responsibility | May depend on | Must not |
 |---|---|---|---|
-| **Contract** (`proto/`) | RPCs and event messages: the module's only public surface. | `kb.common.v1`, well-known types | Contain logic |
+| **Contract** (`proto/`) | RPCs and event messages: the module's only public surface. | `knowcel.common.v1`, well-known types | Contain logic |
 | **Transport** | Decode requests, validate input shape, call application logic, encode responses, map errors to gRPC status. Event consumers decode messages and call the same logic. | Contract, application | Talk to a database, bucket or peer directly |
 | **Application** | Use cases: rules, orchestration across adapters, state transitions. Declares the **ports** (interfaces) it needs. | Contract types, its own ports, generated client interfaces of declared peers | Import gRPC status/codes, SQL, S3 or HTTP clients |
 | **Adapters** | Implement ports: sqlc store, S3, LLM providers, publishers, other modules' clients. | Infrastructure libraries, `platform/` | Contain business rules |
@@ -84,10 +84,10 @@ Envoy routes the browser to a service's methods one by one (`deploy/envoy/envoy.
 ```yaml
 services:
   - name: document-service
-    grpc_services: [kb.document.v1.DocumentService]
+    grpc_services: [knowcel.document.v1.DocumentService]
     internal:                                        # called by other modules' services only
-      - kb.document.v1.DocumentService/AddChunks     # one method
-      # - kb.document.v1.DocumentAdminService        # or a whole service from grpc_services
+      - knowcel.document.v1.DocumentService/AddChunks     # one method
+      # - knowcel.document.v1.DocumentAdminService        # or a whole service from grpc_services
 ```
 
 - Mark a method `internal` when only backend code calls it: writes that belong to a pipeline (`AddChunks`, `SetDocumentStatus`), raw access (`ReadContent`), or anything that would let a browser spend provider resources directly (`LlmService/Generate`, `Embed`). A new RPC is public by default, so decide when adding it.
@@ -118,7 +118,7 @@ services:
 ```yaml
 depends_on: [document, llm]       # modules whose contract (RPCs or events) this module uses
 consumes:                         # event subjects this module subscribes to
-  - kb.ingestion.uploaded
+  - knowcel.ingestion.uploaded
 ```
 
 - `depends_on` names modules, not services. A module may import another module's `api/` package only if it is listed. The graph must be acyclic: if two modules need each other, one of them talks through events.

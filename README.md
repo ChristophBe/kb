@@ -84,7 +84,7 @@ To use another identity provider, set `KB_OIDC_ISSUER` (the `iss` of its tokens)
 
 Follow the [module architecture](docs/architecture/module.md) and copy the structure of the reference implementation for your language (`document` for Go, `llm` for Python). A new module needs an ADR (see CONTRIBUTING.md).
 
-1. Create `modules/<id>/module.yaml` (declare the modules it uses in `depends_on` and the event subjects it subscribes to in `consumes`) and `modules/<id>/proto/kb/<id>/v1/<id>.proto`.
+1. Create `modules/<id>/module.yaml` (declare the modules it uses in `depends_on` and the event subjects it subscribes to in `consumes`) and `modules/<id>/proto/knowcel/<id>/v1/<id>.proto`.
 2. Add the backend under `modules/<id>/service` (and `compose.yaml`). For Python, also add it to the workspace members in `pyproject.toml`.
 3. Optionally add `modules/<id>/ui` exporting a `KbModule` (see `platform/ui/module-sdk`), and add it as a dependency of `apps/web`.
 4. `task gen`. This generates the API packages, Envoy routes, compose includes and the UI registry.

@@ -8,7 +8,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
-	ingestionv1 "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1"
+	ingestionv1 "github.com/ChristophBe/knowcelium/modules/ingestion/api/go/ingestionv1"
 )
 
 // The ingestion service's job metrics (docs/metrics.md).

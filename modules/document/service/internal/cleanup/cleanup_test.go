@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/christoph/kb/modules/document/service/internal/storage"
-	"github.com/christoph/kb/modules/document/service/internal/store"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/storage"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/store"
 )
 
 var now = time.Date(2026, 11, 9, 12, 0, 0, 0, time.UTC)

@@ -96,7 +96,7 @@ Update the overview diagrams in the same PR when services, ports or gRPC/NATS li
 
 Examples: `fix(document): reject empty uploads`, `feat(ui-shell): add a command palette`, `build(deps): bump vite to 7.1.0`, `docs: describe the home page`.
 
-The `pr-title` workflow (`.github/workflows/pr-title.yml`) checks the title on every PR and re-runs when the title is edited; the allowed scopes are read from the module manifests and the `area:*` labels on each run. With Claude Code, the `/pr` skill (`.claude/skills/pr/`) derives the title from the closed issue's labels. Branch commits land on `main` unchanged, so they follow the same convention and should each be a coherent step.
+The `pr-title` workflow (`.github/workflows/pr-title.yml`) checks the title on every PR and re-runs when the title is edited; the allowed scopes are read from the module manifests and the `area:*` labels on each run. With Claude Code, the `/pr` skill (`.claude/skills/pr/`) derives the title from the closed issue's labels. Branch commits land on `main` unchanged, so they follow the same convention and should each be a coherent step. The `/implement <issue>` skill (`.claude/skills/implement/`) runs the whole flow: read the issue, branch and worktree, plan, implement, review, open the PR.
 
 The `pr-history` workflow (`.github/workflows/pr-history.yml`) fails when the branch is behind `main` or contains merge commits. Update a stale branch by rebasing (*Update branch → Update with rebase* on the PR, or `gh pr update-branch --rebase`), never by merging `main` in. The check does not re-run when `main` moves on, so make sure the PR shows the branch as up to date before merging.
 

@@ -233,12 +233,12 @@ describe("Conversation", () => {
     expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
   });
 
-  it("offers the document picker only when answering from the knowledge base", async () => {
+  it("offers the document picker only when answering from your documents", async () => {
     await renderConversation();
     expect(screen.getByText("all documents")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Choose documents" })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("checkbox", { name: "Answer from the knowledge base" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Answer from your documents" }));
     expect(screen.queryByRole("button", { name: "Choose documents" })).toBeNull();
   });
 

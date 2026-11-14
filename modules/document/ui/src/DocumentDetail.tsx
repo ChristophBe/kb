@@ -59,7 +59,7 @@ export function DocumentDetail() {
       <Link to=".." relative="path" className="text-sm text-fg-muted hover:underline">
         ← Documents
       </Link>
-      <p className="mt-2 mb-2 font-mono text-xs text-fg-muted">kb / documents</p>
+      <p className="mt-2 mb-2 font-mono text-xs text-fg-muted">knowcelium / documents</p>
       <TitleEditor id={d.id} title={d.title} />
       <Card className="max-w-2xl">
         <dl className="divide-y divide-dotted divide-border text-sm">

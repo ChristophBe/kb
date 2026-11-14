@@ -85,7 +85,7 @@ export function ReplaceUpload() {
         ← Back to the document
       </Link>
       <PageHeader
-        eyebrow="kb / ingestion"
+        eyebrow="knowcelium / ingestion"
         title="Upload new version"
         description={`Choose the new file${title ? ` for “${title}”` : ""}. The document keeps its title, metadata and links in chats, and stays readable with its current file until the new one is ready.`}
       />

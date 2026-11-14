@@ -46,21 +46,21 @@ export function SearchPage({ providers }: { providers: SearchProvider[] }) {
   return (
     <div className="max-w-3xl">
       <PageHeader
-        eyebrow="kb / search"
+        eyebrow="knowcelium / search"
         title="Search"
-        description="Results from every area of kb."
+        description="Results from every area of Knowcelium."
       />
       <search className="mb-4 block">
         <form noValidate onSubmit={submit}>
           <label htmlFor={inputId} className="sr-only">
-            Search kb
+            Search Knowcelium
           </label>
           <div className="flex gap-2">
             <Input
               ref={input}
               id={inputId}
               type="search"
-              placeholder="Search kb"
+              placeholder="Search Knowcelium"
               value={draft}
               onChange={(e) => {
                 setDraft(e.target.value);

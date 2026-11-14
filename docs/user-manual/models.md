@@ -1,6 +1,6 @@
 # Models
 
-Models shows the language models kb uses for search, chat and processing documents, and whether they are available.
+Models shows the language models Knowcelium uses for search, chat and processing documents, and whether they are available.
 
 ## Check that the language models are available
 
@@ -12,7 +12,7 @@ Open **Models**. The top box names two providers, each with a status badge. They
 The badges mean:
 
 - **healthy**: the provider can be used.
-- **unavailable**: it can't. **Detail** says what is wrong. If the chat provider is unavailable, chat answers fail; if the embedding provider is, searches, chat answers and processing fail. Try again later or ask whoever runs your kb.
+- **unavailable**: it can't. **Detail** says what is wrong. If the chat provider is unavailable, chat answers fail; if the embedding provider is, searches, chat answers and processing fail. Try again later or ask whoever runs Knowcelium for you.
 
 ## See the installed models
 

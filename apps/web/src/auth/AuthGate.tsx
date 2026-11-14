@@ -164,8 +164,7 @@ function SignInScreen({ children }: { children: ReactNode }) {
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
       <p className="flex items-center gap-2 font-semibold">
         <Library className="size-5 text-accent" aria-hidden="true" />
-        <span className="font-mono font-medium">kb</span>
-        <span className="text-fg-muted">/</span> Knowledge Base
+        <span className="font-mono font-medium">knowcelium</span>
       </p>
       {children}
     </main>

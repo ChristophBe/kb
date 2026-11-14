@@ -6,53 +6,53 @@
 [importlinter]
 root_packages =
     knowcel
-    kb_platform
-    kb_chat
-    kb_ingestion_worker
-    kb_llm
+    knowcel_platform
+    knowcel_chat
+    knowcel_ingestion_worker
+    knowcel_llm
 
 [importlinter:contract:platform]
 name = platform/ never imports a module
 type = forbidden
 source_modules =
-    kb_platform
+    knowcel_platform
 forbidden_modules =
     knowcel.chat
-    kb_chat
+    knowcel_chat
     knowcel.document
     knowcel.ingestion
-    kb_ingestion_worker
+    knowcel_ingestion_worker
     knowcel.llm
-    kb_llm
+    knowcel_llm
 
 [importlinter:contract:module-chat]
 name = chat imports only its own code, platform/ and the api/ of modules in depends_on
 type = forbidden
 source_modules =
-    kb_chat
+    knowcel_chat
 forbidden_modules =
     knowcel.ingestion
-    kb_ingestion_worker
-    kb_llm
+    knowcel_ingestion_worker
+    knowcel_llm
 
 [importlinter:contract:module-ingestion]
 name = ingestion imports only its own code, platform/ and the api/ of modules in depends_on
 type = forbidden
 source_modules =
-    kb_ingestion_worker
+    knowcel_ingestion_worker
 forbidden_modules =
     knowcel.chat
-    kb_chat
-    kb_llm
+    knowcel_chat
+    knowcel_llm
 
 [importlinter:contract:module-llm]
 name = llm imports only its own code, platform/ and the api/ of modules in depends_on
 type = forbidden
 source_modules =
-    kb_llm
+    knowcel_llm
 forbidden_modules =
     knowcel.chat
-    kb_chat
+    knowcel_chat
     knowcel.document
     knowcel.ingestion
-    kb_ingestion_worker
+    knowcel_ingestion_worker

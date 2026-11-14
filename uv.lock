@@ -9,15 +9,15 @@ resolution-markers = [
 [manifest]
 members = [
     "kb",
-    "kb-chat-api",
-    "kb-chat-service",
-    "kb-common-api",
-    "kb-document-api",
-    "kb-ingestion-api",
-    "kb-ingestion-worker",
-    "kb-llm-api",
-    "kb-llm-service",
-    "kb-platform",
+    "knowcel-chat-api",
+    "knowcel-chat-service",
+    "knowcel-common-api",
+    "knowcel-document-api",
+    "knowcel-ingestion-api",
+    "knowcel-ingestion-worker",
+    "knowcel-llm-api",
+    "knowcel-llm-service",
+    "knowcel-platform",
 ]
 
 [[package]]
@@ -954,33 +954,33 @@ dev = [
 ]
 
 [[package]]
-name = "kb-chat-api"
+name = "knowcel-chat-api"
 version = "0.1.0"
 source = { editable = "modules/chat/api/python" }
 dependencies = [
     { name = "grpcio" },
-    { name = "kb-common-api" },
+    { name = "knowcel-common-api" },
     { name = "protobuf" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "grpcio", specifier = ">=1.85.0" },
-    { name = "kb-common-api", editable = "platform/api/python" },
+    { name = "knowcel-common-api", editable = "platform/api/python" },
     { name = "protobuf", specifier = ">=7.35.1,<8" },
 ]
 
 [[package]]
-name = "kb-chat-service"
+name = "knowcel-chat-service"
 version = "0.1.0"
 source = { editable = "modules/chat/service" }
 dependencies = [
     { name = "alembic" },
     { name = "asyncpg" },
-    { name = "kb-chat-api" },
-    { name = "kb-document-api" },
-    { name = "kb-llm-api" },
-    { name = "kb-platform" },
+    { name = "knowcel-chat-api" },
+    { name = "knowcel-document-api" },
+    { name = "knowcel-llm-api" },
+    { name = "knowcel-platform" },
     { name = "sqlalchemy", extra = ["asyncio"] },
 ]
 
@@ -988,15 +988,15 @@ dependencies = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.16" },
     { name = "asyncpg", specifier = ">=0.30" },
-    { name = "kb-chat-api", editable = "modules/chat/api/python" },
-    { name = "kb-document-api", editable = "modules/document/api/python" },
-    { name = "kb-llm-api", editable = "modules/llm/api/python" },
-    { name = "kb-platform", editable = "platform/python" },
+    { name = "knowcel-chat-api", editable = "modules/chat/api/python" },
+    { name = "knowcel-document-api", editable = "modules/document/api/python" },
+    { name = "knowcel-llm-api", editable = "modules/llm/api/python" },
+    { name = "knowcel-platform", editable = "platform/python" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.40" },
 ]
 
 [[package]]
-name = "kb-common-api"
+name = "knowcel-common-api"
 version = "0.1.0"
 source = { editable = "platform/api/python" }
 dependencies = [
@@ -1011,48 +1011,48 @@ requires-dist = [
 ]
 
 [[package]]
-name = "kb-document-api"
+name = "knowcel-document-api"
 version = "0.1.0"
 source = { editable = "modules/document/api/python" }
 dependencies = [
     { name = "grpcio" },
-    { name = "kb-common-api" },
+    { name = "knowcel-common-api" },
     { name = "protobuf" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "grpcio", specifier = ">=1.85.0" },
-    { name = "kb-common-api", editable = "platform/api/python" },
+    { name = "knowcel-common-api", editable = "platform/api/python" },
     { name = "protobuf", specifier = ">=7.35.1,<8" },
 ]
 
 [[package]]
-name = "kb-ingestion-api"
+name = "knowcel-ingestion-api"
 version = "0.1.0"
 source = { editable = "modules/ingestion/api/python" }
 dependencies = [
     { name = "grpcio" },
-    { name = "kb-common-api" },
+    { name = "knowcel-common-api" },
     { name = "protobuf" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "grpcio", specifier = ">=1.85.0" },
-    { name = "kb-common-api", editable = "platform/api/python" },
+    { name = "knowcel-common-api", editable = "platform/api/python" },
     { name = "protobuf", specifier = ">=7.35.1,<8" },
 ]
 
 [[package]]
-name = "kb-ingestion-worker"
+name = "knowcel-ingestion-worker"
 version = "0.1.0"
 source = { editable = "modules/ingestion/worker" }
 dependencies = [
-    { name = "kb-document-api" },
-    { name = "kb-ingestion-api" },
-    { name = "kb-llm-api" },
-    { name = "kb-platform" },
+    { name = "knowcel-document-api" },
+    { name = "knowcel-ingestion-api" },
+    { name = "knowcel-llm-api" },
+    { name = "knowcel-platform" },
     { name = "prometheus-client" },
     { name = "pypdf" },
     { name = "tokenizers" },
@@ -1060,41 +1060,41 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "kb-document-api", editable = "modules/document/api/python" },
-    { name = "kb-ingestion-api", editable = "modules/ingestion/api/python" },
-    { name = "kb-llm-api", editable = "modules/llm/api/python" },
-    { name = "kb-platform", editable = "platform/python" },
+    { name = "knowcel-document-api", editable = "modules/document/api/python" },
+    { name = "knowcel-ingestion-api", editable = "modules/ingestion/api/python" },
+    { name = "knowcel-llm-api", editable = "modules/llm/api/python" },
+    { name = "knowcel-platform", editable = "platform/python" },
     { name = "prometheus-client", specifier = ">=0.26" },
     { name = "pypdf", specifier = ">=6.0" },
     { name = "tokenizers", specifier = ">=0.22" },
 ]
 
 [[package]]
-name = "kb-llm-api"
+name = "knowcel-llm-api"
 version = "0.1.0"
 source = { editable = "modules/llm/api/python" }
 dependencies = [
     { name = "grpcio" },
-    { name = "kb-common-api" },
+    { name = "knowcel-common-api" },
     { name = "protobuf" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "grpcio", specifier = ">=1.85.0" },
-    { name = "kb-common-api", editable = "platform/api/python" },
+    { name = "knowcel-common-api", editable = "platform/api/python" },
     { name = "protobuf", specifier = ">=7.35.1,<8" },
 ]
 
 [[package]]
-name = "kb-llm-service"
+name = "knowcel-llm-service"
 version = "0.1.0"
 source = { editable = "modules/llm/service" }
 dependencies = [
     { name = "anthropic" },
     { name = "httpx" },
-    { name = "kb-llm-api" },
-    { name = "kb-platform" },
+    { name = "knowcel-llm-api" },
+    { name = "knowcel-platform" },
     { name = "prometheus-client" },
 ]
 
@@ -1102,13 +1102,13 @@ dependencies = [
 requires-dist = [
     { name = "anthropic", specifier = ">=2.3" },
     { name = "httpx", specifier = ">=0.28" },
-    { name = "kb-llm-api", editable = "modules/llm/api/python" },
-    { name = "kb-platform", editable = "platform/python" },
+    { name = "knowcel-llm-api", editable = "modules/llm/api/python" },
+    { name = "knowcel-platform", editable = "platform/python" },
     { name = "prometheus-client", specifier = ">=0.26" },
 ]
 
 [[package]]
-name = "kb-platform"
+name = "knowcel-platform"
 version = "0.1.0"
 source = { editable = "platform/python" }
 dependencies = [

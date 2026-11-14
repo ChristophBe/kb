@@ -54,9 +54,9 @@ func images(modules []Module) []Image {
 				img.Dockerfile = "deploy/docker/go.Dockerfile"
 				img.BuildArgs = "CMD=" + s.Cmd
 			case "python":
-				// The workspace package and its console script are named kb-<component>.
+				// The workspace package and its console script are named knowcel-<component>.
 				img.Dockerfile = "deploy/docker/python.Dockerfile"
-				img.BuildArgs = "PACKAGE=kb-" + s.Name
+				img.BuildArgs = "PACKAGE=knowcel-" + s.Name
 			}
 			out = append(out, img)
 		}

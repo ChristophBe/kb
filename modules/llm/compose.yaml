@@ -3,7 +3,7 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/python.Dockerfile
-      args: { PACKAGE: kb-llm-service, KB_VERSION: "${KB_VERSION:-dev}" }
+      args: { PACKAGE: knowcel-llm-service, KB_VERSION: "${KB_VERSION:-dev}" }
     environment:
       KB_LOG_LEVEL: ${KB_LOG_LEVEL:-INFO}
       KB_OTEL_ENDPOINT: ${KB_OTEL_ENDPOINT:-}
@@ -24,7 +24,7 @@ services:
       ollama: { condition: service_started, required: false }
       ollama-pull: { condition: service_completed_successfully, required: false }
     healthcheck:
-      test: ["CMD", "python", "-m", "kb_platform.healthcheck", "9004"]
+      test: ["CMD", "python", "-m", "knowcel_platform.healthcheck", "9004"]
       interval: 2s
       retries: 30
     develop:

@@ -75,7 +75,7 @@ func UvRunner(root string, args []string) (map[string][]PySetting, error) {
 const (
 	goBaseDir    = "platform/go/config"
 	goBaseType   = "Base"
-	pyBaseModule = "kb_platform.config:PlatformSettings"
+	pyBaseModule = "knowcel_platform.config:PlatformSettings"
 	envExample   = ".env.example"
 	envoyScript  = "deploy/envoy/entrypoint.sh"
 	webScript    = "deploy/docker/web/40-runtime-config.sh"
@@ -109,7 +109,7 @@ func CollectSettings(root string, modules []Module, py PyRunner) ([]SettingsGrou
 
 	groups := []SettingsGroup{
 		{Title: "Every Go service", Intro: "Read by every Go service, from `config.Base` in [platform/go/config](../platform/go/config/config.go). Each service's section gives its port defaults.", Settings: portsPerComponent(goBase)},
-		{Title: "Every Python component", Intro: "Read by every Python component, from `PlatformSettings` in [kb_platform.config](../platform/python/src/kb_platform/config.py). Each component's section gives its port defaults.", Settings: portsPerComponent(pyOwn(pySettings["platform"], false))},
+		{Title: "Every Python component", Intro: "Read by every Python component, from `PlatformSettings` in [knowcel_platform.config](../platform/python/src/knowcel_platform/config.py). Each component's section gives its port defaults.", Settings: portsPerComponent(pyOwn(pySettings["platform"], false))},
 	}
 	defined := map[string]bool{}
 	for _, s := range slices.Concat(groups[0].Settings, groups[1].Settings) {
@@ -263,12 +263,12 @@ func pyOwn(fields []PySetting, own bool) []Setting {
 }
 
 // pyComponentDir is the directory of Python component name (its
-// pyproject.toml is named kb-<name>), relative to root.
+// pyproject.toml is named knowcel-<name>), relative to root.
 func pyComponentDir(root, module, name string) string {
 	matches, _ := filepath.Glob(filepath.Join(root, "modules", module, "*", "pyproject.toml"))
 	for _, m := range matches {
 		raw, err := os.ReadFile(m)
-		if err == nil && bytes.Contains(raw, []byte(`name = "kb-`+name+`"`)) {
+		if err == nil && bytes.Contains(raw, []byte(`name = "knowcel-`+name+`"`)) {
 			rel, _ := filepath.Rel(root, filepath.Dir(m))
 			return filepath.ToSlash(rel)
 		}
@@ -281,7 +281,7 @@ func pyComponentDir(root, module, name string) string {
 func pyPackage(root, module, name string) (string, error) {
 	dir := pyComponentDir(root, module, name)
 	if dir == "" {
-		return "", fmt.Errorf("%s: no modules/%s/*/pyproject.toml named kb-%s", name, module, name)
+		return "", fmt.Errorf("%s: no modules/%s/*/pyproject.toml named knowcel-%s", name, module, name)
 	}
 	matches, err := filepath.Glob(filepath.Join(root, dir, "src", "*", "config.py"))
 	if err != nil || len(matches) != 1 {

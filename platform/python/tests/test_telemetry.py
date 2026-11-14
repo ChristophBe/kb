@@ -7,10 +7,10 @@ from typing import Any
 
 import grpc
 import pytest
-from kb_platform import telemetry
-from kb_platform.grpc import channel
-from kb_platform.logging import setup_logging
-from kb_platform.nats import publish, receive
+from knowcel_platform import telemetry
+from knowcel_platform.grpc import channel
+from knowcel_platform.logging import setup_logging
+from knowcel_platform.nats import publish, receive
 from opentelemetry import trace
 from opentelemetry.sdk.trace import ReadableSpan, TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
@@ -22,7 +22,7 @@ def test_tracing_is_off_without_endpoint() -> None:
     script = textwrap.dedent(
         """
         import json, sys, threading
-        from kb_platform import telemetry
+        from knowcel_platform import telemetry
         before = threading.active_count()
         telemetry.setup_tracing("", "test")
         print(json.dumps({

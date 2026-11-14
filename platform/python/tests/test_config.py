@@ -1,5 +1,5 @@
 import pytest
-from kb_platform.config import ConfigError, PlatformSettings, Problems, load_settings
+from knowcel_platform.config import ConfigError, PlatformSettings, Problems, load_settings
 
 
 class _Settings(PlatformSettings):

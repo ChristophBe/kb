@@ -7,8 +7,8 @@ from collections.abc import AsyncIterator, Iterator
 import pytest
 from alembic import command
 from alembic.config import Config
-from kb_chat.db import MIGRATIONS_DIR, SqlRepository, migrate
 from knowcel.chat.v1 import chat_pb2
+from knowcel_chat.db import MIGRATIONS_DIR, SqlRepository, migrate
 from sqlalchemy.ext.asyncio import create_async_engine
 from testcontainers.community.postgres import PostgresContainer
 

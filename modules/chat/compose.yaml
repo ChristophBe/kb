@@ -3,7 +3,7 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/python.Dockerfile
-      args: { PACKAGE: kb-chat-service, KB_VERSION: "${KB_VERSION:-dev}" }
+      args: { PACKAGE: knowcel-chat-service, KB_VERSION: "${KB_VERSION:-dev}" }
     environment:
       KB_LOG_LEVEL: ${KB_LOG_LEVEL:-INFO}
       KB_OTEL_ENDPOINT: ${KB_OTEL_ENDPOINT:-}
@@ -17,7 +17,7 @@ services:
     depends_on:
       postgres: { condition: service_healthy }
     healthcheck:
-      test: ["CMD", "python", "-m", "kb_platform.healthcheck", "9003"]
+      test: ["CMD", "python", "-m", "knowcel_platform.healthcheck", "9003"]
       interval: 2s
       retries: 30
     develop:

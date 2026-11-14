@@ -6,7 +6,7 @@ Conventions for Go, Python and TypeScript in kb. Most of them are enforced by `t
 
 - **Read like the surrounding code.** Match the naming, comment density and idioms of the file you are in.
 - **Comments say why, not what.** Every package/module and exported identifier gets a short doc comment; inside functions, comment only non-obvious decisions (`// The vector type exists only after the first migration, …`).
-- **Configuration** comes from `KB_*` environment variables through the platform config helpers (`platform/go/config`, `kb_platform.config`), never from ad-hoc `os.Getenv` / `os.environ`. Defaults work for `task up`.
+- **Configuration** comes from `KB_*` environment variables through the platform config helpers (`platform/go/config`, `knowcel_platform.config`), never from ad-hoc `os.Getenv` / `os.environ`. Defaults work for `task up`.
 - **Logging** is structured: a message that names the event plus key/value fields (`"apply event", "subject", …`). No secrets, tokens or document content in logs. Use `error` only for failures someone has to act on.
 - **Errors at the API boundary** are gRPC statuses. Map client mistakes to `INVALID_ARGUMENT` / `NOT_FOUND` / `FAILED_PRECONDITION`, a missing peer module to `UNAVAILABLE`, and everything else to `INTERNAL` with a generic message; log the cause server-side.
 - **Generated code** (`modules/*/api/**`, sqlc `store/`, `*.gen.ts`, …) is never edited or linted; change the source and run `task gen`.
@@ -29,7 +29,7 @@ Conventions for Go, Python and TypeScript in kb. Most of them are enforced by `t
 
 | Topic | Convention |
 |---|---|
-| Layout | `src/kb_<component>/` with `__main__.py` (wiring), `config.py` (pydantic settings on top of `kb_platform.config`), `server.py` (servicer). |
+| Layout | `src/kb_<component>/` with `__main__.py` (wiring), `config.py` (pydantic settings on top of `knowcel_platform.config`), `server.py` (servicer). |
 | Naming | PEP 8. gRPC servicer methods keep the generated CamelCase names (the only `N802` exception, configured per file). Private helpers start with `_`. |
 | Types | Annotate every public function and attribute. `pyright` runs in `standard` mode plus strict checks for our own code (unused imports/variables, private usage, unnecessary casts and `# type: ignore`, missing type arguments). |
 | Async | Services and the worker are `asyncio`; never block the loop (`ASYNC` rules). Use `grpc.aio` stubs from the generated packages. |

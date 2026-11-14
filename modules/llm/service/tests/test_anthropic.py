@@ -8,16 +8,17 @@ import anthropic
 import grpc
 import httpx2
 import pytest
-from kb_llm.config import Settings
-from kb_llm.providers import REGISTRY, Providers, build_provider, build_providers
-from kb_llm.providers.anthropic import (
+from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
+from knowcel_llm.config import Settings
+from knowcel_llm.providers import REGISTRY, Providers, build_provider, build_providers
+from knowcel_llm.providers.anthropic import (
     MODELS,
     AnthropicLimits,
     AnthropicProvider,
     to_anthropic_messages,
     translate_error,
 )
-from kb_llm.providers.base import (
+from knowcel_llm.providers.base import (
     GenerationOptions,
     Message,
     ModelNotFoundError,
@@ -28,9 +29,8 @@ from kb_llm.providers.base import (
     ProviderUnavailableError,
     Role,
 )
-from kb_llm.providers.fake import FakeProvider
-from kb_llm.server import LlmServicer
-from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
+from knowcel_llm.providers.fake import FakeProvider
+from knowcel_llm.server import LlmServicer
 from pydantic import SecretStr
 
 Handler = Callable[[httpx2.Request], httpx2.Response]

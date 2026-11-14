@@ -29,7 +29,7 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/python.Dockerfile
-      args: { PACKAGE: kb-ingestion-worker, KB_VERSION: "${KB_VERSION:-dev}" }
+      args: { PACKAGE: knowcel-ingestion-worker, KB_VERSION: "${KB_VERSION:-dev}" }
     environment:
       KB_LOG_LEVEL: ${KB_LOG_LEVEL:-INFO}
       KB_OTEL_ENDPOINT: ${KB_OTEL_ENDPOINT:-}

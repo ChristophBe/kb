@@ -1,30 +1,30 @@
 [project]
-name = "kb-ingestion-worker"
+name = "knowcel-ingestion-worker"
 version = "0.1.0"
 description = "kb ingestion module: extract, chunk and embed uploaded documents"
 requires-python = ">=3.13"
 dependencies = [
-    "kb-document-api",
-    "kb-ingestion-api",
-    "kb-llm-api",
-    "kb-platform",
+    "knowcel-document-api",
+    "knowcel-ingestion-api",
+    "knowcel-llm-api",
+    "knowcel-platform",
     "prometheus-client>=0.26",
     "pypdf>=6.0",
     "tokenizers>=0.22",
 ]
 
 [project.scripts]
-kb-ingestion-worker = "kb_ingestion_worker.__main__:main"
+knowcel-ingestion-worker = "knowcel_ingestion_worker.__main__:main"
 
 [tool.uv.sources]
-kb-document-api = { workspace = true }
-kb-ingestion-api = { workspace = true }
-kb-llm-api = { workspace = true }
-kb-platform = { workspace = true }
+knowcel-document-api = { workspace = true }
+knowcel-ingestion-api = { workspace = true }
+knowcel-llm-api = { workspace = true }
+knowcel-platform = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/kb_ingestion_worker"]
+packages = ["src/knowcel_ingestion_worker"]

@@ -54,7 +54,7 @@ To follow a request across the services, start the stack with tracing and Jaeger
 
 ## Authentication
 
-Every call through the gateway needs an OIDC access token: Envoy verifies it (`jwt_authn`, keys from the issuer's JWKS) and answers `UNAUTHENTICATED` otherwise. Only CORS preflights and health checks pass without one. Envoy forwards the token's subject to the services as the `x-kb-user` header and drops any `x-kb-user` the client sent; services read it with `grpcserver.UserFromContext(ctx)` (Go) or `kb_platform.grpc.current_user()` (Python). Calls between services carry no user yet.
+Every call through the gateway needs an OIDC access token: Envoy verifies it (`jwt_authn`, keys from the issuer's JWKS) and answers `UNAUTHENTICATED` otherwise. Only CORS preflights and health checks pass without one. Envoy forwards the token's subject to the services as the `x-kb-user` header and drops any `x-kb-user` the client sent; services read it with `grpcserver.UserFromContext(ctx)` (Go) or `knowcel_platform.grpc.current_user()` (Python). Calls between services carry no user yet.
 
 `task up` starts [Dex](https://dexidp.io) as the dev identity provider at `http://localhost:5556/dex`, configured in `deploy/dex/config.yaml.tpl`; nothing needs setting up by hand. It has two users, `alice@example.com` and `bob@example.com`, both with the password `password`, and two public clients: `kb-web` for the web shell (authorization code with PKCE) and `kb-cli` for scripts and tests. Fetch a token without a browser with the password grant:
 

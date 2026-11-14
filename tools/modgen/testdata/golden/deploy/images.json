@@ -11,7 +11,7 @@
       "component": "search-worker",
       "image": "ghcr.io/christophbe/kb-search-worker",
       "dockerfile": "deploy/docker/python.Dockerfile",
-      "build_args": "PACKAGE=kb-search-worker"
+      "build_args": "PACKAGE=knowcel-search-worker"
     },
     {
       "component": "web",

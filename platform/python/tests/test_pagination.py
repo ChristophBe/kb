@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from kb_platform.pagination import Cursor, InvalidCursorError, decode_cursor
+from knowcel_platform.pagination import Cursor, InvalidCursorError, decode_cursor
 
 # The Go tests read the same file, so the two encodings cannot drift.
 FIXTURE = json.loads((Path(__file__).parents[2] / "testdata" / "cursor.json").read_text())

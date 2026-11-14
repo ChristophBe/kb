@@ -3,7 +3,7 @@ docs/configuration.md.
 
 Usage: uv run python tools/modgen/settings.py <root> <component>=<module>[:<class>]...
 
-<module> is the component's config module (e.g. kb_chat.config) and <class>
+<module> is the component's config module (e.g. knowcel_chat.config) and <class>
 its settings class (default `Settings`). For every field, in declaration order, the output gives its
 environment variable, its default and its description: the comment block
 above the field in the class that declares it (or, for a field that only
@@ -76,8 +76,8 @@ def default(field: FieldInfo, root: Path) -> str:
 
 def describe(cls: Any, root: Path) -> list[dict[str, object]]:
     prefix = cls.model_config.get("env_prefix", "")
-    # The class and its bases from this repository (kb_platform, kb_<component>).
-    docs = [comments(c) for c in cls.__mro__ if c.__module__.startswith("kb_")]
+    # The class and its bases from this repository (knowcel_platform, knowcel_<component>).
+    docs = [comments(c) for c in cls.__mro__ if c.__module__.startswith("knowcel_")]
     out: list[dict[str, object]] = []
     for name, field in cls.model_fields.items():
         declared = next(c for c in cls.__mro__ if name in vars(c).get("__annotations__", {}))

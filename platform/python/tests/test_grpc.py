@@ -6,7 +6,7 @@ import pytest
 from google.rpc import error_details_pb2
 from grpc_health.v1 import health, health_pb2, health_pb2_grpc
 from grpc_status import rpc_status
-from kb_platform.grpc import (
+from knowcel_platform.grpc import (
     USER_HEADER,
     UserInterceptor,
     abort_invalid_argument,

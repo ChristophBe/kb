@@ -5,8 +5,8 @@ import {
   type RuntimeConfig,
   type SearchProvider,
 } from "@kb/module-sdk";
-import { Area, IconButton, navItemClass, ThemeToggle } from "@kb/ui";
-import { CircleHelp, CircleUser, Library, LogOut } from "lucide-react";
+import { Area, IconButton, Logo, navItemClass, ThemeToggle } from "@kb/ui";
+import { CircleHelp, CircleUser, LogOut } from "lucide-react";
 import { lazy, type ReactNode, useMemo } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
 import { AuthGate, useSession } from "./auth/AuthGate.tsx";
@@ -72,10 +72,8 @@ function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: S
   return (
     <div className="flex min-h-screen">
       <Area className="sticky top-0 w-60 shrink-0 overflow-y-auto border-r">
-        <Link to="/" className="flex items-center gap-2 px-5 py-5 font-semibold">
-          <Library className="size-5 text-accent" aria-hidden="true" />
-          <span className="font-mono font-medium">kb</span>
-          <span className="text-fg-muted">/</span> Knowledge Base
+        <Link to="/" aria-label="Knowcelium" className="flex items-center px-5 py-5">
+          <Logo size={24} />
         </Link>
         <div className="px-3 pb-4">
           <HeaderSearch providers={providers} />

@@ -73,6 +73,8 @@ flowchart TB
 
     ingsvc -- "pub kb.ingestion.uploaded<br/>sub started / processed / failed" --> nats
     ingworker -- "sub kb.ingestion.uploaded<br/>pub started / processed / failed" --> nats
+    docsvc -- "pub kb.document.reindex_requested" --> nats
+    ingsvc -- "sub kb.document.reindex_requested" --> nats
 
     docsvc -- "schema document" --> pg
     ingsvc -- "schema ingestion" --> pg
@@ -80,10 +82,10 @@ flowchart TB
     docsvc -- "bucket: raw files, presigning" --> s3
 ```
 
-| Container | Module | Owns | Calls (gRPC) | Events (stream `INGESTION`) |
+| Container | Module | Owns | Calls (gRPC) | Events |
 |---|---|---|---|---|
-| `document-service` | document | schema `document` (documents, chunks + `vector(768)`), S3 bucket | llm (only `SearchDocuments`) | — |
-| `ingestion-service` | ingestion | schema `ingestion` (jobs), stream `INGESTION` | document | publishes `uploaded`; consumes `started`, `processed`, `failed` |
+| `document-service` | document | schema `document` (documents, chunks + `vector(768)`), S3 bucket, stream `DOCUMENT` | llm (`SearchDocuments`, and the current model for `ReindexDocuments`) | publishes `reindex_requested` ([Changing the embedding model](../operations/embedding-model.md)) |
+| `ingestion-service` | ingestion | schema `ingestion` (jobs), stream `INGESTION` | document | publishes `uploaded`; consumes `started`, `processed`, `failed`, and the document module's `reindex_requested` |
 | `ingestion-worker` | ingestion | — | document, llm | consumes `uploaded`; publishes `started`, `processed`, `failed` |
 | `chat-service` | chat | schema `chat` (conversations, messages) | document, llm | — |
 | `llm-service` | llm | provider registry | Ollama over HTTP, Anthropic API | — |

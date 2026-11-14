@@ -30,6 +30,13 @@ type Querier interface {
 	InsertChunks(ctx context.Context, arg []InsertChunksParams) (int64, error)
 	ListChunks(ctx context.Context, arg ListChunksParams) ([]ListChunksRow, error)
 	ListDocuments(ctx context.Context, arg ListDocumentsParams) ([]DocumentDocument, error)
+	// ListReindexTargets returns the owner's READY documents (status 4) to
+	// reindex: those with a chunk made by a model other than embedding_model, or
+	// all of them with force. Documents with a pending version (a new file being
+	// uploaded or processed, or one that failed) are left out: the new file
+	// becomes their chunks, embedded by the current model. With document_ids
+	// the choice is limited to those documents.
+	ListReindexTargets(ctx context.Context, arg ListReindexTargetsParams) ([]uuid.UUID, error)
 	MarkDocumentUploaded(ctx context.Context, arg MarkDocumentUploadedParams) (DocumentDocument, error)
 	MarkPendingUploaded(ctx context.Context, arg MarkPendingUploadedParams) (DocumentDocument, error)
 	// PromotePendingVersion makes an uploaded or processing (UPLOADED=2,
@@ -39,10 +46,12 @@ type Querier interface {
 	// SearchBestChunks returns the most similar chunk of each of the owner's
 	// documents, ranked by that chunk's score: the documents most similar to the
 	// embedding. It is an exact scan, since the vector index can't pick one chunk
-	// per document.
+	// per document. Only chunks of the embedding's model are compared, as in
+	// SearchChunks.
 	SearchBestChunks(ctx context.Context, arg SearchBestChunksParams) ([]SearchBestChunksRow, error)
-	// SearchChunks returns the owner's chunks most similar to the embedding. The
-	// HNSW index yields candidates before the owner filter applies, so the pool
+	// SearchChunks returns the owner's chunks most similar to the embedding, among
+	// those made by the same embedding model: vectors of different models are not
+	// comparable. The HNSW index yields candidates before the owner filter applies, so the pool
 	// sets hnsw.iterative_scan (store.ConfigurePool) to keep scanning until the
 	// limit is filled.
 	SearchChunks(ctx context.Context, arg SearchChunksParams) ([]SearchChunksRow, error)

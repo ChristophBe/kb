@@ -123,6 +123,7 @@ func run(cfg Config) error {
 
 	g, ctx := errgroup.WithContext(ctx)
 	g.Go(func() error { return events.Consume(ctx, js, service, log) })
+	g.Go(func() error { return events.ConsumeReindex(ctx, js, service, log) })
 	g.Go(func() error { return srv.Run(ctx, cfg.GRPCPort) })
 	return g.Wait()
 }

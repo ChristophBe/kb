@@ -1495,13 +1495,16 @@ func (x *ReadContentResponse) GetData() []byte {
 }
 
 type ChunkInput struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Index         int32                  `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
-	Text          string                 `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
-	Embedding     []float32              `protobuf:"fixed32,3,rep,packed,name=embedding,proto3" json:"embedding,omitempty"`
-	Metadata      map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Index     int32                  `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
+	Text      string                 `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
+	Embedding []float32              `protobuf:"fixed32,3,rep,packed,name=embedding,proto3" json:"embedding,omitempty"`
+	Metadata  map[string]string      `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// The embedding model that made `embedding` (EmbedResponse.model); required.
+	// All chunks of a document must come from the same model.
+	EmbeddingModel string `protobuf:"bytes,5,opt,name=embedding_model,json=embeddingModel,proto3" json:"embedding_model,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *ChunkInput) Reset() {
@@ -1560,6 +1563,13 @@ func (x *ChunkInput) GetMetadata() map[string]string {
 		return x.Metadata
 	}
 	return nil
+}
+
+func (x *ChunkInput) GetEmbeddingModel() string {
+	if x != nil {
+		return x.EmbeddingModel
+	}
+	return ""
 }
 
 type AddChunksRequest struct {
@@ -1767,9 +1777,13 @@ type SearchChunksRequest struct {
 	Embedding []float32              `protobuf:"fixed32,1,rep,packed,name=embedding,proto3" json:"embedding,omitempty"`
 	Limit     int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
 	// Restricts the search to these documents when non-empty.
-	DocumentIds   []string `protobuf:"bytes,3,rep,name=document_ids,json=documentIds,proto3" json:"document_ids,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	DocumentIds []string `protobuf:"bytes,3,rep,name=document_ids,json=documentIds,proto3" json:"document_ids,omitempty"`
+	// The model that made `embedding`; only chunks embedded by it are searched.
+	// Empty means the llm module's current default embedding model, which is
+	// what an Embed call without a model uses.
+	EmbeddingModel string `protobuf:"bytes,4,opt,name=embedding_model,json=embeddingModel,proto3" json:"embedding_model,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *SearchChunksRequest) Reset() {
@@ -1821,6 +1835,13 @@ func (x *SearchChunksRequest) GetDocumentIds() []string {
 		return x.DocumentIds
 	}
 	return nil
+}
+
+func (x *SearchChunksRequest) GetEmbeddingModel() string {
+	if x != nil {
+		return x.EmbeddingModel
+	}
+	return ""
 }
 
 type SearchChunksResponse struct {
@@ -1985,6 +2006,124 @@ func (x *SearchDocumentsResponse) GetDocuments() []*ScoredDocument {
 	return nil
 }
 
+// ReindexDocuments is a public RPC that acts on the caller's own documents
+// only, since there are no roles yet: the embedding model is one setting for
+// the deployment, but every user's index is their own, so each user reindexes
+// their documents, and nobody can spend processing on another user's. A call
+// without a user is UNAUTHENTICATED.
+type ReindexDocumentsRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The documents to reindex; empty means all of the caller's documents. An
+	// unknown id (or another user's) is NOT_FOUND.
+	DocumentIds []string `protobuf:"bytes,1,rep,name=document_ids,json=documentIds,proto3" json:"document_ids,omitempty"`
+	// Reindex documents that are already on the current model too. Without it
+	// only documents with chunks of another model are. Use it after a change of
+	// chunking, or when the chunks' recorded model is wrong (see
+	// docs/operations/embedding-model.md).
+	Force         bool `protobuf:"varint,2,opt,name=force,proto3" json:"force,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReindexDocumentsRequest) Reset() {
+	*x = ReindexDocumentsRequest{}
+	mi := &file_kb_document_v1_document_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReindexDocumentsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReindexDocumentsRequest) ProtoMessage() {}
+
+func (x *ReindexDocumentsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_kb_document_v1_document_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReindexDocumentsRequest.ProtoReflect.Descriptor instead.
+func (*ReindexDocumentsRequest) Descriptor() ([]byte, []int) {
+	return file_kb_document_v1_document_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *ReindexDocumentsRequest) GetDocumentIds() []string {
+	if x != nil {
+		return x.DocumentIds
+	}
+	return nil
+}
+
+func (x *ReindexDocumentsRequest) GetForce() bool {
+	if x != nil {
+		return x.Force
+	}
+	return false
+}
+
+type ReindexDocumentsResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// How many documents were queued; ready documents already on the current
+	// model, and documents with a new version in progress, are not.
+	Requested int32 `protobuf:"varint,1,opt,name=requested,proto3" json:"requested,omitempty"`
+	// The current embedding model, the one they are reindexed to.
+	EmbeddingModel string `protobuf:"bytes,2,opt,name=embedding_model,json=embeddingModel,proto3" json:"embedding_model,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *ReindexDocumentsResponse) Reset() {
+	*x = ReindexDocumentsResponse{}
+	mi := &file_kb_document_v1_document_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReindexDocumentsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReindexDocumentsResponse) ProtoMessage() {}
+
+func (x *ReindexDocumentsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_kb_document_v1_document_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReindexDocumentsResponse.ProtoReflect.Descriptor instead.
+func (*ReindexDocumentsResponse) Descriptor() ([]byte, []int) {
+	return file_kb_document_v1_document_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *ReindexDocumentsResponse) GetRequested() int32 {
+	if x != nil {
+		return x.Requested
+	}
+	return 0
+}
+
+func (x *ReindexDocumentsResponse) GetEmbeddingModel() string {
+	if x != nil {
+		return x.EmbeddingModel
+	}
+	return ""
+}
+
 var File_kb_document_v1_document_proto protoreflect.FileDescriptor
 
 const file_kb_document_v1_document_proto_rawDesc = "" +
@@ -2105,13 +2244,14 @@ const file_kb_document_v1_document_proto_rawDesc = "" +
 	"\x12ReadContentRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\")\n" +
 	"\x13ReadContentResponse\x12\x12\n" +
-	"\x04data\x18\x01 \x01(\fR\x04data\"\xd7\x01\n" +
+	"\x04data\x18\x01 \x01(\fR\x04data\"\x80\x02\n" +
 	"\n" +
 	"ChunkInput\x12\x14\n" +
 	"\x05index\x18\x01 \x01(\x05R\x05index\x12\x12\n" +
 	"\x04text\x18\x02 \x01(\tR\x04text\x12\x1c\n" +
 	"\tembedding\x18\x03 \x03(\x02R\tembedding\x12D\n" +
-	"\bmetadata\x18\x04 \x03(\v2(.kb.document.v1.ChunkInput.MetadataEntryR\bmetadata\x1a;\n" +
+	"\bmetadata\x18\x04 \x03(\v2(.kb.document.v1.ChunkInput.MetadataEntryR\bmetadata\x12'\n" +
+	"\x0fembedding_model\x18\x05 \x01(\tR\x0eembeddingModel\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"g\n" +
@@ -2128,11 +2268,12 @@ const file_kb_document_v1_document_proto_rawDesc = "" +
 	"\x04page\x18\x02 \x01(\v2\x19.kb.common.v1.PageRequestR\x04page\"s\n" +
 	"\x12ListChunksResponse\x12-\n" +
 	"\x06chunks\x18\x01 \x03(\v2\x15.kb.document.v1.ChunkR\x06chunks\x12.\n" +
-	"\x04page\x18\x02 \x01(\v2\x1a.kb.common.v1.PageResponseR\x04page\"l\n" +
+	"\x04page\x18\x02 \x01(\v2\x1a.kb.common.v1.PageResponseR\x04page\"\x95\x01\n" +
 	"\x13SearchChunksRequest\x12\x1c\n" +
 	"\tembedding\x18\x01 \x03(\x02R\tembedding\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12!\n" +
-	"\fdocument_ids\x18\x03 \x03(\tR\vdocumentIds\"M\n" +
+	"\fdocument_ids\x18\x03 \x03(\tR\vdocumentIds\x12'\n" +
+	"\x0fembedding_model\x18\x04 \x01(\tR\x0eembeddingModel\"M\n" +
 	"\x14SearchChunksResponse\x125\n" +
 	"\aresults\x18\x01 \x03(\v2\x1b.kb.document.v1.ScoredChunkR\aresults\"g\n" +
 	"\x16SearchDocumentsRequest\x12\x14\n" +
@@ -2141,14 +2282,21 @@ const file_kb_document_v1_document_proto_rawDesc = "" +
 	"\fdocument_ids\x18\x03 \x03(\tR\vdocumentIds\"\x8e\x01\n" +
 	"\x17SearchDocumentsResponse\x125\n" +
 	"\aresults\x18\x01 \x03(\v2\x1b.kb.document.v1.ScoredChunkR\aresults\x12<\n" +
-	"\tdocuments\x18\x02 \x03(\v2\x1e.kb.document.v1.ScoredDocumentR\tdocuments*\xca\x01\n" +
+	"\tdocuments\x18\x02 \x03(\v2\x1e.kb.document.v1.ScoredDocumentR\tdocuments\"R\n" +
+	"\x17ReindexDocumentsRequest\x12!\n" +
+	"\fdocument_ids\x18\x01 \x03(\tR\vdocumentIds\x12\x14\n" +
+	"\x05force\x18\x02 \x01(\bR\x05force\"a\n" +
+	"\x18ReindexDocumentsResponse\x12\x1c\n" +
+	"\trequested\x18\x01 \x01(\x05R\trequested\x12'\n" +
+	"\x0fembedding_model\x18\x02 \x01(\tR\x0eembeddingModel*\xca\x01\n" +
 	"\x0eDocumentStatus\x12\x1f\n" +
 	"\x1bDOCUMENT_STATUS_UNSPECIFIED\x10\x00\x12\"\n" +
 	"\x1eDOCUMENT_STATUS_PENDING_UPLOAD\x10\x01\x12\x1c\n" +
 	"\x18DOCUMENT_STATUS_UPLOADED\x10\x02\x12\x1e\n" +
 	"\x1aDOCUMENT_STATUS_PROCESSING\x10\x03\x12\x19\n" +
 	"\x15DOCUMENT_STATUS_READY\x10\x04\x12\x1a\n" +
-	"\x16DOCUMENT_STATUS_FAILED\x10\x052\xd6\t\n" +
+	"\x16DOCUMENT_STATUS_FAILED\x10\x052\xbd\n" +
+	"\n" +
 	"\x0fDocumentService\x12_\n" +
 	"\x0eCreateDocument\x12%.kb.document.v1.CreateDocumentRequest\x1a&.kb.document.v1.CreateDocumentResponse\x12_\n" +
 	"\x0eReplaceContent\x12%.kb.document.v1.ReplaceContentRequest\x1a&.kb.document.v1.ReplaceContentResponse\x12V\n" +
@@ -2163,7 +2311,8 @@ const file_kb_document_v1_document_proto_rawDesc = "" +
 	"\n" +
 	"ListChunks\x12!.kb.document.v1.ListChunksRequest\x1a\".kb.document.v1.ListChunksResponse\x12Y\n" +
 	"\fSearchChunks\x12#.kb.document.v1.SearchChunksRequest\x1a$.kb.document.v1.SearchChunksResponse\x12b\n" +
-	"\x0fSearchDocuments\x12&.kb.document.v1.SearchDocumentsRequest\x1a'.kb.document.v1.SearchDocumentsResponseBGZEgithub.com/christoph/kb/modules/document/api/go/documentv1;documentv1b\x06proto3"
+	"\x0fSearchDocuments\x12&.kb.document.v1.SearchDocumentsRequest\x1a'.kb.document.v1.SearchDocumentsResponse\x12e\n" +
+	"\x10ReindexDocuments\x12'.kb.document.v1.ReindexDocumentsRequest\x1a(.kb.document.v1.ReindexDocumentsResponseBGZEgithub.com/christoph/kb/modules/document/api/go/documentv1;documentv1b\x06proto3"
 
 var (
 	file_kb_document_v1_document_proto_rawDescOnce sync.Once
@@ -2178,7 +2327,7 @@ func file_kb_document_v1_document_proto_rawDescGZIP() []byte {
 }
 
 var file_kb_document_v1_document_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_kb_document_v1_document_proto_msgTypes = make([]protoimpl.MessageInfo, 37)
+var file_kb_document_v1_document_proto_msgTypes = make([]protoimpl.MessageInfo, 39)
 var file_kb_document_v1_document_proto_goTypes = []any{
 	(DocumentStatus)(0),               // 0: kb.document.v1.DocumentStatus
 	(*Document)(nil),                  // 1: kb.document.v1.Document
@@ -2213,41 +2362,43 @@ var file_kb_document_v1_document_proto_goTypes = []any{
 	(*SearchChunksResponse)(nil),      // 30: kb.document.v1.SearchChunksResponse
 	(*SearchDocumentsRequest)(nil),    // 31: kb.document.v1.SearchDocumentsRequest
 	(*SearchDocumentsResponse)(nil),   // 32: kb.document.v1.SearchDocumentsResponse
-	nil,                               // 33: kb.document.v1.Document.MetadataEntry
-	nil,                               // 34: kb.document.v1.Chunk.MetadataEntry
-	nil,                               // 35: kb.document.v1.CreateDocumentRequest.MetadataEntry
-	nil,                               // 36: kb.document.v1.UpdateDocumentRequest.MetadataEntry
-	nil,                               // 37: kb.document.v1.ChunkInput.MetadataEntry
-	(*timestamppb.Timestamp)(nil),     // 38: google.protobuf.Timestamp
-	(*commonv1.PageRequest)(nil),      // 39: kb.common.v1.PageRequest
-	(*commonv1.PageResponse)(nil),     // 40: kb.common.v1.PageResponse
+	(*ReindexDocumentsRequest)(nil),   // 33: kb.document.v1.ReindexDocumentsRequest
+	(*ReindexDocumentsResponse)(nil),  // 34: kb.document.v1.ReindexDocumentsResponse
+	nil,                               // 35: kb.document.v1.Document.MetadataEntry
+	nil,                               // 36: kb.document.v1.Chunk.MetadataEntry
+	nil,                               // 37: kb.document.v1.CreateDocumentRequest.MetadataEntry
+	nil,                               // 38: kb.document.v1.UpdateDocumentRequest.MetadataEntry
+	nil,                               // 39: kb.document.v1.ChunkInput.MetadataEntry
+	(*timestamppb.Timestamp)(nil),     // 40: google.protobuf.Timestamp
+	(*commonv1.PageRequest)(nil),      // 41: kb.common.v1.PageRequest
+	(*commonv1.PageResponse)(nil),     // 42: kb.common.v1.PageResponse
 }
 var file_kb_document_v1_document_proto_depIdxs = []int32{
 	0,  // 0: kb.document.v1.Document.status:type_name -> kb.document.v1.DocumentStatus
-	33, // 1: kb.document.v1.Document.metadata:type_name -> kb.document.v1.Document.MetadataEntry
-	38, // 2: kb.document.v1.Document.create_time:type_name -> google.protobuf.Timestamp
-	38, // 3: kb.document.v1.Document.update_time:type_name -> google.protobuf.Timestamp
+	35, // 1: kb.document.v1.Document.metadata:type_name -> kb.document.v1.Document.MetadataEntry
+	40, // 2: kb.document.v1.Document.create_time:type_name -> google.protobuf.Timestamp
+	40, // 3: kb.document.v1.Document.update_time:type_name -> google.protobuf.Timestamp
 	2,  // 4: kb.document.v1.Document.pending_version:type_name -> kb.document.v1.PendingVersion
 	0,  // 5: kb.document.v1.PendingVersion.status:type_name -> kb.document.v1.DocumentStatus
-	34, // 6: kb.document.v1.Chunk.metadata:type_name -> kb.document.v1.Chunk.MetadataEntry
+	36, // 6: kb.document.v1.Chunk.metadata:type_name -> kb.document.v1.Chunk.MetadataEntry
 	3,  // 7: kb.document.v1.ScoredChunk.chunk:type_name -> kb.document.v1.Chunk
 	3,  // 8: kb.document.v1.ScoredDocument.best_chunk:type_name -> kb.document.v1.Chunk
-	35, // 9: kb.document.v1.CreateDocumentRequest.metadata:type_name -> kb.document.v1.CreateDocumentRequest.MetadataEntry
+	37, // 9: kb.document.v1.CreateDocumentRequest.metadata:type_name -> kb.document.v1.CreateDocumentRequest.MetadataEntry
 	1,  // 10: kb.document.v1.CreateDocumentResponse.document:type_name -> kb.document.v1.Document
 	1,  // 11: kb.document.v1.ReplaceContentResponse.document:type_name -> kb.document.v1.Document
 	1,  // 12: kb.document.v1.GetDocumentResponse.document:type_name -> kb.document.v1.Document
-	39, // 13: kb.document.v1.ListDocumentsRequest.page:type_name -> kb.common.v1.PageRequest
+	41, // 13: kb.document.v1.ListDocumentsRequest.page:type_name -> kb.common.v1.PageRequest
 	1,  // 14: kb.document.v1.ListDocumentsResponse.documents:type_name -> kb.document.v1.Document
-	40, // 15: kb.document.v1.ListDocumentsResponse.page:type_name -> kb.common.v1.PageResponse
-	36, // 16: kb.document.v1.UpdateDocumentRequest.metadata:type_name -> kb.document.v1.UpdateDocumentRequest.MetadataEntry
+	42, // 15: kb.document.v1.ListDocumentsResponse.page:type_name -> kb.common.v1.PageResponse
+	38, // 16: kb.document.v1.UpdateDocumentRequest.metadata:type_name -> kb.document.v1.UpdateDocumentRequest.MetadataEntry
 	1,  // 17: kb.document.v1.UpdateDocumentResponse.document:type_name -> kb.document.v1.Document
 	0,  // 18: kb.document.v1.SetDocumentStatusRequest.status:type_name -> kb.document.v1.DocumentStatus
 	1,  // 19: kb.document.v1.SetDocumentStatusResponse.document:type_name -> kb.document.v1.Document
-	37, // 20: kb.document.v1.ChunkInput.metadata:type_name -> kb.document.v1.ChunkInput.MetadataEntry
+	39, // 20: kb.document.v1.ChunkInput.metadata:type_name -> kb.document.v1.ChunkInput.MetadataEntry
 	24, // 21: kb.document.v1.AddChunksRequest.chunks:type_name -> kb.document.v1.ChunkInput
-	39, // 22: kb.document.v1.ListChunksRequest.page:type_name -> kb.common.v1.PageRequest
+	41, // 22: kb.document.v1.ListChunksRequest.page:type_name -> kb.common.v1.PageRequest
 	3,  // 23: kb.document.v1.ListChunksResponse.chunks:type_name -> kb.document.v1.Chunk
-	40, // 24: kb.document.v1.ListChunksResponse.page:type_name -> kb.common.v1.PageResponse
+	42, // 24: kb.document.v1.ListChunksResponse.page:type_name -> kb.common.v1.PageResponse
 	4,  // 25: kb.document.v1.SearchChunksResponse.results:type_name -> kb.document.v1.ScoredChunk
 	4,  // 26: kb.document.v1.SearchDocumentsResponse.results:type_name -> kb.document.v1.ScoredChunk
 	5,  // 27: kb.document.v1.SearchDocumentsResponse.documents:type_name -> kb.document.v1.ScoredDocument
@@ -2264,21 +2415,23 @@ var file_kb_document_v1_document_proto_depIdxs = []int32{
 	27, // 38: kb.document.v1.DocumentService.ListChunks:input_type -> kb.document.v1.ListChunksRequest
 	29, // 39: kb.document.v1.DocumentService.SearchChunks:input_type -> kb.document.v1.SearchChunksRequest
 	31, // 40: kb.document.v1.DocumentService.SearchDocuments:input_type -> kb.document.v1.SearchDocumentsRequest
-	7,  // 41: kb.document.v1.DocumentService.CreateDocument:output_type -> kb.document.v1.CreateDocumentResponse
-	9,  // 42: kb.document.v1.DocumentService.ReplaceContent:output_type -> kb.document.v1.ReplaceContentResponse
-	11, // 43: kb.document.v1.DocumentService.GetDocument:output_type -> kb.document.v1.GetDocumentResponse
-	13, // 44: kb.document.v1.DocumentService.ListDocuments:output_type -> kb.document.v1.ListDocumentsResponse
-	15, // 45: kb.document.v1.DocumentService.UpdateDocument:output_type -> kb.document.v1.UpdateDocumentResponse
-	17, // 46: kb.document.v1.DocumentService.DeleteDocument:output_type -> kb.document.v1.DeleteDocumentResponse
-	19, // 47: kb.document.v1.DocumentService.SetDocumentStatus:output_type -> kb.document.v1.SetDocumentStatusResponse
-	21, // 48: kb.document.v1.DocumentService.GetDownloadUrl:output_type -> kb.document.v1.GetDownloadUrlResponse
-	23, // 49: kb.document.v1.DocumentService.ReadContent:output_type -> kb.document.v1.ReadContentResponse
-	26, // 50: kb.document.v1.DocumentService.AddChunks:output_type -> kb.document.v1.AddChunksResponse
-	28, // 51: kb.document.v1.DocumentService.ListChunks:output_type -> kb.document.v1.ListChunksResponse
-	30, // 52: kb.document.v1.DocumentService.SearchChunks:output_type -> kb.document.v1.SearchChunksResponse
-	32, // 53: kb.document.v1.DocumentService.SearchDocuments:output_type -> kb.document.v1.SearchDocumentsResponse
-	41, // [41:54] is the sub-list for method output_type
-	28, // [28:41] is the sub-list for method input_type
+	33, // 41: kb.document.v1.DocumentService.ReindexDocuments:input_type -> kb.document.v1.ReindexDocumentsRequest
+	7,  // 42: kb.document.v1.DocumentService.CreateDocument:output_type -> kb.document.v1.CreateDocumentResponse
+	9,  // 43: kb.document.v1.DocumentService.ReplaceContent:output_type -> kb.document.v1.ReplaceContentResponse
+	11, // 44: kb.document.v1.DocumentService.GetDocument:output_type -> kb.document.v1.GetDocumentResponse
+	13, // 45: kb.document.v1.DocumentService.ListDocuments:output_type -> kb.document.v1.ListDocumentsResponse
+	15, // 46: kb.document.v1.DocumentService.UpdateDocument:output_type -> kb.document.v1.UpdateDocumentResponse
+	17, // 47: kb.document.v1.DocumentService.DeleteDocument:output_type -> kb.document.v1.DeleteDocumentResponse
+	19, // 48: kb.document.v1.DocumentService.SetDocumentStatus:output_type -> kb.document.v1.SetDocumentStatusResponse
+	21, // 49: kb.document.v1.DocumentService.GetDownloadUrl:output_type -> kb.document.v1.GetDownloadUrlResponse
+	23, // 50: kb.document.v1.DocumentService.ReadContent:output_type -> kb.document.v1.ReadContentResponse
+	26, // 51: kb.document.v1.DocumentService.AddChunks:output_type -> kb.document.v1.AddChunksResponse
+	28, // 52: kb.document.v1.DocumentService.ListChunks:output_type -> kb.document.v1.ListChunksResponse
+	30, // 53: kb.document.v1.DocumentService.SearchChunks:output_type -> kb.document.v1.SearchChunksResponse
+	32, // 54: kb.document.v1.DocumentService.SearchDocuments:output_type -> kb.document.v1.SearchDocumentsResponse
+	34, // 55: kb.document.v1.DocumentService.ReindexDocuments:output_type -> kb.document.v1.ReindexDocumentsResponse
+	42, // [42:56] is the sub-list for method output_type
+	28, // [28:42] is the sub-list for method input_type
 	28, // [28:28] is the sub-list for extension type_name
 	28, // [28:28] is the sub-list for extension extendee
 	0,  // [0:28] is the sub-list for field type_name
@@ -2296,7 +2449,7 @@ func file_kb_document_v1_document_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kb_document_v1_document_proto_rawDesc), len(file_kb_document_v1_document_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   37,
+			NumMessages:   39,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

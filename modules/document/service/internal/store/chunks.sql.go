@@ -22,11 +22,12 @@ func (q *Queries) DeleteChunks(ctx context.Context, documentID uuid.UUID) error 
 }
 
 type InsertChunksParams struct {
-	DocumentID uuid.UUID
-	Idx        int32
-	Text       string
-	Metadata   map[string]string
-	Embedding  pgvector.Vector
+	DocumentID     uuid.UUID
+	Idx            int32
+	Text           string
+	Metadata       map[string]string
+	Embedding      pgvector.Vector
+	EmbeddingModel string
 }
 
 const listChunks = `-- name: ListChunks :many
@@ -75,6 +76,58 @@ func (q *Queries) ListChunks(ctx context.Context, arg ListChunksParams) ([]ListC
 	return items, nil
 }
 
+const listReindexTargets = `-- name: ListReindexTargets :many
+SELECT d.id
+FROM document.documents d
+WHERE d.owner_id = $1
+  AND d.status = 4
+  AND d.pending_status = 0
+  AND (cardinality($2::uuid[]) = 0
+       OR d.id = ANY($2::uuid[]))
+  AND ($3::bool
+       OR EXISTS (SELECT 1 FROM document.chunks c
+                  WHERE c.document_id = d.id AND c.embedding_model <> $4::text))
+ORDER BY d.created_at, d.id
+`
+
+type ListReindexTargetsParams struct {
+	OwnerID        string
+	DocumentIds    []uuid.UUID
+	Force          bool
+	EmbeddingModel string
+}
+
+// ListReindexTargets returns the owner's READY documents (status 4) to
+// reindex: those with a chunk made by a model other than embedding_model, or
+// all of them with force. Documents with a pending version (a new file being
+// uploaded or processed, or one that failed) are left out: the new file
+// becomes their chunks, embedded by the current model. With document_ids
+// the choice is limited to those documents.
+func (q *Queries) ListReindexTargets(ctx context.Context, arg ListReindexTargetsParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listReindexTargets,
+		arg.OwnerID,
+		arg.DocumentIds,
+		arg.Force,
+		arg.EmbeddingModel,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchBestChunks = `-- name: SearchBestChunks :many
 SELECT document_id, idx, text, metadata, document_title, score
 FROM (
@@ -84,19 +137,21 @@ FROM (
     FROM document.chunks c
     JOIN document.documents d ON d.id = c.document_id
     WHERE d.owner_id = $2
-      AND (cardinality($3::uuid[]) = 0
-           OR c.document_id = ANY($3::uuid[]))
+      AND c.embedding_model = $3
+      AND (cardinality($4::uuid[]) = 0
+           OR c.document_id = ANY($4::uuid[]))
     ORDER BY c.document_id, c.embedding <=> $1::vector, c.idx
 ) best
 ORDER BY score DESC, document_id
-LIMIT $4
+LIMIT $5
 `
 
 type SearchBestChunksParams struct {
-	Embedding   pgvector.Vector
-	OwnerID     string
-	DocumentIds []uuid.UUID
-	MaxResults  int32
+	Embedding      pgvector.Vector
+	OwnerID        string
+	EmbeddingModel string
+	DocumentIds    []uuid.UUID
+	MaxResults     int32
 }
 
 type SearchBestChunksRow struct {
@@ -111,11 +166,13 @@ type SearchBestChunksRow struct {
 // SearchBestChunks returns the most similar chunk of each of the owner's
 // documents, ranked by that chunk's score: the documents most similar to the
 // embedding. It is an exact scan, since the vector index can't pick one chunk
-// per document.
+// per document. Only chunks of the embedding's model are compared, as in
+// SearchChunks.
 func (q *Queries) SearchBestChunks(ctx context.Context, arg SearchBestChunksParams) ([]SearchBestChunksRow, error) {
 	rows, err := q.db.Query(ctx, searchBestChunks,
 		arg.Embedding,
 		arg.OwnerID,
+		arg.EmbeddingModel,
 		arg.DocumentIds,
 		arg.MaxResults,
 	)
@@ -150,17 +207,19 @@ SELECT c.document_id, c.idx, c.text, c.metadata, d.title AS document_title,
 FROM document.chunks c
 JOIN document.documents d ON d.id = c.document_id
 WHERE d.owner_id = $2
-  AND (cardinality($3::uuid[]) = 0
-       OR c.document_id = ANY($3::uuid[]))
+  AND c.embedding_model = $3
+  AND (cardinality($4::uuid[]) = 0
+       OR c.document_id = ANY($4::uuid[]))
 ORDER BY c.embedding <=> $1::vector
-LIMIT $4
+LIMIT $5
 `
 
 type SearchChunksParams struct {
-	Embedding   pgvector.Vector
-	OwnerID     string
-	DocumentIds []uuid.UUID
-	MaxResults  int32
+	Embedding      pgvector.Vector
+	OwnerID        string
+	EmbeddingModel string
+	DocumentIds    []uuid.UUID
+	MaxResults     int32
 }
 
 type SearchChunksRow struct {
@@ -172,14 +231,16 @@ type SearchChunksRow struct {
 	Score         float32
 }
 
-// SearchChunks returns the owner's chunks most similar to the embedding. The
-// HNSW index yields candidates before the owner filter applies, so the pool
+// SearchChunks returns the owner's chunks most similar to the embedding, among
+// those made by the same embedding model: vectors of different models are not
+// comparable. The HNSW index yields candidates before the owner filter applies, so the pool
 // sets hnsw.iterative_scan (store.ConfigurePool) to keep scanning until the
 // limit is filled.
 func (q *Queries) SearchChunks(ctx context.Context, arg SearchChunksParams) ([]SearchChunksRow, error) {
 	rows, err := q.db.Query(ctx, searchChunks,
 		arg.Embedding,
 		arg.OwnerID,
+		arg.EmbeddingModel,
 		arg.DocumentIds,
 		arg.MaxResults,
 	)

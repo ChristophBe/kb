@@ -11,11 +11,13 @@ import (
 )
 
 type DocumentChunk struct {
-	DocumentID uuid.UUID
-	Idx        int32
-	Text       string
-	Metadata   map[string]string
-	Embedding  pgvector.Vector
+	DocumentID          uuid.UUID
+	Idx                 int32
+	Text                string
+	Metadata            map[string]string
+	Embedding           pgvector.Vector
+	EmbeddingModel      string
+	EmbeddingDimensions pgtype.Int4
 }
 
 type DocumentDocument struct {

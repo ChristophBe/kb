@@ -38,6 +38,16 @@ service DocumentService {
   // similar chunks. It fails with UNAVAILABLE and ErrorInfo reason
   // LLM_UNAVAILABLE while llm is down.
   rpc SearchDocuments(SearchDocumentsRequest) returns (SearchDocumentsResponse);
+  // ReindexDocuments re-embeds the caller's documents with the llm module's
+  // current embedding model, after it was changed (KB_EMBEDDING_MODEL). It
+  // publishes one DocumentReindexRequested event per document (events.proto)
+  // that the ingestion module processes again, and returns without waiting
+  // for them. A document keeps its old chunks until its new ones are stored,
+  // but searches only compare vectors of the query's model, so a document
+  // shows up in search again once it is reindexed. See ReindexDocumentsRequest
+  // for who may call it. Fails with UNAVAILABLE (reason LLM_UNAVAILABLE) while
+  // llm is down, to learn the current model.
+  rpc ReindexDocuments(ReindexDocumentsRequest) returns (ReindexDocumentsResponse);
 }
 
 enum DocumentStatus {
@@ -238,6 +248,9 @@ message ChunkInput {
   string text = 2;
   repeated float embedding = 3;
   map<string, string> metadata = 4;
+  // The embedding model that made `embedding` (EmbedResponse.model); required.
+  // All chunks of a document must come from the same model.
+  string embedding_model = 5;
 }
 
 message AddChunksRequest {
@@ -264,6 +277,10 @@ message SearchChunksRequest {
   int32 limit = 2;
   // Restricts the search to these documents when non-empty.
   repeated string document_ids = 3;
+  // The model that made `embedding`; only chunks embedded by it are searched.
+  // Empty means the llm module's current default embedding model, which is
+  // what an Embed call without a model uses.
+  string embedding_model = 4;
 }
 
 message SearchChunksResponse {
@@ -285,4 +302,28 @@ message SearchDocumentsResponse {
   repeated ScoredChunk results = 1;
   // The most similar documents, each once, ordered by their best chunk.
   repeated ScoredDocument documents = 2;
+}
+
+// ReindexDocuments is a public RPC that acts on the caller's own documents
+// only, since there are no roles yet: the embedding model is one setting for
+// the deployment, but every user's index is their own, so each user reindexes
+// their documents, and nobody can spend processing on another user's. A call
+// without a user is UNAUTHENTICATED.
+message ReindexDocumentsRequest {
+  // The documents to reindex; empty means all of the caller's documents. An
+  // unknown id (or another user's) is NOT_FOUND.
+  repeated string document_ids = 1;
+  // Reindex documents that are already on the current model too. Without it
+  // only documents with chunks of another model are. Use it after a change of
+  // chunking, or when the chunks' recorded model is wrong (see
+  // docs/operations/embedding-model.md).
+  bool force = 2;
+}
+
+message ReindexDocumentsResponse {
+  // How many documents were queued; ready documents already on the current
+  // model, and documents with a new version in progress, are not.
+  int32 requested = 1;
+  // The current embedding model, the one they are reindexed to.
+  string embedding_model = 2;
 }

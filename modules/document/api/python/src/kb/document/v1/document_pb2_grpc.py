@@ -101,6 +101,11 @@ class DocumentServiceStub:
                 request_serializer=kb_dot_document_dot_v1_dot_document__pb2.SearchDocumentsRequest.SerializeToString,
                 response_deserializer=kb_dot_document_dot_v1_dot_document__pb2.SearchDocumentsResponse.FromString,
                 _registered_method=True)
+        self.ReindexDocuments = channel.unary_unary(
+                '/kb.document.v1.DocumentService/ReindexDocuments',
+                request_serializer=kb_dot_document_dot_v1_dot_document__pb2.ReindexDocumentsRequest.SerializeToString,
+                response_deserializer=kb_dot_document_dot_v1_dot_document__pb2.ReindexDocumentsResponse.FromString,
+                _registered_method=True)
 
 
 class DocumentServiceServicer:
@@ -201,6 +206,21 @@ class DocumentServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ReindexDocuments(self, request, context):
+        """ReindexDocuments re-embeds the caller's documents with the llm module's
+        current embedding model, after it was changed (KB_EMBEDDING_MODEL). It
+        publishes one DocumentReindexRequested event per document (events.proto)
+        that the ingestion module processes again, and returns without waiting
+        for them. A document keeps its old chunks until its new ones are stored,
+        but searches only compare vectors of the query's model, so a document
+        shows up in search again once it is reindexed. See ReindexDocumentsRequest
+        for who may call it. Fails with UNAVAILABLE (reason LLM_UNAVAILABLE) while
+        llm is down, to learn the current model.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DocumentServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -268,6 +288,11 @@ def add_DocumentServiceServicer_to_server(servicer, server):
                     servicer.SearchDocuments,
                     request_deserializer=kb_dot_document_dot_v1_dot_document__pb2.SearchDocumentsRequest.FromString,
                     response_serializer=kb_dot_document_dot_v1_dot_document__pb2.SearchDocumentsResponse.SerializeToString,
+            ),
+            'ReindexDocuments': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReindexDocuments,
+                    request_deserializer=kb_dot_document_dot_v1_dot_document__pb2.ReindexDocumentsRequest.FromString,
+                    response_serializer=kb_dot_document_dot_v1_dot_document__pb2.ReindexDocumentsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -623,6 +648,33 @@ class DocumentService:
             '/kb.document.v1.DocumentService/SearchDocuments',
             kb_dot_document_dot_v1_dot_document__pb2.SearchDocumentsRequest.SerializeToString,
             kb_dot_document_dot_v1_dot_document__pb2.SearchDocumentsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReindexDocuments(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/kb.document.v1.DocumentService/ReindexDocuments',
+            kb_dot_document_dot_v1_dot_document__pb2.ReindexDocumentsRequest.SerializeToString,
+            kb_dot_document_dot_v1_dot_document__pb2.ReindexDocumentsResponse.FromString,
             options,
             channel_credentials,
             insecure,

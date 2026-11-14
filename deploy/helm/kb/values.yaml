@@ -138,7 +138,7 @@ components:
     resources:
       requests: { cpu: 50m, memory: 128Mi }
       limits: { memory: 1Gi }
-  # document-service (document module, go, gRPC :9001, metrics :9101; uses postgres, s3)
+  # document-service (document module, go, gRPC :9001, metrics :9101; uses postgres, s3, nats)
   document-service:
     enabled: true
     replicas: 1

@@ -47,14 +47,20 @@ class FakeDocuments:
 
 
 class FakeLlm:
-    def __init__(self, failures: Sequence[BaseException] = ()) -> None:
+    def __init__(
+        self, failures: Sequence[BaseException] = (), models: Sequence[str] = ("fake-embed",)
+    ) -> None:
         self.failures = list(failures)
+        # The model each call reports; the last one repeats.
+        self.models = list(models)
 
     async def Embed(self, request: llm_pb2.EmbedRequest):
         if self.failures:
             raise self.failures.pop(0)
+        model = self.models.pop(0) if len(self.models) > 1 else self.models[0]
         return llm_pb2.EmbedResponse(
-            embeddings=[llm_pb2.Embedding(values=[float(len(t))]) for t in request.inputs]
+            model=model,
+            embeddings=[llm_pb2.Embedding(values=[float(len(t))]) for t in request.inputs],
         )
 
 
@@ -493,3 +499,32 @@ def test_concurrency_comes_from_the_environment(monkeypatch: pytest.MonkeyPatch)
     monkeypatch.setenv("KB_WORKER_CONCURRENCY", "0")
     with pytest.raises(ValueError, match="worker_concurrency"):
         Settings()
+
+
+async def test_chunks_name_the_model_that_embedded_them() -> None:
+    proc, docs, _ = make(b"some text", FakeLlm(models=["other-model"]))
+    assert await proc.handle(uploaded("notes.md")) is None
+    assert docs.chunks
+    assert {c.embedding_model for c in docs.chunks} == {"other-model"}
+
+
+async def test_a_model_switch_between_batches_is_retried_not_stored() -> None:
+    text = b"# Title\n\n" + b"\n\n".join(b"A paragraph of words %d. " % i * 40 for i in range(12))
+    proc, docs, published = make(
+        text,
+        FakeLlm(models=["old-model", "new-model"]),
+        embed_batch_size=1,
+        chunk_tokens=64,
+        chunk_overlap_tokens=8,
+    )
+    delay = await proc.handle(uploaded("notes.md"), attempt=1, last=False)
+    assert delay is not None, "a switch of models is transient"
+    assert docs.chunks == [], "nothing is stored from mixed models"
+    assert all(subject != SUBJECT_FAILED for subject, _ in published)
+
+
+async def test_a_response_without_a_model_fails_the_document() -> None:
+    proc, docs, published = make(b"some text", FakeLlm(models=[""]))
+    assert await proc.handle(uploaded("notes.md")) is None
+    assert docs.chunks == []
+    assert [subject for subject, _ in published][-1] == SUBJECT_FAILED

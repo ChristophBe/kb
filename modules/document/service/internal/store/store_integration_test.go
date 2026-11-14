@@ -22,6 +22,8 @@ const (
 	readyStatus = 4
 	// owner owns the documents of tests that aren't about ownership.
 	owner = "alice"
+	// model is the embedding model of the chunks of tests that aren't about models.
+	model = "test-model"
 )
 
 func newRepo(t *testing.T) *Repo {
@@ -65,7 +67,7 @@ func newOwnedDocument(t *testing.T, r *Repo, ownerID, title string) uuid.UUID {
 func chunk(doc uuid.UUID, idx int32, text string, embedding []float32) InsertChunksParams {
 	return InsertChunksParams{
 		DocumentID: doc, Idx: idx, Text: text, Metadata: map[string]string{"heading": text},
-		Embedding: pgvector.NewVector(embedding),
+		Embedding: pgvector.NewVector(embedding), EmbeddingModel: model,
 	}
 }
 
@@ -75,7 +77,7 @@ func search(t *testing.T, r *Repo, query []float32, limit int32, docs ...uuid.UU
 		docs = []uuid.UUID{}
 	}
 	rows, err := r.SearchChunks(t.Context(), SearchChunksParams{
-		Embedding: pgvector.NewVector(query), OwnerID: owner, DocumentIds: docs, MaxResults: limit,
+		Embedding: pgvector.NewVector(query), OwnerID: owner, EmbeddingModel: model, DocumentIds: docs, MaxResults: limit,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -124,7 +126,7 @@ func TestReplaceChunksKeepsTheOldChunksWhenInsertingFails(t *testing.T) {
 	}
 
 	// The wrong dimension is rejected by the vector column.
-	bad := InsertChunksParams{DocumentID: doc, Idx: 0, Text: "bad", Metadata: map[string]string{}, Embedding: pgvector.NewVector([]float32{1})}
+	bad := InsertChunksParams{DocumentID: doc, Idx: 0, Text: "bad", Metadata: map[string]string{}, Embedding: pgvector.NewVector([]float32{1}), EmbeddingModel: model}
 	if _, err := r.ReplaceChunks(ctx, doc, []InsertChunksParams{bad}, readyStatus); err == nil {
 		t.Fatal("want an error for the wrong dimension")
 	}
@@ -189,7 +191,7 @@ func searchBest(t *testing.T, r *Repo, query []float32, limit int32, docs ...uui
 		docs = []uuid.UUID{}
 	}
 	rows, err := r.SearchBestChunks(t.Context(), SearchBestChunksParams{
-		Embedding: pgvector.NewVector(query), OwnerID: owner, DocumentIds: docs, MaxResults: limit,
+		Embedding: pgvector.NewVector(query), OwnerID: owner, EmbeddingModel: model, DocumentIds: docs, MaxResults: limit,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -317,7 +319,7 @@ func TestSearchesFindOnlyTheOwnersChunks(t *testing.T) {
 	}
 
 	for _, docs := range [][]uuid.UUID{{}, {theirs}, {mine, theirs}} {
-		rows, err := r.SearchChunks(ctx, SearchChunksParams{Embedding: pgvector.NewVector(axis(0)), OwnerID: "alice", DocumentIds: docs, MaxResults: 10})
+		rows, err := r.SearchChunks(ctx, SearchChunksParams{Embedding: pgvector.NewVector(axis(0)), OwnerID: "alice", EmbeddingModel: model, DocumentIds: docs, MaxResults: 10})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -326,7 +328,7 @@ func TestSearchesFindOnlyTheOwnersChunks(t *testing.T) {
 				t.Errorf("alice's search limited to %v finds %q", docs, row.Text)
 			}
 		}
-		best, err := r.SearchBestChunks(ctx, SearchBestChunksParams{Embedding: pgvector.NewVector(axis(0)), OwnerID: "alice", DocumentIds: docs, MaxResults: 10})
+		best, err := r.SearchBestChunks(ctx, SearchBestChunksParams{Embedding: pgvector.NewVector(axis(0)), OwnerID: "alice", EmbeddingModel: model, DocumentIds: docs, MaxResults: 10})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -380,7 +382,7 @@ func TestSearchChunksFindsTheOwnersChunksBehindOtherUsersChunks(t *testing.T) {
 		t.Fatal(err)
 	}
 	rows, err := New(conn).SearchChunks(ctx, SearchChunksParams{
-		Embedding: pgvector.NewVector(query), OwnerID: "alice", DocumentIds: []uuid.UUID{}, MaxResults: 5,
+		Embedding: pgvector.NewVector(query), OwnerID: "alice", EmbeddingModel: model, DocumentIds: []uuid.UUID{}, MaxResults: 5,
 	})
 	if err != nil {
 		t.Fatal(err)

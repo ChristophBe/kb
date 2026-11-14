@@ -34,6 +34,7 @@ func (r iteratorForInsertChunks) Values() ([]interface{}, error) {
 		r.rows[0].Text,
 		r.rows[0].Metadata,
 		r.rows[0].Embedding,
+		r.rows[0].EmbeddingModel,
 	}, nil
 }
 
@@ -42,5 +43,5 @@ func (r iteratorForInsertChunks) Err() error {
 }
 
 func (q *Queries) InsertChunks(ctx context.Context, arg []InsertChunksParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"document", "chunks"}, []string{"document_id", "idx", "text", "metadata", "embedding"}, &iteratorForInsertChunks{rows: arg})
+	return q.db.CopyFrom(ctx, []string{"document", "chunks"}, []string{"document_id", "idx", "text", "metadata", "embedding", "embedding_model"}, &iteratorForInsertChunks{rows: arg})
 }

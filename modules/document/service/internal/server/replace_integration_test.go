@@ -62,7 +62,7 @@ func (h *harness) process(t *testing.T, id, failWith string) string {
 	for i, line := range strings.Split(string(stream.data), "\n") {
 		embedding := make([]float32, 768)
 		embedding[i] = 1
-		chunks = append(chunks, &documentv1.ChunkInput{Index: int32(i), Text: line, Embedding: embedding})
+		chunks = append(chunks, &documentv1.ChunkInput{Index: int32(i), Text: line, Embedding: embedding, EmbeddingModel: "test-model"})
 	}
 	if _, err := h.server.AddChunks(ctx, &documentv1.AddChunksRequest{DocumentId: id, Chunks: chunks}); err != nil {
 		t.Fatalf("add chunks: %v", err)

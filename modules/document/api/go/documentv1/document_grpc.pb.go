@@ -32,6 +32,7 @@ const (
 	DocumentService_ListChunks_FullMethodName        = "/kb.document.v1.DocumentService/ListChunks"
 	DocumentService_SearchChunks_FullMethodName      = "/kb.document.v1.DocumentService/SearchChunks"
 	DocumentService_SearchDocuments_FullMethodName   = "/kb.document.v1.DocumentService/SearchDocuments"
+	DocumentService_ReindexDocuments_FullMethodName  = "/kb.document.v1.DocumentService/ReindexDocuments"
 )
 
 // DocumentServiceClient is the client API for DocumentService service.
@@ -69,6 +70,16 @@ type DocumentServiceClient interface {
 	// similar chunks. It fails with UNAVAILABLE and ErrorInfo reason
 	// LLM_UNAVAILABLE while llm is down.
 	SearchDocuments(ctx context.Context, in *SearchDocumentsRequest, opts ...grpc.CallOption) (*SearchDocumentsResponse, error)
+	// ReindexDocuments re-embeds the caller's documents with the llm module's
+	// current embedding model, after it was changed (KB_EMBEDDING_MODEL). It
+	// publishes one DocumentReindexRequested event per document (events.proto)
+	// that the ingestion module processes again, and returns without waiting
+	// for them. A document keeps its old chunks until its new ones are stored,
+	// but searches only compare vectors of the query's model, so a document
+	// shows up in search again once it is reindexed. See ReindexDocumentsRequest
+	// for who may call it. Fails with UNAVAILABLE (reason LLM_UNAVAILABLE) while
+	// llm is down, to learn the current model.
+	ReindexDocuments(ctx context.Context, in *ReindexDocumentsRequest, opts ...grpc.CallOption) (*ReindexDocumentsResponse, error)
 }
 
 type documentServiceClient struct {
@@ -218,6 +229,16 @@ func (c *documentServiceClient) SearchDocuments(ctx context.Context, in *SearchD
 	return out, nil
 }
 
+func (c *documentServiceClient) ReindexDocuments(ctx context.Context, in *ReindexDocumentsRequest, opts ...grpc.CallOption) (*ReindexDocumentsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReindexDocumentsResponse)
+	err := c.cc.Invoke(ctx, DocumentService_ReindexDocuments_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DocumentServiceServer is the server API for DocumentService service.
 // All implementations must embed UnimplementedDocumentServiceServer
 // for forward compatibility.
@@ -253,6 +274,16 @@ type DocumentServiceServer interface {
 	// similar chunks. It fails with UNAVAILABLE and ErrorInfo reason
 	// LLM_UNAVAILABLE while llm is down.
 	SearchDocuments(context.Context, *SearchDocumentsRequest) (*SearchDocumentsResponse, error)
+	// ReindexDocuments re-embeds the caller's documents with the llm module's
+	// current embedding model, after it was changed (KB_EMBEDDING_MODEL). It
+	// publishes one DocumentReindexRequested event per document (events.proto)
+	// that the ingestion module processes again, and returns without waiting
+	// for them. A document keeps its old chunks until its new ones are stored,
+	// but searches only compare vectors of the query's model, so a document
+	// shows up in search again once it is reindexed. See ReindexDocumentsRequest
+	// for who may call it. Fails with UNAVAILABLE (reason LLM_UNAVAILABLE) while
+	// llm is down, to learn the current model.
+	ReindexDocuments(context.Context, *ReindexDocumentsRequest) (*ReindexDocumentsResponse, error)
 	mustEmbedUnimplementedDocumentServiceServer()
 }
 
@@ -301,6 +332,9 @@ func (UnimplementedDocumentServiceServer) SearchChunks(context.Context, *SearchC
 }
 func (UnimplementedDocumentServiceServer) SearchDocuments(context.Context, *SearchDocumentsRequest) (*SearchDocumentsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SearchDocuments not implemented")
+}
+func (UnimplementedDocumentServiceServer) ReindexDocuments(context.Context, *ReindexDocumentsRequest) (*ReindexDocumentsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReindexDocuments not implemented")
 }
 func (UnimplementedDocumentServiceServer) mustEmbedUnimplementedDocumentServiceServer() {}
 func (UnimplementedDocumentServiceServer) testEmbeddedByValue()                         {}
@@ -550,6 +584,24 @@ func _DocumentService_SearchDocuments_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DocumentService_ReindexDocuments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReindexDocumentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DocumentServiceServer).ReindexDocuments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DocumentService_ReindexDocuments_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DocumentServiceServer).ReindexDocuments(ctx, req.(*ReindexDocumentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DocumentService_ServiceDesc is the grpc.ServiceDesc for DocumentService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -604,6 +656,10 @@ var DocumentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SearchDocuments",
 			Handler:    _DocumentService_SearchDocuments_Handler,
+		},
+		{
+			MethodName: "ReindexDocuments",
+			Handler:    _DocumentService_ReindexDocuments_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

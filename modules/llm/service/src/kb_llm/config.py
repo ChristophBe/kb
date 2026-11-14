@@ -32,6 +32,8 @@ class Settings(PlatformSettings):
     provider_max_concurrency: int = 8
     # Seconds the fake provider waits before each word; 0 streams at once.
     fake_token_delay: float = 0
+    # The embedding model the fake provider reports (and hashes into its vectors).
+    fake_embedding_model: str = "fake-embed"
     # Must match the vector column of the document module's chunk index.
     embedding_dimensions: int = 768
 

@@ -11,6 +11,7 @@ import (
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	"github.com/christoph/kb/modules/document/migrations"
 	"github.com/christoph/kb/modules/document/service/internal/cleanup"
+	"github.com/christoph/kb/modules/document/service/internal/events"
 	"github.com/christoph/kb/modules/document/service/internal/server"
 	"github.com/christoph/kb/modules/document/service/internal/storage"
 	"github.com/christoph/kb/modules/document/service/internal/store"
@@ -19,6 +20,7 @@ import (
 	"github.com/christoph/kb/platform/go/grpcserver"
 	"github.com/christoph/kb/platform/go/logging"
 	"github.com/christoph/kb/platform/go/metrics"
+	"github.com/christoph/kb/platform/go/natsx"
 	"github.com/christoph/kb/platform/go/postgres"
 	"github.com/christoph/kb/platform/go/telemetry"
 )
@@ -26,6 +28,7 @@ import (
 type Config struct {
 	config.Base
 	DatabaseURL string         `env:"DATABASE_URL" envDefault:"postgres://kb:kb@localhost:5432/kb?sslmode=disable"`
+	NATSURL     string         `env:"NATS_URL" envDefault:"nats://localhost:4222"`
 	Storage     storage.Config `envPrefix:"S3_"`
 	// LLMAddr is the llm module, needed only by SearchDocuments.
 	LLMAddr string `env:"LLM_ADDR" envDefault:"localhost:9004"`
@@ -84,6 +87,16 @@ func run() error {
 	}
 	defer pool.Close()
 
+	// Reindex requests go out as events (ingestion consumes them).
+	nc, js, err := natsx.Connect(cfg.NATSURL, "document-service")
+	if err != nil {
+		return err
+	}
+	defer nc.Close()
+	if err := events.EnsureStream(ctx, js); err != nil {
+		return err
+	}
+
 	objects, err := storage.NewS3(ctx, cfg.Storage)
 	if err != nil {
 		return err
@@ -101,6 +114,6 @@ func run() error {
 	go cleanup.New(repo, objects, cfg.Cleanup, log).Run(ctx)
 
 	srv := grpcserver.New(log)
-	documentv1.RegisterDocumentServiceServer(srv, server.New(repo, objects, llmv1.NewLlmServiceClient(llmConn), cfg.Limits, log))
+	documentv1.RegisterDocumentServiceServer(srv, server.New(repo, objects, llmv1.NewLlmServiceClient(llmConn), cfg.Limits, log).WithReindexPublisher(events.NewPublisher(js)))
 	return srv.Run(ctx, cfg.GRPCPort)
 }

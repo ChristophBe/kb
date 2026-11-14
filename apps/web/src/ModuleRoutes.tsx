@@ -1,6 +1,5 @@
-import type { KbModule, LazyModule } from "@kb/module-sdk";
+import { type KbModule, type LazyModule, useModuleRoutes } from "@kb/module-sdk";
 import { use } from "react";
-import { useRoutes } from "react-router";
 import { ModuleLoadError } from "./ModuleBoundary.tsx";
 
 const loaded = new WeakMap<LazyModule, Promise<KbModule>>();
@@ -30,5 +29,5 @@ export function loadModule(module: LazyModule): Promise<KbModule> {
  * then renders its routes.
  */
 export function ModuleRoutes({ module }: { module: LazyModule }) {
-  return useRoutes(use(loadModule(module)).routes);
+  return useModuleRoutes(use(loadModule(module)).routes);
 }

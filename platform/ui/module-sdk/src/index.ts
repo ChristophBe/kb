@@ -1,5 +1,6 @@
 export { Code, ConnectError } from "@connectrpc/connect";
 export { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+export { useModuleRoutes } from "./routes.tsx";
 export {
   authInterceptor,
   KbRuntimeProvider,

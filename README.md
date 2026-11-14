@@ -2,6 +2,8 @@
 
 A modular knowledge-management system: ingest documents, manage them, and chat with them.
 
+Name, story and voice: [Brand](docs/brand.md).
+
 **Website:** [christophbe.github.io/kb](https://christophbe.github.io/kb/), built from [`apps/site`](apps/site) and published to GitHub Pages on every push to `main`.
 
 - **Go** — core infrastructure services (document, ingestion)

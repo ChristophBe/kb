@@ -65,6 +65,7 @@ Update the overview diagrams in the same PR when services, ports or gRPC/NATS li
 - Title the PR in [Conventional Commits](https://www.conventionalcommits.org/) form (see below).
 - Follow the [coding standards](docs/coding-standards.md).
 - UI work follows the [UX and accessibility standards](docs/ux-standards.md) (WCAG 2.2 AA, design tokens, interaction patterns) and fills in the UI checklist of the PR template.
+- Product copy (site, README, UI text) follows the [brand guide](docs/brand.md): name spelling, voice and vocabulary.
 - A PR that adds or changes a user-facing feature updates the matching page of the [user manual](docs/user-manual/README.md) in the same PR, following its rules; a PR that removes a feature removes its description. PRs without a user-facing change tick the checkbox as not applicable.
 - Run `task gen`, `task lint` and `task test` before pushing; the pre-push hook installed by `task setup` runs the fast versions for you.
 

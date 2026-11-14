@@ -67,6 +67,7 @@ From `Config` in [modules/document/service/cmd/document-service](../modules/docu
 | `KB_GRPC_PORT` | `9001` | Serves the gRPC API; each service defaults it to the port in its module.yaml. |
 | `KB_METRICS_PORT` | `9101` | Serves Prometheus metrics at /metrics (package metrics); like KB_GRPC_PORT, each service defaults it to the port in its module.yaml. |
 | `KB_DATABASE_URL` | `postgres://kb:kb@localhost:5432/kb?sslmode=disable` | The Postgres database holding the document schema. |
+| `KB_NATS_URL` | `nats://localhost:4222` | The NATS server with JetStream the reindex events are published to (comma-separated for several). |
 | `KB_S3_ENDPOINT` | `localhost:8333` | The S3 server the service reads and writes, host:port without a scheme. |
 | `KB_S3_PUBLIC_ENDPOINT` | `localhost:8333` | The S3 address browsers use, host:port without a scheme; upload and download URLs are signed for it. |
 | `KB_S3_ACCESS_KEY` | `kb` | The S3 access key id. |
@@ -139,6 +140,7 @@ From `Settings` in [modules/llm/service/src/kb_llm/config.py](../modules/llm/ser
 | `KB_PROVIDER_RETRY_DELAY` | `0.5` | Seconds before the second attempt. |
 | `KB_PROVIDER_MAX_CONCURRENCY` | `8` | Generate and Embed calls in flight per provider, above which calls are rejected. |
 | `KB_FAKE_TOKEN_DELAY` | `0` | Seconds the fake provider waits before each word; 0 streams at once. |
+| `KB_FAKE_EMBEDDING_MODEL` | `fake-embed` | The embedding model the fake provider reports (and hashes into its vectors). |
 | `KB_EMBEDDING_DIMENSIONS` | `768` | Length of the embedding vectors. Must match the vector column of the document module's chunk index, which checks it at startup. |
 
 ## Gateway (Envoy)

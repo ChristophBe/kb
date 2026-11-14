@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
@@ -30,9 +31,11 @@ import (
 type Config struct {
 	config.Base
 	// DatabaseURL is the Postgres database holding the document schema.
-	DatabaseURL string         `env:"DATABASE_URL" envDefault:"postgres://kb:kb@localhost:5432/kb?sslmode=disable"`
-	NATSURL     string         `env:"NATS_URL" envDefault:"nats://localhost:4222"`
-	Storage     storage.Config `envPrefix:"S3_"`
+	DatabaseURL string `env:"DATABASE_URL" envDefault:"postgres://kb:kb@localhost:5432/kb?sslmode=disable"`
+	// NATSURL is the NATS server with JetStream the reindex events are
+	// published to (comma-separated for several).
+	NATSURL string         `env:"NATS_URL" envDefault:"nats://localhost:4222"`
+	Storage storage.Config `envPrefix:"S3_"`
 	// LLMAddr is the llm module (host:port), needed by SearchDocuments and
 	// the startup check of the embedding dimension.
 	LLMAddr string `env:"LLM_ADDR" envDefault:"localhost:9004"`
@@ -45,6 +48,9 @@ type Config struct {
 func (c Config) Validate(p *config.Problems) {
 	c.Base.Validate(p)
 	p.URL("KB_DATABASE_URL", c.DatabaseURL, "postgres", "postgresql")
+	for _, server := range strings.Split(c.NATSURL, ",") {
+		p.URL("KB_NATS_URL", strings.TrimSpace(server), "nats", "tls", "ws", "wss")
+	}
 	c.Storage.Validate(p)
 	p.Addr("KB_LLM_ADDR", c.LLMAddr)
 	c.Limits.Validate(p)

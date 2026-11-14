@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
 
+	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	ingestionv1 "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1"
 	"github.com/christoph/kb/modules/ingestion/service/internal/app"
 )
@@ -129,5 +130,49 @@ func TestPublishUploaded(t *testing.T) {
 	}
 	if ev.GetJobId() != job.ID.String() || ev.GetDocumentId() != job.DocumentID.String() || ev.GetFilename() != "a.md" || ev.GetContentType() != "text/markdown" || ev.GetRun() != 2 {
 		t.Errorf("event = %v", ev)
+	}
+}
+
+type fakeReindexer struct {
+	owner string
+	id    uuid.UUID
+	calls int
+	err   error
+}
+
+func (f *fakeReindexer) ReindexDocument(_ context.Context, owner string, id uuid.UUID) error {
+	f.owner, f.id, f.calls = owner, id, f.calls+1
+	return f.err
+}
+
+func TestReindexPassesTheOwnerAndDocumentOn(t *testing.T) {
+	id := uuid.New()
+	f := &fakeReindexer{}
+	ev := &documentv1.DocumentReindexRequested{DocumentId: id.String(), OwnerId: "alice", EmbeddingModel: "m"}
+	if err := reindex(t.Context(), f, marshal(t, ev)); err != nil {
+		t.Fatal(err)
+	}
+	if f.owner != "alice" || f.id != id || f.calls != 1 {
+		t.Errorf("reindexer = %+v", f)
+	}
+	f.err = app.ErrReindexBusy
+	if err := reindex(t.Context(), f, marshal(t, ev)); !errors.Is(err, app.ErrReindexBusy) {
+		t.Errorf("err = %v, want busy so that the event is retried", err)
+	}
+}
+
+func TestReindexDropsMalformedEvents(t *testing.T) {
+	f := &fakeReindexer{}
+	for name, data := range map[string][]byte{
+		"not protobuf": {0xff, 0xff},
+		"bad id":       marshal(t, &documentv1.DocumentReindexRequested{DocumentId: "x", OwnerId: "alice"}),
+		"no owner":     marshal(t, &documentv1.DocumentReindexRequested{DocumentId: uuid.NewString()}),
+	} {
+		if err := reindex(t.Context(), f, data); err != nil {
+			t.Errorf("%s: %v", name, err)
+		}
+	}
+	if f.calls != 0 {
+		t.Errorf("reindexer called %d times", f.calls)
 	}
 }

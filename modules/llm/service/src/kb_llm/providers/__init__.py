@@ -36,7 +36,9 @@ REGISTRY: dict[str, Callable[[Settings], Provider]] = {
             attempts=s.provider_attempts,
         ),
     ),
-    "fake": lambda s: FakeProvider(s.embedding_dimensions, s.fake_token_delay),
+    "fake": lambda s: FakeProvider(
+        s.embedding_dimensions, s.fake_token_delay, s.fake_embedding_model
+    ),
 }
 
 

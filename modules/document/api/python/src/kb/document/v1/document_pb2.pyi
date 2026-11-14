@@ -281,7 +281,7 @@ class ReadContentResponse(_message.Message):
     def __init__(self, data: _Optional[bytes] = ...) -> None: ...
 
 class ChunkInput(_message.Message):
-    __slots__ = ("index", "text", "embedding", "metadata")
+    __slots__ = ("index", "text", "embedding", "metadata", "embedding_model")
     class MetadataEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -293,11 +293,13 @@ class ChunkInput(_message.Message):
     TEXT_FIELD_NUMBER: _ClassVar[int]
     EMBEDDING_FIELD_NUMBER: _ClassVar[int]
     METADATA_FIELD_NUMBER: _ClassVar[int]
+    EMBEDDING_MODEL_FIELD_NUMBER: _ClassVar[int]
     index: int
     text: str
     embedding: _containers.RepeatedScalarFieldContainer[float]
     metadata: _containers.ScalarMap[str, str]
-    def __init__(self, index: _Optional[int] = ..., text: _Optional[str] = ..., embedding: _Optional[_Iterable[float]] = ..., metadata: _Optional[_Mapping[str, str]] = ...) -> None: ...
+    embedding_model: str
+    def __init__(self, index: _Optional[int] = ..., text: _Optional[str] = ..., embedding: _Optional[_Iterable[float]] = ..., metadata: _Optional[_Mapping[str, str]] = ..., embedding_model: _Optional[str] = ...) -> None: ...
 
 class AddChunksRequest(_message.Message):
     __slots__ = ("document_id", "chunks")
@@ -330,14 +332,16 @@ class ListChunksResponse(_message.Message):
     def __init__(self, chunks: _Optional[_Iterable[_Union[Chunk, _Mapping]]] = ..., page: _Optional[_Union[_common_pb2.PageResponse, _Mapping]] = ...) -> None: ...
 
 class SearchChunksRequest(_message.Message):
-    __slots__ = ("embedding", "limit", "document_ids")
+    __slots__ = ("embedding", "limit", "document_ids", "embedding_model")
     EMBEDDING_FIELD_NUMBER: _ClassVar[int]
     LIMIT_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_IDS_FIELD_NUMBER: _ClassVar[int]
+    EMBEDDING_MODEL_FIELD_NUMBER: _ClassVar[int]
     embedding: _containers.RepeatedScalarFieldContainer[float]
     limit: int
     document_ids: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, embedding: _Optional[_Iterable[float]] = ..., limit: _Optional[int] = ..., document_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+    embedding_model: str
+    def __init__(self, embedding: _Optional[_Iterable[float]] = ..., limit: _Optional[int] = ..., document_ids: _Optional[_Iterable[str]] = ..., embedding_model: _Optional[str] = ...) -> None: ...
 
 class SearchChunksResponse(_message.Message):
     __slots__ = ("results",)
@@ -362,3 +366,19 @@ class SearchDocumentsResponse(_message.Message):
     results: _containers.RepeatedCompositeFieldContainer[ScoredChunk]
     documents: _containers.RepeatedCompositeFieldContainer[ScoredDocument]
     def __init__(self, results: _Optional[_Iterable[_Union[ScoredChunk, _Mapping]]] = ..., documents: _Optional[_Iterable[_Union[ScoredDocument, _Mapping]]] = ...) -> None: ...
+
+class ReindexDocumentsRequest(_message.Message):
+    __slots__ = ("document_ids", "force")
+    DOCUMENT_IDS_FIELD_NUMBER: _ClassVar[int]
+    FORCE_FIELD_NUMBER: _ClassVar[int]
+    document_ids: _containers.RepeatedScalarFieldContainer[str]
+    force: bool
+    def __init__(self, document_ids: _Optional[_Iterable[str]] = ..., force: _Optional[bool] = ...) -> None: ...
+
+class ReindexDocumentsResponse(_message.Message):
+    __slots__ = ("requested", "embedding_model")
+    REQUESTED_FIELD_NUMBER: _ClassVar[int]
+    EMBEDDING_MODEL_FIELD_NUMBER: _ClassVar[int]
+    requested: int
+    embedding_model: str
+    def __init__(self, requested: _Optional[int] = ..., embedding_model: _Optional[str] = ...) -> None: ...

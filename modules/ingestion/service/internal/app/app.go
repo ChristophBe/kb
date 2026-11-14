@@ -32,6 +32,9 @@ var (
 	// ErrDocumentBusy means the document can't take a new version yet: it or
 	// its job is still being uploaded or processed.
 	ErrDocumentBusy = errors.New("the document is still being uploaded or processed")
+	// ErrReindexBusy means the document's job is queued or processing, so a
+	// reindex has to wait for it to finish.
+	ErrReindexBusy = errors.New("the document is being processed")
 	// ErrNotAdvanced is returned by Jobs.Advance when the transition does not
 	// apply: the job is unknown, terminal, in another run or already past the
 	// requested status. Jobs.Reprocess returns it when the job is unknown or
@@ -307,6 +310,38 @@ func (s *Service) ReprocessJob(ctx context.Context, owner string, id uuid.UUID) 
 		return Job{}, fmt.Errorf("publish upload event: %w", err)
 	}
 	return job, nil
+}
+
+// ReindexDocument processes owner's document again after the embedding model
+// changed (the document module's DocumentReindexRequested event). It is a
+// reprocess of the document's job, so the run is new, events of an earlier
+// run are ignored, and the worker replaces the chunks in one step: the old
+// ones stay until the new ones are stored. A document without a job, or whose
+// job still waits for its file, is left alone (the file's processing embeds
+// with the current model anyway). A job that is queued or processing returns
+// ErrReindexBusy: its run may have embedded with the previous model, so the
+// event is retried later.
+func (s *Service) ReindexDocument(ctx context.Context, owner string, documentID uuid.UUID) error {
+	job, err := s.jobs.GetByDocument(ctx, owner, documentID)
+	if errors.Is(err, ErrNotFound) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("get job: %w", err)
+	}
+	switch job.Status {
+	case ingestionv1.JobStatus_JOB_STATUS_PENDING_UPLOAD:
+		return nil
+	case ingestionv1.JobStatus_JOB_STATUS_QUEUED, ingestionv1.JobStatus_JOB_STATUS_PROCESSING:
+		return ErrReindexBusy
+	}
+	if _, err := s.ReprocessJob(ctx, owner, job.ID); err != nil {
+		if errors.Is(err, ErrNotReprocessable) || errors.Is(err, ErrNotFound) {
+			return ErrReindexBusy // queued in between
+		}
+		return err
+	}
+	return nil
 }
 
 // GetJob returns one of owner's jobs.

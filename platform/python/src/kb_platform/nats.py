@@ -22,12 +22,16 @@ async def connect(url: str, name: str) -> Client:
 
 
 async def ensure_stream(js: JetStreamContext, name: str, subjects: list[str]) -> None:
-    """Create the stream if missing. Streams are owned by the module whose
+    """Create the stream if missing and bring its subjects up to date (as the
+    Go side's `natsx.EnsureStream` does). Streams are owned by the module whose
     subjects they carry; any of its components may call this at startup."""
+    config = StreamConfig(name=name, subjects=subjects)
     try:
         await js.stream_info(name)
     except NotFoundError:
-        await js.add_stream(StreamConfig(name=name, subjects=subjects))
+        await js.add_stream(config)
+    else:
+        await js.update_stream(config)
 
 
 async def publish(

@@ -7,18 +7,18 @@ from typing import Any
 
 import grpc
 import pytest
-from kb_chat.chat import Chat
-from kb_chat.config import Settings
-from kb_chat.peers import PeerGenerator, PeerRetriever
-from kb_chat.preview import preview
-from kb_chat.repository import ConversationMatch, ConversationRow, MessageRow
-from kb_chat.server import ChatServicer
-from kb_platform.grpc import USER_HEADER, UserInterceptor, field_violations
-from kb_platform.pagination import Cursor
 from knowcel.chat.v1 import chat_pb2, chat_pb2_grpc
 from knowcel.common.v1 import common_pb2
 from knowcel.document.v1 import document_pb2
 from knowcel.llm.v1 import llm_pb2
+from knowcel_chat.chat import Chat
+from knowcel_chat.config import Settings
+from knowcel_chat.peers import PeerGenerator, PeerRetriever
+from knowcel_chat.preview import preview
+from knowcel_chat.repository import ConversationMatch, ConversationRow, MessageRow
+from knowcel_chat.server import ChatServicer
+from knowcel_platform.grpc import USER_HEADER, UserInterceptor, field_violations
+from knowcel_platform.pagination import Cursor
 
 ALICE, BOB = "alice", "bob"
 
@@ -62,7 +62,7 @@ Connect = Callable[..., chat_pb2_grpc.ChatServiceStub]
 
 @contextlib.asynccontextmanager
 async def running(repo: Any, documents: Any, llm: Any) -> AsyncIterator[Connect]:
-    """Serves chat with the user interceptor of kb_platform.grpc.serve."""
+    """Serves chat with the user interceptor of knowcel_platform.grpc.serve."""
     server = grpc.aio.server(interceptors=[UserInterceptor()])
     chat_pb2_grpc.add_ChatServiceServicer_to_server(servicer(repo, documents, llm), server)
     port = server.add_insecure_port("127.0.0.1:0")

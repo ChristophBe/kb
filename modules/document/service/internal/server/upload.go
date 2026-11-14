@@ -23,7 +23,7 @@ type Limits struct {
 	MaxUploadBytes int64 `env:"MAX_UPLOAD_BYTES" envDefault:"52428800"`
 	// AllowedContentTypes are media types ("application/pdf") or wildcards of
 	// a top-level type ("text/*"). The default is what the ingestion worker
-	// extracts text from (extract_pages in kb_ingestion_worker/extract.py).
+	// extracts text from (extract_pages in knowcel_ingestion_worker/extract.py).
 	AllowedContentTypes []string `env:"ALLOWED_CONTENT_TYPES" envSeparator:"," envDefault:"application/pdf,text/*,application/json,application/yaml,application/x-yaml"`
 }
 

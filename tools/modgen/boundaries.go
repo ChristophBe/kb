@@ -6,7 +6,7 @@ import (
 )
 
 // PlatformPyPackage is the shared Python package every component may import.
-const PlatformPyPackage = "kb_platform"
+const PlatformPyPackage = "knowcel_platform"
 
 // boundary is the import policy of one module, rendered into the Go
 // (depguard), Python (import-linter) and TypeScript (biome) lint configs.

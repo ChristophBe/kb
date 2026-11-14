@@ -1,8 +1,8 @@
 from pathlib import Path
 
 import pytest
-from kb_chat.config import Settings
-from kb_platform.config import Problems
+from knowcel_chat.config import Settings
+from knowcel_platform.config import Problems
 
 
 def _problems(**settings: object) -> list[str]:

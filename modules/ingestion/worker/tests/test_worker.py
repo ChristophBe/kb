@@ -7,8 +7,11 @@ from typing import Any
 import grpc
 import pytest
 from google.protobuf.message import Message
-from kb_ingestion_worker.config import Settings
-from kb_ingestion_worker.worker import (
+from knowcel.document.v1 import document_pb2
+from knowcel.ingestion.v1 import events_pb2, ingestion_pb2
+from knowcel.llm.v1 import llm_pb2
+from knowcel_ingestion_worker.config import Settings
+from knowcel_ingestion_worker.worker import (
     SUBJECT_FAILED,
     SUBJECT_PROCESSED,
     SUBJECT_PROGRESS,
@@ -19,10 +22,7 @@ from kb_ingestion_worker.worker import (
     deliver,
     is_transient,
 )
-from kb_platform.config import Problems
-from knowcel.document.v1 import document_pb2
-from knowcel.ingestion.v1 import events_pb2, ingestion_pb2
-from knowcel.llm.v1 import llm_pb2
+from knowcel_platform.config import Problems
 from prometheus_client import REGISTRY
 
 

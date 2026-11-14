@@ -2,9 +2,9 @@ import pathlib
 import unicodedata
 
 import pytest
-from kb_ingestion_worker.chunking import Chunk, chunk_markdown, chunk_pages, chunk_text
-from kb_ingestion_worker.extract import extract_pages, is_markdown
-from kb_ingestion_worker.tokens import load
+from knowcel_ingestion_worker.chunking import Chunk, chunk_markdown, chunk_pages, chunk_text
+from knowcel_ingestion_worker.extract import extract_pages, is_markdown
+from knowcel_ingestion_worker.tokens import load
 
 FIXTURES = pathlib.Path(__file__).parent / "fixtures"
 TOKENS = load("nomic-embed-text")

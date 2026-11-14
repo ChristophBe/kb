@@ -31,7 +31,7 @@ option go_package = "github.com/ChristophBe/knowcelium/platform/api/go/commonv1;
 //   - metadata: optional context, keys in lower_snake_case.
 //
 // Helpers: grpcserver.InvalidArgument / Violation / ErrorInfo / WithDetails
-// (platform/go/grpcserver), kb_platform.grpc.abort_invalid_argument /
+// (platform/go/grpcserver), knowcel_platform.grpc.abort_invalid_argument /
 // violation / error_info / abort_with_details (platform/python), and
 // fieldViolations / ErrorMessage in @knowcel/ui (platform/ui/kit).
 

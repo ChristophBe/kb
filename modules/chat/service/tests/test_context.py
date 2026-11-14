@@ -2,9 +2,9 @@ import uuid
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
-from kb_chat.context import MESSAGE_OVERHEAD_TOKENS, ApproximateTokenCounter, fit
-from kb_chat.repository import MessageRow
 from knowcel.chat.v1 import chat_pb2
+from knowcel_chat.context import MESSAGE_OVERHEAD_TOKENS, ApproximateTokenCounter, fit
+from knowcel_chat.repository import MessageRow
 
 
 class WordCounter:

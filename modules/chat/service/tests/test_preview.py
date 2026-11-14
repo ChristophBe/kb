@@ -1,5 +1,5 @@
 import pytest
-from kb_chat.preview import PREVIEW_LENGTH, plain_text, preview
+from knowcel_chat.preview import PREVIEW_LENGTH, plain_text, preview
 
 
 @pytest.mark.parametrize(

@@ -13,7 +13,7 @@
       "!**/modules.gen.ts",
       "!**/dist",
       "!biome.modules.jsonc",
-      "!modules/ingestion/worker/src/kb_ingestion_worker/vocab",
+      "!modules/ingestion/worker/src/knowcel_ingestion_worker/vocab",
       "!tools/modgen/testdata/boundaries",
       "!tools/modgen/testdata/golden",
       "!**/*.md",

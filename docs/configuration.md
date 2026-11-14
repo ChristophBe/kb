@@ -27,25 +27,25 @@ Read by every Go service, from `config.Base` in [platform/go/config](../platform
 
 ## Every Python component
 
-Read by every Python component, from `PlatformSettings` in [kb_platform.config](../platform/python/src/kb_platform/config.py). Each component's section gives its port defaults.
+Read by every Python component, from `PlatformSettings` in [knowcel_platform.config](../platform/python/src/knowcel_platform/config.py). Each component's section gives its port defaults.
 
 | Variable | Default | Description |
 |---|---|---|
 | `KB_LOG_LEVEL` | `INFO` | Lowest level logged: DEBUG, INFO, WARNING or ERROR. |
 | `KB_LOG_FORMAT` | `json` | Log output: json (one object per line) or text. |
 | `KB_GRPC_PORT` | `per component` | Serves the gRPC API; each component defaults it to the port in its module.yaml (0 for workers, which serve none). |
-| `KB_METRICS_PORT` | `per component` | Serves Prometheus metrics at /metrics (kb_platform.metrics); like KB_GRPC_PORT, each component defaults it to the port in its module.yaml. |
+| `KB_METRICS_PORT` | `per component` | Serves Prometheus metrics at /metrics (knowcel_platform.metrics); like KB_GRPC_PORT, each component defaults it to the port in its module.yaml. |
 | `KB_NATS_URL` | `nats://localhost:4222` | NATS server with JetStream (comma-separated for a cluster); used by components that publish or consume events. |
-| `KB_OTEL_ENDPOINT` | empty | OTLP/gRPC endpoint spans go to, e.g. http://otel-collector:4317; tracing is off while it is empty (kb_platform.telemetry). |
+| `KB_OTEL_ENDPOINT` | empty | OTLP/gRPC endpoint spans go to, e.g. http://otel-collector:4317; tracing is off while it is empty (knowcel_platform.telemetry). |
 
 ## chat-service
 
-From `Settings` in [modules/chat/service/src/kb_chat/config.py](../modules/chat/service/src/kb_chat/config.py), in addition to the settings every Python component reads.
+From `Settings` in [modules/chat/service/src/knowcel_chat/config.py](../modules/chat/service/src/knowcel_chat/config.py), in addition to the settings every Python component reads.
 
 | Variable | Default | Description |
 |---|---|---|
 | `KB_GRPC_PORT` | `9003` | Serves the gRPC API; each component defaults it to the port in its module.yaml (0 for workers, which serve none). |
-| `KB_METRICS_PORT` | `9103` | Serves Prometheus metrics at /metrics (kb_platform.metrics); like KB_GRPC_PORT, each component defaults it to the port in its module.yaml. |
+| `KB_METRICS_PORT` | `9103` | Serves Prometheus metrics at /metrics (knowcel_platform.metrics); like KB_GRPC_PORT, each component defaults it to the port in its module.yaml. |
 | `KB_DATABASE_URL` | `postgresql+asyncpg://kb:kb@localhost:5432/kb` | The Postgres database holding the chat schema, as an SQLAlchemy URL. |
 | `KB_DOCUMENT_ADDR` | `localhost:9001` | The document module (host:port), which retrieves the passages. |
 | `KB_LLM_ADDR` | `localhost:9004` | The llm module (host:port), which embeds questions and generates answers. |
@@ -77,7 +77,7 @@ From `Config` in [modules/document/service/cmd/document-service](../modules/docu
 | `KB_S3_REGION` | `us-east-1` | The S3 region URLs are signed for. |
 | `KB_LLM_ADDR` | `localhost:9004` | The llm module (host:port), needed by SearchDocuments and the startup check of the embedding dimension. |
 | `KB_MAX_UPLOAD_BYTES` | `52428800` | The largest file accepted. 50 MiB fits long PDFs while bounding the ingestion worker, which holds a whole file and its extracted text in memory. |
-| `KB_ALLOWED_CONTENT_TYPES` | `application/pdf,text/*,application/json,application/yaml,application/x-yaml` | Media types ("application/pdf") or wildcards of a top-level type ("text/*"). The default is what the ingestion worker extracts text from (extract_pages in kb_ingestion_worker/extract.py). |
+| `KB_ALLOWED_CONTENT_TYPES` | `application/pdf,text/*,application/json,application/yaml,application/x-yaml` | Media types ("application/pdf") or wildcards of a top-level type ("text/*"). The default is what the ingestion worker extracts text from (extract_pages in knowcel_ingestion_worker/extract.py). |
 | `KB_CLEANUP_INTERVAL` | `1h` | The time between sweeps; 0 turns the sweeper off. |
 | `KB_UPLOAD_TTL` | `24h` | How long a document may wait for its upload before it is removed. It must be longer than upload URLs stay valid (15 minutes). |
 | `KB_ORPHAN_GRACE` | `1h` | How old an object without a document must be before it is removed, so that an upload racing a delete is not judged too early. |
@@ -96,14 +96,14 @@ From `Config` in [modules/ingestion/service/cmd/ingestion-service](../modules/in
 
 ## ingestion-worker
 
-From `Settings` in [modules/ingestion/worker/src/kb_ingestion_worker/config.py](../modules/ingestion/worker/src/kb_ingestion_worker/config.py), in addition to the settings every Python component reads.
+From `Settings` in [modules/ingestion/worker/src/knowcel_ingestion_worker/config.py](../modules/ingestion/worker/src/knowcel_ingestion_worker/config.py), in addition to the settings every Python component reads.
 
 | Variable | Default | Description |
 |---|---|---|
-| `KB_METRICS_PORT` | `9105` | Serves Prometheus metrics at /metrics (kb_platform.metrics); like KB_GRPC_PORT, each component defaults it to the port in its module.yaml. |
+| `KB_METRICS_PORT` | `9105` | Serves Prometheus metrics at /metrics (knowcel_platform.metrics); like KB_GRPC_PORT, each component defaults it to the port in its module.yaml. |
 | `KB_DOCUMENT_ADDR` | `localhost:9001` | The document module (host:port), whose documents the worker reads and fills. |
 | `KB_LLM_ADDR` | `localhost:9004` | The llm module (host:port), which embeds the chunks. |
-| `KB_CHUNK_TOKENIZER` | `nomic-embed-text` | Chunks are measured in tokens of the embedding model's tokenizer: a name bundled in kb_ingestion_worker/vocab (nomic-embed-text) or a path to a Hugging Face tokenizer.json. Change it together with KB_EMBEDDING_MODEL on the llm service. |
+| `KB_CHUNK_TOKENIZER` | `nomic-embed-text` | Chunks are measured in tokens of the embedding model's tokenizer: a name bundled in knowcel_ingestion_worker/vocab (nomic-embed-text) or a path to a Hugging Face tokenizer.json. Change it together with KB_EMBEDDING_MODEL on the llm service. |
 | `KB_CHUNK_TOKENS` | `256` | Size of a chunk in tokens; it must fit KB_EMBEDDING_MAX_TOKENS. |
 | `KB_CHUNK_OVERLAP_TOKENS` | `32` | Tokens a chunk repeats from the end of the previous one, below KB_CHUNK_TOKENS. |
 | `KB_CHUNK_MIN_SECTION_TOKENS` | `50` | Markdown sections shorter than this (tokens) merge with the next section at the same level, so that a heading with a line of text isn't a chunk of its own. |
@@ -116,13 +116,13 @@ From `Settings` in [modules/ingestion/worker/src/kb_ingestion_worker/config.py](
 
 ## llm-service
 
-From `Settings` in [modules/llm/service/src/kb_llm/config.py](../modules/llm/service/src/kb_llm/config.py), in addition to the settings every Python component reads.
+From `Settings` in [modules/llm/service/src/knowcel_llm/config.py](../modules/llm/service/src/knowcel_llm/config.py), in addition to the settings every Python component reads.
 
 | Variable | Default | Description |
 |---|---|---|
 | `KB_GRPC_PORT` | `9004` | Serves the gRPC API; each component defaults it to the port in its module.yaml (0 for workers, which serve none). |
-| `KB_METRICS_PORT` | `9104` | Serves Prometheus metrics at /metrics (kb_platform.metrics); like KB_GRPC_PORT, each component defaults it to the port in its module.yaml. |
-| `KB_LLM_PROVIDER` | `ollama` | Provider for chat and embeddings, a name in kb_llm.providers.REGISTRY: ollama, anthropic or fake. |
+| `KB_METRICS_PORT` | `9104` | Serves Prometheus metrics at /metrics (knowcel_platform.metrics); like KB_GRPC_PORT, each component defaults it to the port in its module.yaml. |
+| `KB_LLM_PROVIDER` | `ollama` | Provider for chat and embeddings, a name in knowcel_llm.providers.REGISTRY: ollama, anthropic or fake. |
 | `KB_CHAT_PROVIDER` | empty | Provider for Generate (chat) only, e.g. anthropic with Ollama embeddings; empty falls back to KB_LLM_PROVIDER. |
 | `KB_EMBEDDING_PROVIDER` | empty | Provider for Embed only; empty falls back to KB_LLM_PROVIDER. |
 | `KB_OLLAMA_URL` | `http://localhost:11434` | Ollama server (provider ollama). |

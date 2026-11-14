@@ -16,7 +16,7 @@ Labels never carry user, document or job ids, so the number of series stays smal
 
 ## gRPC servers
 
-Recorded for every RPC except health checks by `platform/go/grpcserver` and `kb_platform.grpc.serve`, with the same names and labels in Go and Python.
+Recorded for every RPC except health checks by `platform/go/grpcserver` and `knowcel_platform.grpc.serve`, with the same names and labels in Go and Python.
 
 | Metric | Type | Labels | Meaning |
 |---|---|---|---|

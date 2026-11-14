@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from kb_platform.logging import setup_logging
+from knowcel_platform.logging import setup_logging
 
 
 def test_setup_logs_the_version(

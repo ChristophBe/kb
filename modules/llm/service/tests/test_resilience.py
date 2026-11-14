@@ -6,9 +6,10 @@ from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
 import grpc
 import httpx
 import pytest
-from kb_llm.config import Settings
-from kb_llm.providers import Providers
-from kb_llm.providers.base import (
+from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
+from knowcel_llm.config import Settings
+from knowcel_llm.providers import Providers
+from knowcel_llm.providers.base import (
     Chunk,
     GenerationOptions,
     Message,
@@ -20,10 +21,9 @@ from kb_llm.providers.base import (
     Role,
     Status,
 )
-from kb_llm.providers.fake import FakeProvider
-from kb_llm.providers.ollama import OllamaLimits, OllamaProvider
-from kb_llm.server import LlmServicer
-from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
+from knowcel_llm.providers.fake import FakeProvider
+from knowcel_llm.providers.ollama import OllamaLimits, OllamaProvider
+from knowcel_llm.server import LlmServicer
 
 FAST_RETRIES = OllamaLimits(retry_delay=0)
 HELLO = llm_pb2.GenerateRequest(messages=[llm_pb2.Message(role=llm_pb2.ROLE_USER, content="hi")])
@@ -339,7 +339,7 @@ async def test_a_cancelled_generate_closes_the_provider_stream_and_frees_its_slo
     assert (await call.read()).delta == "word "
     await provider.streaming.wait()
 
-    with caplog.at_level("INFO", logger="kb_llm"):
+    with caplog.at_level("INFO", logger="knowcel_llm"):
         call.cancel()
         async with asyncio.timeout(1):
             await provider.closed.wait()

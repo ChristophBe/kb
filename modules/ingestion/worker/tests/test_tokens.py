@@ -1,7 +1,7 @@
 import pathlib
 
 import pytest
-from kb_ingestion_worker import tokens
+from knowcel_ingestion_worker import tokens
 
 VOCAB = pathlib.Path(tokens.__file__).parent / "vocab"
 

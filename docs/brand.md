@@ -57,6 +57,26 @@ In the product, things keep their technical names. A button says "Add connector"
 ## Visual identity
 
 - **Palette "Moss":** soil-tinted neutrals, a moss-green accent, and ochre as the second gradient stop. The tokens live in [`platform/ui/kit/src/theme.css`](../platform/ui/kit/src/theme.css); use tokens, never raw colours.
-- **Mark "Balanced star k":** a k drawn as a graph, with one centred hub, mirrored arm and leg, and edges that swell into their nodes. Single colour, in two cuts (full and small). The logo section is added by #185 (details also in #201).
+- **Mark "Balanced star k":** a k drawn as a graph, with one centred hub, mirrored arm and leg, and edges that swell into their nodes. Single colour, in two cuts (full and small). See [Logo](#logo).
 - **Typeface:** IBM Plex Sans and IBM Plex Mono.
 - **Direction:** technical, abstract and balanced, not illustrative.
+
+## Logo
+
+The mark is the `Mark` component and the lockup (mark plus "knowcelium" in lowercase IBM Plex Sans semibold, tight tracking, a gap of 0.3em) is `Logo`, both in [`platform/ui/kit/src/logo.tsx`](../platform/ui/kit/src/logo.tsx). Use them instead of copying the SVG; the favicons (`apps/*/public/favicon.svg`) and the social card (`apps/site/public/og.png`) are the only static copies.
+
+### Two cuts
+
+One geometry on a 48-unit grid, drawn twice. `Mark` picks the cut from its size.
+
+| Cut | Size | Use |
+|---|---|---|
+| Full | 32px and up | site nav, README, home page, social card |
+| Small | 24px and below | favicons, app tile, app shell sidebar; thicker waists and larger nodes keep the five nodes and the hub apart at 16px |
+
+### Rules
+
+- **Colour:** single colour, `currentColor`. Use `accent` on the canvas or a surface, `on-accent` on an accent tile.
+- **Clear space:** one node diameter on every side.
+- **Minimum size:** 16px, small cut.
+- **Don't:** recolour single parts, add outlines, rotate, or use gradients.

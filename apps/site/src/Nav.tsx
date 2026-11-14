@@ -1,5 +1,4 @@
-import { buttonClass, ThemeToggle } from "@kb/ui";
-import { Library } from "lucide-react";
+import { buttonClass, Logo, Mark, ThemeToggle } from "@kb/ui";
 import { useEffect, useState } from "react";
 import { GithubMark } from "./GithubMark.tsx";
 import { REPO } from "./links.ts";
@@ -10,7 +9,7 @@ const SECTIONS = [
   { href: "#developers", label: "Developers" },
 ];
 
-/** The sticky top bar: the app's wordmark, section links, GitHub and the theme switch. */
+/** The sticky top bar: the logo, section links, GitHub and the theme switch. */
 export function Nav() {
   return (
     <div className="glass-subtle sticky top-0 z-20 border-b border-border">
@@ -18,11 +17,9 @@ export function Nav() {
         aria-label="Main"
         className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-8"
       >
-        <a href="#top" className="flex items-center gap-2 font-semibold">
-          <Library className="size-5 text-accent" aria-hidden="true" />
-          <span className="font-mono font-medium">kb</span>
-          <span className="hidden text-fg-muted sm:inline">/</span>
-          <span className="hidden sm:inline">Knowledge Base</span>
+        <a href="#top" aria-label="Knowcelium" className="flex items-center">
+          <Mark size={32} className="text-accent sm:hidden" />
+          <Logo size={32} className="hidden sm:inline-flex" />
         </a>
         <ul className="ml-auto hidden items-center gap-1 md:flex">
           {SECTIONS.map((s) => (

@@ -12,11 +12,26 @@ hostport=${jwks#*://}
 hostport=${hostport%%/*}
 host=${hostport%:*}
 port=${hostport##*:}
+# Every problem is reported before Envoy exits.
+problems=""
+problem() { problems="${problems}
+  $1"; }
 case "$scheme" in
   http) [ "$host" != "$hostport" ] || port=80 ;;
   https) [ "$host" != "$hostport" ] || port=443 ;;
-  *) echo "KB_OIDC_JWKS_URL must be an http(s) URL: $jwks" >&2; exit 1 ;;
+  *) problem "KB_OIDC_JWKS_URL: must be an http(s) URL, got \"$jwks\"" ;;
 esac
+case "$issuer" in
+  http://?*|https://?*) ;;
+  *) problem "KB_OIDC_ISSUER: must be an http(s) URL, got \"$issuer\"" ;;
+esac
+case "$audiences" in
+  ""|,*|*,|*,,*) problem "KB_OIDC_AUDIENCES: must list client ids separated by commas, got \"$audiences\"" ;;
+esac
+if [ -n "$problems" ]; then
+  echo "envoy: invalid configuration:$problems" >&2
+  exit 1
+fi
 
 sed \
   -e "s|\${KB_OIDC_ISSUER}|$issuer|g" \

@@ -152,7 +152,7 @@ tasks:
         tmp=$(mktemp -d)
         trap 'rm -rf "$tmp"' EXIT
         cp -R {{.FIXTURE}}/. "$tmp"
-        go -C tools run ./modgen -root "$tmp" >/dev/null
+        go -C tools run ./modgen -config-doc=false -root "$tmp" >/dev/null
         status=0
         # expect <linter> <files> <output>: the output must name exactly these files (never an ok.* file).
         expect() {

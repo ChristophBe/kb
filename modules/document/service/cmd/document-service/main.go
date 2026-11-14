@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -11,6 +12,7 @@ import (
 	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
 	"github.com/christoph/kb/modules/document/migrations"
 	"github.com/christoph/kb/modules/document/service/internal/cleanup"
+	"github.com/christoph/kb/modules/document/service/internal/embedcheck"
 	"github.com/christoph/kb/modules/document/service/internal/server"
 	"github.com/christoph/kb/modules/document/service/internal/storage"
 	"github.com/christoph/kb/modules/document/service/internal/store"
@@ -25,9 +27,11 @@ import (
 
 type Config struct {
 	config.Base
+	// DatabaseURL is the Postgres database holding the document schema.
 	DatabaseURL string         `env:"DATABASE_URL" envDefault:"postgres://kb:kb@localhost:5432/kb?sslmode=disable"`
 	Storage     storage.Config `envPrefix:"S3_"`
-	// LLMAddr is the llm module, needed only by SearchDocuments.
+	// LLMAddr is the llm module (host:port), needed by SearchDocuments and
+	// the startup check of the embedding dimension.
 	LLMAddr string `env:"LLM_ADDR" envDefault:"localhost:9004"`
 	// Limits bound uploads: KB_MAX_UPLOAD_BYTES, KB_ALLOWED_CONTENT_TYPES.
 	Limits server.Limits
@@ -35,24 +39,34 @@ type Config struct {
 	Cleanup cleanup.Config
 }
 
+func (c Config) Validate(p *config.Problems) {
+	c.Base.Validate(p)
+	p.URL("KB_DATABASE_URL", c.DatabaseURL, "postgres", "postgresql")
+	c.Storage.Validate(p)
+	p.Addr("KB_LLM_ADDR", c.LLMAddr)
+	c.Limits.Validate(p)
+	c.Cleanup.Validate(p)
+}
+
+// loadConfig reads the configuration with the ports of module.yaml as defaults.
+func loadConfig() (Config, error) {
+	return config.Load(func(c *Config) { c.DefaultPorts(9001, 9101) })
+}
+
 func main() {
-	if err := run(); err != nil {
+	cfg, err := loadConfig()
+	if err != nil {
+		// Before logging is set up: one plain message listing every problem.
+		fmt.Fprintln(os.Stderr, "document-service:", err)
+		os.Exit(1)
+	}
+	if err := run(cfg); err != nil {
 		slog.Error("fatal", "error", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
-	cfg, err := config.Load[Config]()
-	if err != nil {
-		return err
-	}
-	if cfg.GRPCPort == 0 {
-		cfg.GRPCPort = 9001
-	}
-	if cfg.MetricsPort == 0 {
-		cfg.MetricsPort = 9101
-	}
+func run(cfg Config) error {
 	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
 		return grpcserver.Probe(cfg.GRPCPort)
 	}
@@ -96,11 +110,20 @@ func run() error {
 	}
 	defer llmConn.Close()
 
+	// Says at startup, not on the first upload, when llm embeds with another
+	// dimension than the chunk index has (see package embedcheck).
+	dims, err := embedcheck.ColumnDimensions(ctx, pool)
+	if err != nil {
+		return err
+	}
+	llm := llmv1.NewLlmServiceClient(llmConn)
+	go embedcheck.Run(ctx, dims, llm, embedcheck.DefaultBackoff, log)
+
 	// Removes abandoned uploads and orphaned objects; replicas take turns.
 	repo := store.NewRepo(pool)
 	go cleanup.New(repo, objects, cfg.Cleanup, log).Run(ctx)
 
 	srv := grpcserver.New(log)
-	documentv1.RegisterDocumentServiceServer(srv, server.New(repo, objects, llmv1.NewLlmServiceClient(llmConn), cfg.Limits, log))
+	documentv1.RegisterDocumentServiceServer(srv, server.New(repo, objects, llm, cfg.Limits, log))
 	return srv.Run(ctx, cfg.GRPCPort)
 }

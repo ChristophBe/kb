@@ -11,6 +11,7 @@ import (
 
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 
+	"github.com/christoph/kb/platform/go/config"
 	"github.com/christoph/kb/platform/go/grpcserver"
 )
 
@@ -24,6 +25,24 @@ type Limits struct {
 	// a top-level type ("text/*"). The default is what the ingestion worker
 	// extracts text from (extract_pages in kb_ingestion_worker/extract.py).
 	AllowedContentTypes []string `env:"ALLOWED_CONTENT_TYPES" envSeparator:"," envDefault:"application/pdf,text/*,application/json,application/yaml,application/x-yaml"`
+}
+
+// Validate checks the limits (KB_MAX_UPLOAD_BYTES, KB_ALLOWED_CONTENT_TYPES).
+func (l Limits) Validate(p *config.Problems) {
+	config.Positive(p, "KB_MAX_UPLOAD_BYTES", l.MaxUploadBytes)
+	if len(l.AllowedContentTypes) == 0 {
+		p.Addf("KB_ALLOWED_CONTENT_TYPES", "must list at least one content type")
+	}
+	for _, allowed := range l.AllowedContentTypes {
+		allowed = strings.ToLower(strings.TrimSpace(allowed))
+		kind, sub, ok := strings.Cut(allowed, "/")
+		if sub == "*" {
+			sub = "x" // a wildcard is a valid type with any subtype
+		}
+		if mediaType, _, err := mime.ParseMediaType(kind + "/" + sub); !ok || err != nil || mediaType != kind+"/"+sub {
+			p.Addf("KB_ALLOWED_CONTENT_TYPES", "%q is not a media type (type/subtype) or a wildcard (type/*)", allowed)
+		}
+	}
 }
 
 // allows reports whether contentType is one of the allowed types, ignoring

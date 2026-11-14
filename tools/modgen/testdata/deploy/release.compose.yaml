@@ -1,0 +1,3 @@
+services:
+  web:
+    image: kb-web:${KB_VERSION:?set KB_VERSION}

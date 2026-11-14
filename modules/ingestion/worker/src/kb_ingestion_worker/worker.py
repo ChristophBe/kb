@@ -93,6 +93,11 @@ _TRANSIENT_CODES = {
 }
 
 
+class EmbeddingModelChangedError(Exception):
+    """The llm service switched embedding models between two batches of one
+    document. A later attempt embeds all of it with the new model."""
+
+
 def is_transient(exc: BaseException) -> bool:
     """Whether a later attempt may succeed. Anything unrecognised is permanent,
     so that a bug fails the document instead of being retried over and over."""
@@ -101,7 +106,7 @@ def is_transient(exc: BaseException) -> bool:
         if "larger than max" in (exc.details() or ""):
             return False
         return exc.code() in _TRANSIENT_CODES
-    return isinstance(exc, TimeoutError | ConnectionError)
+    return isinstance(exc, TimeoutError | ConnectionError | EmbeddingModelChangedError)
 
 
 class Processor:
@@ -243,11 +248,21 @@ class Processor:
 
         await self._report(event, _EMBEDDING, _EMBEDDING_START)
         inputs: list[document_pb2.ChunkInput] = []
+        # The model that embedded the chunks, as llm reports it: stored with
+        # them, so that search only compares vectors of one model.
+        model = ""
         batch = self._settings.embed_batch_size
         span = _EMBEDDING_END - _EMBEDDING_START
         for start in range(0, len(chunks), batch):
             group = chunks[start : start + batch]
             resp = await self._llm.Embed(llm_pb2.EmbedRequest(inputs=[c.text for c in group]))
+            if not resp.model:
+                raise ValueError("the llm service did not name the embedding model")
+            if model and resp.model != model:
+                raise EmbeddingModelChangedError(
+                    f"the embedding model changed from {model} to {resp.model} while embedding"
+                )
+            model = resp.model
             for offset, (chunk, emb) in enumerate(zip(group, resp.embeddings, strict=True)):
                 inputs.append(
                     document_pb2.ChunkInput(
@@ -255,6 +270,7 @@ class Processor:
                         text=chunk.text,
                         metadata=chunk.metadata,
                         embedding=emb.values,
+                        embedding_model=model,
                     )
                 )
             done = start + len(group)

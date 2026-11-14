@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -154,6 +155,8 @@ type fakeLLM struct {
 	err    error
 	calls  []*llmv1.EmbedRequest
 	vector []float32
+	// model is what Embed reports; "fake-embed" when empty.
+	model string
 }
 
 func (f *fakeLLM) Embed(_ context.Context, req *llmv1.EmbedRequest, _ ...grpc.CallOption) (*llmv1.EmbedResponse, error) {
@@ -161,7 +164,7 @@ func (f *fakeLLM) Embed(_ context.Context, req *llmv1.EmbedRequest, _ ...grpc.Ca
 	if f.err != nil {
 		return nil, f.err
 	}
-	resp := &llmv1.EmbedResponse{}
+	resp := &llmv1.EmbedResponse{Model: cmp.Or(f.model, "fake-embed")}
 	for range req.GetInputs() {
 		resp.Embeddings = append(resp.Embeddings, &llmv1.Embedding{Values: f.vector})
 	}

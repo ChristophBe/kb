@@ -62,6 +62,11 @@ type ObjectStore interface {
 	Delete(ctx context.Context, key string) error
 }
 
+// ReindexPublisher announces that a document should be embedded again.
+type ReindexPublisher interface {
+	PublishReindexRequested(ctx context.Context, ev *documentv1.DocumentReindexRequested) error
+}
+
 // Server implements DocumentService. Documents belong to the user who uploaded
 // them: the RPCs a user calls, and the internal CreateDocument and SearchChunks
 // that services call on a user's behalf (passing the user on), act on that
@@ -75,6 +80,7 @@ type Server struct {
 	llm     llmv1.LlmServiceClient
 	limits  Limits
 	log     *slog.Logger
+	reindex ReindexPublisher
 }
 
 // New builds the server. llm is the llm module's client, used only by
@@ -82,6 +88,13 @@ type Server struct {
 // files users upload.
 func New(repo Repository, objects ObjectStore, llm llmv1.LlmServiceClient, limits Limits, log *slog.Logger) *Server {
 	return &Server{repo: repo, objects: objects, llm: llm, limits: limits, log: log}
+}
+
+// WithReindexPublisher sets where ReindexDocuments sends its events; without
+// one it fails with UNAVAILABLE.
+func (s *Server) WithReindexPublisher(p ReindexPublisher) *Server {
+	s.reindex = p
+	return s
 }
 
 // CreateDocument registers a document owned by the calling user, so it is
@@ -383,12 +396,22 @@ func (s *Server) AddChunks(ctx context.Context, req *documentv1.AddChunksRequest
 			return nil, grpcserver.InvalidArgument(grpcserver.Violation(fmt.Sprintf("chunks[%d].embedding", i),
 				fmt.Sprintf("Chunk %d has no embedding", c.GetIndex())))
 		}
+		if c.GetEmbeddingModel() == "" {
+			return nil, grpcserver.InvalidArgument(grpcserver.Violation(fmt.Sprintf("chunks[%d].embedding_model", i),
+				fmt.Sprintf("Chunk %d does not name its embedding model", c.GetIndex())))
+		}
+		if c.GetEmbeddingModel() != req.GetChunks()[0].GetEmbeddingModel() {
+			return nil, grpcserver.InvalidArgument(grpcserver.Violation(fmt.Sprintf("chunks[%d].embedding_model", i),
+				"All chunks of a document must come from the same embedding model"))
+		}
 		rows = append(rows, store.InsertChunksParams{
 			DocumentID: id,
 			Idx:        c.GetIndex(),
 			Text:       c.GetText(),
 			Metadata:   nonNil(c.GetMetadata()),
 			Embedding:  pgvector.NewVector(c.GetEmbedding()),
+
+			EmbeddingModel: c.GetEmbeddingModel(),
 		})
 	}
 	// The document as it was tells whether the chunks bring in a new version.
@@ -455,7 +478,13 @@ func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksR
 	if err != nil {
 		return nil, err
 	}
-	results, err := s.search(ctx, owner, req.GetEmbedding(), req.GetLimit(), ids)
+	model := req.GetEmbeddingModel()
+	if model == "" {
+		if model, err = s.currentModel(ctx); err != nil {
+			return nil, err
+		}
+	}
+	results, err := s.search(ctx, owner, req.GetEmbedding(), model, req.GetLimit(), ids)
 	if err != nil {
 		return nil, err
 	}
@@ -481,25 +510,20 @@ func (s *Server) SearchDocuments(ctx context.Context, req *documentv1.SearchDocu
 	}
 	embedded, err := s.llm.Embed(ctx, &llmv1.EmbedRequest{Inputs: []string{query}})
 	if err != nil {
-		// llm's own statuses mean something else here; only its availability
-		// is passed on.
-		if code := status.Code(err); code == codes.Unavailable || code == codes.DeadlineExceeded {
-			s.log.WarnContext(ctx, "embed query", "error", err)
-			return nil, grpcserver.WithDetails(codes.Unavailable, "the llm service is unavailable",
-				grpcserver.ErrorInfo(domain, "LLM_UNAVAILABLE", nil))
-		}
-		return nil, s.internal("embed query", err)
+		return nil, s.llmError("embed query", err)
 	}
-	if len(embedded.GetEmbeddings()) != 1 || len(embedded.GetEmbeddings()[0].GetValues()) == 0 {
+	if len(embedded.GetEmbeddings()) != 1 || len(embedded.GetEmbeddings()[0].GetValues()) == 0 || embedded.GetModel() == "" {
 		return nil, s.internal("embed query", fmt.Errorf("got %d embeddings for 1 input", len(embedded.GetEmbeddings())))
 	}
 	embedding := embedded.GetEmbeddings()[0].GetValues()
-	results, err := s.search(ctx, owner, embedding, req.GetLimit(), ids)
+	model := embedded.GetModel()
+	results, err := s.search(ctx, owner, embedding, model, req.GetLimit(), ids)
 	if err != nil {
 		return nil, err
 	}
 	rows, err := s.repo.SearchBestChunks(ctx, store.SearchBestChunksParams{
-		Embedding: pgvector.NewVector(embedding), OwnerID: owner, DocumentIds: ids, MaxResults: clampLimit(req.GetLimit()),
+		Embedding: pgvector.NewVector(embedding), OwnerID: owner, EmbeddingModel: model,
+		DocumentIds: ids, MaxResults: clampLimit(req.GetLimit()),
 	})
 	if err != nil {
 		return nil, s.internal("search documents", err)
@@ -518,6 +542,74 @@ func (s *Server) SearchDocuments(ctx context.Context, req *documentv1.SearchDocu
 	return &documentv1.SearchDocumentsResponse{Results: results, Documents: documents}, nil
 }
 
+// llmError maps a failed llm call: only its availability is passed on, since
+// its other statuses mean something else here.
+func (s *Server) llmError(op string, err error) error {
+	if code := status.Code(err); code == codes.Unavailable || code == codes.DeadlineExceeded {
+		s.log.Warn(op, "error", err)
+		return grpcserver.WithDetails(codes.Unavailable, "the llm service is unavailable",
+			grpcserver.ErrorInfo(domain, "LLM_UNAVAILABLE", nil))
+	}
+	return s.internal(op, err)
+}
+
+// currentModel asks llm for the embedding model it uses now: an Embed call
+// without inputs answers with the model without calling the provider.
+func (s *Server) currentModel(ctx context.Context) (string, error) {
+	resp, err := s.llm.Embed(ctx, &llmv1.EmbedRequest{})
+	if err != nil {
+		return "", s.llmError("get embedding model", err)
+	}
+	if resp.GetModel() == "" {
+		return "", s.internal("get embedding model", errors.New("llm returned no model"))
+	}
+	return resp.GetModel(), nil
+}
+
+// ReindexDocuments asks for the caller's documents to be embedded again with
+// the current model: one DocumentReindexRequested event per document, which
+// ingestion processes. A document is searchable again once its new chunks are
+// stored; until then its old chunks stay (and are not searched, being of
+// another model), so a failed run loses nothing.
+func (s *Server) ReindexDocuments(ctx context.Context, req *documentv1.ReindexDocumentsRequest) (*documentv1.ReindexDocumentsResponse, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ids, err := parseIDs(req.GetDocumentIds())
+	if err != nil {
+		return nil, err
+	}
+	for _, id := range ids {
+		if _, err := s.getOwned(ctx, owner, id); err != nil {
+			return nil, err
+		}
+	}
+	if s.reindex == nil {
+		return nil, status.Error(codes.Unavailable, "reindexing is unavailable")
+	}
+	model, err := s.currentModel(ctx)
+	if err != nil {
+		return nil, err
+	}
+	targets, err := s.repo.ListReindexTargets(ctx, store.ListReindexTargetsParams{
+		OwnerID: owner, DocumentIds: ids, Force: req.GetForce(), EmbeddingModel: model,
+	})
+	if err != nil {
+		return nil, s.internal("list documents to reindex", err)
+	}
+	for i, id := range targets {
+		ev := &documentv1.DocumentReindexRequested{DocumentId: id.String(), OwnerId: owner, EmbeddingModel: model}
+		if err := s.reindex.PublishReindexRequested(ctx, ev); err != nil {
+			// The documents before this one are queued; asking again queues
+			// the rest (and some of those again, which is harmless).
+			s.log.ErrorContext(ctx, "publish reindex request", "queued", i, "error", err)
+			return nil, status.Error(codes.Unavailable, "the event stream is unavailable, try again")
+		}
+	}
+	return &documentv1.ReindexDocumentsResponse{Requested: int32(len(targets)), EmbeddingModel: model}, nil
+}
+
 // clampLimit applies the default and the cap to a search's limit.
 func clampLimit(limit int32) int32 {
 	if limit <= 0 {
@@ -526,9 +618,12 @@ func clampLimit(limit int32) int32 {
 	return min(limit, maxLimit)
 }
 
-func (s *Server) search(ctx context.Context, owner string, embedding []float32, limit int32, ids []uuid.UUID) ([]*documentv1.ScoredChunk, error) {
+// search finds the owner's chunks most similar to an embedding that model made;
+// chunks of other models are never compared with it.
+func (s *Server) search(ctx context.Context, owner string, embedding []float32, model string, limit int32, ids []uuid.UUID) ([]*documentv1.ScoredChunk, error) {
 	rows, err := s.repo.SearchChunks(ctx, store.SearchChunksParams{
-		Embedding: pgvector.NewVector(embedding), OwnerID: owner, DocumentIds: ids, MaxResults: clampLimit(limit),
+		Embedding: pgvector.NewVector(embedding), OwnerID: owner, EmbeddingModel: model,
+		DocumentIds: ids, MaxResults: clampLimit(limit),
 	})
 	if err != nil {
 		return nil, s.internal("search chunks", err)

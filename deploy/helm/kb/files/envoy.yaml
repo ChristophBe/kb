@@ -62,6 +62,8 @@ static_resources:
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/kb.document.v1.DocumentService/SearchDocuments" }
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/kb.document.v1.DocumentService/ReindexDocuments" }
+                          route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/kb.ingestion.v1.IngestionService/CreateUpload" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/kb.ingestion.v1.IngestionService/CompleteUpload" }

@@ -17,6 +17,7 @@ services:
       KB_ANTHROPIC_CHAT_MODEL: ${KB_ANTHROPIC_CHAT_MODEL:-claude-sonnet-5-5}
       KB_EMBEDDING_DIMENSIONS: ${KB_EMBEDDING_DIMENSIONS:-768}
       KB_FAKE_TOKEN_DELAY: ${KB_FAKE_TOKEN_DELAY:-0}
+      KB_FAKE_EMBEDDING_MODEL: ${KB_FAKE_EMBEDDING_MODEL:-fake-embed}
     # gRPC and Prometheus /metrics (docs/metrics.md).
     ports: ["9004:9004", "9104:9104"]
     depends_on:

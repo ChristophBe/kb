@@ -22,3 +22,4 @@ consumes:
   - kb.ingestion.progress
   - kb.ingestion.processed
   - kb.ingestion.failed
+  - kb.document.reindex_requested   # ingestion-service (reprocess after an embedding model change)

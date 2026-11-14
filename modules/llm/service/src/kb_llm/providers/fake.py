@@ -10,15 +10,19 @@ class FakeProvider:
     """Deterministic provider for tests and for running the stack without a
     model server. Generation echoes the last user message, optionally waiting
     `token_delay` seconds before each word (to watch or stop a stream);
-    embeddings are derived from a hash so identical text gets identical vectors."""
+    embeddings are derived from a hash of the model and the text, so identical
+    text gets identical vectors for one model."""
 
     name = "fake"
     default_chat_model = "fake-chat"
-    default_embedding_model = "fake-embed"
 
-    def __init__(self, dimensions: int, token_delay: float = 0) -> None:
+    def __init__(
+        self, dimensions: int, token_delay: float = 0, embedding_model: str = "fake-embed"
+    ) -> None:
         self._dimensions = dimensions
         self._token_delay = token_delay
+        # Settable, to try out a change of the embedding model without a model server.
+        self.default_embedding_model = embedding_model
 
     async def generate(
         self, model: str, messages: list[Message], options: GenerationOptions
@@ -36,7 +40,7 @@ class FakeProvider:
         )
 
     async def embed(self, model: str, inputs: list[str]) -> list[list[float]]:
-        return [self._vector(text) for text in inputs]
+        return [self._vector(f"{model}:{text}") for text in inputs]
 
     def _vector(self, text: str) -> list[float]:
         values: list[float] = []

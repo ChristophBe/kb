@@ -1,14 +1,14 @@
 import asyncio
 import logging
 
-from kb.chat.v1 import chat_pb2, chat_pb2_grpc
-from kb.document.v1 import document_pb2_grpc
-from kb.llm.v1 import llm_pb2_grpc
 from kb_platform.config import load_settings
 from kb_platform.grpc import channel, serve
 from kb_platform.logging import setup_logging
 from kb_platform.metrics import start_metrics_server
 from kb_platform.telemetry import setup_tracing
+from knowcel.chat.v1 import chat_pb2, chat_pb2_grpc
+from knowcel.document.v1 import document_pb2_grpc
+from knowcel.llm.v1 import llm_pb2_grpc
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from .chat import Chat

@@ -1,5 +1,5 @@
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
-import { LlmService, ModelKind } from "@kb/llm-api/kb/llm/v1/llm_pb";
+import { LlmService, ModelKind } from "@kb/llm-api/knowcel/llm/v1/llm_pb";
 import { renderModule } from "@kb/module-sdk/testing";
 import { act, cleanup, fireEvent, screen } from "@testing-library/react";
 import { MessageSquare } from "lucide-react";
@@ -73,7 +73,7 @@ describe("useModelChoice", () => {
   });
 
   it("falls back to the default when the picked model is gone", async () => {
-    localStorage.setItem("kb.chat.model.c1", "mistral");
+    localStorage.setItem("knowcel.chat.model.c1", "mistral");
     renderProbe("c1");
     const select = (await screen.findByRole("combobox", { name: "Model" })) as HTMLSelectElement;
     expect(select.value).toBe("llama3.2");

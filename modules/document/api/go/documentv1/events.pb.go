@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.12
 // 	protoc        (unknown)
-// source: kb/document/v1/events.proto
+// source: knowcel/document/v1/events.proto
 
 package documentv1
 
@@ -21,7 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Subject: kb.document.reindex_requested
+// Subject: knowcel.document.reindex_requested
 // Published by ReindexDocuments, once per document: its chunks should be made
 // again, with the current embedding model. The ingestion module processes the
 // document's file again, which replaces the chunks (AddChunks). Delivery is
@@ -39,7 +39,7 @@ type DocumentReindexRequested struct {
 
 func (x *DocumentReindexRequested) Reset() {
 	*x = DocumentReindexRequested{}
-	mi := &file_kb_document_v1_events_proto_msgTypes[0]
+	mi := &file_knowcel_document_v1_events_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -51,7 +51,7 @@ func (x *DocumentReindexRequested) String() string {
 func (*DocumentReindexRequested) ProtoMessage() {}
 
 func (x *DocumentReindexRequested) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_document_v1_events_proto_msgTypes[0]
+	mi := &file_knowcel_document_v1_events_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -64,7 +64,7 @@ func (x *DocumentReindexRequested) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DocumentReindexRequested.ProtoReflect.Descriptor instead.
 func (*DocumentReindexRequested) Descriptor() ([]byte, []int) {
-	return file_kb_document_v1_events_proto_rawDescGZIP(), []int{0}
+	return file_knowcel_document_v1_events_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *DocumentReindexRequested) GetDocumentId() string {
@@ -88,34 +88,34 @@ func (x *DocumentReindexRequested) GetEmbeddingModel() string {
 	return ""
 }
 
-var File_kb_document_v1_events_proto protoreflect.FileDescriptor
+var File_knowcel_document_v1_events_proto protoreflect.FileDescriptor
 
-const file_kb_document_v1_events_proto_rawDesc = "" +
+const file_knowcel_document_v1_events_proto_rawDesc = "" +
 	"\n" +
-	"\x1bkb/document/v1/events.proto\x12\x0ekb.document.v1\"\x7f\n" +
+	" knowcel/document/v1/events.proto\x12\x13knowcel.document.v1\"\x7f\n" +
 	"\x18DocumentReindexRequested\x12\x1f\n" +
 	"\vdocument_id\x18\x01 \x01(\tR\n" +
 	"documentId\x12\x19\n" +
 	"\bowner_id\x18\x02 \x01(\tR\aownerId\x12'\n" +
-	"\x0fembedding_model\x18\x03 \x01(\tR\x0eembeddingModelBGZEgithub.com/christoph/kb/modules/document/api/go/documentv1;documentv1b\x06proto3"
+	"\x0fembedding_model\x18\x03 \x01(\tR\x0eembeddingModelBQZOgithub.com/ChristophBe/knowcelium/modules/document/api/go/documentv1;documentv1b\x06proto3"
 
 var (
-	file_kb_document_v1_events_proto_rawDescOnce sync.Once
-	file_kb_document_v1_events_proto_rawDescData []byte
+	file_knowcel_document_v1_events_proto_rawDescOnce sync.Once
+	file_knowcel_document_v1_events_proto_rawDescData []byte
 )
 
-func file_kb_document_v1_events_proto_rawDescGZIP() []byte {
-	file_kb_document_v1_events_proto_rawDescOnce.Do(func() {
-		file_kb_document_v1_events_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_kb_document_v1_events_proto_rawDesc), len(file_kb_document_v1_events_proto_rawDesc)))
+func file_knowcel_document_v1_events_proto_rawDescGZIP() []byte {
+	file_knowcel_document_v1_events_proto_rawDescOnce.Do(func() {
+		file_knowcel_document_v1_events_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_knowcel_document_v1_events_proto_rawDesc), len(file_knowcel_document_v1_events_proto_rawDesc)))
 	})
-	return file_kb_document_v1_events_proto_rawDescData
+	return file_knowcel_document_v1_events_proto_rawDescData
 }
 
-var file_kb_document_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_kb_document_v1_events_proto_goTypes = []any{
-	(*DocumentReindexRequested)(nil), // 0: kb.document.v1.DocumentReindexRequested
+var file_knowcel_document_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_knowcel_document_v1_events_proto_goTypes = []any{
+	(*DocumentReindexRequested)(nil), // 0: knowcel.document.v1.DocumentReindexRequested
 }
-var file_kb_document_v1_events_proto_depIdxs = []int32{
+var file_knowcel_document_v1_events_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -123,26 +123,26 @@ var file_kb_document_v1_events_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_kb_document_v1_events_proto_init() }
-func file_kb_document_v1_events_proto_init() {
-	if File_kb_document_v1_events_proto != nil {
+func init() { file_knowcel_document_v1_events_proto_init() }
+func file_knowcel_document_v1_events_proto_init() {
+	if File_knowcel_document_v1_events_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kb_document_v1_events_proto_rawDesc), len(file_kb_document_v1_events_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_knowcel_document_v1_events_proto_rawDesc), len(file_knowcel_document_v1_events_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_kb_document_v1_events_proto_goTypes,
-		DependencyIndexes: file_kb_document_v1_events_proto_depIdxs,
-		MessageInfos:      file_kb_document_v1_events_proto_msgTypes,
+		GoTypes:           file_knowcel_document_v1_events_proto_goTypes,
+		DependencyIndexes: file_knowcel_document_v1_events_proto_depIdxs,
+		MessageInfos:      file_knowcel_document_v1_events_proto_msgTypes,
 	}.Build()
-	File_kb_document_v1_events_proto = out.File
-	file_kb_document_v1_events_proto_goTypes = nil
-	file_kb_document_v1_events_proto_depIdxs = nil
+	File_knowcel_document_v1_events_proto = out.File
+	file_knowcel_document_v1_events_proto_goTypes = nil
+	file_knowcel_document_v1_events_proto_depIdxs = nil
 }

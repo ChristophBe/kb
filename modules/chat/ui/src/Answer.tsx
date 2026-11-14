@@ -1,4 +1,4 @@
-import type { Citation } from "@kb/chat-api/kb/chat/v1/chat_pb";
+import type { Citation } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
 import { IconButton, SourceNote } from "@kb/ui";
 import { Check, Copy } from "lucide-react";
 import { type ComponentProps, useCallback, useMemo, useRef, useState } from "react";

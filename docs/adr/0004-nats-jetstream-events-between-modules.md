@@ -9,7 +9,7 @@ Document processing (extract → chunk → embed) is slow and must survive resta
 
 ## Decision
 
-We will publish module events on NATS JetStream. Each module owns its stream (ingestion: `INGESTION`, subjects `kb.<id>.<event>`), and the event payloads are protobuf messages defined in the module's proto package (`modules/ingestion/proto/kb/ingestion/v1/events.proto`). Publishers set a message ID so retries are deduplicated; consumers are durable and acknowledge after processing.
+We will publish module events on NATS JetStream. Each module owns its stream (ingestion: `INGESTION`, subjects `kb.<id>.<event>`), and the event payloads are protobuf messages defined in the module's proto package (`modules/ingestion/proto/knowcel/ingestion/v1/events.proto`). Publishers set a message ID so retries are deduplicated; consumers are durable and acknowledge after processing.
 
 ## Consequences
 

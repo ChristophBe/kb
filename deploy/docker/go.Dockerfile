@@ -13,7 +13,7 @@ ARG CMD TARGETOS TARGETARCH
 # The release version, logged at startup (platform/go/version); "dev" for local builds.
 ARG KB_VERSION=dev
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -trimpath \
-    -ldflags="-s -w -X github.com/christoph/kb/platform/go/version.Version=${KB_VERSION}" \
+    -ldflags="-s -w -X github.com/ChristophBe/knowcelium/platform/go/version.Version=${KB_VERSION}" \
     -o /out/app ${CMD}
 
 FROM gcr.io/distroless/static-debian12:nonroot

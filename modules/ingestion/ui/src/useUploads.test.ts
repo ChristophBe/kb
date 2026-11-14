@@ -1,5 +1,9 @@
 import { create } from "@bufbuild/protobuf";
-import { type Job, JobSchema, JobStatus } from "@kb/ingestion-api/kb/ingestion/v1/ingestion_pb";
+import {
+  type Job,
+  JobSchema,
+  JobStatus,
+} from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 import { Code, ConnectError } from "@kb/module-sdk";
 import { badRequestDetail } from "@kb/ui/testing/errors";
 import { act, renderHook, waitFor } from "@testing-library/react";

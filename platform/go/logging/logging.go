@@ -9,7 +9,7 @@ import (
 
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/christoph/kb/platform/go/version"
+	"github.com/ChristophBe/knowcelium/platform/go/version"
 )
 
 // Setup installs and returns a slog logger and logs the release version the

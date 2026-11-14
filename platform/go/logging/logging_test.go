@@ -11,7 +11,7 @@ import (
 
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/christoph/kb/platform/go/version"
+	"github.com/ChristophBe/knowcelium/platform/go/version"
 )
 
 func TestSetupLevel(t *testing.T) {

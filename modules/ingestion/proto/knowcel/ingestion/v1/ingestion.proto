@@ -1,0 +1,161 @@
+syntax = "proto3";
+
+package knowcel.ingestion.v1;
+
+import "google/protobuf/timestamp.proto";
+import "knowcel/common/v1/common.proto";
+
+option go_package = "github.com/ChristophBe/knowcelium/modules/ingestion/api/go/ingestionv1;ingestionv1";
+
+// IngestionService accepts new content and tracks it through processing
+// (extraction, chunking, embedding).
+service IngestionService {
+  // CreateUpload registers an ingestion job and returns a presigned URL the
+  // client uploads the file to. A file the document module does not accept
+  // (empty, too large, of a type it does not take) is rejected with field
+  // violations.
+  rpc CreateUpload(CreateUploadRequest) returns (CreateUploadResponse);
+  // CompleteUpload confirms the upload finished and queues processing. A
+  // file the document module rejects once uploaded (too large, not matching
+  // its sha256) fails the job instead, with the reason in error.
+  rpc CompleteUpload(CompleteUploadRequest) returns (CompleteUploadResponse);
+  // ReplaceUpload starts uploading a new version of an existing document,
+  // which keeps its id, title and metadata. The document's job waits for the
+  // file again as a new run (filename and content_type become the new file's);
+  // CompleteUpload then queues it, and once processed the new version
+  // replaces the document's file and chunks. Until then the document keeps
+  // its current version, and keeps it when the new one fails. A file the
+  // document module does not accept is rejected with field violations; a
+  // document whose job is QUEUED or PROCESSING, or that is still being
+  // uploaded or processed, fails with FAILED_PRECONDITION (reason
+  // DOCUMENT_BUSY); another user's document is NOT_FOUND.
+  rpc ReplaceUpload(ReplaceUploadRequest) returns (ReplaceUploadResponse);
+  rpc GetJob(GetJobRequest) returns (GetJobResponse);
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
+  // WatchJob streams the job every time it changes until it is terminal.
+  rpc WatchJob(WatchJobRequest) returns (stream WatchJobResponse);
+  // ReprocessJob queues a FAILED or DONE job again: the worker extracts,
+  // chunks and embeds the uploaded file anew and replaces the document's
+  // chunks. Other jobs fail with FAILED_PRECONDITION.
+  rpc ReprocessJob(ReprocessJobRequest) returns (ReprocessJobResponse);
+}
+
+enum JobStatus {
+  JOB_STATUS_UNSPECIFIED = 0;
+  JOB_STATUS_PENDING_UPLOAD = 1;
+  JOB_STATUS_QUEUED = 2;
+  JOB_STATUS_PROCESSING = 3;
+  JOB_STATUS_DONE = 4;
+  JOB_STATUS_FAILED = 5;
+}
+
+// JobStage is the step of processing a job is in. Stages run in this order.
+enum JobStage {
+  JOB_STAGE_UNSPECIFIED = 0;
+  // Reading the uploaded file and extracting its text.
+  JOB_STAGE_EXTRACTING = 1;
+  // Splitting the text into chunks.
+  JOB_STAGE_CHUNKING = 2;
+  // Computing the chunks' embeddings, the longest stage.
+  JOB_STAGE_EMBEDDING = 3;
+  // Storing the embedded chunks in the document module.
+  JOB_STAGE_STORING = 4;
+}
+
+message Job {
+  string id = 1;
+  string document_id = 2;
+  string filename = 3;
+  string content_type = 4;
+  JobStatus status = 5;
+  string error = 6;
+  int32 chunk_count = 7;
+  google.protobuf.Timestamp create_time = 8;
+  google.protobuf.Timestamp update_time = 9;
+  // Estimated share of the current run that is done, 0–100. It only grows
+  // within a run, is 100 once the job is DONE and starts over at 0 when the
+  // job is reprocessed.
+  int32 progress = 10;
+  // The step the current run reached; UNSPECIFIED until the worker reports one.
+  JobStage stage = 11;
+  // The user who created the upload, as the subject of their token. Set by
+  // the service; only this user can see the job.
+  string owner_id = 12;
+}
+
+message CreateUploadRequest {
+  string filename = 1;
+  string content_type = 2;
+  // The file's size; must be greater than 0, empty files are rejected.
+  int64 size_bytes = 3;
+  // Defaults to the filename when empty.
+  string title = 4;
+  // Optional SHA-256 of the file, in hex. A file uploaded with other content
+  // fails its job on CompleteUpload.
+  string sha256 = 5;
+}
+
+message CreateUploadResponse {
+  Job job = 1;
+  // A presigned URL to PUT the file to, sending the job's content_type as
+  // Content-Type and exactly size_bytes bytes; other uploads are refused.
+  string upload_url = 2;
+}
+
+message ReplaceUploadRequest {
+  string document_id = 1;
+  string filename = 2;
+  string content_type = 3;
+  // The new file's size; must be greater than 0.
+  int64 size_bytes = 4;
+  // Optional SHA-256 of the new file, in hex, checked like CreateUpload's.
+  string sha256 = 5;
+}
+
+message ReplaceUploadResponse {
+  Job job = 1;
+  // A presigned URL to PUT the new file to, sending the job's content_type as
+  // Content-Type and exactly size_bytes bytes.
+  string upload_url = 2;
+}
+
+message CompleteUploadRequest {
+  string job_id = 1;
+}
+
+message CompleteUploadResponse {
+  Job job = 1;
+}
+
+message GetJobRequest {
+  string id = 1;
+}
+
+message GetJobResponse {
+  Job job = 1;
+}
+
+message ListJobsRequest {
+  knowcel.common.v1.PageRequest page = 1;
+}
+
+message ListJobsResponse {
+  repeated Job jobs = 1;
+  knowcel.common.v1.PageResponse page = 2;
+}
+
+message WatchJobRequest {
+  string id = 1;
+}
+
+message WatchJobResponse {
+  Job job = 1;
+}
+
+message ReprocessJobRequest {
+  string id = 1;
+}
+
+message ReprocessJobResponse {
+  Job job = 1;
+}

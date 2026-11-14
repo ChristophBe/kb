@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.12
 // 	protoc        (unknown)
-// source: kb/common/v1/common.proto
+// source: knowcel/common/v1/common.proto
 
 package commonv1
 
@@ -37,7 +37,7 @@ type PageRequest struct {
 
 func (x *PageRequest) Reset() {
 	*x = PageRequest{}
-	mi := &file_kb_common_v1_common_proto_msgTypes[0]
+	mi := &file_knowcel_common_v1_common_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -49,7 +49,7 @@ func (x *PageRequest) String() string {
 func (*PageRequest) ProtoMessage() {}
 
 func (x *PageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_common_v1_common_proto_msgTypes[0]
+	mi := &file_knowcel_common_v1_common_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -62,7 +62,7 @@ func (x *PageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PageRequest.ProtoReflect.Descriptor instead.
 func (*PageRequest) Descriptor() ([]byte, []int) {
-	return file_kb_common_v1_common_proto_rawDescGZIP(), []int{0}
+	return file_knowcel_common_v1_common_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *PageRequest) GetPageSize() int32 {
@@ -90,7 +90,7 @@ type PageResponse struct {
 
 func (x *PageResponse) Reset() {
 	*x = PageResponse{}
-	mi := &file_kb_common_v1_common_proto_msgTypes[1]
+	mi := &file_knowcel_common_v1_common_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -102,7 +102,7 @@ func (x *PageResponse) String() string {
 func (*PageResponse) ProtoMessage() {}
 
 func (x *PageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_kb_common_v1_common_proto_msgTypes[1]
+	mi := &file_knowcel_common_v1_common_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -115,7 +115,7 @@ func (x *PageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PageResponse.ProtoReflect.Descriptor instead.
 func (*PageResponse) Descriptor() ([]byte, []int) {
-	return file_kb_common_v1_common_proto_rawDescGZIP(), []int{1}
+	return file_knowcel_common_v1_common_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *PageResponse) GetNextPageToken() string {
@@ -125,36 +125,36 @@ func (x *PageResponse) GetNextPageToken() string {
 	return ""
 }
 
-var File_kb_common_v1_common_proto protoreflect.FileDescriptor
+var File_knowcel_common_v1_common_proto protoreflect.FileDescriptor
 
-const file_kb_common_v1_common_proto_rawDesc = "" +
+const file_knowcel_common_v1_common_proto_rawDesc = "" +
 	"\n" +
-	"\x19kb/common/v1/common.proto\x12\fkb.common.v1\"I\n" +
+	"\x1eknowcel/common/v1/common.proto\x12\x11knowcel.common.v1\"I\n" +
 	"\vPageRequest\x12\x1b\n" +
 	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
 	"page_token\x18\x02 \x01(\tR\tpageToken\"6\n" +
 	"\fPageResponse\x12&\n" +
-	"\x0fnext_page_token\x18\x01 \x01(\tR\rnextPageTokenB;Z9github.com/christoph/kb/platform/api/go/commonv1;commonv1b\x06proto3"
+	"\x0fnext_page_token\x18\x01 \x01(\tR\rnextPageTokenBEZCgithub.com/ChristophBe/knowcelium/platform/api/go/commonv1;commonv1b\x06proto3"
 
 var (
-	file_kb_common_v1_common_proto_rawDescOnce sync.Once
-	file_kb_common_v1_common_proto_rawDescData []byte
+	file_knowcel_common_v1_common_proto_rawDescOnce sync.Once
+	file_knowcel_common_v1_common_proto_rawDescData []byte
 )
 
-func file_kb_common_v1_common_proto_rawDescGZIP() []byte {
-	file_kb_common_v1_common_proto_rawDescOnce.Do(func() {
-		file_kb_common_v1_common_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_kb_common_v1_common_proto_rawDesc), len(file_kb_common_v1_common_proto_rawDesc)))
+func file_knowcel_common_v1_common_proto_rawDescGZIP() []byte {
+	file_knowcel_common_v1_common_proto_rawDescOnce.Do(func() {
+		file_knowcel_common_v1_common_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_knowcel_common_v1_common_proto_rawDesc), len(file_knowcel_common_v1_common_proto_rawDesc)))
 	})
-	return file_kb_common_v1_common_proto_rawDescData
+	return file_knowcel_common_v1_common_proto_rawDescData
 }
 
-var file_kb_common_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_kb_common_v1_common_proto_goTypes = []any{
-	(*PageRequest)(nil),  // 0: kb.common.v1.PageRequest
-	(*PageResponse)(nil), // 1: kb.common.v1.PageResponse
+var file_knowcel_common_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_knowcel_common_v1_common_proto_goTypes = []any{
+	(*PageRequest)(nil),  // 0: knowcel.common.v1.PageRequest
+	(*PageResponse)(nil), // 1: knowcel.common.v1.PageResponse
 }
-var file_kb_common_v1_common_proto_depIdxs = []int32{
+var file_knowcel_common_v1_common_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -162,26 +162,26 @@ var file_kb_common_v1_common_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_kb_common_v1_common_proto_init() }
-func file_kb_common_v1_common_proto_init() {
-	if File_kb_common_v1_common_proto != nil {
+func init() { file_knowcel_common_v1_common_proto_init() }
+func file_knowcel_common_v1_common_proto_init() {
+	if File_knowcel_common_v1_common_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kb_common_v1_common_proto_rawDesc), len(file_kb_common_v1_common_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_knowcel_common_v1_common_proto_rawDesc), len(file_knowcel_common_v1_common_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_kb_common_v1_common_proto_goTypes,
-		DependencyIndexes: file_kb_common_v1_common_proto_depIdxs,
-		MessageInfos:      file_kb_common_v1_common_proto_msgTypes,
+		GoTypes:           file_knowcel_common_v1_common_proto_goTypes,
+		DependencyIndexes: file_knowcel_common_v1_common_proto_depIdxs,
+		MessageInfos:      file_knowcel_common_v1_common_proto_msgTypes,
 	}.Build()
-	File_kb_common_v1_common_proto = out.File
-	file_kb_common_v1_common_proto_goTypes = nil
-	file_kb_common_v1_common_proto_depIdxs = nil
+	File_knowcel_common_v1_common_proto = out.File
+	file_knowcel_common_v1_common_proto_goTypes = nil
+	file_knowcel_common_v1_common_proto_depIdxs = nil
 }

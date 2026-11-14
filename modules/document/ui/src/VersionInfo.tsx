@@ -1,4 +1,4 @@
-import { type Document, DocumentStatus } from "@kb/document-api/kb/document/v1/document_pb";
+import { type Document, DocumentStatus } from "@kb/document-api/knowcel/document/v1/document_pb";
 import { Badge, buttonClass } from "@kb/ui";
 import { Upload } from "lucide-react";
 import { Link } from "react-router";

@@ -14,26 +14,26 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"google.golang.org/protobuf/proto"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
-	ingestionv1 "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1"
-	"github.com/christoph/kb/modules/ingestion/service/internal/app"
-	"github.com/christoph/kb/platform/go/natsx"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
+	ingestionv1 "github.com/ChristophBe/knowcelium/modules/ingestion/api/go/ingestionv1"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/app"
+	"github.com/ChristophBe/knowcelium/platform/go/natsx"
 )
 
 const (
 	Stream = "INGESTION"
 
-	SubjectUploaded  = "kb.ingestion.uploaded"
-	SubjectStarted   = "kb.ingestion.started"
-	SubjectProgress  = "kb.ingestion.progress"
-	SubjectProcessed = "kb.ingestion.processed"
-	SubjectFailed    = "kb.ingestion.failed"
+	SubjectUploaded  = "knowcel.ingestion.uploaded"
+	SubjectStarted   = "knowcel.ingestion.started"
+	SubjectProgress  = "knowcel.ingestion.progress"
+	SubjectProcessed = "knowcel.ingestion.processed"
+	SubjectFailed    = "knowcel.ingestion.failed"
 
 	consumerName = "ingestion-service"
 
 	// The document module's stream and the subject that asks for a reindex.
 	documentStream          = "DOCUMENT"
-	SubjectReindexRequested = "kb.document.reindex_requested"
+	SubjectReindexRequested = "knowcel.document.reindex_requested"
 	reindexConsumerName     = "ingestion-service-reindex"
 	// A reindex that finds its document busy is tried again after this long,
 	// up to reindexMaxDeliver times.
@@ -78,7 +78,7 @@ func (p *Publisher) PublishUploaded(ctx context.Context, job app.Job) error {
 
 // EnsureStream creates the module's stream.
 func EnsureStream(ctx context.Context, js jetstream.JetStream) error {
-	_, err := natsx.EnsureStream(ctx, js, Stream, "kb.ingestion.>")
+	_, err := natsx.EnsureStream(ctx, js, Stream, "knowcel.ingestion.>")
 	return err
 }
 

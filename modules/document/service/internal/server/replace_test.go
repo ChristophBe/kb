@@ -13,9 +13,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
-	"github.com/christoph/kb/modules/document/service/internal/store"
-	"github.com/christoph/kb/platform/go/grpcserver"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/store"
+	"github.com/ChristophBe/knowcelium/platform/go/grpcserver"
 )
 
 // The fake's pending-version queries behave like the SQL: they act on f.doc.

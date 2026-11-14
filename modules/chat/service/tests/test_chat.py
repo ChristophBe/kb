@@ -6,7 +6,6 @@ from typing import Any
 
 import grpc
 import pytest
-from kb.chat.v1 import chat_pb2
 from kb_chat.chat import (
     NO_SOURCES_PROMPT,
     RAG_PROMPT,
@@ -28,6 +27,7 @@ from kb_chat.chat import (
 from kb_chat.config import Settings
 from kb_chat.peers import PeerGenerator, PeerRetriever
 from kb_chat.repository import ConversationRow, MessageRow
+from knowcel.chat.v1 import chat_pb2
 
 USER = chat_pb2.MESSAGE_ROLE_USER
 ASSISTANT = chat_pb2.MESSAGE_ROLE_ASSISTANT
@@ -431,7 +431,7 @@ async def test_closing_the_generator_early_cancels_the_llm_call() -> None:
             self.calls: list[FakeCall] = []
 
         async def _gen(self) -> AsyncIterator[Any]:
-            from kb.llm.v1 import llm_pb2
+            from knowcel.llm.v1 import llm_pb2
 
             for word in ["Par", "is"]:
                 yield llm_pb2.GenerateResponse(delta=word)

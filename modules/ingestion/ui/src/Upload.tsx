@@ -2,7 +2,7 @@ import {
   IngestionService,
   type Job,
   JobStatus,
-} from "@kb/ingestion-api/kb/ingestion/v1/ingestion_pb";
+} from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 import { toast, useClient, useQuery, useQueryClient } from "@kb/module-sdk";
 import {
   Badge,

@@ -9,8 +9,8 @@ from typing import Any
 
 from alembic import command
 from alembic.config import Config
-from kb.chat.v1 import chat_pb2
 from kb_platform.pagination import Cursor
+from knowcel.chat.v1 import chat_pb2
 from sqlalchemy import (
     Column,
     DateTime,
@@ -64,7 +64,7 @@ messages = Table(
     Column("content", Text, nullable=False),
     Column("citations", JSONB, nullable=False, server_default="[]"),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
-    # kb.chat.v1.MessageStatus
+    # knowcel.chat.v1.MessageStatus
     Column("status", SmallInteger, nullable=False, server_default="1"),
 )
 

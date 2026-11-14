@@ -12,3 +12,11 @@ lint:
 breaking:
   use:
     - FILE
+  # The one-off kb.* -> knowcel.* package rename (#188): the old files are
+  # intentionally gone. Drop these once the rename is on main.
+  ignore:
+    - modules/chat/proto/kb
+    - modules/document/proto/kb
+    - modules/ingestion/proto/kb
+    - modules/llm/proto/kb
+    - platform/proto/kb

@@ -8,7 +8,6 @@ import anthropic
 import grpc
 import httpx2
 import pytest
-from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_llm.config import Settings
 from kb_llm.providers import REGISTRY, Providers, build_provider, build_providers
 from kb_llm.providers.anthropic import (
@@ -31,6 +30,7 @@ from kb_llm.providers.base import (
 )
 from kb_llm.providers.fake import FakeProvider
 from kb_llm.server import LlmServicer
+from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
 from pydantic import SecretStr
 
 Handler = Callable[[httpx2.Request], httpx2.Response]

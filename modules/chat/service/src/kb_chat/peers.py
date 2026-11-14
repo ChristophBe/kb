@@ -6,9 +6,9 @@ import uuid
 from collections.abc import AsyncGenerator, Iterator, Sequence
 
 import grpc
-from kb.chat.v1 import chat_pb2
-from kb.document.v1 import document_pb2, document_pb2_grpc
-from kb.llm.v1 import llm_pb2, llm_pb2_grpc
+from knowcel.chat.v1 import chat_pb2
+from knowcel.document.v1 import document_pb2, document_pb2_grpc
+from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
 
 from .chat import Peer, PeerError, PeerUnavailableError, PromptMessage, PromptRole
 from .manual import Manual, merge_sources

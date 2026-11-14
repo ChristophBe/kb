@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             (unknown)
-// source: kb/chat/v1/chat.proto
+// source: knowcel/chat/v1/chat.proto
 
 package chatv1
 
@@ -19,13 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ChatService_CreateConversation_FullMethodName  = "/kb.chat.v1.ChatService/CreateConversation"
-	ChatService_GetConversation_FullMethodName     = "/kb.chat.v1.ChatService/GetConversation"
-	ChatService_ListConversations_FullMethodName   = "/kb.chat.v1.ChatService/ListConversations"
-	ChatService_DeleteConversation_FullMethodName  = "/kb.chat.v1.ChatService/DeleteConversation"
-	ChatService_UpdateConversation_FullMethodName  = "/kb.chat.v1.ChatService/UpdateConversation"
-	ChatService_SearchConversations_FullMethodName = "/kb.chat.v1.ChatService/SearchConversations"
-	ChatService_StreamChat_FullMethodName          = "/kb.chat.v1.ChatService/StreamChat"
+	ChatService_CreateConversation_FullMethodName  = "/knowcel.chat.v1.ChatService/CreateConversation"
+	ChatService_GetConversation_FullMethodName     = "/knowcel.chat.v1.ChatService/GetConversation"
+	ChatService_ListConversations_FullMethodName   = "/knowcel.chat.v1.ChatService/ListConversations"
+	ChatService_DeleteConversation_FullMethodName  = "/knowcel.chat.v1.ChatService/DeleteConversation"
+	ChatService_UpdateConversation_FullMethodName  = "/knowcel.chat.v1.ChatService/UpdateConversation"
+	ChatService_SearchConversations_FullMethodName = "/knowcel.chat.v1.ChatService/SearchConversations"
+	ChatService_StreamChat_FullMethodName          = "/knowcel.chat.v1.ChatService/StreamChat"
 )
 
 // ChatServiceClient is the client API for ChatService service.
@@ -328,7 +328,7 @@ type ChatService_StreamChatServer = grpc.ServerStreamingServer[StreamChatRespons
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var ChatService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "kb.chat.v1.ChatService",
+	ServiceName: "knowcel.chat.v1.ChatService",
 	HandlerType: (*ChatServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -363,5 +363,5 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "kb/chat/v1/chat.proto",
+	Metadata: "knowcel/chat/v1/chat.proto",
 }

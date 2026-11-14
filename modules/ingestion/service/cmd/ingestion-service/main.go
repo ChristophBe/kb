@@ -14,21 +14,21 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/sync/errgroup"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
-	ingestionv1 "github.com/christoph/kb/modules/ingestion/api/go/ingestionv1"
-	"github.com/christoph/kb/modules/ingestion/migrations"
-	"github.com/christoph/kb/modules/ingestion/service/internal/app"
-	"github.com/christoph/kb/modules/ingestion/service/internal/documents"
-	"github.com/christoph/kb/modules/ingestion/service/internal/events"
-	"github.com/christoph/kb/modules/ingestion/service/internal/server"
-	"github.com/christoph/kb/modules/ingestion/service/internal/store"
-	"github.com/christoph/kb/platform/go/config"
-	"github.com/christoph/kb/platform/go/grpcserver"
-	"github.com/christoph/kb/platform/go/logging"
-	"github.com/christoph/kb/platform/go/metrics"
-	"github.com/christoph/kb/platform/go/natsx"
-	"github.com/christoph/kb/platform/go/postgres"
-	"github.com/christoph/kb/platform/go/telemetry"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
+	ingestionv1 "github.com/ChristophBe/knowcelium/modules/ingestion/api/go/ingestionv1"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/migrations"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/app"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/documents"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/events"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/server"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/store"
+	"github.com/ChristophBe/knowcelium/platform/go/config"
+	"github.com/ChristophBe/knowcelium/platform/go/grpcserver"
+	"github.com/ChristophBe/knowcelium/platform/go/logging"
+	"github.com/ChristophBe/knowcelium/platform/go/metrics"
+	"github.com/ChristophBe/knowcelium/platform/go/natsx"
+	"github.com/ChristophBe/knowcelium/platform/go/postgres"
+	"github.com/ChristophBe/knowcelium/platform/go/telemetry"
 )
 
 type Config struct {
@@ -36,7 +36,7 @@ type Config struct {
 	// DatabaseURL is the Postgres database holding the ingestion schema.
 	DatabaseURL string `env:"DATABASE_URL" envDefault:"postgres://kb:kb@localhost:5432/kb?sslmode=disable"`
 	// NATSURL is the NATS server with JetStream that carries the
-	// kb.ingestion.* events (comma-separated for a cluster).
+	// knowcel.ingestion.* events (comma-separated for a cluster).
 	NATSURL string `env:"NATS_URL" envDefault:"nats://localhost:4222"`
 	// DocumentAddr is the document module (host:port), where uploads are
 	// created and their status is set.

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             (unknown)
-// source: kb/ingestion/v1/ingestion.proto
+// source: knowcel/ingestion/v1/ingestion.proto
 
 package ingestionv1
 
@@ -19,13 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	IngestionService_CreateUpload_FullMethodName   = "/kb.ingestion.v1.IngestionService/CreateUpload"
-	IngestionService_CompleteUpload_FullMethodName = "/kb.ingestion.v1.IngestionService/CompleteUpload"
-	IngestionService_ReplaceUpload_FullMethodName  = "/kb.ingestion.v1.IngestionService/ReplaceUpload"
-	IngestionService_GetJob_FullMethodName         = "/kb.ingestion.v1.IngestionService/GetJob"
-	IngestionService_ListJobs_FullMethodName       = "/kb.ingestion.v1.IngestionService/ListJobs"
-	IngestionService_WatchJob_FullMethodName       = "/kb.ingestion.v1.IngestionService/WatchJob"
-	IngestionService_ReprocessJob_FullMethodName   = "/kb.ingestion.v1.IngestionService/ReprocessJob"
+	IngestionService_CreateUpload_FullMethodName   = "/knowcel.ingestion.v1.IngestionService/CreateUpload"
+	IngestionService_CompleteUpload_FullMethodName = "/knowcel.ingestion.v1.IngestionService/CompleteUpload"
+	IngestionService_ReplaceUpload_FullMethodName  = "/knowcel.ingestion.v1.IngestionService/ReplaceUpload"
+	IngestionService_GetJob_FullMethodName         = "/knowcel.ingestion.v1.IngestionService/GetJob"
+	IngestionService_ListJobs_FullMethodName       = "/knowcel.ingestion.v1.IngestionService/ListJobs"
+	IngestionService_WatchJob_FullMethodName       = "/knowcel.ingestion.v1.IngestionService/WatchJob"
+	IngestionService_ReprocessJob_FullMethodName   = "/knowcel.ingestion.v1.IngestionService/ReprocessJob"
 )
 
 // IngestionServiceClient is the client API for IngestionService service.
@@ -362,7 +362,7 @@ func _IngestionService_ReprocessJob_Handler(srv interface{}, ctx context.Context
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var IngestionService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "kb.ingestion.v1.IngestionService",
+	ServiceName: "knowcel.ingestion.v1.IngestionService",
 	HandlerType: (*IngestionServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -397,5 +397,5 @@ var IngestionService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "kb/ingestion/v1/ingestion.proto",
+	Metadata: "knowcel/ingestion/v1/ingestion.proto",
 }

@@ -1,5 +1,5 @@
-import type { Job } from "@kb/ingestion-api/kb/ingestion/v1/ingestion_pb";
-import { JobStatus } from "@kb/ingestion-api/kb/ingestion/v1/ingestion_pb";
+import type { Job } from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
+import { JobStatus } from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 import { Code, ConnectError } from "@kb/module-sdk";
 import { fieldViolations } from "@kb/ui";
 import { useCallback, useEffect, useRef, useState } from "react";

@@ -2,7 +2,7 @@ import {
   type Chunk,
   DocumentService,
   DocumentStatus,
-} from "@kb/document-api/kb/document/v1/document_pb";
+} from "@kb/document-api/knowcel/document/v1/document_pb";
 import { useClient, useQuery, useQueryClient } from "@kb/module-sdk";
 import { Button, Card, DelayedLoading, EmptyState, ErrorMessage, SkeletonRows } from "@kb/ui";
 import { useEffect, useRef, useState } from "react";

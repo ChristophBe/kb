@@ -1,4 +1,4 @@
-import { ChatService } from "@kb/chat-api/kb/chat/v1/chat_pb";
+import { ChatService } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
 import { toast, useClient, useMutation, useQuery, useQueryClient } from "@kb/module-sdk";
 import {
   Area,

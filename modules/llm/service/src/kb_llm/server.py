@@ -6,8 +6,8 @@ from collections.abc import AsyncIterator
 from typing import Any
 
 import grpc
-from kb.llm.v1 import llm_pb2, llm_pb2_grpc
 from kb_platform.grpc import abort_invalid_argument, violation
+from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
 from prometheus_client import Counter, Histogram
 
 from .config import Settings

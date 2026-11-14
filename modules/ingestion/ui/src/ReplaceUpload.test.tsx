@@ -1,5 +1,5 @@
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
-import { IngestionService, JobStatus } from "@kb/ingestion-api/kb/ingestion/v1/ingestion_pb";
+import { IngestionService, JobStatus } from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 import { renderModule } from "@kb/module-sdk/testing";
 import { badRequestDetail } from "@kb/ui/testing/errors";
 import { act, fireEvent, screen } from "@testing-library/react";

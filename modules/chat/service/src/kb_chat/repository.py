@@ -5,8 +5,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Protocol
 
-from kb.chat.v1 import chat_pb2
 from kb_platform.pagination import Cursor
+from knowcel.chat.v1 import chat_pb2
 
 
 @dataclass

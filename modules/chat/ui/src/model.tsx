@@ -1,8 +1,8 @@
-import { LlmService, ModelKind } from "@kb/llm-api/kb/llm/v1/llm_pb";
+import { LlmService, ModelKind } from "@kb/llm-api/knowcel/llm/v1/llm_pb";
 import { useClient, useQuery } from "@kb/module-sdk";
 import { useState } from "react";
 
-const STORAGE_PREFIX = "kb.chat.model.";
+const STORAGE_PREFIX = "knowcel.chat.model.";
 
 function readModel(conversationId: string): string | null {
   try {

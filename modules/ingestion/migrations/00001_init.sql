@@ -1,7 +1,7 @@
 -- +goose Up
 CREATE SCHEMA IF NOT EXISTS ingestion;
 
--- status holds kb.ingestion.v1.JobStatus values.
+-- status holds knowcel.ingestion.v1.JobStatus values.
 CREATE TABLE ingestion.jobs (
     id           uuid PRIMARY KEY,
     document_id  uuid        NOT NULL,

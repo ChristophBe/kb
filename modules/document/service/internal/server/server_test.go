@@ -24,11 +24,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
-	"github.com/christoph/kb/modules/document/service/internal/store"
-	llmv1 "github.com/christoph/kb/modules/llm/api/go/llmv1"
-	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
-	"github.com/christoph/kb/platform/go/grpcserver"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/store"
+	llmv1 "github.com/ChristophBe/knowcelium/modules/llm/api/go/llmv1"
+	commonv1 "github.com/ChristophBe/knowcelium/platform/api/go/commonv1"
+	"github.com/ChristophBe/knowcelium/platform/go/grpcserver"
 )
 
 const (

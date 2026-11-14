@@ -71,10 +71,10 @@ flowchart TB
     docsvc -- "Embed (SearchDocuments)" --> llmsvc
     llmsvc -- "HTTP" --> ollama
 
-    ingsvc -- "pub kb.ingestion.uploaded<br/>sub started / processed / failed" --> nats
-    ingworker -- "sub kb.ingestion.uploaded<br/>pub started / processed / failed" --> nats
-    docsvc -- "pub kb.document.reindex_requested" --> nats
-    ingsvc -- "sub kb.document.reindex_requested" --> nats
+    ingsvc -- "pub knowcel.ingestion.uploaded<br/>sub started / processed / failed" --> nats
+    ingworker -- "sub knowcel.ingestion.uploaded<br/>pub started / processed / failed" --> nats
+    docsvc -- "pub knowcel.document.reindex_requested" --> nats
+    ingsvc -- "sub knowcel.document.reindex_requested" --> nats
 
     docsvc -- "schema document" --> pg
     ingsvc -- "schema ingestion" --> pg
@@ -117,17 +117,17 @@ sequenceDiagram
     U->>S3: PUT file (presigned)
     U->>I: CompleteUpload (via envoy)
     I->>D: SetDocumentStatus(UPLOADED)
-    I->>N: kb.ingestion.uploaded
+    I->>N: knowcel.ingestion.uploaded
     U->>I: WatchJob (server stream, via envoy)
 
     N->>W: DocumentUploaded
-    W->>N: kb.ingestion.started
+    W->>N: knowcel.ingestion.started
     W->>D: SetDocumentStatus(PROCESSING)
     W->>D: ReadContent (stream)
     W->>W: extract + chunk
     W->>L: Embed(chunks)
     W->>D: AddChunks(text, embeddings), marks READY
-    W->>N: kb.ingestion.processed
+    W->>N: knowcel.ingestion.processed
     N->>I: started / processed (or failed)
     I-->>U: job updates on WatchJob
 
@@ -138,4 +138,4 @@ sequenceDiagram
     C-->>U: answer tokens + citations (stream)
 ```
 
-On a processing error the worker sets the document to `FAILED` and publishes `kb.ingestion.failed` instead; the ingestion service marks the job failed. JetStream redelivers an unacknowledged `uploaded` event up to three times.
+On a processing error the worker sets the document to `FAILED` and publishes `knowcel.ingestion.failed` instead; the ingestion service marks the job failed. JetStream redelivers an unacknowledged `uploaded` event up to three times.

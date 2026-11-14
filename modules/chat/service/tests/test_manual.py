@@ -4,11 +4,11 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
-from kb.chat.v1 import chat_pb2
 from kb_chat.chat import Peer, PeerUnavailableError
 from kb_chat.config import Settings
 from kb_chat.manual import Manual, Section, load_sections, merge_sources, parse_page, slug
 from kb_chat.peers import PeerRetriever
+from knowcel.chat.v1 import chat_pb2
 
 PAGE = """# Chat
 

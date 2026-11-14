@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 
-	"github.com/christoph/kb/platform/go/postgres"
+	"github.com/ChristophBe/knowcelium/platform/go/postgres"
 )
 
 // Image is the image of deploy/infra.compose.yaml, so tests see the same pgvector.

@@ -1,5 +1,5 @@
-import { ChatService, type Conversation } from "@kb/chat-api/kb/chat/v1/chat_pb";
-import { DocumentService } from "@kb/document-api/kb/document/v1/document_pb";
+import { ChatService, type Conversation } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
+import { DocumentService } from "@kb/document-api/knowcel/document/v1/document_pb";
 import {
   Code,
   ConnectError,

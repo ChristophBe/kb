@@ -1,4 +1,4 @@
-import { DocumentStatus } from "@kb/document-api/kb/document/v1/document_pb";
+import { DocumentStatus } from "@kb/document-api/knowcel/document/v1/document_pb";
 import { KbRuntimeProvider } from "@kb/module-sdk";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";

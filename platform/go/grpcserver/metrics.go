@@ -63,7 +63,7 @@ func streamType(info *grpc.StreamServerInfo) string {
 	}
 }
 
-// splitMethod turns "/kb.x.v1.XService/Get" into "kb.x.v1.XService", "Get".
+// splitMethod turns "/knowcel.x.v1.XService/Get" into "knowcel.x.v1.XService", "Get".
 func splitMethod(fullMethod string) (service, method string) {
 	service, method, ok := strings.Cut(strings.TrimPrefix(fullMethod, "/"), "/")
 	if !ok {

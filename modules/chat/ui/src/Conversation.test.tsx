@@ -12,8 +12,8 @@ import {
   type StreamChatRequest,
   type StreamChatResponse,
   StreamChatResponseSchema,
-} from "@kb/chat-api/kb/chat/v1/chat_pb";
-import { ModelKind } from "@kb/llm-api/kb/llm/v1/llm_pb";
+} from "@kb/chat-api/knowcel/chat/v1/chat_pb";
+import { ModelKind } from "@kb/llm-api/knowcel/llm/v1/llm_pb";
 import { KbRuntimeProvider } from "@kb/module-sdk";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";

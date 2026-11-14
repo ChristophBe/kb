@@ -10,7 +10,7 @@ import {
   ChatService,
   ConversationSchema,
   type SearchConversationsRequest,
-} from "@kb/chat-api/kb/chat/v1/chat_pb";
+} from "@kb/chat-api/knowcel/chat/v1/chat_pb";
 import type { SearchContext } from "@kb/module-sdk";
 import { describe, expect, it } from "vitest";
 import manifest from "./manifest.ts";

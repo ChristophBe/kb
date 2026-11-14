@@ -5,7 +5,7 @@ import {
   type GetConversationResponse,
   MessageRole,
   MessageStatus,
-} from "@kb/chat-api/kb/chat/v1/chat_pb";
+} from "@kb/chat-api/knowcel/chat/v1/chat_pb";
 import { Code, ConnectError, useClient, useQuery, useQueryClient } from "@kb/module-sdk";
 import { Button, buttonClass, ErrorMessage, Spinner } from "@kb/ui";
 import { ArrowUp, MessageSquare, RotateCcw, Square, TriangleAlert } from "lucide-react";

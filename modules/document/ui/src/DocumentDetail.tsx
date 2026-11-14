@@ -1,4 +1,4 @@
-import { DocumentService } from "@kb/document-api/kb/document/v1/document_pb";
+import { DocumentService } from "@kb/document-api/knowcel/document/v1/document_pb";
 import { useClient, useQuery, useQueryClient } from "@kb/module-sdk";
 import { Badge, Card, ChunkStrip, ErrorMessage, formatBytes, formatTime, Spinner } from "@kb/ui";
 import { useEffect, useRef } from "react";

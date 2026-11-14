@@ -14,7 +14,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # kb.chat.v1.MessageStatus; existing messages are complete (1).
+    # knowcel.chat.v1.MessageStatus; existing messages are complete (1).
     op.add_column(
         "messages",
         sa.Column("status", sa.SmallInteger, nullable=False, server_default="1"),

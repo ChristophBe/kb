@@ -1,4 +1,4 @@
-// Package server implements kb.document.v1.DocumentService.
+// Package server implements knowcel.document.v1.DocumentService.
 package server
 
 import (
@@ -23,12 +23,12 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
-	"github.com/christoph/kb/modules/document/service/internal/store"
-	llmv1 "github.com/christoph/kb/modules/llm/api/go/llmv1"
-	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
-	"github.com/christoph/kb/platform/go/grpcserver"
-	"github.com/christoph/kb/platform/go/postgres"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/store"
+	llmv1 "github.com/ChristophBe/knowcelium/modules/llm/api/go/llmv1"
+	commonv1 "github.com/ChristophBe/knowcelium/platform/api/go/commonv1"
+	"github.com/ChristophBe/knowcelium/platform/go/grpcserver"
+	"github.com/ChristophBe/knowcelium/platform/go/postgres"
 )
 
 const (
@@ -40,7 +40,7 @@ const (
 	// maxTitleLength matches the limit on conversation titles in the chat module.
 	maxTitleLength = 200
 	// domain is the ErrorInfo domain of this module's errors.
-	domain = "kb.document.v1"
+	domain = "knowcel.document.v1"
 )
 
 // Repository is the persistence the server needs.

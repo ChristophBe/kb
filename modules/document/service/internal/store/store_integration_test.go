@@ -17,8 +17,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/pgvector/pgvector-go"
 
-	"github.com/christoph/kb/modules/document/migrations"
-	"github.com/christoph/kb/platform/go/postgres/pgtest"
+	"github.com/ChristophBe/knowcelium/modules/document/migrations"
+	"github.com/ChristophBe/knowcelium/platform/go/postgres/pgtest"
 )
 
 const (

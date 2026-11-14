@@ -6,8 +6,8 @@ methods, as a YAML list (read with fromYamlArray). The Ingress sends them to
 Envoy, which routes the public methods and answers 404 for the rest.
 */ -}}
 {{- define "kb.gatewayPrefixes" -}}
-- /kb.chat.v1.ChatService
-- /kb.document.v1.DocumentService
-- /kb.ingestion.v1.IngestionService
-- /kb.llm.v1.LlmService
+- /knowcel.chat.v1.ChatService
+- /knowcel.document.v1.DocumentService
+- /knowcel.ingestion.v1.IngestionService
+- /knowcel.llm.v1.LlmService
 {{- end -}}

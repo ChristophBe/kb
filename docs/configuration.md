@@ -91,7 +91,7 @@ From `Config` in [modules/ingestion/service/cmd/ingestion-service](../modules/in
 | `KB_GRPC_PORT` | `9002` | Serves the gRPC API; each service defaults it to the port in its module.yaml. |
 | `KB_METRICS_PORT` | `9102` | Serves Prometheus metrics at /metrics (package metrics); like KB_GRPC_PORT, each service defaults it to the port in its module.yaml. |
 | `KB_DATABASE_URL` | `postgres://kb:kb@localhost:5432/kb?sslmode=disable` | The Postgres database holding the ingestion schema. |
-| `KB_NATS_URL` | `nats://localhost:4222` | The NATS server with JetStream that carries the kb.ingestion.* events (comma-separated for a cluster). |
+| `KB_NATS_URL` | `nats://localhost:4222` | The NATS server with JetStream that carries the knowcel.ingestion.* events (comma-separated for a cluster). |
 | `KB_DOCUMENT_ADDR` | `localhost:9001` | The document module (host:port), where uploads are created and their status is set. |
 
 ## ingestion-worker

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             (unknown)
-// source: kb/document/v1/document.proto
+// source: knowcel/document/v1/document.proto
 
 package documentv1
 
@@ -19,20 +19,20 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	DocumentService_CreateDocument_FullMethodName    = "/kb.document.v1.DocumentService/CreateDocument"
-	DocumentService_ReplaceContent_FullMethodName    = "/kb.document.v1.DocumentService/ReplaceContent"
-	DocumentService_GetDocument_FullMethodName       = "/kb.document.v1.DocumentService/GetDocument"
-	DocumentService_ListDocuments_FullMethodName     = "/kb.document.v1.DocumentService/ListDocuments"
-	DocumentService_UpdateDocument_FullMethodName    = "/kb.document.v1.DocumentService/UpdateDocument"
-	DocumentService_DeleteDocument_FullMethodName    = "/kb.document.v1.DocumentService/DeleteDocument"
-	DocumentService_SetDocumentStatus_FullMethodName = "/kb.document.v1.DocumentService/SetDocumentStatus"
-	DocumentService_GetDownloadUrl_FullMethodName    = "/kb.document.v1.DocumentService/GetDownloadUrl"
-	DocumentService_ReadContent_FullMethodName       = "/kb.document.v1.DocumentService/ReadContent"
-	DocumentService_AddChunks_FullMethodName         = "/kb.document.v1.DocumentService/AddChunks"
-	DocumentService_ListChunks_FullMethodName        = "/kb.document.v1.DocumentService/ListChunks"
-	DocumentService_SearchChunks_FullMethodName      = "/kb.document.v1.DocumentService/SearchChunks"
-	DocumentService_SearchDocuments_FullMethodName   = "/kb.document.v1.DocumentService/SearchDocuments"
-	DocumentService_ReindexDocuments_FullMethodName  = "/kb.document.v1.DocumentService/ReindexDocuments"
+	DocumentService_CreateDocument_FullMethodName    = "/knowcel.document.v1.DocumentService/CreateDocument"
+	DocumentService_ReplaceContent_FullMethodName    = "/knowcel.document.v1.DocumentService/ReplaceContent"
+	DocumentService_GetDocument_FullMethodName       = "/knowcel.document.v1.DocumentService/GetDocument"
+	DocumentService_ListDocuments_FullMethodName     = "/knowcel.document.v1.DocumentService/ListDocuments"
+	DocumentService_UpdateDocument_FullMethodName    = "/knowcel.document.v1.DocumentService/UpdateDocument"
+	DocumentService_DeleteDocument_FullMethodName    = "/knowcel.document.v1.DocumentService/DeleteDocument"
+	DocumentService_SetDocumentStatus_FullMethodName = "/knowcel.document.v1.DocumentService/SetDocumentStatus"
+	DocumentService_GetDownloadUrl_FullMethodName    = "/knowcel.document.v1.DocumentService/GetDownloadUrl"
+	DocumentService_ReadContent_FullMethodName       = "/knowcel.document.v1.DocumentService/ReadContent"
+	DocumentService_AddChunks_FullMethodName         = "/knowcel.document.v1.DocumentService/AddChunks"
+	DocumentService_ListChunks_FullMethodName        = "/knowcel.document.v1.DocumentService/ListChunks"
+	DocumentService_SearchChunks_FullMethodName      = "/knowcel.document.v1.DocumentService/SearchChunks"
+	DocumentService_SearchDocuments_FullMethodName   = "/knowcel.document.v1.DocumentService/SearchDocuments"
+	DocumentService_ReindexDocuments_FullMethodName  = "/knowcel.document.v1.DocumentService/ReindexDocuments"
 )
 
 // DocumentServiceClient is the client API for DocumentService service.
@@ -606,7 +606,7 @@ func _DocumentService_ReindexDocuments_Handler(srv interface{}, ctx context.Cont
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var DocumentService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "kb.document.v1.DocumentService",
+	ServiceName: "knowcel.document.v1.DocumentService",
 	HandlerType: (*DocumentServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -669,5 +669,5 @@ var DocumentService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "kb/document/v1/document.proto",
+	Metadata: "knowcel/document/v1/document.proto",
 }

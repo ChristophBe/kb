@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package knowcel.document.v1;
+
+option go_package = "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1;documentv1";
+
+// Events published on NATS JetStream stream "DOCUMENT". The subject for each
+// message is noted on the message. Payloads are binary-encoded protobuf.
+
+// Subject: knowcel.document.reindex_requested
+// Published by ReindexDocuments, once per document: its chunks should be made
+// again, with the current embedding model. The ingestion module processes the
+// document's file again, which replaces the chunks (AddChunks). Delivery is
+// at least once; processing a document again is harmless.
+message DocumentReindexRequested {
+  string document_id = 1;
+  // The document's owner, so that the consumer acts for them.
+  string owner_id = 2;
+  // The model the document is reindexed to, for logs.
+  string embedding_model = 3;
+}

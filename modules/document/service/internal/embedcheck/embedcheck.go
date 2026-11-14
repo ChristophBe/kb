@@ -19,7 +19,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc"
 
-	llmv1 "github.com/christoph/kb/modules/llm/api/go/llmv1"
+	llmv1 "github.com/ChristophBe/knowcelium/modules/llm/api/go/llmv1"
 )
 
 // Status is the part of the llm client the check needs.

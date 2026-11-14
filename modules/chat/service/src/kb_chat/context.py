@@ -6,7 +6,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
-from kb.chat.v1 import chat_pb2
+from knowcel.chat.v1 import chat_pb2
 
 from .repository import MessageRow
 

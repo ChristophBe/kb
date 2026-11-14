@@ -14,7 +14,7 @@ import (
 
 	"connectrpc.com/connect"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
 )
 
 // testUser is a static user of the dev Dex (deploy/dex/config.yaml.tpl).

@@ -13,10 +13,10 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.opentelemetry.io/otel"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
-	"github.com/christoph/kb/modules/document/service/internal/storage"
-	"github.com/christoph/kb/modules/document/service/internal/store"
-	"github.com/christoph/kb/platform/go/config"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/storage"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/store"
+	"github.com/ChristophBe/knowcelium/platform/go/config"
 )
 
 const (

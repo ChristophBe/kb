@@ -22,3 +22,7 @@ The released version (without the `v`, e.g. `0.3.1`) is the `version` output of 
 ## Token
 
 The release is created with the workflow's `GITHUB_TOKEN` (job permission `contents: write`); no app or secret needs to be set up. Tags and releases created with `GITHUB_TOKEN` don't trigger other workflows, so builds that need the version (the [container images](images.md), the Helm chart) run as jobs in the `release` workflow after the `release` job and read its `version` output instead of running on the tag.
+
+## Upgrading across the `knowcel` rename
+
+The proto packages and event subjects moved from `kb.*` to `knowcel.*` (`kb.document.>` is now `knowcel.document.>`, likewise `kb.ingestion.>`). The services update the subjects of the existing `DOCUMENT` and `INGESTION` JetStream streams at startup (`natsx.EnsureStream` and the worker's `ensure_stream`), so no volume reset is needed. Messages already stored under the old `kb.*` subjects are not delivered to the renamed consumers: let the queues drain before upgrading, or accept that pending uploads and reindex requests are dropped and re-run them. API clients must use the new `knowcel.<module>.v1.*` service names. To start from scratch instead, remove the NATS volume (`docker compose down -v` for the dev stack, the `nats` PVC in Kubernetes).

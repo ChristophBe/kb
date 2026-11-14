@@ -44,7 +44,7 @@ func resolvePeers(modules []Module) {
 	}
 }
 
-// grpcPrefixes are the URL path prefixes ("/kb.x.v1.XService") of every gRPC
+// grpcPrefixes are the URL path prefixes ("/knowcel.x.v1.XService") of every gRPC
 // service with at least one public method; the chart's Ingress sends them to
 // Envoy, which routes the methods.
 func grpcPrefixes(modules []Module) []string {

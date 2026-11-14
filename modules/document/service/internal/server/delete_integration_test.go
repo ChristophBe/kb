@@ -16,13 +16,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
-	"github.com/christoph/kb/modules/document/migrations"
-	"github.com/christoph/kb/modules/document/service/internal/storage"
-	"github.com/christoph/kb/modules/document/service/internal/storage/s3test"
-	"github.com/christoph/kb/modules/document/service/internal/store"
-	"github.com/christoph/kb/platform/go/grpcserver"
-	"github.com/christoph/kb/platform/go/postgres/pgtest"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
+	"github.com/ChristophBe/knowcelium/modules/document/migrations"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/storage"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/storage/s3test"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/store"
+	"github.com/ChristophBe/knowcelium/platform/go/grpcserver"
+	"github.com/ChristophBe/knowcelium/platform/go/postgres/pgtest"
 )
 
 var errInjected = errors.New("injected failure")

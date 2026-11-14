@@ -16,16 +16,16 @@ services:
       KB_CLEANUP_INTERVAL: 1h
       KB_UPLOAD_TTL: 24h
       KB_ORPHAN_GRACE: 1h
-    grpc_services: [kb.document.v1.DocumentService]
+    grpc_services: [knowcel.document.v1.DocumentService]
     # Called only by other modules' services (ingestion creates, replaces and
     # fills documents, chat retrieves chunks); Envoy does not route them.
     internal:
-      - kb.document.v1.DocumentService/CreateDocument
-      - kb.document.v1.DocumentService/ReplaceContent
-      - kb.document.v1.DocumentService/SetDocumentStatus
-      - kb.document.v1.DocumentService/ReadContent
-      - kb.document.v1.DocumentService/AddChunks
-      - kb.document.v1.DocumentService/SearchChunks
+      - knowcel.document.v1.DocumentService/CreateDocument
+      - knowcel.document.v1.DocumentService/ReplaceContent
+      - knowcel.document.v1.DocumentService/SetDocumentStatus
+      - knowcel.document.v1.DocumentService/ReadContent
+      - knowcel.document.v1.DocumentService/AddChunks
+      - knowcel.document.v1.DocumentService/SearchChunks
 ui: "@kb/module-document"
 # SearchDocuments embeds queries through llm; everything else works without it.
 depends_on: [llm]

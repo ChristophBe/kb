@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Protocol
 
-from kb.chat.v1 import chat_pb2
+from knowcel.chat.v1 import chat_pb2
 
 from .config import Settings
 from .context import ApproximateTokenCounter, TokenCounter, fit

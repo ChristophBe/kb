@@ -1,6 +1,6 @@
 import { timestampFromDate } from "@bufbuild/protobuf/wkt";
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
-import { ChatService } from "@kb/chat-api/kb/chat/v1/chat_pb";
+import { ChatService } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
 import { renderWidget } from "@kb/module-sdk/testing";
 import { expectNoAxeViolations } from "@kb/ui/testing";
 import { screen } from "@testing-library/react";

@@ -15,12 +15,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	documentv1 "github.com/christoph/kb/modules/document/api/go/documentv1"
-	"github.com/christoph/kb/modules/document/migrations"
-	"github.com/christoph/kb/modules/document/service/internal/storage"
-	"github.com/christoph/kb/modules/document/service/internal/storage/s3test"
-	"github.com/christoph/kb/modules/document/service/internal/store"
-	"github.com/christoph/kb/platform/go/postgres/pgtest"
+	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
+	"github.com/ChristophBe/knowcelium/modules/document/migrations"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/storage"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/storage/s3test"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/store"
+	"github.com/ChristophBe/knowcelium/platform/go/postgres/pgtest"
 )
 
 var testConfig = Config{Interval: time.Hour, UploadTTL: 24 * time.Hour, OrphanGrace: time.Hour}

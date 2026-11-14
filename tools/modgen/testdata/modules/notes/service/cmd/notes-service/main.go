@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/christoph/kb/modules/notes/service/internal/limits"
-	"github.com/christoph/kb/platform/go/config"
+	"github.com/ChristophBe/knowcelium/modules/notes/service/internal/limits"
+	"github.com/ChristophBe/knowcelium/platform/go/config"
 )
 
 type Config struct {

@@ -1,4 +1,4 @@
-import { DocumentService } from "@kb/document-api/kb/document/v1/document_pb";
+import { DocumentService } from "@kb/document-api/knowcel/document/v1/document_pb";
 import { toast, useClient, useMutation, useQuery, useQueryClient } from "@kb/module-sdk";
 import {
   Badge,

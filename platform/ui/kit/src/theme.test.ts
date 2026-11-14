@@ -158,7 +158,7 @@ it("converts known colours", () => {
   // Tailwind zinc-900 is #18181b.
   expect(contrast(parse(resolve("--color-zinc-900", "light")), parse("#fff"))).toBeCloseTo(17.7, 0);
   expect(composite([1, 1, 1, 0.5], [0, 0, 0, 1])).toEqual([0.5, 0.5, 0.5, 1]);
-  expect(resolve("--color-canvas", "light")).toBe(resolve("--color-zinc-100", "light"));
-  expect(resolve("--color-canvas", "dark")).toBe(resolve("--color-zinc-950", "dark"));
+  expect(resolve("--color-canvas", "light")).toBe(resolve("--color-soil-100", "light"));
+  expect(resolve("--color-canvas", "dark")).toBe(resolve("--color-soil-900", "dark"));
   expect(parse(resolve("--color-glass", "dark"))[3]).toBeLessThan(1);
 });

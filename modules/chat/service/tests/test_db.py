@@ -48,7 +48,7 @@ async def test_conversations_sort_by_their_latest_message(repo: SqlRepository) -
     await say(repo, second.id, "hello")
     await say(repo, first.id, "hello")
 
-    listed = await repo.list_conversations(ALICE, 10, 0)
+    listed = await repo.list_conversations(ALICE, 10)
 
     assert [c.title for c in listed] == ["first", "second", "empty"]
 
@@ -62,7 +62,7 @@ async def test_renaming_or_rescoping_does_not_move_a_conversation(repo: SqlRepos
     renamed = await repo.update_conversation(ALICE, older.id, title="renamed")
     await repo.update_conversation(ALICE, older.id, document_ids=[uuid.uuid4()])
 
-    assert [c.title for c in await repo.list_conversations(ALICE, 10, 0)] == ["newer", "renamed"]
+    assert [c.title for c in await repo.list_conversations(ALICE, 10)] == ["newer", "renamed"]
     # The updated conversation still carries its latest message.
     assert renamed is not None
     assert renamed.last_message_preview == "hello"
@@ -75,7 +75,7 @@ async def test_conversations_without_messages_sort_by_creation(repo: SqlReposito
     await say(repo, talked.id, "hello")
     await repo.create_conversation(ALICE, "c", [])
 
-    listed = await repo.list_conversations(ALICE, 10, 0)
+    listed = await repo.list_conversations(ALICE, 10)
 
     assert [c.title for c in listed] == ["c", "talked", "b", "a"]
     assert listed[0].last_message_time is None
@@ -89,7 +89,7 @@ async def test_the_preview_is_the_latest_message_as_plain_text(repo: SqlReposito
         conv.id, chat_pb2.MESSAGE_ROLE_ASSISTANT, "**Paris** is the capital [1]. " * 20, []
     )
 
-    [listed] = await repo.list_conversations(ALICE, 10, 0)
+    [listed] = await repo.list_conversations(ALICE, 10)
     got = await repo.get_conversation(ALICE, conv.id)
     messages = await repo.list_messages(conv.id)
 
@@ -101,14 +101,28 @@ async def test_the_preview_is_the_latest_message_as_plain_text(repo: SqlReposito
     assert got.last_message_preview == listed.last_message_preview
 
 
-async def test_paging_follows_the_order(repo: SqlRepository) -> None:
-    for title in ["a", "b", "c"]:
+async def test_paging_follows_the_order_while_conversations_are_added(
+    repo: SqlRepository,
+) -> None:
+    expected = []
+    for title in "abcdefg":
         conv = await repo.create_conversation(ALICE, title, [])
         await say(repo, conv.id, title)
+        expected.insert(0, title)
 
-    pages = [await repo.list_conversations(ALICE, 2, 0), await repo.list_conversations(ALICE, 2, 2)]
+    seen: list[str] = []
+    after = None
+    while True:
+        page = await repo.list_conversations(ALICE, 3, after)
+        seen += [c.title for c in page]
+        # New activity lands before the cursor, so it must not shift the next page.
+        newer = await repo.create_conversation(ALICE, "new", [])
+        await say(repo, newer.id, "new")
+        if len(page) < 3:
+            break
+        after = page[-1].cursor
 
-    assert [[c.title for c in page] for page in pages] == [["c", "b"], ["a"]]
+    assert seen == expected
 
 
 async def test_search_finds_words_in_titles_and_messages(repo: SqlRepository) -> None:
@@ -196,7 +210,7 @@ async def test_users_see_only_their_own_conversations(repo: SqlRepository) -> No
     await say(repo, theirs.id, "museums in Lisbon")
 
     assert mine.owner_id == ALICE
-    assert [c.id for c in await repo.list_conversations(ALICE, 10, 0)] == [mine.id]
+    assert [c.id for c in await repo.list_conversations(ALICE, 10)] == [mine.id]
     assert [m.conversation.id for m in await repo.search_conversations(ALICE, "lisbon", 10)] == [
         mine.id
     ]
@@ -242,7 +256,7 @@ async def test_the_migration_gives_existing_conversations_to_alice(database_url:
     await asyncio.to_thread(_alembic, url, "head")
 
     try:
-        listed = await SqlRepository(engine).list_conversations("CgVhbGljZRIFbG9jYWw", 10, 0)
+        listed = await SqlRepository(engine).list_conversations("CgVhbGljZRIFbG9jYWw", 10)
         assert [c.title for c in listed] == ["old"]
         # New conversations must name their owner.
         async with engine.connect() as conn:

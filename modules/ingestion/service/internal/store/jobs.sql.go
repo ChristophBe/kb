@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const advanceJob = `-- name: AdvanceJob :one
@@ -204,18 +205,31 @@ func (q *Queries) GetJob(ctx context.Context, arg GetJobParams) (IngestionJob, e
 const listJobs = `-- name: ListJobs :many
 SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id FROM ingestion.jobs
 WHERE owner_id = $1
+  AND (created_at, id) < (
+    coalesce($2::timestamptz, 'infinity'),
+    coalesce($3::uuid, 'ffffffff-ffff-ffff-ffff-ffffffffffff')
+  )
 ORDER BY created_at DESC, id DESC
-LIMIT $2 OFFSET $3
+LIMIT $4
 `
 
 type ListJobsParams struct {
-	OwnerID string
-	Limit   int32
-	Offset  int32
+	OwnerID        string
+	AfterCreatedAt pgtype.Timestamptz
+	AfterID        pgtype.UUID
+	MaxResults     int32
 }
 
+// ListJobs is keyset-paginated: a page continues after the (created_at, id) of
+// the last row of the previous one (both after_* NULL for the first page), so
+// rows inserted meanwhile never shift it. It walks the owner's index.
 func (q *Queries) ListJobs(ctx context.Context, arg ListJobsParams) ([]IngestionJob, error) {
-	rows, err := q.db.Query(ctx, listJobs, arg.OwnerID, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listJobs,
+		arg.OwnerID,
+		arg.AfterCreatedAt,
+		arg.AfterID,
+		arg.MaxResults,
+	)
 	if err != nil {
 		return nil, err
 	}

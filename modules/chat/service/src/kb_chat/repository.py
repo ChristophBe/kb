@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, Protocol
 
 from kb.chat.v1 import chat_pb2
+from kb_platform.pagination import Cursor
 
 
 @dataclass
@@ -21,6 +22,12 @@ class ConversationRow:
     # None while the conversation has no messages.
     last_message_time: datetime | None = None
     last_message_preview: str = ""
+
+    @property
+    def cursor(self) -> Cursor:
+        """The position of this conversation in the list, which is ordered by
+        its latest activity: the last message, else its creation."""
+        return Cursor(self.last_message_time or self.created_at, self.id)
 
 
 @dataclass
@@ -53,10 +60,11 @@ class Repository(Protocol):
     ) -> ConversationRow: ...
     async def get_conversation(self, owner: str, id: uuid.UUID) -> ConversationRow | None: ...
     async def list_conversations(
-        self, owner: str, limit: int, offset: int
+        self, owner: str, limit: int, after: Cursor | None = None
     ) -> list[ConversationRow]:
         """Newest latest message first; a conversation without messages counts
-        from its creation."""
+        from its creation. `after` continues behind the conversation whose
+        `activity_cursor` it is (None for the first page)."""
         ...
 
     async def search_conversations(

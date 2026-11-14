@@ -10,6 +10,7 @@ from typing import Any
 from alembic import command
 from alembic.config import Config
 from kb.chat.v1 import chat_pb2
+from kb_platform.pagination import Cursor
 from sqlalchemy import (
     Column,
     DateTime,
@@ -26,6 +27,7 @@ from sqlalchemy import (
     or_,
     select,
     true,
+    tuple_,
     update,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
@@ -139,17 +141,13 @@ class SqlRepository:
         return _conversation(row) if row else None
 
     async def list_conversations(
-        self, owner: str, limit: int, offset: int
+        self, owner: str, limit: int, after: Cursor | None = None
     ) -> list[ConversationRow]:
-        query = (
-            _conversations_with_last_message.where(conversations.c.owner_id == owner)
-            .order_by(
-                func.coalesce(_last_message.c.last_message_time, conversations.c.created_at).desc(),
-                conversations.c.id.desc(),
-            )
-            .limit(limit)
-            .offset(offset)
-        )
+        activity = func.coalesce(_last_message.c.last_message_time, conversations.c.created_at)
+        query = _conversations_with_last_message.where(conversations.c.owner_id == owner)
+        if after is not None:
+            query = query.where(tuple_(activity, conversations.c.id) < tuple_(after.time, after.id))
+        query = query.order_by(activity.desc(), conversations.c.id.desc()).limit(limit)
         async with self._engine.connect() as conn:
             rows = (await conn.execute(query)).mappings().all()
         return [_conversation(r) for r in rows]

@@ -56,7 +56,7 @@ func (f *fakeJobs) Get(_ context.Context, owner string, id uuid.UUID) (Job, erro
 	return j, nil
 }
 
-func (f *fakeJobs) List(context.Context, string, int32, int32) ([]Job, error) { return nil, nil }
+func (f *fakeJobs) List(context.Context, string, *JobCursor, int32) ([]Job, error) { return nil, nil }
 
 func (f *fakeJobs) Advance(_ context.Context, t Transition) (Job, error) {
 	if f.advanceErr != nil {

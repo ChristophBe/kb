@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -12,9 +13,11 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -59,16 +62,23 @@ func (f *fakeRepo) CreateDocument(_ context.Context, p store.CreateDocumentParam
 	return store.DocumentDocument{ID: p.ID, OwnerID: p.OwnerID, Title: p.Title, Filename: p.Filename, Status: p.Status}, nil
 }
 
-// ListDocuments behaves like the query: the owner's documents, paged.
+// ListDocuments behaves like the query: the owner's documents, newest first
+// (f.list is kept in that order), after the cursor.
 func (f *fakeRepo) ListDocuments(_ context.Context, p store.ListDocumentsParams) ([]store.DocumentDocument, error) {
 	owned := []store.DocumentDocument{}
 	for _, d := range f.list {
-		if owner(d) == p.OwnerID {
-			owned = append(owned, d)
+		if owner(d) != p.OwnerID {
+			continue
 		}
+		if p.AfterCreatedAt.Valid {
+			after, id := p.AfterCreatedAt.Time, uuid.UUID(p.AfterID.Bytes)
+			if d.CreatedAt.Time.After(after) || (d.CreatedAt.Time.Equal(after) && bytes.Compare(d.ID[:], id[:]) >= 0) {
+				continue
+			}
+		}
+		owned = append(owned, d)
 	}
-	end := min(int(p.Offset+p.Limit), len(owned))
-	return owned[p.Offset:end], nil
+	return owned[:min(int(p.MaxResults), len(owned))], nil
 }
 
 func (f *fakeRepo) GetDocument(_ context.Context, p store.GetDocumentParams) (store.DocumentDocument, error) {
@@ -319,15 +329,18 @@ func TestCreateDocumentRequiresFilename(t *testing.T) {
 
 func TestListDocumentsPaginates(t *testing.T) {
 	repo := &fakeRepo{}
-	for range 3 {
-		repo.list = append(repo.list, store.DocumentDocument{ID: uuid.New()})
+	now := time.Now().Truncate(time.Microsecond)
+	for i := range 3 {
+		repo.list = append(repo.list, store.DocumentDocument{
+			ID: uuid.New(), CreatedAt: pgtype.Timestamptz{Time: now.Add(-time.Duration(i) * time.Minute), Valid: true},
+		})
 	}
 	srv := newServer(repo)
 	first, err := srv.ListDocuments(asAlice(t), &documentv1.ListDocumentsRequest{Page: &commonv1.PageRequest{PageSize: 2}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(first.GetDocuments()) != 2 || first.GetPage().GetNextPageToken() != "2" {
+	if len(first.GetDocuments()) != 2 || first.GetPage().GetNextPageToken() == "" {
 		t.Fatalf("first page: %d docs, token %q", len(first.GetDocuments()), first.GetPage().GetNextPageToken())
 	}
 	second, err := srv.ListDocuments(asAlice(t), &documentv1.ListDocumentsRequest{
@@ -338,6 +351,21 @@ func TestListDocumentsPaginates(t *testing.T) {
 	}
 	if len(second.GetDocuments()) != 1 || second.GetPage().GetNextPageToken() != "" {
 		t.Fatalf("second page: %d docs, token %q", len(second.GetDocuments()), second.GetPage().GetNextPageToken())
+	}
+	if second.GetDocuments()[0].GetId() != repo.list[2].ID.String() {
+		t.Errorf("second page starts with %s, want the oldest document", second.GetDocuments()[0].GetId())
+	}
+}
+
+func TestListDocumentsRejectsInvalidPageTokens(t *testing.T) {
+	for _, token := range []string{"2", "!!!", "bm90IGpzb24"} {
+		_, err := newServer(&fakeRepo{}).ListDocuments(asAlice(t), &documentv1.ListDocumentsRequest{
+			Page: &commonv1.PageRequest{PageToken: token},
+		})
+		got := grpcserver.FieldViolations(err)
+		if status.Code(err) != codes.InvalidArgument || len(got) != 1 || got[0].GetField() != "page.page_token" {
+			t.Errorf("token %q: err = %v, want InvalidArgument on page.page_token", token, err)
+		}
 	}
 }
 

@@ -24,6 +24,9 @@ type Querier interface {
 	// there be more than one.
 	GetDocumentJob(ctx context.Context, arg GetDocumentJobParams) (IngestionJob, error)
 	GetJob(ctx context.Context, arg GetJobParams) (IngestionJob, error)
+	// ListJobs is keyset-paginated: a page continues after the (created_at, id) of
+	// the last row of the previous one (both after_* NULL for the first page), so
+	// rows inserted meanwhile never shift it. It walks the owner's index.
 	ListJobs(ctx context.Context, arg ListJobsParams) ([]IngestionJob, error)
 	// ReportProgress records the stage and progress of a job's current run. A
 	// report means the worker is at it, so a QUEUED job (whose started event is

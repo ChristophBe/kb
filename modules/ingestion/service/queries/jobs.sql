@@ -28,11 +28,18 @@ SET status = 1, filename = sqlc.arg(filename), content_type = sqlc.arg(content_t
 WHERE id = sqlc.arg(id) AND owner_id = sqlc.arg(owner_id) AND status IN (1, 4, 5)
 RETURNING *;
 
+-- ListJobs is keyset-paginated: a page continues after the (created_at, id) of
+-- the last row of the previous one (both after_* NULL for the first page), so
+-- rows inserted meanwhile never shift it. It walks the owner's index.
 -- name: ListJobs :many
 SELECT * FROM ingestion.jobs
-WHERE owner_id = $1
+WHERE owner_id = sqlc.arg(owner_id)
+  AND (created_at, id) < (
+    coalesce(sqlc.narg(after_created_at)::timestamptz, 'infinity'),
+    coalesce(sqlc.narg(after_id)::uuid, 'ffffffff-ffff-ffff-ffff-ffffffffffff')
+  )
 ORDER BY created_at DESC, id DESC
-LIMIT $2 OFFSET $3;
+LIMIT sqlc.arg(max_results);
 
 -- AdvanceJob moves a job forward within its current run. Status values are
 -- ordered, so a stale or duplicate event can never move a job backwards,

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,6 +18,7 @@ import (
 	"github.com/christoph/kb/modules/ingestion/service/internal/app"
 	commonv1 "github.com/christoph/kb/platform/api/go/commonv1"
 	"github.com/christoph/kb/platform/go/grpcserver"
+	"github.com/christoph/kb/platform/go/postgres"
 )
 
 const (
@@ -138,22 +138,23 @@ func (s *Server) ListJobs(ctx context.Context, req *ingestionv1.ListJobsRequest)
 		limit = defaultPageSize
 	}
 	limit = min(limit, maxPageSize)
-	var offset int32
+	var after *app.JobCursor
 	if tok := req.GetPage().GetPageToken(); tok != "" {
-		o, err := strconv.Atoi(tok)
-		if err != nil || o < 0 {
+		c, err := postgres.DecodeCursor(tok)
+		if err != nil {
 			return nil, grpcserver.InvalidArgument(grpcserver.Violation("page.page_token", "The page token is invalid"))
 		}
-		offset = int32(o)
+		after = &app.JobCursor{CreatedAt: c.Time, ID: c.ID}
 	}
-	jobs, err := s.app.ListJobs(ctx, owner, limit+1, offset)
+	jobs, err := s.app.ListJobs(ctx, owner, after, limit+1)
 	if err != nil {
 		return nil, s.toStatus("list jobs", err)
 	}
 	resp := &ingestionv1.ListJobsResponse{Page: &commonv1.PageResponse{}}
 	if len(jobs) > int(limit) {
 		jobs = jobs[:limit]
-		resp.Page.NextPageToken = strconv.Itoa(int(offset + limit))
+		last := jobs[len(jobs)-1]
+		resp.Page.NextPageToken = postgres.Cursor{Time: last.CreatedAt, ID: last.ID}.Encode()
 	}
 	for _, j := range jobs {
 		resp.Jobs = append(resp.Jobs, toProto(j))

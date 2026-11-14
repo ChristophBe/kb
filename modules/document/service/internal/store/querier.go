@@ -29,6 +29,9 @@ type Querier interface {
 	GetDocument(ctx context.Context, arg GetDocumentParams) (DocumentDocument, error)
 	InsertChunks(ctx context.Context, arg []InsertChunksParams) (int64, error)
 	ListChunks(ctx context.Context, arg ListChunksParams) ([]ListChunksRow, error)
+	// ListDocuments is keyset-paginated: a page continues after the (created_at, id) of
+	// the last row of the previous one (both after_* NULL for the first page), so
+	// rows inserted meanwhile never shift it. It walks the owner's index.
 	ListDocuments(ctx context.Context, arg ListDocumentsParams) ([]DocumentDocument, error)
 	MarkDocumentUploaded(ctx context.Context, arg MarkDocumentUploadedParams) (DocumentDocument, error)
 	MarkPendingUploaded(ctx context.Context, arg MarkPendingUploadedParams) (DocumentDocument, error)

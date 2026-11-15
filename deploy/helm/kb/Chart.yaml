@@ -6,5 +6,5 @@ type: application
 # (image.tag). Install guide: docs/operations/kubernetes.md.
 version: 0.1.0
 appVersion: "0.2.1"
-home: https://github.com/ChristophBe/kb
-sources: [https://github.com/ChristophBe/kb]
+home: https://github.com/ChristophBe/knowcelium
+sources: [https://github.com/ChristophBe/knowcelium]

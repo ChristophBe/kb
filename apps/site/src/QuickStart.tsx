@@ -7,7 +7,7 @@ import { REPO, repoPath } from "./links.ts";
 
 /** The README's quick start; keep the two in step. */
 const COMMANDS = [
-  `git clone ${REPO}.git && cd kb`,
+  `git clone ${REPO}.git && cd knowcelium`,
   "alias task='go tool -modfile=tools/go.mod task'   # or install go-task",
   "task setup                      # go/uv/pnpm dependencies",
   "task up -- --profile ollama     # full stack incl. Ollama",

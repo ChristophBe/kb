@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-export const REPO = "https://github.com/ChristophBe/kb";
+export const REPO = "https://github.com/ChristophBe/knowcelium";
 
 /** A file or folder on the repository's main branch. */
 export function repoPath(path: string) {

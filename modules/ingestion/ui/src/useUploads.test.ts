@@ -5,7 +5,7 @@ import {
   JobStatus,
 } from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 import { Code, ConnectError } from "@knowcel/module-sdk";
-import { badRequestDetail } from "@knowcel/ui/testing/errors";
+import { badRequestDetail, errorInfoDetail } from "@knowcel/ui/testing/errors";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { type Put, UploadError } from "./put.ts";
@@ -98,8 +98,38 @@ describe("useUploads", () => {
       sizeBytes: 7n,
       // SHA-256 of "content".
       sha256: "ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73",
+      teamIds: [],
     });
     expect(put.mock.calls[0]?.[2]).toBe("text/markdown");
+  });
+
+  it("shares the document with the teams chosen when the file was added", async () => {
+    const { hook, client } = setup();
+    act(() => hook.result.current.add([file("a.md")], ["t1", "t2"]));
+    await waitFor(() => expect(hook.result.current.uploads).toEqual([]));
+    expect(client.createUpload).toHaveBeenCalledWith(
+      expect.objectContaining({ filename: "a.md", teamIds: ["t1", "t2"] }),
+    );
+  });
+
+  it("explains an unknown team and uploads on a second try", async () => {
+    const client = fakeClient();
+    const unknown = new ConnectError("team not found", Code.NotFound);
+    unknown.details.push(
+      errorInfoDetail({ reason: "TEAM_NOT_FOUND", domain: "knowcel.ingestion.v1" }),
+    );
+    client.createUpload.mockRejectedValueOnce(unknown);
+    const { hook, events } = setup(client);
+    act(() => hook.result.current.add([file("a.md")], ["t1"]));
+    await waitFor(() => expect(hook.result.current.uploads[0]?.status).toBe("failed"));
+    expect(hook.result.current.uploads[0]?.error).toMatch(/half a minute/);
+    expect(events.announce).toHaveBeenCalledWith("Upload of a.md failed", true);
+
+    act(() => hook.result.current.retry(hook.result.current.uploads[0]?.key ?? 0));
+    await waitFor(() => expect(hook.result.current.uploads).toEqual([]));
+    expect(client.createUpload).toHaveBeenLastCalledWith(
+      expect.objectContaining({ teamIds: ["t1"] }),
+    );
   });
 
   it("reports progress per file", async () => {

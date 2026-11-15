@@ -1,11 +1,12 @@
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
+import { IamService, TeamRole } from "@knowcel/iam-api/knowcel/iam/v1/iam_pb";
 import {
   IngestionService,
   JobStage,
   JobStatus,
 } from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 import { renderModule } from "@knowcel/module-sdk/testing";
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import ingestion from "./index.tsx";
 
@@ -131,5 +132,41 @@ describe("Upload", () => {
     renderModule(ingestion, transport);
     const error = await screen.findByText("[unavailable] ingestion service down");
     expect(error.getAttribute("role")).toBe("alert");
+  });
+
+  describe("sharing", () => {
+    const transport = (iam: boolean) =>
+      createRouterTransport(({ service }) => {
+        service(IngestionService, { listJobs: () => ({ jobs: [] }) });
+        if (iam) {
+          service(IamService, {
+            listMyTeams: () => ({
+              teams: [
+                { id: "t1", name: "Platform", myRole: TeamRole.ADMIN, members: [] },
+                { id: "t2", name: "Support", myRole: TeamRole.MEMBER, members: [] },
+              ],
+            }),
+          });
+        }
+      });
+
+    it("offers the user's teams, none chosen so that uploads stay private", async () => {
+      renderModule(ingestion, transport(true));
+      const group = await screen.findByRole("group", { name: "Share new uploads with" });
+      const boxes = within(group).getAllByRole("checkbox") as HTMLInputElement[];
+      expect(boxes.map((b) => b.checked)).toEqual([false, false]);
+      fireEvent.click(within(group).getByRole("checkbox", { name: "Support" }));
+      expect(
+        (within(group).getByRole("checkbox", { name: "Support" }) as HTMLInputElement).checked,
+      ).toBe(true);
+    });
+
+    it("shows no picker without IAM, and no error", async () => {
+      renderModule(ingestion, transport(false));
+      await screen.findByText("No uploads yet. Drop files above to add documents.");
+      expect(screen.queryByRole("group", { name: "Share new uploads with" })).toBeNull();
+      // The page's own urgent live region is always there, and empty.
+      expect(screen.queryAllByRole("alert").map((a) => a.textContent)).toEqual([""]);
+    });
   });
 });

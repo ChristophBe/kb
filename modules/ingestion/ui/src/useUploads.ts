@@ -1,7 +1,7 @@
 import type { Job } from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 import { JobStatus } from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 import { Code, ConnectError } from "@knowcel/module-sdk";
-import { fieldViolations } from "@knowcel/ui";
+import { fieldViolations, isTeamNotFound } from "@knowcel/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isSupported, SUPPORTED_FORMATS, sha256 } from "./files.ts";
 import { type Put, UploadError } from "./put.ts";
@@ -18,6 +18,7 @@ export interface UploadClient {
     contentType: string;
     sizeBytes: bigint;
     sha256: string;
+    teamIds: string[];
   }): Promise<{ job?: Job; uploadUrl: string }>;
   completeUpload(req: { jobId: string }): Promise<{ job?: Job }>;
   watchJob(req: { id: string }): AsyncIterable<{ job?: Job }>;
@@ -34,6 +35,8 @@ export interface Upload {
   /** 0 to 1 while uploading. */
   progress: number;
   error?: string;
+  /** The teams the document is shared with, as chosen when the file was added. */
+  teamIds: string[];
 }
 
 /** Where a file goes: the job created for it and its presigned URL, signed for contentType. */
@@ -60,6 +63,9 @@ let nextKey = 1;
 /** A reason for a failed upload that a user can act on. */
 export function describe(err: unknown): string {
   if (err instanceof UploadError) return err.message;
+  if (isTeamNotFound(err)) {
+    return "a chosen team isn't available. One you created or joined a moment ago can take up to half a minute; retry shortly";
+  }
   if (err instanceof ConnectError) {
     // A request that never reached the server surfaces as Unknown ("Failed to fetch").
     if (err.code === Code.Unavailable || err.code === Code.Unknown) {
@@ -136,6 +142,7 @@ export function useUploads(client: UploadClient, put: Put, events: UploadEvents,
             contentType: file.type || "application/octet-stream",
             sizeBytes: BigInt(file.size),
             sha256: await sha256(file),
+            teamIds: upload.teamIds,
           });
           target = {
             jobId: created.job?.id ?? "",
@@ -194,13 +201,14 @@ export function useUploads(client: UploadClient, put: Put, events: UploadEvents,
     }
   }, [uploads, run]);
 
-  const add = useCallback((files: Iterable<File>) => {
+  const add = useCallback((files: Iterable<File>, teamIds: string[] = []) => {
     const added: Upload[] = [...files].map((file) => ({
       key: nextKey++,
       file,
       status: isSupported(file) ? "waiting" : "rejected",
       progress: 0,
       error: isSupported(file) ? undefined : `Not supported (${SUPPORTED_FORMATS})`,
+      teamIds,
     }));
     if (added.length === 0) return;
     setUploads((us) => [...added, ...us]);

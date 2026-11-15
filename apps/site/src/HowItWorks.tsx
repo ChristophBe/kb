@@ -50,7 +50,7 @@ const PROMISES: { icon: LucideIcon; title: string; text: string }[] = [
 /** The three steps from file to answer, and why it is safe to give Knowcelium your documents. */
 export function HowItWorks() {
   return (
-    <section id="how-it-works" aria-labelledby="how-title" className="px-4 py-20 sm:px-8">
+    <section id="how-it-works" aria-labelledby="how-title" className="px-4 py-24 sm:px-8">
       <div className="mx-auto max-w-6xl">
         <SectionTitle
           id="how-title"
@@ -64,7 +64,7 @@ export function HowItWorks() {
         </ol>
 
         <div className="glass mt-16 rounded-panel p-6 sm:p-10">
-          <h3 className="max-w-xl text-xl font-medium text-balance">
+          <h3 className="max-w-3xl text-3xl font-bold text-balance sm:text-4xl lg:text-5xl">
             Private by design. Your knowledge, on your hardware.
           </h3>
           <ul className="mt-8 grid gap-6 md:grid-cols-3">
@@ -72,8 +72,8 @@ export function HowItWorks() {
               <li key={p.title} className="flex gap-3">
                 <p.icon className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden="true" />
                 <div>
-                  <p className="font-medium">{p.title}</p>
-                  <p className="mt-1 text-sm text-fg-muted">{p.text}</p>
+                  <p className="text-lg font-semibold">{p.title}</p>
+                  <p className="mt-1 text-base text-fg-muted">{p.text}</p>
                 </div>
               </li>
             ))}
@@ -105,15 +105,15 @@ function Step({
             <span className="inline-flex size-10 items-center justify-center rounded-card bg-accent-subtle text-accent">
               <Icon className="size-5" aria-hidden="true" />
             </span>
-            <span className="font-mono text-xs text-fg-muted">0{n}</span>
+            <span className="font-mono text-3xl font-bold text-accent/40">0{n}</span>
           </div>
-          <h3 className="font-medium">{title}</h3>
-          <p className="text-sm text-fg-muted">{text}</p>
+          <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
+          <p className="text-base text-fg-muted">{text}</p>
         </Card>
       </li>
       {!last && (
         <li aria-hidden="true" className="hidden justify-center text-fg-muted md:flex">
-          <ArrowRight className="size-5" />
+          <ArrowRight className="size-7 animate-pulse-node text-accent" />
         </li>
       )}
     </>

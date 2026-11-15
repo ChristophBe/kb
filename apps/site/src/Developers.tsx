@@ -1,6 +1,7 @@
 import { Badge } from "@knowcel/ui";
 import { ArrowDown, Blocks, Braces, type LucideIcon, Workflow } from "lucide-react";
 import { SectionTitle } from "./Features.tsx";
+import { DotGrid } from "./Graphics.tsx";
 import { repoPath } from "./links.ts";
 
 const POINTS: { icon: LucideIcon; title: string; text: string }[] = [
@@ -35,7 +36,12 @@ const MODULES = [
 /** For people who want to run, read or extend Knowcelium. */
 export function Developers() {
   return (
-    <section id="developers" aria-labelledby="dev-title" className="px-4 py-20 sm:px-8">
+    <section
+      id="developers"
+      aria-labelledby="dev-title"
+      className="relative isolate px-4 py-24 sm:px-8"
+    >
+      <DotGrid />
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:items-center">
         <div>
           <SectionTitle
@@ -49,8 +55,8 @@ export function Developers() {
               <li key={p.title} className="flex gap-3">
                 <p.icon className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden="true" />
                 <div>
-                  <p className="font-medium">{p.title}</p>
-                  <p className="mt-1 text-sm text-fg-muted">{p.text}</p>
+                  <p className="text-lg font-semibold">{p.title}</p>
+                  <p className="mt-1 text-base text-fg-muted">{p.text}</p>
                 </div>
               </li>
             ))}

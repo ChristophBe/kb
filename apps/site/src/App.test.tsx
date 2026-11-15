@@ -1,5 +1,5 @@
 import { expectNoAxeViolations } from "@knowcel/ui/testing";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { App } from "./App.tsx";
 import { render as renderStatic } from "./entry-server.tsx";
@@ -17,16 +17,13 @@ describe("marketing site", () => {
     await expectNoAxeViolations(container);
   });
 
-  it("links a citation in the demo answer to its source", () => {
+  it("shows the demo as a recording nobody can interact with", () => {
     render(<App />);
-    const sources = screen.getByRole("list", { name: "Sources" });
-    const marker = screen.getByRole("button", { name: /^Source 2:/ });
-    fireEvent.focus(marker);
-    const notes = within(sources).getAllByRole("listitem");
-    expect(notes[1]?.className).toContain("border-accent");
-    expect(notes[0]?.className).not.toContain("border-accent");
-    fireEvent.blur(marker);
-    expect(notes[1]?.className).not.toContain("border-accent");
+    const demo = screen.getByRole("figure", { name: /recording/ });
+    expect(within(demo).queryAllByRole("button")).toHaveLength(0);
+    expect(within(demo).queryAllByRole("link")).toHaveLength(0);
+    expect(demo.className).toContain("pointer-events-none");
+    expect(within(demo).getByText("Demo recording")).not.toBeNull();
   });
 
   it("prerenders the content, so the page reads without JavaScript", () => {
@@ -34,6 +31,7 @@ describe("marketing site", () => {
     expect(html).toContain("Everything your organization knows");
     for (const pillar of ["Absorb", "Connect", "Renew"]) expect(html).toContain(pillar);
     expect(html).toContain("On the roadmap");
-    expect(html).toContain("task up -- --profile ollama");
+    expect(html).toContain("Drop PDFs, Markdown or text files here");
+    expect(html).toContain("task up:release");
   });
 });

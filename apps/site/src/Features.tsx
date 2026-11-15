@@ -12,6 +12,7 @@ import {
   Upload,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { DotGrid } from "./Graphics.tsx";
 
 type Feature = { icon: LucideIcon; title: string; text: string; demo: ReactNode };
 
@@ -87,7 +88,12 @@ const FEATURES: Feature[] = [
 /** The three pillars, then the six things Knowcelium does today, each with a small piece of its UI. */
 export function Features() {
   return (
-    <section id="features" aria-labelledby="features-title" className="px-4 py-20 sm:px-8">
+    <section
+      id="features"
+      aria-labelledby="features-title"
+      className="relative isolate px-4 py-24 sm:px-8"
+    >
+      <DotGrid />
       <div className="mx-auto max-w-6xl">
         <SectionTitle
           id="features-title"
@@ -96,7 +102,9 @@ export function Features() {
           text="Stop digging through folders and PDFs. Knowcelium takes in your documents, makes them searchable and answers questions like a colleague who has read them all."
         />
         <Pillars />
-        <h3 className="mt-16 mb-6 text-lg font-medium">What you can do today</h3>
+        <h3 className="mt-20 mb-8 text-3xl font-bold tracking-tight sm:text-4xl">
+          What you can do today
+        </h3>
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
             <li key={f.title}>
@@ -104,8 +112,8 @@ export function Features() {
                 <span className="inline-flex size-10 items-center justify-center rounded-card bg-accent-subtle text-accent">
                   <f.icon className="size-5" aria-hidden="true" />
                 </span>
-                <h3 className="font-medium">{f.title}</h3>
-                <p className="flex-1 text-sm text-fg-muted">{f.text}</p>
+                <h3 className="text-xl font-semibold tracking-tight">{f.title}</h3>
+                <p className="flex-1 text-base text-fg-muted">{f.text}</p>
                 <div
                   aria-hidden="true"
                   className="mt-2 rounded-control border border-border bg-canvas p-3"
@@ -153,8 +161,8 @@ function Pillars() {
               </span>
               {p.roadmap && <Badge tone="info">On the roadmap</Badge>}
             </div>
-            <h3 className="font-medium">{p.title}</h3>
-            <p className="text-sm text-fg-muted">{p.text}</p>
+            <h3 className="text-xl font-semibold tracking-tight">{p.title}</h3>
+            <p className="text-base text-fg-muted">{p.text}</p>
           </Card>
         </li>
       ))}
@@ -175,12 +183,12 @@ export function SectionTitle({
   text?: string;
 }) {
   return (
-    <div className="mb-10 max-w-2xl">
-      <p className="mb-2 font-mono text-xs text-accent">{eyebrow}</p>
-      <h2 id={id} className="text-2xl font-medium text-balance">
+    <div className="mb-12 max-w-4xl">
+      <p className="mb-3 font-mono text-sm tracking-wide text-accent uppercase">{eyebrow}</p>
+      <h2 id={id} className="font-bold text-balance text-3xl sm:text-4xl lg:text-5xl">
         {title}
       </h2>
-      {text && <p className="mt-3 text-base text-pretty text-fg-muted">{text}</p>}
+      {text && <p className="mt-4 text-lg text-pretty text-fg-muted">{text}</p>}
     </div>
   );
 }

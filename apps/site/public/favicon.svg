@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
   <title>Knowcelium</title>
-  <rect width="48" height="48" rx="10" fill="#3a6830"/>
-  <g fill="#fcfcf9" transform="translate(2.4 2.4) scale(0.9)">
+  <rect width="48" height="48" rx="10" fill="#3a6343"/>
+  <g fill="#fcfcfa" transform="translate(2.4 2.4) scale(0.9)">
     <path d="M19.18 24C16.5 18.05 16.5 12.95 18.8 7L11.2 7C13.5 12.95 13.5 18.05 10.82 24Z" />
     <path d="M10.82 24C13.5 29.95 13.5 35.05 11.2 41L18.8 41C16.5 35.05 16.5 29.95 19.18 24Z" />
     <path d="M17.69 27.2C20.94 20.96 29.99 13.33 36.45 10.91L31.55 5.09C28.06 11.04 19.01 18.67 12.31 20.8Z" />

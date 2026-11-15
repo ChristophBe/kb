@@ -56,9 +56,9 @@ In the product, things keep their technical names. A button says "Add connector"
 
 ## Visual identity
 
-- **Palette "Moss":** soil-tinted neutrals, a moss-green accent, and ochre as the second gradient stop. The tokens live in [`platform/ui/kit/src/theme.css`](../platform/ui/kit/src/theme.css); use tokens, never raw colours.
+- **Palette "Sage":** near-neutral stone greys, an earthy sage-green accent, and ochre as the second gradient stop. The tokens live in [`platform/ui/kit/src/theme.css`](../platform/ui/kit/src/theme.css); use tokens, never raw colours.
 - **Mark "Balanced star k":** a k drawn as a graph, with one centred hub, mirrored arm and leg, and edges that swell into their nodes. Single colour, in two cuts (full and small). See [Logo](#logo).
-- **Typeface:** IBM Plex Sans and IBM Plex Mono.
+- **Typeface:** Source Serif 4 for headings, IBM Plex Sans for the interface and IBM Plex Mono for data.
 - **Direction:** technical, abstract and balanced, not illustrative.
 
 ## Logo

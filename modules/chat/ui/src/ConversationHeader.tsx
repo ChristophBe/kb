@@ -62,7 +62,9 @@ export function ConversationHeader({ conversation }: { conversation: Conversatio
     return (
       <header className={HEADER}>
         <div className="flex items-center gap-3">
-          <h1 className="min-w-0 flex-1 truncate font-medium">{conversation.title || UNTITLED}</h1>
+          <h1 className="min-w-0 flex-1 truncate font-sans font-medium">
+            {conversation.title || UNTITLED}
+          </h1>
           <Button ref={renameButton} variant="ghost" onClick={() => setDraft(conversation.title)}>
             Rename
           </Button>

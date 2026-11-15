@@ -95,7 +95,7 @@ describe("ModuleRoutes", () => {
     );
     const heading = await screen.findByRole("heading", { name: "Notes couldn't be loaded." });
     expect(document.activeElement).toBe(heading);
-    expect(screen.getByText(/kb may have been updated since you opened it/)).toBeTruthy();
+    expect(screen.getByText(/Knowcelium may have been updated since you opened it/)).toBeTruthy();
     expect(
       screen.getByText(
         "Notes couldn't be loaded: Failed to fetch dynamically imported module: /a.js",

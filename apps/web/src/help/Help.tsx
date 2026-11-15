@@ -14,7 +14,11 @@ const PROSE =
 export function HelpIndex() {
   return (
     <div className="max-w-3xl">
-      <PageHeader eyebrow="kb / help" title="Help" description="How to use kb, by area." />
+      <PageHeader
+        eyebrow="knowcelium / help"
+        title="Help"
+        description="How to use Knowcelium, by area."
+      />
       <ul className="grid gap-3">
         {manualPages.map((p) => (
           <li key={p.slug}>

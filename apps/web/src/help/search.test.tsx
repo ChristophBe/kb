@@ -96,7 +96,7 @@ describe("Help in the header search", () => {
         <RouterProvider router={router} />
       </KbRuntimeProvider>,
     );
-    const field = screen.getByRole("combobox", { name: "Search kb" });
+    const field = screen.getByRole("combobox", { name: "Search Knowcelium" });
     fireEvent.focus(field);
     fireEvent.change(field, { target: { value: "rename" } });
 

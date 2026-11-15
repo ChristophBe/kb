@@ -66,9 +66,9 @@ describe("SearchPage", () => {
       [pagesProvider(modules), documents, failing],
       "/search?q=chat",
     );
-    expect((screen.getByRole("searchbox", { name: "Search kb" }) as HTMLInputElement).value).toBe(
-      "chat",
-    );
+    expect(
+      (screen.getByRole("searchbox", { name: "Search Knowcelium" }) as HTMLInputElement).value,
+    ).toBe("chat");
 
     const docs = await screen.findByRole("region", { name: /Documents/ });
     expect(within(docs).getAllByRole("link")).toHaveLength(8);
@@ -101,7 +101,7 @@ describe("SearchPage", () => {
   it("asks for a search term instead of searching for nothing", async () => {
     const { router } = renderPage([documents], "/search?q=report");
     await screen.findByRole("link", { name: "report 1" });
-    const field = screen.getByRole("searchbox", { name: "Search kb" });
+    const field = screen.getByRole("searchbox", { name: "Search Knowcelium" });
     fireEvent.change(field, { target: { value: "   " } });
     fireEvent.click(screen.getByRole("button", { name: "Search" }));
 
@@ -154,7 +154,7 @@ describe("SearchPage", () => {
       .getAllByRole("link")
       .map((l) => l.textContent);
 
-    const header = screen.getByRole("combobox", { name: "Search kb" });
+    const header = screen.getByRole("combobox", { name: "Search Knowcelium" });
     fireEvent.focus(header);
     fireEvent.change(header, { target: { value: "report" } });
     const popup = await screen.findByRole("group", { name: "Documents" });
@@ -166,7 +166,7 @@ describe("SearchPage", () => {
 
   it("gets to the same address from the header's “See all results” and from the page's own field", async () => {
     const { router } = renderPage([documents], "/search", { header: true });
-    const header = screen.getByRole("combobox", { name: "Search kb" });
+    const header = screen.getByRole("combobox", { name: "Search Knowcelium" });
     fireEvent.focus(header);
     fireEvent.change(header, { target: { value: "q3 report" } });
     fireEvent.click(await screen.findByRole("option", { name: /See all results/ }));
@@ -174,7 +174,7 @@ describe("SearchPage", () => {
     expect(fromHeader).toBe("/search?q=q3+report");
 
     await router.navigate("/search");
-    fireEvent.change(screen.getByRole("searchbox", { name: "Search kb" }), {
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search Knowcelium" }), {
       target: { value: "q3 report" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Search" }));

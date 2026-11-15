@@ -1,12 +1,12 @@
 # Search
 
-Search finds what you are looking for across kb: the documents that best match, with the passage in each that matches best, your conversations, pages of kb and sections of this help. Documents match by meaning, not only by exact words, so a question or a description works as well as keywords. There are two ways into the same search: the search box at the top of the sidebar, and the **Search** page.
+Search finds what you are looking for across Knowcelium: the documents that best match, with the passage in each that matches best, your conversations, pages of Knowcelium and sections of this help. Documents match by meaning, not only by exact words, so a question or a description works as well as keywords. There are two ways into the same search: the search box at the top of the sidebar, and the **Search** page.
 
 ## Search from any page
 
 The search box at the top of the sidebar is on every page. Press ⌘K (on a Mac) or Ctrl+K (on Windows and Linux) to jump into it.
 
-1. Type a few letters. Matches appear below the box as you type, grouped by kind; **Pages** lists the pages of kb whose name contains what you typed, for example **Chat** when you type "chat".
+1. Type a few letters. Matches appear below the box as you type, grouped by kind; **Pages** lists the pages of Knowcelium whose name contains what you typed, for example **Chat** when you type "chat".
 2. Select a match, or move to it with the Up and Down arrow keys and press Enter, to open it.
 3. Press Escape to close the list; press it again to empty the box.
 
@@ -39,6 +39,6 @@ Select a document under **Documents**. The document opens at its best matching p
 
 ## When search does not work
 
-- "Search needs the Models service, which isn't available right now." under **Documents**: the language model kb uses to compare meaning can't be reached. The other groups still work. Check [Models](models.md) and try again later.
+- "Search needs the Models service, which isn't available right now." under **Documents**: the language model Knowcelium uses to compare meaning can't be reached. The other groups still work. Check [Models](models.md) and try again later.
 - "… isn't available right now." or "Couldn't search …": that group can't be searched at the moment; search again later.
 - "Enter a search term" appears when you select **Search** on the **Search** page with an empty box.

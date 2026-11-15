@@ -60,7 +60,7 @@ function renderSearch(providers: SearchProvider[]) {
   return { ...result, router };
 }
 
-const field = () => screen.getByRole("combobox", { name: "Search kb" });
+const field = () => screen.getByRole("combobox", { name: "Search Knowcelium" });
 const where = () => screen.getByTestId("where").textContent;
 
 function type(text: string) {

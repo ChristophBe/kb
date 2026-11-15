@@ -24,7 +24,7 @@ export function Models() {
   return (
     <div>
       <PageHeader
-        eyebrow="kb / llm"
+        eyebrow="knowcelium / models"
         title="Models"
         description="The LLM providers used by all modules."
       />

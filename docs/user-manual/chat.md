@@ -1,10 +1,10 @@
 # Chat
 
-Chat answers your questions from the documents in your knowledge base and shows which passages each answer is based on. Your conversations are kept, so you can come back to them.
+Chat answers your questions from the documents you have uploaded and shows which passages each answer is based on. Your conversations are kept, so you can come back to them.
 
 ## Who can see your conversations
 
-Your conversations are private: only you see them, and only you can find, rename, delete or continue them. Other people signed in to kb have their own conversations and never see yours, not in the list or in [conversation search](#find-a-conversation). If you send someone a link to one of your conversations, they see "This conversation no longer exists."
+Your conversations are private: only you see them, and only you can find, rename, delete or continue them. Other people signed in to Knowcelium have their own conversations and never see yours, not in the list or in [conversation search](#find-a-conversation). If you send someone a link to one of your conversations, they see "This conversation no longer exists."
 
 ## Start a conversation
 
@@ -26,16 +26,16 @@ Follow-up questions in the same conversation can refer to earlier questions and 
 
 ## Check the sources of an answer
 
-Answers from the knowledge base contain numbers like [1] and [2]. Each number points to a passage listed under the answer's sources, with the document's title, the passage number and a short excerpt. Passage numbers are the same as in search and on the document's page.
+Answers from your documents contain numbers like [1] and [2]. Each number points to a passage listed under the answer's sources, with the document's title, the passage number and a short excerpt. Passage numbers are the same as in search and on the document's page.
 
 - Point at or focus a number to highlight its source, and the other way round.
 - Select a number or a source's title to open the document at that passage. The passage is scrolled into view and briefly highlighted.
 
 The sources are the passages that matched your question best; the answer doesn't have to use all of them. Passages that aren't related to your question are left out, so an answer can have fewer sources, or none. An answer without sources comes from the language model's general knowledge, and is meant to say first that nothing in your documents relates to the question. When the sources don't contain the answer, the answer is meant to say so, but check the sources before relying on it.
 
-## Answer without the knowledge base
+## Answer without your documents
 
-Clear **Answer from the knowledge base** below the question box to get answers from the language model alone, without searching your documents. These answers have no sources. Select it again to go back. The setting applies to the questions you send next while the conversation is open.
+Clear **Answer from your documents** below the question box to get answers from the language model alone, without searching your documents. These answers have no sources. Select it again to go back. The setting applies to the questions you send next while the conversation is open.
 
 ## Choose the model that answers
 
@@ -43,11 +43,11 @@ Clear **Answer from the knowledge base** below the question box to get answers f
 
 The choice is remembered for each conversation in this browser, also after a reload; other browsers and new conversations use the default. If the chosen model is no longer installed, the conversation goes back to the default. **Model** is hidden while the models can't be loaded; answers then use the default. You can't change the model while an answer is being written.
 
-## Ask how to use kb
+## Ask how to use Knowcelium
 
 Chat also knows this manual. Ask how to do something, for example "How do I restrict a chat to some documents?", and the answer explains it, citing the sections of the manual it used. These sources are marked **user manual**; select one to open that section of the help page.
 
-The manual is searched alongside your documents and only when **Answer from the knowledge base** is ticked. Its sections never replace passages from your documents, and they are only cited when they match your question closely. When kb has just started, it can take a moment before chat knows the manual.
+The manual is searched alongside your documents and only when **Answer from your documents** is ticked. Its sections never replace passages from your documents, and they are only cited when they match your question closely. When Knowcelium has just started, it can take a moment before chat knows the manual.
 
 ## Restrict a chat to some documents
 
@@ -63,7 +63,7 @@ The documents now appear as chips next to **Scope:** under the title, and the bu
 - To use all documents again, open the dialog, clear every tick and select **Apply**.
 - A document that was deleted shows as **Deleted document**; remove it from the scope.
 
-**Choose documents** is hidden while **Answer from the knowledge base** is cleared.
+**Choose documents** is hidden while **Answer from your documents** is cleared.
 
 ## Stop an answer
 
@@ -73,7 +73,7 @@ The text written so far is kept and marked **Stopped**. You can ask the next que
 
 ## When an answer fails
 
-If an answer can't be completed, it shows "The answer was interrupted." with the reason when kb knows it, for example that a service isn't available. The text written until then is kept.
+If an answer can't be completed, it shows "The answer was interrupted." with the reason when Knowcelium knows it, for example that a service isn't available. The text written until then is kept.
 
 Select **Retry** under the newest answer to ask the same question again. Older failed answers keep their note but can't be retried; ask the question again instead.
 

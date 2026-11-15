@@ -1,6 +1,6 @@
 # User manual
 
-This folder is the end-user manual for kb. The web UI shows it on its help page, and the chat uses it to answer how-to questions, so every page has to read well on its own and link by section.
+This folder is the end-user manual for Knowcelium. The web UI shows it on its help page, and the chat uses it to answer how-to questions, so every page has to read well on its own and link by section.
 
 The design drafts in [`docs/ux/`](../ux/) are for contributors; this manual is for the people using the tool.
 
@@ -25,7 +25,7 @@ The design drafts in [`docs/ux/`](../ux/) are for contributors; this manual is f
 
 <!-- One line per page: [Title](file.md) — what it covers. -->
 
-- [Getting started](getting-started.md) — the areas of kb, the home page and its overview of recent items, your first documents and question, light and dark mode
+- [Getting started](getting-started.md) — the areas of Knowcelium, the home page and its overview of recent items, your first documents and question, light and dark mode
 - [Sign in](sign-in.md) — signing in, coming back to the page you asked for, expired sessions, seeing who is signed in, signing out
 - [Ingestion](ingestion.md) — uploading files, following their processing, retrying failed uploads and processing
 - [Documents](documents.md) — browsing, opening and reading documents, renaming, metadata, downloading, replacing, deleting

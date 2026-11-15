@@ -22,6 +22,15 @@ import {
 import { expectNoAxeViolations } from "./testing/axe.ts";
 import { badRequestDetail } from "./testing/errors.ts";
 
+describe("PageHeader", () => {
+  it("titles the browser tab and restores the product name on unmount", () => {
+    const { unmount } = render(<PageHeader title="Documents" />);
+    expect(document.title).toBe("Documents · Knowcelium");
+    unmount();
+    expect(document.title).toBe("Knowcelium");
+  });
+});
+
 describe("kit components have no axe violations", () => {
   it("Button", async () => {
     const { container } = render(
@@ -123,7 +132,7 @@ describe("kit components have no axe violations", () => {
   it("PageHeader", async () => {
     const { container } = render(
       <PageHeader
-        eyebrow="kb / documents"
+        eyebrow="knowcelium / documents"
         title="Documents"
         description="All documents"
         actions={<Button>Upload</Button>}

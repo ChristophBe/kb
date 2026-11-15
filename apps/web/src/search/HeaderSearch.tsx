@@ -127,7 +127,7 @@ export function HeaderSearch({ providers }: { providers: SearchProvider[] }) {
   return (
     <search className="block">
       <label htmlFor={`${id}-input`} className="sr-only">
-        Search kb
+        Search Knowcelium
       </label>
       <div
         ref={field}

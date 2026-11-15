@@ -93,7 +93,7 @@ function ErrorPanel({
       </Heading>
       <p className="mt-1">
         {chunk
-          ? "kb may have been updated since you opened it. Reload the page to get the latest version."
+          ? "Knowcelium may have been updated since you opened it. Reload the page to get the latest version."
           : "The rest of the app still works."}
       </p>
       <div className="mt-3 flex gap-2">

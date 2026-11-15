@@ -278,7 +278,7 @@ export function Conversation() {
                   checked={useKnowledgeBase}
                   onChange={(e) => setUseKnowledgeBase(e.target.checked)}
                 />
-                Answer from the knowledge base
+                Answer from your documents
               </label>
               {conversation.data?.conversation && useKnowledgeBase && (
                 <DocumentPicker conversation={conversation.data.conversation} />

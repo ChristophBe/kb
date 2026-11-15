@@ -1,6 +1,6 @@
 # Documents
 
-Documents lists everything in your knowledge base. From here you open a document to see its details and passages, rename it, add metadata, download the original file, upload a new version of it or delete it.
+Documents lists everything in your account. From here you open a document to see its details and passages, rename it, add metadata, download the original file, upload a new version of it or delete it.
 
 ## Browse your documents
 
@@ -10,13 +10,13 @@ With no documents yet, the page says so; add some in [Ingestion](ingestion.md#up
 
 ## Who can see your documents
 
-Your documents are private: only you see them once you have uploaded them, and only you can search, chat with, change or delete them. Other people signed in to kb have their own documents and never see yours, not in the list, in search results or in chat answers. If you send someone a link to one of your documents, they get an error that the document was not found.
+Your documents are private: only you see them once you have uploaded them, and only you can search, chat with, change or delete them. Other people signed in to Knowcelium have their own documents and never see yours, not in the list, in search results or in chat answers. If you send someone a link to one of your documents, they get an error that the document was not found.
 
 ## Understand the status of a document
 
-- **Awaiting upload**: the upload has started but the file hasn't arrived yet. If it never arrives, for example because the tab was closed during the upload, kb removes the document after a day (your administrator may have set another time); upload the file again.
+- **Awaiting upload**: the upload has started but the file hasn't arrived yet. If it never arrives, for example because the tab was closed during the upload, Knowcelium removes the document after a day (your administrator may have set another time); upload the file again.
 - **Uploaded**: the file has arrived and waits to be processed.
-- **Processing**: kb is reading the text and preparing the passages.
+- **Processing**: Knowcelium is reading the text and preparing the passages.
 - **Ready**: the document can be searched and used in chat.
 - **Failed**: processing stopped. Open the document to see the reason under **Detail**, then see [Retry processing](ingestion.md#retry-processing).
 
@@ -30,7 +30,7 @@ Select **← Documents** to go back to the list.
 
 ## Read the passages of a document
 
-Below the details, **Chunks** lists the passages kb split the document into, in order. Each passage shows its number, the page it comes from (for PDFs), a heading if it has one, and its length.
+Below the details, **Chunks** lists the passages Knowcelium split the document into, in order. Each passage shows its number, the page it comes from (for PDFs), a heading if it has one, and its length.
 
 - Long passages are cut off; select **Show full chunk** to read all of it and **Show less** to collapse it again.
 - The list shows 20 passages at a time. Use **Previous** and **Next** to move through them; "Showing 1–20 of …" tells you where you are.
@@ -67,14 +67,14 @@ Select the download button in the document's row in **Documents**. The original 
 When a file changes, upload its new version into the same document instead of adding a second one. The document keeps its title, metadata and ID, so links to it and chat sources that cite it keep working.
 
 1. Open the document and select **Upload new version** next to **Version**.
-2. Select **Choose file** and pick the new file. It can be of another type than the old one, as long as kb can read it (PDF, Markdown or plain text).
-3. When the upload is done, kb takes you back to the document, which shows the new version as **Processing** next to **Version**.
+2. Select **Choose file** and pick the new file. It can be of another type than the old one, as long as Knowcelium can read it (PDF, Markdown or plain text).
+3. When the upload is done, Knowcelium takes you back to the document, which shows the new version as **Processing** next to **Version**.
 
 While the new version is processed, the document stays as it was: search, chat and **Download** use the current version. Once the new version is ready, its passages, file name and size replace the old ones and **Version** goes up by one; the old file is removed.
 
 If the new version can't be processed, it shows as **Failed** with the reason, and the document keeps its current version. Select **Upload new version** to try another file, or retry processing in [Ingestion](ingestion.md#retry-processing).
 
-**Upload new version** isn't offered while the document or a new version of it is still being uploaded or processed. If a file is too large or of a type kb doesn't read, the upload page says so; choose another file. Select **← Back to the document** to leave without uploading.
+**Upload new version** isn't offered while the document or a new version of it is still being uploaded or processed. If a file is too large or of a type Knowcelium doesn't read, the upload page says so; choose another file. Select **← Back to the document** to leave without uploading.
 
 ## Delete a document
 

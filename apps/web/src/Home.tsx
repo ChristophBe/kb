@@ -54,8 +54,8 @@ export function Home({ modules }: { modules: ModuleManifest[] }) {
             className="mt-5 max-w-xl animate-rise text-base text-pretty text-fg-muted"
             style={rise(160)}
           >
-            kb reads everything you upload and answers in plain language, with the exact passages to
-            prove it.
+            Knowcelium reads everything you upload and answers in plain language, with the exact
+            passages to prove it.
           </p>
           {prompter?.feature?.prompt && (
             <HomePrompt module={prompter} {...prompter.feature.prompt} />

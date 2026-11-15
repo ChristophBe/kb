@@ -13,11 +13,13 @@ export {
   navItemClass,
   PageHeader,
   PageTitle,
+  PRODUCT_NAME,
   RelativeTime,
   SourceNote,
   Spinner,
   Textarea,
   type Tone,
+  useDocumentTitle,
   type Variant,
 } from "./components.tsx";
 export { ConfirmDialog } from "./confirm-dialog.tsx";

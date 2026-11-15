@@ -44,7 +44,7 @@ test("the sidebar's search and the search page are one search", async ({ page })
   await expect(pageHits.first()).toBeVisible();
   const pageTitles = await pageHits.allTextContents();
 
-  const field = page.getByRole("combobox", { name: "Search kb" });
+  const field = page.getByRole("combobox", { name: "Search Knowcelium" });
   await field.fill("aurora");
   const popup = page.getByRole("listbox", { name: "Search results" });
   const popupHits = popup.getByRole("group", { name: "Documents" }).getByRole("option");

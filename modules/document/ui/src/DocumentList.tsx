@@ -50,7 +50,7 @@ export function DocumentList() {
   return (
     <div>
       <PageHeader
-        eyebrow="kb / documents"
+        eyebrow="knowcelium / documents"
         title="Documents"
         description="Everything in your knowledge base."
         actions={

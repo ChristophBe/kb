@@ -139,7 +139,7 @@ export function Upload() {
   return (
     <div>
       <PageHeader
-        eyebrow="kb / ingestion"
+        eyebrow="knowcelium / ingestion"
         title="Ingestion"
         description="Upload documents to add them to the knowledge base."
       />

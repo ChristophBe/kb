@@ -156,18 +156,32 @@ export function PageTitle({ className, children }: { className?: string; childre
   );
 }
 
+/** The product name, as shown in the browser tab. */
+export const PRODUCT_NAME = "Knowcelium";
+
+/** Titles the browser tab "<title> · Knowcelium" while the calling page is shown. */
+export function useDocumentTitle(title: string) {
+  useEffect(() => {
+    document.title = `${title} · ${PRODUCT_NAME}`;
+    return () => {
+      document.title = PRODUCT_NAME;
+    };
+  }, [title]);
+}
+
 export function PageHeader({
   eyebrow,
   title,
   description,
   actions,
 }: {
-  /** Short mono label above the title, e.g. the path "kb / documents". */
+  /** Short mono label above the title, e.g. the path "knowcelium / documents". */
   eyebrow?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
 }) {
+  useDocumentTitle(title);
   return (
     <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">

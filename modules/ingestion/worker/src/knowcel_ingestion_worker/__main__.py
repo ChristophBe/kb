@@ -59,7 +59,7 @@ async def run() -> None:
             ack_wait=ACK_WAIT,
             max_deliver=settings.max_deliver,
             # max_ack_pending stays at the server default: each worker fetches
-            # only as many messages as it has free slots (KB_WORKER_CONCURRENCY),
+            # only as many messages as it has free slots (KNOWCEL_WORKER_CONCURRENCY),
             # which bounds what is pending across all replicas.
         )
         # Creates the consumer, or updates one made by an earlier version (which

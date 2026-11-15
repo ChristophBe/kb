@@ -224,14 +224,14 @@ export type GetProviderStatusResponse = Message$1<"knowcel.llm.v1.GetProviderSta
   embeddingDimensions: number;
 
   /**
-   * Provider serving Generate (KB_CHAT_PROVIDER).
+   * Provider serving Generate (KNOWCEL_CHAT_PROVIDER).
    *
    * @generated from field: knowcel.llm.v1.ProviderHealth chat = 7;
    */
   chat?: ProviderHealth | undefined;
 
   /**
-   * Provider serving Embed (KB_EMBEDDING_PROVIDER).
+   * Provider serving Embed (KNOWCEL_EMBEDDING_PROVIDER).
    *
    * @generated from field: knowcel.llm.v1.ProviderHealth embedding = 8;
    */

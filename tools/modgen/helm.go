@@ -19,14 +19,14 @@ var helmTemplates = template.Must(template.New("").Delims("[[", "]]").Funcs(temp
 }).ParseFS(templateFS, "templates/helm/*.tmpl"))
 
 // resolvePeers fills in every service's Peers from its module's depends_on:
-// the first service with a port of each dependency, as KB_<MODULE>_ADDR.
+// the first service with a port of each dependency, as KNOWCEL_<MODULE>_ADDR.
 // Dependencies that serve no gRPC (event-only modules) get no address.
 func resolvePeers(modules []Module) {
 	addrs := map[string]Peer{}
 	for _, m := range modules {
 		for _, s := range m.Services {
 			if s.Port != 0 {
-				addrs[m.ID] = Peer{Env: "KB_" + strings.ToUpper(m.ID) + "_ADDR", Addr: s.Name + ":" + strconv.Itoa(s.Port)}
+				addrs[m.ID] = Peer{Env: "KNOWCEL_" + strings.ToUpper(m.ID) + "_ADDR", Addr: s.Name + ":" + strconv.Itoa(s.Port)}
 				break
 			}
 		}
@@ -92,7 +92,7 @@ func helmFiles(modules []Module, envoy []byte) ([]File, error) {
 	if err := add("templates/_modules.gen.tpl", "modules.gen.tpl.tmpl", data); err != nil {
 		return nil, err
 	}
-	// The same Envoy config compose uses; the chart fills in its ${KB_OIDC_*}
+	// The same Envoy config compose uses; the chart fills in its ${KNOWCEL_OIDC_*}
 	// placeholders (templates/envoy.yaml) instead of entrypoint.sh.
 	files = append(files, File{Path: path.Join(ChartDir, "files/envoy.yaml"), Content: envoy})
 	return files, nil

@@ -1,4 +1,4 @@
-// Package config loads service configuration from KB_* environment variables
+// Package config loads service configuration from KNOWCEL_* environment variables
 // into a struct using `env` tags, and validates it.
 //
 // The field comments of a config struct are its documentation:
@@ -10,8 +10,10 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net"
 	"net/url"
+	"os"
 	"reflect"
 	"slices"
 	"strconv"
@@ -30,7 +32,7 @@ type Base struct {
 	// its module.yaml.
 	GRPCPort int `env:"GRPC_PORT"`
 	// MetricsPort serves Prometheus metrics at /metrics (package metrics);
-	// like KB_GRPC_PORT, each service defaults it to the port in its
+	// like KNOWCEL_GRPC_PORT, each service defaults it to the port in its
 	// module.yaml.
 	MetricsPort int `env:"METRICS_PORT"`
 	// OTelEndpoint is the OTLP/gRPC endpoint spans go to, e.g.
@@ -53,16 +55,16 @@ func (b *Base) DefaultPorts(grpc, metrics int) {
 func (b Base) Validate(p *Problems) {
 	var level slog.Level
 	if level.UnmarshalText([]byte(b.LogLevel)) != nil {
-		p.Addf("KB_LOG_LEVEL", "must be debug, info, warn or error, got %q", b.LogLevel)
+		p.Addf("KNOWCEL_LOG_LEVEL", "must be debug, info, warn or error, got %q", b.LogLevel)
 	}
-	p.OneOf("KB_LOG_FORMAT", b.LogFormat, "json", "text")
-	p.Port("KB_GRPC_PORT", b.GRPCPort)
-	p.Port("KB_METRICS_PORT", b.MetricsPort)
+	p.OneOf("KNOWCEL_LOG_FORMAT", b.LogFormat, "json", "text")
+	p.Port("KNOWCEL_GRPC_PORT", b.GRPCPort)
+	p.Port("KNOWCEL_METRICS_PORT", b.MetricsPort)
 	if b.GRPCPort != 0 && b.GRPCPort == b.MetricsPort {
-		p.Addf("KB_METRICS_PORT", "must differ from KB_GRPC_PORT (both %d)", b.GRPCPort)
+		p.Addf("KNOWCEL_METRICS_PORT", "must differ from KNOWCEL_GRPC_PORT (both %d)", b.GRPCPort)
 	}
 	if b.OTelEndpoint != "" {
-		p.URL("KB_OTEL_ENDPOINT", b.OTelEndpoint, "http", "https")
+		p.URL("KNOWCEL_OTEL_ENDPOINT", b.OTelEndpoint, "http", "https")
 	}
 }
 
@@ -71,12 +73,12 @@ type Validator interface {
 	Validate(p *Problems)
 }
 
-// Load parses environment variables prefixed with KB_ into a T, applies
+// Load parses environment variables prefixed with KNOWCEL_ into a T, applies
 // defaults (e.g. Base.DefaultPorts) and, if T is a Validator, validates the
 // result. The error is an *Error listing every problem found: all values that
 // do not parse, or else everything Validate reports.
 func Load[T any](defaults ...func(*T)) (T, error) {
-	cfg, err := env.ParseAsWithOptions[T](env.Options{Prefix: "KB_"})
+	cfg, err := env.ParseAsWithOptions[T](env.Options{Prefix: "KNOWCEL_", Environment: withLegacyEnv(os.Environ())})
 	if err != nil {
 		return cfg, parseProblems(reflect.TypeFor[T](), err)
 	}
@@ -91,6 +93,36 @@ func Load[T any](defaults ...func(*T)) (T, error) {
 		}
 	}
 	return cfg, nil
+}
+
+// legacyPrefix is the former prefix of the environment variables. It is still
+// accepted, with a deprecation warning, for one release.
+const legacyPrefix = "KB_"
+
+// withLegacyEnv turns environ into the map env reads from, adding KNOWCEL_x
+// for every KB_x whose KNOWCEL_x is not set, and warns about each KB_ variable.
+// Remove it together with the fallback after one release.
+func withLegacyEnv(environ []string) map[string]string {
+	vars := make(map[string]string, len(environ))
+	for _, kv := range environ {
+		if k, v, ok := strings.Cut(kv, "="); ok {
+			vars[k] = v
+		}
+	}
+	for _, k := range slices.Sorted(maps.Keys(vars)) {
+		rest, ok := strings.CutPrefix(k, legacyPrefix)
+		if !ok {
+			continue
+		}
+		name := "KNOWCEL_" + rest
+		if _, set := vars[name]; set {
+			slog.Warn("ignoring deprecated environment variable, "+name+" is set", "variable", k)
+			continue
+		}
+		slog.Warn("deprecated environment variable, rename it (support ends after the next release)", "variable", k, "use", name)
+		vars[name] = vars[k]
+	}
+	return vars
 }
 
 // Error is an invalid configuration: one line per problem, each starting
@@ -109,7 +141,7 @@ type Problems struct {
 	list []string
 }
 
-// Addf records a problem with setting (e.g. "KB_LOG_LEVEL").
+// Addf records a problem with setting (e.g. "KNOWCEL_LOG_LEVEL").
 func (p *Problems) Addf(setting, format string, args ...any) {
 	p.list = append(p.list, setting+": "+fmt.Sprintf(format, args...))
 }
@@ -144,7 +176,7 @@ func (p *Problems) URL(setting, value string, schemes ...string) {
 	}
 }
 
-// Addr checks a host:port address such as a peer's KB_<MODULE>_ADDR.
+// Addr checks a host:port address such as a peer's KNOWCEL_<MODULE>_ADDR.
 func (p *Problems) Addr(setting, value string) {
 	host, port, err := net.SplitHostPort(value)
 	if n, perr := strconv.Atoi(port); err != nil || host == "" || perr != nil || n < 1 || n > 65535 {
@@ -163,7 +195,7 @@ func Positive[N int | int64 | float64](p *Problems, setting string, value N) {
 // variables, which env reports by struct field only.
 func parseProblems(t reflect.Type, err error) error {
 	keys := map[string][]string{}
-	envKeys(t, "KB_", keys)
+	envKeys(t, "KNOWCEL_", keys)
 	var agg env.AggregateError
 	if !errors.As(err, &agg) {
 		return &Error{Problems: []string{err.Error()}}

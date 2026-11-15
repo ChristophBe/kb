@@ -3,13 +3,13 @@
   "include": [
     {
       "component": "notes-service",
-      "image": "ghcr.io/christophbe/kb-notes-service",
+      "image": "ghcr.io/christophbe/knowcelium-notes-service",
       "dockerfile": "deploy/docker/go.Dockerfile",
       "build_args": "CMD=./modules/notes/service/cmd/notes-service"
     },
     {
       "component": "search-worker",
-      "image": "ghcr.io/christophbe/kb-search-worker",
+      "image": "ghcr.io/christophbe/knowcelium-search-worker",
       "dockerfile": "deploy/docker/python.Dockerfile",
       "build_args": "PACKAGE=knowcel-search-worker"
     },

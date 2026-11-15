@@ -4,7 +4,7 @@ module.yaml): a Deployment and, when it serves gRPC, a Service. Pods carry
 the prometheus.io/* annotations for annotation-based scraping of /metrics. The
 generated templates/modules/<id>.yaml call it with the manifest's facts:
   name, module, language (go | python), port (0 for workers),
-  metricsPort (Prometheus /metrics, every component), infra (list of postgres | nats | s3), peers (KB_<MODULE>_ADDR -> address).
+  metricsPort (Prometheus /metrics, every component), infra (list of postgres | nats | s3), peers (KNOWCEL_<MODULE>_ADDR -> address).
 Settings an operator changes come from .Values.components.<name>.
 
 Services apply their own migrations at startup (goose / Alembic, one version
@@ -55,17 +55,17 @@ spec:
           imagePullPolicy: {{ $root.Values.image.pullPolicy }}
           env:
             {{- if .port }}
-            - name: KB_GRPC_PORT
+            - name: KNOWCEL_GRPC_PORT
               value: {{ .port | quote }}
             {{- end }}
-            - name: KB_METRICS_PORT
+            - name: KNOWCEL_METRICS_PORT
               value: {{ .metricsPort | quote }}
             {{- range $key, $addr := .peers }}
             - name: {{ $key }}
               value: {{ $addr | quote }}
             {{- end }}
             {{- with $root.Values.otel.endpoint }}
-            - name: KB_OTEL_ENDPOINT
+            - name: KNOWCEL_OTEL_ENDPOINT
               value: {{ . | quote }}
             {{- end }}
             {{- range .infra }}

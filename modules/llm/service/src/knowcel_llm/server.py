@@ -196,7 +196,7 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
             await context.abort(
                 grpc.StatusCode.FAILED_PRECONDITION,
                 f"model {model} returned {dims}-dim vectors, expected "
-                f"{self._settings.embedding_dimensions} (KB_EMBEDDING_DIMENSIONS)",
+                f"{self._settings.embedding_dimensions} (KNOWCEL_EMBEDDING_DIMENSIONS)",
             )
         EMBEDDING_SECONDS.labels(self._embedding.name, model).observe(elapsed)
         EMBEDDING_INPUTS.labels(self._embedding.name, model).inc(len(request.inputs))

@@ -1,7 +1,7 @@
 {{- /*
 Shared helpers. Resources are named after their component, without the
 release name, as in compose: the generated Envoy config and the peer
-addresses (KB_<MODULE>_ADDR) use those names. One release per namespace.
+addresses (KNOWCEL_<MODULE>_ADDR) use those names. One release per namespace.
 */ -}}
 
 {{- define "kb.selectorLabels" -}}
@@ -104,29 +104,29 @@ http://dex:5556/dex/keys
 {{- $port := $pg.port }}
 {{- $db := $pg.database }}
 {{- $sslmode := $pg.sslmode }}
-{{ include "kb.secretEnv" (dict "root" .root "name" "KB_POSTGRES_USER" "key" "postgres-user") }}
-{{ include "kb.secretEnv" (dict "root" .root "name" "KB_POSTGRES_PASSWORD" "key" "postgres-password") }}
-- name: KB_DATABASE_URL
+{{ include "kb.secretEnv" (dict "root" .root "name" "KNOWCEL_POSTGRES_USER" "key" "postgres-user") }}
+{{ include "kb.secretEnv" (dict "root" .root "name" "KNOWCEL_POSTGRES_PASSWORD" "key" "postgres-password") }}
+- name: KNOWCEL_DATABASE_URL
 {{- if eq .language "go" }}
-  value: "postgres://$(KB_POSTGRES_USER):$(KB_POSTGRES_PASSWORD)@{{ $host }}:{{ $port }}/{{ $db }}?sslmode={{ $sslmode }}"
+  value: "postgres://$(KNOWCEL_POSTGRES_USER):$(KNOWCEL_POSTGRES_PASSWORD)@{{ $host }}:{{ $port }}/{{ $db }}?sslmode={{ $sslmode }}"
 {{- else }}
   {{- /* SQLAlchemy with asyncpg, which takes the mode as ssl. */}}
-  value: "postgresql+asyncpg://$(KB_POSTGRES_USER):$(KB_POSTGRES_PASSWORD)@{{ $host }}:{{ $port }}/{{ $db }}{{ if ne $sslmode "disable" }}?ssl={{ $sslmode }}{{ end }}"
+  value: "postgresql+asyncpg://$(KNOWCEL_POSTGRES_USER):$(KNOWCEL_POSTGRES_PASSWORD)@{{ $host }}:{{ $port }}/{{ $db }}{{ if ne $sslmode "disable" }}?ssl={{ $sslmode }}{{ end }}"
 {{- end }}
 {{- else if eq .kind "nats" }}
-{{ include "kb.secretEnv" (dict "root" .root "name" "KB_NATS_URL" "key" "nats-url") }}
+{{ include "kb.secretEnv" (dict "root" .root "name" "KNOWCEL_NATS_URL" "key" "nats-url") }}
 {{- else if eq .kind "s3" }}
-- name: KB_S3_ENDPOINT
+- name: KNOWCEL_S3_ENDPOINT
   value: {{ if $v.infra.enabled }}"s3:8333"{{ else }}{{ required "s3.endpoint is required unless infra.enabled" $v.s3.endpoint | quote }}{{ end }}
-- name: KB_S3_PUBLIC_ENDPOINT
+- name: KNOWCEL_S3_PUBLIC_ENDPOINT
   value: {{ include "kb.s3PublicEndpoint" .root | quote }}
-- name: KB_S3_USE_SSL
+- name: KNOWCEL_S3_USE_SSL
   value: {{ ternary false $v.s3.useSSL $v.infra.enabled | quote }}
-- name: KB_S3_REGION
+- name: KNOWCEL_S3_REGION
   value: {{ $v.s3.region | quote }}
-- name: KB_S3_BUCKET
+- name: KNOWCEL_S3_BUCKET
   value: {{ $v.s3.bucket | quote }}
-{{ include "kb.secretEnv" (dict "root" .root "name" "KB_S3_ACCESS_KEY" "key" "s3-access-key") }}
-{{ include "kb.secretEnv" (dict "root" .root "name" "KB_S3_SECRET_KEY" "key" "s3-secret-key") }}
+{{ include "kb.secretEnv" (dict "root" .root "name" "KNOWCEL_S3_ACCESS_KEY" "key" "s3-access-key") }}
+{{ include "kb.secretEnv" (dict "root" .root "name" "KNOWCEL_S3_SECRET_KEY" "key" "s3-secret-key") }}
 {{- end }}
 {{- end -}}

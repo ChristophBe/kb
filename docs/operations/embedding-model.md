@@ -1,6 +1,6 @@
 # Changing the embedding model
 
-Search and chat compare the vector of a question with the vectors of the stored passages (chunks). Vectors of different models can't be compared, so the chunks of every document have to be made again when `KB_EMBEDDING_MODEL` changes. This page covers what happens meanwhile, how to reindex, and what else to change when the new model's vectors have another dimension. The column and its dimension: [ADR 0006](../adr/0006-pgvector-with-768-dimensions.md).
+Search and chat compare the vector of a question with the vectors of the stored passages (chunks). Vectors of different models can't be compared, so the chunks of every document have to be made again when `KNOWCEL_EMBEDDING_MODEL` changes. This page covers what happens meanwhile, how to reindex, and what else to change when the new model's vectors have another dimension. The column and its dimension: [ADR 0006](../adr/0006-pgvector-with-768-dimensions.md).
 
 ## How the index keeps track of the model
 
@@ -10,7 +10,7 @@ Search and chat compare the vector of a question with the vectors of the stored 
 
 ## Change the model and reindex
 
-1. Pull or provide the new model (for Ollama `ollama pull <model>`), and set `KB_EMBEDDING_MODEL` for the llm service. Set `KB_CHUNK_TOKENIZER`, `KB_CHUNK_TOKENS` and `KB_EMBEDDING_MAX_TOKENS` for it too if they differ (`.env.example`). Restart `llm-service`, `ingestion-worker` and `chat-service` (which embeds the user manual in memory at startup, with the model of that moment). With the fake provider, `KB_FAKE_EMBEDDING_MODEL` is the model name.
+1. Pull or provide the new model (for Ollama `ollama pull <model>`), and set `KNOWCEL_EMBEDDING_MODEL` for the llm service. Set `KNOWCEL_CHUNK_TOKENIZER`, `KNOWCEL_CHUNK_TOKENS` and `KNOWCEL_EMBEDDING_MAX_TOKENS` for it too if they differ (`.env.example`). Restart `llm-service`, `ingestion-worker` and `chat-service` (which embeds the user manual in memory at startup, with the model of that moment). With the fake provider, `KNOWCEL_FAKE_EMBEDDING_MODEL` is the model name.
 2. Ask for the reindex: `DocumentService.ReindexDocuments`. It queues every ready document of the calling user whose chunks come from another model, and answers with how many (`requested`) and the model. It doesn't wait for the processing.
 3. Follow the processing on the ingestion page (each document's job runs again) or in the `kb_ingestion_worker_jobs` metric. A document is searchable again as soon as its new chunks are stored.
 
@@ -18,7 +18,7 @@ The call is public (there are no roles yet) and acts on the caller's own documen
 
 ```sh
 TOKEN=$(curl -s -d grant_type=password -d client_id=kb-cli -d username=alice@example.com \
-  -d password=password -d 'scope=openid email profile' "$KB_OIDC_ISSUER/token" | jq -r .access_token)
+  -d password=password -d 'scope=openid email profile' "$KNOWCEL_OIDC_ISSUER/token" | jq -r .access_token)
 buf curl --protocol grpcweb -H "Authorization: Bearer $TOKEN" -d '{}' \
   --schema modules/document/proto \
   http://localhost:8080/knowcel.document.v1.DocumentService/ReindexDocuments
@@ -37,7 +37,7 @@ The request travels as the event `knowcel.document.reindex_requested` on the `DO
 
 ## A model with another dimension
 
-The vector column has a fixed dimension, 768 (`vector(768)` in `modules/document/migrations`), which the llm service checks against `KB_EMBEDDING_DIMENSIONS`: it refuses embeddings of any other size. A model with another dimension, say 1024, needs both changed together, and the chunks of the old model can't be kept:
+The vector column has a fixed dimension, 768 (`vector(768)` in `modules/document/migrations`), which the llm service checks against `KNOWCEL_EMBEDDING_DIMENSIONS`: it refuses embeddings of any other size. A model with another dimension, say 1024, needs both changed together, and the chunks of the old model can't be kept:
 
 1. Add a migration to `modules/document/migrations`, for example `00007_embedding_1024.sql`. The stored vectors can't be converted, so it removes the chunks; the documents stay and are reindexed afterwards. pgvector's HNSW index supports up to 2000 dimensions; above that, use `halfvec` or drop the index (searches then scan all chunks).
 
@@ -58,7 +58,7 @@ The vector column has a fixed dimension, 768 (`vector(768)` in `modules/document
    SELECT 1/0;
    ```
 
-2. Set `KB_EMBEDDING_DIMENSIONS=1024` next to `KB_EMBEDDING_MODEL` (llm service; `.env.example`, the Helm chart's `components.llm-service.env`) and the chunking settings of the new model.
+2. Set `KNOWCEL_EMBEDDING_DIMENSIONS=1024` next to `KNOWCEL_EMBEDDING_MODEL` (llm service; `.env.example`, the Helm chart's `components.llm-service.env`) and the chunking settings of the new model.
 3. Deploy: the document service migrates on startup. Until the documents are reindexed, search finds nothing.
 4. Reindex with `force: true`: the removed chunks leave the documents with no chunk of another model, so they would not count as outdated without it.
 

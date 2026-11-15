@@ -54,7 +54,7 @@ func TestRunLogsAMismatch(t *testing.T) {
 	if ok {
 		t.Error("ok = true, want false for 1024 vs 768")
 	}
-	for _, want := range []string{"level=ERROR", "llm_dimensions=1024", "column_dimensions=768", "KB_EMBEDDING_DIMENSIONS"} {
+	for _, want := range []string{"level=ERROR", "llm_dimensions=1024", "column_dimensions=768", "KNOWCEL_EMBEDDING_DIMENSIONS"} {
 		if !strings.Contains(logs, want) {
 			t.Errorf("logs lack %q: %s", want, logs)
 		}

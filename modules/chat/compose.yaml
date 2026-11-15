@@ -3,14 +3,14 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/python.Dockerfile
-      args: { PACKAGE: knowcel-chat-service, KB_VERSION: "${KB_VERSION:-dev}" }
+      args: { PACKAGE: knowcel-chat-service, KNOWCEL_VERSION: "${KNOWCEL_VERSION:-dev}" }
     environment:
-      KB_LOG_LEVEL: ${KB_LOG_LEVEL:-INFO}
-      KB_OTEL_ENDPOINT: ${KB_OTEL_ENDPOINT:-}
-      KB_DATABASE_URL: postgresql+asyncpg://kb:kb@postgres:5432/kb
-      KB_DOCUMENT_ADDR: document-service:9001
-      KB_LLM_ADDR: llm-service:9004
-      KB_RAG_MIN_SCORE: ${KB_RAG_MIN_SCORE:-0.5}
+      KNOWCEL_LOG_LEVEL: ${KNOWCEL_LOG_LEVEL:-INFO}
+      KNOWCEL_OTEL_ENDPOINT: ${KNOWCEL_OTEL_ENDPOINT:-}
+      KNOWCEL_DATABASE_URL: postgresql+asyncpg://kb:kb@postgres:5432/kb
+      KNOWCEL_DOCUMENT_ADDR: document-service:9001
+      KNOWCEL_LLM_ADDR: llm-service:9004
+      KNOWCEL_RAG_MIN_SCORE: ${KNOWCEL_RAG_MIN_SCORE:-0.5}
     # gRPC and Prometheus /metrics (docs/metrics.md).
     ports: ["9003:9003", "9103:9103"]
     # Infrastructure only: other modules are soft dependencies (docs/architecture/module.md).

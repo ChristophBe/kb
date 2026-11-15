@@ -71,7 +71,7 @@ type DocumentServiceClient interface {
 	// LLM_UNAVAILABLE while llm is down.
 	SearchDocuments(ctx context.Context, in *SearchDocumentsRequest, opts ...grpc.CallOption) (*SearchDocumentsResponse, error)
 	// ReindexDocuments re-embeds the caller's documents with the llm module's
-	// current embedding model, after it was changed (KB_EMBEDDING_MODEL). It
+	// current embedding model, after it was changed (KNOWCEL_EMBEDDING_MODEL). It
 	// publishes one DocumentReindexRequested event per document (events.proto)
 	// that the ingestion module processes again, and returns without waiting
 	// for them. A document keeps its old chunks until its new ones are stored,
@@ -275,7 +275,7 @@ type DocumentServiceServer interface {
 	// LLM_UNAVAILABLE while llm is down.
 	SearchDocuments(context.Context, *SearchDocumentsRequest) (*SearchDocumentsResponse, error)
 	// ReindexDocuments re-embeds the caller's documents with the llm module's
-	// current embedding model, after it was changed (KB_EMBEDDING_MODEL). It
+	// current embedding model, after it was changed (KNOWCEL_EMBEDDING_MODEL). It
 	// publishes one DocumentReindexRequested event per document (events.proto)
 	// that the ingestion module processes again, and returns without waiting
 	// for them. A document keeps its old chunks until its new ones are stored,

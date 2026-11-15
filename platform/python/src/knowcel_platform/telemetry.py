@@ -1,4 +1,4 @@
-"""OpenTelemetry tracing. Tracing is off unless KB_OTEL_ENDPOINT is set: then
+"""OpenTelemetry tracing. Tracing is off unless KNOWCEL_OTEL_ENDPOINT is set: then
 spans go to that OTLP/gRPC endpoint, and `knowcel_platform.grpc` and
 `knowcel_platform.nats` instrument the servers, channels and messages they handle.
 While it is off nothing is installed: no exporter, no background thread, no

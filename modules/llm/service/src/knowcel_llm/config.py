@@ -9,16 +9,16 @@ class Settings(PlatformSettings):
     # ollama, anthropic or fake.
     llm_provider: str = "ollama"
     # Provider for Generate (chat) only, e.g. anthropic with Ollama embeddings;
-    # empty falls back to KB_LLM_PROVIDER.
+    # empty falls back to KNOWCEL_LLM_PROVIDER.
     chat_provider: str = ""
-    # Provider for Embed only; empty falls back to KB_LLM_PROVIDER.
+    # Provider for Embed only; empty falls back to KNOWCEL_LLM_PROVIDER.
     embedding_provider: str = ""
     # Ollama server (provider ollama).
     ollama_url: str = "http://localhost:11434"
     # Default chat model of the ollama provider.
     chat_model: str = "llama3.2"
     # Default embedding model of the ollama provider; change the ingestion
-    # worker's KB_CHUNK_TOKENIZER with it.
+    # worker's KNOWCEL_CHUNK_TOKENIZER with it.
     embedding_model: str = "nomic-embed-text"
     # Anthropic API key, required by provider anthropic (chat only: Anthropic
     # has no embeddings).

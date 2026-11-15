@@ -7,7 +7,7 @@
 --
 -- Chunks that exist before this migration were embedded by the llm service's
 -- default model, nomic-embed-text, unless the deployment set
--- KB_EMBEDDING_MODEL to another one; they are marked with the default. A
+-- KNOWCEL_EMBEDDING_MODEL to another one; they are marked with the default. A
 -- deployment that used another model reindexes with force (see
 -- docs/operations/embedding-model.md).
 ALTER TABLE document.chunks

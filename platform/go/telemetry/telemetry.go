@@ -1,5 +1,5 @@
 // Package telemetry turns on OpenTelemetry tracing. Tracing is off unless
-// KB_OTEL_ENDPOINT is set: then spans go to that OTLP/gRPC endpoint and the
+// KNOWCEL_OTEL_ENDPOINT is set: then spans go to that OTLP/gRPC endpoint and the
 // grpcserver, postgres and natsx packages instrument what they build. While it
 // is off nothing is installed, so instrumentation costs nothing.
 package telemetry

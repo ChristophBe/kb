@@ -17,7 +17,7 @@ The first release is `v0.1.0`. While the major version is `0`, go-semantic-relea
 
 Runs for the same ref are serialised (`concurrency`), so two quick merges give two versions. GitHub keeps only one waiting run per group: when a third push arrives while one run is going and one is waiting, the waiting run is cancelled and the newest one releases both commits under one version. A re-run of an older push that is already released, or that a newer release has overtaken, does nothing.
 
-The released version (without the `v`, e.g. `0.3.1`) is the `version` output of the `release` job. The [image builds](images.md) pass it as build arg `KB_VERSION` (`deploy/docker/*.Dockerfile`); every service logs it at startup (Go: `"msg":"starting",…,"version":"0.3.1"`, Python: `starting version 0.3.1`, web: `kb web starting version 0.3.1`) and the images carry it as label `org.opencontainers.image.version`. Builds without it report `dev`.
+The released version (without the `v`, e.g. `0.3.1`) is the `version` output of the `release` job. The [image builds](images.md) pass it as build arg `KNOWCEL_VERSION` (`deploy/docker/*.Dockerfile`); every service logs it at startup (Go: `"msg":"starting",…,"version":"0.3.1"`, Python: `starting version 0.3.1`, web: `kb web starting version 0.3.1`) and the images carry it as label `org.opencontainers.image.version`. Builds without it report `dev`.
 
 ## Token
 

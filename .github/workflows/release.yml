@@ -28,7 +28,7 @@ jobs:
       contents: write
     outputs:
       # The released version without the `v` (e.g. 0.3.1), empty when nothing was
-      # released. Image and chart builds pass it on as KB_VERSION.
+      # released. Image and chart builds pass it on as KNOWCEL_VERSION.
       version: ${{ steps.semrel.outputs.version }}
     steps:
       - uses: actions/checkout@v7

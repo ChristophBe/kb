@@ -7,8 +7,8 @@ from .base import ModelKind, Provider
 from .fake import FakeProvider
 from .ollama import OllamaLimits, OllamaProvider
 
-# Add new vendors here (e.g. "openai"); select with KB_LLM_PROVIDER, or per task
-# with KB_CHAT_PROVIDER / KB_EMBEDDING_PROVIDER.
+# Add new vendors here (e.g. "openai"); select with KNOWCEL_LLM_PROVIDER, or per task
+# with KNOWCEL_CHAT_PROVIDER / KNOWCEL_EMBEDDING_PROVIDER.
 REGISTRY: dict[str, Callable[[Settings], Provider]] = {
     "ollama": lambda s: OllamaProvider(
         s.ollama_url,
@@ -61,7 +61,7 @@ class Providers:
 
 
 def build_provider(settings: Settings, name: str | None = None) -> Provider:
-    """Builds the provider `name` (default KB_LLM_PROVIDER)."""
+    """Builds the provider `name` (default KNOWCEL_LLM_PROVIDER)."""
     name = name or settings.llm_provider
     try:
         factory = REGISTRY[name]
@@ -77,8 +77,8 @@ def build_providers(settings: Settings) -> Providers:
     embedding_name = settings.resolved_embedding_provider
     chat = build_provider(settings, chat_name)
     embedding = chat if embedding_name == chat_name else build_provider(settings, embedding_name)
-    _require(chat, ModelKind.CHAT, "KB_CHAT_PROVIDER")
-    _require(embedding, ModelKind.EMBEDDING, "KB_EMBEDDING_PROVIDER")
+    _require(chat, ModelKind.CHAT, "KNOWCEL_CHAT_PROVIDER")
+    _require(embedding, ModelKind.EMBEDDING, "KNOWCEL_EMBEDDING_PROVIDER")
     return Providers(chat, embedding)
 
 

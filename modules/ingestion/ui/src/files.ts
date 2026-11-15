@@ -1,4 +1,4 @@
-// Mirrors extract_pages in modules/ingestion/worker/src/kb_ingestion_worker/extract.py;
+// Mirrors extract_pages in modules/ingestion/worker/src/knowcel_ingestion_worker/extract.py;
 // change both together.
 const TEXT_SUFFIXES = [
   ".txt",

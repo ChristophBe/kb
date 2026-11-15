@@ -1,7 +1,7 @@
 # Dex, the dev OIDC identity provider (rendered with gomplate by the image's
 # entrypoint because of the .tpl suffix). Not for production: static users,
 # known passwords, and the password grant enabled for tests and scripts.
-issuer: {{ getenv "KB_OIDC_ISSUER" "http://localhost:5556/dex" }}
+issuer: {{ getenv "KNOWCEL_OIDC_ISSUER" "http://localhost:5556/dex" }}
 
 # Keeps the signing keys across restarts, so issued tokens stay valid.
 storage:
@@ -42,11 +42,11 @@ staticClients:
     name: kb
     public: true
     redirectURIs:
-      - http://localhost:{{ getenv "KB_WEB_PORT" "3000" }}/
-      - http://localhost:{{ getenv "KB_WEB_PORT" "3000" }}/auth/callback
+      - http://localhost:{{ getenv "KNOWCEL_WEB_PORT" "3000" }}/
+      - http://localhost:{{ getenv "KNOWCEL_WEB_PORT" "3000" }}/auth/callback
       # The Vite dev server (task web).
-      - http://localhost:{{ getenv "KB_WEB_DEV_PORT" "5173" }}/
-      - http://localhost:{{ getenv "KB_WEB_DEV_PORT" "5173" }}/auth/callback
+      - http://localhost:{{ getenv "KNOWCEL_WEB_DEV_PORT" "5173" }}/
+      - http://localhost:{{ getenv "KNOWCEL_WEB_DEV_PORT" "5173" }}/auth/callback
   # Command-line tools and tests, with the password grant.
   - id: kb-cli
     name: kb CLI

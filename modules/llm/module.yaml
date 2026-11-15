@@ -11,8 +11,8 @@ services:
     # defaults point at localhost. The chart's Ollama (ollama.enabled) or any
     # other reachable Ollama.
     env:
-      KB_LLM_PROVIDER: ollama
-      KB_OLLAMA_URL: http://ollama:11434
+      KNOWCEL_LLM_PROVIDER: ollama
+      KNOWCEL_OLLAMA_URL: http://ollama:11434
     grpc_services: [knowcel.llm.v1.LlmService]
     # Generation and embeddings are for other modules' services only (chat,
     # document search, ingestion worker); Envoy does not route them.

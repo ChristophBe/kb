@@ -237,10 +237,10 @@ func TestConfigDocRejectsUndescribedSettings(t *testing.T) {
 	}
 	py := func(root string, args []string) (map[string][]PySetting, error) {
 		all, err := fakePython(t)(root, args)
-		all["search-worker"] = append(all["search-worker"], PySetting{Field: "x", Env: "KB_X", Own: true})
+		all["search-worker"] = append(all["search-worker"], PySetting{Field: "x", Env: "KNOWCEL_X", Own: true})
 		return all, err
 	}
-	if _, err := CollectSettings("testdata", modules, py); err == nil || !strings.Contains(err.Error(), "KB_X has no description") {
+	if _, err := CollectSettings("testdata", modules, py); err == nil || !strings.Contains(err.Error(), "KNOWCEL_X has no description") {
 		t.Fatalf("err = %v, want a missing description error", err)
 	}
 }

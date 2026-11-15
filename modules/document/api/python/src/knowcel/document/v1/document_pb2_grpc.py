@@ -208,7 +208,7 @@ class DocumentServiceServicer:
 
     def ReindexDocuments(self, request, context):
         """ReindexDocuments re-embeds the caller's documents with the llm module's
-        current embedding model, after it was changed (KB_EMBEDDING_MODEL). It
+        current embedding model, after it was changed (KNOWCEL_EMBEDDING_MODEL). It
         publishes one DocumentReindexRequested event per document (events.proto)
         that the ingestion module processes again, and returns without waiting
         for them. A document keeps its old chunks until its new ones are stored,

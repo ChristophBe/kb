@@ -7,7 +7,7 @@ services:
     metrics_port: 9201
     infra: [postgres, s3]
     env:
-      KB_NOTES_LIMIT: "100"
+      KNOWCEL_NOTES_LIMIT: "100"
     grpc_services: [knowcel.notes.v1.NotesService, knowcel.notes.v1.NotesAdminService]
     internal:
       - knowcel.notes.v1.NotesService/IndexNote

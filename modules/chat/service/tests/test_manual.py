@@ -245,6 +245,6 @@ async def test_the_retriever_keeps_every_passage_without_a_minimum_score() -> No
 
 
 def test_the_minimum_score_is_a_setting(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("KB_RAG_MIN_SCORE", "0.42")
+    monkeypatch.setenv("KNOWCEL_RAG_MIN_SCORE", "0.42")
 
     assert Settings().rag_min_score == 0.42

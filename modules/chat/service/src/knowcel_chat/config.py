@@ -51,7 +51,7 @@ class Settings(PlatformSettings):
         if self.context_tokens <= self.answer_reserve_tokens:
             problems.add(
                 "context_tokens",
-                f"must be above KB_ANSWER_RESERVE_TOKENS ({self.answer_reserve_tokens}), "
+                f"must be above KNOWCEL_ANSWER_RESERVE_TOKENS ({self.answer_reserve_tokens}), "
                 f"got {self.context_tokens}",
             )
         if not self.manual_dir.is_dir():

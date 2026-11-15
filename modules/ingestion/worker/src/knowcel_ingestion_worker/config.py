@@ -13,12 +13,12 @@ class Settings(PlatformSettings):
     llm_addr: str = "localhost:9004"
     # Chunks are measured in tokens of the embedding model's tokenizer: a name
     # bundled in knowcel_ingestion_worker/vocab (nomic-embed-text) or a path to a
-    # Hugging Face tokenizer.json. Change it together with KB_EMBEDDING_MODEL
+    # Hugging Face tokenizer.json. Change it together with KNOWCEL_EMBEDDING_MODEL
     # on the llm service.
     chunk_tokenizer: str = "nomic-embed-text"
-    # Size of a chunk in tokens; it must fit KB_EMBEDDING_MAX_TOKENS.
+    # Size of a chunk in tokens; it must fit KNOWCEL_EMBEDDING_MAX_TOKENS.
     chunk_tokens: int = 256
-    # Tokens a chunk repeats from the end of the previous one, below KB_CHUNK_TOKENS.
+    # Tokens a chunk repeats from the end of the previous one, below KNOWCEL_CHUNK_TOKENS.
     chunk_overlap_tokens: int = 32
     # Markdown sections shorter than this (tokens) merge with the next section
     # at the same level, so that a heading with a line of text isn't a chunk of its own.
@@ -50,7 +50,7 @@ class Settings(PlatformSettings):
         if not 0 <= self.chunk_overlap_tokens < self.chunk_tokens:
             problems.add(
                 "chunk_overlap_tokens",
-                f"must be at least 0 and below KB_CHUNK_TOKENS ({self.chunk_tokens}), "
+                f"must be at least 0 and below KNOWCEL_CHUNK_TOKENS ({self.chunk_tokens}), "
                 f"got {self.chunk_overlap_tokens}",
             )
         problems.at_least("chunk_min_section_tokens", self.chunk_min_section_tokens, 0)
@@ -64,7 +64,7 @@ class Settings(PlatformSettings):
                 problems.add(
                     "chunk_tokens",
                     f"{self.chunk_tokens} exceeds the embedding model's input limit of "
-                    f"{self.embedding_max_tokens - special} tokens (KB_EMBEDDING_MAX_TOKENS "
+                    f"{self.embedding_max_tokens - special} tokens (KNOWCEL_EMBEDDING_MAX_TOKENS "
                     f"{self.embedding_max_tokens} minus {special} special tokens)",
                 )
         problems.at_least("embed_batch_size", self.embed_batch_size, 1)
@@ -73,5 +73,6 @@ class Settings(PlatformSettings):
         if self.retry_max_delay < self.retry_delay:
             problems.add(
                 "retry_max_delay",
-                f"must be at least KB_RETRY_DELAY ({self.retry_delay}), got {self.retry_max_delay}",
+                f"must be at least KNOWCEL_RETRY_DELAY ({self.retry_delay}), "
+                f"got {self.retry_max_delay}",
             )

@@ -13,7 +13,7 @@ Anyone who can reach Envoy can read and change all data. kb needs users, and lat
 
 ## Decision
 
-We will authenticate every browser-facing call at Envoy with an OIDC access token (JWT) from a configurable issuer (`KB_OIDC_ISSUER`, `KB_OIDC_JWKS_URL`, `KB_OIDC_AUDIENCES`). Calls without a valid token get `UNAUTHENTICATED`; CORS preflights and health checks are exempt. Envoy forwards the token's `sub` claim as the `x-kb-user` header and removes any `x-kb-user` sent by the client. The platform's gRPC servers (`platform/go/grpcserver`, `knowcel_platform.grpc`) put it into the request context (`UserFromContext`, `current_user()`).
+We will authenticate every browser-facing call at Envoy with an OIDC access token (JWT) from a configurable issuer (`KNOWCEL_OIDC_ISSUER`, `KNOWCEL_OIDC_JWKS_URL`, `KNOWCEL_OIDC_AUDIENCES`). Calls without a valid token get `UNAUTHENTICATED`; CORS preflights and health checks are exempt. Envoy forwards the token's `sub` claim as the `x-kb-user` header and removes any `x-kb-user` sent by the client. The platform's gRPC servers (`platform/go/grpcserver`, `knowcel_platform.grpc`) put it into the request context (`UserFromContext`, `current_user()`).
 
 For development and tests, compose runs Dex (`deploy/infra.compose.yaml`, `deploy/dex/config.yaml.tpl`) with static users and public clients, and the password grant enabled so tests and scripts fetch tokens without a browser. There is no auth-off mode.
 

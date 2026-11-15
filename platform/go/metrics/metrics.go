@@ -1,5 +1,5 @@
 // Package metrics serves the process's Prometheus metrics on their own HTTP
-// port (KB_METRICS_PORT), apart from the gRPC port, so scraping needs no gRPC
+// port (KNOWCEL_METRICS_PORT), apart from the gRPC port, so scraping needs no gRPC
 // and no token. Metrics register with the default registry (promauto), which
 // also carries the Go runtime and process collectors. Names and labels are
 // listed in docs/metrics.md; labels never carry user or document ids.

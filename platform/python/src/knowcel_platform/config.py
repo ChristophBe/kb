@@ -1,4 +1,4 @@
-"""Settings from KB_* environment variables, and their validation.
+"""Settings from KNOWCEL_* environment variables, and their validation.
 
 The comment above a field (or at the end of its line) is its documentation:
 docs/configuration.md is generated from it (tools/modgen), together with the
@@ -8,6 +8,7 @@ reports every problem at once and exits instead of raising a traceback.
 
 import logging
 import math
+import os
 from collections.abc import Sequence
 from urllib.parse import urlsplit
 
@@ -48,7 +49,7 @@ class Problems:
             )
 
     def addr(self, field: str, value: str) -> None:
-        """Checks a host:port address such as a peer's KB_<MODULE>_ADDR."""
+        """Checks a host:port address such as a peer's KNOWCEL_<MODULE>_ADDR."""
         host, _, port = value.rpartition(":")
         if not host or not port.isdigit() or not 1 <= int(port) <= 65535:
             self.add(field, f"must be host:port, got {value!r}")
@@ -74,9 +75,9 @@ class ConfigError(SystemExit):
 
 class PlatformSettings(BaseSettings):
     """Settings every component understands. Components subclass this and add
-    their own fields; all values come from KB_* environment variables."""
+    their own fields; all values come from KNOWCEL_* environment variables."""
 
-    model_config = SettingsConfigDict(env_prefix="KB_", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="KNOWCEL_", extra="ignore")
 
     # Lowest level logged: DEBUG, INFO, WARNING or ERROR.
     log_level: str = "INFO"
@@ -86,7 +87,7 @@ class PlatformSettings(BaseSettings):
     # module.yaml (0 for workers, which serve none).
     grpc_port: int = 0
     # Serves Prometheus metrics at /metrics (knowcel_platform.metrics); like
-    # KB_GRPC_PORT, each component defaults it to the port in its module.yaml.
+    # KNOWCEL_GRPC_PORT, each component defaults it to the port in its module.yaml.
     metrics_port: int = 0
     # NATS server with JetStream (comma-separated for a cluster); used by
     # components that publish or consume events.
@@ -107,22 +108,46 @@ class PlatformSettings(BaseSettings):
             problems.port("grpc_port", self.grpc_port)
         problems.port("metrics_port", self.metrics_port)
         if self.grpc_port and self.grpc_port == self.metrics_port:
-            problems.add("metrics_port", f"must differ from KB_GRPC_PORT (both {self.grpc_port})")
+            problems.add(
+                "metrics_port", f"must differ from KNOWCEL_GRPC_PORT (both {self.grpc_port})"
+            )
         for server in self.nats_url.split(","):
             problems.url("nats_url", server.strip(), ["nats", "tls", "ws", "wss"])
         if self.otel_endpoint:
             problems.url("otel_endpoint", self.otel_endpoint, ["http", "https"])
 
 
+def migrate_legacy_env() -> None:
+    """Accepts the former KB_* variables: sets KNOWCEL_x from KB_x where it is
+    not set yet, and warns about each KB_* variable. Remove it together with
+    the fallback after one release."""
+    log = logging.getLogger(__name__)
+    for key in sorted(os.environ):
+        if not key.startswith("KB_"):
+            continue
+        name = "KNOWCEL_" + key.removeprefix("KB_")
+        if name in os.environ:
+            log.warning("ignoring deprecated environment variable %s, %s is set", key, name)
+            continue
+        log.warning(
+            "deprecated environment variable %s, rename it to %s "
+            "(support ends after the next release)",
+            key,
+            name,
+        )
+        os.environ[name] = os.environ[key]
+
+
 def env_name(field: str) -> str:
-    """The environment variable of a settings field: log_level → KB_LOG_LEVEL."""
-    return "KB_" + field.upper()
+    """The environment variable of a settings field: log_level → KNOWCEL_LOG_LEVEL."""
+    return "KNOWCEL_" + field.upper()
 
 
 def load_settings[S: PlatformSettings](cls: type[S], component: str) -> S:
     """Reads and validates the settings of `component`. Raises ConfigError
     listing every value that does not parse or, if all parse, every problem
     `check` finds."""
+    migrate_legacy_env()
     try:
         settings = cls()
     except ValidationError as exc:

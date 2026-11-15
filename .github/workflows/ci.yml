@@ -111,15 +111,15 @@ jobs:
             --set infra.enabled=true \
             --set publicUrl="$PUBLIC_URL" \
             --set image.tag=dev \
-            --set components.llm-service.env.KB_LLM_PROVIDER=fake \
-            --set components.chat-service.env.KB_RAG_MIN_SCORE=-1 \
+            --set components.llm-service.env.KNOWCEL_LLM_PROVIDER=fake \
+            --set components.chat-service.env.KNOWCEL_RAG_MIN_SCORE=-1 \
             --wait --timeout 10m
 
       # Go's resolver doesn't map *.localhost to the loopback address by itself.
       - run: echo "127.0.0.1 kb.localhost s3.kb.localhost" | sudo tee -a /etc/hosts
       - name: Smoke test
         env:
-          KB_E2E_GATEWAY: ${{ env.PUBLIC_URL }}
+          KNOWCEL_E2E_GATEWAY: ${{ env.PUBLIC_URL }}
         run: go tool -modfile=tools/go.mod task e2e
 
       - name: Cluster state

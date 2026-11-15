@@ -47,24 +47,24 @@ type Config struct {
 // bucketName follows the S3 naming rules (lowercase, 3-63 characters).
 var bucketName = regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`)
 
-// Validate checks the settings (KB_S3_*).
+// Validate checks the settings (KNOWCEL_S3_*).
 func (c Config) Validate(p *config.Problems) {
-	for _, e := range [][2]string{{"KB_S3_ENDPOINT", c.Endpoint}, {"KB_S3_PUBLIC_ENDPOINT", c.PublicEndpoint}} {
+	for _, e := range [][2]string{{"KNOWCEL_S3_ENDPOINT", c.Endpoint}, {"KNOWCEL_S3_PUBLIC_ENDPOINT", c.PublicEndpoint}} {
 		if e[1] == "" || strings.Contains(e[1], "/") {
 			p.Addf(e[0], "must be host or host:port without a scheme, got %q", e[1])
 		}
 	}
 	if c.AccessKey == "" {
-		p.Addf("KB_S3_ACCESS_KEY", "must be set")
+		p.Addf("KNOWCEL_S3_ACCESS_KEY", "must be set")
 	}
 	if c.SecretKey == "" {
-		p.Addf("KB_S3_SECRET_KEY", "must be set")
+		p.Addf("KNOWCEL_S3_SECRET_KEY", "must be set")
 	}
 	if !bucketName.MatchString(c.Bucket) {
-		p.Addf("KB_S3_BUCKET", "must be a bucket name (3-63 lowercase letters, digits, dots, hyphens), got %q", c.Bucket)
+		p.Addf("KNOWCEL_S3_BUCKET", "must be a bucket name (3-63 lowercase letters, digits, dots, hyphens), got %q", c.Bucket)
 	}
 	if c.Region == "" {
-		p.Addf("KB_S3_REGION", "must be set")
+		p.Addf("KNOWCEL_S3_REGION", "must be set")
 	}
 }
 

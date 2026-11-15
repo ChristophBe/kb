@@ -15,7 +15,7 @@ An upload crosses ingestion-service, NATS, the ingestion worker, llm-service and
 
 We will instrument the platform libraries with OpenTelemetry, so that modules get tracing without code of their own: gRPC servers and clients (`platform/go/grpcserver`, `knowcel_platform.grpc`), Go Postgres pools (`platform/go/postgres`) and NATS messages (`natsx.Publish`/`Receive`, `knowcel_platform.nats.publish`/`receive`, carrying W3C Trace Context in the headers). Log lines carry the trace and span id.
 
-Tracing is off unless `KB_OTEL_ENDPOINT` (OTLP/gRPC) is set; while it is off no instrumentation, exporter or background work is installed. For development, the compose profile `observability` runs an OpenTelemetry collector forwarding to Jaeger (`deploy/infra.compose.yaml`, `deploy/otel/collector.yaml`).
+Tracing is off unless `KNOWCEL_OTEL_ENDPOINT` (OTLP/gRPC) is set; while it is off no instrumentation, exporter or background work is installed. For development, the compose profile `observability` runs an OpenTelemetry collector forwarding to Jaeger (`deploy/infra.compose.yaml`, `deploy/otel/collector.yaml`).
 
 ## Consequences
 

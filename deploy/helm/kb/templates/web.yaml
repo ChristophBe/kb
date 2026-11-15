@@ -19,13 +19,13 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             # The Ingress sends the gRPC paths on the same host to Envoy.
-            - name: KB_API_BASE_URL
+            - name: KNOWCEL_API_BASE_URL
               value: {{ trimSuffix "/" .Values.publicUrl | quote }}
-            - name: KB_ENABLED_MODULES
+            - name: KNOWCEL_ENABLED_MODULES
               value: {{ .Values.web.enabledModules | quote }}
-            - name: KB_OIDC_ISSUER
+            - name: KNOWCEL_OIDC_ISSUER
               value: {{ include "kb.oidcIssuer" . | quote }}
-            - name: KB_OIDC_CLIENT_ID
+            - name: KNOWCEL_OIDC_CLIENT_ID
               value: {{ .Values.oidc.clientId | quote }}
           ports:
             - name: http

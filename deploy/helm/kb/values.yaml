@@ -76,7 +76,7 @@ ingress:
   # e.g. [{secretName: kb-tls, hosts: [kb.example.com]}]
   tls: []
 
-# Local model server for the llm module (KB_LLM_PROVIDER=ollama), reachable as
+# Local model server for the llm module (KNOWCEL_LLM_PROVIDER=ollama), reachable as
 # http://ollama:11434. The pull job downloads the models after install.
 ollama:
   enabled: false
@@ -100,7 +100,7 @@ envoy:
 web:
   replicas: 1
   image:
-    repository: kb-web
+    repository: knowcelium-web
   # Module ids to show (comma-separated); empty shows all.
   enabledModules: ""
   resources:
@@ -113,7 +113,7 @@ networkPolicy:
   enabled: true
 
 # OpenTelemetry: the OTLP endpoint every module component sends traces to
-# (KB_OTEL_ENDPOINT); empty leaves tracing off.
+# (KNOWCEL_OTEL_ENDPOINT); empty leaves tracing off.
 otel:
   endpoint: ""
 
@@ -122,17 +122,17 @@ nodeSelector: {}
 tolerations: []
 affinity: {}
 
-# One entry per module component (modules/*/module.yaml). env holds KB_*
+# One entry per module component (modules/*/module.yaml). env holds KNOWCEL_*
 # settings (README, .env.example); extraEnv takes full EnvVar entries, e.g. a
-# secretKeyRef for KB_ANTHROPIC_API_KEY. Components with infra get their
-# connection settings from the values above, peers their KB_<MODULE>_ADDR.
+# secretKeyRef for KNOWCEL_ANTHROPIC_API_KEY. Components with infra get their
+# connection settings from the values above, peers their KNOWCEL_<MODULE>_ADDR.
 components:
   # chat-service (chat module, python, gRPC :9003, metrics :9103; uses postgres)
   chat-service:
     enabled: true
     replicas: 1
     image:
-      repository: kb-chat-service
+      repository: knowcelium-chat-service
     env: {}
     extraEnv: []
     resources:
@@ -143,13 +143,13 @@ components:
     enabled: true
     replicas: 1
     image:
-      repository: kb-document-service
+      repository: knowcelium-document-service
     env:
-      KB_ALLOWED_CONTENT_TYPES: "application/pdf,text/*,application/json,application/yaml,application/x-yaml"
-      KB_CLEANUP_INTERVAL: "1h"
-      KB_MAX_UPLOAD_BYTES: "52428800"
-      KB_ORPHAN_GRACE: "1h"
-      KB_UPLOAD_TTL: "24h"
+      KNOWCEL_ALLOWED_CONTENT_TYPES: "application/pdf,text/*,application/json,application/yaml,application/x-yaml"
+      KNOWCEL_CLEANUP_INTERVAL: "1h"
+      KNOWCEL_MAX_UPLOAD_BYTES: "52428800"
+      KNOWCEL_ORPHAN_GRACE: "1h"
+      KNOWCEL_UPLOAD_TTL: "24h"
     extraEnv: []
     resources:
       requests: { cpu: 10m, memory: 32Mi }
@@ -159,7 +159,7 @@ components:
     enabled: true
     replicas: 1
     image:
-      repository: kb-ingestion-service
+      repository: knowcelium-ingestion-service
     env: {}
     extraEnv: []
     resources:
@@ -170,7 +170,7 @@ components:
     enabled: true
     replicas: 1
     image:
-      repository: kb-ingestion-worker
+      repository: knowcelium-ingestion-worker
     env: {}
     extraEnv: []
     resources:
@@ -181,10 +181,10 @@ components:
     enabled: true
     replicas: 1
     image:
-      repository: kb-llm-service
+      repository: knowcelium-llm-service
     env:
-      KB_LLM_PROVIDER: "ollama"
-      KB_OLLAMA_URL: "http://ollama:11434"
+      KNOWCEL_LLM_PROVIDER: "ollama"
+      KNOWCEL_OLLAMA_URL: "http://ollama:11434"
     extraEnv: []
     resources:
       requests: { cpu: 50m, memory: 128Mi }

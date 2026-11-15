@@ -3,31 +3,31 @@
   "include": [
     {
       "component": "chat-service",
-      "image": "ghcr.io/christophbe/kb-chat-service",
+      "image": "ghcr.io/christophbe/knowcelium-chat-service",
       "dockerfile": "deploy/docker/python.Dockerfile",
       "build_args": "PACKAGE=knowcel-chat-service"
     },
     {
       "component": "document-service",
-      "image": "ghcr.io/christophbe/kb-document-service",
+      "image": "ghcr.io/christophbe/knowcelium-document-service",
       "dockerfile": "deploy/docker/go.Dockerfile",
       "build_args": "CMD=./modules/document/service/cmd/document-service"
     },
     {
       "component": "ingestion-service",
-      "image": "ghcr.io/christophbe/kb-ingestion-service",
+      "image": "ghcr.io/christophbe/knowcelium-ingestion-service",
       "dockerfile": "deploy/docker/go.Dockerfile",
       "build_args": "CMD=./modules/ingestion/service/cmd/ingestion-service"
     },
     {
       "component": "ingestion-worker",
-      "image": "ghcr.io/christophbe/kb-ingestion-worker",
+      "image": "ghcr.io/christophbe/knowcelium-ingestion-worker",
       "dockerfile": "deploy/docker/python.Dockerfile",
       "build_args": "PACKAGE=knowcel-ingestion-worker"
     },
     {
       "component": "llm-service",
-      "image": "ghcr.io/christophbe/kb-llm-service",
+      "image": "ghcr.io/christophbe/knowcelium-llm-service",
       "dockerfile": "deploy/docker/python.Dockerfile",
       "build_args": "PACKAGE=knowcel-llm-service"
     },

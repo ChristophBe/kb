@@ -28,6 +28,9 @@ type Repository interface {
 	UpsertUser(ctx context.Context, arg store.UpsertUserParams) (store.IamUser, error)
 	FindUserByEmail(ctx context.Context, email string) (store.IamUser, error)
 	GetUser(ctx context.Context, id string) (store.IamUser, error)
+	ListUsers(ctx context.Context) ([]store.IamUser, error)
+	// SetPlatformAdmin fails with store.ErrLastPlatformAdmin or pgx.ErrNoRows.
+	SetPlatformAdmin(ctx context.Context, id string, admin bool) (store.IamUser, error)
 
 	CreateTeam(ctx context.Context, name, creator string) (store.IamTeam, error)
 	UpdateTeamName(ctx context.Context, arg store.UpdateTeamNameParams) (store.IamTeam, error)
@@ -74,12 +77,7 @@ func (s *Server) GetCurrentUser(ctx context.Context, _ *iamv1.GetCurrentUserRequ
 	if err != nil {
 		return nil, err
 	}
-	return &iamv1.GetCurrentUserResponse{User: &iamv1.User{
-		Id:            u.ID,
-		Email:         u.Email,
-		DisplayName:   u.DisplayName,
-		PlatformAdmin: u.PlatformAdmin,
-	}}, nil
+	return &iamv1.GetCurrentUserResponse{User: userMessage(u)}, nil
 }
 
 // register upserts the caller from the token's claims.

@@ -81,6 +81,16 @@ class IamServiceStub:
                 request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleRequest.SerializeToString,
                 response_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleResponse.FromString,
                 _registered_method=True)
+        self.ListUsers = channel.unary_unary(
+                '/knowcel.iam.v1.IamService/ListUsers',
+                request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.ListUsersRequest.SerializeToString,
+                response_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.ListUsersResponse.FromString,
+                _registered_method=True)
+        self.SetPlatformAdmin = channel.unary_unary(
+                '/knowcel.iam.v1.IamService/SetPlatformAdmin',
+                request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetPlatformAdminRequest.SerializeToString,
+                response_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetPlatformAdminResponse.FromString,
+                _registered_method=True)
         self.ResolveCaller = channel.unary_unary(
                 '/knowcel.iam.v1.IamService/ResolveCaller',
                 request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.ResolveCallerRequest.SerializeToString,
@@ -164,6 +174,23 @@ class IamServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ListUsers(self, request, context):
+        """ListUsers returns every registered user, for the platform admins' user
+        directory. Platform admins only (PERMISSION_DENIED otherwise).
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetPlatformAdmin(self, request, context):
+        """SetPlatformAdmin promotes or demotes a user. Platform admins only. The
+        last platform admin cannot be demoted (FAILED_PRECONDITION, reason
+        LAST_PLATFORM_ADMIN); an unknown user is NOT_FOUND.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ResolveCaller(self, request, context):
         """ResolveCaller returns the caller's platform-admin flag and team
         memberships, for the access checks of other modules. Internal: only
@@ -221,6 +248,16 @@ def add_IamServiceServicer_to_server(servicer, server):
                     servicer.SetMemberRole,
                     request_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleRequest.FromString,
                     response_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleResponse.SerializeToString,
+            ),
+            'ListUsers': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListUsers,
+                    request_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.ListUsersRequest.FromString,
+                    response_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.ListUsersResponse.SerializeToString,
+            ),
+            'SetPlatformAdmin': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetPlatformAdmin,
+                    request_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetPlatformAdminRequest.FromString,
+                    response_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetPlatformAdminResponse.SerializeToString,
             ),
             'ResolveCaller': grpc.unary_unary_rpc_method_handler(
                     servicer.ResolveCaller,
@@ -473,6 +510,60 @@ class IamService:
             '/knowcel.iam.v1.IamService/SetMemberRole',
             knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleRequest.SerializeToString,
             knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListUsers(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.iam.v1.IamService/ListUsers',
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.ListUsersRequest.SerializeToString,
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.ListUsersResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetPlatformAdmin(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.iam.v1.IamService/SetPlatformAdmin',
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.SetPlatformAdminRequest.SerializeToString,
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.SetPlatformAdminResponse.FromString,
             options,
             channel_credentials,
             insecure,

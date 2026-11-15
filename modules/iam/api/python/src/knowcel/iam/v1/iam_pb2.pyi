@@ -164,6 +164,30 @@ class SetMemberRoleResponse(_message.Message):
     member: TeamMember
     def __init__(self, member: _Optional[_Union[TeamMember, _Mapping]] = ...) -> None: ...
 
+class ListUsersRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class ListUsersResponse(_message.Message):
+    __slots__ = ("users",)
+    USERS_FIELD_NUMBER: _ClassVar[int]
+    users: _containers.RepeatedCompositeFieldContainer[User]
+    def __init__(self, users: _Optional[_Iterable[_Union[User, _Mapping]]] = ...) -> None: ...
+
+class SetPlatformAdminRequest(_message.Message):
+    __slots__ = ("user_id", "platform_admin")
+    USER_ID_FIELD_NUMBER: _ClassVar[int]
+    PLATFORM_ADMIN_FIELD_NUMBER: _ClassVar[int]
+    user_id: str
+    platform_admin: bool
+    def __init__(self, user_id: _Optional[str] = ..., platform_admin: _Optional[bool] = ...) -> None: ...
+
+class SetPlatformAdminResponse(_message.Message):
+    __slots__ = ("user",)
+    USER_FIELD_NUMBER: _ClassVar[int]
+    user: User
+    def __init__(self, user: _Optional[_Union[User, _Mapping]] = ...) -> None: ...
+
 class ResolveCallerRequest(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...

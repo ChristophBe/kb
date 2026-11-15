@@ -21,3 +21,19 @@ LIMIT 1;
 -- GetUser returns a registered user by id.
 -- name: GetUser :one
 SELECT * FROM iam.users WHERE id = sqlc.arg(id);
+
+-- ListUsers returns the user directory, by display name, then email.
+-- name: ListUsers :many
+SELECT * FROM iam.users
+ORDER BY lower(display_name), lower(email), id;
+
+-- LockPlatformAdmins takes the rows of all platform admins in a fixed order,
+-- so that concurrent demotions run one after the other and cannot both leave
+-- the platform without an admin.
+-- name: LockPlatformAdmins :many
+SELECT id FROM iam.users WHERE platform_admin ORDER BY id FOR UPDATE;
+
+-- name: SetPlatformAdmin :one
+UPDATE iam.users SET platform_admin = sqlc.arg(platform_admin), updated_at = now()
+WHERE id = sqlc.arg(id)
+RETURNING *;

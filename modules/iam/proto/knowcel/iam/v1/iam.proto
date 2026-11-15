@@ -35,6 +35,14 @@ service IamService {
   // cannot be demoted (FAILED_PRECONDITION).
   rpc SetMemberRole(SetMemberRoleRequest) returns (SetMemberRoleResponse);
 
+  // ListUsers returns every registered user, for the platform admins' user
+  // directory. Platform admins only (PERMISSION_DENIED otherwise).
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+  // SetPlatformAdmin promotes or demotes a user. Platform admins only. The
+  // last platform admin cannot be demoted (FAILED_PRECONDITION, reason
+  // LAST_PLATFORM_ADMIN); an unknown user is NOT_FOUND.
+  rpc SetPlatformAdmin(SetPlatformAdminRequest) returns (SetPlatformAdminResponse);
+
   // ResolveCaller returns the caller's platform-admin flag and team
   // memberships, for the access checks of other modules. Internal: only
   // services call it, passing the user on. A caller who is not registered
@@ -144,6 +152,22 @@ message SetMemberRoleRequest {
 
 message SetMemberRoleResponse {
   TeamMember member = 1;
+}
+
+message ListUsersRequest {}
+
+message ListUsersResponse {
+  // users are ordered by display name, then email.
+  repeated User users = 1;
+}
+
+message SetPlatformAdminRequest {
+  string user_id = 1;
+  bool platform_admin = 2;
+}
+
+message SetPlatformAdminResponse {
+  User user = 1;
 }
 
 message ResolveCallerRequest {}

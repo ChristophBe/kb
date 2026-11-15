@@ -27,9 +27,16 @@ type Querier interface {
 	InsertTeamMember(ctx context.Context, arg InsertTeamMemberParams) error
 	ListTeamMembers(ctx context.Context, teamID uuid.UUID) ([]ListTeamMembersRow, error)
 	ListTeamsForUser(ctx context.Context, userID string) ([]ListTeamsForUserRow, error)
+	// ListUsers returns the user directory, by display name, then email.
+	ListUsers(ctx context.Context) ([]IamUser, error)
+	// LockPlatformAdmins takes the rows of all platform admins in a fixed order,
+	// so that concurrent demotions run one after the other and cannot both leave
+	// the platform without an admin.
+	LockPlatformAdmins(ctx context.Context) ([]string, error)
 	// LockTeam serialises the membership changes of one team, so that two
 	// concurrent demotions cannot both leave the team without an admin.
 	LockTeam(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	SetPlatformAdmin(ctx context.Context, arg SetPlatformAdminParams) (IamUser, error)
 	SetTeamMemberRole(ctx context.Context, arg SetTeamMemberRoleParams) (int64, error)
 	UpdateTeamName(ctx context.Context, arg UpdateTeamNameParams) (IamTeam, error)
 	// UpsertUser registers a user or refreshes their email and display name. A

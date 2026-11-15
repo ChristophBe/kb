@@ -51,6 +51,91 @@ func (q *Queries) GetUser(ctx context.Context, id string) (IamUser, error) {
 	return i, err
 }
 
+const listUsers = `-- name: ListUsers :many
+SELECT id, email, display_name, platform_admin, created_at, updated_at FROM iam.users
+ORDER BY lower(display_name), lower(email), id
+`
+
+// ListUsers returns the user directory, by display name, then email.
+func (q *Queries) ListUsers(ctx context.Context) ([]IamUser, error) {
+	rows, err := q.db.Query(ctx, listUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []IamUser{}
+	for rows.Next() {
+		var i IamUser
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.DisplayName,
+			&i.PlatformAdmin,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const lockPlatformAdmins = `-- name: LockPlatformAdmins :many
+SELECT id FROM iam.users WHERE platform_admin ORDER BY id FOR UPDATE
+`
+
+// LockPlatformAdmins takes the rows of all platform admins in a fixed order,
+// so that concurrent demotions run one after the other and cannot both leave
+// the platform without an admin.
+func (q *Queries) LockPlatformAdmins(ctx context.Context) ([]string, error) {
+	rows, err := q.db.Query(ctx, lockPlatformAdmins)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const setPlatformAdmin = `-- name: SetPlatformAdmin :one
+UPDATE iam.users SET platform_admin = $1, updated_at = now()
+WHERE id = $2
+RETURNING id, email, display_name, platform_admin, created_at, updated_at
+`
+
+type SetPlatformAdminParams struct {
+	PlatformAdmin bool
+	ID            string
+}
+
+func (q *Queries) SetPlatformAdmin(ctx context.Context, arg SetPlatformAdminParams) (IamUser, error) {
+	row := q.db.QueryRow(ctx, setPlatformAdmin, arg.PlatformAdmin, arg.ID)
+	var i IamUser
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.DisplayName,
+		&i.PlatformAdmin,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const upsertUser = `-- name: UpsertUser :one
 INSERT INTO iam.users (id, email, display_name, platform_admin)
 VALUES ($1, $2, $3, $4)

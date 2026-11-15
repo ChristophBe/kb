@@ -149,3 +149,67 @@ func TestDeletingATeamRemovesItsMemberships(t *testing.T) {
 		t.Errorf("remove from a deleted team: %v", err)
 	}
 }
+
+func TestSetPlatformAdminKeepsTheLastAdmin(t *testing.T) {
+	r, ctx := newRepo(t), t.Context()
+	register(t, r, "ann", "bob")
+	if _, err := r.SetPlatformAdmin(ctx, "ann", true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.SetPlatformAdmin(ctx, "ann", false); !errors.Is(err, ErrLastPlatformAdmin) {
+		t.Errorf("demote the last admin: %v", err)
+	}
+	// Demoting someone who is no admin is harmless, and a second admin frees the first.
+	if u, err := r.SetPlatformAdmin(ctx, "bob", false); err != nil || u.PlatformAdmin {
+		t.Errorf("demote a non-admin: %+v, %v", u, err)
+	}
+	if _, err := r.SetPlatformAdmin(ctx, "bob", true); err != nil {
+		t.Fatal(err)
+	}
+	if u, err := r.SetPlatformAdmin(ctx, "ann", false); err != nil || u.PlatformAdmin {
+		t.Errorf("demote with a second admin: %+v, %v", u, err)
+	}
+	if _, err := r.SetPlatformAdmin(ctx, "nobody", true); !errors.Is(err, pgx.ErrNoRows) {
+		t.Errorf("unknown user: %v", err)
+	}
+}
+
+func TestTwoPlatformAdminsCannotDemoteEachOtherAtOnce(t *testing.T) {
+	r, ctx := newRepo(t), t.Context()
+	register(t, r, "ann", "bob")
+	for _, id := range []string{"ann", "bob"} {
+		if _, err := r.SetPlatformAdmin(ctx, id, true); err != nil {
+			t.Fatal(err)
+		}
+	}
+	errs := make([]error, 2)
+	var wg sync.WaitGroup
+	for i, user := range []string{"ann", "bob"} {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, errs[i] = r.SetPlatformAdmin(ctx, user, false)
+		}()
+	}
+	wg.Wait()
+	if (errs[0] == nil) == (errs[1] == nil) {
+		t.Fatalf("exactly one demotion must succeed, got %v and %v", errs[0], errs[1])
+	}
+	users, err := r.ListUsers(ctx)
+	if err != nil || len(users) != 2 {
+		t.Fatalf("users = %+v, %v", users, err)
+	}
+	if admins := countAdmins(users); admins != 1 {
+		t.Errorf("platform admins = %d", admins)
+	}
+}
+
+func countAdmins(users []IamUser) int {
+	n := 0
+	for _, u := range users {
+		if u.PlatformAdmin {
+			n++
+		}
+	}
+	return n
+}

@@ -4,6 +4,7 @@ import manifest from "./manifest.ts";
 import { TeamDetail } from "./TeamDetail.tsx";
 import { TeamPlaceholder } from "./TeamPlaceholder.tsx";
 import { Teams } from "./Teams.tsx";
+import { Users } from "./Users.tsx";
 
 export default defineModule({
   ...manifest,
@@ -17,5 +18,6 @@ export default defineModule({
         { path: ":id", element: <TeamDetail /> },
       ],
     },
+    { path: "users", element: <Users /> },
   ],
 });

@@ -66,6 +66,38 @@ func (m *memRepo) GetUser(_ context.Context, id string) (store.IamUser, error) {
 	return store.IamUser{}, pgx.ErrNoRows
 }
 
+func (m *memRepo) ListUsers(context.Context) ([]store.IamUser, error) {
+	users := make([]store.IamUser, 0, len(m.users))
+	for _, u := range m.users {
+		users = append(users, u)
+	}
+	slices.SortFunc(users, func(a, b store.IamUser) int { return strings.Compare(a.Email, b.Email) })
+	return users, nil
+}
+
+// SetPlatformAdmin answers like the store's Repo, whose last-admin rule is
+// tested against Postgres.
+func (m *memRepo) SetPlatformAdmin(_ context.Context, id string, admin bool) (store.IamUser, error) {
+	u, ok := m.users[id]
+	if !ok {
+		return store.IamUser{}, pgx.ErrNoRows
+	}
+	if !admin && u.PlatformAdmin {
+		n := 0
+		for _, o := range m.users {
+			if o.PlatformAdmin {
+				n++
+			}
+		}
+		if n == 1 {
+			return store.IamUser{}, store.ErrLastPlatformAdmin
+		}
+	}
+	u.PlatformAdmin = admin
+	m.users[id] = u
+	return u, nil
+}
+
 func (m *memRepo) CreateTeam(_ context.Context, name, creator string) (store.IamTeam, error) {
 	t := store.IamTeam{ID: uuid.New(), Name: name}
 	m.teams[t.ID] = t

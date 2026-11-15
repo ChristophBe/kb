@@ -17,3 +17,15 @@ export function teamError(err: unknown): Error | null {
   if (error.code === Code.AlreadyExists) return new Error("This person is already a member.");
   return new Error(error.rawMessage);
 }
+
+/** What a failed request of the user directory means for the user. */
+export function userError(err: unknown): Error | null {
+  if (!err) return null;
+  if (errorInfo(err)?.reason === "LAST_PLATFORM_ADMIN") {
+    return new Error("The platform needs at least one admin. Promote someone else first.");
+  }
+  if (ConnectError.from(err).code === Code.PermissionDenied) {
+    return new Error("Only platform admins can do this.");
+  }
+  return new Error(ConnectError.from(err).rawMessage);
+}

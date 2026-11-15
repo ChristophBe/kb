@@ -45,6 +45,36 @@ describe("pagesProvider", () => {
   });
 });
 
+describe("pagesProvider for platform admins", () => {
+  const iam: KbModule = {
+    id: "iam",
+    title: "Users & teams",
+    icon: Icon,
+    routes: [],
+    nav: [
+      { path: "teams", label: "Teams" },
+      { path: "users", label: "Users", requiresPlatformAdmin: true },
+    ],
+  };
+  const search = (admin: boolean) =>
+    pagesProvider([iam], () => admin).search("users", signal, context);
+
+  it("lists an admin-only page only while the user is a platform admin", async () => {
+    expect(await search(false)).toEqual([]);
+    expect(await search(true)).toEqual([
+      { title: "Users", snippet: "Users & teams", href: "/m/iam/users" },
+    ]);
+  });
+
+  it("asks again on every search, as the user is known only later", async () => {
+    let admin = false;
+    const provider = pagesProvider([iam], () => admin);
+    expect(await provider.search("users", signal, context)).toEqual([]);
+    admin = true;
+    expect(await provider.search("users", signal, context)).toHaveLength(1);
+  });
+});
+
 describe("searchProviders", () => {
   it("puts Pages first, then the modules that provide a search, then Help", () => {
     const provider = { label: "Conversations", search: async () => [] };

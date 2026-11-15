@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -21,6 +22,8 @@ var (
 	ErrNotMember = errors.New("not a member of the team")
 	// ErrLastAdmin means the change would leave the team without an admin.
 	ErrLastAdmin = errors.New("the team would have no admin")
+	// ErrLastPlatformAdmin means the change would leave the platform without an admin.
+	ErrLastPlatformAdmin = errors.New("the platform would have no admin")
 )
 
 // Repo adds multi-statement operations on top of the generated queries.
@@ -98,6 +101,30 @@ func (r *Repo) changeMember(ctx context.Context, teamID uuid.UUID, userID string
 		return err
 	}
 	return tx.Commit(ctx)
+}
+
+// SetPlatformAdmin promotes or demotes a user and returns them. Demoting the
+// last platform admin fails with ErrLastPlatformAdmin, an unknown user with
+// pgx.ErrNoRows.
+func (r *Repo) SetPlatformAdmin(ctx context.Context, userID string, admin bool) (IamUser, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return IamUser{}, err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck // no-op after commit
+	q := r.WithTx(tx)
+	admins, err := q.LockPlatformAdmins(ctx)
+	if err != nil {
+		return IamUser{}, err
+	}
+	if !admin && len(admins) <= 1 && slices.Contains(admins, userID) {
+		return IamUser{}, ErrLastPlatformAdmin
+	}
+	u, err := q.SetPlatformAdmin(ctx, SetPlatformAdminParams{ID: userID, PlatformAdmin: admin})
+	if err != nil {
+		return IamUser{}, err
+	}
+	return u, tx.Commit(ctx)
 }
 
 func notMember(err error) error {

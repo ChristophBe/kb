@@ -33,3 +33,4 @@ The design drafts in [`docs/ux/`](../ux/) are for contributors; this manual is f
 - [Chat](chat.md) — asking questions, sources, choosing the model, restricting to documents, stopping and retrying answers, managing conversations
 - [Models](models.md) — whether the chat and embedding providers are available and which models are installed
 - [Teams](teams.md) — creating teams, adding and removing members by email, admin and member roles, leaving, renaming and deleting a team
+- [Users](users.md) — the user list for platform admins, making someone a platform admin and taking the role away

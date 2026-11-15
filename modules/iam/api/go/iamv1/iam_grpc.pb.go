@@ -19,16 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	IamService_GetCurrentUser_FullMethodName = "/knowcel.iam.v1.IamService/GetCurrentUser"
-	IamService_CreateTeam_FullMethodName     = "/knowcel.iam.v1.IamService/CreateTeam"
-	IamService_GetTeam_FullMethodName        = "/knowcel.iam.v1.IamService/GetTeam"
-	IamService_ListMyTeams_FullMethodName    = "/knowcel.iam.v1.IamService/ListMyTeams"
-	IamService_UpdateTeam_FullMethodName     = "/knowcel.iam.v1.IamService/UpdateTeam"
-	IamService_DeleteTeam_FullMethodName     = "/knowcel.iam.v1.IamService/DeleteTeam"
-	IamService_AddMember_FullMethodName      = "/knowcel.iam.v1.IamService/AddMember"
-	IamService_RemoveMember_FullMethodName   = "/knowcel.iam.v1.IamService/RemoveMember"
-	IamService_SetMemberRole_FullMethodName  = "/knowcel.iam.v1.IamService/SetMemberRole"
-	IamService_ResolveCaller_FullMethodName  = "/knowcel.iam.v1.IamService/ResolveCaller"
+	IamService_GetCurrentUser_FullMethodName   = "/knowcel.iam.v1.IamService/GetCurrentUser"
+	IamService_CreateTeam_FullMethodName       = "/knowcel.iam.v1.IamService/CreateTeam"
+	IamService_GetTeam_FullMethodName          = "/knowcel.iam.v1.IamService/GetTeam"
+	IamService_ListMyTeams_FullMethodName      = "/knowcel.iam.v1.IamService/ListMyTeams"
+	IamService_UpdateTeam_FullMethodName       = "/knowcel.iam.v1.IamService/UpdateTeam"
+	IamService_DeleteTeam_FullMethodName       = "/knowcel.iam.v1.IamService/DeleteTeam"
+	IamService_AddMember_FullMethodName        = "/knowcel.iam.v1.IamService/AddMember"
+	IamService_RemoveMember_FullMethodName     = "/knowcel.iam.v1.IamService/RemoveMember"
+	IamService_SetMemberRole_FullMethodName    = "/knowcel.iam.v1.IamService/SetMemberRole"
+	IamService_ListUsers_FullMethodName        = "/knowcel.iam.v1.IamService/ListUsers"
+	IamService_SetPlatformAdmin_FullMethodName = "/knowcel.iam.v1.IamService/SetPlatformAdmin"
+	IamService_ResolveCaller_FullMethodName    = "/knowcel.iam.v1.IamService/ResolveCaller"
 )
 
 // IamServiceClient is the client API for IamService service.
@@ -64,6 +66,13 @@ type IamServiceClient interface {
 	// SetMemberRole changes a member's role. Team admins only. The last admin
 	// cannot be demoted (FAILED_PRECONDITION).
 	SetMemberRole(ctx context.Context, in *SetMemberRoleRequest, opts ...grpc.CallOption) (*SetMemberRoleResponse, error)
+	// ListUsers returns every registered user, for the platform admins' user
+	// directory. Platform admins only (PERMISSION_DENIED otherwise).
+	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error)
+	// SetPlatformAdmin promotes or demotes a user. Platform admins only. The
+	// last platform admin cannot be demoted (FAILED_PRECONDITION, reason
+	// LAST_PLATFORM_ADMIN); an unknown user is NOT_FOUND.
+	SetPlatformAdmin(ctx context.Context, in *SetPlatformAdminRequest, opts ...grpc.CallOption) (*SetPlatformAdminResponse, error)
 	// ResolveCaller returns the caller's platform-admin flag and team
 	// memberships, for the access checks of other modules. Internal: only
 	// services call it, passing the user on. A caller who is not registered
@@ -169,6 +178,26 @@ func (c *iamServiceClient) SetMemberRole(ctx context.Context, in *SetMemberRoleR
 	return out, nil
 }
 
+func (c *iamServiceClient) ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListUsersResponse)
+	err := c.cc.Invoke(ctx, IamService_ListUsers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iamServiceClient) SetPlatformAdmin(ctx context.Context, in *SetPlatformAdminRequest, opts ...grpc.CallOption) (*SetPlatformAdminResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetPlatformAdminResponse)
+	err := c.cc.Invoke(ctx, IamService_SetPlatformAdmin_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *iamServiceClient) ResolveCaller(ctx context.Context, in *ResolveCallerRequest, opts ...grpc.CallOption) (*ResolveCallerResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ResolveCallerResponse)
@@ -212,6 +241,13 @@ type IamServiceServer interface {
 	// SetMemberRole changes a member's role. Team admins only. The last admin
 	// cannot be demoted (FAILED_PRECONDITION).
 	SetMemberRole(context.Context, *SetMemberRoleRequest) (*SetMemberRoleResponse, error)
+	// ListUsers returns every registered user, for the platform admins' user
+	// directory. Platform admins only (PERMISSION_DENIED otherwise).
+	ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error)
+	// SetPlatformAdmin promotes or demotes a user. Platform admins only. The
+	// last platform admin cannot be demoted (FAILED_PRECONDITION, reason
+	// LAST_PLATFORM_ADMIN); an unknown user is NOT_FOUND.
+	SetPlatformAdmin(context.Context, *SetPlatformAdminRequest) (*SetPlatformAdminResponse, error)
 	// ResolveCaller returns the caller's platform-admin flag and team
 	// memberships, for the access checks of other modules. Internal: only
 	// services call it, passing the user on. A caller who is not registered
@@ -253,6 +289,12 @@ func (UnimplementedIamServiceServer) RemoveMember(context.Context, *RemoveMember
 }
 func (UnimplementedIamServiceServer) SetMemberRole(context.Context, *SetMemberRoleRequest) (*SetMemberRoleResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SetMemberRole not implemented")
+}
+func (UnimplementedIamServiceServer) ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListUsers not implemented")
+}
+func (UnimplementedIamServiceServer) SetPlatformAdmin(context.Context, *SetPlatformAdminRequest) (*SetPlatformAdminResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetPlatformAdmin not implemented")
 }
 func (UnimplementedIamServiceServer) ResolveCaller(context.Context, *ResolveCallerRequest) (*ResolveCallerResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ResolveCaller not implemented")
@@ -440,6 +482,42 @@ func _IamService_SetMemberRole_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _IamService_ListUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IamServiceServer).ListUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IamService_ListUsers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IamServiceServer).ListUsers(ctx, req.(*ListUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IamService_SetPlatformAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetPlatformAdminRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IamServiceServer).SetPlatformAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IamService_SetPlatformAdmin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IamServiceServer).SetPlatformAdmin(ctx, req.(*SetPlatformAdminRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _IamService_ResolveCaller_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ResolveCallerRequest)
 	if err := dec(in); err != nil {
@@ -500,6 +578,14 @@ var IamService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetMemberRole",
 			Handler:    _IamService_SetMemberRole_Handler,
+		},
+		{
+			MethodName: "ListUsers",
+			Handler:    _IamService_ListUsers_Handler,
+		},
+		{
+			MethodName: "SetPlatformAdmin",
+			Handler:    _IamService_SetPlatformAdmin_Handler,
 		},
 		{
 			MethodName: "ResolveCaller",

@@ -83,6 +83,10 @@ static_resources:
                           route: { cluster: iam-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.iam.v1.IamService/SetMemberRole" }
                           route: { cluster: iam-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.iam.v1.IamService/ListUsers" }
+                          route: { cluster: iam-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.iam.v1.IamService/SetPlatformAdmin" }
+                          route: { cluster: iam-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.ingestion.v1.IngestionService/CreateUpload" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.ingestion.v1.IngestionService/CompleteUpload" }

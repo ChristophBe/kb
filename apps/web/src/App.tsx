@@ -8,7 +8,7 @@ import {
 } from "@knowcel/module-sdk";
 import { Area, IconButton, Logo, navItemClass, ThemeToggle } from "@knowcel/ui";
 import { CircleHelp, CircleUser, LogOut } from "lucide-react";
-import { lazy, type ReactNode, useMemo } from "react";
+import { lazy, type ReactNode, useMemo, useRef } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
 import { AuthGate, useSession } from "./auth/AuthGate.tsx";
 import { createUserManager } from "./auth/session.ts";
@@ -50,9 +50,12 @@ export function App({ config }: { config: RuntimeConfig }) {
 }
 
 function Routes({ config }: { config: RuntimeConfig }) {
+  // The search reads it when it runs, so the router does not restart when the user is known.
+  const isPlatformAdmin = useRef(false);
+  isPlatformAdmin.current = useIsPlatformAdmin();
   const router = useMemo(() => {
     const modules = activeModules(config);
-    const providers = searchProviders(modules);
+    const providers = searchProviders(modules, () => isPlatformAdmin.current);
     return createBrowserRouter([
       {
         element: <Shell modules={modules} providers={providers} />,

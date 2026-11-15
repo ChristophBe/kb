@@ -4,6 +4,7 @@ import {
   type Team,
   type TeamMember,
   TeamRole,
+  type User,
 } from "@knowcel/iam-api/knowcel/iam/v1/iam_pb";
 import type { CurrentUser } from "@knowcel/module-sdk";
 import { errorInfoDetail } from "@knowcel/ui/testing/errors";
@@ -121,6 +122,43 @@ export function iamService(
         }
         if (target) target.role = req.role;
         return { member: target };
+      },
+    }),
+  );
+  return { transport, calls };
+}
+
+/** A user of the directory. */
+export const person = (id: string, platformAdmin = false): User =>
+  ({
+    id,
+    email: `${id}@example.com`,
+    displayName: id[0]?.toUpperCase() + id.slice(1),
+    platformAdmin,
+  }) as User;
+
+/**
+ * An in-memory user directory with the rule the page relies on: the last
+ * platform admin stays.
+ */
+export function directoryService(initial: User[]) {
+  const users = initial.map((u) => ({ ...u }));
+  const calls = { listUsers: vi.fn(), setPlatformAdmin: vi.fn() };
+  const transport = createRouterTransport(({ service }) =>
+    service(IamService, {
+      listUsers: () => {
+        calls.listUsers();
+        return { users };
+      },
+      setPlatformAdmin: (req) => {
+        calls.setPlatformAdmin(req);
+        const target = users.find((u) => u.id === req.userId);
+        if (!target) throw new ConnectError("not found", Code.NotFound);
+        if (!req.platformAdmin && users.filter((u) => u.platformAdmin).length === 1) {
+          throw failed("LAST_PLATFORM_ADMIN", Code.FailedPrecondition);
+        }
+        target.platformAdmin = req.platformAdmin;
+        return { user: target };
       },
     }),
   );

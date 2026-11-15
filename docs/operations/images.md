@@ -24,6 +24,8 @@ git checkout v0.3.1
 KNOWCEL_VERSION=0.3.1 docker compose -f compose.yaml -f deploy/release.compose.yaml up -d
 ```
 
+With [Task](https://taskfile.dev) installed, `task up:release -- --profile ollama` does the same for the latest release tag of your checkout (no `git checkout` needed; set `KNOWCEL_VERSION` to pick another one).
+
 Nothing is built; compose pulls the images it doesn't have yet. Without `KNOWCEL_VERSION` compose stops with *set KNOWCEL_VERSION to a released version*. All other settings (`.env.example`, README) work as with `task up`, e.g. `--profile ollama` or `KNOWCEL_LLM_PROVIDER=fake`. `docker compose ... pull` fetches the images up front.
 
 While the packages are private, sign in first with a personal access token (classic) that has `read:packages`: `echo "$TOKEN" | docker login ghcr.io -u <github user> --password-stdin`.

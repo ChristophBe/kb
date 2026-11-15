@@ -253,6 +253,15 @@ tasks:
     cmds:
       - . deploy/scripts/legacy-env.sh && docker compose {{.CLI_ARGS}} up -d --build --wait
 
+  up:release:
+    desc: Start the latest release from its published images, without building (pass compose flags after --, e.g. -- --profile ollama; KNOWCEL_VERSION=x.y.z picks another release).
+    cmds:
+      # No sed or other tools beyond git and docker, so it runs in Task's own shell on Windows too.
+      - |
+        . deploy/scripts/legacy-env.sh
+        tag=$(git describe --tags --abbrev=0)
+        KNOWCEL_VERSION="${KNOWCEL_VERSION:-${tag#v}}" docker compose -f compose.yaml -f deploy/release.compose.yaml {{.CLI_ARGS}} up -d --wait
+
   down:
     desc: Stop the stack (add -- -v to delete volumes).
     cmds:

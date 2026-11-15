@@ -1,5 +1,5 @@
 {
-  "name": "@kb/module-ingestion",
+  "name": "@knowcel/module-ingestion",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,9 +11,9 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
-    "@kb/ingestion-api": "workspace:*",
-    "@kb/module-sdk": "workspace:*",
-    "@kb/ui": "workspace:*",
+    "@knowcel/ingestion-api": "workspace:*",
+    "@knowcel/module-sdk": "workspace:*",
+    "@knowcel/ui": "workspace:*",
     "lucide-react": "catalog:",
     "react-router": "catalog:"
   },

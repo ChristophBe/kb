@@ -1,15 +1,15 @@
 import { Code, ConnectError } from "@connectrpc/connect";
-import { KbRuntimeProvider } from "@kb/module-sdk";
-import { polyfillDialog } from "@kb/ui/testing/dialog";
-import { badRequestDetail } from "@kb/ui/testing/errors";
+import { KbRuntimeProvider } from "@knowcel/module-sdk";
+import { polyfillDialog } from "@knowcel/ui/testing/dialog";
+import { badRequestDetail } from "@knowcel/ui/testing/errors";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { MetadataEditor, validate } from "./MetadataEditor.tsx";
 
 const updateDocument = vi.fn();
 
-vi.mock("@kb/module-sdk", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@kb/module-sdk")>()),
+vi.mock("@knowcel/module-sdk", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@knowcel/module-sdk")>()),
   useClient: () => ({ updateDocument }),
 }));
 

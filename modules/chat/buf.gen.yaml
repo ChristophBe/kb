@@ -19,4 +19,4 @@ plugins:
     out: modules/chat/api/ts/src
     opt:
       - target=ts
-      - rewrite_imports=./knowcel/common/**/*_pb.js:@kb/common-api
+      - rewrite_imports=./knowcel/common/**/*_pb.js:@knowcel/common-api

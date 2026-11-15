@@ -1,7 +1,7 @@
 import { createRouterTransport } from "@connectrpc/connect";
-import type { KbModule } from "@kb/module-sdk";
-import { renderWithRuntime } from "@kb/module-sdk/testing";
-import { expectNoAxeViolations } from "@kb/ui/testing";
+import type { KbModule } from "@knowcel/module-sdk";
+import { renderWithRuntime } from "@knowcel/module-sdk/testing";
+import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider, useLocation } from "react-router";
 import { describe, expect, it } from "vitest";

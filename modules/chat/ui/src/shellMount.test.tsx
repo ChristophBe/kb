@@ -1,8 +1,8 @@
 import { create } from "@bufbuild/protobuf";
 import { createRouterTransport } from "@connectrpc/connect";
-import { ChatService, ConversationSchema } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import { type KbModule, useModuleRoutes } from "@kb/module-sdk";
-import { renderModule } from "@kb/module-sdk/testing";
+import { ChatService, ConversationSchema } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { type KbModule, useModuleRoutes } from "@knowcel/module-sdk";
+import { renderModule } from "@knowcel/module-sdk/testing";
 import { act, fireEvent, screen, within } from "@testing-library/react";
 import { beforeAll, describe, expect, it } from "vitest";
 import chat from "./index.tsx";

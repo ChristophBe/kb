@@ -1,13 +1,13 @@
-import { Code, ConnectError, KbRuntimeProvider } from "@kb/module-sdk";
-import { badRequestDetail } from "@kb/ui/testing/errors";
+import { Code, ConnectError, KbRuntimeProvider } from "@knowcel/module-sdk";
+import { badRequestDetail } from "@knowcel/ui/testing/errors";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TitleEditor } from "./TitleEditor.tsx";
 
 const updateDocument = vi.fn();
 
-vi.mock("@kb/module-sdk", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@kb/module-sdk")>()),
+vi.mock("@knowcel/module-sdk", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@knowcel/module-sdk")>()),
   useClient: () => ({ updateDocument }),
 }));
 

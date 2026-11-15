@@ -1,4 +1,4 @@
-import { type KbModule, type LazyModule, useModuleRoutes } from "@kb/module-sdk";
+import { type KbModule, type LazyModule, useModuleRoutes } from "@knowcel/module-sdk";
 import { use } from "react";
 import { ModuleLoadError } from "./ModuleBoundary.tsx";
 

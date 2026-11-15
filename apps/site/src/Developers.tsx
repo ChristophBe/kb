@@ -1,4 +1,4 @@
-import { Badge } from "@kb/ui";
+import { Badge } from "@knowcel/ui";
 import { ArrowDown, Blocks, Braces, type LucideIcon, Workflow } from "lucide-react";
 import { SectionTitle } from "./Features.tsx";
 import { repoPath } from "./links.ts";

@@ -1,4 +1,4 @@
-import { buttonClass, Logo, Mark, ThemeToggle } from "@kb/ui";
+import { buttonClass, Logo, Mark, ThemeToggle } from "@knowcel/ui";
 import { useEffect, useState } from "react";
 import { GithubMark } from "./GithubMark.tsx";
 import { REPO } from "./links.ts";

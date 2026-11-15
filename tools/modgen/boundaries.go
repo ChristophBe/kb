@@ -22,7 +22,7 @@ type boundary struct {
 	PyForbidden []string
 	// HasUI is set when the module ships a UI package.
 	HasUI bool
-	// TSAllowAPIs are the @kb/<id>-api packages the UI may import.
+	// TSAllowAPIs are the @knowcel/<id>-api packages the UI may import.
 	TSAllowAPIs []string
 }
 
@@ -32,17 +32,17 @@ func boundaries(modules []Module) []boundary {
 	out := make([]boundary, 0, len(modules))
 	for _, m := range modules {
 		b := boundary{ID: m.ID, PySources: m.PyPackages, HasUI: m.UI != ""}
-		b.TSAllowAPIs = append(b.TSAllowAPIs, "@kb/common-api")
+		b.TSAllowAPIs = append(b.TSAllowAPIs, "@knowcel/common-api")
 		for _, other := range modules {
 			if other.ID == m.ID {
-				b.TSAllowAPIs = append(b.TSAllowAPIs, "@kb/"+m.ID+"-api")
+				b.TSAllowAPIs = append(b.TSAllowAPIs, "@knowcel/"+m.ID+"-api")
 				continue
 			}
 			root := path.Join(GoModule, "modules", other.ID)
 			if m.Allows(other.ID) {
 				b.GoDeny = append(b.GoDeny, goRule{root, "only the api/ of a module in depends_on may be imported"})
 				b.GoAllow = append(b.GoAllow, path.Join(root, "api", "go"))
-				b.TSAllowAPIs = append(b.TSAllowAPIs, "@kb/"+other.ID+"-api")
+				b.TSAllowAPIs = append(b.TSAllowAPIs, "@knowcel/"+other.ID+"-api")
 			} else {
 				b.GoDeny = append(b.GoDeny, goRule{root, other.ID + " is not in depends_on of " + m.ID})
 				if other.HasProto {
@@ -98,8 +98,8 @@ func biomeOverrides(bs []boundary) (string, error) {
 	overrides := []override{{
 		Includes: []string{"platform/**"},
 		Linter: rule([]biomePattern{
-			{[]string{"@kb/module-*", "@kb/module-*/**", "!@kb/module-sdk", "!@kb/module-sdk/**"}, "platform/ must not import module UIs."},
-			{[]string{"@kb/*-api", "@kb/*-api/**", "!@kb/common-api", "!@kb/common-api/**"}, "platform/ must not import module APIs."},
+			{[]string{"@knowcel/module-*", "@knowcel/module-*/**", "!@knowcel/module-sdk", "!@knowcel/module-sdk/**"}, "platform/ must not import module UIs."},
+			{[]string{"@knowcel/*-api", "@knowcel/*-api/**", "!@knowcel/common-api", "!@knowcel/common-api/**"}, "platform/ must not import module APIs."},
 			escape,
 		}),
 	}}
@@ -107,14 +107,14 @@ func biomeOverrides(bs []boundary) (string, error) {
 		if !b.HasUI {
 			continue
 		}
-		apis := []string{"@kb/*-api", "@kb/*-api/**"}
+		apis := []string{"@knowcel/*-api", "@knowcel/*-api/**"}
 		for _, a := range b.TSAllowAPIs {
 			apis = append(apis, "!"+a, "!"+a+"/**")
 		}
 		overrides = append(overrides, override{
 			Includes: []string{"modules/" + b.ID + "/ui/**"},
 			Linter: rule([]biomePattern{
-				{[]string{"@kb/module-*", "@kb/module-*/**", "!@kb/module-sdk", "!@kb/module-sdk/**", "!@kb/module-" + b.ID, "!@kb/module-" + b.ID + "/**"}, "A module UI never imports another module's UI; link to its routes instead."},
+				{[]string{"@knowcel/module-*", "@knowcel/module-*/**", "!@knowcel/module-sdk", "!@knowcel/module-sdk/**", "!@knowcel/module-" + b.ID, "!@knowcel/module-" + b.ID + "/**"}, "A module UI never imports another module's UI; link to its routes instead."},
 				{apis, "Only the API packages of modules in depends_on (module.yaml) may be imported."},
 				escape,
 			}),

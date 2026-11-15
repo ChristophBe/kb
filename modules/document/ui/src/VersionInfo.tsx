@@ -1,5 +1,8 @@
-import { type Document, DocumentStatus } from "@kb/document-api/knowcel/document/v1/document_pb";
-import { Badge, buttonClass } from "@kb/ui";
+import {
+  type Document,
+  DocumentStatus,
+} from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import { Badge, buttonClass } from "@knowcel/ui";
 import { Upload } from "lucide-react";
 import { Link } from "react-router";
 import { statusLabel } from "./status.ts";

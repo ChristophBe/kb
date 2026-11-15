@@ -1,4 +1,4 @@
-import { Card } from "@kb/ui";
+import { Card } from "@knowcel/ui";
 import {
   ArrowRight,
   Contrast,

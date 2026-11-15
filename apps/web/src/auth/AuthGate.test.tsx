@@ -1,5 +1,5 @@
-import type { RuntimeAuth } from "@kb/module-sdk";
-import { expectNoAxeViolations } from "@kb/ui/testing";
+import type { RuntimeAuth } from "@knowcel/module-sdk";
+import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { StrictMode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";

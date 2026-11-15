@@ -1,7 +1,10 @@
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
-import { IngestionService, JobStatus } from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
-import { renderModule } from "@kb/module-sdk/testing";
-import { badRequestDetail } from "@kb/ui/testing/errors";
+import {
+  IngestionService,
+  JobStatus,
+} from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
+import { renderModule } from "@knowcel/module-sdk/testing";
+import { badRequestDetail } from "@knowcel/ui/testing/errors";
 import { act, fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ingestion from "./index.tsx";

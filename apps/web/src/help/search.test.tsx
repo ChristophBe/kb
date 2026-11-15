@@ -1,4 +1,4 @@
-import { KbRuntimeProvider, type SearchContext } from "@kb/module-sdk";
+import { KbRuntimeProvider, type SearchContext } from "@knowcel/module-sdk";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";

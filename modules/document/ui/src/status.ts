@@ -1,5 +1,5 @@
-import { DocumentStatus } from "@kb/document-api/knowcel/document/v1/document_pb";
-import type { Tone } from "@kb/ui";
+import { DocumentStatus } from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import type { Tone } from "@knowcel/ui";
 
 export const statusLabel: Record<DocumentStatus, [string, Tone]> = {
   [DocumentStatus.UNSPECIFIED]: ["Unknown", "neutral"],

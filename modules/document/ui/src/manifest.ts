@@ -1,4 +1,4 @@
-import { defineManifest, lazySearch } from "@kb/module-sdk";
+import { defineManifest, lazySearch } from "@knowcel/module-sdk";
 import { FileText } from "lucide-react";
 import { lazy } from "react";
 

@@ -1,4 +1,4 @@
-import { defineModule } from "@kb/module-sdk";
+import { defineModule } from "@knowcel/module-sdk";
 import manifest from "./manifest.ts";
 import { ReplaceUpload } from "./ReplaceUpload.tsx";
 import { Upload } from "./Upload.tsx";

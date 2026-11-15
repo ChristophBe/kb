@@ -1,5 +1,5 @@
-import type { ModuleManifest } from "@kb/module-sdk";
-import { buttonClass, Card, cn, PageTitle } from "@kb/ui";
+import type { ModuleManifest } from "@knowcel/module-sdk";
+import { buttonClass, Card, cn, PageTitle } from "@knowcel/ui";
 import { ArrowRight, ArrowUp, Sparkles } from "lucide-react";
 import { type CSSProperties, type FormEvent, useId, useState } from "react";
 import { Link, useNavigate } from "react-router";

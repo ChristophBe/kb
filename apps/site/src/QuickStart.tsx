@@ -1,4 +1,4 @@
-import { buttonClass, IconButton } from "@kb/ui";
+import { buttonClass, IconButton } from "@knowcel/ui";
 import { BookOpen, Check, Copy } from "lucide-react";
 import { useState } from "react";
 import { SectionTitle } from "./Features.tsx";

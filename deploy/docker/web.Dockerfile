@@ -3,7 +3,7 @@ FROM node:24-alpine AS build
 RUN corepack enable
 WORKDIR /src
 COPY . .
-RUN pnpm install --frozen-lockfile --filter "@kb/web..." && pnpm --filter @kb/web build
+RUN pnpm install --frozen-lockfile --filter "@knowcel/web..." && pnpm --filter @knowcel/web build
 
 FROM nginx:1.29-alpine
 COPY deploy/docker/web/nginx.conf /etc/nginx/conf.d/default.conf

@@ -1,4 +1,4 @@
-import type { KbModule, SearchContext } from "@kb/module-sdk";
+import type { KbModule, SearchContext } from "@knowcel/module-sdk";
 import { describe, expect, it } from "vitest";
 import { pagesProvider, searchProviders } from "./pages.ts";
 

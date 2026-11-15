@@ -1,6 +1,14 @@
-import { DocumentService } from "@kb/document-api/knowcel/document/v1/document_pb";
-import { useClient, useQuery, useQueryClient } from "@kb/module-sdk";
-import { Badge, Card, ChunkStrip, ErrorMessage, formatBytes, formatTime, Spinner } from "@kb/ui";
+import { DocumentService } from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import { useClient, useQuery, useQueryClient } from "@knowcel/module-sdk";
+import {
+  Badge,
+  Card,
+  ChunkStrip,
+  ErrorMessage,
+  formatBytes,
+  formatTime,
+  Spinner,
+} from "@knowcel/ui";
 import { useEffect, useRef } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import { ChunkList } from "./ChunkList.tsx";

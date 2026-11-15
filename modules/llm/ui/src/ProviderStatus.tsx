@@ -1,6 +1,6 @@
-import { LlmService, type ProviderHealth } from "@kb/llm-api/knowcel/llm/v1/llm_pb";
-import { useClient, useQuery } from "@kb/module-sdk";
-import { Badge, DelayedLoading, SkeletonRows, Widget, WidgetMessage } from "@kb/ui";
+import { LlmService, type ProviderHealth } from "@knowcel/llm-api/knowcel/llm/v1/llm_pb";
+import { useClient, useQuery } from "@knowcel/module-sdk";
+import { Badge, DelayedLoading, SkeletonRows, Widget, WidgetMessage } from "@knowcel/ui";
 import { Cpu } from "lucide-react";
 import { Link } from "react-router";
 

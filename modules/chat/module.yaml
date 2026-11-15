@@ -9,6 +9,6 @@ services:
     metrics_port: 9103
     infra: [postgres]
     grpc_services: [knowcel.chat.v1.ChatService]
-ui: "@kb/module-chat"
+ui: "@knowcel/module-chat"
 # Retrieval (SearchChunks) and generation/embeddings.
 depends_on: [document, llm]

@@ -1,1 +1,1 @@
-import "@kb/module-notes";
+import "@knowcel/module-notes";

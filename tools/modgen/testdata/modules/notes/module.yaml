@@ -12,4 +12,4 @@ services:
     internal:
       - knowcel.notes.v1.NotesService/IndexNote
       - knowcel.notes.v1.NotesAdminService
-ui: "@kb/module-notes"
+ui: "@knowcel/module-notes"

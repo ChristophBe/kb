@@ -1,5 +1,5 @@
-import type { Citation } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import { IconButton, SourceNote } from "@kb/ui";
+import type { Citation } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { IconButton, SourceNote } from "@knowcel/ui";
 import { Check, Copy } from "lucide-react";
 import { type ComponentProps, useCallback, useMemo, useRef, useState } from "react";
 import Markdown, { type Components } from "react-markdown";

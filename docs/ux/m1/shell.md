@@ -1,6 +1,6 @@
 # Shell: error boundary, toasts, loading states (#58)
 
-Shell-level building blocks that every module UI uses: a route-level error boundary per module, a toast API in `@kb/module-sdk` rendered by the shell, and skeleton/loading components in `@kb/ui`.
+Shell-level building blocks that every module UI uses: a route-level error boundary per module, a toast API in `@knowcel/module-sdk` rendered by the shell, and skeleton/loading components in `@knowcel/ui`.
 
 ## Layout
 
@@ -55,7 +55,7 @@ A module that throws while rendering shows an error panel in `<main>`. The sideb
                                    └──────────────────────────────┘
 ```
 
-API sketch (`@kb/module-sdk`): `toast.success(message, { action? })`, `toast.error(message)`, `toast.info(message)`.
+API sketch (`@knowcel/module-sdk`): `toast.success(message, { action? })`, `toast.error(message)`, `toast.info(message)`.
 
 | Kind | Region | Auto-dismiss | Used for |
 |---|---|---|---|
@@ -69,7 +69,7 @@ API sketch (`@kb/module-sdk`): `toast.success(message, { action? })`, `toast.err
 
 ## Loading states
 
-| Component (`@kb/ui`) | Use | Accessible behaviour |
+| Component (`@knowcel/ui`) | Use | Accessible behaviour |
 |---|---|---|
 | `Skeleton` (lines, table rows, card) | First load of lists and detail pages | `aria-hidden`; the container has `aria-busy="true"` and a visually hidden "Loading documents" text |
 | `Spinner` | Actions in progress (inside buttons, small areas) | `role="status"` with a label |

@@ -1,6 +1,9 @@
 import { createRouterTransport } from "@connectrpc/connect";
-import { DocumentService, DocumentStatus } from "@kb/document-api/knowcel/document/v1/document_pb";
-import { renderModule } from "@kb/module-sdk/testing";
+import {
+  DocumentService,
+  DocumentStatus,
+} from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import { renderModule } from "@knowcel/module-sdk/testing";
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import documents from "./index.tsx";

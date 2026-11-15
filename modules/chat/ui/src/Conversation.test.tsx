@@ -12,9 +12,9 @@ import {
   type StreamChatRequest,
   type StreamChatResponse,
   StreamChatResponseSchema,
-} from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import { ModelKind } from "@kb/llm-api/knowcel/llm/v1/llm_pb";
-import { KbRuntimeProvider } from "@kb/module-sdk";
+} from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { ModelKind } from "@knowcel/llm-api/knowcel/llm/v1/llm_pb";
+import { KbRuntimeProvider } from "@knowcel/module-sdk";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -32,8 +32,8 @@ const listModels = vi.fn(async () => ({
 const getProviderStatus = vi.fn(async () => ({ defaultChatModel: "llama3.2" }));
 
 // The real runtime, except that the chat and llm clients are fakes.
-vi.mock("@kb/module-sdk", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@kb/module-sdk")>()),
+vi.mock("@knowcel/module-sdk", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@knowcel/module-sdk")>()),
   useClient: () => ({ getConversation, streamChat, listModels, getProviderStatus }),
 }));
 

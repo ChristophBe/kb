@@ -1,4 +1,4 @@
-import type { RuntimeConfig } from "@kb/module-sdk";
+import type { RuntimeConfig } from "@knowcel/module-sdk";
 import { type User, UserManager, WebStorageStateStore } from "oidc-client-ts";
 
 /** Where the identity provider sends the browser back to; registered with the provider. */

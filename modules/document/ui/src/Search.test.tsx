@@ -4,10 +4,10 @@ import {
   DocumentService,
   type SearchDocumentsRequest,
   type SearchDocumentsResponseSchema,
-} from "@kb/document-api/knowcel/document/v1/document_pb";
-import { SearchError } from "@kb/module-sdk";
-import { renderWithRuntime } from "@kb/module-sdk/testing";
-import { errorInfoDetail } from "@kb/ui/testing/errors";
+} from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import { SearchError } from "@knowcel/module-sdk";
+import { renderWithRuntime } from "@knowcel/module-sdk/testing";
+import { errorInfoDetail } from "@knowcel/ui/testing/errors";
 import { screen } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider, useLocation } from "react-router";
 import { describe, expect, it, vi } from "vitest";

@@ -1,5 +1,5 @@
-import { type KbModule, KbRuntimeProvider, type SearchProvider } from "@kb/module-sdk";
-import { expectNoAxeViolations } from "@kb/ui/testing";
+import { type KbModule, KbRuntimeProvider, type SearchProvider } from "@knowcel/module-sdk";
+import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider, useLocation } from "react-router";
 import { describe, expect, it, vi } from "vitest";

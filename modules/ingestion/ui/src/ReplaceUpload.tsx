@@ -1,6 +1,6 @@
-import { IngestionService } from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
-import { toast, useClient } from "@kb/module-sdk";
-import { Button, fieldViolations, PageHeader } from "@kb/ui";
+import { IngestionService } from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
+import { toast, useClient } from "@knowcel/module-sdk";
+import { Button, fieldViolations, PageHeader } from "@knowcel/ui";
 import { AlertTriangle, Upload as UploadIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";

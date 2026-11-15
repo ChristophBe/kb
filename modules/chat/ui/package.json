@@ -1,5 +1,5 @@
 {
-  "name": "@kb/module-chat",
+  "name": "@knowcel/module-chat",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,11 +11,11 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
-    "@kb/chat-api": "workspace:*",
-    "@kb/document-api": "workspace:*",
-    "@kb/llm-api": "workspace:*",
-    "@kb/module-sdk": "workspace:*",
-    "@kb/ui": "workspace:*",
+    "@knowcel/chat-api": "workspace:*",
+    "@knowcel/document-api": "workspace:*",
+    "@knowcel/llm-api": "workspace:*",
+    "@knowcel/module-sdk": "workspace:*",
+    "@knowcel/ui": "workspace:*",
     "lucide-react": "catalog:",
     "react-markdown": "catalog:",
     "react-router": "catalog:",

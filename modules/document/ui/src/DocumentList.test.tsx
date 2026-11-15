@@ -1,7 +1,10 @@
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
-import { DocumentService, DocumentStatus } from "@kb/document-api/knowcel/document/v1/document_pb";
-import { renderModule } from "@kb/module-sdk/testing";
-import { polyfillDialog } from "@kb/ui/testing/dialog";
+import {
+  DocumentService,
+  DocumentStatus,
+} from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import { renderModule } from "@knowcel/module-sdk/testing";
+import { polyfillDialog } from "@knowcel/ui/testing/dialog";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import documents from "./index.tsx";

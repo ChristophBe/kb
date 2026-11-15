@@ -1,5 +1,5 @@
 {
-  "name": "@kb/module-llm",
+  "name": "@knowcel/module-llm",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,9 +11,9 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
-    "@kb/llm-api": "workspace:*",
-    "@kb/module-sdk": "workspace:*",
-    "@kb/ui": "workspace:*",
+    "@knowcel/llm-api": "workspace:*",
+    "@knowcel/module-sdk": "workspace:*",
+    "@knowcel/ui": "workspace:*",
     "lucide-react": "catalog:",
     "react-router": "catalog:"
   },

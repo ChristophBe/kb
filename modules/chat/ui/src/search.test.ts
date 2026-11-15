@@ -10,8 +10,8 @@ import {
   ChatService,
   ConversationSchema,
   type SearchConversationsRequest,
-} from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import type { SearchContext } from "@kb/module-sdk";
+} from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import type { SearchContext } from "@knowcel/module-sdk";
 import { describe, expect, it } from "vitest";
 import manifest from "./manifest.ts";
 import { conversationSearch, SEARCH_LIMIT } from "./search.ts";

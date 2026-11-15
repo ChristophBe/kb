@@ -1,4 +1,4 @@
-import { cn, SourceNote } from "@kb/ui";
+import { cn, SourceNote } from "@knowcel/ui";
 import { ArrowUp } from "lucide-react";
 import { Fragment, useState } from "react";
 import { delay } from "./links.ts";

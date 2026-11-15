@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf";
 import { Code, ConnectError } from "@connectrpc/connect";
-import { ConversationSchema } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import { KbRuntimeProvider, useToasts } from "@kb/module-sdk";
+import { ConversationSchema } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { KbRuntimeProvider, useToasts } from "@knowcel/module-sdk";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ConversationHeader } from "./ConversationHeader.tsx";
@@ -9,8 +9,8 @@ import { ConversationHeader } from "./ConversationHeader.tsx";
 const updateConversation = vi.fn();
 
 // The real runtime, except that the chat client is a fake.
-vi.mock("@kb/module-sdk", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@kb/module-sdk")>()),
+vi.mock("@knowcel/module-sdk", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@knowcel/module-sdk")>()),
   useClient: () => ({ updateConversation }),
 }));
 

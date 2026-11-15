@@ -3,7 +3,9 @@ import { useCallback, useState } from "react";
 export type ThemePref = "system" | "light" | "dark";
 
 /** Also read by the inline script in the index.html of apps/web and apps/site, which applies it before first paint. */
-const STORAGE_KEY = "kb.theme";
+const STORAGE_KEY = "knowcel.theme";
+/** The key used before the Knowcelium rename; read once and migrated. */
+const LEGACY_STORAGE_KEY = "kb.theme";
 
 function isThemePref(value: unknown): value is ThemePref {
   return value === "system" || value === "light" || value === "dark";
@@ -11,7 +13,14 @@ function isThemePref(value: unknown): value is ThemePref {
 
 export function readThemePref(): ThemePref {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    let stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === null) {
+      stored = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (stored !== null) {
+        if (isThemePref(stored)) localStorage.setItem(STORAGE_KEY, stored);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+      }
+    }
     return isThemePref(stored) ? stored : "system";
   } catch {
     return "system";
@@ -31,6 +40,7 @@ export function useThemePref(): [ThemePref, (pref: ThemePref) => void] {
     setPref(next);
     applyThemePref(next);
     try {
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
       if (next === "system") localStorage.removeItem(STORAGE_KEY);
       else localStorage.setItem(STORAGE_KEY, next);
     } catch {

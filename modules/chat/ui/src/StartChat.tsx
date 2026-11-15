@@ -1,6 +1,6 @@
-import { ChatService } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import { useClient, useQueryClient } from "@kb/module-sdk";
-import { ErrorMessage, Spinner } from "@kb/ui";
+import { ChatService } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { useClient, useQueryClient } from "@knowcel/module-sdk";
+import { ErrorMessage, Spinner } from "@knowcel/ui";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 

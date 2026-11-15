@@ -60,7 +60,7 @@ export interface SearchProvider {
 /**
  * What the shell knows about a module before its code loads: enough for the
  * sidebar, the home page and the global search. A module package exports it
- * from `@kb/module-<id>/manifest` (`src/manifest.ts`). Every manifest ships in
+ * from `@knowcel/module-<id>/manifest` (`src/manifest.ts`). Every manifest ships in
  * the app's initial bundle, so it holds no page code: widgets come through
  * React's `lazy` and the search through `lazySearch`, so that each loads its
  * own small chunk on first use.

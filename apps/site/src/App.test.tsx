@@ -1,4 +1,4 @@
-import { expectNoAxeViolations } from "@kb/ui/testing";
+import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { App } from "./App.tsx";

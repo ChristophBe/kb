@@ -7,9 +7,10 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <script>
-      // Applies the saved theme (@kb/ui theme.ts) before first paint, so a pinned theme doesn't flash.
+      // Applies the saved theme (@knowcel/ui theme.ts) before first paint, so a pinned theme doesn't flash.
       try {
-        const theme = localStorage.getItem("kb.theme");
+        // Reads the pre-rename "kb.theme" key as a fallback; @knowcel/ui migrates it on first load.
+        const theme = localStorage.getItem("knowcel.theme") ?? localStorage.getItem("kb.theme");
         if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
       } catch {}
     </script>

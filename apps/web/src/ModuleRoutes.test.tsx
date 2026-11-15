@@ -1,4 +1,4 @@
-import type { KbModule, LazyModule } from "@kb/module-sdk";
+import type { KbModule, LazyModule } from "@knowcel/module-sdk";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { createMemoryRouter, Link, Outlet, RouterProvider } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";

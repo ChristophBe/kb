@@ -1,1 +1,1 @@
-import "@kb/module-notes/manifest";
+import "@knowcel/module-notes/manifest";

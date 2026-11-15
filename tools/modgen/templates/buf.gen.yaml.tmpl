@@ -20,5 +20,5 @@ plugins:
     opt:
       - target=ts
 {{- if not .Pkg.Common}}
-      - rewrite_imports=./knowcel/common/**/*_pb.js:@kb/common-api
+      - rewrite_imports=./knowcel/common/**/*_pb.js:@knowcel/common-api
 {{- end}}

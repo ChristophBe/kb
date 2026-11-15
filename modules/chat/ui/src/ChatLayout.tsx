@@ -1,5 +1,5 @@
-import { ChatService } from "@kb/chat-api/knowcel/chat/v1/chat_pb";
-import { toast, useClient, useMutation, useQuery, useQueryClient } from "@kb/module-sdk";
+import { ChatService } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { toast, useClient, useMutation, useQuery, useQueryClient } from "@knowcel/module-sdk";
 import {
   Area,
   Button,
@@ -8,7 +8,7 @@ import {
   IconButton,
   navItemClass,
   RelativeTime,
-} from "@kb/ui";
+} from "@knowcel/ui";
 import { Plus, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Navigate, NavLink, Outlet, useNavigate, useParams } from "react-router";

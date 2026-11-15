@@ -6,4 +6,4 @@ services:
     port: 9102
     metrics_port: 9202
 depends_on: [notes]
-ui: "@kb/module-search"
+ui: "@knowcel/module-search"

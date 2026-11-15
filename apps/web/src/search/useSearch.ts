@@ -5,8 +5,8 @@ import {
   type SearchHit,
   type SearchProvider,
   useSearchContext,
-} from "@kb/module-sdk";
-import { fieldViolations } from "@kb/ui";
+} from "@knowcel/module-sdk";
+import { fieldViolations } from "@knowcel/ui";
 import { useEffect, useState } from "react";
 
 /** One provider's results for the current query. */

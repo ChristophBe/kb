@@ -1,5 +1,5 @@
-import type { RuntimeAuth } from "@kb/module-sdk";
-import { Button, DelayedLoading, ErrorMessage, PageTitle, Spinner } from "@kb/ui";
+import type { RuntimeAuth } from "@knowcel/module-sdk";
+import { Button, DelayedLoading, ErrorMessage, PageTitle, Spinner } from "@knowcel/ui";
 import { Library } from "lucide-react";
 import type { User, UserManager } from "oidc-client-ts";
 import {

@@ -1,5 +1,5 @@
 {
-  "name": "@kb/browser-tests",
+  "name": "@knowcel/browser-tests",
   "version": "0.0.0",
   "private": true,
   "type": "module",

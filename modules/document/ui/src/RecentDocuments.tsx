@@ -1,6 +1,13 @@
-import { DocumentService } from "@kb/document-api/knowcel/document/v1/document_pb";
-import { useClient, useQuery } from "@kb/module-sdk";
-import { Badge, DelayedLoading, RelativeTime, SkeletonRows, Widget, WidgetMessage } from "@kb/ui";
+import { DocumentService } from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import { useClient, useQuery } from "@knowcel/module-sdk";
+import {
+  Badge,
+  DelayedLoading,
+  RelativeTime,
+  SkeletonRows,
+  Widget,
+  WidgetMessage,
+} from "@knowcel/ui";
 import { FileText } from "lucide-react";
 import { Link } from "react-router";
 import { statusLabel } from "./status.ts";

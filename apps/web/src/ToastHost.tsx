@@ -1,5 +1,5 @@
-import { dismissToast, type Toast, useToasts } from "@kb/module-sdk";
-import { cn, IconButton } from "@kb/ui";
+import { dismissToast, type Toast, useToasts } from "@knowcel/module-sdk";
+import { cn, IconButton } from "@knowcel/ui";
 import { AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
 import { useEffect, useState } from "react";
 

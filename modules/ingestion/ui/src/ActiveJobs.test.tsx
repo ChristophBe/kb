@@ -3,9 +3,9 @@ import {
   IngestionService,
   JobStage,
   JobStatus,
-} from "@kb/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
-import { renderWidget } from "@kb/module-sdk/testing";
-import { expectNoAxeViolations } from "@kb/ui/testing";
+} from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
+import { renderWidget } from "@knowcel/module-sdk/testing";
+import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ActiveJobs } from "./ActiveJobs.tsx";

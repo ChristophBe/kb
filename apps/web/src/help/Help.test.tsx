@@ -1,4 +1,4 @@
-import { expectNoAxeViolations } from "@kb/ui/testing";
+import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { render, screen } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";

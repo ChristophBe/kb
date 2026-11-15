@@ -31,7 +31,7 @@ type Repository interface {
 type Server struct {
 	iamv1.UnimplementedIamServiceServer
 	repo           Repository
-	bootstrapAdmin []string
+	bootstrapAdmins []string
 	log            *slog.Logger
 }
 
@@ -44,7 +44,7 @@ func New(repo Repository, bootstrapAdmins []string, log *slog.Logger) *Server {
 			admins = append(admins, a)
 		}
 	}
-	return &Server{repo: repo, bootstrapAdmin: admins, log: log}
+	return &Server{repo: repo, bootstrapAdmins: admins, log: log}
 }
 
 // GetCurrentUser registers the caller on their first call and refreshes their
@@ -77,7 +77,7 @@ func (s *Server) GetCurrentUser(ctx context.Context, _ *iamv1.GetCurrentUserRequ
 // isBootstrapAdmin reports whether the subject, or a non-empty email
 // (case-insensitively), is configured as a platform admin.
 func (s *Server) isBootstrapAdmin(id, email string) bool {
-	for _, a := range s.bootstrapAdmin {
+	for _, a := range s.bootstrapAdmins {
 		if a == id || (email != "" && strings.EqualFold(a, email)) {
 			return true
 		}

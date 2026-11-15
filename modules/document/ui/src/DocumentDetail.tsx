@@ -13,6 +13,7 @@ import { useEffect, useRef } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import { ChunkList } from "./ChunkList.tsx";
 import { MetadataEditor } from "./MetadataEditor.tsx";
+import { ShareEditor } from "./ShareEditor.tsx";
 import { statusLabel } from "./status.ts";
 import { TitleEditor } from "./TitleEditor.tsx";
 import { inProgress, VersionInfo } from "./VersionInfo.tsx";
@@ -57,6 +58,7 @@ export function DocumentDetail() {
     ["Content type", d.contentType],
     ["Size", formatBytes(d.sizeBytes)],
     ["Chunks", <ChunkStrip count={d.chunkCount} />],
+    ["Shared with", <ShareEditor document={d} />],
     ["Created", formatTime(d.createTime)],
     ["Updated", formatTime(d.updateTime)],
     ["Metadata", <MetadataEditor id={d.id} metadata={d.metadata} />],

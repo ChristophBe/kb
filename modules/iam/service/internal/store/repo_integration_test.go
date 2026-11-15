@@ -7,6 +7,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/jackc/pgx/v5"
+
 	"github.com/ChristophBe/knowcelium/modules/iam/migrations"
 	"github.com/ChristophBe/knowcelium/platform/go/postgres/pgtest"
 )
@@ -39,6 +41,17 @@ func TestCreateTeamMakesTheCreatorAdmin(t *testing.T) {
 	teams, err := r.ListTeamsForUser(ctx, "ann")
 	if err != nil || len(teams) != 1 {
 		t.Fatalf("teams = %+v, %v", teams, err)
+	}
+}
+
+func TestGetUser(t *testing.T) {
+	r, ctx := newRepo(t), t.Context()
+	register(t, r, "ann")
+	if u, err := r.GetUser(ctx, "ann"); err != nil || u.ID != "ann" {
+		t.Fatalf("GetUser(ann) = %+v, %v", u, err)
+	}
+	if _, err := r.GetUser(ctx, "nobody"); !errors.Is(err, pgx.ErrNoRows) {
+		t.Errorf("GetUser(nobody) error = %v, want pgx.ErrNoRows", err)
 	}
 }
 

@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file knowcel/iam/v1/iam.proto.
  */
 export const file_knowcel_iam_v1_iam: GenFile = /*@__PURE__*/
-  fileDesc("Chhrbm93Y2VsL2lhbS92MS9pYW0ucHJvdG8SDmtub3djZWwuaWFtLnYxIk8KBFVzZXISCgoCaWQYASABKAkSDQoFZW1haWwYAiABKAkSFAoMZGlzcGxheV9uYW1lGAMgASgJEhYKDnBsYXRmb3JtX2FkbWluGAQgASgIIhcKFUdldEN1cnJlbnRVc2VyUmVxdWVzdCI8ChZHZXRDdXJyZW50VXNlclJlc3BvbnNlEiIKBHVzZXIYASABKAsyFC5rbm93Y2VsLmlhbS52MS5Vc2VyIngKBFRlYW0SCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIpCgdteV9yb2xlGAMgASgOMhgua25vd2NlbC5pYW0udjEuVGVhbVJvbGUSKwoHbWVtYmVycxgEIAMoCzIaLmtub3djZWwuaWFtLnYxLlRlYW1NZW1iZXIiagoKVGVhbU1lbWJlchIPCgd1c2VyX2lkGAEgASgJEg0KBWVtYWlsGAIgASgJEhQKDGRpc3BsYXlfbmFtZRgDIAEoCRImCgRyb2xlGAQgASgOMhgua25vd2NlbC5pYW0udjEuVGVhbVJvbGUiIQoRQ3JlYXRlVGVhbVJlcXVlc3QSDAoEbmFtZRgBIAEoCSI4ChJDcmVhdGVUZWFtUmVzcG9uc2USIgoEdGVhbRgBIAEoCzIULmtub3djZWwuaWFtLnYxLlRlYW0iHAoOR2V0VGVhbVJlcXVlc3QSCgoCaWQYASABKAkiNQoPR2V0VGVhbVJlc3BvbnNlEiIKBHRlYW0YASABKAsyFC5rbm93Y2VsLmlhbS52MS5UZWFtIhQKEkxpc3RNeVRlYW1zUmVxdWVzdCI6ChNMaXN0TXlUZWFtc1Jlc3BvbnNlEiMKBXRlYW1zGAEgAygLMhQua25vd2NlbC5pYW0udjEuVGVhbSItChFVcGRhdGVUZWFtUmVxdWVzdBIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJIjgKElVwZGF0ZVRlYW1SZXNwb25zZRIiCgR0ZWFtGAEgASgLMhQua25vd2NlbC5pYW0udjEuVGVhbSIfChFEZWxldGVUZWFtUmVxdWVzdBIKCgJpZBgBIAEoCSIUChJEZWxldGVUZWFtUmVzcG9uc2UiWgoQQWRkTWVtYmVyUmVxdWVzdBIPCgd0ZWFtX2lkGAEgASgJEg0KBWVtYWlsGAIgASgJEiYKBHJvbGUYAyABKA4yGC5rbm93Y2VsLmlhbS52MS5UZWFtUm9sZSI/ChFBZGRNZW1iZXJSZXNwb25zZRIqCgZtZW1iZXIYASABKAsyGi5rbm93Y2VsLmlhbS52MS5UZWFtTWVtYmVyIjcKE1JlbW92ZU1lbWJlclJlcXVlc3QSDwoHdGVhbV9pZBgBIAEoCRIPCgd1c2VyX2lkGAIgASgJIhYKFFJlbW92ZU1lbWJlclJlc3BvbnNlImAKFFNldE1lbWJlclJvbGVSZXF1ZXN0Eg8KB3RlYW1faWQYASABKAkSDwoHdXNlcl9pZBgCIAEoCRImCgRyb2xlGAMgASgOMhgua25vd2NlbC5pYW0udjEuVGVhbVJvbGUiQwoVU2V0TWVtYmVyUm9sZVJlc3BvbnNlEioKBm1lbWJlchgBIAEoCzIaLmtub3djZWwuaWFtLnYxLlRlYW1NZW1iZXIqUAoIVGVhbVJvbGUSGQoVVEVBTV9ST0xFX1VOU1BFQ0lGSUVEEAASEwoPVEVBTV9ST0xFX0FETUlOEAESFAoQVEVBTV9ST0xFX01FTUJFUhACMpsGCgpJYW1TZXJ2aWNlEl8KDkdldEN1cnJlbnRVc2VyEiUua25vd2NlbC5pYW0udjEuR2V0Q3VycmVudFVzZXJSZXF1ZXN0GiYua25vd2NlbC5pYW0udjEuR2V0Q3VycmVudFVzZXJSZXNwb25zZRJTCgpDcmVhdGVUZWFtEiEua25vd2NlbC5pYW0udjEuQ3JlYXRlVGVhbVJlcXVlc3QaIi5rbm93Y2VsLmlhbS52MS5DcmVhdGVUZWFtUmVzcG9uc2USSgoHR2V0VGVhbRIeLmtub3djZWwuaWFtLnYxLkdldFRlYW1SZXF1ZXN0Gh8ua25vd2NlbC5pYW0udjEuR2V0VGVhbVJlc3BvbnNlElYKC0xpc3RNeVRlYW1zEiIua25vd2NlbC5pYW0udjEuTGlzdE15VGVhbXNSZXF1ZXN0GiMua25vd2NlbC5pYW0udjEuTGlzdE15VGVhbXNSZXNwb25zZRJTCgpVcGRhdGVUZWFtEiEua25vd2NlbC5pYW0udjEuVXBkYXRlVGVhbVJlcXVlc3QaIi5rbm93Y2VsLmlhbS52MS5VcGRhdGVUZWFtUmVzcG9uc2USUwoKRGVsZXRlVGVhbRIhLmtub3djZWwuaWFtLnYxLkRlbGV0ZVRlYW1SZXF1ZXN0GiIua25vd2NlbC5pYW0udjEuRGVsZXRlVGVhbVJlc3BvbnNlElAKCUFkZE1lbWJlchIgLmtub3djZWwuaWFtLnYxLkFkZE1lbWJlclJlcXVlc3QaIS5rbm93Y2VsLmlhbS52MS5BZGRNZW1iZXJSZXNwb25zZRJZCgxSZW1vdmVNZW1iZXISIy5rbm93Y2VsLmlhbS52MS5SZW1vdmVNZW1iZXJSZXF1ZXN0GiQua25vd2NlbC5pYW0udjEuUmVtb3ZlTWVtYmVyUmVzcG9uc2USXAoNU2V0TWVtYmVyUm9sZRIkLmtub3djZWwuaWFtLnYxLlNldE1lbWJlclJvbGVSZXF1ZXN0GiUua25vd2NlbC5pYW0udjEuU2V0TWVtYmVyUm9sZVJlc3BvbnNlQkJaQGdpdGh1Yi5jb20vQ2hyaXN0b3BoQmUva25vd2NlbGl1bS9tb2R1bGVzL2lhbS9hcGkvZ28vaWFtdjE7aWFtdjFiBnByb3RvMw");
+  fileDesc("Chhrbm93Y2VsL2lhbS92MS9pYW0ucHJvdG8SDmtub3djZWwuaWFtLnYxIk8KBFVzZXISCgoCaWQYASABKAkSDQoFZW1haWwYAiABKAkSFAoMZGlzcGxheV9uYW1lGAMgASgJEhYKDnBsYXRmb3JtX2FkbWluGAQgASgIIhcKFUdldEN1cnJlbnRVc2VyUmVxdWVzdCI8ChZHZXRDdXJyZW50VXNlclJlc3BvbnNlEiIKBHVzZXIYASABKAsyFC5rbm93Y2VsLmlhbS52MS5Vc2VyIngKBFRlYW0SCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIpCgdteV9yb2xlGAMgASgOMhgua25vd2NlbC5pYW0udjEuVGVhbVJvbGUSKwoHbWVtYmVycxgEIAMoCzIaLmtub3djZWwuaWFtLnYxLlRlYW1NZW1iZXIiagoKVGVhbU1lbWJlchIPCgd1c2VyX2lkGAEgASgJEg0KBWVtYWlsGAIgASgJEhQKDGRpc3BsYXlfbmFtZRgDIAEoCRImCgRyb2xlGAQgASgOMhgua25vd2NlbC5pYW0udjEuVGVhbVJvbGUiIQoRQ3JlYXRlVGVhbVJlcXVlc3QSDAoEbmFtZRgBIAEoCSI4ChJDcmVhdGVUZWFtUmVzcG9uc2USIgoEdGVhbRgBIAEoCzIULmtub3djZWwuaWFtLnYxLlRlYW0iHAoOR2V0VGVhbVJlcXVlc3QSCgoCaWQYASABKAkiNQoPR2V0VGVhbVJlc3BvbnNlEiIKBHRlYW0YASABKAsyFC5rbm93Y2VsLmlhbS52MS5UZWFtIhQKEkxpc3RNeVRlYW1zUmVxdWVzdCI6ChNMaXN0TXlUZWFtc1Jlc3BvbnNlEiMKBXRlYW1zGAEgAygLMhQua25vd2NlbC5pYW0udjEuVGVhbSItChFVcGRhdGVUZWFtUmVxdWVzdBIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJIjgKElVwZGF0ZVRlYW1SZXNwb25zZRIiCgR0ZWFtGAEgASgLMhQua25vd2NlbC5pYW0udjEuVGVhbSIfChFEZWxldGVUZWFtUmVxdWVzdBIKCgJpZBgBIAEoCSIUChJEZWxldGVUZWFtUmVzcG9uc2UiWgoQQWRkTWVtYmVyUmVxdWVzdBIPCgd0ZWFtX2lkGAEgASgJEg0KBWVtYWlsGAIgASgJEiYKBHJvbGUYAyABKA4yGC5rbm93Y2VsLmlhbS52MS5UZWFtUm9sZSI/ChFBZGRNZW1iZXJSZXNwb25zZRIqCgZtZW1iZXIYASABKAsyGi5rbm93Y2VsLmlhbS52MS5UZWFtTWVtYmVyIjcKE1JlbW92ZU1lbWJlclJlcXVlc3QSDwoHdGVhbV9pZBgBIAEoCRIPCgd1c2VyX2lkGAIgASgJIhYKFFJlbW92ZU1lbWJlclJlc3BvbnNlImAKFFNldE1lbWJlclJvbGVSZXF1ZXN0Eg8KB3RlYW1faWQYASABKAkSDwoHdXNlcl9pZBgCIAEoCRImCgRyb2xlGAMgASgOMhgua25vd2NlbC5pYW0udjEuVGVhbVJvbGUiQwoVU2V0TWVtYmVyUm9sZVJlc3BvbnNlEioKBm1lbWJlchgBIAEoCzIaLmtub3djZWwuaWFtLnYxLlRlYW1NZW1iZXIiFgoUUmVzb2x2ZUNhbGxlclJlcXVlc3QiawoVUmVzb2x2ZUNhbGxlclJlc3BvbnNlEg8KB3VzZXJfaWQYASABKAkSFgoOcGxhdGZvcm1fYWRtaW4YAiABKAgSKQoFdGVhbXMYAyADKAsyGi5rbm93Y2VsLmlhbS52MS5DYWxsZXJUZWFtIkUKCkNhbGxlclRlYW0SDwoHdGVhbV9pZBgBIAEoCRImCgRyb2xlGAIgASgOMhgua25vd2NlbC5pYW0udjEuVGVhbVJvbGUqUAoIVGVhbVJvbGUSGQoVVEVBTV9ST0xFX1VOU1BFQ0lGSUVEEAASEwoPVEVBTV9ST0xFX0FETUlOEAESFAoQVEVBTV9ST0xFX01FTUJFUhACMvkGCgpJYW1TZXJ2aWNlEl8KDkdldEN1cnJlbnRVc2VyEiUua25vd2NlbC5pYW0udjEuR2V0Q3VycmVudFVzZXJSZXF1ZXN0GiYua25vd2NlbC5pYW0udjEuR2V0Q3VycmVudFVzZXJSZXNwb25zZRJTCgpDcmVhdGVUZWFtEiEua25vd2NlbC5pYW0udjEuQ3JlYXRlVGVhbVJlcXVlc3QaIi5rbm93Y2VsLmlhbS52MS5DcmVhdGVUZWFtUmVzcG9uc2USSgoHR2V0VGVhbRIeLmtub3djZWwuaWFtLnYxLkdldFRlYW1SZXF1ZXN0Gh8ua25vd2NlbC5pYW0udjEuR2V0VGVhbVJlc3BvbnNlElYKC0xpc3RNeVRlYW1zEiIua25vd2NlbC5pYW0udjEuTGlzdE15VGVhbXNSZXF1ZXN0GiMua25vd2NlbC5pYW0udjEuTGlzdE15VGVhbXNSZXNwb25zZRJTCgpVcGRhdGVUZWFtEiEua25vd2NlbC5pYW0udjEuVXBkYXRlVGVhbVJlcXVlc3QaIi5rbm93Y2VsLmlhbS52MS5VcGRhdGVUZWFtUmVzcG9uc2USUwoKRGVsZXRlVGVhbRIhLmtub3djZWwuaWFtLnYxLkRlbGV0ZVRlYW1SZXF1ZXN0GiIua25vd2NlbC5pYW0udjEuRGVsZXRlVGVhbVJlc3BvbnNlElAKCUFkZE1lbWJlchIgLmtub3djZWwuaWFtLnYxLkFkZE1lbWJlclJlcXVlc3QaIS5rbm93Y2VsLmlhbS52MS5BZGRNZW1iZXJSZXNwb25zZRJZCgxSZW1vdmVNZW1iZXISIy5rbm93Y2VsLmlhbS52MS5SZW1vdmVNZW1iZXJSZXF1ZXN0GiQua25vd2NlbC5pYW0udjEuUmVtb3ZlTWVtYmVyUmVzcG9uc2USXAoNU2V0TWVtYmVyUm9sZRIkLmtub3djZWwuaWFtLnYxLlNldE1lbWJlclJvbGVSZXF1ZXN0GiUua25vd2NlbC5pYW0udjEuU2V0TWVtYmVyUm9sZVJlc3BvbnNlElwKDVJlc29sdmVDYWxsZXISJC5rbm93Y2VsLmlhbS52MS5SZXNvbHZlQ2FsbGVyUmVxdWVzdBolLmtub3djZWwuaWFtLnYxLlJlc29sdmVDYWxsZXJSZXNwb25zZUJCWkBnaXRodWIuY29tL0NocmlzdG9waEJlL2tub3djZWxpdW0vbW9kdWxlcy9pYW0vYXBpL2dvL2lhbXYxO2lhbXYxYgZwcm90bzM");
 
 /**
  * User is a registered user. The id is the subject of the user's OIDC token,
@@ -441,6 +441,70 @@ export const SetMemberRoleResponseSchema: GenMessage<SetMemberRoleResponse> = /*
   messageDesc(file_knowcel_iam_v1_iam, 20);
 
 /**
+ * @generated from message knowcel.iam.v1.ResolveCallerRequest
+ */
+export type ResolveCallerRequest = Message<"knowcel.iam.v1.ResolveCallerRequest"> & {
+};
+
+/**
+ * Describes the message knowcel.iam.v1.ResolveCallerRequest.
+ * Use `create(ResolveCallerRequestSchema)` to create a new message.
+ */
+export const ResolveCallerRequestSchema: GenMessage<ResolveCallerRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 21);
+
+/**
+ * @generated from message knowcel.iam.v1.ResolveCallerResponse
+ */
+export type ResolveCallerResponse = Message<"knowcel.iam.v1.ResolveCallerResponse"> & {
+  /**
+   * @generated from field: string user_id = 1;
+   */
+  userId: string;
+
+  /**
+   * @generated from field: bool platform_admin = 2;
+   */
+  platformAdmin: boolean;
+
+  /**
+   * @generated from field: repeated knowcel.iam.v1.CallerTeam teams = 3;
+   */
+  teams: CallerTeam[];
+};
+
+/**
+ * Describes the message knowcel.iam.v1.ResolveCallerResponse.
+ * Use `create(ResolveCallerResponseSchema)` to create a new message.
+ */
+export const ResolveCallerResponseSchema: GenMessage<ResolveCallerResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 22);
+
+/**
+ * CallerTeam is a team the caller is a member of, with their role in it.
+ *
+ * @generated from message knowcel.iam.v1.CallerTeam
+ */
+export type CallerTeam = Message<"knowcel.iam.v1.CallerTeam"> & {
+  /**
+   * @generated from field: string team_id = 1;
+   */
+  teamId: string;
+
+  /**
+   * @generated from field: knowcel.iam.v1.TeamRole role = 2;
+   */
+  role: TeamRole;
+};
+
+/**
+ * Describes the message knowcel.iam.v1.CallerTeam.
+ * Use `create(CallerTeamSchema)` to create a new message.
+ */
+export const CallerTeamSchema: GenMessage<CallerTeam> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 23);
+
+/**
  * @generated from enum knowcel.iam.v1.TeamRole
  */
 export enum TeamRole {
@@ -570,6 +634,19 @@ export const IamService: GenService<{
     methodKind: "unary";
     input: typeof SetMemberRoleRequestSchema;
     output: typeof SetMemberRoleResponseSchema;
+  },
+  /**
+   * ResolveCaller returns the caller's platform-admin flag and team
+   * memberships, for the access checks of other modules. Internal: only
+   * services call it, passing the user on. A caller who is not registered
+   * yet resolves to no teams and no admin rights.
+   *
+   * @generated from rpc knowcel.iam.v1.IamService.ResolveCaller
+   */
+  resolveCaller: {
+    methodKind: "unary";
+    input: typeof ResolveCallerRequestSchema;
+    output: typeof ResolveCallerResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_knowcel_iam_v1_iam, 0);

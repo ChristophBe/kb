@@ -34,6 +34,12 @@ service IamService {
   // SetMemberRole changes a member's role. Team admins only. The last admin
   // cannot be demoted (FAILED_PRECONDITION).
   rpc SetMemberRole(SetMemberRoleRequest) returns (SetMemberRoleResponse);
+
+  // ResolveCaller returns the caller's platform-admin flag and team
+  // memberships, for the access checks of other modules. Internal: only
+  // services call it, passing the user on. A caller who is not registered
+  // yet resolves to no teams and no admin rights.
+  rpc ResolveCaller(ResolveCallerRequest) returns (ResolveCallerResponse);
 }
 
 // User is a registered user. The id is the subject of the user's OIDC token,
@@ -138,4 +144,18 @@ message SetMemberRoleRequest {
 
 message SetMemberRoleResponse {
   TeamMember member = 1;
+}
+
+message ResolveCallerRequest {}
+
+message ResolveCallerResponse {
+  string user_id = 1;
+  bool platform_admin = 2;
+  repeated CallerTeam teams = 3;
+}
+
+// CallerTeam is a team the caller is a member of, with their role in it.
+message CallerTeam {
+  string team_id = 1;
+  TeamRole role = 2;
 }

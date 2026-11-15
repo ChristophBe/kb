@@ -1089,6 +1089,155 @@ func (x *SetMemberRoleResponse) GetMember() *TeamMember {
 	return nil
 }
 
+type ResolveCallerRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResolveCallerRequest) Reset() {
+	*x = ResolveCallerRequest{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResolveCallerRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResolveCallerRequest) ProtoMessage() {}
+
+func (x *ResolveCallerRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResolveCallerRequest.ProtoReflect.Descriptor instead.
+func (*ResolveCallerRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{21}
+}
+
+type ResolveCallerResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	PlatformAdmin bool                   `protobuf:"varint,2,opt,name=platform_admin,json=platformAdmin,proto3" json:"platform_admin,omitempty"`
+	Teams         []*CallerTeam          `protobuf:"bytes,3,rep,name=teams,proto3" json:"teams,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResolveCallerResponse) Reset() {
+	*x = ResolveCallerResponse{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResolveCallerResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResolveCallerResponse) ProtoMessage() {}
+
+func (x *ResolveCallerResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResolveCallerResponse.ProtoReflect.Descriptor instead.
+func (*ResolveCallerResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ResolveCallerResponse) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *ResolveCallerResponse) GetPlatformAdmin() bool {
+	if x != nil {
+		return x.PlatformAdmin
+	}
+	return false
+}
+
+func (x *ResolveCallerResponse) GetTeams() []*CallerTeam {
+	if x != nil {
+		return x.Teams
+	}
+	return nil
+}
+
+// CallerTeam is a team the caller is a member of, with their role in it.
+type CallerTeam struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TeamId        string                 `protobuf:"bytes,1,opt,name=team_id,json=teamId,proto3" json:"team_id,omitempty"`
+	Role          TeamRole               `protobuf:"varint,2,opt,name=role,proto3,enum=knowcel.iam.v1.TeamRole" json:"role,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CallerTeam) Reset() {
+	*x = CallerTeam{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CallerTeam) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CallerTeam) ProtoMessage() {}
+
+func (x *CallerTeam) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CallerTeam.ProtoReflect.Descriptor instead.
+func (*CallerTeam) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *CallerTeam) GetTeamId() string {
+	if x != nil {
+		return x.TeamId
+	}
+	return ""
+}
+
+func (x *CallerTeam) GetRole() TeamRole {
+	if x != nil {
+		return x.Role
+	}
+	return TeamRole_TEAM_ROLE_UNSPECIFIED
+}
+
 var File_knowcel_iam_v1_iam_proto protoreflect.FileDescriptor
 
 const file_knowcel_iam_v1_iam_proto_rawDesc = "" +
@@ -1147,11 +1296,20 @@ const file_knowcel_iam_v1_iam_proto_rawDesc = "" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\x12,\n" +
 	"\x04role\x18\x03 \x01(\x0e2\x18.knowcel.iam.v1.TeamRoleR\x04role\"K\n" +
 	"\x15SetMemberRoleResponse\x122\n" +
-	"\x06member\x18\x01 \x01(\v2\x1a.knowcel.iam.v1.TeamMemberR\x06member*P\n" +
+	"\x06member\x18\x01 \x01(\v2\x1a.knowcel.iam.v1.TeamMemberR\x06member\"\x16\n" +
+	"\x14ResolveCallerRequest\"\x89\x01\n" +
+	"\x15ResolveCallerResponse\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12%\n" +
+	"\x0eplatform_admin\x18\x02 \x01(\bR\rplatformAdmin\x120\n" +
+	"\x05teams\x18\x03 \x03(\v2\x1a.knowcel.iam.v1.CallerTeamR\x05teams\"S\n" +
+	"\n" +
+	"CallerTeam\x12\x17\n" +
+	"\ateam_id\x18\x01 \x01(\tR\x06teamId\x12,\n" +
+	"\x04role\x18\x02 \x01(\x0e2\x18.knowcel.iam.v1.TeamRoleR\x04role*P\n" +
 	"\bTeamRole\x12\x19\n" +
 	"\x15TEAM_ROLE_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fTEAM_ROLE_ADMIN\x10\x01\x12\x14\n" +
-	"\x10TEAM_ROLE_MEMBER\x10\x022\x9b\x06\n" +
+	"\x10TEAM_ROLE_MEMBER\x10\x022\xf9\x06\n" +
 	"\n" +
 	"IamService\x12_\n" +
 	"\x0eGetCurrentUser\x12%.knowcel.iam.v1.GetCurrentUserRequest\x1a&.knowcel.iam.v1.GetCurrentUserResponse\x12S\n" +
@@ -1165,7 +1323,8 @@ const file_knowcel_iam_v1_iam_proto_rawDesc = "" +
 	"DeleteTeam\x12!.knowcel.iam.v1.DeleteTeamRequest\x1a\".knowcel.iam.v1.DeleteTeamResponse\x12P\n" +
 	"\tAddMember\x12 .knowcel.iam.v1.AddMemberRequest\x1a!.knowcel.iam.v1.AddMemberResponse\x12Y\n" +
 	"\fRemoveMember\x12#.knowcel.iam.v1.RemoveMemberRequest\x1a$.knowcel.iam.v1.RemoveMemberResponse\x12\\\n" +
-	"\rSetMemberRole\x12$.knowcel.iam.v1.SetMemberRoleRequest\x1a%.knowcel.iam.v1.SetMemberRoleResponseBBZ@github.com/ChristophBe/knowcelium/modules/iam/api/go/iamv1;iamv1b\x06proto3"
+	"\rSetMemberRole\x12$.knowcel.iam.v1.SetMemberRoleRequest\x1a%.knowcel.iam.v1.SetMemberRoleResponse\x12\\\n" +
+	"\rResolveCaller\x12$.knowcel.iam.v1.ResolveCallerRequest\x1a%.knowcel.iam.v1.ResolveCallerResponseBBZ@github.com/ChristophBe/knowcelium/modules/iam/api/go/iamv1;iamv1b\x06proto3"
 
 var (
 	file_knowcel_iam_v1_iam_proto_rawDescOnce sync.Once
@@ -1180,7 +1339,7 @@ func file_knowcel_iam_v1_iam_proto_rawDescGZIP() []byte {
 }
 
 var file_knowcel_iam_v1_iam_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_knowcel_iam_v1_iam_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_knowcel_iam_v1_iam_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_knowcel_iam_v1_iam_proto_goTypes = []any{
 	(TeamRole)(0),                  // 0: knowcel.iam.v1.TeamRole
 	(*User)(nil),                   // 1: knowcel.iam.v1.User
@@ -1204,6 +1363,9 @@ var file_knowcel_iam_v1_iam_proto_goTypes = []any{
 	(*RemoveMemberResponse)(nil),   // 19: knowcel.iam.v1.RemoveMemberResponse
 	(*SetMemberRoleRequest)(nil),   // 20: knowcel.iam.v1.SetMemberRoleRequest
 	(*SetMemberRoleResponse)(nil),  // 21: knowcel.iam.v1.SetMemberRoleResponse
+	(*ResolveCallerRequest)(nil),   // 22: knowcel.iam.v1.ResolveCallerRequest
+	(*ResolveCallerResponse)(nil),  // 23: knowcel.iam.v1.ResolveCallerResponse
+	(*CallerTeam)(nil),             // 24: knowcel.iam.v1.CallerTeam
 }
 var file_knowcel_iam_v1_iam_proto_depIdxs = []int32{
 	1,  // 0: knowcel.iam.v1.GetCurrentUserResponse.user:type_name -> knowcel.iam.v1.User
@@ -1218,29 +1380,33 @@ var file_knowcel_iam_v1_iam_proto_depIdxs = []int32{
 	5,  // 9: knowcel.iam.v1.AddMemberResponse.member:type_name -> knowcel.iam.v1.TeamMember
 	0,  // 10: knowcel.iam.v1.SetMemberRoleRequest.role:type_name -> knowcel.iam.v1.TeamRole
 	5,  // 11: knowcel.iam.v1.SetMemberRoleResponse.member:type_name -> knowcel.iam.v1.TeamMember
-	2,  // 12: knowcel.iam.v1.IamService.GetCurrentUser:input_type -> knowcel.iam.v1.GetCurrentUserRequest
-	6,  // 13: knowcel.iam.v1.IamService.CreateTeam:input_type -> knowcel.iam.v1.CreateTeamRequest
-	8,  // 14: knowcel.iam.v1.IamService.GetTeam:input_type -> knowcel.iam.v1.GetTeamRequest
-	10, // 15: knowcel.iam.v1.IamService.ListMyTeams:input_type -> knowcel.iam.v1.ListMyTeamsRequest
-	12, // 16: knowcel.iam.v1.IamService.UpdateTeam:input_type -> knowcel.iam.v1.UpdateTeamRequest
-	14, // 17: knowcel.iam.v1.IamService.DeleteTeam:input_type -> knowcel.iam.v1.DeleteTeamRequest
-	16, // 18: knowcel.iam.v1.IamService.AddMember:input_type -> knowcel.iam.v1.AddMemberRequest
-	18, // 19: knowcel.iam.v1.IamService.RemoveMember:input_type -> knowcel.iam.v1.RemoveMemberRequest
-	20, // 20: knowcel.iam.v1.IamService.SetMemberRole:input_type -> knowcel.iam.v1.SetMemberRoleRequest
-	3,  // 21: knowcel.iam.v1.IamService.GetCurrentUser:output_type -> knowcel.iam.v1.GetCurrentUserResponse
-	7,  // 22: knowcel.iam.v1.IamService.CreateTeam:output_type -> knowcel.iam.v1.CreateTeamResponse
-	9,  // 23: knowcel.iam.v1.IamService.GetTeam:output_type -> knowcel.iam.v1.GetTeamResponse
-	11, // 24: knowcel.iam.v1.IamService.ListMyTeams:output_type -> knowcel.iam.v1.ListMyTeamsResponse
-	13, // 25: knowcel.iam.v1.IamService.UpdateTeam:output_type -> knowcel.iam.v1.UpdateTeamResponse
-	15, // 26: knowcel.iam.v1.IamService.DeleteTeam:output_type -> knowcel.iam.v1.DeleteTeamResponse
-	17, // 27: knowcel.iam.v1.IamService.AddMember:output_type -> knowcel.iam.v1.AddMemberResponse
-	19, // 28: knowcel.iam.v1.IamService.RemoveMember:output_type -> knowcel.iam.v1.RemoveMemberResponse
-	21, // 29: knowcel.iam.v1.IamService.SetMemberRole:output_type -> knowcel.iam.v1.SetMemberRoleResponse
-	21, // [21:30] is the sub-list for method output_type
-	12, // [12:21] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	24, // 12: knowcel.iam.v1.ResolveCallerResponse.teams:type_name -> knowcel.iam.v1.CallerTeam
+	0,  // 13: knowcel.iam.v1.CallerTeam.role:type_name -> knowcel.iam.v1.TeamRole
+	2,  // 14: knowcel.iam.v1.IamService.GetCurrentUser:input_type -> knowcel.iam.v1.GetCurrentUserRequest
+	6,  // 15: knowcel.iam.v1.IamService.CreateTeam:input_type -> knowcel.iam.v1.CreateTeamRequest
+	8,  // 16: knowcel.iam.v1.IamService.GetTeam:input_type -> knowcel.iam.v1.GetTeamRequest
+	10, // 17: knowcel.iam.v1.IamService.ListMyTeams:input_type -> knowcel.iam.v1.ListMyTeamsRequest
+	12, // 18: knowcel.iam.v1.IamService.UpdateTeam:input_type -> knowcel.iam.v1.UpdateTeamRequest
+	14, // 19: knowcel.iam.v1.IamService.DeleteTeam:input_type -> knowcel.iam.v1.DeleteTeamRequest
+	16, // 20: knowcel.iam.v1.IamService.AddMember:input_type -> knowcel.iam.v1.AddMemberRequest
+	18, // 21: knowcel.iam.v1.IamService.RemoveMember:input_type -> knowcel.iam.v1.RemoveMemberRequest
+	20, // 22: knowcel.iam.v1.IamService.SetMemberRole:input_type -> knowcel.iam.v1.SetMemberRoleRequest
+	22, // 23: knowcel.iam.v1.IamService.ResolveCaller:input_type -> knowcel.iam.v1.ResolveCallerRequest
+	3,  // 24: knowcel.iam.v1.IamService.GetCurrentUser:output_type -> knowcel.iam.v1.GetCurrentUserResponse
+	7,  // 25: knowcel.iam.v1.IamService.CreateTeam:output_type -> knowcel.iam.v1.CreateTeamResponse
+	9,  // 26: knowcel.iam.v1.IamService.GetTeam:output_type -> knowcel.iam.v1.GetTeamResponse
+	11, // 27: knowcel.iam.v1.IamService.ListMyTeams:output_type -> knowcel.iam.v1.ListMyTeamsResponse
+	13, // 28: knowcel.iam.v1.IamService.UpdateTeam:output_type -> knowcel.iam.v1.UpdateTeamResponse
+	15, // 29: knowcel.iam.v1.IamService.DeleteTeam:output_type -> knowcel.iam.v1.DeleteTeamResponse
+	17, // 30: knowcel.iam.v1.IamService.AddMember:output_type -> knowcel.iam.v1.AddMemberResponse
+	19, // 31: knowcel.iam.v1.IamService.RemoveMember:output_type -> knowcel.iam.v1.RemoveMemberResponse
+	21, // 32: knowcel.iam.v1.IamService.SetMemberRole:output_type -> knowcel.iam.v1.SetMemberRoleResponse
+	23, // 33: knowcel.iam.v1.IamService.ResolveCaller:output_type -> knowcel.iam.v1.ResolveCallerResponse
+	24, // [24:34] is the sub-list for method output_type
+	14, // [14:24] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_knowcel_iam_v1_iam_proto_init() }
@@ -1254,7 +1420,7 @@ func file_knowcel_iam_v1_iam_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_knowcel_iam_v1_iam_proto_rawDesc), len(file_knowcel_iam_v1_iam_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   21,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

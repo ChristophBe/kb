@@ -1,5 +1,6 @@
 # The web shell with every module UI compiled in, served by nginx.
-FROM node:24-alpine AS build
+# Runs on the builder's own platform: the bundle is static, and node under QEMU crashes (SIGILL) at random.
+FROM --platform=$BUILDPLATFORM node:24-alpine AS build
 RUN corepack enable
 WORKDIR /src
 COPY . .

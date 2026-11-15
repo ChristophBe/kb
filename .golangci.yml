@@ -50,12 +50,13 @@ linters:
           # allow and a deny entry wins (a dependency's api/ under its denied root).
           list-mode: lax
           allow:
+            - github.com/ChristophBe/knowcelium/modules/iam/api/go
             - github.com/ChristophBe/knowcelium/modules/llm/api/go
           deny:
             - pkg: github.com/ChristophBe/knowcelium/modules/chat
               desc: chat is not in depends_on of document
             - pkg: github.com/ChristophBe/knowcelium/modules/iam
-              desc: iam is not in depends_on of document
+              desc: only the api/ of a module in depends_on may be imported
             - pkg: github.com/ChristophBe/knowcelium/modules/ingestion
               desc: ingestion is not in depends_on of document
             - pkg: github.com/ChristophBe/knowcelium/modules/llm

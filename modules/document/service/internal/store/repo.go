@@ -61,6 +61,28 @@ func (r *Repo) ReplaceChunks(ctx context.Context, documentID uuid.UUID, chunks [
 	return int32(n), tx.Commit(ctx)
 }
 
+// ApplyDocumentTeams shares a document with the teams in add and stops
+// sharing it with those in remove, in one step. Both are idempotent.
+func (r *Repo) ApplyDocumentTeams(ctx context.Context, documentID uuid.UUID, add, remove []uuid.UUID) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck // no-op after commit
+	q := r.WithTx(tx)
+	if len(remove) > 0 {
+		if err := q.RemoveDocumentTeams(ctx, RemoveDocumentTeamsParams{DocumentID: documentID, TeamIds: remove}); err != nil {
+			return err
+		}
+	}
+	if len(add) > 0 {
+		if err := q.AddDocumentTeams(ctx, AddDocumentTeamsParams{DocumentID: documentID, TeamIds: add}); err != nil {
+			return err
+		}
+	}
+	return tx.Commit(ctx)
+}
+
 // WithLock runs fn while holding the Postgres advisory lock key, so that of
 // several replicas only one runs fn at a time. It returns false without
 // running fn when another holds the lock. The lock is held by a transaction

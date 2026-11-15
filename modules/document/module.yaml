@@ -28,4 +28,6 @@ services:
       - knowcel.document.v1.DocumentService/SearchChunks
 ui: "@knowcel/module-document"
 # SearchDocuments embeds queries through llm; everything else works without it.
-depends_on: [llm]
+# iam resolves the caller's teams for the visibility of shared documents; while
+# it is down, users see only their own documents.
+depends_on: [llm, iam]

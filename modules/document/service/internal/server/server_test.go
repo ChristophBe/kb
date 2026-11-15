@@ -56,6 +56,51 @@ type fakeRepo struct {
 	searches []store.SearchChunksParams
 	best     []store.SearchBestChunksRow
 	bestReq  []store.SearchBestChunksParams
+	// shared holds the teams each document is shared with.
+	shared  map[uuid.UUID][]uuid.UUID
+	applied []appliedTeams
+}
+
+// appliedTeams is a call of ApplyDocumentTeams.
+type appliedTeams struct {
+	id          uuid.UUID
+	add, remove []uuid.UUID
+}
+
+func (f *fakeRepo) ApplyDocumentTeams(_ context.Context, id uuid.UUID, add, remove []uuid.UUID) error {
+	f.applied = append(f.applied, appliedTeams{id, add, remove})
+	return nil
+}
+
+func (f *fakeRepo) ListDocumentTeams(_ context.Context, ids []uuid.UUID) ([]store.DocumentDocumentTeam, error) {
+	var rows []store.DocumentDocumentTeam
+	for _, id := range ids {
+		for _, t := range f.shared[id] {
+			rows = append(rows, store.DocumentDocumentTeam{DocumentID: id, TeamID: t})
+		}
+	}
+	return rows, nil
+}
+
+// visible reports what the queries check: the caller owns the document or a
+// team of theirs has it.
+func (f *fakeRepo) visible(d store.DocumentDocument, user string, teams []uuid.UUID) bool {
+	if owner(d) == user {
+		return true
+	}
+	for _, t := range f.shared[d.ID] {
+		if slices.Contains(teams, t) {
+			return true
+		}
+	}
+	return false
+}
+
+func (f *fakeRepo) GetVisibleDocument(_ context.Context, p store.GetVisibleDocumentParams) (store.DocumentDocument, error) {
+	if f.doc.ID != p.ID || !f.visible(f.doc, p.OwnerID, p.TeamIds) {
+		return store.DocumentDocument{}, pgx.ErrNoRows
+	}
+	return f.doc, nil
 }
 
 func (f *fakeRepo) CreateDocument(_ context.Context, p store.CreateDocumentParams) (store.DocumentDocument, error) {
@@ -68,7 +113,7 @@ func (f *fakeRepo) CreateDocument(_ context.Context, p store.CreateDocumentParam
 func (f *fakeRepo) ListDocuments(_ context.Context, p store.ListDocumentsParams) ([]store.DocumentDocument, error) {
 	owned := []store.DocumentDocument{}
 	for _, d := range f.list {
-		if owner(d) != p.OwnerID {
+		if !f.visible(d, p.OwnerID, p.TeamIds) {
 			continue
 		}
 		if p.AfterCreatedAt.Valid {

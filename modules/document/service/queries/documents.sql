@@ -1,5 +1,6 @@
--- Queries taking an owner_id act for that user and find only their documents.
--- The others serve the internal RPCs of the ingestion pipeline, which acts on
+-- Queries taking an owner_id act for that user and find only their documents;
+-- those that also take team_ids find the documents shared with any of those
+-- teams too (the caller's). The others serve the internal RPCs of the ingestion pipeline, which acts on
 -- any document.
 
 -- name: CreateDocument :one
@@ -10,21 +11,58 @@ RETURNING *;
 -- name: GetDocument :one
 SELECT * FROM document.documents WHERE id = $1 AND owner_id = $2;
 
+-- name: GetVisibleDocument :one
+SELECT d.* FROM document.documents d
+WHERE d.id = sqlc.arg(id)
+  AND (d.owner_id = sqlc.arg(owner_id)
+       OR EXISTS (SELECT 1 FROM document.document_teams t
+                  WHERE t.document_id = d.id AND t.team_id = ANY(sqlc.arg(team_ids)::uuid[])));
+
 -- name: GetAnyDocument :one
 SELECT * FROM document.documents WHERE id = $1;
 
 -- ListDocuments is keyset-paginated: a page continues after the (created_at, id) of
 -- the last row of the previous one (both after_* NULL for the first page), so
--- rows inserted meanwhile never shift it. It walks the owner's index.
+-- rows inserted meanwhile never shift it. It lists the user's documents and
+-- those shared with their teams: each of the two sets is read in order from
+-- its index (the owner's, and the teams') and cut to a page before they are
+-- merged, which an OR of both conditions could not do.
 -- name: ListDocuments :many
-SELECT * FROM document.documents
-WHERE owner_id = sqlc.arg(owner_id)
-  AND (created_at, id) < (
-    coalesce(sqlc.narg(after_created_at)::timestamptz, 'infinity'),
-    coalesce(sqlc.narg(after_id)::uuid, 'ffffffff-ffff-ffff-ffff-ffffffffffff')
-  )
-ORDER BY created_at DESC, id DESC
+SELECT d.* FROM document.documents d
+WHERE d.id IN (
+    (SELECT o.id FROM document.documents o
+     WHERE o.owner_id = sqlc.arg(owner_id)
+       AND (o.created_at, o.id) < (
+         coalesce(sqlc.narg(after_created_at)::timestamptz, 'infinity'),
+         coalesce(sqlc.narg(after_id)::uuid, 'ffffffff-ffff-ffff-ffff-ffffffffffff'))
+     ORDER BY o.created_at DESC, o.id DESC
+     LIMIT sqlc.arg(max_results))
+    UNION
+    (SELECT s.id FROM document.documents s
+     JOIN document.document_teams t ON t.document_id = s.id
+     WHERE t.team_id = ANY(sqlc.arg(team_ids)::uuid[])
+       AND (s.created_at, s.id) < (
+         coalesce(sqlc.narg(after_created_at)::timestamptz, 'infinity'),
+         coalesce(sqlc.narg(after_id)::uuid, 'ffffffff-ffff-ffff-ffff-ffffffffffff'))
+     ORDER BY s.created_at DESC, s.id DESC
+     LIMIT sqlc.arg(max_results))
+)
+ORDER BY d.created_at DESC, d.id DESC
 LIMIT sqlc.arg(max_results);
+
+-- name: ListDocumentTeams :many
+SELECT document_id, team_id FROM document.document_teams
+WHERE document_id = ANY(sqlc.arg(document_ids)::uuid[]);
+
+-- AddDocumentTeams and RemoveDocumentTeams are idempotent.
+-- name: AddDocumentTeams :exec
+INSERT INTO document.document_teams (document_id, team_id)
+SELECT sqlc.arg(document_id), unnest(sqlc.arg(team_ids)::uuid[])
+ON CONFLICT DO NOTHING;
+
+-- name: RemoveDocumentTeams :exec
+DELETE FROM document.document_teams
+WHERE document_id = sqlc.arg(document_id) AND team_id = ANY(sqlc.arg(team_ids)::uuid[]);
 
 -- name: UpdateDocument :one
 UPDATE document.documents

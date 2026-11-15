@@ -66,6 +66,11 @@ class DocumentServiceStub:
                 request_serializer=knowcel_dot_document_dot_v1_dot_document__pb2.DeleteDocumentRequest.SerializeToString,
                 response_deserializer=knowcel_dot_document_dot_v1_dot_document__pb2.DeleteDocumentResponse.FromString,
                 _registered_method=True)
+        self.SetDocumentTeams = channel.unary_unary(
+                '/knowcel.document.v1.DocumentService/SetDocumentTeams',
+                request_serializer=knowcel_dot_document_dot_v1_dot_document__pb2.SetDocumentTeamsRequest.SerializeToString,
+                response_deserializer=knowcel_dot_document_dot_v1_dot_document__pb2.SetDocumentTeamsResponse.FromString,
+                _registered_method=True)
         self.SetDocumentStatus = channel.unary_unary(
                 '/knowcel.document.v1.DocumentService/SetDocumentStatus',
                 request_serializer=knowcel_dot_document_dot_v1_dot_document__pb2.SetDocumentStatusRequest.SerializeToString,
@@ -150,6 +155,12 @@ class DocumentServiceServicer:
         raise NotImplementedError('Method not implemented!')
 
     def DeleteDocument(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetDocumentTeams(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -253,6 +264,11 @@ def add_DocumentServiceServicer_to_server(servicer, server):
                     servicer.DeleteDocument,
                     request_deserializer=knowcel_dot_document_dot_v1_dot_document__pb2.DeleteDocumentRequest.FromString,
                     response_serializer=knowcel_dot_document_dot_v1_dot_document__pb2.DeleteDocumentResponse.SerializeToString,
+            ),
+            'SetDocumentTeams': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetDocumentTeams,
+                    request_deserializer=knowcel_dot_document_dot_v1_dot_document__pb2.SetDocumentTeamsRequest.FromString,
+                    response_serializer=knowcel_dot_document_dot_v1_dot_document__pb2.SetDocumentTeamsResponse.SerializeToString,
             ),
             'SetDocumentStatus': grpc.unary_unary_rpc_method_handler(
                     servicer.SetDocumentStatus,
@@ -459,6 +475,33 @@ class DocumentService:
             '/knowcel.document.v1.DocumentService/DeleteDocument',
             knowcel_dot_document_dot_v1_dot_document__pb2.DeleteDocumentRequest.SerializeToString,
             knowcel_dot_document_dot_v1_dot_document__pb2.DeleteDocumentResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetDocumentTeams(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.document.v1.DocumentService/SetDocumentTeams',
+            knowcel_dot_document_dot_v1_dot_document__pb2.SetDocumentTeamsRequest.SerializeToString,
+            knowcel_dot_document_dot_v1_dot_document__pb2.SetDocumentTeamsResponse.FromString,
             options,
             channel_credentials,
             insecure,

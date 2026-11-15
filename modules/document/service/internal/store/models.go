@@ -44,3 +44,8 @@ type DocumentDocument struct {
 	PendingSizeBytes    int64
 	PendingSha256       string
 }
+
+type DocumentDocumentTeam struct {
+	DocumentID uuid.UUID
+	TeamID     uuid.UUID
+}

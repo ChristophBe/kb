@@ -11,8 +11,11 @@ import (
 )
 
 type Querier interface {
-	// Queries taking an owner_id act for that user and find only their documents.
-	// The others serve the internal RPCs of the ingestion pipeline, which acts on
+	// AddDocumentTeams and RemoveDocumentTeams are idempotent.
+	AddDocumentTeams(ctx context.Context, arg AddDocumentTeamsParams) error
+	// Queries taking an owner_id act for that user and find only their documents;
+	// those that also take team_ids find the documents shared with any of those
+	// teams too (the caller's). The others serve the internal RPCs of the ingestion pipeline, which acts on
 	// any document.
 	CreateDocument(ctx context.Context, arg CreateDocumentParams) (DocumentDocument, error)
 	DeleteChunks(ctx context.Context, documentID uuid.UUID) error
@@ -27,11 +30,16 @@ type Querier interface {
 	ExistingObjectKeys(ctx context.Context, keys []string) ([]string, error)
 	GetAnyDocument(ctx context.Context, id uuid.UUID) (DocumentDocument, error)
 	GetDocument(ctx context.Context, arg GetDocumentParams) (DocumentDocument, error)
+	GetVisibleDocument(ctx context.Context, arg GetVisibleDocumentParams) (DocumentDocument, error)
 	InsertChunks(ctx context.Context, arg []InsertChunksParams) (int64, error)
 	ListChunks(ctx context.Context, arg ListChunksParams) ([]ListChunksRow, error)
+	ListDocumentTeams(ctx context.Context, documentIds []uuid.UUID) ([]DocumentDocumentTeam, error)
 	// ListDocuments is keyset-paginated: a page continues after the (created_at, id) of
 	// the last row of the previous one (both after_* NULL for the first page), so
-	// rows inserted meanwhile never shift it. It walks the owner's index.
+	// rows inserted meanwhile never shift it. It lists the user's documents and
+	// those shared with their teams: each of the two sets is read in order from
+	// its index (the owner's, and the teams') and cut to a page before they are
+	// merged, which an OR of both conditions could not do.
 	ListDocuments(ctx context.Context, arg ListDocumentsParams) ([]DocumentDocument, error)
 	// ListReindexTargets returns the owner's READY documents (status 4) to
 	// reindex: those with a chunk made by a model other than embedding_model, or
@@ -46,15 +54,17 @@ type Querier interface {
 	// PROCESSING=3) pending version the document's current one. It runs with the
 	// chunks of that version replacing the old ones (store.Repo.ReplaceChunks).
 	PromotePendingVersion(ctx context.Context, id uuid.UUID) error
-	// SearchBestChunks returns the most similar chunk of each of the owner's
-	// documents, ranked by that chunk's score: the documents most similar to the
+	RemoveDocumentTeams(ctx context.Context, arg RemoveDocumentTeamsParams) error
+	// SearchBestChunks returns the most similar chunk of each of the documents
+	// visible as in SearchChunks, ranked by that chunk's score: the documents most similar to the
 	// embedding. It is an exact scan, since the vector index can't pick one chunk
 	// per document. Only chunks of the embedding's model are compared, as in
 	// SearchChunks.
 	SearchBestChunks(ctx context.Context, arg SearchBestChunksParams) ([]SearchBestChunksRow, error)
-	// SearchChunks returns the owner's chunks most similar to the embedding, among
-	// those made by the same embedding model: vectors of different models are not
-	// comparable. The HNSW index yields candidates before the owner filter applies, so the pool
+	// SearchChunks returns the chunks of the owner's documents and of those shared
+	// with team_ids that are most similar to the embedding, among those made by
+	// the same embedding model: vectors of different models are not comparable.
+	// The HNSW index yields candidates before the visibility filter applies, so the pool
 	// sets hnsw.iterative_scan (store.ConfigurePool) to keep scanning until the
 	// limit is filled.
 	SearchChunks(ctx context.Context, arg SearchChunksParams) ([]SearchChunksRow, error)

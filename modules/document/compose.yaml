@@ -13,6 +13,8 @@ services:
       KNOWCEL_S3_PUBLIC_ENDPOINT: ${KNOWCEL_S3_PUBLIC_ENDPOINT:-localhost:8333}
       # Soft dependency: no depends_on on llm-service, search returns UNAVAILABLE while it is down.
       KNOWCEL_LLM_ADDR: llm-service:9004
+      # Soft dependency: no depends_on on iam-service; while it is down, users see only their own documents.
+      KNOWCEL_IAM_ADDR: iam-service:9006
       # Upload limits; the defaults are what the ingestion worker can read.
       KNOWCEL_MAX_UPLOAD_BYTES: ${KNOWCEL_MAX_UPLOAD_BYTES:-52428800}
       KNOWCEL_ALLOWED_CONTENT_TYPES: ${KNOWCEL_ALLOWED_CONTENT_TYPES:-application/pdf,text/*,application/json,application/yaml,application/x-yaml}

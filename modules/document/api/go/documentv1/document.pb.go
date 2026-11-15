@@ -95,7 +95,8 @@ type Document struct {
 	CreateTime   *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
 	UpdateTime   *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`
 	// The user who uploaded the document, as the subject of their token. Set by
-	// the service; only this user can see the document.
+	// the service; this user and the members of the teams it is shared with
+	// can see the document.
 	OwnerId string `protobuf:"bytes,12,opt,name=owner_id,json=ownerId,proto3" json:"owner_id,omitempty"`
 	// The SHA-256 of the file as declared at creation, in lowercase hex; empty
 	// when none was declared.
@@ -108,8 +109,11 @@ type Document struct {
 	// The new version being uploaded or processed, or the last one that failed;
 	// unset when there is none.
 	PendingVersion *PendingVersion `protobuf:"bytes,15,opt,name=pending_version,json=pendingVersion,proto3" json:"pending_version,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// The teams the document is shared with, whose members can read it. The
+	// owner sees all of them; anyone else only those they are a member of.
+	TeamIds       []string `protobuf:"bytes,16,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Document) Reset() {
@@ -243,6 +247,13 @@ func (x *Document) GetVersion() int32 {
 func (x *Document) GetPendingVersion() *PendingVersion {
 	if x != nil {
 		return x.PendingVersion
+	}
+	return nil
+}
+
+func (x *Document) GetTeamIds() []string {
+	if x != nil {
+		return x.TeamIds
 	}
 	return nil
 }
@@ -561,7 +572,10 @@ type CreateDocumentRequest struct {
 	Metadata  map[string]string `protobuf:"bytes,5,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Optional SHA-256 of the file, in hex. When set, SetDocumentStatus(UPLOADED)
 	// checks the uploaded file against it and fails the document on a mismatch.
-	Sha256        string `protobuf:"bytes,6,opt,name=sha256,proto3" json:"sha256,omitempty"`
+	Sha256 string `protobuf:"bytes,6,opt,name=sha256,proto3" json:"sha256,omitempty"`
+	// Teams to share the document with from the start. The caller must be a
+	// member of each; otherwise the call fails with NOT_FOUND.
+	TeamIds       []string `protobuf:"bytes,7,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -636,6 +650,13 @@ func (x *CreateDocumentRequest) GetSha256() string {
 		return x.Sha256
 	}
 	return ""
+}
+
+func (x *CreateDocumentRequest) GetTeamIds() []string {
+	if x != nil {
+		return x.TeamIds
+	}
+	return nil
 }
 
 type CreateDocumentResponse struct {
@@ -1130,6 +1151,109 @@ func (x *UpdateDocumentResponse) GetDocument() *Document {
 	return nil
 }
 
+// SetDocumentTeams sets the teams a document is shared with. The owner may
+// share with the teams they are a member of and stop sharing with any team.
+// An admin of a team the document is shared with may only stop sharing it
+// with their own team; anyone else who can read the document gets
+// PERMISSION_DENIED. A caller who can't see the document gets NOT_FOUND, and
+// so does one who names a team they are not a member of. The set applies to
+// the teams the caller sees, so teams they don't belong to stay untouched.
+type SetDocumentTeamsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	TeamIds       []string               `protobuf:"bytes,2,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetDocumentTeamsRequest) Reset() {
+	*x = SetDocumentTeamsRequest{}
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetDocumentTeamsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetDocumentTeamsRequest) ProtoMessage() {}
+
+func (x *SetDocumentTeamsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetDocumentTeamsRequest.ProtoReflect.Descriptor instead.
+func (*SetDocumentTeamsRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *SetDocumentTeamsRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *SetDocumentTeamsRequest) GetTeamIds() []string {
+	if x != nil {
+		return x.TeamIds
+	}
+	return nil
+}
+
+type SetDocumentTeamsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Document      *Document              `protobuf:"bytes,1,opt,name=document,proto3" json:"document,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetDocumentTeamsResponse) Reset() {
+	*x = SetDocumentTeamsResponse{}
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetDocumentTeamsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetDocumentTeamsResponse) ProtoMessage() {}
+
+func (x *SetDocumentTeamsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetDocumentTeamsResponse.ProtoReflect.Descriptor instead.
+func (*SetDocumentTeamsResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *SetDocumentTeamsResponse) GetDocument() *Document {
+	if x != nil {
+		return x.Document
+	}
+	return nil
+}
+
 type DeleteDocumentRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1139,7 +1263,7 @@ type DeleteDocumentRequest struct {
 
 func (x *DeleteDocumentRequest) Reset() {
 	*x = DeleteDocumentRequest{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[15]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1151,7 +1275,7 @@ func (x *DeleteDocumentRequest) String() string {
 func (*DeleteDocumentRequest) ProtoMessage() {}
 
 func (x *DeleteDocumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[15]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1164,7 +1288,7 @@ func (x *DeleteDocumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteDocumentRequest.ProtoReflect.Descriptor instead.
 func (*DeleteDocumentRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{15}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *DeleteDocumentRequest) GetId() string {
@@ -1182,7 +1306,7 @@ type DeleteDocumentResponse struct {
 
 func (x *DeleteDocumentResponse) Reset() {
 	*x = DeleteDocumentResponse{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[16]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1194,7 +1318,7 @@ func (x *DeleteDocumentResponse) String() string {
 func (*DeleteDocumentResponse) ProtoMessage() {}
 
 func (x *DeleteDocumentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[16]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1207,7 +1331,7 @@ func (x *DeleteDocumentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteDocumentResponse.ProtoReflect.Descriptor instead.
 func (*DeleteDocumentResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{16}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{18}
 }
 
 // Setting UPLOADED checks the uploaded file: FAILED_PRECONDITION when it is
@@ -1225,7 +1349,7 @@ type SetDocumentStatusRequest struct {
 
 func (x *SetDocumentStatusRequest) Reset() {
 	*x = SetDocumentStatusRequest{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[17]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1237,7 +1361,7 @@ func (x *SetDocumentStatusRequest) String() string {
 func (*SetDocumentStatusRequest) ProtoMessage() {}
 
 func (x *SetDocumentStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[17]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1250,7 +1374,7 @@ func (x *SetDocumentStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetDocumentStatusRequest.ProtoReflect.Descriptor instead.
 func (*SetDocumentStatusRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{17}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *SetDocumentStatusRequest) GetId() string {
@@ -1283,7 +1407,7 @@ type SetDocumentStatusResponse struct {
 
 func (x *SetDocumentStatusResponse) Reset() {
 	*x = SetDocumentStatusResponse{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[18]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1295,7 +1419,7 @@ func (x *SetDocumentStatusResponse) String() string {
 func (*SetDocumentStatusResponse) ProtoMessage() {}
 
 func (x *SetDocumentStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[18]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1308,7 +1432,7 @@ func (x *SetDocumentStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetDocumentStatusResponse.ProtoReflect.Descriptor instead.
 func (*SetDocumentStatusResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{18}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *SetDocumentStatusResponse) GetDocument() *Document {
@@ -1327,7 +1451,7 @@ type GetDownloadUrlRequest struct {
 
 func (x *GetDownloadUrlRequest) Reset() {
 	*x = GetDownloadUrlRequest{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[19]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1339,7 +1463,7 @@ func (x *GetDownloadUrlRequest) String() string {
 func (*GetDownloadUrlRequest) ProtoMessage() {}
 
 func (x *GetDownloadUrlRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[19]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1352,7 +1476,7 @@ func (x *GetDownloadUrlRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDownloadUrlRequest.ProtoReflect.Descriptor instead.
 func (*GetDownloadUrlRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{19}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *GetDownloadUrlRequest) GetId() string {
@@ -1371,7 +1495,7 @@ type GetDownloadUrlResponse struct {
 
 func (x *GetDownloadUrlResponse) Reset() {
 	*x = GetDownloadUrlResponse{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[20]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1383,7 +1507,7 @@ func (x *GetDownloadUrlResponse) String() string {
 func (*GetDownloadUrlResponse) ProtoMessage() {}
 
 func (x *GetDownloadUrlResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[20]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1396,7 +1520,7 @@ func (x *GetDownloadUrlResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDownloadUrlResponse.ProtoReflect.Descriptor instead.
 func (*GetDownloadUrlResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{20}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *GetDownloadUrlResponse) GetUrl() string {
@@ -1415,7 +1539,7 @@ type ReadContentRequest struct {
 
 func (x *ReadContentRequest) Reset() {
 	*x = ReadContentRequest{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[21]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1427,7 +1551,7 @@ func (x *ReadContentRequest) String() string {
 func (*ReadContentRequest) ProtoMessage() {}
 
 func (x *ReadContentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[21]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1440,7 +1564,7 @@ func (x *ReadContentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReadContentRequest.ProtoReflect.Descriptor instead.
 func (*ReadContentRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{21}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ReadContentRequest) GetId() string {
@@ -1459,7 +1583,7 @@ type ReadContentResponse struct {
 
 func (x *ReadContentResponse) Reset() {
 	*x = ReadContentResponse{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[22]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1471,7 +1595,7 @@ func (x *ReadContentResponse) String() string {
 func (*ReadContentResponse) ProtoMessage() {}
 
 func (x *ReadContentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[22]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1484,7 +1608,7 @@ func (x *ReadContentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReadContentResponse.ProtoReflect.Descriptor instead.
 func (*ReadContentResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{22}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *ReadContentResponse) GetData() []byte {
@@ -1509,7 +1633,7 @@ type ChunkInput struct {
 
 func (x *ChunkInput) Reset() {
 	*x = ChunkInput{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[23]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1521,7 +1645,7 @@ func (x *ChunkInput) String() string {
 func (*ChunkInput) ProtoMessage() {}
 
 func (x *ChunkInput) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[23]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1534,7 +1658,7 @@ func (x *ChunkInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChunkInput.ProtoReflect.Descriptor instead.
 func (*ChunkInput) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{23}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *ChunkInput) GetIndex() int32 {
@@ -1582,7 +1706,7 @@ type AddChunksRequest struct {
 
 func (x *AddChunksRequest) Reset() {
 	*x = AddChunksRequest{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[24]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1594,7 +1718,7 @@ func (x *AddChunksRequest) String() string {
 func (*AddChunksRequest) ProtoMessage() {}
 
 func (x *AddChunksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[24]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1607,7 +1731,7 @@ func (x *AddChunksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddChunksRequest.ProtoReflect.Descriptor instead.
 func (*AddChunksRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{24}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *AddChunksRequest) GetDocumentId() string {
@@ -1633,7 +1757,7 @@ type AddChunksResponse struct {
 
 func (x *AddChunksResponse) Reset() {
 	*x = AddChunksResponse{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[25]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1645,7 +1769,7 @@ func (x *AddChunksResponse) String() string {
 func (*AddChunksResponse) ProtoMessage() {}
 
 func (x *AddChunksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[25]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1658,7 +1782,7 @@ func (x *AddChunksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddChunksResponse.ProtoReflect.Descriptor instead.
 func (*AddChunksResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{25}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *AddChunksResponse) GetChunkCount() int32 {
@@ -1678,7 +1802,7 @@ type ListChunksRequest struct {
 
 func (x *ListChunksRequest) Reset() {
 	*x = ListChunksRequest{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[26]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1690,7 +1814,7 @@ func (x *ListChunksRequest) String() string {
 func (*ListChunksRequest) ProtoMessage() {}
 
 func (x *ListChunksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[26]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1703,7 +1827,7 @@ func (x *ListChunksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListChunksRequest.ProtoReflect.Descriptor instead.
 func (*ListChunksRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{26}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *ListChunksRequest) GetDocumentId() string {
@@ -1730,7 +1854,7 @@ type ListChunksResponse struct {
 
 func (x *ListChunksResponse) Reset() {
 	*x = ListChunksResponse{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[27]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1742,7 +1866,7 @@ func (x *ListChunksResponse) String() string {
 func (*ListChunksResponse) ProtoMessage() {}
 
 func (x *ListChunksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[27]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1755,7 +1879,7 @@ func (x *ListChunksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListChunksResponse.ProtoReflect.Descriptor instead.
 func (*ListChunksResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{27}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *ListChunksResponse) GetChunks() []*Chunk {
@@ -1788,7 +1912,7 @@ type SearchChunksRequest struct {
 
 func (x *SearchChunksRequest) Reset() {
 	*x = SearchChunksRequest{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[28]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1800,7 +1924,7 @@ func (x *SearchChunksRequest) String() string {
 func (*SearchChunksRequest) ProtoMessage() {}
 
 func (x *SearchChunksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[28]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1813,7 +1937,7 @@ func (x *SearchChunksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchChunksRequest.ProtoReflect.Descriptor instead.
 func (*SearchChunksRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{28}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *SearchChunksRequest) GetEmbedding() []float32 {
@@ -1853,7 +1977,7 @@ type SearchChunksResponse struct {
 
 func (x *SearchChunksResponse) Reset() {
 	*x = SearchChunksResponse{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[29]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1865,7 +1989,7 @@ func (x *SearchChunksResponse) String() string {
 func (*SearchChunksResponse) ProtoMessage() {}
 
 func (x *SearchChunksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[29]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1878,7 +2002,7 @@ func (x *SearchChunksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchChunksResponse.ProtoReflect.Descriptor instead.
 func (*SearchChunksResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{29}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *SearchChunksResponse) GetResults() []*ScoredChunk {
@@ -1902,7 +2026,7 @@ type SearchDocumentsRequest struct {
 
 func (x *SearchDocumentsRequest) Reset() {
 	*x = SearchDocumentsRequest{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[30]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1914,7 +2038,7 @@ func (x *SearchDocumentsRequest) String() string {
 func (*SearchDocumentsRequest) ProtoMessage() {}
 
 func (x *SearchDocumentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[30]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1927,7 +2051,7 @@ func (x *SearchDocumentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchDocumentsRequest.ProtoReflect.Descriptor instead.
 func (*SearchDocumentsRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{30}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *SearchDocumentsRequest) GetQuery() string {
@@ -1964,7 +2088,7 @@ type SearchDocumentsResponse struct {
 
 func (x *SearchDocumentsResponse) Reset() {
 	*x = SearchDocumentsResponse{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[31]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1976,7 +2100,7 @@ func (x *SearchDocumentsResponse) String() string {
 func (*SearchDocumentsResponse) ProtoMessage() {}
 
 func (x *SearchDocumentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[31]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1989,7 +2113,7 @@ func (x *SearchDocumentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchDocumentsResponse.ProtoReflect.Descriptor instead.
 func (*SearchDocumentsResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{31}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *SearchDocumentsResponse) GetResults() []*ScoredChunk {
@@ -2027,7 +2151,7 @@ type ReindexDocumentsRequest struct {
 
 func (x *ReindexDocumentsRequest) Reset() {
 	*x = ReindexDocumentsRequest{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[32]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2039,7 +2163,7 @@ func (x *ReindexDocumentsRequest) String() string {
 func (*ReindexDocumentsRequest) ProtoMessage() {}
 
 func (x *ReindexDocumentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[32]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2052,7 +2176,7 @@ func (x *ReindexDocumentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReindexDocumentsRequest.ProtoReflect.Descriptor instead.
 func (*ReindexDocumentsRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{32}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *ReindexDocumentsRequest) GetDocumentIds() []string {
@@ -2082,7 +2206,7 @@ type ReindexDocumentsResponse struct {
 
 func (x *ReindexDocumentsResponse) Reset() {
 	*x = ReindexDocumentsResponse{}
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[33]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2094,7 +2218,7 @@ func (x *ReindexDocumentsResponse) String() string {
 func (*ReindexDocumentsResponse) ProtoMessage() {}
 
 func (x *ReindexDocumentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_document_v1_document_proto_msgTypes[33]
+	mi := &file_knowcel_document_v1_document_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2107,7 +2231,7 @@ func (x *ReindexDocumentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReindexDocumentsResponse.ProtoReflect.Descriptor instead.
 func (*ReindexDocumentsResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{33}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *ReindexDocumentsResponse) GetRequested() int32 {
@@ -2128,7 +2252,7 @@ var File_knowcel_document_v1_document_proto protoreflect.FileDescriptor
 
 const file_knowcel_document_v1_document_proto_rawDesc = "" +
 	"\n" +
-	"\"knowcel/document/v1/document.proto\x12\x13knowcel.document.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eknowcel/common/v1/common.proto\"\xac\x05\n" +
+	"\"knowcel/document/v1/document.proto\x12\x13knowcel.document.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eknowcel/common/v1/common.proto\"\xc7\x05\n" +
 	"\bDocument\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x1a\n" +
@@ -2149,7 +2273,8 @@ const file_knowcel_document_v1_document_proto_rawDesc = "" +
 	"\bowner_id\x18\f \x01(\tR\aownerId\x12\x16\n" +
 	"\x06sha256\x18\r \x01(\tR\x06sha256\x12\x18\n" +
 	"\aversion\x18\x0e \x01(\x05R\aversion\x12L\n" +
-	"\x0fpending_version\x18\x0f \x01(\v2#.knowcel.document.v1.PendingVersionR\x0ependingVersion\x1a;\n" +
+	"\x0fpending_version\x18\x0f \x01(\v2#.knowcel.document.v1.PendingVersionR\x0ependingVersion\x12\x19\n" +
+	"\bteam_ids\x18\x10 \x03(\tR\ateamIds\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x82\x02\n" +
@@ -2181,7 +2306,7 @@ const file_knowcel_document_v1_document_proto_rawDesc = "" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x14\n" +
 	"\x05score\x18\x03 \x01(\x02R\x05score\x129\n" +
 	"\n" +
-	"best_chunk\x18\x04 \x01(\v2\x1a.knowcel.document.v1.ChunkR\tbestChunk\"\xb6\x02\n" +
+	"best_chunk\x18\x04 \x01(\v2\x1a.knowcel.document.v1.ChunkR\tbestChunk\"\xd1\x02\n" +
 	"\x15CreateDocumentRequest\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12\x1a\n" +
 	"\bfilename\x18\x02 \x01(\tR\bfilename\x12!\n" +
@@ -2189,7 +2314,8 @@ const file_knowcel_document_v1_document_proto_rawDesc = "" +
 	"\n" +
 	"size_bytes\x18\x04 \x01(\x03R\tsizeBytes\x12T\n" +
 	"\bmetadata\x18\x05 \x03(\v28.knowcel.document.v1.CreateDocumentRequest.MetadataEntryR\bmetadata\x12\x16\n" +
-	"\x06sha256\x18\x06 \x01(\tR\x06sha256\x1a;\n" +
+	"\x06sha256\x18\x06 \x01(\tR\x06sha256\x12\x19\n" +
+	"\bteam_ids\x18\a \x03(\tR\ateamIds\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"r\n" +
@@ -2227,6 +2353,11 @@ const file_knowcel_document_v1_document_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\b\n" +
 	"\x06_title\"S\n" +
 	"\x16UpdateDocumentResponse\x129\n" +
+	"\bdocument\x18\x01 \x01(\v2\x1d.knowcel.document.v1.DocumentR\bdocument\"D\n" +
+	"\x17SetDocumentTeamsRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
+	"\bteam_ids\x18\x02 \x03(\tR\ateamIds\"U\n" +
+	"\x18SetDocumentTeamsResponse\x129\n" +
 	"\bdocument\x18\x01 \x01(\v2\x1d.knowcel.document.v1.DocumentR\bdocument\"'\n" +
 	"\x15DeleteDocumentRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x18\n" +
@@ -2295,14 +2426,15 @@ const file_knowcel_document_v1_document_proto_rawDesc = "" +
 	"\x18DOCUMENT_STATUS_UPLOADED\x10\x02\x12\x1e\n" +
 	"\x1aDOCUMENT_STATUS_PROCESSING\x10\x03\x12\x19\n" +
 	"\x15DOCUMENT_STATUS_READY\x10\x04\x12\x1a\n" +
-	"\x16DOCUMENT_STATUS_FAILED\x10\x052\xc9\v\n" +
+	"\x16DOCUMENT_STATUS_FAILED\x10\x052\xba\f\n" +
 	"\x0fDocumentService\x12i\n" +
 	"\x0eCreateDocument\x12*.knowcel.document.v1.CreateDocumentRequest\x1a+.knowcel.document.v1.CreateDocumentResponse\x12i\n" +
 	"\x0eReplaceContent\x12*.knowcel.document.v1.ReplaceContentRequest\x1a+.knowcel.document.v1.ReplaceContentResponse\x12`\n" +
 	"\vGetDocument\x12'.knowcel.document.v1.GetDocumentRequest\x1a(.knowcel.document.v1.GetDocumentResponse\x12f\n" +
 	"\rListDocuments\x12).knowcel.document.v1.ListDocumentsRequest\x1a*.knowcel.document.v1.ListDocumentsResponse\x12i\n" +
 	"\x0eUpdateDocument\x12*.knowcel.document.v1.UpdateDocumentRequest\x1a+.knowcel.document.v1.UpdateDocumentResponse\x12i\n" +
-	"\x0eDeleteDocument\x12*.knowcel.document.v1.DeleteDocumentRequest\x1a+.knowcel.document.v1.DeleteDocumentResponse\x12r\n" +
+	"\x0eDeleteDocument\x12*.knowcel.document.v1.DeleteDocumentRequest\x1a+.knowcel.document.v1.DeleteDocumentResponse\x12o\n" +
+	"\x10SetDocumentTeams\x12,.knowcel.document.v1.SetDocumentTeamsRequest\x1a-.knowcel.document.v1.SetDocumentTeamsResponse\x12r\n" +
 	"\x11SetDocumentStatus\x12-.knowcel.document.v1.SetDocumentStatusRequest\x1a..knowcel.document.v1.SetDocumentStatusResponse\x12i\n" +
 	"\x0eGetDownloadUrl\x12*.knowcel.document.v1.GetDownloadUrlRequest\x1a+.knowcel.document.v1.GetDownloadUrlResponse\x12b\n" +
 	"\vReadContent\x12'.knowcel.document.v1.ReadContentRequest\x1a(.knowcel.document.v1.ReadContentResponse0\x01\x12Z\n" +
@@ -2326,7 +2458,7 @@ func file_knowcel_document_v1_document_proto_rawDescGZIP() []byte {
 }
 
 var file_knowcel_document_v1_document_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_knowcel_document_v1_document_proto_msgTypes = make([]protoimpl.MessageInfo, 39)
+var file_knowcel_document_v1_document_proto_msgTypes = make([]protoimpl.MessageInfo, 41)
 var file_knowcel_document_v1_document_proto_goTypes = []any{
 	(DocumentStatus)(0),               // 0: knowcel.document.v1.DocumentStatus
 	(*Document)(nil),                  // 1: knowcel.document.v1.Document
@@ -2344,96 +2476,101 @@ var file_knowcel_document_v1_document_proto_goTypes = []any{
 	(*ListDocumentsResponse)(nil),     // 13: knowcel.document.v1.ListDocumentsResponse
 	(*UpdateDocumentRequest)(nil),     // 14: knowcel.document.v1.UpdateDocumentRequest
 	(*UpdateDocumentResponse)(nil),    // 15: knowcel.document.v1.UpdateDocumentResponse
-	(*DeleteDocumentRequest)(nil),     // 16: knowcel.document.v1.DeleteDocumentRequest
-	(*DeleteDocumentResponse)(nil),    // 17: knowcel.document.v1.DeleteDocumentResponse
-	(*SetDocumentStatusRequest)(nil),  // 18: knowcel.document.v1.SetDocumentStatusRequest
-	(*SetDocumentStatusResponse)(nil), // 19: knowcel.document.v1.SetDocumentStatusResponse
-	(*GetDownloadUrlRequest)(nil),     // 20: knowcel.document.v1.GetDownloadUrlRequest
-	(*GetDownloadUrlResponse)(nil),    // 21: knowcel.document.v1.GetDownloadUrlResponse
-	(*ReadContentRequest)(nil),        // 22: knowcel.document.v1.ReadContentRequest
-	(*ReadContentResponse)(nil),       // 23: knowcel.document.v1.ReadContentResponse
-	(*ChunkInput)(nil),                // 24: knowcel.document.v1.ChunkInput
-	(*AddChunksRequest)(nil),          // 25: knowcel.document.v1.AddChunksRequest
-	(*AddChunksResponse)(nil),         // 26: knowcel.document.v1.AddChunksResponse
-	(*ListChunksRequest)(nil),         // 27: knowcel.document.v1.ListChunksRequest
-	(*ListChunksResponse)(nil),        // 28: knowcel.document.v1.ListChunksResponse
-	(*SearchChunksRequest)(nil),       // 29: knowcel.document.v1.SearchChunksRequest
-	(*SearchChunksResponse)(nil),      // 30: knowcel.document.v1.SearchChunksResponse
-	(*SearchDocumentsRequest)(nil),    // 31: knowcel.document.v1.SearchDocumentsRequest
-	(*SearchDocumentsResponse)(nil),   // 32: knowcel.document.v1.SearchDocumentsResponse
-	(*ReindexDocumentsRequest)(nil),   // 33: knowcel.document.v1.ReindexDocumentsRequest
-	(*ReindexDocumentsResponse)(nil),  // 34: knowcel.document.v1.ReindexDocumentsResponse
-	nil,                               // 35: knowcel.document.v1.Document.MetadataEntry
-	nil,                               // 36: knowcel.document.v1.Chunk.MetadataEntry
-	nil,                               // 37: knowcel.document.v1.CreateDocumentRequest.MetadataEntry
-	nil,                               // 38: knowcel.document.v1.UpdateDocumentRequest.MetadataEntry
-	nil,                               // 39: knowcel.document.v1.ChunkInput.MetadataEntry
-	(*timestamppb.Timestamp)(nil),     // 40: google.protobuf.Timestamp
-	(*commonv1.PageRequest)(nil),      // 41: knowcel.common.v1.PageRequest
-	(*commonv1.PageResponse)(nil),     // 42: knowcel.common.v1.PageResponse
+	(*SetDocumentTeamsRequest)(nil),   // 16: knowcel.document.v1.SetDocumentTeamsRequest
+	(*SetDocumentTeamsResponse)(nil),  // 17: knowcel.document.v1.SetDocumentTeamsResponse
+	(*DeleteDocumentRequest)(nil),     // 18: knowcel.document.v1.DeleteDocumentRequest
+	(*DeleteDocumentResponse)(nil),    // 19: knowcel.document.v1.DeleteDocumentResponse
+	(*SetDocumentStatusRequest)(nil),  // 20: knowcel.document.v1.SetDocumentStatusRequest
+	(*SetDocumentStatusResponse)(nil), // 21: knowcel.document.v1.SetDocumentStatusResponse
+	(*GetDownloadUrlRequest)(nil),     // 22: knowcel.document.v1.GetDownloadUrlRequest
+	(*GetDownloadUrlResponse)(nil),    // 23: knowcel.document.v1.GetDownloadUrlResponse
+	(*ReadContentRequest)(nil),        // 24: knowcel.document.v1.ReadContentRequest
+	(*ReadContentResponse)(nil),       // 25: knowcel.document.v1.ReadContentResponse
+	(*ChunkInput)(nil),                // 26: knowcel.document.v1.ChunkInput
+	(*AddChunksRequest)(nil),          // 27: knowcel.document.v1.AddChunksRequest
+	(*AddChunksResponse)(nil),         // 28: knowcel.document.v1.AddChunksResponse
+	(*ListChunksRequest)(nil),         // 29: knowcel.document.v1.ListChunksRequest
+	(*ListChunksResponse)(nil),        // 30: knowcel.document.v1.ListChunksResponse
+	(*SearchChunksRequest)(nil),       // 31: knowcel.document.v1.SearchChunksRequest
+	(*SearchChunksResponse)(nil),      // 32: knowcel.document.v1.SearchChunksResponse
+	(*SearchDocumentsRequest)(nil),    // 33: knowcel.document.v1.SearchDocumentsRequest
+	(*SearchDocumentsResponse)(nil),   // 34: knowcel.document.v1.SearchDocumentsResponse
+	(*ReindexDocumentsRequest)(nil),   // 35: knowcel.document.v1.ReindexDocumentsRequest
+	(*ReindexDocumentsResponse)(nil),  // 36: knowcel.document.v1.ReindexDocumentsResponse
+	nil,                               // 37: knowcel.document.v1.Document.MetadataEntry
+	nil,                               // 38: knowcel.document.v1.Chunk.MetadataEntry
+	nil,                               // 39: knowcel.document.v1.CreateDocumentRequest.MetadataEntry
+	nil,                               // 40: knowcel.document.v1.UpdateDocumentRequest.MetadataEntry
+	nil,                               // 41: knowcel.document.v1.ChunkInput.MetadataEntry
+	(*timestamppb.Timestamp)(nil),     // 42: google.protobuf.Timestamp
+	(*commonv1.PageRequest)(nil),      // 43: knowcel.common.v1.PageRequest
+	(*commonv1.PageResponse)(nil),     // 44: knowcel.common.v1.PageResponse
 }
 var file_knowcel_document_v1_document_proto_depIdxs = []int32{
 	0,  // 0: knowcel.document.v1.Document.status:type_name -> knowcel.document.v1.DocumentStatus
-	35, // 1: knowcel.document.v1.Document.metadata:type_name -> knowcel.document.v1.Document.MetadataEntry
-	40, // 2: knowcel.document.v1.Document.create_time:type_name -> google.protobuf.Timestamp
-	40, // 3: knowcel.document.v1.Document.update_time:type_name -> google.protobuf.Timestamp
+	37, // 1: knowcel.document.v1.Document.metadata:type_name -> knowcel.document.v1.Document.MetadataEntry
+	42, // 2: knowcel.document.v1.Document.create_time:type_name -> google.protobuf.Timestamp
+	42, // 3: knowcel.document.v1.Document.update_time:type_name -> google.protobuf.Timestamp
 	2,  // 4: knowcel.document.v1.Document.pending_version:type_name -> knowcel.document.v1.PendingVersion
 	0,  // 5: knowcel.document.v1.PendingVersion.status:type_name -> knowcel.document.v1.DocumentStatus
-	36, // 6: knowcel.document.v1.Chunk.metadata:type_name -> knowcel.document.v1.Chunk.MetadataEntry
+	38, // 6: knowcel.document.v1.Chunk.metadata:type_name -> knowcel.document.v1.Chunk.MetadataEntry
 	3,  // 7: knowcel.document.v1.ScoredChunk.chunk:type_name -> knowcel.document.v1.Chunk
 	3,  // 8: knowcel.document.v1.ScoredDocument.best_chunk:type_name -> knowcel.document.v1.Chunk
-	37, // 9: knowcel.document.v1.CreateDocumentRequest.metadata:type_name -> knowcel.document.v1.CreateDocumentRequest.MetadataEntry
+	39, // 9: knowcel.document.v1.CreateDocumentRequest.metadata:type_name -> knowcel.document.v1.CreateDocumentRequest.MetadataEntry
 	1,  // 10: knowcel.document.v1.CreateDocumentResponse.document:type_name -> knowcel.document.v1.Document
 	1,  // 11: knowcel.document.v1.ReplaceContentResponse.document:type_name -> knowcel.document.v1.Document
 	1,  // 12: knowcel.document.v1.GetDocumentResponse.document:type_name -> knowcel.document.v1.Document
-	41, // 13: knowcel.document.v1.ListDocumentsRequest.page:type_name -> knowcel.common.v1.PageRequest
+	43, // 13: knowcel.document.v1.ListDocumentsRequest.page:type_name -> knowcel.common.v1.PageRequest
 	1,  // 14: knowcel.document.v1.ListDocumentsResponse.documents:type_name -> knowcel.document.v1.Document
-	42, // 15: knowcel.document.v1.ListDocumentsResponse.page:type_name -> knowcel.common.v1.PageResponse
-	38, // 16: knowcel.document.v1.UpdateDocumentRequest.metadata:type_name -> knowcel.document.v1.UpdateDocumentRequest.MetadataEntry
+	44, // 15: knowcel.document.v1.ListDocumentsResponse.page:type_name -> knowcel.common.v1.PageResponse
+	40, // 16: knowcel.document.v1.UpdateDocumentRequest.metadata:type_name -> knowcel.document.v1.UpdateDocumentRequest.MetadataEntry
 	1,  // 17: knowcel.document.v1.UpdateDocumentResponse.document:type_name -> knowcel.document.v1.Document
-	0,  // 18: knowcel.document.v1.SetDocumentStatusRequest.status:type_name -> knowcel.document.v1.DocumentStatus
-	1,  // 19: knowcel.document.v1.SetDocumentStatusResponse.document:type_name -> knowcel.document.v1.Document
-	39, // 20: knowcel.document.v1.ChunkInput.metadata:type_name -> knowcel.document.v1.ChunkInput.MetadataEntry
-	24, // 21: knowcel.document.v1.AddChunksRequest.chunks:type_name -> knowcel.document.v1.ChunkInput
-	41, // 22: knowcel.document.v1.ListChunksRequest.page:type_name -> knowcel.common.v1.PageRequest
-	3,  // 23: knowcel.document.v1.ListChunksResponse.chunks:type_name -> knowcel.document.v1.Chunk
-	42, // 24: knowcel.document.v1.ListChunksResponse.page:type_name -> knowcel.common.v1.PageResponse
-	4,  // 25: knowcel.document.v1.SearchChunksResponse.results:type_name -> knowcel.document.v1.ScoredChunk
-	4,  // 26: knowcel.document.v1.SearchDocumentsResponse.results:type_name -> knowcel.document.v1.ScoredChunk
-	5,  // 27: knowcel.document.v1.SearchDocumentsResponse.documents:type_name -> knowcel.document.v1.ScoredDocument
-	6,  // 28: knowcel.document.v1.DocumentService.CreateDocument:input_type -> knowcel.document.v1.CreateDocumentRequest
-	8,  // 29: knowcel.document.v1.DocumentService.ReplaceContent:input_type -> knowcel.document.v1.ReplaceContentRequest
-	10, // 30: knowcel.document.v1.DocumentService.GetDocument:input_type -> knowcel.document.v1.GetDocumentRequest
-	12, // 31: knowcel.document.v1.DocumentService.ListDocuments:input_type -> knowcel.document.v1.ListDocumentsRequest
-	14, // 32: knowcel.document.v1.DocumentService.UpdateDocument:input_type -> knowcel.document.v1.UpdateDocumentRequest
-	16, // 33: knowcel.document.v1.DocumentService.DeleteDocument:input_type -> knowcel.document.v1.DeleteDocumentRequest
-	18, // 34: knowcel.document.v1.DocumentService.SetDocumentStatus:input_type -> knowcel.document.v1.SetDocumentStatusRequest
-	20, // 35: knowcel.document.v1.DocumentService.GetDownloadUrl:input_type -> knowcel.document.v1.GetDownloadUrlRequest
-	22, // 36: knowcel.document.v1.DocumentService.ReadContent:input_type -> knowcel.document.v1.ReadContentRequest
-	25, // 37: knowcel.document.v1.DocumentService.AddChunks:input_type -> knowcel.document.v1.AddChunksRequest
-	27, // 38: knowcel.document.v1.DocumentService.ListChunks:input_type -> knowcel.document.v1.ListChunksRequest
-	29, // 39: knowcel.document.v1.DocumentService.SearchChunks:input_type -> knowcel.document.v1.SearchChunksRequest
-	31, // 40: knowcel.document.v1.DocumentService.SearchDocuments:input_type -> knowcel.document.v1.SearchDocumentsRequest
-	33, // 41: knowcel.document.v1.DocumentService.ReindexDocuments:input_type -> knowcel.document.v1.ReindexDocumentsRequest
-	7,  // 42: knowcel.document.v1.DocumentService.CreateDocument:output_type -> knowcel.document.v1.CreateDocumentResponse
-	9,  // 43: knowcel.document.v1.DocumentService.ReplaceContent:output_type -> knowcel.document.v1.ReplaceContentResponse
-	11, // 44: knowcel.document.v1.DocumentService.GetDocument:output_type -> knowcel.document.v1.GetDocumentResponse
-	13, // 45: knowcel.document.v1.DocumentService.ListDocuments:output_type -> knowcel.document.v1.ListDocumentsResponse
-	15, // 46: knowcel.document.v1.DocumentService.UpdateDocument:output_type -> knowcel.document.v1.UpdateDocumentResponse
-	17, // 47: knowcel.document.v1.DocumentService.DeleteDocument:output_type -> knowcel.document.v1.DeleteDocumentResponse
-	19, // 48: knowcel.document.v1.DocumentService.SetDocumentStatus:output_type -> knowcel.document.v1.SetDocumentStatusResponse
-	21, // 49: knowcel.document.v1.DocumentService.GetDownloadUrl:output_type -> knowcel.document.v1.GetDownloadUrlResponse
-	23, // 50: knowcel.document.v1.DocumentService.ReadContent:output_type -> knowcel.document.v1.ReadContentResponse
-	26, // 51: knowcel.document.v1.DocumentService.AddChunks:output_type -> knowcel.document.v1.AddChunksResponse
-	28, // 52: knowcel.document.v1.DocumentService.ListChunks:output_type -> knowcel.document.v1.ListChunksResponse
-	30, // 53: knowcel.document.v1.DocumentService.SearchChunks:output_type -> knowcel.document.v1.SearchChunksResponse
-	32, // 54: knowcel.document.v1.DocumentService.SearchDocuments:output_type -> knowcel.document.v1.SearchDocumentsResponse
-	34, // 55: knowcel.document.v1.DocumentService.ReindexDocuments:output_type -> knowcel.document.v1.ReindexDocumentsResponse
-	42, // [42:56] is the sub-list for method output_type
-	28, // [28:42] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	1,  // 18: knowcel.document.v1.SetDocumentTeamsResponse.document:type_name -> knowcel.document.v1.Document
+	0,  // 19: knowcel.document.v1.SetDocumentStatusRequest.status:type_name -> knowcel.document.v1.DocumentStatus
+	1,  // 20: knowcel.document.v1.SetDocumentStatusResponse.document:type_name -> knowcel.document.v1.Document
+	41, // 21: knowcel.document.v1.ChunkInput.metadata:type_name -> knowcel.document.v1.ChunkInput.MetadataEntry
+	26, // 22: knowcel.document.v1.AddChunksRequest.chunks:type_name -> knowcel.document.v1.ChunkInput
+	43, // 23: knowcel.document.v1.ListChunksRequest.page:type_name -> knowcel.common.v1.PageRequest
+	3,  // 24: knowcel.document.v1.ListChunksResponse.chunks:type_name -> knowcel.document.v1.Chunk
+	44, // 25: knowcel.document.v1.ListChunksResponse.page:type_name -> knowcel.common.v1.PageResponse
+	4,  // 26: knowcel.document.v1.SearchChunksResponse.results:type_name -> knowcel.document.v1.ScoredChunk
+	4,  // 27: knowcel.document.v1.SearchDocumentsResponse.results:type_name -> knowcel.document.v1.ScoredChunk
+	5,  // 28: knowcel.document.v1.SearchDocumentsResponse.documents:type_name -> knowcel.document.v1.ScoredDocument
+	6,  // 29: knowcel.document.v1.DocumentService.CreateDocument:input_type -> knowcel.document.v1.CreateDocumentRequest
+	8,  // 30: knowcel.document.v1.DocumentService.ReplaceContent:input_type -> knowcel.document.v1.ReplaceContentRequest
+	10, // 31: knowcel.document.v1.DocumentService.GetDocument:input_type -> knowcel.document.v1.GetDocumentRequest
+	12, // 32: knowcel.document.v1.DocumentService.ListDocuments:input_type -> knowcel.document.v1.ListDocumentsRequest
+	14, // 33: knowcel.document.v1.DocumentService.UpdateDocument:input_type -> knowcel.document.v1.UpdateDocumentRequest
+	18, // 34: knowcel.document.v1.DocumentService.DeleteDocument:input_type -> knowcel.document.v1.DeleteDocumentRequest
+	16, // 35: knowcel.document.v1.DocumentService.SetDocumentTeams:input_type -> knowcel.document.v1.SetDocumentTeamsRequest
+	20, // 36: knowcel.document.v1.DocumentService.SetDocumentStatus:input_type -> knowcel.document.v1.SetDocumentStatusRequest
+	22, // 37: knowcel.document.v1.DocumentService.GetDownloadUrl:input_type -> knowcel.document.v1.GetDownloadUrlRequest
+	24, // 38: knowcel.document.v1.DocumentService.ReadContent:input_type -> knowcel.document.v1.ReadContentRequest
+	27, // 39: knowcel.document.v1.DocumentService.AddChunks:input_type -> knowcel.document.v1.AddChunksRequest
+	29, // 40: knowcel.document.v1.DocumentService.ListChunks:input_type -> knowcel.document.v1.ListChunksRequest
+	31, // 41: knowcel.document.v1.DocumentService.SearchChunks:input_type -> knowcel.document.v1.SearchChunksRequest
+	33, // 42: knowcel.document.v1.DocumentService.SearchDocuments:input_type -> knowcel.document.v1.SearchDocumentsRequest
+	35, // 43: knowcel.document.v1.DocumentService.ReindexDocuments:input_type -> knowcel.document.v1.ReindexDocumentsRequest
+	7,  // 44: knowcel.document.v1.DocumentService.CreateDocument:output_type -> knowcel.document.v1.CreateDocumentResponse
+	9,  // 45: knowcel.document.v1.DocumentService.ReplaceContent:output_type -> knowcel.document.v1.ReplaceContentResponse
+	11, // 46: knowcel.document.v1.DocumentService.GetDocument:output_type -> knowcel.document.v1.GetDocumentResponse
+	13, // 47: knowcel.document.v1.DocumentService.ListDocuments:output_type -> knowcel.document.v1.ListDocumentsResponse
+	15, // 48: knowcel.document.v1.DocumentService.UpdateDocument:output_type -> knowcel.document.v1.UpdateDocumentResponse
+	19, // 49: knowcel.document.v1.DocumentService.DeleteDocument:output_type -> knowcel.document.v1.DeleteDocumentResponse
+	17, // 50: knowcel.document.v1.DocumentService.SetDocumentTeams:output_type -> knowcel.document.v1.SetDocumentTeamsResponse
+	21, // 51: knowcel.document.v1.DocumentService.SetDocumentStatus:output_type -> knowcel.document.v1.SetDocumentStatusResponse
+	23, // 52: knowcel.document.v1.DocumentService.GetDownloadUrl:output_type -> knowcel.document.v1.GetDownloadUrlResponse
+	25, // 53: knowcel.document.v1.DocumentService.ReadContent:output_type -> knowcel.document.v1.ReadContentResponse
+	28, // 54: knowcel.document.v1.DocumentService.AddChunks:output_type -> knowcel.document.v1.AddChunksResponse
+	30, // 55: knowcel.document.v1.DocumentService.ListChunks:output_type -> knowcel.document.v1.ListChunksResponse
+	32, // 56: knowcel.document.v1.DocumentService.SearchChunks:output_type -> knowcel.document.v1.SearchChunksResponse
+	34, // 57: knowcel.document.v1.DocumentService.SearchDocuments:output_type -> knowcel.document.v1.SearchDocumentsResponse
+	36, // 58: knowcel.document.v1.DocumentService.ReindexDocuments:output_type -> knowcel.document.v1.ReindexDocumentsResponse
+	44, // [44:59] is the sub-list for method output_type
+	29, // [29:44] is the sub-list for method input_type
+	29, // [29:29] is the sub-list for extension type_name
+	29, // [29:29] is the sub-list for extension extendee
+	0,  // [0:29] is the sub-list for field type_name
 }
 
 func init() { file_knowcel_document_v1_document_proto_init() }
@@ -2448,7 +2585,7 @@ func file_knowcel_document_v1_document_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_knowcel_document_v1_document_proto_rawDesc), len(file_knowcel_document_v1_document_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   39,
+			NumMessages:   41,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

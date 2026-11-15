@@ -27,7 +27,7 @@ DOCUMENT_STATUS_READY: DocumentStatus
 DOCUMENT_STATUS_FAILED: DocumentStatus
 
 class Document(_message.Message):
-    __slots__ = ("id", "title", "filename", "content_type", "size_bytes", "status", "status_detail", "chunk_count", "metadata", "create_time", "update_time", "owner_id", "sha256", "version", "pending_version")
+    __slots__ = ("id", "title", "filename", "content_type", "size_bytes", "status", "status_detail", "chunk_count", "metadata", "create_time", "update_time", "owner_id", "sha256", "version", "pending_version", "team_ids")
     class MetadataEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -50,6 +50,7 @@ class Document(_message.Message):
     SHA256_FIELD_NUMBER: _ClassVar[int]
     VERSION_FIELD_NUMBER: _ClassVar[int]
     PENDING_VERSION_FIELD_NUMBER: _ClassVar[int]
+    TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
     id: str
     title: str
     filename: str
@@ -65,7 +66,8 @@ class Document(_message.Message):
     sha256: str
     version: int
     pending_version: PendingVersion
-    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., status: _Optional[_Union[DocumentStatus, str]] = ..., status_detail: _Optional[str] = ..., chunk_count: _Optional[int] = ..., metadata: _Optional[_Mapping[str, str]] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., owner_id: _Optional[str] = ..., sha256: _Optional[str] = ..., version: _Optional[int] = ..., pending_version: _Optional[_Union[PendingVersion, _Mapping]] = ...) -> None: ...
+    team_ids: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., status: _Optional[_Union[DocumentStatus, str]] = ..., status_detail: _Optional[str] = ..., chunk_count: _Optional[int] = ..., metadata: _Optional[_Mapping[str, str]] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., owner_id: _Optional[str] = ..., sha256: _Optional[str] = ..., version: _Optional[int] = ..., pending_version: _Optional[_Union[PendingVersion, _Mapping]] = ..., team_ids: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class PendingVersion(_message.Message):
     __slots__ = ("version", "filename", "content_type", "size_bytes", "status", "status_detail", "sha256")
@@ -127,7 +129,7 @@ class ScoredDocument(_message.Message):
     def __init__(self, document_id: _Optional[str] = ..., title: _Optional[str] = ..., score: _Optional[float] = ..., best_chunk: _Optional[_Union[Chunk, _Mapping]] = ...) -> None: ...
 
 class CreateDocumentRequest(_message.Message):
-    __slots__ = ("title", "filename", "content_type", "size_bytes", "metadata", "sha256")
+    __slots__ = ("title", "filename", "content_type", "size_bytes", "metadata", "sha256", "team_ids")
     class MetadataEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -141,13 +143,15 @@ class CreateDocumentRequest(_message.Message):
     SIZE_BYTES_FIELD_NUMBER: _ClassVar[int]
     METADATA_FIELD_NUMBER: _ClassVar[int]
     SHA256_FIELD_NUMBER: _ClassVar[int]
+    TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
     title: str
     filename: str
     content_type: str
     size_bytes: int
     metadata: _containers.ScalarMap[str, str]
     sha256: str
-    def __init__(self, title: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., metadata: _Optional[_Mapping[str, str]] = ..., sha256: _Optional[str] = ...) -> None: ...
+    team_ids: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, title: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., metadata: _Optional[_Mapping[str, str]] = ..., sha256: _Optional[str] = ..., team_ids: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class CreateDocumentResponse(_message.Message):
     __slots__ = ("document", "upload_url")
@@ -225,6 +229,20 @@ class UpdateDocumentRequest(_message.Message):
     def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., metadata: _Optional[_Mapping[str, str]] = ..., set_metadata: _Optional[bool] = ...) -> None: ...
 
 class UpdateDocumentResponse(_message.Message):
+    __slots__ = ("document",)
+    DOCUMENT_FIELD_NUMBER: _ClassVar[int]
+    document: Document
+    def __init__(self, document: _Optional[_Union[Document, _Mapping]] = ...) -> None: ...
+
+class SetDocumentTeamsRequest(_message.Message):
+    __slots__ = ("id", "team_ids")
+    ID_FIELD_NUMBER: _ClassVar[int]
+    TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
+    id: str
+    team_ids: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, id: _Optional[str] = ..., team_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class SetDocumentTeamsResponse(_message.Message):
     __slots__ = ("document",)
     DOCUMENT_FIELD_NUMBER: _ClassVar[int]
     document: Document

@@ -13,7 +13,7 @@ An open-source, modular knowledge backbone: ingest documents, manage them, and c
 
 Name, story and voice: [Brand](docs/brand.md).
 
-**Website:** [christophbe.github.io/kb](https://christophbe.github.io/kb/), built from [`apps/site`](apps/site) and published to GitHub Pages on every push to `main`.
+**Website:** [christophbe.github.io/knowcelium](https://christophbe.github.io/knowcelium/), built from [`apps/site`](apps/site) and published to GitHub Pages on every push to `main`.
 
 - **Go** — core infrastructure services (document, ingestion)
 - **Python** — data-science / LLM work (ingestion worker, chat, llm gateway)

@@ -46,7 +46,7 @@ An issue is ready to be picked up when every check for its type holds. Refine it
 
 ### Milestones
 
-Work items are planned into small, topic-based [milestones](https://github.com/ChristophBe/kb/milestones), e.g. *Better retrieval* or *More sources*. A milestone has a one-sentence goal (what is true when it is done) as its description and a handful of issues, roughly 2–6. It can be shipped and closed on its own and may take issues from several epics. When no open milestone fits a new issue, propose a new one rather than stretching an existing goal. Epics span milestones and get no milestone. The closed phase milestones M0 and M1 and the open M2 remain from the earlier phase-based planning.
+Work items are planned into small, topic-based [milestones](https://github.com/ChristophBe/knowcelium/milestones), e.g. *Better retrieval* or *More sources*. A milestone has a one-sentence goal (what is true when it is done) as its description and a handful of issues, roughly 2–6. It can be shipped and closed on its own and may take issues from several epics. When no open milestone fits a new issue, propose a new one rather than stretching an existing goal. Epics span milestones and get no milestone. The closed phase milestones M0 and M1 and the open M2 remain from the earlier phase-based planning.
 
 ## Architecture decisions
 

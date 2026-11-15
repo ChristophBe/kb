@@ -1,6 +1,7 @@
 import { LlmService, ModelKind, type ProviderHealth } from "@knowcel/llm-api/knowcel/llm/v1/llm_pb";
 import { useClient, useQuery } from "@knowcel/module-sdk";
 import { Badge, Card, EmptyState, ErrorMessage, PageHeader, Spinner } from "@knowcel/ui";
+import { Cpu } from "lucide-react";
 
 function Provider({ health }: { health: Pick<ProviderHealth, "provider" | "healthy"> }) {
   return (
@@ -69,7 +70,7 @@ export function Models() {
             ))}
           </ul>
         ) : (
-          <EmptyState>No models installed.</EmptyState>
+          <EmptyState icon={Cpu}>No models installed.</EmptyState>
         )}
       </Card>
     </div>

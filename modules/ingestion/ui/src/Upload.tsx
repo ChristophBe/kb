@@ -17,7 +17,7 @@ import {
   SkeletonRows,
   type Tone,
 } from "@knowcel/ui";
-import { AlertTriangle, Upload as UploadIcon, X } from "lucide-react";
+import { AlertTriangle, FileUp, Upload as UploadIcon, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SUPPORTED_FORMATS } from "./files.ts";
 import { active, ProgressBar, stageLabel } from "./progress.tsx";
@@ -156,9 +156,11 @@ export function Upload() {
           setDragging(false);
           add(Array.from(e.dataTransfer.files));
         }}
-        className={`mb-6 flex flex-col items-center gap-2 rounded-card border-2 border-dashed border-border-strong p-10 text-sm text-fg-muted ${dragging ? "bg-surface-muted" : "bg-surface"}`}
+        className={`mb-6 flex flex-col items-center gap-2 rounded-card border-2 border-dashed p-10 text-sm text-fg-muted transition-colors ${dragging ? "border-accent bg-accent-subtle" : "border-accent/40 bg-accent-subtle/40"}`}
       >
-        <UploadIcon className="size-6" aria-hidden="true" />
+        <span className="inline-flex size-12 items-center justify-center rounded-card bg-accent-subtle text-accent">
+          <UploadIcon className="size-6" aria-hidden="true" />
+        </span>
         {dragging ? (
           <span>Drop to upload</span>
         ) : (
@@ -196,7 +198,7 @@ export function Upload() {
             <SkeletonRows label="Loading uploads" />
           </DelayedLoading>
         ) : empty ? (
-          <EmptyState>No uploads yet. Drop files above to add documents.</EmptyState>
+          <EmptyState icon={FileUp}>No uploads yet. Drop files above to add documents.</EmptyState>
         ) : (
           <ul ref={list} className="divide-y divide-dotted divide-border text-sm">
             {uploads.map((u) => (

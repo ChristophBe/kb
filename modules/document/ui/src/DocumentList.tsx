@@ -15,7 +15,7 @@ import {
   PageHeader,
   SkeletonRows,
 } from "@knowcel/ui";
-import { Download, Search as SearchIcon, Trash2 } from "lucide-react";
+import { Download, FileText, Search as SearchIcon, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Link } from "react-router";
 import { statusLabel } from "./status.ts";
@@ -111,7 +111,7 @@ export function DocumentList() {
             </tbody>
           </table>
         ) : (
-          <EmptyState>No documents yet. Upload some in Ingestion.</EmptyState>
+          <EmptyState icon={FileText}>No documents yet. Upload some in Ingestion.</EmptyState>
         )}
       </Card>
       <ConfirmDialog

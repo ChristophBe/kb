@@ -13,7 +13,7 @@ There are no metrics: request rates and latencies, the ingestion queue and the t
 
 ## Decision
 
-We will expose Prometheus metrics with the native client libraries: `platform/go/metrics` and `kb_platform.metrics` serve the default registry at `/metrics` on a separate port per component (`KB_METRICS_PORT`, default `metrics_port` from its `module.yaml`). The gRPC server interceptors in `platform/go/grpcserver` and `kb_platform.grpc` record `grpc_server_handled_total` and `grpc_server_handling_seconds` with identical names and labels in both languages (the names of go-grpc-prometheus, so existing dashboards fit). Modules add their domain metrics with the same libraries, named `kb_<module>_…`.
+We will expose Prometheus metrics with the native client libraries: `platform/go/metrics` and `knowcel_platform.metrics` serve the default registry at `/metrics` on a separate port per component (`KB_METRICS_PORT`, default `metrics_port` from its `module.yaml`). The gRPC server interceptors in `platform/go/grpcserver` and `knowcel_platform.grpc` record `grpc_server_handled_total` and `grpc_server_handling_seconds` with identical names and labels in both languages (the names of go-grpc-prometheus, so existing dashboards fit). Modules add their domain metrics with the same libraries, named `kb_<module>_…`.
 
 Metrics are always on: they cost little and need no backend. Prometheus scrapes them; for development the compose profile `observability` runs one, its scrape targets generated from the manifests (`deploy/prometheus/prometheus.yml`). The Helm chart exposes the port and sets the `prometheus.io/*` pod annotations.
 

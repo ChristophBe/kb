@@ -6,8 +6,8 @@ from typing import Any
 import grpc
 import pytest
 from grpc_health.v1 import health, health_pb2, health_pb2_grpc
-from kb_platform.grpc import MetricsInterceptor
-from kb_platform.metrics import start_metrics_server
+from knowcel_platform.grpc import MetricsInterceptor
+from knowcel_platform.metrics import start_metrics_server
 from prometheus_client import REGISTRY
 
 

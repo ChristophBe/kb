@@ -25,7 +25,7 @@ Read by every Go service, from `config.Base` in [platform/go/config](../platform
 
 ## Every Python component
 
-Read by every Python component, from `PlatformSettings` in [kb_platform.config](../platform/python/src/kb_platform/config.py). Each component's section gives its port defaults.
+Read by every Python component, from `PlatformSettings` in [knowcel_platform.config](../platform/python/src/knowcel_platform/config.py). Each component's section gives its port defaults.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -48,7 +48,7 @@ From `Config` in [modules/notes/service/cmd/notes-service](../modules/notes/serv
 
 ## search-worker
 
-From `Settings` in [modules/search/worker/src/kb_search/config.py](../modules/search/worker/src/kb_search/config.py), in addition to the settings every Python component reads.
+From `Settings` in [modules/search/worker/src/knowcel_search/config.py](../modules/search/worker/src/knowcel_search/config.py), in addition to the settings every Python component reads.
 
 | Variable | Default | Description |
 |---|---|---|

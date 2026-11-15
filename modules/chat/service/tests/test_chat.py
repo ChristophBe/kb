@@ -6,7 +6,8 @@ from typing import Any
 
 import grpc
 import pytest
-from kb_chat.chat import (
+from knowcel.chat.v1 import chat_pb2
+from knowcel_chat.chat import (
     NO_SOURCES_PROMPT,
     RAG_PROMPT,
     SYSTEM_PROMPT,
@@ -24,10 +25,9 @@ from kb_chat.chat import (
     PromptRole,
     SourcesFound,
 )
-from kb_chat.config import Settings
-from kb_chat.peers import PeerGenerator, PeerRetriever
-from kb_chat.repository import ConversationRow, MessageRow
-from knowcel.chat.v1 import chat_pb2
+from knowcel_chat.config import Settings
+from knowcel_chat.peers import PeerGenerator, PeerRetriever
+from knowcel_chat.repository import ConversationRow, MessageRow
 
 USER = chat_pb2.MESSAGE_ROLE_USER
 ASSISTANT = chat_pb2.MESSAGE_ROLE_ASSISTANT

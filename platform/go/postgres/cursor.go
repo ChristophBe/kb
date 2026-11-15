@@ -22,7 +22,7 @@ const cursorVersion = 1
 // ordering time and the id of the last row of the previous page, for lists
 // ordered by (time DESC, id DESC).
 //
-// The wire format is shared with kb_platform.pagination (Python), which has
+// The wire format is shared with knowcel_platform.pagination (Python), which has
 // the same fixture test (platform/testdata/cursor.json): base64url without
 // padding of the compact JSON {"v":1,"t":<unix microseconds>,"i":"<uuid>"}.
 type Cursor struct {

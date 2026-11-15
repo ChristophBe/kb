@@ -5,7 +5,7 @@
       "component": "chat-service",
       "image": "ghcr.io/christophbe/kb-chat-service",
       "dockerfile": "deploy/docker/python.Dockerfile",
-      "build_args": "PACKAGE=kb-chat-service"
+      "build_args": "PACKAGE=knowcel-chat-service"
     },
     {
       "component": "document-service",
@@ -23,13 +23,13 @@
       "component": "ingestion-worker",
       "image": "ghcr.io/christophbe/kb-ingestion-worker",
       "dockerfile": "deploy/docker/python.Dockerfile",
-      "build_args": "PACKAGE=kb-ingestion-worker"
+      "build_args": "PACKAGE=knowcel-ingestion-worker"
     },
     {
       "component": "llm-service",
       "image": "ghcr.io/christophbe/kb-llm-service",
       "dockerfile": "deploy/docker/python.Dockerfile",
-      "build_args": "PACKAGE=kb-llm-service"
+      "build_args": "PACKAGE=knowcel-llm-service"
     },
     {
       "component": "web",

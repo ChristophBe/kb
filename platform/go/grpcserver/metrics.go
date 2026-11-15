@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// The gRPC server metrics (docs/metrics.md). kb_platform.grpc records the
+// The gRPC server metrics (docs/metrics.md). knowcel_platform.grpc records the
 // same names and labels in the Python services.
 var (
 	rpcHandled = promauto.NewCounterVec(prometheus.CounterOpts{

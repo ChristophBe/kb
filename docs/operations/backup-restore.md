@@ -84,7 +84,7 @@ Each module owns its schema and migrates independently.
 
 ### How they run
 
-Every service applies its pending migrations at startup, before it serves requests (`postgres.Migrate` for goose, `kb_chat.db.migrate` for Alembic). There is no separate migration step in compose; under [Kubernetes](kubernetes.md) there is no migration Job either, so roll out one pod at a time for services with migrations.
+Every service applies its pending migrations at startup, before it serves requests (`postgres.Migrate` for goose, `knowcel_chat.db.migrate` for Alembic). There is no separate migration step in compose; under [Kubernetes](kubernetes.md) there is no migration Job either, so roll out one pod at a time for services with migrations.
 
 A new release therefore migrates the database as it starts. **Take a [backup](#back-up) before upgrading**: it is the only rollback that also undoes data changes.
 
@@ -110,7 +110,7 @@ For `ingestion` use `-dir modules/ingestion/migrations -table ingestion_schema_m
 Alembic (`chat`) has no `alembic.ini`; the service builds its config in code. Run the commands through a short script:
 
 ```python
-# alembic_run.py: uv run --package kb-chat-service python alembic_run.py downgrade -1
+# alembic_run.py: uv run --package knowcel-chat-service python alembic_run.py downgrade -1
 import sys
 from alembic import command
 from alembic.config import Config

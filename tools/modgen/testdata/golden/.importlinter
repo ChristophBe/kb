@@ -6,12 +6,12 @@
 [importlinter]
 root_packages =
     knowcel
-    kb_platform
+    knowcel_platform
 
 [importlinter:contract:platform]
 name = platform/ never imports a module
 type = forbidden
 source_modules =
-    kb_platform
+    knowcel_platform
 forbidden_modules =
     knowcel.notes

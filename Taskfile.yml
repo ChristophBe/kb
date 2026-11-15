@@ -163,7 +163,7 @@ tasks:
         expect go "modules/search/service/bad/bad.go modules/tags/service/bad/bad.go platform/go/bad/bad.go " "$go_out"
         py_path=$(ls -d "$tmp"/modules/*/*/src "$tmp"/modules/*/api/python/src "$tmp"/platform/python/src | tr '\n' ':')
         py_out=$(PYTHONPATH="$py_path" uv run lint-imports --config "$tmp/.importlinter" 2>&1 || true)
-        py_out=$(printf '%s\n' "$py_out" | sed -E 's/kb_(search|tags|platform)\.(bad|ok)/\1\/\2.py/')
+        py_out=$(printf '%s\n' "$py_out" | sed -E 's/knowcel_(search|tags|platform)\.(bad|ok)/\1\/\2.py/')
         expect python "platform/bad.py search/bad.py tags/bad.py " "$py_out"
         ts_out=$(cd "$tmp" && {{.ROOT_DIR}}/node_modules/.bin/biome lint . 2>&1 || true)
         expect ts "modules/search/ui/src/bad.ts modules/search/ui/src/subpath/bad.ts modules/tags/ui/src/bad.ts platform/ui/kit/src/bad.ts " "$ts_out"

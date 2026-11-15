@@ -18,7 +18,7 @@ An issue is ready to be picked up when every check for its type holds. Refine it
 **Work items** (`type:feature`, `type:chore`, `type:docs`):
 
 - [ ] The body follows the issue form for its type (Feature: Context, Changes, Acceptance criteria, Notes; Chore / Docs: Context, Acceptance criteria, optionally Changes and Notes).
-- [ ] *Changes* (where present) names real paths per layer (**Proto** / **Backend** / **UI**), e.g. `modules/chat/service/src/kb_chat/server.py`, not just "the chat backend".
+- [ ] *Changes* (where present) names real paths per layer (**Proto** / **Backend** / **UI**), e.g. `modules/chat/service/src/knowcel_chat/server.py`, not just "the chat backend".
 - [ ] Every acceptance criterion is a `- [ ]` checkbox that can be observed or tested (a command, a UI behaviour, a file that exists), not "works well" or "is improved".
 - [ ] It fits in about one PR. Bigger work is split into several sub-issues of the same epic.
 - [ ] Labels are complete: exactly one `type:*`, exactly one scope (`module:*` / `area:*`), a `lang:*` for every stack touched, and `api-change` when a `.proto` changes.

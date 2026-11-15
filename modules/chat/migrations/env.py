@@ -3,7 +3,7 @@
 import asyncio
 
 from alembic import context
-from kb_chat.db import SCHEMA, metadata
+from knowcel_chat.db import SCHEMA, metadata
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 

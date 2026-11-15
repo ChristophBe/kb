@@ -19,7 +19,7 @@ RUN uv sync --frozen --no-dev --package ${PACKAGE}
 # manual change doesn't reinstall the dependencies.
 COPY docs/user-manual docs/user-manual
 ENV KB_ENTRYPOINT=${PACKAGE}
-# The release version, logged at startup (kb_platform.version); "dev" for local
+# The release version, logged at startup (knowcel_platform.version); "dev" for local
 # builds. Last, so a new version reuses every layer above.
 ARG KB_VERSION=dev
 ENV KB_VERSION=${KB_VERSION}

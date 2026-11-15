@@ -30,9 +30,9 @@ type Repository interface {
 // Server implements IamService.
 type Server struct {
 	iamv1.UnimplementedIamServiceServer
-	repo           Repository
+	repo            Repository
 	bootstrapAdmins []string
-	log            *slog.Logger
+	log             *slog.Logger
 }
 
 // New builds the server. bootstrapAdmins are the subjects or emails of the

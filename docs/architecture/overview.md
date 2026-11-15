@@ -100,6 +100,10 @@ flowchart TB
 
 Modules never share a schema, bucket or stream: each is owned by one module, and other modules go through its gRPC API or its events ([ADR 0002](../adr/0002-module-per-folder-monorepo.md), [ADR 0004](../adr/0004-nats-jetstream-events-between-modules.md)).
 
+## Access control
+
+Documents are private to their owner and can be shared with teams; model management is limited to platform admins. Users, teams and roles live in `iam`, and the other modules enforce access with a caller context they resolve from it. The access matrix, the team rules and the behaviour while IAM is down are in [Access control](access-control.md).
+
 ## Upload → process → chat
 
 ```mermaid

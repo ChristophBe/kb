@@ -1,6 +1,6 @@
 # Teams
 
-Teams group people so that you can manage who belongs together. You can belong to several teams, create your own and see their members on the Teams page.
+Teams group people who work together. You can belong to several teams, create your own and see their members on the Teams page. Teams are what you [share documents](sharing-documents.md) with: the members of a team can read the documents shared with it.
 
 ## Create a team
 
@@ -44,4 +44,8 @@ The last admin can't leave: make someone else an admin first, or delete the team
 
 ## Rename or delete a team
 
-Admins select **Rename** to change the name. **Delete team** removes the team and its memberships after you confirm; this can't be undone.
+Admins select **Rename** to change the name. **Delete team** removes the team and its memberships after you confirm; this can't be undone. Documents that were shared with the team stop being visible to its former members, and are private to their owners again unless they are shared with other teams.
+
+## What a team gives its members
+
+Belonging to a team lets you read the documents that are shared with it, find them in search and use them in chat. It doesn't let you change them, and it shows nobody anything else of yours. Being an admin of a team only adds managing the team and its members, and [stopping sharing](sharing-documents.md#stop-sharing-a-document-with-your-team) a document with your team. Platform admins, who [designate other platform admins](users.md), get no extra access to documents either.

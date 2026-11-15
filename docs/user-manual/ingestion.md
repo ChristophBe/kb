@@ -8,7 +8,7 @@ Ingestion is where you add files to your documents. Knowcelium uploads each file
 2. Drop one or more files onto the upload area, or select **Choose files** and pick them.
 3. Each file gets a row under **Uploads** with a progress bar. Files wait their turn (**Waiting**) when several are uploading.
 
-If you belong to teams, **Share new uploads with** lists them above the upload area. Tick the teams whose members should be able to read the files you add next; leave all unticked to keep them private. Each file's row shows **Shared with** and the teams it was added with, and changing the ticks afterwards doesn't affect files already added. You can change who a document is shared with later, on [its page](documents.md#share-a-document-with-teams).
+If you belong to teams, **Share new uploads with** lists them above the upload area. Tick the teams whose members should be able to read the files you add next; leave all unticked to keep them private. Each file's row shows **Shared with** and the teams it was added with, and changing the ticks afterwards doesn't affect files already added. You can change who a document is shared with later, on [its page](sharing-documents.md#share-a-document-with-teams).
 
 If a row says **Upload failed** because a chosen team isn't available, it may be a team you created or joined a moment ago, which can take up to half a minute to work here. Select **Retry upload** a little later.
 

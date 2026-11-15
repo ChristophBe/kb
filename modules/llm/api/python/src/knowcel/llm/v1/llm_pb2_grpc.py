@@ -56,6 +56,16 @@ class LlmServiceStub:
                 request_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.EmbedRequest.SerializeToString,
                 response_deserializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.EmbedResponse.FromString,
                 _registered_method=True)
+        self.PullModel = channel.unary_stream(
+                '/knowcel.llm.v1.LlmService/PullModel',
+                request_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.PullModelRequest.SerializeToString,
+                response_deserializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.PullModelResponse.FromString,
+                _registered_method=True)
+        self.DeleteModel = channel.unary_unary(
+                '/knowcel.llm.v1.LlmService/DeleteModel',
+                request_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.DeleteModelRequest.SerializeToString,
+                response_deserializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.DeleteModelResponse.FromString,
+                _registered_method=True)
 
 
 class LlmServiceServicer:
@@ -89,6 +99,23 @@ class LlmServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def PullModel(self, request, context):
+        """PullModel downloads a model to a provider and streams the progress, ending
+        with a message with done set. Platform admins only; providers that can't
+        manage models return UNIMPLEMENTED.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteModel(self, request, context):
+        """DeleteModel removes a model from a provider. Platform admins only;
+        providers that can't manage models return UNIMPLEMENTED.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_LlmServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -111,6 +138,16 @@ def add_LlmServiceServicer_to_server(servicer, server):
                     servicer.Embed,
                     request_deserializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.EmbedRequest.FromString,
                     response_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.EmbedResponse.SerializeToString,
+            ),
+            'PullModel': grpc.unary_stream_rpc_method_handler(
+                    servicer.PullModel,
+                    request_deserializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.PullModelRequest.FromString,
+                    response_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.PullModelResponse.SerializeToString,
+            ),
+            'DeleteModel': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteModel,
+                    request_deserializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.DeleteModelRequest.FromString,
+                    response_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.DeleteModelResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -223,6 +260,60 @@ class LlmService:
             '/knowcel.llm.v1.LlmService/Embed',
             knowcel_dot_llm_dot_v1_dot_llm__pb2.EmbedRequest.SerializeToString,
             knowcel_dot_llm_dot_v1_dot_llm__pb2.EmbedResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def PullModel(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/knowcel.llm.v1.LlmService/PullModel',
+            knowcel_dot_llm_dot_v1_dot_llm__pb2.PullModelRequest.SerializeToString,
+            knowcel_dot_llm_dot_v1_dot_llm__pb2.PullModelResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeleteModel(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.llm.v1.LlmService/DeleteModel',
+            knowcel_dot_llm_dot_v1_dot_llm__pb2.DeleteModelRequest.SerializeToString,
+            knowcel_dot_llm_dot_v1_dot_llm__pb2.DeleteModelResponse.FromString,
             options,
             channel_credentials,
             insecure,

@@ -15,6 +15,7 @@ from .base import (
     ModelNotFoundError,
     ProviderError,
     ProviderUnavailableError,
+    PullProgress,
     Status,
 )
 
@@ -31,6 +32,8 @@ class OllamaLimits:
     generate_timeout: float = 600
     embed_timeout: float = 120
     list_timeout: float = 10
+    # Seconds a model download may go without a progress message.
+    pull_stall_timeout: float = 120
     attempts: int = 3
     retry_delay: float = 0.5
 
@@ -117,6 +120,42 @@ class OllamaProvider:
                 ModelInfo(id=name, kind=ModelKind.EMBEDDING if is_embedding else ModelKind.CHAT)
             )
         return models
+
+    async def pull_model(self, model: str) -> AsyncGenerator[PullProgress]:
+        # No overall deadline: a big model takes as long as the network needs.
+        # A stalled download is caught by the read timeout between messages.
+        timeout = self._timeout(self._limits.pull_stall_timeout)
+        try:
+            async with self._http.stream(
+                "POST", "/api/pull", json={"model": model, "stream": True}, timeout=timeout
+            ) as resp:
+                resp.raise_for_status()
+                async for line in resp.aiter_lines():
+                    if not line:
+                        continue
+                    event = json.loads(line)
+                    if "error" in event:
+                        message = str(event["error"])
+                        if "does not exist" in message or "not found" in message:
+                            raise ModelNotFoundError(f"ollama: {message}")
+                        raise ProviderError(f"ollama: {message}")
+                    status = event.get("status", "")
+                    if status == "success":
+                        yield PullProgress(status=status, done=True)
+                        return
+                    yield PullProgress(
+                        status=status,
+                        completed=event.get("completed", 0),
+                        total=event.get("total", 0),
+                    )
+        except httpx.HTTPError as exc:
+            raise _translate(exc) from exc
+        raise ProviderError("ollama: the download ended without a result")
+
+    async def delete_model(self, model: str) -> None:
+        await self._idempotent(
+            "DELETE", "/api/delete", self._limits.list_timeout, json={"model": model}
+        )
 
     async def status(self) -> Status:
         try:

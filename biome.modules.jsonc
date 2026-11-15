@@ -273,6 +273,8 @@
                       "@knowcel/*-api/**",
                       "!@knowcel/common-api",
                       "!@knowcel/common-api/**",
+                      "!@knowcel/iam-api",
+                      "!@knowcel/iam-api/**",
                       "!@knowcel/llm-api",
                       "!@knowcel/llm-api/**"
                     ],

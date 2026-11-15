@@ -18,6 +18,7 @@ from .base import (
     ProviderError,
     ProviderRateLimitedError,
     ProviderUnavailableError,
+    PullProgress,
     Role,
     Status,
 )
@@ -123,6 +124,13 @@ class AnthropicProvider:
         raise NotSupportedError(
             "the anthropic provider has no embedding models; use another provider for embeddings"
         )
+
+    async def pull_model(self, model: str) -> AsyncGenerator[PullProgress]:
+        raise NotSupportedError("anthropic models are hosted by Anthropic and can't be pulled")
+        yield  # makes this an async generator, like the providers that can pull
+
+    async def delete_model(self, model: str) -> None:
+        raise NotSupportedError("anthropic models are hosted by Anthropic and can't be deleted")
 
     async def list_models(self) -> list[ModelInfo]:
         return [ModelInfo(id=m, kind=ModelKind.CHAT) for m in MODELS]

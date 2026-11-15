@@ -7,7 +7,7 @@ from typing import Any
 
 import grpc
 from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
-from knowcel_platform.grpc import abort_invalid_argument, violation
+from knowcel_platform.grpc import abort_invalid_argument, current_principal, violation
 from prometheus_client import Counter, Histogram
 
 from .config import Settings
@@ -179,6 +179,42 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
                 elif chunk.delta:
                     yield llm_pb2.GenerateResponse(delta=chunk.delta, model=model)
 
+    async def PullModel(
+        self, request: llm_pb2.PullModelRequest, context: _Context
+    ) -> AsyncIterator[llm_pb2.PullModelResponse]:
+        await _require_platform_admin(context)
+        provider = await self._managed(request.provider, request.model, context)
+        log.info("PullModel %s on %s", request.model, provider.name)
+        async with (
+            _provider_errors(context),
+            contextlib.aclosing(provider.pull_model(request.model)) as steps,
+        ):
+            async for step in steps:
+                yield llm_pb2.PullModelResponse(
+                    status=step.status, completed=step.completed, total=step.total, done=step.done
+                )
+
+    async def DeleteModel(
+        self, request: llm_pb2.DeleteModelRequest, context: _Context
+    ) -> llm_pb2.DeleteModelResponse:
+        await _require_platform_admin(context)
+        provider = await self._managed(request.provider, request.model, context)
+        log.info("DeleteModel %s on %s", request.model, provider.name)
+        async with _provider_errors(context):
+            await provider.delete_model(request.model)
+        return llm_pb2.DeleteModelResponse()
+
+    async def _managed(self, name: str, model: str, context: _Context) -> Provider:
+        """The provider `name` (empty: the chat provider) of a model change."""
+        if not model:
+            await abort_invalid_argument(context, violation("model", "A model is required"))
+        provider = next((p for p in (self._chat, self._embedding) if name in ("", p.name)), None)
+        if provider is None:
+            await abort_invalid_argument(
+                context, violation("provider", f"{name} is not a configured provider")
+            )
+        return provider
+
     async def Embed(
         self, request: llm_pb2.EmbedRequest, context: _Context
     ) -> llm_pb2.EmbedResponse:
@@ -215,6 +251,16 @@ async def _slot(slots: asyncio.Semaphore, context: _Context) -> AsyncIterator[No
         await context.abort(grpc.StatusCode.RESOURCE_EXHAUSTED, "too many concurrent requests")
     async with slots:
         yield
+
+
+async def _require_platform_admin(context: _Context) -> None:
+    """Rejects callers who are not platform admins. Fails closed: without a
+    caller, or while iam can't say who they are, nobody is an admin."""
+    principal = current_principal()
+    if principal is None or not principal.platform_admin:
+        await context.abort(
+            grpc.StatusCode.PERMISSION_DENIED, "only platform admins can change models"
+        )
 
 
 def _health(provider: Provider, status: Status) -> llm_pb2.ProviderHealth:

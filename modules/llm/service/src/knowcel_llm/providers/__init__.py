@@ -20,6 +20,7 @@ REGISTRY: dict[str, Callable[[Settings], Provider]] = {
             generate_timeout=s.provider_generate_timeout,
             embed_timeout=s.provider_embed_timeout,
             list_timeout=s.provider_list_timeout,
+            pull_stall_timeout=s.provider_pull_stall_timeout,
             attempts=s.provider_attempts,
             retry_delay=s.provider_retry_delay,
         ),

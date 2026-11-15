@@ -150,3 +150,35 @@ class EmbedResponse(_message.Message):
     model: str
     dimensions: int
     def __init__(self, embeddings: _Optional[_Iterable[_Union[Embedding, _Mapping]]] = ..., model: _Optional[str] = ..., dimensions: _Optional[int] = ...) -> None: ...
+
+class PullModelRequest(_message.Message):
+    __slots__ = ("provider", "model")
+    PROVIDER_FIELD_NUMBER: _ClassVar[int]
+    MODEL_FIELD_NUMBER: _ClassVar[int]
+    provider: str
+    model: str
+    def __init__(self, provider: _Optional[str] = ..., model: _Optional[str] = ...) -> None: ...
+
+class PullModelResponse(_message.Message):
+    __slots__ = ("status", "completed", "total", "done")
+    STATUS_FIELD_NUMBER: _ClassVar[int]
+    COMPLETED_FIELD_NUMBER: _ClassVar[int]
+    TOTAL_FIELD_NUMBER: _ClassVar[int]
+    DONE_FIELD_NUMBER: _ClassVar[int]
+    status: str
+    completed: int
+    total: int
+    done: bool
+    def __init__(self, status: _Optional[str] = ..., completed: _Optional[int] = ..., total: _Optional[int] = ..., done: _Optional[bool] = ...) -> None: ...
+
+class DeleteModelRequest(_message.Message):
+    __slots__ = ("provider", "model")
+    PROVIDER_FIELD_NUMBER: _ClassVar[int]
+    MODEL_FIELD_NUMBER: _ClassVar[int]
+    provider: str
+    model: str
+    def __init__(self, provider: _Optional[str] = ..., model: _Optional[str] = ...) -> None: ...
+
+class DeleteModelResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...

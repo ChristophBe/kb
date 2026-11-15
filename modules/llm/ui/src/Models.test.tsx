@@ -1,8 +1,10 @@
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
 import { LlmService, ModelKind } from "@knowcel/llm-api/knowcel/llm/v1/llm_pb";
 import { renderModule } from "@knowcel/module-sdk/testing";
-import { screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { expectNoAxeViolations } from "@knowcel/ui/testing";
+import { polyfillDialog } from "@knowcel/ui/testing/dialog";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { beforeAll, describe, expect, it } from "vitest";
 import llm from "./index.tsx";
 
 describe("Models", () => {
@@ -95,5 +97,182 @@ describe("Models", () => {
     );
     renderModule(llm, transport);
     expect((await screen.findByRole("alert")).textContent).toBe("[unavailable] llm service down");
+  });
+
+  describe("managing models", () => {
+    beforeAll(polyfillDialog);
+
+    const ADMIN = { id: "root", email: "root@x", displayName: "Root", platformAdmin: true };
+    const MEMBER = { ...ADMIN, id: "mia", platformAdmin: false };
+    const status = {
+      provider: "ollama",
+      healthy: true,
+      detail: "ollama 0.12.6",
+      defaultChatModel: "llama3.2",
+      defaultEmbeddingModel: "nomic-embed-text",
+      embeddingDimensions: 768,
+    };
+
+    it("hides pulling and deleting from everyone but platform admins", async () => {
+      const transport = createRouterTransport(({ service }) =>
+        service(LlmService, {
+          getProviderStatus: () => status,
+          listModels: () => ({
+            models: [{ id: "llama3.2", provider: "ollama", kind: ModelKind.CHAT }],
+          }),
+        }),
+      );
+      for (const user of [MEMBER, null]) {
+        const { unmount } = renderModule(llm, transport, "/", user);
+        expect(await screen.findByText("llama3.2", { selector: "span.font-mono" })).toBeTruthy();
+        expect(screen.queryByLabelText("Pull a model")).toBeNull();
+        expect(screen.queryByRole("button", { name: "Delete llama3.2" })).toBeNull();
+        unmount();
+      }
+    });
+
+    it("has no accessibility violations for admins", async () => {
+      const transport = createRouterTransport(({ service }) =>
+        service(LlmService, {
+          getProviderStatus: () => status,
+          listModels: () => ({
+            models: [{ id: "llama3.2", provider: "ollama", kind: ModelKind.CHAT }],
+          }),
+        }),
+      );
+      const { container } = renderModule(llm, transport, "/", ADMIN);
+      await screen.findByLabelText("Pull a model");
+      await screen.findByRole("button", { name: "Delete llama3.2" });
+      await expectNoAxeViolations(container);
+    });
+
+    it("pulls a model with live progress and lists it afterwards", async () => {
+      let pulled = false;
+      let release: () => void = () => {};
+      const midway = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const requests: { provider: string; model: string }[] = [];
+      const transport = createRouterTransport(({ service }) =>
+        service(LlmService, {
+          getProviderStatus: () => status,
+          listModels: () => ({
+            models: pulled ? [{ id: "phi4", provider: "ollama", kind: ModelKind.CHAT }] : [],
+          }),
+          async *pullModel(req) {
+            requests.push({ provider: req.provider, model: req.model });
+            yield { status: "pulling abc", completed: 25n, total: 100n };
+            await midway;
+            pulled = true;
+            yield { status: "success", done: true };
+          },
+        }),
+      );
+      renderModule(llm, transport, "/", ADMIN);
+      fireEvent.change(await screen.findByLabelText("Pull a model"), { target: { value: "phi4" } });
+      fireEvent.click(screen.getByRole("button", { name: "Pull" }));
+
+      const bar = await screen.findByRole("progressbar", { name: "Pulling phi4" });
+      await waitFor(() => expect((bar as HTMLProgressElement).value).toBe(25));
+      expect(screen.getByText("25 %")).toBeTruthy();
+      expect(screen.getByRole("status").textContent).toBe("pulling abc");
+      release();
+      expect(await screen.findByText("phi4", { selector: "span.font-mono" })).toBeTruthy();
+      expect(screen.queryByRole("progressbar")).toBeNull();
+      expect(requests).toEqual([{ provider: "ollama", model: "phi4" }]);
+    });
+
+    it("asks for a model name and says why a pull failed", async () => {
+      const transport = createRouterTransport(({ service }) =>
+        service(LlmService, {
+          getProviderStatus: () => status,
+          listModels: () => ({ models: [] }),
+          // biome-ignore lint/correctness/useYield: fails before the first step
+          async *pullModel() {
+            throw new ConnectError("no such model", Code.NotFound);
+          },
+        }),
+      );
+      renderModule(llm, transport, "/", ADMIN);
+      const pull = await screen.findByRole("button", { name: "Pull" });
+      fireEvent.click(pull);
+      expect(screen.getByText("Model name must not be empty")).toBeTruthy();
+      fireEvent.change(screen.getByLabelText("Pull a model"), { target: { value: "nope" } });
+      fireEvent.click(pull);
+      expect((await screen.findByRole("alert")).textContent).toContain(
+        "The provider doesn't have this model",
+      );
+    });
+
+    it("offers both providers when chat and embeddings are served apart", async () => {
+      const requests: string[] = [];
+      const transport = createRouterTransport(({ service }) =>
+        service(LlmService, {
+          getProviderStatus: () => ({
+            ...status,
+            provider: "anthropic+ollama",
+            chat: { provider: "anthropic", healthy: true },
+            embedding: { provider: "ollama", healthy: true },
+          }),
+          listModels: () => ({ models: [] }),
+          async *pullModel(req) {
+            requests.push(req.provider);
+            yield { status: "success", done: true };
+          },
+        }),
+      );
+      renderModule(llm, transport, "/", ADMIN);
+      fireEvent.change(await screen.findByLabelText("Provider"), { target: { value: "ollama" } });
+      fireEvent.change(screen.getByLabelText("Pull a model"), {
+        target: { value: "nomic-embed-text" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: "Pull" }));
+      await waitFor(() => expect(requests).toEqual(["ollama"]));
+    });
+
+    it("deletes a model after a confirmation", async () => {
+      const deleted: { provider: string; model: string }[] = [];
+      const transport = createRouterTransport(({ service }) =>
+        service(LlmService, {
+          getProviderStatus: () => status,
+          listModels: () => ({
+            models: deleted.length
+              ? []
+              : [{ id: "llama3.2", provider: "ollama", kind: ModelKind.CHAT }],
+          }),
+          deleteModel: (req) => {
+            deleted.push({ provider: req.provider, model: req.model });
+            return {};
+          },
+        }),
+      );
+      renderModule(llm, transport, "/", ADMIN);
+      fireEvent.click(await screen.findByRole("button", { name: "Delete llama3.2" }));
+      expect(deleted).toEqual([]);
+      fireEvent.click(await screen.findByRole("button", { name: "Delete" }));
+      expect(await screen.findByText("No models installed.")).toBeTruthy();
+      expect(deleted).toEqual([{ provider: "ollama", model: "llama3.2" }]);
+    });
+
+    it("says why a delete was refused", async () => {
+      const transport = createRouterTransport(({ service }) =>
+        service(LlmService, {
+          getProviderStatus: () => status,
+          listModels: () => ({
+            models: [{ id: "llama3.2", provider: "ollama", kind: ModelKind.CHAT }],
+          }),
+          deleteModel: () => {
+            throw new ConnectError("denied", Code.PermissionDenied);
+          },
+        }),
+      );
+      renderModule(llm, transport, "/", ADMIN);
+      fireEvent.click(await screen.findByRole("button", { name: "Delete llama3.2" }));
+      const dialog = await screen.findByRole("dialog");
+      fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
+      expect((await screen.findByRole("alert")).textContent).toContain(
+        "Only platform admins can pull and delete models.",
+      );
+    });
   });
 });

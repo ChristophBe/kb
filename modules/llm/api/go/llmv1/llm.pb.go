@@ -911,6 +911,220 @@ func (x *EmbedResponse) GetDimensions() int32 {
 	return 0
 }
 
+type PullModelRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Registry name of the provider (a Model.provider or a ProviderHealth.provider).
+	// Empty selects the chat provider.
+	Provider      string `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	Model         string `protobuf:"bytes,2,opt,name=model,proto3" json:"model,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PullModelRequest) Reset() {
+	*x = PullModelRequest{}
+	mi := &file_knowcel_llm_v1_llm_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PullModelRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PullModelRequest) ProtoMessage() {}
+
+func (x *PullModelRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_llm_v1_llm_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PullModelRequest.ProtoReflect.Descriptor instead.
+func (*PullModelRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_llm_v1_llm_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *PullModelRequest) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+func (x *PullModelRequest) GetModel() string {
+	if x != nil {
+		return x.Model
+	}
+	return ""
+}
+
+type PullModelResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// What the provider is doing, e.g. "pulling manifest" or "verifying sha256 digest".
+	Status string `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	// Bytes of the current download step; total is 0 when the step has no size.
+	Completed int64 `protobuf:"varint,2,opt,name=completed,proto3" json:"completed,omitempty"`
+	Total     int64 `protobuf:"varint,3,opt,name=total,proto3" json:"total,omitempty"`
+	// Set on the final message of the stream only.
+	Done          bool `protobuf:"varint,4,opt,name=done,proto3" json:"done,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PullModelResponse) Reset() {
+	*x = PullModelResponse{}
+	mi := &file_knowcel_llm_v1_llm_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PullModelResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PullModelResponse) ProtoMessage() {}
+
+func (x *PullModelResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_llm_v1_llm_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PullModelResponse.ProtoReflect.Descriptor instead.
+func (*PullModelResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_llm_v1_llm_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *PullModelResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *PullModelResponse) GetCompleted() int64 {
+	if x != nil {
+		return x.Completed
+	}
+	return 0
+}
+
+func (x *PullModelResponse) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *PullModelResponse) GetDone() bool {
+	if x != nil {
+		return x.Done
+	}
+	return false
+}
+
+type DeleteModelRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Registry name of the provider (a Model.provider). Empty selects the chat provider.
+	Provider      string `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	Model         string `protobuf:"bytes,2,opt,name=model,proto3" json:"model,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteModelRequest) Reset() {
+	*x = DeleteModelRequest{}
+	mi := &file_knowcel_llm_v1_llm_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteModelRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteModelRequest) ProtoMessage() {}
+
+func (x *DeleteModelRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_llm_v1_llm_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteModelRequest.ProtoReflect.Descriptor instead.
+func (*DeleteModelRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_llm_v1_llm_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *DeleteModelRequest) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+func (x *DeleteModelRequest) GetModel() string {
+	if x != nil {
+		return x.Model
+	}
+	return ""
+}
+
+type DeleteModelResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteModelResponse) Reset() {
+	*x = DeleteModelResponse{}
+	mi := &file_knowcel_llm_v1_llm_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteModelResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteModelResponse) ProtoMessage() {}
+
+func (x *DeleteModelResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_llm_v1_llm_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteModelResponse.ProtoReflect.Descriptor instead.
+func (*DeleteModelResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_llm_v1_llm_proto_rawDescGZIP(), []int{17}
+}
+
 var File_knowcel_llm_v1_llm_proto protoreflect.FileDescriptor
 
 const file_knowcel_llm_v1_llm_proto_rawDesc = "" +
@@ -970,7 +1184,19 @@ const file_knowcel_llm_v1_llm_proto_rawDesc = "" +
 	"\x05model\x18\x02 \x01(\tR\x05model\x12\x1e\n" +
 	"\n" +
 	"dimensions\x18\x03 \x01(\x05R\n" +
-	"dimensions*P\n" +
+	"dimensions\"D\n" +
+	"\x10PullModelRequest\x12\x1a\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x14\n" +
+	"\x05model\x18\x02 \x01(\tR\x05model\"s\n" +
+	"\x11PullModelResponse\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\x12\x1c\n" +
+	"\tcompleted\x18\x02 \x01(\x03R\tcompleted\x12\x14\n" +
+	"\x05total\x18\x03 \x01(\x03R\x05total\x12\x12\n" +
+	"\x04done\x18\x04 \x01(\bR\x04done\"F\n" +
+	"\x12DeleteModelRequest\x12\x1a\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x14\n" +
+	"\x05model\x18\x02 \x01(\tR\x05model\"\x15\n" +
+	"\x13DeleteModelResponse*P\n" +
 	"\x04Role\x12\x14\n" +
 	"\x10ROLE_UNSPECIFIED\x10\x00\x12\x0f\n" +
 	"\vROLE_SYSTEM\x10\x01\x12\r\n" +
@@ -979,14 +1205,16 @@ const file_knowcel_llm_v1_llm_proto_rawDesc = "" +
 	"\tModelKind\x12\x1a\n" +
 	"\x16MODEL_KIND_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fMODEL_KIND_CHAT\x10\x01\x12\x18\n" +
-	"\x14MODEL_KIND_EMBEDDING\x10\x022\xe2\x02\n" +
+	"\x14MODEL_KIND_EMBEDDING\x10\x022\x8e\x04\n" +
 	"\n" +
 	"LlmService\x12S\n" +
 	"\n" +
 	"ListModels\x12!.knowcel.llm.v1.ListModelsRequest\x1a\".knowcel.llm.v1.ListModelsResponse\x12h\n" +
 	"\x11GetProviderStatus\x12(.knowcel.llm.v1.GetProviderStatusRequest\x1a).knowcel.llm.v1.GetProviderStatusResponse\x12O\n" +
 	"\bGenerate\x12\x1f.knowcel.llm.v1.GenerateRequest\x1a .knowcel.llm.v1.GenerateResponse0\x01\x12D\n" +
-	"\x05Embed\x12\x1c.knowcel.llm.v1.EmbedRequest\x1a\x1d.knowcel.llm.v1.EmbedResponseBBZ@github.com/ChristophBe/knowcelium/modules/llm/api/go/llmv1;llmv1b\x06proto3"
+	"\x05Embed\x12\x1c.knowcel.llm.v1.EmbedRequest\x1a\x1d.knowcel.llm.v1.EmbedResponse\x12R\n" +
+	"\tPullModel\x12 .knowcel.llm.v1.PullModelRequest\x1a!.knowcel.llm.v1.PullModelResponse0\x01\x12V\n" +
+	"\vDeleteModel\x12\".knowcel.llm.v1.DeleteModelRequest\x1a#.knowcel.llm.v1.DeleteModelResponseBBZ@github.com/ChristophBe/knowcelium/modules/llm/api/go/llmv1;llmv1b\x06proto3"
 
 var (
 	file_knowcel_llm_v1_llm_proto_rawDescOnce sync.Once
@@ -1001,7 +1229,7 @@ func file_knowcel_llm_v1_llm_proto_rawDescGZIP() []byte {
 }
 
 var file_knowcel_llm_v1_llm_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_knowcel_llm_v1_llm_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_knowcel_llm_v1_llm_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_knowcel_llm_v1_llm_proto_goTypes = []any{
 	(Role)(0),                         // 0: knowcel.llm.v1.Role
 	(ModelKind)(0),                    // 1: knowcel.llm.v1.ModelKind
@@ -1019,6 +1247,10 @@ var file_knowcel_llm_v1_llm_proto_goTypes = []any{
 	(*EmbedRequest)(nil),              // 13: knowcel.llm.v1.EmbedRequest
 	(*Embedding)(nil),                 // 14: knowcel.llm.v1.Embedding
 	(*EmbedResponse)(nil),             // 15: knowcel.llm.v1.EmbedResponse
+	(*PullModelRequest)(nil),          // 16: knowcel.llm.v1.PullModelRequest
+	(*PullModelResponse)(nil),         // 17: knowcel.llm.v1.PullModelResponse
+	(*DeleteModelRequest)(nil),        // 18: knowcel.llm.v1.DeleteModelRequest
+	(*DeleteModelResponse)(nil),       // 19: knowcel.llm.v1.DeleteModelResponse
 }
 var file_knowcel_llm_v1_llm_proto_depIdxs = []int32{
 	1,  // 0: knowcel.llm.v1.Model.kind:type_name -> knowcel.llm.v1.ModelKind
@@ -1034,12 +1266,16 @@ var file_knowcel_llm_v1_llm_proto_depIdxs = []int32{
 	8,  // 10: knowcel.llm.v1.LlmService.GetProviderStatus:input_type -> knowcel.llm.v1.GetProviderStatusRequest
 	11, // 11: knowcel.llm.v1.LlmService.Generate:input_type -> knowcel.llm.v1.GenerateRequest
 	13, // 12: knowcel.llm.v1.LlmService.Embed:input_type -> knowcel.llm.v1.EmbedRequest
-	7,  // 13: knowcel.llm.v1.LlmService.ListModels:output_type -> knowcel.llm.v1.ListModelsResponse
-	10, // 14: knowcel.llm.v1.LlmService.GetProviderStatus:output_type -> knowcel.llm.v1.GetProviderStatusResponse
-	12, // 15: knowcel.llm.v1.LlmService.Generate:output_type -> knowcel.llm.v1.GenerateResponse
-	15, // 16: knowcel.llm.v1.LlmService.Embed:output_type -> knowcel.llm.v1.EmbedResponse
-	13, // [13:17] is the sub-list for method output_type
-	9,  // [9:13] is the sub-list for method input_type
+	16, // 13: knowcel.llm.v1.LlmService.PullModel:input_type -> knowcel.llm.v1.PullModelRequest
+	18, // 14: knowcel.llm.v1.LlmService.DeleteModel:input_type -> knowcel.llm.v1.DeleteModelRequest
+	7,  // 15: knowcel.llm.v1.LlmService.ListModels:output_type -> knowcel.llm.v1.ListModelsResponse
+	10, // 16: knowcel.llm.v1.LlmService.GetProviderStatus:output_type -> knowcel.llm.v1.GetProviderStatusResponse
+	12, // 17: knowcel.llm.v1.LlmService.Generate:output_type -> knowcel.llm.v1.GenerateResponse
+	15, // 18: knowcel.llm.v1.LlmService.Embed:output_type -> knowcel.llm.v1.EmbedResponse
+	17, // 19: knowcel.llm.v1.LlmService.PullModel:output_type -> knowcel.llm.v1.PullModelResponse
+	19, // 20: knowcel.llm.v1.LlmService.DeleteModel:output_type -> knowcel.llm.v1.DeleteModelResponse
+	15, // [15:21] is the sub-list for method output_type
+	9,  // [9:15] is the sub-list for method input_type
 	9,  // [9:9] is the sub-list for extension type_name
 	9,  // [9:9] is the sub-list for extension extendee
 	0,  // [0:9] is the sub-list for field type_name
@@ -1057,7 +1293,7 @@ func file_knowcel_llm_v1_llm_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_knowcel_llm_v1_llm_proto_rawDesc), len(file_knowcel_llm_v1_llm_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   14,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

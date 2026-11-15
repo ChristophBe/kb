@@ -134,6 +134,7 @@ From `Settings` in [modules/llm/service/src/knowcel_llm/config.py](../modules/ll
 |---|---|---|
 | `KNOWCEL_GRPC_PORT` | `9004` | Serves the gRPC API; each component defaults it to the port in its module.yaml (0 for workers, which serve none). |
 | `KNOWCEL_METRICS_PORT` | `9104` | Serves Prometheus metrics at /metrics (knowcel_platform.metrics); like KNOWCEL_GRPC_PORT, each component defaults it to the port in its module.yaml. |
+| `KNOWCEL_IAM_ADDR` | `localhost:9006` | The iam module (host:port), which tells whether a caller is a platform admin. While it is down, nobody is one and models can't be changed. |
 | `KNOWCEL_LLM_PROVIDER` | `ollama` | Provider for chat and embeddings, a name in knowcel_llm.providers.REGISTRY: ollama, anthropic or fake. |
 | `KNOWCEL_CHAT_PROVIDER` | empty | Provider for Generate (chat) only, e.g. anthropic with Ollama embeddings; empty falls back to KNOWCEL_LLM_PROVIDER. |
 | `KNOWCEL_EMBEDDING_PROVIDER` | empty | Provider for Embed only; empty falls back to KNOWCEL_LLM_PROVIDER. |
@@ -148,6 +149,7 @@ From `Settings` in [modules/llm/service/src/knowcel_llm/config.py](../modules/ll
 | `KNOWCEL_PROVIDER_GENERATE_TIMEOUT` | `600` | Seconds one whole answer may take. |
 | `KNOWCEL_PROVIDER_EMBED_TIMEOUT` | `120` | Seconds one Embed call may take. |
 | `KNOWCEL_PROVIDER_LIST_TIMEOUT` | `10` | Seconds to list a provider's models or check its health. |
+| `KNOWCEL_PROVIDER_PULL_STALL_TIMEOUT` | `120` | Seconds a model download may go without progress before it is given up. |
 | `KNOWCEL_PROVIDER_ATTEMPTS` | `3` | Attempts for idempotent calls (embed, list), doubling the delay after each. |
 | `KNOWCEL_PROVIDER_RETRY_DELAY` | `0.5` | Seconds before the second attempt. |
 | `KNOWCEL_PROVIDER_MAX_CONCURRENCY` | `8` | Generate and Embed calls in flight per provider, above which calls are rejected. |

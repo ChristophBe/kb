@@ -57,6 +57,5 @@ forbidden_modules =
     knowcel.chat
     knowcel_chat
     knowcel.document
-    knowcel.iam
     knowcel.ingestion
     knowcel_ingestion_worker

@@ -10,7 +10,7 @@ import type { Message as Message$1 } from "@bufbuild/protobuf";
  * Describes the file knowcel/llm/v1/llm.proto.
  */
 export const file_knowcel_llm_v1_llm: GenFile = /*@__PURE__*/
-  fileDesc("Chhrbm93Y2VsL2xsbS92MS9sbG0ucHJvdG8SDmtub3djZWwubGxtLnYxIk4KBU1vZGVsEgoKAmlkGAEgASgJEhAKCHByb3ZpZGVyGAIgASgJEicKBGtpbmQYAyABKA4yGS5rbm93Y2VsLmxsbS52MS5Nb2RlbEtpbmQiPgoHTWVzc2FnZRIiCgRyb2xlGAEgASgOMhQua25vd2NlbC5sbG0udjEuUm9sZRIPCgdjb250ZW50GAIgASgJImUKEUdlbmVyYXRpb25PcHRpb25zEhgKC3RlbXBlcmF0dXJlGAEgASgCSACIAQESFwoKbWF4X3Rva2VucxgCIAEoBUgBiAEBQg4KDF90ZW1wZXJhdHVyZUINCgtfbWF4X3Rva2VucyI0CgVVc2FnZRIUCgxpbnB1dF90b2tlbnMYASABKAUSFQoNb3V0cHV0X3Rva2VucxgCIAEoBSITChFMaXN0TW9kZWxzUmVxdWVzdCI7ChJMaXN0TW9kZWxzUmVzcG9uc2USJQoGbW9kZWxzGAEgAygLMhUua25vd2NlbC5sbG0udjEuTW9kZWwiGgoYR2V0UHJvdmlkZXJTdGF0dXNSZXF1ZXN0IkMKDlByb3ZpZGVySGVhbHRoEhAKCHByb3ZpZGVyGAEgASgJEg8KB2hlYWx0aHkYAiABKAgSDgoGZGV0YWlsGAMgASgJIooCChlHZXRQcm92aWRlclN0YXR1c1Jlc3BvbnNlEhAKCHByb3ZpZGVyGAEgASgJEg8KB2hlYWx0aHkYAiABKAgSDgoGZGV0YWlsGAMgASgJEhoKEmRlZmF1bHRfY2hhdF9tb2RlbBgEIAEoCRIfChdkZWZhdWx0X2VtYmVkZGluZ19tb2RlbBgFIAEoCRIcChRlbWJlZGRpbmdfZGltZW5zaW9ucxgGIAEoBRIsCgRjaGF0GAcgASgLMh4ua25vd2NlbC5sbG0udjEuUHJvdmlkZXJIZWFsdGgSMQoJZW1iZWRkaW5nGAggASgLMh4ua25vd2NlbC5sbG0udjEuUHJvdmlkZXJIZWFsdGgifwoPR2VuZXJhdGVSZXF1ZXN0Eg0KBW1vZGVsGAEgASgJEikKCG1lc3NhZ2VzGAIgAygLMhcua25vd2NlbC5sbG0udjEuTWVzc2FnZRIyCgdvcHRpb25zGAMgASgLMiEua25vd2NlbC5sbG0udjEuR2VuZXJhdGlvbk9wdGlvbnMiZAoQR2VuZXJhdGVSZXNwb25zZRINCgVkZWx0YRgBIAEoCRIMCgRkb25lGAIgASgIEiQKBXVzYWdlGAMgASgLMhUua25vd2NlbC5sbG0udjEuVXNhZ2USDQoFbW9kZWwYBCABKAkiLQoMRW1iZWRSZXF1ZXN0Eg0KBW1vZGVsGAEgASgJEg4KBmlucHV0cxgCIAMoCSIbCglFbWJlZGRpbmcSDgoGdmFsdWVzGAEgAygCImEKDUVtYmVkUmVzcG9uc2USLQoKZW1iZWRkaW5ncxgBIAMoCzIZLmtub3djZWwubGxtLnYxLkVtYmVkZGluZxINCgVtb2RlbBgCIAEoCRISCgpkaW1lbnNpb25zGAMgASgFKlAKBFJvbGUSFAoQUk9MRV9VTlNQRUNJRklFRBAAEg8KC1JPTEVfU1lTVEVNEAESDQoJUk9MRV9VU0VSEAISEgoOUk9MRV9BU1NJU1RBTlQQAypWCglNb2RlbEtpbmQSGgoWTU9ERUxfS0lORF9VTlNQRUNJRklFRBAAEhMKD01PREVMX0tJTkRfQ0hBVBABEhgKFE1PREVMX0tJTkRfRU1CRURESU5HEAIy4gIKCkxsbVNlcnZpY2USUwoKTGlzdE1vZGVscxIhLmtub3djZWwubGxtLnYxLkxpc3RNb2RlbHNSZXF1ZXN0GiIua25vd2NlbC5sbG0udjEuTGlzdE1vZGVsc1Jlc3BvbnNlEmgKEUdldFByb3ZpZGVyU3RhdHVzEigua25vd2NlbC5sbG0udjEuR2V0UHJvdmlkZXJTdGF0dXNSZXF1ZXN0Gikua25vd2NlbC5sbG0udjEuR2V0UHJvdmlkZXJTdGF0dXNSZXNwb25zZRJPCghHZW5lcmF0ZRIfLmtub3djZWwubGxtLnYxLkdlbmVyYXRlUmVxdWVzdBogLmtub3djZWwubGxtLnYxLkdlbmVyYXRlUmVzcG9uc2UwARJECgVFbWJlZBIcLmtub3djZWwubGxtLnYxLkVtYmVkUmVxdWVzdBodLmtub3djZWwubGxtLnYxLkVtYmVkUmVzcG9uc2VCQlpAZ2l0aHViLmNvbS9DaHJpc3RvcGhCZS9rbm93Y2VsaXVtL21vZHVsZXMvbGxtL2FwaS9nby9sbG12MTtsbG12MWIGcHJvdG8z");
+  fileDesc("Chhrbm93Y2VsL2xsbS92MS9sbG0ucHJvdG8SDmtub3djZWwubGxtLnYxIk4KBU1vZGVsEgoKAmlkGAEgASgJEhAKCHByb3ZpZGVyGAIgASgJEicKBGtpbmQYAyABKA4yGS5rbm93Y2VsLmxsbS52MS5Nb2RlbEtpbmQiPgoHTWVzc2FnZRIiCgRyb2xlGAEgASgOMhQua25vd2NlbC5sbG0udjEuUm9sZRIPCgdjb250ZW50GAIgASgJImUKEUdlbmVyYXRpb25PcHRpb25zEhgKC3RlbXBlcmF0dXJlGAEgASgCSACIAQESFwoKbWF4X3Rva2VucxgCIAEoBUgBiAEBQg4KDF90ZW1wZXJhdHVyZUINCgtfbWF4X3Rva2VucyI0CgVVc2FnZRIUCgxpbnB1dF90b2tlbnMYASABKAUSFQoNb3V0cHV0X3Rva2VucxgCIAEoBSITChFMaXN0TW9kZWxzUmVxdWVzdCI7ChJMaXN0TW9kZWxzUmVzcG9uc2USJQoGbW9kZWxzGAEgAygLMhUua25vd2NlbC5sbG0udjEuTW9kZWwiGgoYR2V0UHJvdmlkZXJTdGF0dXNSZXF1ZXN0IkMKDlByb3ZpZGVySGVhbHRoEhAKCHByb3ZpZGVyGAEgASgJEg8KB2hlYWx0aHkYAiABKAgSDgoGZGV0YWlsGAMgASgJIooCChlHZXRQcm92aWRlclN0YXR1c1Jlc3BvbnNlEhAKCHByb3ZpZGVyGAEgASgJEg8KB2hlYWx0aHkYAiABKAgSDgoGZGV0YWlsGAMgASgJEhoKEmRlZmF1bHRfY2hhdF9tb2RlbBgEIAEoCRIfChdkZWZhdWx0X2VtYmVkZGluZ19tb2RlbBgFIAEoCRIcChRlbWJlZGRpbmdfZGltZW5zaW9ucxgGIAEoBRIsCgRjaGF0GAcgASgLMh4ua25vd2NlbC5sbG0udjEuUHJvdmlkZXJIZWFsdGgSMQoJZW1iZWRkaW5nGAggASgLMh4ua25vd2NlbC5sbG0udjEuUHJvdmlkZXJIZWFsdGgifwoPR2VuZXJhdGVSZXF1ZXN0Eg0KBW1vZGVsGAEgASgJEikKCG1lc3NhZ2VzGAIgAygLMhcua25vd2NlbC5sbG0udjEuTWVzc2FnZRIyCgdvcHRpb25zGAMgASgLMiEua25vd2NlbC5sbG0udjEuR2VuZXJhdGlvbk9wdGlvbnMiZAoQR2VuZXJhdGVSZXNwb25zZRINCgVkZWx0YRgBIAEoCRIMCgRkb25lGAIgASgIEiQKBXVzYWdlGAMgASgLMhUua25vd2NlbC5sbG0udjEuVXNhZ2USDQoFbW9kZWwYBCABKAkiLQoMRW1iZWRSZXF1ZXN0Eg0KBW1vZGVsGAEgASgJEg4KBmlucHV0cxgCIAMoCSIbCglFbWJlZGRpbmcSDgoGdmFsdWVzGAEgAygCImEKDUVtYmVkUmVzcG9uc2USLQoKZW1iZWRkaW5ncxgBIAMoCzIZLmtub3djZWwubGxtLnYxLkVtYmVkZGluZxINCgVtb2RlbBgCIAEoCRISCgpkaW1lbnNpb25zGAMgASgFIjMKEFB1bGxNb2RlbFJlcXVlc3QSEAoIcHJvdmlkZXIYASABKAkSDQoFbW9kZWwYAiABKAkiUwoRUHVsbE1vZGVsUmVzcG9uc2USDgoGc3RhdHVzGAEgASgJEhEKCWNvbXBsZXRlZBgCIAEoAxINCgV0b3RhbBgDIAEoAxIMCgRkb25lGAQgASgIIjUKEkRlbGV0ZU1vZGVsUmVxdWVzdBIQCghwcm92aWRlchgBIAEoCRINCgVtb2RlbBgCIAEoCSIVChNEZWxldGVNb2RlbFJlc3BvbnNlKlAKBFJvbGUSFAoQUk9MRV9VTlNQRUNJRklFRBAAEg8KC1JPTEVfU1lTVEVNEAESDQoJUk9MRV9VU0VSEAISEgoOUk9MRV9BU1NJU1RBTlQQAypWCglNb2RlbEtpbmQSGgoWTU9ERUxfS0lORF9VTlNQRUNJRklFRBAAEhMKD01PREVMX0tJTkRfQ0hBVBABEhgKFE1PREVMX0tJTkRfRU1CRURESU5HEAIyjgQKCkxsbVNlcnZpY2USUwoKTGlzdE1vZGVscxIhLmtub3djZWwubGxtLnYxLkxpc3RNb2RlbHNSZXF1ZXN0GiIua25vd2NlbC5sbG0udjEuTGlzdE1vZGVsc1Jlc3BvbnNlEmgKEUdldFByb3ZpZGVyU3RhdHVzEigua25vd2NlbC5sbG0udjEuR2V0UHJvdmlkZXJTdGF0dXNSZXF1ZXN0Gikua25vd2NlbC5sbG0udjEuR2V0UHJvdmlkZXJTdGF0dXNSZXNwb25zZRJPCghHZW5lcmF0ZRIfLmtub3djZWwubGxtLnYxLkdlbmVyYXRlUmVxdWVzdBogLmtub3djZWwubGxtLnYxLkdlbmVyYXRlUmVzcG9uc2UwARJECgVFbWJlZBIcLmtub3djZWwubGxtLnYxLkVtYmVkUmVxdWVzdBodLmtub3djZWwubGxtLnYxLkVtYmVkUmVzcG9uc2USUgoJUHVsbE1vZGVsEiAua25vd2NlbC5sbG0udjEuUHVsbE1vZGVsUmVxdWVzdBohLmtub3djZWwubGxtLnYxLlB1bGxNb2RlbFJlc3BvbnNlMAESVgoLRGVsZXRlTW9kZWwSIi5rbm93Y2VsLmxsbS52MS5EZWxldGVNb2RlbFJlcXVlc3QaIy5rbm93Y2VsLmxsbS52MS5EZWxldGVNb2RlbFJlc3BvbnNlQkJaQGdpdGh1Yi5jb20vQ2hyaXN0b3BoQmUva25vd2NlbGl1bS9tb2R1bGVzL2xsbS9hcGkvZ28vbGxtdjE7bGxtdjFiBnByb3RvMw");
 
 /**
  * @generated from message knowcel.llm.v1.Model
@@ -377,6 +377,106 @@ export const EmbedResponseSchema: GenMessage<EmbedResponse> = /*@__PURE__*/
   messageDesc(file_knowcel_llm_v1_llm, 13);
 
 /**
+ * @generated from message knowcel.llm.v1.PullModelRequest
+ */
+export type PullModelRequest = Message$1<"knowcel.llm.v1.PullModelRequest"> & {
+  /**
+   * Registry name of the provider (a Model.provider or a ProviderHealth.provider).
+   * Empty selects the chat provider.
+   *
+   * @generated from field: string provider = 1;
+   */
+  provider: string;
+
+  /**
+   * @generated from field: string model = 2;
+   */
+  model: string;
+};
+
+/**
+ * Describes the message knowcel.llm.v1.PullModelRequest.
+ * Use `create(PullModelRequestSchema)` to create a new message.
+ */
+export const PullModelRequestSchema: GenMessage<PullModelRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_llm_v1_llm, 14);
+
+/**
+ * @generated from message knowcel.llm.v1.PullModelResponse
+ */
+export type PullModelResponse = Message$1<"knowcel.llm.v1.PullModelResponse"> & {
+  /**
+   * What the provider is doing, e.g. "pulling manifest" or "verifying sha256 digest".
+   *
+   * @generated from field: string status = 1;
+   */
+  status: string;
+
+  /**
+   * Bytes of the current download step; total is 0 when the step has no size.
+   *
+   * @generated from field: int64 completed = 2;
+   */
+  completed: bigint;
+
+  /**
+   * @generated from field: int64 total = 3;
+   */
+  total: bigint;
+
+  /**
+   * Set on the final message of the stream only.
+   *
+   * @generated from field: bool done = 4;
+   */
+  done: boolean;
+};
+
+/**
+ * Describes the message knowcel.llm.v1.PullModelResponse.
+ * Use `create(PullModelResponseSchema)` to create a new message.
+ */
+export const PullModelResponseSchema: GenMessage<PullModelResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_llm_v1_llm, 15);
+
+/**
+ * @generated from message knowcel.llm.v1.DeleteModelRequest
+ */
+export type DeleteModelRequest = Message$1<"knowcel.llm.v1.DeleteModelRequest"> & {
+  /**
+   * Registry name of the provider (a Model.provider). Empty selects the chat provider.
+   *
+   * @generated from field: string provider = 1;
+   */
+  provider: string;
+
+  /**
+   * @generated from field: string model = 2;
+   */
+  model: string;
+};
+
+/**
+ * Describes the message knowcel.llm.v1.DeleteModelRequest.
+ * Use `create(DeleteModelRequestSchema)` to create a new message.
+ */
+export const DeleteModelRequestSchema: GenMessage<DeleteModelRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_llm_v1_llm, 16);
+
+/**
+ * @generated from message knowcel.llm.v1.DeleteModelResponse
+ */
+export type DeleteModelResponse = Message$1<"knowcel.llm.v1.DeleteModelResponse"> & {
+};
+
+/**
+ * Describes the message knowcel.llm.v1.DeleteModelResponse.
+ * Use `create(DeleteModelResponseSchema)` to create a new message.
+ */
+export const DeleteModelResponseSchema: GenMessage<DeleteModelResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_llm_v1_llm, 17);
+
+/**
  * @generated from enum knowcel.llm.v1.Role
  */
 export enum Role {
@@ -474,6 +574,29 @@ export const LlmService: GenService<{
     methodKind: "unary";
     input: typeof EmbedRequestSchema;
     output: typeof EmbedResponseSchema;
+  },
+  /**
+   * PullModel downloads a model to a provider and streams the progress, ending
+   * with a message with done set. Platform admins only; providers that can't
+   * manage models return UNIMPLEMENTED.
+   *
+   * @generated from rpc knowcel.llm.v1.LlmService.PullModel
+   */
+  pullModel: {
+    methodKind: "server_streaming";
+    input: typeof PullModelRequestSchema;
+    output: typeof PullModelResponseSchema;
+  },
+  /**
+   * DeleteModel removes a model from a provider. Platform admins only;
+   * providers that can't manage models return UNIMPLEMENTED.
+   *
+   * @generated from rpc knowcel.llm.v1.LlmService.DeleteModel
+   */
+  deleteModel: {
+    methodKind: "unary";
+    input: typeof DeleteModelRequestSchema;
+    output: typeof DeleteModelResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_knowcel_llm_v1_llm, 0);

@@ -7,6 +7,8 @@ services:
     environment:
       KNOWCEL_LOG_LEVEL: ${KNOWCEL_LOG_LEVEL:-INFO}
       KNOWCEL_OTEL_ENDPOINT: ${KNOWCEL_OTEL_ENDPOINT:-}
+      # Soft dependency: no depends_on on iam-service; while it is down, models can't be pulled or deleted.
+      KNOWCEL_IAM_ADDR: iam-service:9006
       KNOWCEL_LLM_PROVIDER: ${KNOWCEL_LLM_PROVIDER:-ollama}
       KNOWCEL_CHAT_PROVIDER: ${KNOWCEL_CHAT_PROVIDER:-}
       KNOWCEL_EMBEDDING_PROVIDER: ${KNOWCEL_EMBEDDING_PROVIDER:-}

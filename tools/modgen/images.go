@@ -61,7 +61,7 @@ func images(modules []Module) []Image {
 			out = append(out, img)
 		}
 	}
-	return append(out, Image{Component: "web", Image: ImageRegistry + "/kb-web", Dockerfile: "deploy/docker/web.Dockerfile"})
+	return append(out, Image{Component: "web", Image: ImageRegistry + "/knowcelium-web", Dockerfile: "deploy/docker/web.Dockerfile"})
 }
 
 // imagesJSON renders the images as a GitHub Actions matrix: its "include"

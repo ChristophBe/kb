@@ -15,7 +15,7 @@
     },
     {
       "component": "web",
-      "image": "ghcr.io/christophbe/kb-web",
+      "image": "ghcr.io/christophbe/knowcelium-web",
       "dockerfile": "deploy/docker/web.Dockerfile",
       "build_args": ""
     }

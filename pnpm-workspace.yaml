@@ -16,6 +16,7 @@ catalog:
   "@connectrpc/connect": ^2.1.0
   "@connectrpc/connect-web": ^2.1.0
   "@fontsource-variable/ibm-plex-sans": ^5.3.0
+  "@fontsource-variable/source-serif-4": ^5.2.0
   "@fontsource/ibm-plex-mono": ^5.3.0
   # Exact: CI caches the browsers per Playwright version.
   "@playwright/test": 1.64.1

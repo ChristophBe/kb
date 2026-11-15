@@ -433,6 +433,57 @@ func TestListDocumentsKeysetPagingIgnoresConcurrentInserts(t *testing.T) {
 	}
 }
 
+// Documents shared with a user's teams join the pages of their own, in order,
+// and one that is both owned and shared appears once.
+func TestListDocumentsIncludesTheTeamsDocuments(t *testing.T) {
+	ctx := t.Context()
+	r := NewRepo(pgtest.Start(t, "document", migrations.FS))
+	team, other := uuid.New(), uuid.New()
+	share := func(id, team uuid.UUID) {
+		t.Helper()
+		if err := r.ApplyDocumentTeams(ctx, id, []uuid.UUID{team}, nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	first := newOwnedDocument(t, r, "bob", "shared-1.md")
+	share(first, team)
+	mine := newOwnedDocument(t, r, "alice", "mine.md")
+	share(mine, team)
+	second := newOwnedDocument(t, r, "bob", "shared-2.md")
+	share(second, team)
+	hidden := newOwnedDocument(t, r, "bob", "other-team.md")
+	share(hidden, other)
+	newOwnedDocument(t, r, "bob", "private.md")
+
+	want := []uuid.UUID{second, mine, first}
+	var got []uuid.UUID
+	var after DocumentDocument
+	for {
+		params := ListDocumentsParams{OwnerID: "alice", TeamIds: []uuid.UUID{team}, MaxResults: 2}
+		if len(got) > 0 {
+			params.AfterCreatedAt = after.CreatedAt
+			params.AfterID = pgtype.UUID{Bytes: after.ID, Valid: true}
+		}
+		page, err := r.ListDocuments(ctx, params)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, d := range page {
+			got = append(got, d.ID)
+			after = d
+		}
+		if len(page) < 2 {
+			break
+		}
+	}
+	if !slices.Equal(got, want) {
+		t.Errorf("paged %v, want %v", got, want)
+	}
+	if _, err := r.GetVisibleDocument(ctx, GetVisibleDocumentParams{ID: hidden, OwnerID: "alice", TeamIds: []uuid.UUID{team}}); !errors.Is(err, pgx.ErrNoRows) {
+		t.Errorf("a document of another team: %v, want no rows", err)
+	}
+}
+
 func TestListDocumentsUsesTheOwnerIndex(t *testing.T) {
 	pool := pgtest.Start(t, "document", migrations.FS)
 	tx, err := pool.Begin(t.Context())
@@ -444,7 +495,7 @@ func TestListDocumentsUsesTheOwnerIndex(t *testing.T) {
 	if _, err := tx.Exec(t.Context(), "SET LOCAL enable_seqscan = off"); err != nil {
 		t.Fatal(err)
 	}
-	rows, err := tx.Query(t.Context(), "EXPLAIN "+listDocuments, "alice", pgtype.Timestamptz{Time: time.Now(), Valid: true}, pgtype.UUID{Valid: true}, 51)
+	rows, err := tx.Query(t.Context(), "EXPLAIN "+listDocuments, "alice", pgtype.Timestamptz{Time: time.Now(), Valid: true}, pgtype.UUID{Valid: true}, 51, []uuid.UUID{})
 	if err != nil {
 		t.Fatal(err)
 	}

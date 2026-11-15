@@ -12,6 +12,23 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addDocumentTeams = `-- name: AddDocumentTeams :exec
+INSERT INTO document.document_teams (document_id, team_id)
+SELECT $1, unnest($2::uuid[])
+ON CONFLICT DO NOTHING
+`
+
+type AddDocumentTeamsParams struct {
+	DocumentID uuid.UUID
+	TeamIds    []uuid.UUID
+}
+
+// AddDocumentTeams and RemoveDocumentTeams are idempotent.
+func (q *Queries) AddDocumentTeams(ctx context.Context, arg AddDocumentTeamsParams) error {
+	_, err := q.db.Exec(ctx, addDocumentTeams, arg.DocumentID, arg.TeamIds)
+	return err
+}
+
 const createDocument = `-- name: CreateDocument :one
 
 INSERT INTO document.documents (id, owner_id, title, filename, content_type, size_bytes, object_key, status, metadata, sha256)
@@ -32,8 +49,9 @@ type CreateDocumentParams struct {
 	Sha256      string
 }
 
-// Queries taking an owner_id act for that user and find only their documents.
-// The others serve the internal RPCs of the ingestion pipeline, which acts on
+// Queries taking an owner_id act for that user and find only their documents;
+// those that also take team_ids find the documents shared with any of those
+// teams too (the caller's). The others serve the internal RPCs of the ingestion pipeline, which acts on
 // any document.
 func (q *Queries) CreateDocument(ctx context.Context, arg CreateDocumentParams) (DocumentDocument, error) {
 	row := q.db.QueryRow(ctx, createDocument,
@@ -235,14 +253,96 @@ func (q *Queries) GetDocument(ctx context.Context, arg GetDocumentParams) (Docum
 	return i, err
 }
 
+const getVisibleDocument = `-- name: GetVisibleDocument :one
+SELECT d.id, d.title, d.filename, d.content_type, d.size_bytes, d.object_key, d.status, d.status_detail, d.chunk_count, d.metadata, d.created_at, d.updated_at, d.owner_id, d.sha256, d.version, d.pending_status, d.pending_status_detail, d.pending_object_key, d.pending_filename, d.pending_content_type, d.pending_size_bytes, d.pending_sha256 FROM document.documents d
+WHERE d.id = $1
+  AND (d.owner_id = $2
+       OR EXISTS (SELECT 1 FROM document.document_teams t
+                  WHERE t.document_id = d.id AND t.team_id = ANY($3::uuid[])))
+`
+
+type GetVisibleDocumentParams struct {
+	ID      uuid.UUID
+	OwnerID string
+	TeamIds []uuid.UUID
+}
+
+func (q *Queries) GetVisibleDocument(ctx context.Context, arg GetVisibleDocumentParams) (DocumentDocument, error) {
+	row := q.db.QueryRow(ctx, getVisibleDocument, arg.ID, arg.OwnerID, arg.TeamIds)
+	var i DocumentDocument
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Filename,
+		&i.ContentType,
+		&i.SizeBytes,
+		&i.ObjectKey,
+		&i.Status,
+		&i.StatusDetail,
+		&i.ChunkCount,
+		&i.Metadata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.OwnerID,
+		&i.Sha256,
+		&i.Version,
+		&i.PendingStatus,
+		&i.PendingStatusDetail,
+		&i.PendingObjectKey,
+		&i.PendingFilename,
+		&i.PendingContentType,
+		&i.PendingSizeBytes,
+		&i.PendingSha256,
+	)
+	return i, err
+}
+
+const listDocumentTeams = `-- name: ListDocumentTeams :many
+SELECT document_id, team_id FROM document.document_teams
+WHERE document_id = ANY($1::uuid[])
+`
+
+func (q *Queries) ListDocumentTeams(ctx context.Context, documentIds []uuid.UUID) ([]DocumentDocumentTeam, error) {
+	rows, err := q.db.Query(ctx, listDocumentTeams, documentIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []DocumentDocumentTeam{}
+	for rows.Next() {
+		var i DocumentDocumentTeam
+		if err := rows.Scan(&i.DocumentID, &i.TeamID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listDocuments = `-- name: ListDocuments :many
-SELECT id, title, filename, content_type, size_bytes, object_key, status, status_detail, chunk_count, metadata, created_at, updated_at, owner_id, sha256, version, pending_status, pending_status_detail, pending_object_key, pending_filename, pending_content_type, pending_size_bytes, pending_sha256 FROM document.documents
-WHERE owner_id = $1
-  AND (created_at, id) < (
-    coalesce($2::timestamptz, 'infinity'),
-    coalesce($3::uuid, 'ffffffff-ffff-ffff-ffff-ffffffffffff')
-  )
-ORDER BY created_at DESC, id DESC
+SELECT d.id, d.title, d.filename, d.content_type, d.size_bytes, d.object_key, d.status, d.status_detail, d.chunk_count, d.metadata, d.created_at, d.updated_at, d.owner_id, d.sha256, d.version, d.pending_status, d.pending_status_detail, d.pending_object_key, d.pending_filename, d.pending_content_type, d.pending_size_bytes, d.pending_sha256 FROM document.documents d
+WHERE d.id IN (
+    (SELECT o.id FROM document.documents o
+     WHERE o.owner_id = $1
+       AND (o.created_at, o.id) < (
+         coalesce($2::timestamptz, 'infinity'),
+         coalesce($3::uuid, 'ffffffff-ffff-ffff-ffff-ffffffffffff'))
+     ORDER BY o.created_at DESC, o.id DESC
+     LIMIT $4)
+    UNION
+    (SELECT s.id FROM document.documents s
+     JOIN document.document_teams t ON t.document_id = s.id
+     WHERE t.team_id = ANY($5::uuid[])
+       AND (s.created_at, s.id) < (
+         coalesce($2::timestamptz, 'infinity'),
+         coalesce($3::uuid, 'ffffffff-ffff-ffff-ffff-ffffffffffff'))
+     ORDER BY s.created_at DESC, s.id DESC
+     LIMIT $4)
+)
+ORDER BY d.created_at DESC, d.id DESC
 LIMIT $4
 `
 
@@ -251,17 +351,22 @@ type ListDocumentsParams struct {
 	AfterCreatedAt pgtype.Timestamptz
 	AfterID        pgtype.UUID
 	MaxResults     int32
+	TeamIds        []uuid.UUID
 }
 
 // ListDocuments is keyset-paginated: a page continues after the (created_at, id) of
 // the last row of the previous one (both after_* NULL for the first page), so
-// rows inserted meanwhile never shift it. It walks the owner's index.
+// rows inserted meanwhile never shift it. It lists the user's documents and
+// those shared with their teams: each of the two sets is read in order from
+// its index (the owner's, and the teams') and cut to a page before they are
+// merged, which an OR of both conditions could not do.
 func (q *Queries) ListDocuments(ctx context.Context, arg ListDocumentsParams) ([]DocumentDocument, error) {
 	rows, err := q.db.Query(ctx, listDocuments,
 		arg.OwnerID,
 		arg.AfterCreatedAt,
 		arg.AfterID,
 		arg.MaxResults,
+		arg.TeamIds,
 	)
 	if err != nil {
 		return nil, err
@@ -421,6 +526,21 @@ WHERE id = $1 AND pending_status IN (2, 3)
 // chunks of that version replacing the old ones (store.Repo.ReplaceChunks).
 func (q *Queries) PromotePendingVersion(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, promotePendingVersion, id)
+	return err
+}
+
+const removeDocumentTeams = `-- name: RemoveDocumentTeams :exec
+DELETE FROM document.document_teams
+WHERE document_id = $1 AND team_id = ANY($2::uuid[])
+`
+
+type RemoveDocumentTeamsParams struct {
+	DocumentID uuid.UUID
+	TeamIds    []uuid.UUID
+}
+
+func (q *Queries) RemoveDocumentTeams(ctx context.Context, arg RemoveDocumentTeamsParams) error {
+	_, err := q.db.Exec(ctx, removeDocumentTeams, arg.DocumentID, arg.TeamIds)
 	return err
 }
 

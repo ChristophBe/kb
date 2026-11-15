@@ -15,9 +15,11 @@ import (
 	"github.com/ChristophBe/knowcelium/modules/document/service/internal/cleanup"
 	"github.com/ChristophBe/knowcelium/modules/document/service/internal/embedcheck"
 	"github.com/ChristophBe/knowcelium/modules/document/service/internal/events"
+	"github.com/ChristophBe/knowcelium/modules/document/service/internal/iamclient"
 	"github.com/ChristophBe/knowcelium/modules/document/service/internal/server"
 	"github.com/ChristophBe/knowcelium/modules/document/service/internal/storage"
 	"github.com/ChristophBe/knowcelium/modules/document/service/internal/store"
+	iamv1 "github.com/ChristophBe/knowcelium/modules/iam/api/go/iamv1"
 	llmv1 "github.com/ChristophBe/knowcelium/modules/llm/api/go/llmv1"
 	"github.com/ChristophBe/knowcelium/platform/go/config"
 	"github.com/ChristophBe/knowcelium/platform/go/grpcserver"
@@ -39,6 +41,9 @@ type Config struct {
 	// LLMAddr is the llm module (host:port), needed by SearchDocuments and
 	// the startup check of the embedding dimension.
 	LLMAddr string `env:"LLM_ADDR" envDefault:"localhost:9004"`
+	// IAMAddr is the iam module (host:port), which tells the teams of a
+	// caller. While it is down, users see only their own documents.
+	IAMAddr string `env:"IAM_ADDR" envDefault:"localhost:9006"`
 	// Limits bound uploads: KNOWCEL_MAX_UPLOAD_BYTES, KNOWCEL_ALLOWED_CONTENT_TYPES.
 	Limits server.Limits
 	// Cleanup: KNOWCEL_CLEANUP_INTERVAL, KNOWCEL_UPLOAD_TTL, KNOWCEL_ORPHAN_GRACE.
@@ -53,6 +58,7 @@ func (c Config) Validate(p *config.Problems) {
 	}
 	c.Storage.Validate(p)
 	p.Addr("KNOWCEL_LLM_ADDR", c.LLMAddr)
+	p.Addr("KNOWCEL_IAM_ADDR", c.IAMAddr)
 	c.Limits.Validate(p)
 	c.Cleanup.Validate(p)
 }
@@ -129,6 +135,14 @@ func run(cfg Config) error {
 	}
 	defer llmConn.Close()
 
+	// Resolves the teams of each caller, cached briefly; lazy like llm's.
+	iamConn, err := grpcserver.Dial(cfg.IAMAddr)
+	if err != nil {
+		return err
+	}
+	defer iamConn.Close()
+	callers := grpcserver.NewResolver(iamclient.Resolve(iamv1.NewIamServiceClient(iamConn)), grpcserver.DefaultPrincipalTTL, log)
+
 	// Says at startup, not on the first upload, when llm embeds with another
 	// dimension than the chunk index has (see package embedcheck).
 	dims, err := embedcheck.ColumnDimensions(ctx, pool)
@@ -142,7 +156,7 @@ func run(cfg Config) error {
 	repo := store.NewRepo(pool)
 	go cleanup.New(repo, objects, cfg.Cleanup, log).Run(ctx)
 
-	srv := grpcserver.New(log)
+	srv := grpcserver.New(log, grpcserver.Principals(callers)...)
 	documentv1.RegisterDocumentServiceServer(srv, server.New(repo, objects, llm, cfg.Limits, log).WithReindexPublisher(events.NewPublisher(js)))
 	return srv.Run(ctx, cfg.GRPCPort)
 }

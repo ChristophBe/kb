@@ -76,6 +76,7 @@ From `Config` in [modules/document/service/cmd/document-service](../modules/docu
 | `KNOWCEL_S3_USE_SSL` | `false` | Talks HTTPS to both endpoints. |
 | `KNOWCEL_S3_REGION` | `us-east-1` | The S3 region URLs are signed for. |
 | `KNOWCEL_LLM_ADDR` | `localhost:9004` | The llm module (host:port), needed by SearchDocuments and the startup check of the embedding dimension. |
+| `KNOWCEL_IAM_ADDR` | `localhost:9006` | The iam module (host:port), which tells the teams of a caller. While it is down, users see only their own documents. |
 | `KNOWCEL_MAX_UPLOAD_BYTES` | `52428800` | The largest file accepted. 50 MiB fits long PDFs while bounding the ingestion worker, which holds a whole file and its extracted text in memory. |
 | `KNOWCEL_ALLOWED_CONTENT_TYPES` | `application/pdf,text/*,application/json,application/yaml,application/x-yaml` | Media types ("application/pdf") or wildcards of a top-level type ("text/*"). The default is what the ingestion worker extracts text from (extract_pages in knowcel_ingestion_worker/extract.py). |
 | `KNOWCEL_CLEANUP_INTERVAL` | `1h` | The time between sweeps; 0 turns the sweeper off. |

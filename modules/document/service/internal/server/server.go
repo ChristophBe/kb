@@ -47,6 +47,7 @@ const (
 type Repository interface {
 	store.Querier
 	ReplaceChunks(ctx context.Context, documentID uuid.UUID, chunks []store.InsertChunksParams, readyStatus int16) (int32, error)
+	ApplyDocumentTeams(ctx context.Context, documentID uuid.UUID, add, remove []uuid.UUID) error
 }
 
 // ObjectStore holds the raw files.
@@ -68,11 +69,14 @@ type ReindexPublisher interface {
 }
 
 // Server implements DocumentService. Documents belong to the user who uploaded
-// them: the RPCs a user calls, and the internal CreateDocument and SearchChunks
-// that services call on a user's behalf (passing the user on), act on that
-// user's documents only and report another user's as not found. The other
-// internal RPCs serve the ingestion pipeline, which runs without a user, and
-// act on any document.
+// them and can be shared with teams. The RPCs a user calls, and the internal
+// CreateDocument and SearchChunks that services call on a user's behalf
+// (passing the user on), read the user's documents and those shared with the
+// teams they belong to (the call's grpcserver.Principal; without teams, for
+// instance while iam is down, only their own); changing or deleting a
+// document is the owner's alone, and anything the caller can't read is
+// reported as not found. The other internal RPCs serve the ingestion
+// pipeline, which runs without a user, and act on any document.
 type Server struct {
 	documentv1.UnimplementedDocumentServiceServer
 	repo    Repository
@@ -101,10 +105,11 @@ func (s *Server) WithReindexPublisher(p ReindexPublisher) *Server {
 // called on behalf of a user (ingestion forwards the uploader). The file must
 // fit the limits; the upload URL only takes the declared size and type.
 func (s *Server) CreateDocument(ctx context.Context, req *documentv1.CreateDocumentRequest) (*documentv1.CreateDocumentResponse, error) {
-	owner, err := caller(ctx)
+	a, err := accessOf(ctx)
 	if err != nil {
 		return nil, err
 	}
+	owner := a.user
 	contentType := declaredContentType(req.GetContentType(), req.GetFilename())
 	checksum := strings.ToLower(strings.TrimSpace(req.GetSha256()))
 	var violations []*errdetails.BadRequest_FieldViolation
@@ -118,6 +123,10 @@ func (s *Server) CreateDocument(ctx context.Context, req *documentv1.CreateDocum
 	violations = append(violations, s.limits.validateUpload(req.GetSizeBytes(), contentType, checksum)...)
 	if len(violations) > 0 {
 		return nil, grpcserver.InvalidArgument(violations...)
+	}
+	teams, err := a.shareable(req.GetTeamIds())
+	if err != nil {
+		return nil, err
 	}
 	id := uuid.New()
 	title := req.GetTitle()
@@ -140,23 +149,38 @@ func (s *Server) CreateDocument(ctx context.Context, req *documentv1.CreateDocum
 	if err != nil {
 		return nil, s.internal("create document", err)
 	}
+	if len(teams) > 0 {
+		// A failure leaves a document that never gets its upload, which the
+		// cleanup sweeper removes.
+		if err := s.repo.ApplyDocumentTeams(ctx, id, teams, nil); err != nil {
+			return nil, s.internal("share document", err)
+		}
+	}
 	uploadURL, err := s.objects.PresignPut(ctx, key, contentType, req.GetSizeBytes())
 	if err != nil {
 		return nil, s.internal("presign upload", err)
 	}
-	return &documentv1.CreateDocumentResponse{Document: toProto(doc), UploadUrl: uploadURL}, nil
-}
-
-func (s *Server) GetDocument(ctx context.Context, req *documentv1.GetDocumentRequest) (*documentv1.GetDocumentResponse, error) {
-	doc, err := s.get(ctx, req.GetId())
+	docs, err := s.protos(ctx, a, doc)
 	if err != nil {
 		return nil, err
 	}
-	return &documentv1.GetDocumentResponse{Document: toProto(doc)}, nil
+	return &documentv1.CreateDocumentResponse{Document: docs[0], UploadUrl: uploadURL}, nil
+}
+
+func (s *Server) GetDocument(ctx context.Context, req *documentv1.GetDocumentRequest) (*documentv1.GetDocumentResponse, error) {
+	a, doc, err := s.get(ctx, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+	docs, err := s.protos(ctx, a, doc)
+	if err != nil {
+		return nil, err
+	}
+	return &documentv1.GetDocumentResponse{Document: docs[0]}, nil
 }
 
 func (s *Server) ListDocuments(ctx context.Context, req *documentv1.ListDocumentsRequest) (*documentv1.ListDocumentsResponse, error) {
-	owner, err := caller(ctx)
+	a, err := accessOf(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +190,7 @@ func (s *Server) ListDocuments(ctx context.Context, req *documentv1.ListDocument
 		return nil, errInvalidPageToken()
 	}
 	docs, err := s.repo.ListDocuments(ctx, store.ListDocumentsParams{
-		OwnerID: owner, AfterCreatedAt: afterTime, AfterID: afterID, MaxResults: limit + 1,
+		OwnerID: a.user, TeamIds: a.teamIDs(), AfterCreatedAt: afterTime, AfterID: afterID, MaxResults: limit + 1,
 	})
 	if err != nil {
 		return nil, s.internal("list documents", err)
@@ -177,8 +201,9 @@ func (s *Server) ListDocuments(ctx context.Context, req *documentv1.ListDocument
 		last := docs[len(docs)-1]
 		resp.Page.NextPageToken = postgres.Cursor{Time: last.CreatedAt.Time, ID: last.ID}.Encode()
 	}
-	for _, d := range docs {
-		resp.Documents = append(resp.Documents, toProto(d))
+	resp.Documents, err = s.protos(ctx, a, docs...)
+	if err != nil {
+		return nil, err
 	}
 	return resp, nil
 }
@@ -214,9 +239,13 @@ func (s *Server) UpdateDocument(ctx context.Context, req *documentv1.UpdateDocum
 	}
 	doc, err := s.repo.UpdateDocument(ctx, params)
 	if err != nil {
-		return nil, s.notFoundOr("update document", err)
+		return nil, s.notOwner(ctx, "update document", id, err)
 	}
-	return &documentv1.UpdateDocumentResponse{Document: toProto(doc)}, nil
+	docs, err := s.protos(ctx, access{user: owner}, doc)
+	if err != nil {
+		return nil, err
+	}
+	return &documentv1.UpdateDocumentResponse{Document: docs[0]}, nil
 }
 
 func (s *Server) DeleteDocument(ctx context.Context, req *documentv1.DeleteDocumentRequest) (*documentv1.DeleteDocumentResponse, error) {
@@ -246,7 +275,7 @@ func (s *Server) DeleteDocument(ctx context.Context, req *documentv1.DeleteDocum
 		}
 	}
 	if _, err := s.repo.DeleteDocument(ctx, store.DeleteDocumentParams{ID: id, OwnerID: owner}); err != nil {
-		return nil, s.notFoundOr("delete document", err)
+		return nil, s.notOwner(ctx, "delete document", id, err)
 	}
 	return &documentv1.DeleteDocumentResponse{}, nil
 }
@@ -335,7 +364,7 @@ func (s *Server) reject(ctx context.Context, id uuid.UUID, reason string) error 
 }
 
 func (s *Server) GetDownloadUrl(ctx context.Context, req *documentv1.GetDownloadUrlRequest) (*documentv1.GetDownloadUrlResponse, error) {
-	doc, err := s.get(ctx, req.GetId())
+	_, doc, err := s.get(ctx, req.GetId())
 	if err != nil {
 		return nil, err
 	}
@@ -431,7 +460,7 @@ func (s *Server) AddChunks(ctx context.Context, req *documentv1.AddChunksRequest
 // the last index of the previous page, so pages stay stable while the client
 // pages; a document re-processed in between simply continues after that index.
 func (s *Server) ListChunks(ctx context.Context, req *documentv1.ListChunksRequest) (*documentv1.ListChunksResponse, error) {
-	owner, err := caller(ctx)
+	a, err := accessOf(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -444,7 +473,7 @@ func (s *Server) ListChunks(ctx context.Context, req *documentv1.ListChunksReque
 		return nil, err
 	}
 	limit := pageSize(req.GetPage())
-	if _, err := s.getOwned(ctx, owner, id); err != nil {
+	if _, err := s.getVisible(ctx, a, id); err != nil {
 		return nil, err
 	}
 	rows, err := s.repo.ListChunks(ctx, store.ListChunksParams{DocumentID: id, AfterIdx: after, MaxResults: limit + 1})
@@ -464,10 +493,11 @@ func (s *Server) ListChunks(ctx context.Context, req *documentv1.ListChunksReque
 	return resp, nil
 }
 
-// SearchChunks searches the calling user's chunks; chat calls it on behalf of
+// SearchChunks searches the chunks of the documents the calling user can read
+// (their own and those shared with their teams); chat calls it on behalf of
 // the user asking.
 func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksRequest) (*documentv1.SearchChunksResponse, error) {
-	owner, err := caller(ctx)
+	a, err := accessOf(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -484,7 +514,7 @@ func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksR
 			return nil, err
 		}
 	}
-	results, err := s.search(ctx, owner, req.GetEmbedding(), model, req.GetLimit(), ids)
+	results, err := s.search(ctx, a, req.GetEmbedding(), model, req.GetLimit(), ids)
 	if err != nil {
 		return nil, err
 	}
@@ -496,7 +526,7 @@ func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksR
 // counts documents. Only this RPC needs llm: while it is down, this fails with
 // UNAVAILABLE and every other RPC keeps working.
 func (s *Server) SearchDocuments(ctx context.Context, req *documentv1.SearchDocumentsRequest) (*documentv1.SearchDocumentsResponse, error) {
-	owner, err := caller(ctx)
+	a, err := accessOf(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -517,12 +547,12 @@ func (s *Server) SearchDocuments(ctx context.Context, req *documentv1.SearchDocu
 	}
 	embedding := embedded.GetEmbeddings()[0].GetValues()
 	model := embedded.GetModel()
-	results, err := s.search(ctx, owner, embedding, model, req.GetLimit(), ids)
+	results, err := s.search(ctx, a, embedding, model, req.GetLimit(), ids)
 	if err != nil {
 		return nil, err
 	}
 	rows, err := s.repo.SearchBestChunks(ctx, store.SearchBestChunksParams{
-		Embedding: pgvector.NewVector(embedding), OwnerID: owner, EmbeddingModel: model,
+		Embedding: pgvector.NewVector(embedding), OwnerID: a.user, TeamIds: a.teamIDs(), EmbeddingModel: model,
 		DocumentIds: ids, MaxResults: clampLimit(req.GetLimit()),
 	})
 	if err != nil {
@@ -618,11 +648,11 @@ func clampLimit(limit int32) int32 {
 	return min(limit, maxLimit)
 }
 
-// search finds the owner's chunks most similar to an embedding that model made;
-// chunks of other models are never compared with it.
-func (s *Server) search(ctx context.Context, owner string, embedding []float32, model string, limit int32, ids []uuid.UUID) ([]*documentv1.ScoredChunk, error) {
+// search finds the chunks the caller can read that are most similar to an
+// embedding that model made; chunks of other models are never compared with it.
+func (s *Server) search(ctx context.Context, a access, embedding []float32, model string, limit int32, ids []uuid.UUID) ([]*documentv1.ScoredChunk, error) {
 	rows, err := s.repo.SearchChunks(ctx, store.SearchChunksParams{
-		Embedding: pgvector.NewVector(embedding), OwnerID: owner, EmbeddingModel: model,
+		Embedding: pgvector.NewVector(embedding), OwnerID: a.user, TeamIds: a.teamIDs(), EmbeddingModel: model,
 		DocumentIds: ids, MaxResults: clampLimit(limit),
 	})
 	if err != nil {
@@ -641,26 +671,53 @@ func (s *Server) search(ctx context.Context, owner string, embedding []float32, 
 	return results, nil
 }
 
-// get returns the calling user's document with the id in the request.
-func (s *Server) get(ctx context.Context, rawID string) (store.DocumentDocument, error) {
-	owner, err := caller(ctx)
+// get returns the document with the id in the request if the calling user can
+// read it, with their access.
+func (s *Server) get(ctx context.Context, rawID string) (access, store.DocumentDocument, error) {
+	a, err := accessOf(ctx)
 	if err != nil {
-		return store.DocumentDocument{}, err
+		return access{}, store.DocumentDocument{}, err
 	}
 	id, err := parseID("id", rawID)
 	if err != nil {
-		return store.DocumentDocument{}, err
+		return access{}, store.DocumentDocument{}, err
 	}
-	return s.getOwned(ctx, owner, id)
+	doc, err := s.getVisible(ctx, a, id)
+	return a, doc, err
 }
 
-// getOwned returns owner's document; another user's is not found.
-func (s *Server) getOwned(ctx context.Context, owner string, id uuid.UUID) (store.DocumentDocument, error) {
-	doc, err := s.repo.GetDocument(ctx, store.GetDocumentParams{ID: id, OwnerID: owner})
+// getVisible returns a document its owner or a member of a team it is shared
+// with can read; for anyone else it is not found.
+func (s *Server) getVisible(ctx context.Context, a access, id uuid.UUID) (store.DocumentDocument, error) {
+	doc, err := s.repo.GetVisibleDocument(ctx, store.GetVisibleDocumentParams{ID: id, OwnerID: a.user, TeamIds: a.teamIDs()})
 	if err != nil {
 		return store.DocumentDocument{}, s.notFoundOr("get document", err)
 	}
 	return doc, nil
+}
+
+// getOwned returns owner's document. Another user's is not found, unless they
+// can read it through a team: then changing it is not permitted.
+func (s *Server) getOwned(ctx context.Context, owner string, id uuid.UUID) (store.DocumentDocument, error) {
+	doc, err := s.repo.GetDocument(ctx, store.GetDocumentParams{ID: id, OwnerID: owner})
+	if err != nil {
+		return store.DocumentDocument{}, s.notOwner(ctx, "get document", id, err)
+	}
+	return doc, nil
+}
+
+// notOwner maps the failure of an owner-only lookup of a document: not found,
+// or PERMISSION_DENIED for a reader that is not the owner (a team member).
+func (s *Server) notOwner(ctx context.Context, op string, id uuid.UUID, err error) error {
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return s.internal(op, err)
+	}
+	if a, aerr := accessOf(ctx); aerr == nil {
+		if _, verr := s.repo.GetVisibleDocument(ctx, store.GetVisibleDocumentParams{ID: id, OwnerID: a.user, TeamIds: a.teamIDs()}); verr == nil {
+			return status.Error(codes.PermissionDenied, "only the owner can change the document")
+		}
+	}
+	return status.Error(codes.NotFound, "document not found")
 }
 
 // caller returns the user the call is made for. Calls through the gateway

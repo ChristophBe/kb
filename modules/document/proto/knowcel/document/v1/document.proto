@@ -22,6 +22,7 @@ service DocumentService {
   rpc ListDocuments(ListDocumentsRequest) returns (ListDocumentsResponse);
   rpc UpdateDocument(UpdateDocumentRequest) returns (UpdateDocumentResponse);
   rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
+  rpc SetDocumentTeams(SetDocumentTeamsRequest) returns (SetDocumentTeamsResponse);
   rpc SetDocumentStatus(SetDocumentStatusRequest) returns (SetDocumentStatusResponse);
   // GetDownloadUrl returns a short-lived URL for downloading the raw file.
   rpc GetDownloadUrl(GetDownloadUrlRequest) returns (GetDownloadUrlResponse);
@@ -72,7 +73,8 @@ message Document {
   google.protobuf.Timestamp create_time = 10;
   google.protobuf.Timestamp update_time = 11;
   // The user who uploaded the document, as the subject of their token. Set by
-  // the service; only this user can see the document.
+  // the service; this user and the members of the teams it is shared with
+  // can see the document.
   string owner_id = 12;
   // The SHA-256 of the file as declared at creation, in lowercase hex; empty
   // when none was declared.
@@ -85,6 +87,9 @@ message Document {
   // The new version being uploaded or processed, or the last one that failed;
   // unset when there is none.
   PendingVersion pending_version = 15;
+  // The teams the document is shared with, whose members can read it. The
+  // owner sees all of them; anyone else only those they are a member of.
+  repeated string team_ids = 16;
 }
 
 // PendingVersion is a new file for a document, from ReplaceContent. While it
@@ -143,6 +148,9 @@ message CreateDocumentRequest {
   // Optional SHA-256 of the file, in hex. When set, SetDocumentStatus(UPLOADED)
   // checks the uploaded file against it and fails the document on a mismatch.
   string sha256 = 6;
+  // Teams to share the document with from the start. The caller must be a
+  // member of each; otherwise the call fails with NOT_FOUND.
+  repeated string team_ids = 7;
 }
 
 message CreateDocumentResponse {
@@ -204,6 +212,22 @@ message UpdateDocumentRequest {
 }
 
 message UpdateDocumentResponse {
+  Document document = 1;
+}
+
+// SetDocumentTeams sets the teams a document is shared with. The owner may
+// share with the teams they are a member of and stop sharing with any team.
+// An admin of a team the document is shared with may only stop sharing it
+// with their own team; anyone else who can read the document gets
+// PERMISSION_DENIED. A caller who can't see the document gets NOT_FOUND, and
+// so does one who names a team they are not a member of. The set applies to
+// the teams the caller sees, so teams they don't belong to stay untouched.
+message SetDocumentTeamsRequest {
+  string id = 1;
+  repeated string team_ids = 2;
+}
+
+message SetDocumentTeamsResponse {
   Document document = 1;
 }
 

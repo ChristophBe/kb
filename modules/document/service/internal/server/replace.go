@@ -88,7 +88,11 @@ func (s *Server) ReplaceContent(ctx context.Context, req *documentv1.ReplaceCont
 	if err != nil {
 		return nil, s.internal("presign upload", err)
 	}
-	return &documentv1.ReplaceContentResponse{Document: toProto(doc), UploadUrl: uploadURL}, nil
+	docs, err := s.protos(ctx, access{user: owner}, doc)
+	if err != nil {
+		return nil, err
+	}
+	return &documentv1.ReplaceContentResponse{Document: docs[0], UploadUrl: uploadURL}, nil
 }
 
 // busy reports a document that can't take a new version yet: its first upload

@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file knowcel/document/v1/document.proto.
  */
 export const file_knowcel_document_v1_document: GenFile = /*@__PURE__*/
-  fileDesc("CiJrbm93Y2VsL2RvY3VtZW50L3YxL2RvY3VtZW50LnByb3RvEhNrbm93Y2VsLmRvY3VtZW50LnYxIoUECghEb2N1bWVudBIKCgJpZBgBIAEoCRINCgV0aXRsZRgCIAEoCRIQCghmaWxlbmFtZRgDIAEoCRIUCgxjb250ZW50X3R5cGUYBCABKAkSEgoKc2l6ZV9ieXRlcxgFIAEoAxIzCgZzdGF0dXMYBiABKA4yIy5rbm93Y2VsLmRvY3VtZW50LnYxLkRvY3VtZW50U3RhdHVzEhUKDXN0YXR1c19kZXRhaWwYByABKAkSEwoLY2h1bmtfY291bnQYCCABKAUSPQoIbWV0YWRhdGEYCSADKAsyKy5rbm93Y2VsLmRvY3VtZW50LnYxLkRvY3VtZW50Lk1ldGFkYXRhRW50cnkSLwoLY3JlYXRlX3RpbWUYCiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEi8KC3VwZGF0ZV90aW1lGAsgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIQCghvd25lcl9pZBgMIAEoCRIOCgZzaGEyNTYYDSABKAkSDwoHdmVyc2lvbhgOIAEoBRI8Cg9wZW5kaW5nX3ZlcnNpb24YDyABKAsyIy5rbm93Y2VsLmRvY3VtZW50LnYxLlBlbmRpbmdWZXJzaW9uGi8KDU1ldGFkYXRhRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASK5AQoOUGVuZGluZ1ZlcnNpb24SDwoHdmVyc2lvbhgBIAEoBRIQCghmaWxlbmFtZRgCIAEoCRIUCgxjb250ZW50X3R5cGUYAyABKAkSEgoKc2l6ZV9ieXRlcxgEIAEoAxIzCgZzdGF0dXMYBSABKA4yIy5rbm93Y2VsLmRvY3VtZW50LnYxLkRvY3VtZW50U3RhdHVzEhUKDXN0YXR1c19kZXRhaWwYBiABKAkSDgoGc2hhMjU2GAcgASgJIqYBCgVDaHVuaxITCgtkb2N1bWVudF9pZBgBIAEoCRINCgVpbmRleBgCIAEoBRIMCgR0ZXh0GAMgASgJEjoKCG1ldGFkYXRhGAQgAygLMigua25vd2NlbC5kb2N1bWVudC52MS5DaHVuay5NZXRhZGF0YUVudHJ5Gi8KDU1ldGFkYXRhRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASJfCgtTY29yZWRDaHVuaxIpCgVjaHVuaxgBIAEoCzIaLmtub3djZWwuZG9jdW1lbnQudjEuQ2h1bmsSFgoOZG9jdW1lbnRfdGl0bGUYAiABKAkSDQoFc2NvcmUYAyABKAIicwoOU2NvcmVkRG9jdW1lbnQSEwoLZG9jdW1lbnRfaWQYASABKAkSDQoFdGl0bGUYAiABKAkSDQoFc2NvcmUYAyABKAISLgoKYmVzdF9jaHVuaxgEIAEoCzIaLmtub3djZWwuZG9jdW1lbnQudjEuQ2h1bmsi7wEKFUNyZWF0ZURvY3VtZW50UmVxdWVzdBINCgV0aXRsZRgBIAEoCRIQCghmaWxlbmFtZRgCIAEoCRIUCgxjb250ZW50X3R5cGUYAyABKAkSEgoKc2l6ZV9ieXRlcxgEIAEoAxJKCghtZXRhZGF0YRgFIAMoCzI4Lmtub3djZWwuZG9jdW1lbnQudjEuQ3JlYXRlRG9jdW1lbnRSZXF1ZXN0Lk1ldGFkYXRhRW50cnkSDgoGc2hhMjU2GAYgASgJGi8KDU1ldGFkYXRhRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASJdChZDcmVhdGVEb2N1bWVudFJlc3BvbnNlEi8KCGRvY3VtZW50GAEgASgLMh0ua25vd2NlbC5kb2N1bWVudC52MS5Eb2N1bWVudBISCgp1cGxvYWRfdXJsGAIgASgJIm8KFVJlcGxhY2VDb250ZW50UmVxdWVzdBIKCgJpZBgBIAEoCRIQCghmaWxlbmFtZRgCIAEoCRIUCgxjb250ZW50X3R5cGUYAyABKAkSEgoKc2l6ZV9ieXRlcxgEIAEoAxIOCgZzaGEyNTYYBSABKAkiXQoWUmVwbGFjZUNvbnRlbnRSZXNwb25zZRIvCghkb2N1bWVudBgBIAEoCzIdLmtub3djZWwuZG9jdW1lbnQudjEuRG9jdW1lbnQSEgoKdXBsb2FkX3VybBgCIAEoCSIgChJHZXREb2N1bWVudFJlcXVlc3QSCgoCaWQYASABKAkiRgoTR2V0RG9jdW1lbnRSZXNwb25zZRIvCghkb2N1bWVudBgBIAEoCzIdLmtub3djZWwuZG9jdW1lbnQudjEuRG9jdW1lbnQiRAoUTGlzdERvY3VtZW50c1JlcXVlc3QSLAoEcGFnZRgBIAEoCzIeLmtub3djZWwuY29tbW9uLnYxLlBhZ2VSZXF1ZXN0IngKFUxpc3REb2N1bWVudHNSZXNwb25zZRIwCglkb2N1bWVudHMYASADKAsyHS5rbm93Y2VsLmRvY3VtZW50LnYxLkRvY3VtZW50Ei0KBHBhZ2UYAiABKAsyHy5rbm93Y2VsLmNvbW1vbi52MS5QYWdlUmVzcG9uc2Ui1AEKFVVwZGF0ZURvY3VtZW50UmVxdWVzdBIKCgJpZBgBIAEoCRISCgV0aXRsZRgCIAEoCUgAiAEBEkoKCG1ldGFkYXRhGAMgAygLMjgua25vd2NlbC5kb2N1bWVudC52MS5VcGRhdGVEb2N1bWVudFJlcXVlc3QuTWV0YWRhdGFFbnRyeRIUCgxzZXRfbWV0YWRhdGEYBCABKAgaLwoNTWV0YWRhdGFFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBQggKBl90aXRsZSJJChZVcGRhdGVEb2N1bWVudFJlc3BvbnNlEi8KCGRvY3VtZW50GAEgASgLMh0ua25vd2NlbC5kb2N1bWVudC52MS5Eb2N1bWVudCIjChVEZWxldGVEb2N1bWVudFJlcXVlc3QSCgoCaWQYASABKAkiGAoWRGVsZXRlRG9jdW1lbnRSZXNwb25zZSJyChhTZXREb2N1bWVudFN0YXR1c1JlcXVlc3QSCgoCaWQYASABKAkSMwoGc3RhdHVzGAIgASgOMiMua25vd2NlbC5kb2N1bWVudC52MS5Eb2N1bWVudFN0YXR1cxIVCg1zdGF0dXNfZGV0YWlsGAMgASgJIkwKGVNldERvY3VtZW50U3RhdHVzUmVzcG9uc2USLwoIZG9jdW1lbnQYASABKAsyHS5rbm93Y2VsLmRvY3VtZW50LnYxLkRvY3VtZW50IiMKFUdldERvd25sb2FkVXJsUmVxdWVzdBIKCgJpZBgBIAEoCSIlChZHZXREb3dubG9hZFVybFJlc3BvbnNlEgsKA3VybBgBIAEoCSIgChJSZWFkQ29udGVudFJlcXVlc3QSCgoCaWQYASABKAkiIwoTUmVhZENvbnRlbnRSZXNwb25zZRIMCgRkYXRhGAEgASgMIscBCgpDaHVua0lucHV0Eg0KBWluZGV4GAEgASgFEgwKBHRleHQYAiABKAkSEQoJZW1iZWRkaW5nGAMgAygCEj8KCG1ldGFkYXRhGAQgAygLMi0ua25vd2NlbC5kb2N1bWVudC52MS5DaHVua0lucHV0Lk1ldGFkYXRhRW50cnkSFwoPZW1iZWRkaW5nX21vZGVsGAUgASgJGi8KDU1ldGFkYXRhRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASJYChBBZGRDaHVua3NSZXF1ZXN0EhMKC2RvY3VtZW50X2lkGAEgASgJEi8KBmNodW5rcxgCIAMoCzIfLmtub3djZWwuZG9jdW1lbnQudjEuQ2h1bmtJbnB1dCIoChFBZGRDaHVua3NSZXNwb25zZRITCgtjaHVua19jb3VudBgBIAEoBSJWChFMaXN0Q2h1bmtzUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCRIsCgRwYWdlGAIgASgLMh4ua25vd2NlbC5jb21tb24udjEuUGFnZVJlcXVlc3QibwoSTGlzdENodW5rc1Jlc3BvbnNlEioKBmNodW5rcxgBIAMoCzIaLmtub3djZWwuZG9jdW1lbnQudjEuQ2h1bmsSLQoEcGFnZRgCIAEoCzIfLmtub3djZWwuY29tbW9uLnYxLlBhZ2VSZXNwb25zZSJmChNTZWFyY2hDaHVua3NSZXF1ZXN0EhEKCWVtYmVkZGluZxgBIAMoAhINCgVsaW1pdBgCIAEoBRIUCgxkb2N1bWVudF9pZHMYAyADKAkSFwoPZW1iZWRkaW5nX21vZGVsGAQgASgJIkkKFFNlYXJjaENodW5rc1Jlc3BvbnNlEjEKB3Jlc3VsdHMYASADKAsyIC5rbm93Y2VsLmRvY3VtZW50LnYxLlNjb3JlZENodW5rIkwKFlNlYXJjaERvY3VtZW50c1JlcXVlc3QSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKAUSFAoMZG9jdW1lbnRfaWRzGAMgAygJIoQBChdTZWFyY2hEb2N1bWVudHNSZXNwb25zZRIxCgdyZXN1bHRzGAEgAygLMiAua25vd2NlbC5kb2N1bWVudC52MS5TY29yZWRDaHVuaxI2Cglkb2N1bWVudHMYAiADKAsyIy5rbm93Y2VsLmRvY3VtZW50LnYxLlNjb3JlZERvY3VtZW50Ij4KF1JlaW5kZXhEb2N1bWVudHNSZXF1ZXN0EhQKDGRvY3VtZW50X2lkcxgBIAMoCRINCgVmb3JjZRgCIAEoCCJGChhSZWluZGV4RG9jdW1lbnRzUmVzcG9uc2USEQoJcmVxdWVzdGVkGAEgASgFEhcKD2VtYmVkZGluZ19tb2RlbBgCIAEoCSrKAQoORG9jdW1lbnRTdGF0dXMSHwobRE9DVU1FTlRfU1RBVFVTX1VOU1BFQ0lGSUVEEAASIgoeRE9DVU1FTlRfU1RBVFVTX1BFTkRJTkdfVVBMT0FEEAESHAoYRE9DVU1FTlRfU1RBVFVTX1VQTE9BREVEEAISHgoaRE9DVU1FTlRfU1RBVFVTX1BST0NFU1NJTkcQAxIZChVET0NVTUVOVF9TVEFUVVNfUkVBRFkQBBIaChZET0NVTUVOVF9TVEFUVVNfRkFJTEVEEAUyyQsKD0RvY3VtZW50U2VydmljZRJpCg5DcmVhdGVEb2N1bWVudBIqLmtub3djZWwuZG9jdW1lbnQudjEuQ3JlYXRlRG9jdW1lbnRSZXF1ZXN0Gisua25vd2NlbC5kb2N1bWVudC52MS5DcmVhdGVEb2N1bWVudFJlc3BvbnNlEmkKDlJlcGxhY2VDb250ZW50Eioua25vd2NlbC5kb2N1bWVudC52MS5SZXBsYWNlQ29udGVudFJlcXVlc3QaKy5rbm93Y2VsLmRvY3VtZW50LnYxLlJlcGxhY2VDb250ZW50UmVzcG9uc2USYAoLR2V0RG9jdW1lbnQSJy5rbm93Y2VsLmRvY3VtZW50LnYxLkdldERvY3VtZW50UmVxdWVzdBooLmtub3djZWwuZG9jdW1lbnQudjEuR2V0RG9jdW1lbnRSZXNwb25zZRJmCg1MaXN0RG9jdW1lbnRzEikua25vd2NlbC5kb2N1bWVudC52MS5MaXN0RG9jdW1lbnRzUmVxdWVzdBoqLmtub3djZWwuZG9jdW1lbnQudjEuTGlzdERvY3VtZW50c1Jlc3BvbnNlEmkKDlVwZGF0ZURvY3VtZW50Eioua25vd2NlbC5kb2N1bWVudC52MS5VcGRhdGVEb2N1bWVudFJlcXVlc3QaKy5rbm93Y2VsLmRvY3VtZW50LnYxLlVwZGF0ZURvY3VtZW50UmVzcG9uc2USaQoORGVsZXRlRG9jdW1lbnQSKi5rbm93Y2VsLmRvY3VtZW50LnYxLkRlbGV0ZURvY3VtZW50UmVxdWVzdBorLmtub3djZWwuZG9jdW1lbnQudjEuRGVsZXRlRG9jdW1lbnRSZXNwb25zZRJyChFTZXREb2N1bWVudFN0YXR1cxItLmtub3djZWwuZG9jdW1lbnQudjEuU2V0RG9jdW1lbnRTdGF0dXNSZXF1ZXN0Gi4ua25vd2NlbC5kb2N1bWVudC52MS5TZXREb2N1bWVudFN0YXR1c1Jlc3BvbnNlEmkKDkdldERvd25sb2FkVXJsEioua25vd2NlbC5kb2N1bWVudC52MS5HZXREb3dubG9hZFVybFJlcXVlc3QaKy5rbm93Y2VsLmRvY3VtZW50LnYxLkdldERvd25sb2FkVXJsUmVzcG9uc2USYgoLUmVhZENvbnRlbnQSJy5rbm93Y2VsLmRvY3VtZW50LnYxLlJlYWRDb250ZW50UmVxdWVzdBooLmtub3djZWwuZG9jdW1lbnQudjEuUmVhZENvbnRlbnRSZXNwb25zZTABEloKCUFkZENodW5rcxIlLmtub3djZWwuZG9jdW1lbnQudjEuQWRkQ2h1bmtzUmVxdWVzdBomLmtub3djZWwuZG9jdW1lbnQudjEuQWRkQ2h1bmtzUmVzcG9uc2USXQoKTGlzdENodW5rcxImLmtub3djZWwuZG9jdW1lbnQudjEuTGlzdENodW5rc1JlcXVlc3QaJy5rbm93Y2VsLmRvY3VtZW50LnYxLkxpc3RDaHVua3NSZXNwb25zZRJjCgxTZWFyY2hDaHVua3MSKC5rbm93Y2VsLmRvY3VtZW50LnYxLlNlYXJjaENodW5rc1JlcXVlc3QaKS5rbm93Y2VsLmRvY3VtZW50LnYxLlNlYXJjaENodW5rc1Jlc3BvbnNlEmwKD1NlYXJjaERvY3VtZW50cxIrLmtub3djZWwuZG9jdW1lbnQudjEuU2VhcmNoRG9jdW1lbnRzUmVxdWVzdBosLmtub3djZWwuZG9jdW1lbnQudjEuU2VhcmNoRG9jdW1lbnRzUmVzcG9uc2USbwoQUmVpbmRleERvY3VtZW50cxIsLmtub3djZWwuZG9jdW1lbnQudjEuUmVpbmRleERvY3VtZW50c1JlcXVlc3QaLS5rbm93Y2VsLmRvY3VtZW50LnYxLlJlaW5kZXhEb2N1bWVudHNSZXNwb25zZUJRWk9naXRodWIuY29tL0NocmlzdG9waEJlL2tub3djZWxpdW0vbW9kdWxlcy9kb2N1bWVudC9hcGkvZ28vZG9jdW1lbnR2MTtkb2N1bWVudHYxYgZwcm90bzM", [file_google_protobuf_timestamp, file_knowcel_common_v1_common]);
+  fileDesc("CiJrbm93Y2VsL2RvY3VtZW50L3YxL2RvY3VtZW50LnByb3RvEhNrbm93Y2VsLmRvY3VtZW50LnYxIpcECghEb2N1bWVudBIKCgJpZBgBIAEoCRINCgV0aXRsZRgCIAEoCRIQCghmaWxlbmFtZRgDIAEoCRIUCgxjb250ZW50X3R5cGUYBCABKAkSEgoKc2l6ZV9ieXRlcxgFIAEoAxIzCgZzdGF0dXMYBiABKA4yIy5rbm93Y2VsLmRvY3VtZW50LnYxLkRvY3VtZW50U3RhdHVzEhUKDXN0YXR1c19kZXRhaWwYByABKAkSEwoLY2h1bmtfY291bnQYCCABKAUSPQoIbWV0YWRhdGEYCSADKAsyKy5rbm93Y2VsLmRvY3VtZW50LnYxLkRvY3VtZW50Lk1ldGFkYXRhRW50cnkSLwoLY3JlYXRlX3RpbWUYCiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEi8KC3VwZGF0ZV90aW1lGAsgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIQCghvd25lcl9pZBgMIAEoCRIOCgZzaGEyNTYYDSABKAkSDwoHdmVyc2lvbhgOIAEoBRI8Cg9wZW5kaW5nX3ZlcnNpb24YDyABKAsyIy5rbm93Y2VsLmRvY3VtZW50LnYxLlBlbmRpbmdWZXJzaW9uEhAKCHRlYW1faWRzGBAgAygJGi8KDU1ldGFkYXRhRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASK5AQoOUGVuZGluZ1ZlcnNpb24SDwoHdmVyc2lvbhgBIAEoBRIQCghmaWxlbmFtZRgCIAEoCRIUCgxjb250ZW50X3R5cGUYAyABKAkSEgoKc2l6ZV9ieXRlcxgEIAEoAxIzCgZzdGF0dXMYBSABKA4yIy5rbm93Y2VsLmRvY3VtZW50LnYxLkRvY3VtZW50U3RhdHVzEhUKDXN0YXR1c19kZXRhaWwYBiABKAkSDgoGc2hhMjU2GAcgASgJIqYBCgVDaHVuaxITCgtkb2N1bWVudF9pZBgBIAEoCRINCgVpbmRleBgCIAEoBRIMCgR0ZXh0GAMgASgJEjoKCG1ldGFkYXRhGAQgAygLMigua25vd2NlbC5kb2N1bWVudC52MS5DaHVuay5NZXRhZGF0YUVudHJ5Gi8KDU1ldGFkYXRhRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASJfCgtTY29yZWRDaHVuaxIpCgVjaHVuaxgBIAEoCzIaLmtub3djZWwuZG9jdW1lbnQudjEuQ2h1bmsSFgoOZG9jdW1lbnRfdGl0bGUYAiABKAkSDQoFc2NvcmUYAyABKAIicwoOU2NvcmVkRG9jdW1lbnQSEwoLZG9jdW1lbnRfaWQYASABKAkSDQoFdGl0bGUYAiABKAkSDQoFc2NvcmUYAyABKAISLgoKYmVzdF9jaHVuaxgEIAEoCzIaLmtub3djZWwuZG9jdW1lbnQudjEuQ2h1bmsigQIKFUNyZWF0ZURvY3VtZW50UmVxdWVzdBINCgV0aXRsZRgBIAEoCRIQCghmaWxlbmFtZRgCIAEoCRIUCgxjb250ZW50X3R5cGUYAyABKAkSEgoKc2l6ZV9ieXRlcxgEIAEoAxJKCghtZXRhZGF0YRgFIAMoCzI4Lmtub3djZWwuZG9jdW1lbnQudjEuQ3JlYXRlRG9jdW1lbnRSZXF1ZXN0Lk1ldGFkYXRhRW50cnkSDgoGc2hhMjU2GAYgASgJEhAKCHRlYW1faWRzGAcgAygJGi8KDU1ldGFkYXRhRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASJdChZDcmVhdGVEb2N1bWVudFJlc3BvbnNlEi8KCGRvY3VtZW50GAEgASgLMh0ua25vd2NlbC5kb2N1bWVudC52MS5Eb2N1bWVudBISCgp1cGxvYWRfdXJsGAIgASgJIm8KFVJlcGxhY2VDb250ZW50UmVxdWVzdBIKCgJpZBgBIAEoCRIQCghmaWxlbmFtZRgCIAEoCRIUCgxjb250ZW50X3R5cGUYAyABKAkSEgoKc2l6ZV9ieXRlcxgEIAEoAxIOCgZzaGEyNTYYBSABKAkiXQoWUmVwbGFjZUNvbnRlbnRSZXNwb25zZRIvCghkb2N1bWVudBgBIAEoCzIdLmtub3djZWwuZG9jdW1lbnQudjEuRG9jdW1lbnQSEgoKdXBsb2FkX3VybBgCIAEoCSIgChJHZXREb2N1bWVudFJlcXVlc3QSCgoCaWQYASABKAkiRgoTR2V0RG9jdW1lbnRSZXNwb25zZRIvCghkb2N1bWVudBgBIAEoCzIdLmtub3djZWwuZG9jdW1lbnQudjEuRG9jdW1lbnQiRAoUTGlzdERvY3VtZW50c1JlcXVlc3QSLAoEcGFnZRgBIAEoCzIeLmtub3djZWwuY29tbW9uLnYxLlBhZ2VSZXF1ZXN0IngKFUxpc3REb2N1bWVudHNSZXNwb25zZRIwCglkb2N1bWVudHMYASADKAsyHS5rbm93Y2VsLmRvY3VtZW50LnYxLkRvY3VtZW50Ei0KBHBhZ2UYAiABKAsyHy5rbm93Y2VsLmNvbW1vbi52MS5QYWdlUmVzcG9uc2Ui1AEKFVVwZGF0ZURvY3VtZW50UmVxdWVzdBIKCgJpZBgBIAEoCRISCgV0aXRsZRgCIAEoCUgAiAEBEkoKCG1ldGFkYXRhGAMgAygLMjgua25vd2NlbC5kb2N1bWVudC52MS5VcGRhdGVEb2N1bWVudFJlcXVlc3QuTWV0YWRhdGFFbnRyeRIUCgxzZXRfbWV0YWRhdGEYBCABKAgaLwoNTWV0YWRhdGFFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBQggKBl90aXRsZSJJChZVcGRhdGVEb2N1bWVudFJlc3BvbnNlEi8KCGRvY3VtZW50GAEgASgLMh0ua25vd2NlbC5kb2N1bWVudC52MS5Eb2N1bWVudCI3ChdTZXREb2N1bWVudFRlYW1zUmVxdWVzdBIKCgJpZBgBIAEoCRIQCgh0ZWFtX2lkcxgCIAMoCSJLChhTZXREb2N1bWVudFRlYW1zUmVzcG9uc2USLwoIZG9jdW1lbnQYASABKAsyHS5rbm93Y2VsLmRvY3VtZW50LnYxLkRvY3VtZW50IiMKFURlbGV0ZURvY3VtZW50UmVxdWVzdBIKCgJpZBgBIAEoCSIYChZEZWxldGVEb2N1bWVudFJlc3BvbnNlInIKGFNldERvY3VtZW50U3RhdHVzUmVxdWVzdBIKCgJpZBgBIAEoCRIzCgZzdGF0dXMYAiABKA4yIy5rbm93Y2VsLmRvY3VtZW50LnYxLkRvY3VtZW50U3RhdHVzEhUKDXN0YXR1c19kZXRhaWwYAyABKAkiTAoZU2V0RG9jdW1lbnRTdGF0dXNSZXNwb25zZRIvCghkb2N1bWVudBgBIAEoCzIdLmtub3djZWwuZG9jdW1lbnQudjEuRG9jdW1lbnQiIwoVR2V0RG93bmxvYWRVcmxSZXF1ZXN0EgoKAmlkGAEgASgJIiUKFkdldERvd25sb2FkVXJsUmVzcG9uc2USCwoDdXJsGAEgASgJIiAKElJlYWRDb250ZW50UmVxdWVzdBIKCgJpZBgBIAEoCSIjChNSZWFkQ29udGVudFJlc3BvbnNlEgwKBGRhdGEYASABKAwixwEKCkNodW5rSW5wdXQSDQoFaW5kZXgYASABKAUSDAoEdGV4dBgCIAEoCRIRCgllbWJlZGRpbmcYAyADKAISPwoIbWV0YWRhdGEYBCADKAsyLS5rbm93Y2VsLmRvY3VtZW50LnYxLkNodW5rSW5wdXQuTWV0YWRhdGFFbnRyeRIXCg9lbWJlZGRpbmdfbW9kZWwYBSABKAkaLwoNTWV0YWRhdGFFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIlgKEEFkZENodW5rc1JlcXVlc3QSEwoLZG9jdW1lbnRfaWQYASABKAkSLwoGY2h1bmtzGAIgAygLMh8ua25vd2NlbC5kb2N1bWVudC52MS5DaHVua0lucHV0IigKEUFkZENodW5rc1Jlc3BvbnNlEhMKC2NodW5rX2NvdW50GAEgASgFIlYKEUxpc3RDaHVua3NSZXF1ZXN0EhMKC2RvY3VtZW50X2lkGAEgASgJEiwKBHBhZ2UYAiABKAsyHi5rbm93Y2VsLmNvbW1vbi52MS5QYWdlUmVxdWVzdCJvChJMaXN0Q2h1bmtzUmVzcG9uc2USKgoGY2h1bmtzGAEgAygLMhoua25vd2NlbC5kb2N1bWVudC52MS5DaHVuaxItCgRwYWdlGAIgASgLMh8ua25vd2NlbC5jb21tb24udjEuUGFnZVJlc3BvbnNlImYKE1NlYXJjaENodW5rc1JlcXVlc3QSEQoJZW1iZWRkaW5nGAEgAygCEg0KBWxpbWl0GAIgASgFEhQKDGRvY3VtZW50X2lkcxgDIAMoCRIXCg9lbWJlZGRpbmdfbW9kZWwYBCABKAkiSQoUU2VhcmNoQ2h1bmtzUmVzcG9uc2USMQoHcmVzdWx0cxgBIAMoCzIgLmtub3djZWwuZG9jdW1lbnQudjEuU2NvcmVkQ2h1bmsiTAoWU2VhcmNoRG9jdW1lbnRzUmVxdWVzdBINCgVxdWVyeRgBIAEoCRINCgVsaW1pdBgCIAEoBRIUCgxkb2N1bWVudF9pZHMYAyADKAkihAEKF1NlYXJjaERvY3VtZW50c1Jlc3BvbnNlEjEKB3Jlc3VsdHMYASADKAsyIC5rbm93Y2VsLmRvY3VtZW50LnYxLlNjb3JlZENodW5rEjYKCWRvY3VtZW50cxgCIAMoCzIjLmtub3djZWwuZG9jdW1lbnQudjEuU2NvcmVkRG9jdW1lbnQiPgoXUmVpbmRleERvY3VtZW50c1JlcXVlc3QSFAoMZG9jdW1lbnRfaWRzGAEgAygJEg0KBWZvcmNlGAIgASgIIkYKGFJlaW5kZXhEb2N1bWVudHNSZXNwb25zZRIRCglyZXF1ZXN0ZWQYASABKAUSFwoPZW1iZWRkaW5nX21vZGVsGAIgASgJKsoBCg5Eb2N1bWVudFN0YXR1cxIfChtET0NVTUVOVF9TVEFUVVNfVU5TUEVDSUZJRUQQABIiCh5ET0NVTUVOVF9TVEFUVVNfUEVORElOR19VUExPQUQQARIcChhET0NVTUVOVF9TVEFUVVNfVVBMT0FERUQQAhIeChpET0NVTUVOVF9TVEFUVVNfUFJPQ0VTU0lORxADEhkKFURPQ1VNRU5UX1NUQVRVU19SRUFEWRAEEhoKFkRPQ1VNRU5UX1NUQVRVU19GQUlMRUQQBTK6DAoPRG9jdW1lbnRTZXJ2aWNlEmkKDkNyZWF0ZURvY3VtZW50Eioua25vd2NlbC5kb2N1bWVudC52MS5DcmVhdGVEb2N1bWVudFJlcXVlc3QaKy5rbm93Y2VsLmRvY3VtZW50LnYxLkNyZWF0ZURvY3VtZW50UmVzcG9uc2USaQoOUmVwbGFjZUNvbnRlbnQSKi5rbm93Y2VsLmRvY3VtZW50LnYxLlJlcGxhY2VDb250ZW50UmVxdWVzdBorLmtub3djZWwuZG9jdW1lbnQudjEuUmVwbGFjZUNvbnRlbnRSZXNwb25zZRJgCgtHZXREb2N1bWVudBInLmtub3djZWwuZG9jdW1lbnQudjEuR2V0RG9jdW1lbnRSZXF1ZXN0Gigua25vd2NlbC5kb2N1bWVudC52MS5HZXREb2N1bWVudFJlc3BvbnNlEmYKDUxpc3REb2N1bWVudHMSKS5rbm93Y2VsLmRvY3VtZW50LnYxLkxpc3REb2N1bWVudHNSZXF1ZXN0Gioua25vd2NlbC5kb2N1bWVudC52MS5MaXN0RG9jdW1lbnRzUmVzcG9uc2USaQoOVXBkYXRlRG9jdW1lbnQSKi5rbm93Y2VsLmRvY3VtZW50LnYxLlVwZGF0ZURvY3VtZW50UmVxdWVzdBorLmtub3djZWwuZG9jdW1lbnQudjEuVXBkYXRlRG9jdW1lbnRSZXNwb25zZRJpCg5EZWxldGVEb2N1bWVudBIqLmtub3djZWwuZG9jdW1lbnQudjEuRGVsZXRlRG9jdW1lbnRSZXF1ZXN0Gisua25vd2NlbC5kb2N1bWVudC52MS5EZWxldGVEb2N1bWVudFJlc3BvbnNlEm8KEFNldERvY3VtZW50VGVhbXMSLC5rbm93Y2VsLmRvY3VtZW50LnYxLlNldERvY3VtZW50VGVhbXNSZXF1ZXN0Gi0ua25vd2NlbC5kb2N1bWVudC52MS5TZXREb2N1bWVudFRlYW1zUmVzcG9uc2UScgoRU2V0RG9jdW1lbnRTdGF0dXMSLS5rbm93Y2VsLmRvY3VtZW50LnYxLlNldERvY3VtZW50U3RhdHVzUmVxdWVzdBouLmtub3djZWwuZG9jdW1lbnQudjEuU2V0RG9jdW1lbnRTdGF0dXNSZXNwb25zZRJpCg5HZXREb3dubG9hZFVybBIqLmtub3djZWwuZG9jdW1lbnQudjEuR2V0RG93bmxvYWRVcmxSZXF1ZXN0Gisua25vd2NlbC5kb2N1bWVudC52MS5HZXREb3dubG9hZFVybFJlc3BvbnNlEmIKC1JlYWRDb250ZW50Eicua25vd2NlbC5kb2N1bWVudC52MS5SZWFkQ29udGVudFJlcXVlc3QaKC5rbm93Y2VsLmRvY3VtZW50LnYxLlJlYWRDb250ZW50UmVzcG9uc2UwARJaCglBZGRDaHVua3MSJS5rbm93Y2VsLmRvY3VtZW50LnYxLkFkZENodW5rc1JlcXVlc3QaJi5rbm93Y2VsLmRvY3VtZW50LnYxLkFkZENodW5rc1Jlc3BvbnNlEl0KCkxpc3RDaHVua3MSJi5rbm93Y2VsLmRvY3VtZW50LnYxLkxpc3RDaHVua3NSZXF1ZXN0Gicua25vd2NlbC5kb2N1bWVudC52MS5MaXN0Q2h1bmtzUmVzcG9uc2USYwoMU2VhcmNoQ2h1bmtzEigua25vd2NlbC5kb2N1bWVudC52MS5TZWFyY2hDaHVua3NSZXF1ZXN0Gikua25vd2NlbC5kb2N1bWVudC52MS5TZWFyY2hDaHVua3NSZXNwb25zZRJsCg9TZWFyY2hEb2N1bWVudHMSKy5rbm93Y2VsLmRvY3VtZW50LnYxLlNlYXJjaERvY3VtZW50c1JlcXVlc3QaLC5rbm93Y2VsLmRvY3VtZW50LnYxLlNlYXJjaERvY3VtZW50c1Jlc3BvbnNlEm8KEFJlaW5kZXhEb2N1bWVudHMSLC5rbm93Y2VsLmRvY3VtZW50LnYxLlJlaW5kZXhEb2N1bWVudHNSZXF1ZXN0Gi0ua25vd2NlbC5kb2N1bWVudC52MS5SZWluZGV4RG9jdW1lbnRzUmVzcG9uc2VCUVpPZ2l0aHViLmNvbS9DaHJpc3RvcGhCZS9rbm93Y2VsaXVtL21vZHVsZXMvZG9jdW1lbnQvYXBpL2dvL2RvY3VtZW50djE7ZG9jdW1lbnR2MWIGcHJvdG8z", [file_google_protobuf_timestamp, file_knowcel_common_v1_common]);
 
 /**
  * @generated from message knowcel.document.v1.Document
@@ -77,7 +77,8 @@ export type Document = Message<"knowcel.document.v1.Document"> & {
 
   /**
    * The user who uploaded the document, as the subject of their token. Set by
-   * the service; only this user can see the document.
+   * the service; this user and the members of the teams it is shared with
+   * can see the document.
    *
    * @generated from field: string owner_id = 12;
    */
@@ -108,6 +109,14 @@ export type Document = Message<"knowcel.document.v1.Document"> & {
    * @generated from field: knowcel.document.v1.PendingVersion pending_version = 15;
    */
   pendingVersion?: PendingVersion | undefined;
+
+  /**
+   * The teams the document is shared with, whose members can read it. The
+   * owner sees all of them; anyone else only those they are a member of.
+   *
+   * @generated from field: repeated string team_ids = 16;
+   */
+  teamIds: string[];
 };
 
 /**
@@ -317,6 +326,14 @@ export type CreateDocumentRequest = Message<"knowcel.document.v1.CreateDocumentR
    * @generated from field: string sha256 = 6;
    */
   sha256: string;
+
+  /**
+   * Teams to share the document with from the start. The caller must be a
+   * member of each; otherwise the call fails with NOT_FOUND.
+   *
+   * @generated from field: repeated string team_ids = 7;
+   */
+  teamIds: string[];
 };
 
 /**
@@ -554,6 +571,53 @@ export const UpdateDocumentResponseSchema: GenMessage<UpdateDocumentResponse> = 
   messageDesc(file_knowcel_document_v1_document, 14);
 
 /**
+ * SetDocumentTeams sets the teams a document is shared with. The owner may
+ * share with the teams they are a member of and stop sharing with any team.
+ * An admin of a team the document is shared with may only stop sharing it
+ * with their own team; anyone else who can read the document gets
+ * PERMISSION_DENIED. A caller who can't see the document gets NOT_FOUND, and
+ * so does one who names a team they are not a member of. The set applies to
+ * the teams the caller sees, so teams they don't belong to stay untouched.
+ *
+ * @generated from message knowcel.document.v1.SetDocumentTeamsRequest
+ */
+export type SetDocumentTeamsRequest = Message<"knowcel.document.v1.SetDocumentTeamsRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: repeated string team_ids = 2;
+   */
+  teamIds: string[];
+};
+
+/**
+ * Describes the message knowcel.document.v1.SetDocumentTeamsRequest.
+ * Use `create(SetDocumentTeamsRequestSchema)` to create a new message.
+ */
+export const SetDocumentTeamsRequestSchema: GenMessage<SetDocumentTeamsRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_document_v1_document, 15);
+
+/**
+ * @generated from message knowcel.document.v1.SetDocumentTeamsResponse
+ */
+export type SetDocumentTeamsResponse = Message<"knowcel.document.v1.SetDocumentTeamsResponse"> & {
+  /**
+   * @generated from field: knowcel.document.v1.Document document = 1;
+   */
+  document?: Document | undefined;
+};
+
+/**
+ * Describes the message knowcel.document.v1.SetDocumentTeamsResponse.
+ * Use `create(SetDocumentTeamsResponseSchema)` to create a new message.
+ */
+export const SetDocumentTeamsResponseSchema: GenMessage<SetDocumentTeamsResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_document_v1_document, 16);
+
+/**
  * @generated from message knowcel.document.v1.DeleteDocumentRequest
  */
 export type DeleteDocumentRequest = Message<"knowcel.document.v1.DeleteDocumentRequest"> & {
@@ -568,7 +632,7 @@ export type DeleteDocumentRequest = Message<"knowcel.document.v1.DeleteDocumentR
  * Use `create(DeleteDocumentRequestSchema)` to create a new message.
  */
 export const DeleteDocumentRequestSchema: GenMessage<DeleteDocumentRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 15);
+  messageDesc(file_knowcel_document_v1_document, 17);
 
 /**
  * @generated from message knowcel.document.v1.DeleteDocumentResponse
@@ -581,7 +645,7 @@ export type DeleteDocumentResponse = Message<"knowcel.document.v1.DeleteDocument
  * Use `create(DeleteDocumentResponseSchema)` to create a new message.
  */
 export const DeleteDocumentResponseSchema: GenMessage<DeleteDocumentResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 16);
+  messageDesc(file_knowcel_document_v1_document, 18);
 
 /**
  * Setting UPLOADED checks the uploaded file: FAILED_PRECONDITION when it is
@@ -613,7 +677,7 @@ export type SetDocumentStatusRequest = Message<"knowcel.document.v1.SetDocumentS
  * Use `create(SetDocumentStatusRequestSchema)` to create a new message.
  */
 export const SetDocumentStatusRequestSchema: GenMessage<SetDocumentStatusRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 17);
+  messageDesc(file_knowcel_document_v1_document, 19);
 
 /**
  * @generated from message knowcel.document.v1.SetDocumentStatusResponse
@@ -630,7 +694,7 @@ export type SetDocumentStatusResponse = Message<"knowcel.document.v1.SetDocument
  * Use `create(SetDocumentStatusResponseSchema)` to create a new message.
  */
 export const SetDocumentStatusResponseSchema: GenMessage<SetDocumentStatusResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 18);
+  messageDesc(file_knowcel_document_v1_document, 20);
 
 /**
  * @generated from message knowcel.document.v1.GetDownloadUrlRequest
@@ -647,7 +711,7 @@ export type GetDownloadUrlRequest = Message<"knowcel.document.v1.GetDownloadUrlR
  * Use `create(GetDownloadUrlRequestSchema)` to create a new message.
  */
 export const GetDownloadUrlRequestSchema: GenMessage<GetDownloadUrlRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 19);
+  messageDesc(file_knowcel_document_v1_document, 21);
 
 /**
  * @generated from message knowcel.document.v1.GetDownloadUrlResponse
@@ -664,7 +728,7 @@ export type GetDownloadUrlResponse = Message<"knowcel.document.v1.GetDownloadUrl
  * Use `create(GetDownloadUrlResponseSchema)` to create a new message.
  */
 export const GetDownloadUrlResponseSchema: GenMessage<GetDownloadUrlResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 20);
+  messageDesc(file_knowcel_document_v1_document, 22);
 
 /**
  * @generated from message knowcel.document.v1.ReadContentRequest
@@ -681,7 +745,7 @@ export type ReadContentRequest = Message<"knowcel.document.v1.ReadContentRequest
  * Use `create(ReadContentRequestSchema)` to create a new message.
  */
 export const ReadContentRequestSchema: GenMessage<ReadContentRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 21);
+  messageDesc(file_knowcel_document_v1_document, 23);
 
 /**
  * @generated from message knowcel.document.v1.ReadContentResponse
@@ -698,7 +762,7 @@ export type ReadContentResponse = Message<"knowcel.document.v1.ReadContentRespon
  * Use `create(ReadContentResponseSchema)` to create a new message.
  */
 export const ReadContentResponseSchema: GenMessage<ReadContentResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 22);
+  messageDesc(file_knowcel_document_v1_document, 24);
 
 /**
  * @generated from message knowcel.document.v1.ChunkInput
@@ -738,7 +802,7 @@ export type ChunkInput = Message<"knowcel.document.v1.ChunkInput"> & {
  * Use `create(ChunkInputSchema)` to create a new message.
  */
 export const ChunkInputSchema: GenMessage<ChunkInput> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 23);
+  messageDesc(file_knowcel_document_v1_document, 25);
 
 /**
  * @generated from message knowcel.document.v1.AddChunksRequest
@@ -760,7 +824,7 @@ export type AddChunksRequest = Message<"knowcel.document.v1.AddChunksRequest"> &
  * Use `create(AddChunksRequestSchema)` to create a new message.
  */
 export const AddChunksRequestSchema: GenMessage<AddChunksRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 24);
+  messageDesc(file_knowcel_document_v1_document, 26);
 
 /**
  * @generated from message knowcel.document.v1.AddChunksResponse
@@ -777,7 +841,7 @@ export type AddChunksResponse = Message<"knowcel.document.v1.AddChunksResponse">
  * Use `create(AddChunksResponseSchema)` to create a new message.
  */
 export const AddChunksResponseSchema: GenMessage<AddChunksResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 25);
+  messageDesc(file_knowcel_document_v1_document, 27);
 
 /**
  * @generated from message knowcel.document.v1.ListChunksRequest
@@ -799,7 +863,7 @@ export type ListChunksRequest = Message<"knowcel.document.v1.ListChunksRequest">
  * Use `create(ListChunksRequestSchema)` to create a new message.
  */
 export const ListChunksRequestSchema: GenMessage<ListChunksRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 26);
+  messageDesc(file_knowcel_document_v1_document, 28);
 
 /**
  * @generated from message knowcel.document.v1.ListChunksResponse
@@ -821,7 +885,7 @@ export type ListChunksResponse = Message<"knowcel.document.v1.ListChunksResponse
  * Use `create(ListChunksResponseSchema)` to create a new message.
  */
 export const ListChunksResponseSchema: GenMessage<ListChunksResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 27);
+  messageDesc(file_knowcel_document_v1_document, 29);
 
 /**
  * @generated from message knowcel.document.v1.SearchChunksRequest
@@ -859,7 +923,7 @@ export type SearchChunksRequest = Message<"knowcel.document.v1.SearchChunksReque
  * Use `create(SearchChunksRequestSchema)` to create a new message.
  */
 export const SearchChunksRequestSchema: GenMessage<SearchChunksRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 28);
+  messageDesc(file_knowcel_document_v1_document, 30);
 
 /**
  * @generated from message knowcel.document.v1.SearchChunksResponse
@@ -876,7 +940,7 @@ export type SearchChunksResponse = Message<"knowcel.document.v1.SearchChunksResp
  * Use `create(SearchChunksResponseSchema)` to create a new message.
  */
 export const SearchChunksResponseSchema: GenMessage<SearchChunksResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 29);
+  messageDesc(file_knowcel_document_v1_document, 31);
 
 /**
  * @generated from message knowcel.document.v1.SearchDocumentsRequest
@@ -909,7 +973,7 @@ export type SearchDocumentsRequest = Message<"knowcel.document.v1.SearchDocument
  * Use `create(SearchDocumentsRequestSchema)` to create a new message.
  */
 export const SearchDocumentsRequestSchema: GenMessage<SearchDocumentsRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 30);
+  messageDesc(file_knowcel_document_v1_document, 32);
 
 /**
  * @generated from message knowcel.document.v1.SearchDocumentsResponse
@@ -936,7 +1000,7 @@ export type SearchDocumentsResponse = Message<"knowcel.document.v1.SearchDocumen
  * Use `create(SearchDocumentsResponseSchema)` to create a new message.
  */
 export const SearchDocumentsResponseSchema: GenMessage<SearchDocumentsResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 31);
+  messageDesc(file_knowcel_document_v1_document, 33);
 
 /**
  * ReindexDocuments is a public RPC that acts on the caller's own documents
@@ -972,7 +1036,7 @@ export type ReindexDocumentsRequest = Message<"knowcel.document.v1.ReindexDocume
  * Use `create(ReindexDocumentsRequestSchema)` to create a new message.
  */
 export const ReindexDocumentsRequestSchema: GenMessage<ReindexDocumentsRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 32);
+  messageDesc(file_knowcel_document_v1_document, 34);
 
 /**
  * @generated from message knowcel.document.v1.ReindexDocumentsResponse
@@ -999,7 +1063,7 @@ export type ReindexDocumentsResponse = Message<"knowcel.document.v1.ReindexDocum
  * Use `create(ReindexDocumentsResponseSchema)` to create a new message.
  */
 export const ReindexDocumentsResponseSchema: GenMessage<ReindexDocumentsResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_document_v1_document, 33);
+  messageDesc(file_knowcel_document_v1_document, 35);
 
 /**
  * @generated from enum knowcel.document.v1.DocumentStatus
@@ -1104,6 +1168,14 @@ export const DocumentService: GenService<{
     methodKind: "unary";
     input: typeof DeleteDocumentRequestSchema;
     output: typeof DeleteDocumentResponseSchema;
+  },
+  /**
+   * @generated from rpc knowcel.document.v1.DocumentService.SetDocumentTeams
+   */
+  setDocumentTeams: {
+    methodKind: "unary";
+    input: typeof SetDocumentTeamsRequestSchema;
+    output: typeof SetDocumentTeamsResponseSchema;
   },
   /**
    * @generated from rpc knowcel.document.v1.DocumentService.SetDocumentStatus

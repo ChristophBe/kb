@@ -25,6 +25,7 @@ const (
 	DocumentService_ListDocuments_FullMethodName     = "/knowcel.document.v1.DocumentService/ListDocuments"
 	DocumentService_UpdateDocument_FullMethodName    = "/knowcel.document.v1.DocumentService/UpdateDocument"
 	DocumentService_DeleteDocument_FullMethodName    = "/knowcel.document.v1.DocumentService/DeleteDocument"
+	DocumentService_SetDocumentTeams_FullMethodName  = "/knowcel.document.v1.DocumentService/SetDocumentTeams"
 	DocumentService_SetDocumentStatus_FullMethodName = "/knowcel.document.v1.DocumentService/SetDocumentStatus"
 	DocumentService_GetDownloadUrl_FullMethodName    = "/knowcel.document.v1.DocumentService/GetDownloadUrl"
 	DocumentService_ReadContent_FullMethodName       = "/knowcel.document.v1.DocumentService/ReadContent"
@@ -54,6 +55,7 @@ type DocumentServiceClient interface {
 	ListDocuments(ctx context.Context, in *ListDocumentsRequest, opts ...grpc.CallOption) (*ListDocumentsResponse, error)
 	UpdateDocument(ctx context.Context, in *UpdateDocumentRequest, opts ...grpc.CallOption) (*UpdateDocumentResponse, error)
 	DeleteDocument(ctx context.Context, in *DeleteDocumentRequest, opts ...grpc.CallOption) (*DeleteDocumentResponse, error)
+	SetDocumentTeams(ctx context.Context, in *SetDocumentTeamsRequest, opts ...grpc.CallOption) (*SetDocumentTeamsResponse, error)
 	SetDocumentStatus(ctx context.Context, in *SetDocumentStatusRequest, opts ...grpc.CallOption) (*SetDocumentStatusResponse, error)
 	// GetDownloadUrl returns a short-lived URL for downloading the raw file.
 	GetDownloadUrl(ctx context.Context, in *GetDownloadUrlRequest, opts ...grpc.CallOption) (*GetDownloadUrlResponse, error)
@@ -144,6 +146,16 @@ func (c *documentServiceClient) DeleteDocument(ctx context.Context, in *DeleteDo
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeleteDocumentResponse)
 	err := c.cc.Invoke(ctx, DocumentService_DeleteDocument_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *documentServiceClient) SetDocumentTeams(ctx context.Context, in *SetDocumentTeamsRequest, opts ...grpc.CallOption) (*SetDocumentTeamsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetDocumentTeamsResponse)
+	err := c.cc.Invoke(ctx, DocumentService_SetDocumentTeams_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -258,6 +270,7 @@ type DocumentServiceServer interface {
 	ListDocuments(context.Context, *ListDocumentsRequest) (*ListDocumentsResponse, error)
 	UpdateDocument(context.Context, *UpdateDocumentRequest) (*UpdateDocumentResponse, error)
 	DeleteDocument(context.Context, *DeleteDocumentRequest) (*DeleteDocumentResponse, error)
+	SetDocumentTeams(context.Context, *SetDocumentTeamsRequest) (*SetDocumentTeamsResponse, error)
 	SetDocumentStatus(context.Context, *SetDocumentStatusRequest) (*SetDocumentStatusResponse, error)
 	// GetDownloadUrl returns a short-lived URL for downloading the raw file.
 	GetDownloadUrl(context.Context, *GetDownloadUrlRequest) (*GetDownloadUrlResponse, error)
@@ -311,6 +324,9 @@ func (UnimplementedDocumentServiceServer) UpdateDocument(context.Context, *Updat
 }
 func (UnimplementedDocumentServiceServer) DeleteDocument(context.Context, *DeleteDocumentRequest) (*DeleteDocumentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteDocument not implemented")
+}
+func (UnimplementedDocumentServiceServer) SetDocumentTeams(context.Context, *SetDocumentTeamsRequest) (*SetDocumentTeamsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetDocumentTeams not implemented")
 }
 func (UnimplementedDocumentServiceServer) SetDocumentStatus(context.Context, *SetDocumentStatusRequest) (*SetDocumentStatusResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SetDocumentStatus not implemented")
@@ -461,6 +477,24 @@ func _DocumentService_DeleteDocument_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DocumentServiceServer).DeleteDocument(ctx, req.(*DeleteDocumentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DocumentService_SetDocumentTeams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetDocumentTeamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DocumentServiceServer).SetDocumentTeams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DocumentService_SetDocumentTeams_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DocumentServiceServer).SetDocumentTeams(ctx, req.(*SetDocumentTeamsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -632,6 +666,10 @@ var DocumentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteDocument",
 			Handler:    _DocumentService_DeleteDocument_Handler,
+		},
+		{
+			MethodName: "SetDocumentTeams",
+			Handler:    _DocumentService_SetDocumentTeams_Handler,
 		},
 		{
 			MethodName: "SetDocumentStatus",

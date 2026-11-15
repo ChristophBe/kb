@@ -81,6 +81,11 @@ class IamServiceStub:
                 request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleRequest.SerializeToString,
                 response_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleResponse.FromString,
                 _registered_method=True)
+        self.ResolveCaller = channel.unary_unary(
+                '/knowcel.iam.v1.IamService/ResolveCaller',
+                request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.ResolveCallerRequest.SerializeToString,
+                response_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.ResolveCallerResponse.FromString,
+                _registered_method=True)
 
 
 class IamServiceServicer:
@@ -159,6 +164,16 @@ class IamServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ResolveCaller(self, request, context):
+        """ResolveCaller returns the caller's platform-admin flag and team
+        memberships, for the access checks of other modules. Internal: only
+        services call it, passing the user on. A caller who is not registered
+        yet resolves to no teams and no admin rights.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_IamServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -206,6 +221,11 @@ def add_IamServiceServicer_to_server(servicer, server):
                     servicer.SetMemberRole,
                     request_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleRequest.FromString,
                     response_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleResponse.SerializeToString,
+            ),
+            'ResolveCaller': grpc.unary_unary_rpc_method_handler(
+                    servicer.ResolveCaller,
+                    request_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.ResolveCallerRequest.FromString,
+                    response_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.ResolveCallerResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -453,6 +473,33 @@ class IamService:
             '/knowcel.iam.v1.IamService/SetMemberRole',
             knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleRequest.SerializeToString,
             knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ResolveCaller(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.iam.v1.IamService/ResolveCaller',
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.ResolveCallerRequest.SerializeToString,
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.ResolveCallerResponse.FromString,
             options,
             channel_credentials,
             insecure,

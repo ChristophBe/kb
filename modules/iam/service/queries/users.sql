@@ -17,3 +17,7 @@ SELECT * FROM iam.users
 WHERE lower(email) = lower(sqlc.arg(email)) AND email <> ''
 ORDER BY created_at, id
 LIMIT 1;
+
+-- GetUser returns a registered user by id.
+-- name: GetUser :one
+SELECT * FROM iam.users WHERE id = sqlc.arg(id);

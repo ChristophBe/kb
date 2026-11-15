@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import contextvars
+import dataclasses
 import inspect
 import logging
 import signal
@@ -50,9 +51,114 @@ def as_user(user: str) -> Iterator[None]:
         _user.reset(token)
 
 
+@dataclasses.dataclass(frozen=True)
+class Team:
+    """A team a user belongs to, with their role in it."""
+
+    id: str
+    admin: bool = False
+
+
+@dataclasses.dataclass(frozen=True)
+class Principal:
+    """The caller of a user-facing call: who they are and what they may reach.
+    Modules use it to decide which documents a call may see."""
+
+    user_id: str
+    platform_admin: bool = False
+    teams: tuple[Team, ...] = ()
+
+    @property
+    def team_ids(self) -> list[str]:
+        return [t.id for t in self.teams]
+
+    def is_team_admin(self, team_id: str) -> bool:
+        return any(t.id == team_id and t.admin for t in self.teams)
+
+
+_principal: contextvars.ContextVar[Principal | None] = contextvars.ContextVar(
+    "kb_principal", default=None
+)
+
+
+def current_principal() -> Principal | None:
+    """The principal of the current RPC, as put into the context by
+    `UserInterceptor` when `serve` got a `PrincipalResolver`; None for calls
+    without a user and for servers without a resolver."""
+    return _principal.get()
+
+
+@contextlib.contextmanager
+def as_principal(principal: Principal) -> Iterator[None]:
+    """Runs the block with `current_principal()` returning `principal` and
+    `current_user()` its user, for tests and code that acts on behalf of a user
+    outside an RPC."""
+    token = _principal.set(principal)
+    try:
+        with as_user(principal.user_id):
+            yield
+    finally:
+        _principal.reset(token)
+
+
+ResolveFunc = Callable[[str], Awaitable[Principal]]
+"""Looks up the principal of a user, normally through the IAM module's
+generated client (platform code must not import a module). It runs inside the
+call, so a client from `channel` acts for the user."""
+
+DEFAULT_PRINCIPAL_TTL = 30.0
+"""Seconds a resolved principal is reused, so membership changes reach other
+modules within this time."""
+
+_FAILURE_TTL = 5.0
+"""Seconds a failed resolution is reused, so an IAM outage does not add a
+failing call to every request."""
+
+_RESOLVE_TIMEOUT = 2.0
+_CACHE_LIMIT = 10_000
+
+
+class PrincipalResolver:
+    """Resolves principals through a `ResolveFunc` and caches the results.
+    When the lookup fails, for instance because IAM is down, the principal has
+    no teams and no admin rights: owner-only access keeps working."""
+
+    def __init__(
+        self,
+        resolve: ResolveFunc,
+        ttl: float = DEFAULT_PRINCIPAL_TTL,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
+        self._resolve = resolve
+        self._ttl = ttl
+        self._clock = clock
+        self._cache: dict[str, tuple[Principal, float]] = {}
+
+    async def resolve(self, user: str) -> Principal:
+        """The principal of `user`. Never raises."""
+        hit = self._cache.get(user)
+        if hit is not None and self._clock() < hit[1]:
+            return hit[0]
+        ttl = self._ttl
+        try:
+            resolved = await asyncio.wait_for(self._resolve(user), _RESOLVE_TIMEOUT)
+            principal = dataclasses.replace(resolved, user_id=user)
+        except Exception as err:
+            log.warning("resolve caller failed; continuing without teams: %s", err)
+            principal, ttl = Principal(user_id=user), min(_FAILURE_TTL, self._ttl)
+        if len(self._cache) > _CACHE_LIMIT:  # bounded: drop everything rather than track ages
+            self._cache.clear()
+        self._cache[user] = (principal, self._clock() + ttl)
+        return principal
+
+
 class UserInterceptor(grpc.aio.ServerInterceptor):
     """Makes the x-kb-user metadata of each call available as `current_user()`
-    inside its handler. `serve` installs it."""
+    inside its handler and, given a `PrincipalResolver`, the caller's
+    principal as `current_principal()`. `serve` installs it."""
+
+    def __init__(self, principals: PrincipalResolver | None = None) -> None:
+        self._principals = principals
 
     async def intercept_service(
         self,
@@ -72,18 +178,30 @@ class UserInterceptor(grpc.aio.ServerInterceptor):
         )
         if handler is None or user is None:
             return handler
-        return _with_user(handler, user)
+        return _with_user(handler, user, self._principals)
 
 
 def _with_user(
-    handler: grpc.RpcMethodHandler[Any, Any], user: str
+    handler: grpc.RpcMethodHandler[Any, Any],
+    user: str,
+    principals: PrincipalResolver | None = None,
 ) -> grpc.RpcMethodHandler[Any, Any]:
-    """Wraps the behaviour of `handler` so it runs with `current_user()` set."""
+    """Wraps the behaviour of `handler` so it runs with `current_user()` and,
+    given `principals`, `current_principal()` set."""
 
     @contextlib.asynccontextmanager
     async def scope(_context: Any) -> AsyncIterator[None]:
         with as_user(user):
-            yield
+            if principals is None:
+                yield
+                return
+            # Resolved inside the user's scope, so the lookup acts for them.
+            principal = await principals.resolve(user)
+            token = _principal.set(principal)
+            try:
+                yield
+            finally:
+                _principal.reset(token)
 
     return _wrap(handler, scope)
 
@@ -225,16 +343,22 @@ async def serve(
     service_names: Iterable[str],
     *,
     grace_seconds: float = 5.0,
+    principals: PrincipalResolver | None = None,
 ) -> None:
     """Run a grpc.aio server with health checking and reflection until SIGINT
     or SIGTERM. `service_names` are the fully qualified names reported as
     SERVING and exposed via reflection. Handlers read the calling user with
-    `current_user()`. Each call is counted in the gRPC server metrics
+    `current_user()` and, given `principals`, the caller's teams with
+    `current_principal()`. Each call is counted in the gRPC server metrics
     (`knowcel_platform.metrics`; serve them with `start_metrics_server`). With
     tracing on (`knowcel_platform.telemetry`), each call continues the caller's
     trace in a server span."""
     server = grpc.aio.server(
-        interceptors=[MetricsInterceptor(), *telemetry.server_interceptors(), UserInterceptor()]
+        interceptors=[
+            MetricsInterceptor(),
+            *telemetry.server_interceptors(),
+            UserInterceptor(principals),
+        ]
     )
     for reg in register:
         reg(server)

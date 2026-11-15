@@ -21,6 +21,8 @@ type Querier interface {
 	// user is not a member.
 	GetTeamForUser(ctx context.Context, arg GetTeamForUserParams) (GetTeamForUserRow, error)
 	GetTeamMember(ctx context.Context, arg GetTeamMemberParams) (GetTeamMemberRow, error)
+	// GetUser returns a registered user by id.
+	GetUser(ctx context.Context, id string) (IamUser, error)
 	InsertTeam(ctx context.Context, arg InsertTeamParams) (IamTeam, error)
 	InsertTeamMember(ctx context.Context, arg InsertTeamMemberParams) error
 	ListTeamMembers(ctx context.Context, teamID uuid.UUID) ([]ListTeamMembersRow, error)

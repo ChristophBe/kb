@@ -13,4 +13,8 @@ services:
     env:
       KNOWCEL_IAM_BOOTSTRAP_ADMINS: ""
     grpc_services: [knowcel.iam.v1.IamService]
+    # Called only by other modules' services, to resolve the caller's teams;
+    # Envoy does not route it.
+    internal:
+      - knowcel.iam.v1.IamService/ResolveCaller
 ui: "@knowcel/module-iam"

@@ -27,6 +27,7 @@ const (
 type Repository interface {
 	UpsertUser(ctx context.Context, arg store.UpsertUserParams) (store.IamUser, error)
 	FindUserByEmail(ctx context.Context, email string) (store.IamUser, error)
+	GetUser(ctx context.Context, id string) (store.IamUser, error)
 
 	CreateTeam(ctx context.Context, name, creator string) (store.IamTeam, error)
 	UpdateTeamName(ctx context.Context, arg store.UpdateTeamNameParams) (store.IamTeam, error)

@@ -59,6 +59,13 @@ func (m *memRepo) FindUserByEmail(_ context.Context, email string) (store.IamUse
 	return store.IamUser{}, pgx.ErrNoRows
 }
 
+func (m *memRepo) GetUser(_ context.Context, id string) (store.IamUser, error) {
+	if u, ok := m.users[id]; ok {
+		return u, nil
+	}
+	return store.IamUser{}, pgx.ErrNoRows
+}
+
 func (m *memRepo) CreateTeam(_ context.Context, name, creator string) (store.IamTeam, error) {
 	t := store.IamTeam{ID: uuid.New(), Name: name}
 	m.teams[t.ID] = t

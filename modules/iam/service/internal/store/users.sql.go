@@ -32,6 +32,25 @@ func (q *Queries) FindUserByEmail(ctx context.Context, email string) (IamUser, e
 	return i, err
 }
 
+const getUser = `-- name: GetUser :one
+SELECT id, email, display_name, platform_admin, created_at, updated_at FROM iam.users WHERE id = $1
+`
+
+// GetUser returns a registered user by id.
+func (q *Queries) GetUser(ctx context.Context, id string) (IamUser, error) {
+	row := q.db.QueryRow(ctx, getUser, id)
+	var i IamUser
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.DisplayName,
+		&i.PlatformAdmin,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const upsertUser = `-- name: UpsertUser :one
 INSERT INTO iam.users (id, email, display_name, platform_admin)
 VALUES ($1, $2, $3, $4)

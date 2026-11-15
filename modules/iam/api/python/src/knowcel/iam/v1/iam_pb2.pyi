@@ -163,3 +163,25 @@ class SetMemberRoleResponse(_message.Message):
     MEMBER_FIELD_NUMBER: _ClassVar[int]
     member: TeamMember
     def __init__(self, member: _Optional[_Union[TeamMember, _Mapping]] = ...) -> None: ...
+
+class ResolveCallerRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class ResolveCallerResponse(_message.Message):
+    __slots__ = ("user_id", "platform_admin", "teams")
+    USER_ID_FIELD_NUMBER: _ClassVar[int]
+    PLATFORM_ADMIN_FIELD_NUMBER: _ClassVar[int]
+    TEAMS_FIELD_NUMBER: _ClassVar[int]
+    user_id: str
+    platform_admin: bool
+    teams: _containers.RepeatedCompositeFieldContainer[CallerTeam]
+    def __init__(self, user_id: _Optional[str] = ..., platform_admin: _Optional[bool] = ..., teams: _Optional[_Iterable[_Union[CallerTeam, _Mapping]]] = ...) -> None: ...
+
+class CallerTeam(_message.Message):
+    __slots__ = ("team_id", "role")
+    TEAM_ID_FIELD_NUMBER: _ClassVar[int]
+    ROLE_FIELD_NUMBER: _ClassVar[int]
+    team_id: str
+    role: TeamRole
+    def __init__(self, team_id: _Optional[str] = ..., role: _Optional[_Union[TeamRole, str]] = ...) -> None: ...

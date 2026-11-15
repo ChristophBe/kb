@@ -8,11 +8,16 @@ from grpc_health.v1 import health, health_pb2, health_pb2_grpc
 from grpc_status import rpc_status
 from knowcel_platform.grpc import (
     USER_HEADER,
+    Principal,
+    PrincipalResolver,
+    Team,
     UserInterceptor,
     abort_invalid_argument,
     abort_with_details,
+    as_principal,
     as_user,
     channel,
+    current_principal,
     current_user,
     error_info,
     field_violations,
@@ -193,3 +198,101 @@ async def test_channel_forwards_the_user_alongside_other_metadata() -> None:
 
 async def test_channel_without_a_user_sends_none() -> None:
     assert await _users_seen((), channel) == [None] * 5
+
+
+def test_principal_helpers() -> None:
+    p = Principal("ann", teams=(Team("a", admin=True), Team("b")))
+    assert p.team_ids == ["a", "b"]
+    assert p.is_team_admin("a")
+    assert not p.is_team_admin("b")
+    assert not p.is_team_admin("c")
+    assert current_principal() is None
+    with as_principal(p):
+        assert current_principal() == p
+        assert current_user() == "ann"
+    assert current_principal() is None
+    assert current_user() is None
+
+
+class _Clock:
+    def __init__(self) -> None:
+        self.now = 1000.0
+
+    def __call__(self) -> float:
+        return self.now
+
+
+async def test_resolver_caches_until_the_ttl_expires() -> None:
+    calls: list[str] = []
+
+    async def resolve(user: str) -> Principal:
+        calls.append(user)
+        return Principal(user, teams=(Team("t1"),))
+
+    clock = _Clock()
+    resolver = PrincipalResolver(resolve, ttl=60, clock=clock)
+    for _ in range(3):
+        assert (await resolver.resolve("ann")).team_ids == ["t1"]
+    assert calls == ["ann"]
+    await resolver.resolve("bob")
+    assert calls == ["ann", "bob"]
+    clock.now += 61
+    await resolver.resolve("ann")
+    assert calls == ["ann", "bob", "ann"]
+
+
+async def test_resolver_without_iam_has_no_teams() -> None:
+    calls = 0
+    failing = True
+
+    async def resolve(user: str) -> Principal:
+        nonlocal calls
+        calls += 1
+        if failing:
+            raise RuntimeError("iam unavailable")
+        return Principal(user, platform_admin=True, teams=(Team("t1"),))
+
+    clock = _Clock()
+    resolver = PrincipalResolver(resolve, ttl=60, clock=clock)
+    assert await resolver.resolve("ann") == Principal("ann")
+    await resolver.resolve("ann")
+    assert calls == 1  # the failure is reused briefly
+    failing = False
+    clock.now += 6
+    recovered = await resolver.resolve("ann")
+    assert recovered.platform_admin
+    assert recovered.team_ids == ["t1"]
+
+
+async def test_interceptor_exposes_the_callers_principal() -> None:
+    seen: list[Principal | None] = []
+    looked_up_for: list[str | None] = []
+
+    async def resolve(user: str) -> Principal:
+        looked_up_for.append(current_user())
+        return Principal(user, teams=(Team("t1", admin=True),))
+
+    async def unary(_request: bytes, _context: Any) -> bytes:
+        seen.append(current_principal())
+        return b""
+
+    server = grpc.aio.server(interceptors=[UserInterceptor(PrincipalResolver(resolve))])
+    server.add_generic_rpc_handlers(
+        (
+            grpc.method_handlers_generic_handler(
+                "test.Svc", {"Unary": grpc.unary_unary_rpc_method_handler(unary)}
+            ),
+        )
+    )
+    port = server.add_insecure_port("127.0.0.1:0")
+    await server.start()
+    try:
+        async with grpc.aio.insecure_channel(f"127.0.0.1:{port}") as ch:
+            call = ch.unary_unary("/test.Svc/Unary")
+            await call(b"", metadata=((USER_HEADER, "ann"),))
+            await call(b"")
+    finally:
+        await server.stop(None)
+    assert seen == [Principal("ann", teams=(Team("t1", admin=True),)), None]
+    assert looked_up_for == ["ann"]  # the lookup acts for the caller
+    assert current_principal() is None

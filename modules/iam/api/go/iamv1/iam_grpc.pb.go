@@ -28,6 +28,7 @@ const (
 	IamService_AddMember_FullMethodName      = "/knowcel.iam.v1.IamService/AddMember"
 	IamService_RemoveMember_FullMethodName   = "/knowcel.iam.v1.IamService/RemoveMember"
 	IamService_SetMemberRole_FullMethodName  = "/knowcel.iam.v1.IamService/SetMemberRole"
+	IamService_ResolveCaller_FullMethodName  = "/knowcel.iam.v1.IamService/ResolveCaller"
 )
 
 // IamServiceClient is the client API for IamService service.
@@ -63,6 +64,11 @@ type IamServiceClient interface {
 	// SetMemberRole changes a member's role. Team admins only. The last admin
 	// cannot be demoted (FAILED_PRECONDITION).
 	SetMemberRole(ctx context.Context, in *SetMemberRoleRequest, opts ...grpc.CallOption) (*SetMemberRoleResponse, error)
+	// ResolveCaller returns the caller's platform-admin flag and team
+	// memberships, for the access checks of other modules. Internal: only
+	// services call it, passing the user on. A caller who is not registered
+	// yet resolves to no teams and no admin rights.
+	ResolveCaller(ctx context.Context, in *ResolveCallerRequest, opts ...grpc.CallOption) (*ResolveCallerResponse, error)
 }
 
 type iamServiceClient struct {
@@ -163,6 +169,16 @@ func (c *iamServiceClient) SetMemberRole(ctx context.Context, in *SetMemberRoleR
 	return out, nil
 }
 
+func (c *iamServiceClient) ResolveCaller(ctx context.Context, in *ResolveCallerRequest, opts ...grpc.CallOption) (*ResolveCallerResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ResolveCallerResponse)
+	err := c.cc.Invoke(ctx, IamService_ResolveCaller_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IamServiceServer is the server API for IamService service.
 // All implementations must embed UnimplementedIamServiceServer
 // for forward compatibility.
@@ -196,6 +212,11 @@ type IamServiceServer interface {
 	// SetMemberRole changes a member's role. Team admins only. The last admin
 	// cannot be demoted (FAILED_PRECONDITION).
 	SetMemberRole(context.Context, *SetMemberRoleRequest) (*SetMemberRoleResponse, error)
+	// ResolveCaller returns the caller's platform-admin flag and team
+	// memberships, for the access checks of other modules. Internal: only
+	// services call it, passing the user on. A caller who is not registered
+	// yet resolves to no teams and no admin rights.
+	ResolveCaller(context.Context, *ResolveCallerRequest) (*ResolveCallerResponse, error)
 	mustEmbedUnimplementedIamServiceServer()
 }
 
@@ -232,6 +253,9 @@ func (UnimplementedIamServiceServer) RemoveMember(context.Context, *RemoveMember
 }
 func (UnimplementedIamServiceServer) SetMemberRole(context.Context, *SetMemberRoleRequest) (*SetMemberRoleResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SetMemberRole not implemented")
+}
+func (UnimplementedIamServiceServer) ResolveCaller(context.Context, *ResolveCallerRequest) (*ResolveCallerResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ResolveCaller not implemented")
 }
 func (UnimplementedIamServiceServer) mustEmbedUnimplementedIamServiceServer() {}
 func (UnimplementedIamServiceServer) testEmbeddedByValue()                    {}
@@ -416,6 +440,24 @@ func _IamService_SetMemberRole_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _IamService_ResolveCaller_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResolveCallerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IamServiceServer).ResolveCaller(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IamService_ResolveCaller_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IamServiceServer).ResolveCaller(ctx, req.(*ResolveCallerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // IamService_ServiceDesc is the grpc.ServiceDesc for IamService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -458,6 +500,10 @@ var IamService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetMemberRole",
 			Handler:    _IamService_SetMemberRole_Handler,
+		},
+		{
+			MethodName: "ResolveCaller",
+			Handler:    _IamService_ResolveCaller_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

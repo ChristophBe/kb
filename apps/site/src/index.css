@@ -5,11 +5,44 @@
 @source "../../../platform/ui/kit/src";
 
 @theme {
+  /* Display sizes for the marketing headlines; the app's own scale stops at text-3xl. */
+  --text-4xl: 3rem;
+  --text-4xl--line-height: 1.05;
+  --text-4xl--letter-spacing: -0.025em;
+  --text-5xl: 3.75rem;
+  --text-5xl--line-height: 1.03;
+  --text-5xl--letter-spacing: -0.03em;
+  --text-6xl: 4.5rem;
+  --text-6xl--line-height: 1;
+  --text-6xl--letter-spacing: -0.035em;
+  --text-7xl: 6rem;
+  --text-7xl--line-height: 1;
+  --text-7xl--letter-spacing: -0.04em;
+  --text-8xl: 7.5rem;
+  --text-8xl--line-height: 0.98;
+  --text-8xl--letter-spacing: -0.045em;
+
   /* The demo answer appearing word by word, as a streamed answer does; reduced motion stills it. */
   --animate-stream: stream 0.3s ease-out both;
 
   @keyframes stream {
     from {
+      opacity: 0;
+    }
+  }
+
+  /* Decorative graphics: drifting nodes, flowing connections, blinking caret. */
+  --animate-pulse-node: pulse-node 3.2s ease-in-out infinite;
+  --animate-caret: caret 1s steps(1) infinite;
+
+  @keyframes pulse-node {
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  @keyframes caret {
+    50% {
       opacity: 0;
     }
   }

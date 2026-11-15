@@ -35,6 +35,12 @@ export { formatBytes, formatRelativeTime, formatTime } from "./format.ts";
 export { DelayedLoading, Skeleton, SkeletonRows } from "./loading.tsx";
 export { Logo, Mark } from "./logo.tsx";
 export { headingSlug } from "./slug.ts";
+export {
+  isTeamNotFound,
+  TEAM_NOT_FOUND_MESSAGE,
+  type TeamOption,
+  TeamPicker,
+} from "./team-picker.tsx";
 export { applyThemePref, readThemePref, type ThemePref, useThemePref } from "./theme.ts";
 export { ThemeToggle } from "./theme-toggle.tsx";
 export { Widget, WidgetMessage } from "./widget.tsx";

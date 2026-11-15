@@ -5,6 +5,9 @@ from pydantic import SecretStr
 class Settings(PlatformSettings):
     grpc_port: int = 9004
     metrics_port: int = 9104
+    # The iam module (host:port), which tells whether a caller is a platform
+    # admin. While it is down, nobody is one and models can't be changed.
+    iam_addr: str = "localhost:9006"
     # Provider for chat and embeddings, a name in knowcel_llm.providers.REGISTRY:
     # ollama, anthropic or fake.
     llm_provider: str = "ollama"
@@ -38,6 +41,8 @@ class Settings(PlatformSettings):
     provider_embed_timeout: float = 120
     # Seconds to list a provider's models or check its health.
     provider_list_timeout: float = 10
+    # Seconds a model download may go without progress before it is given up.
+    provider_pull_stall_timeout: float = 120
     # Attempts for idempotent calls (embed, list), doubling the delay after each.
     provider_attempts: int = 3
     # Seconds before the second attempt.
@@ -62,6 +67,7 @@ class Settings(PlatformSettings):
 
     def check(self, problems: Problems) -> None:
         super().check(problems)
+        problems.addr("iam_addr", self.iam_addr)
         # Imported here: the providers import these settings.
         from .providers import REGISTRY
 
@@ -83,6 +89,7 @@ class Settings(PlatformSettings):
             "provider_generate_timeout",
             "provider_embed_timeout",
             "provider_list_timeout",
+            "provider_pull_stall_timeout",
         ):
             if not getattr(self, field) > 0:
                 problems.add(field, f"must be positive, got {getattr(self, field)}")

@@ -6,6 +6,7 @@ requires-python = ">=3.13"
 dependencies = [
     "anthropic>=2.3",
     "httpx>=0.28",
+    "knowcel-iam-api",
     "knowcel-llm-api",
     "knowcel-platform",
     "prometheus-client>=0.26",
@@ -15,6 +16,7 @@ dependencies = [
 knowcel-llm-service = "knowcel_llm.__main__:main"
 
 [tool.uv.sources]
+knowcel-iam-api = { workspace = true }
 knowcel-llm-api = { workspace = true }
 knowcel-platform = { workspace = true }
 

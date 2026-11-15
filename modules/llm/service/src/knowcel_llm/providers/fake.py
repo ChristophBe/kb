@@ -3,7 +3,16 @@ import hashlib
 import math
 from collections.abc import AsyncGenerator
 
-from .base import Chunk, GenerationOptions, Message, ModelInfo, ModelKind, Status
+from .base import (
+    Chunk,
+    GenerationOptions,
+    Message,
+    ModelInfo,
+    ModelKind,
+    NotSupportedError,
+    PullProgress,
+    Status,
+)
 
 
 class FakeProvider:
@@ -52,6 +61,13 @@ class FakeProvider:
         values = values[: self._dimensions]
         norm = math.sqrt(sum(v * v for v in values)) or 1.0
         return [v / norm for v in values]
+
+    async def pull_model(self, model: str) -> AsyncGenerator[PullProgress]:
+        raise NotSupportedError("the fake provider has no models to pull")
+        yield  # makes this an async generator, like the providers that can pull
+
+    async def delete_model(self, model: str) -> None:
+        raise NotSupportedError("the fake provider has no models to delete")
 
     async def list_models(self) -> list[ModelInfo]:
         return [

@@ -20,3 +20,6 @@ services:
       - knowcel.llm.v1.LlmService/Generate
       - knowcel.llm.v1.LlmService/Embed
 ui: "@knowcel/module-llm"
+# iam tells whether the caller is a platform admin, who alone may pull and
+# delete models; while it is down, nobody can, and everything else works.
+depends_on: [iam]

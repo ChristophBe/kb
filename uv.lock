@@ -1111,6 +1111,7 @@ source = { editable = "modules/llm/service" }
 dependencies = [
     { name = "anthropic" },
     { name = "httpx" },
+    { name = "knowcel-iam-api" },
     { name = "knowcel-llm-api" },
     { name = "knowcel-platform" },
     { name = "prometheus-client" },
@@ -1120,6 +1121,7 @@ dependencies = [
 requires-dist = [
     { name = "anthropic", specifier = ">=2.3" },
     { name = "httpx", specifier = ">=0.28" },
+    { name = "knowcel-iam-api", editable = "modules/iam/api/python" },
     { name = "knowcel-llm-api", editable = "modules/llm/api/python" },
     { name = "knowcel-platform", editable = "platform/python" },
     { name = "prometheus-client", specifier = ">=0.26" },

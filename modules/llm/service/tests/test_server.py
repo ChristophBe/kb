@@ -137,6 +137,7 @@ def test_default_settings_are_valid() -> None:
             "KNOWCEL_OLLAMA_URL: must be a URL with a host and scheme http or https, "
             "got 'ollama:11434'",
         ),
+        ({"iam_addr": "iam"}, "KNOWCEL_IAM_ADDR: must be host:port, got 'iam'"),
         ({"anthropic_max_tokens": 0}, "KNOWCEL_ANTHROPIC_MAX_TOKENS: must be at least 1, got 0"),
         (
             {"provider_embed_timeout": 0},

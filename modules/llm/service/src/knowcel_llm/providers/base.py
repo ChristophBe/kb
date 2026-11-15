@@ -69,6 +69,17 @@ class ModelInfo:
 
 
 @dataclass(frozen=True)
+class PullProgress:
+    """One streamed step of a model download. `total` is 0 for steps without a
+    size (e.g. "pulling manifest"). The final one has done=True."""
+
+    status: str
+    completed: int = 0
+    total: int = 0
+    done: bool = False
+
+
+@dataclass(frozen=True)
 class Status:
     healthy: bool
     detail: str = ""
@@ -92,6 +103,11 @@ class Provider(Protocol):
     async def embed(self, model: str, inputs: list[str]) -> list[list[float]]: ...
 
     async def list_models(self) -> list[ModelInfo]: ...
+
+    # Providers that can't manage their models raise NotSupportedError.
+    def pull_model(self, model: str) -> AsyncGenerator[PullProgress]: ...
+
+    async def delete_model(self, model: str) -> None: ...
 
     async def status(self) -> Status: ...
 

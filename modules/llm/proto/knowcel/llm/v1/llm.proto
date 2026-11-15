@@ -13,6 +13,13 @@ service LlmService {
   // message carrying usage information.
   rpc Generate(GenerateRequest) returns (stream GenerateResponse);
   rpc Embed(EmbedRequest) returns (EmbedResponse);
+  // PullModel downloads a model to a provider and streams the progress, ending
+  // with a message with done set. Platform admins only; providers that can't
+  // manage models return UNIMPLEMENTED.
+  rpc PullModel(PullModelRequest) returns (stream PullModelResponse);
+  // DeleteModel removes a model from a provider. Platform admins only;
+  // providers that can't manage models return UNIMPLEMENTED.
+  rpc DeleteModel(DeleteModelRequest) returns (DeleteModelResponse);
 }
 
 enum Role {
@@ -114,3 +121,28 @@ message EmbedResponse {
   string model = 2;
   int32 dimensions = 3;
 }
+
+message PullModelRequest {
+  // Registry name of the provider (a Model.provider or a ProviderHealth.provider).
+  // Empty selects the chat provider.
+  string provider = 1;
+  string model = 2;
+}
+
+message PullModelResponse {
+  // What the provider is doing, e.g. "pulling manifest" or "verifying sha256 digest".
+  string status = 1;
+  // Bytes of the current download step; total is 0 when the step has no size.
+  int64 completed = 2;
+  int64 total = 3;
+  // Set on the final message of the stream only.
+  bool done = 4;
+}
+
+message DeleteModelRequest {
+  // Registry name of the provider (a Model.provider). Empty selects the chat provider.
+  string provider = 1;
+  string model = 2;
+}
+
+message DeleteModelResponse {}

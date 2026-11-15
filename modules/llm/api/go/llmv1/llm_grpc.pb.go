@@ -23,6 +23,8 @@ const (
 	LlmService_GetProviderStatus_FullMethodName = "/knowcel.llm.v1.LlmService/GetProviderStatus"
 	LlmService_Generate_FullMethodName          = "/knowcel.llm.v1.LlmService/Generate"
 	LlmService_Embed_FullMethodName             = "/knowcel.llm.v1.LlmService/Embed"
+	LlmService_PullModel_FullMethodName         = "/knowcel.llm.v1.LlmService/PullModel"
+	LlmService_DeleteModel_FullMethodName       = "/knowcel.llm.v1.LlmService/DeleteModel"
 )
 
 // LlmServiceClient is the client API for LlmService service.
@@ -38,6 +40,13 @@ type LlmServiceClient interface {
 	// message carrying usage information.
 	Generate(ctx context.Context, in *GenerateRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GenerateResponse], error)
 	Embed(ctx context.Context, in *EmbedRequest, opts ...grpc.CallOption) (*EmbedResponse, error)
+	// PullModel downloads a model to a provider and streams the progress, ending
+	// with a message with done set. Platform admins only; providers that can't
+	// manage models return UNIMPLEMENTED.
+	PullModel(ctx context.Context, in *PullModelRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[PullModelResponse], error)
+	// DeleteModel removes a model from a provider. Platform admins only;
+	// providers that can't manage models return UNIMPLEMENTED.
+	DeleteModel(ctx context.Context, in *DeleteModelRequest, opts ...grpc.CallOption) (*DeleteModelResponse, error)
 }
 
 type llmServiceClient struct {
@@ -97,6 +106,35 @@ func (c *llmServiceClient) Embed(ctx context.Context, in *EmbedRequest, opts ...
 	return out, nil
 }
 
+func (c *llmServiceClient) PullModel(ctx context.Context, in *PullModelRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[PullModelResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &LlmService_ServiceDesc.Streams[1], LlmService_PullModel_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[PullModelRequest, PullModelResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type LlmService_PullModelClient = grpc.ServerStreamingClient[PullModelResponse]
+
+func (c *llmServiceClient) DeleteModel(ctx context.Context, in *DeleteModelRequest, opts ...grpc.CallOption) (*DeleteModelResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteModelResponse)
+	err := c.cc.Invoke(ctx, LlmService_DeleteModel_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LlmServiceServer is the server API for LlmService service.
 // All implementations must embed UnimplementedLlmServiceServer
 // for forward compatibility.
@@ -110,6 +148,13 @@ type LlmServiceServer interface {
 	// message carrying usage information.
 	Generate(*GenerateRequest, grpc.ServerStreamingServer[GenerateResponse]) error
 	Embed(context.Context, *EmbedRequest) (*EmbedResponse, error)
+	// PullModel downloads a model to a provider and streams the progress, ending
+	// with a message with done set. Platform admins only; providers that can't
+	// manage models return UNIMPLEMENTED.
+	PullModel(*PullModelRequest, grpc.ServerStreamingServer[PullModelResponse]) error
+	// DeleteModel removes a model from a provider. Platform admins only;
+	// providers that can't manage models return UNIMPLEMENTED.
+	DeleteModel(context.Context, *DeleteModelRequest) (*DeleteModelResponse, error)
 	mustEmbedUnimplementedLlmServiceServer()
 }
 
@@ -131,6 +176,12 @@ func (UnimplementedLlmServiceServer) Generate(*GenerateRequest, grpc.ServerStrea
 }
 func (UnimplementedLlmServiceServer) Embed(context.Context, *EmbedRequest) (*EmbedResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Embed not implemented")
+}
+func (UnimplementedLlmServiceServer) PullModel(*PullModelRequest, grpc.ServerStreamingServer[PullModelResponse]) error {
+	return status.Error(codes.Unimplemented, "method PullModel not implemented")
+}
+func (UnimplementedLlmServiceServer) DeleteModel(context.Context, *DeleteModelRequest) (*DeleteModelResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteModel not implemented")
 }
 func (UnimplementedLlmServiceServer) mustEmbedUnimplementedLlmServiceServer() {}
 func (UnimplementedLlmServiceServer) testEmbeddedByValue()                    {}
@@ -218,6 +269,35 @@ func _LlmService_Embed_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LlmService_PullModel_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(PullModelRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(LlmServiceServer).PullModel(m, &grpc.GenericServerStream[PullModelRequest, PullModelResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type LlmService_PullModelServer = grpc.ServerStreamingServer[PullModelResponse]
+
+func _LlmService_DeleteModel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteModelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LlmServiceServer).DeleteModel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LlmService_DeleteModel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LlmServiceServer).DeleteModel(ctx, req.(*DeleteModelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LlmService_ServiceDesc is the grpc.ServiceDesc for LlmService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -237,11 +317,20 @@ var LlmService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "Embed",
 			Handler:    _LlmService_Embed_Handler,
 		},
+		{
+			MethodName: "DeleteModel",
+			Handler:    _LlmService_DeleteModel_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "Generate",
 			Handler:       _LlmService_Generate_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "PullModel",
+			Handler:       _LlmService_PullModel_Handler,
 			ServerStreams: true,
 		},
 	},

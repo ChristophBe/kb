@@ -15,7 +15,7 @@ Name, story and voice: [Brand](docs/brand.md).
 
 **Website:** [christophbe.github.io/knowcelium](https://christophbe.github.io/knowcelium/), built from [`apps/site`](apps/site) and published to GitHub Pages on every push to `main`.
 
-- **Go** — core infrastructure services (document, ingestion)
+- **Go** — core infrastructure services (document, ingestion, iam)
 - **Python** — data-science / LLM work (ingestion worker, chat, llm gateway)
 - **TypeScript + React** — a modular UI shell; each module ships its own UI package
 - **gRPC + protobuf** between all modules; the browser uses gRPC-Web through Envoy
@@ -29,9 +29,10 @@ Name, story and voice: [Brand](docs/brand.md).
 | `ingestion` | Go service :9002, Python worker | Presigned uploads, job tracking, extract → chunk → embed pipeline over NATS JetStream |
 | `chat` | Python service :9003 | Conversations, streaming retrieval-augmented answers with citations |
 | `llm` | Python service :9004 | Single gateway to LLM providers (Ollama by default, `fake` for tests) |
+| `iam` | Go service :9006 | Registry of users (registered on first sign-in) and platform admins; teams and roles follow |
 
 ```
-browser ──gRPC-Web──▶ envoy :8080 ──gRPC──▶ document / ingestion / chat / llm
+browser ──gRPC-Web──▶ envoy :8080 ──gRPC──▶ document / ingestion / chat / llm / iam
    │                                              │        │
    └── presigned PUT ──▶ S3 (SeaweedFS) :8333 ◀───┘        └─▶ NATS JetStream ──▶ ingestion-worker
                                      Postgres + pgvector (one schema per module)

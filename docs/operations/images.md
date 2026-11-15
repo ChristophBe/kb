@@ -9,6 +9,7 @@ Every [release](releases.md) publishes one image per component to the GitHub Con
 | `ingestion-worker` | `ghcr.io/christophbe/knowcelium-ingestion-worker` |
 | `chat-service` | `ghcr.io/christophbe/knowcelium-chat-service` |
 | `llm-service` | `ghcr.io/christophbe/knowcelium-llm-service` |
+| `iam-service` | `ghcr.io/christophbe/knowcelium-iam-service` |
 | `web` | `ghcr.io/christophbe/knowcelium-web` |
 
 Each is tagged with the version without the `v` (`0.3.1`) and, for the newest release, `latest`. The images carry the version as label `org.opencontainers.image.version` and log it at startup.

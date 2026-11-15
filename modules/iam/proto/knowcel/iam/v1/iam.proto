@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package knowcel.iam.v1;
+
+option go_package = "github.com/ChristophBe/knowcelium/modules/iam/api/go/iamv1;iamv1";
+
+// IamService owns the registry of users, and the teams and roles built on it.
+// Other modules access them only through this service.
+service IamService {
+  // GetCurrentUser returns the calling user. The first call of a subject
+  // registers the user; later calls update the email and display name from
+  // the token.
+  rpc GetCurrentUser(GetCurrentUserRequest) returns (GetCurrentUserResponse);
+}
+
+// User is a registered user. The id is the subject of the user's OIDC token,
+// the same id other modules store as the owner of their data.
+message User {
+  string id = 1;
+  string email = 2;
+  string display_name = 3;
+  // platform_admin is set for the users configured as platform admins on
+  // their first call, and for those promoted later.
+  bool platform_admin = 4;
+}
+
+message GetCurrentUserRequest {}
+
+message GetCurrentUserResponse {
+  User user = 1;
+}

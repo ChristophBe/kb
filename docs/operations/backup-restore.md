@@ -4,7 +4,7 @@ kb keeps state in three servers, each shared by the modules that use it. Back up
 
 | Store | Holds | Backed up with |
 |---|---|---|
-| Postgres | Schemas `document`, `ingestion` and `chat` (incl. the pgvector embeddings), and each module's migration table | `pg_dump` |
+| Postgres | Schemas `document`, `ingestion`, `chat` and `iam` (incl. the pgvector embeddings), and each module's migration table | `pg_dump` |
 | S3 (SeaweedFS) | Bucket `documents` (`KNOWCEL_S3_BUCKET`): the uploaded files | `aws s3 sync` |
 | NATS JetStream | Stream `INGESTION` with its consumer: ingestion events not yet processed | `nats stream backup` |
 
@@ -64,7 +64,7 @@ docker compose up -d --wait
 
 Then open the UI and check that a document opens and downloads. The migration tables are part of the dump, so the services find the schema at its backed-up version and apply only newer migrations.
 
-Restoring into the database of a running stack works the same way, but stop the modules first (`docker compose stop document-service ingestion-service chat-service`).
+Restoring into the database of a running stack works the same way, but stop the modules first (`docker compose stop document-service ingestion-service chat-service iam-service`).
 
 ### Verification
 
@@ -79,6 +79,7 @@ Each module owns its schema and migrates independently.
 | `document` | goose | `modules/document/migrations/*.sql` | `public.document_schema_migrations` |
 | `ingestion` | goose | `modules/ingestion/migrations/*.sql` | `public.ingestion_schema_migrations` |
 | `chat` | Alembic | `modules/chat/migrations/versions` | `chat.alembic_version` |
+| `iam` | goose | `modules/iam/migrations/*.sql` | `public.iam_schema_migrations` |
 
 `llm` has no database.
 

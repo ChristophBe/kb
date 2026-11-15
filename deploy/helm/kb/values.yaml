@@ -154,6 +154,18 @@ components:
     resources:
       requests: { cpu: 10m, memory: 32Mi }
       limits: { memory: 256Mi }
+  # iam-service (iam module, go, gRPC :9006, metrics :9106; uses postgres)
+  iam-service:
+    enabled: true
+    replicas: 1
+    image:
+      repository: knowcelium-iam-service
+    env:
+      KNOWCEL_IAM_BOOTSTRAP_ADMINS: ""
+    extraEnv: []
+    resources:
+      requests: { cpu: 10m, memory: 32Mi }
+      limits: { memory: 256Mi }
   # ingestion-service (ingestion module, go, gRPC :9002, metrics :9102; uses postgres, nats)
   ingestion-service:
     enabled: true

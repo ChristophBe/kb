@@ -12,6 +12,7 @@
   "dependencies": {
     "@knowcel/module-chat": "workspace:*",
     "@knowcel/module-document": "workspace:*",
+    "@knowcel/module-iam": "workspace:*",
     "@knowcel/module-ingestion": "workspace:*",
     "@knowcel/module-llm": "workspace:*",
     "@knowcel/module-sdk": "workspace:*",

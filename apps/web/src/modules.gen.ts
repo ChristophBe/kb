@@ -4,12 +4,14 @@
 import type { LazyModule } from "@knowcel/module-sdk";
 import chat from "@knowcel/module-chat/manifest";
 import document from "@knowcel/module-document/manifest";
+import iam from "@knowcel/module-iam/manifest";
 import ingestion from "@knowcel/module-ingestion/manifest";
 import llm from "@knowcel/module-llm/manifest";
 
 export const modules: LazyModule[] = [
   { ...chat, load: () => import("@knowcel/module-chat") },
   { ...document, load: () => import("@knowcel/module-document") },
+  { ...iam, load: () => import("@knowcel/module-iam") },
   { ...ingestion, load: () => import("@knowcel/module-ingestion") },
   { ...llm, load: () => import("@knowcel/module-llm") },
 ];

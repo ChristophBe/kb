@@ -147,6 +147,53 @@
     },
     {
       "includes": [
+        "modules/iam/ui/**"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@knowcel/module-*",
+                      "@knowcel/module-*/**",
+                      "!@knowcel/module-sdk",
+                      "!@knowcel/module-sdk/**",
+                      "!@knowcel/module-iam",
+                      "!@knowcel/module-iam/**"
+                    ],
+                    "message": "A module UI never imports another module's UI; link to its routes instead."
+                  },
+                  {
+                    "group": [
+                      "@knowcel/*-api",
+                      "@knowcel/*-api/**",
+                      "!@knowcel/common-api",
+                      "!@knowcel/common-api/**",
+                      "!@knowcel/iam-api",
+                      "!@knowcel/iam-api/**"
+                    ],
+                    "message": "Only the API packages of modules in depends_on (module.yaml) may be imported."
+                  },
+                  {
+                    "group": [
+                      "../../../*",
+                      "../../../**"
+                    ],
+                    "message": "Import other packages by name; relative imports stay inside the package."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
         "modules/ingestion/ui/**"
       ],
       "linter": {

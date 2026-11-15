@@ -9,6 +9,9 @@ services:
   document-service:
     image: ghcr.io/christophbe/knowcelium-document-service:${KNOWCEL_VERSION:?set KNOWCEL_VERSION to a released version, e.g. 0.3.1}
     build: !reset null
+  iam-service:
+    image: ghcr.io/christophbe/knowcelium-iam-service:${KNOWCEL_VERSION:?set KNOWCEL_VERSION to a released version, e.g. 0.3.1}
+    build: !reset null
   ingestion-service:
     image: ghcr.io/christophbe/knowcelium-ingestion-service:${KNOWCEL_VERSION:?set KNOWCEL_VERSION to a released version, e.g. 0.3.1}
     build: !reset null

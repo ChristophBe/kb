@@ -6,7 +6,7 @@ const ids = (enabledModules?: string[]) =>
 
 describe("activeModules", () => {
   it("shows every compiled-in module when the config names none", () => {
-    expect(ids()).toEqual(["chat", "document", "ingestion", "llm"]);
+    expect(ids()).toEqual(["chat", "document", "iam", "ingestion", "llm"]);
   });
 
   it("shows only the enabled modules, in compiled-in order", () => {

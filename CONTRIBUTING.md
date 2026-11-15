@@ -40,7 +40,7 @@ An issue is ready to be picked up when every check for its type holds. Refine it
 | Group | Labels | Meaning |
 |---|---|---|
 | type | `type:epic` `type:feature` `type:chore` `type:docs` `type:bug` | Kind of work |
-| scope | `module:document` `module:ingestion` `module:chat` `module:llm` `area:platform` `area:ui-shell` `area:infra` | Where it lives (one per issue) |
+| scope | `module:document` `module:ingestion` `module:chat` `module:llm` `module:iam` `area:platform` `area:ui-shell` `area:infra` | Where it lives (one per issue) |
 | lang | `lang:go` `lang:python` `lang:ts` | Stacks touched |
 | contract | `api-change` | Changes a `.proto`: run `task gen`, mind `buf breaking` |
 

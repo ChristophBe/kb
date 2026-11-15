@@ -6,5 +6,6 @@ include:
   - deploy/edge.compose.yaml
   - modules/chat/compose.yaml
   - modules/document/compose.yaml
+  - modules/iam/compose.yaml
   - modules/ingestion/compose.yaml
   - modules/llm/compose.yaml

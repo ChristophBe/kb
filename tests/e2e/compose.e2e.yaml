@@ -24,5 +24,7 @@ services:
     ports: !reset []
   llm-service:
     ports: !reset []
+  iam-service:
+    ports: !reset []
   ingestion-worker:
     ports: !reset []

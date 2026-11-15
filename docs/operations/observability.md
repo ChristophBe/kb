@@ -24,7 +24,7 @@ Prometheus keeps its data in the `prometheus` volume. In Kubernetes, the chart g
 
 ## Tracing
 
-Every component can send [OpenTelemetry](https://opentelemetry.io) traces over OTLP/gRPC. Tracing is **off** unless `KNOWCEL_OTEL_ENDPOINT` is set; without it nothing is installed (no exporter, no background goroutine or thread, no interceptor). The service name in the traces is the component's (`ingestion-service`, `ingestion-worker`, `document-service`, `llm-service`, `chat-service`). See [ADR 0010](../adr/0010-opentelemetry-tracing.md).
+Every component can send [OpenTelemetry](https://opentelemetry.io) traces over OTLP/gRPC. Tracing is **off** unless `KNOWCEL_OTEL_ENDPOINT` is set; without it nothing is installed (no exporter, no background goroutine or thread, no interceptor). The service name in the traces is the component's (`ingestion-service`, `ingestion-worker`, `document-service`, `llm-service`, `chat-service`, `iam-service`). See [ADR 0010](../adr/0010-opentelemetry-tracing.md).
 
 ### Running with Jaeger
 

@@ -50,7 +50,7 @@ helm install traefik traefik/traefik -n traefik --create-namespace \
 To try the chart of the checkout with its own code, build the images from it and load them into the cluster (every entry of `deploy/images.json`):
 
 ```sh
-for c in document-service ingestion-service; do
+for c in document-service ingestion-service iam-service; do
   docker build -t ghcr.io/christophbe/knowcelium-$c:dev -f deploy/docker/go.Dockerfile \
     --build-arg CMD=./modules/${c%-service}/service/cmd/$c .
 done
@@ -58,7 +58,7 @@ for c in chat-service llm-service ingestion-worker; do
   docker build -t ghcr.io/christophbe/knowcelium-$c:dev -f deploy/docker/python.Dockerfile --build-arg PACKAGE=knowcel-$c .
 done
 docker build -t ghcr.io/christophbe/knowcelium-web:dev -f deploy/docker/web.Dockerfile .
-for c in document-service ingestion-service chat-service llm-service ingestion-worker web; do
+for c in document-service ingestion-service iam-service chat-service llm-service ingestion-worker web; do
   kind load docker-image --name kb ghcr.io/christophbe/knowcelium-$c:dev
 done
 ```

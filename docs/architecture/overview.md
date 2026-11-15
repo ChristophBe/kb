@@ -41,6 +41,9 @@ flowchart TB
         subgraph llm["llm"]
             llmsvc["llm-service :9004<br/>Python"]
         end
+        subgraph iam["iam"]
+            iamsvc["iam-service :9006<br/>Go"]
+        end
     end
 
     subgraph infra["Infrastructure (deploy/infra.compose.yaml)"]
@@ -62,6 +65,7 @@ flowchart TB
     envoy -- "IngestionService" --> ingsvc
     envoy -- "ChatService" --> chatsvc
     envoy -- "LlmService" --> llmsvc
+    envoy -- "IamService" --> iamsvc
 
     ingsvc -- "CreateDocument, SetDocumentStatus" --> docsvc
     ingworker -- "ReadContent, AddChunks, SetDocumentStatus" --> docsvc
@@ -79,6 +83,7 @@ flowchart TB
     docsvc -- "schema document" --> pg
     ingsvc -- "schema ingestion" --> pg
     chatsvc -- "schema chat" --> pg
+    iamsvc -- "schema iam" --> pg
     docsvc -- "bucket: raw files, presigning" --> s3
 ```
 
@@ -89,7 +94,8 @@ flowchart TB
 | `ingestion-worker` | ingestion | — | document, llm | consumes `uploaded`; publishes `started`, `processed`, `failed` |
 | `chat-service` | chat | schema `chat` (conversations, messages) | document, llm | — |
 | `llm-service` | llm | provider registry | Ollama over HTTP, Anthropic API | — |
-| `envoy` | — | per-method routes for the public RPCs of each manifest's `grpc_services` (not `internal`); token check, sets `x-kb-user` ([ADR 0009](../adr/0009-oidc-authentication-at-the-gateway.md)) | all four services | — |
+| `iam-service` | iam | schema `iam` (users) | — | — |
+| `envoy` | — | per-method routes for the public RPCs of each manifest's `grpc_services` (not `internal`); token check, sets `x-kb-user`, `x-kb-email` and `x-kb-name` ([ADR 0009](../adr/0009-oidc-authentication-at-the-gateway.md), [ADR 0013](../adr/0013-iam-module.md)) | all services | — |
 | `web` | — | UI shell; module UIs from `apps/web/src/modules.gen.ts` | via envoy | — |
 
 Modules never share a schema, bucket or stream: each is owned by one module, and other modules go through its gRPC API or its events ([ADR 0002](../adr/0002-module-per-folder-monorepo.md), [ADR 0004](../adr/0004-nats-jetstream-events-between-modules.md)).

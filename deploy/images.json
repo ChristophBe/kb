@@ -14,6 +14,12 @@
       "build_args": "CMD=./modules/document/service/cmd/document-service"
     },
     {
+      "component": "iam-service",
+      "image": "ghcr.io/christophbe/knowcelium-iam-service",
+      "dockerfile": "deploy/docker/go.Dockerfile",
+      "build_args": "CMD=./modules/iam/service/cmd/iam-service"
+    },
+    {
       "component": "ingestion-service",
       "image": "ghcr.io/christophbe/knowcelium-ingestion-service",
       "dockerfile": "deploy/docker/go.Dockerfile",

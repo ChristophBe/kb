@@ -3,7 +3,8 @@
 # Only public methods are routed: methods listed as internal in module.yaml
 # get no route, so the browser sees 404 (UNIMPLEMENTED) for them.
 # Every routed call needs a JWT from the OIDC issuer (UNAUTHENTICATED
-# otherwise); Envoy forwards its subject to the services as x-kb-user.
+# otherwise); Envoy forwards its subject to the services as x-kb-user, and its
+# email and name as x-kb-email and x-kb-name (the iam module registers them).
 # The ${KNOWCEL_OIDC_*} placeholders are filled in at startup by
 # deploy/envoy/entrypoint.sh from the environment.
 static_resources:
@@ -64,6 +65,8 @@ static_resources:
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.document.v1.DocumentService/ReindexDocuments" }
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.iam.v1.IamService/GetCurrentUser" }
+                          route: { cluster: iam-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.ingestion.v1.IngestionService/CreateUpload" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.ingestion.v1.IngestionService/CompleteUpload" }
@@ -89,14 +92,16 @@ static_resources:
                   - name: envoy.filters.http.cors
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors
-                  # The user id is only ever set from a verified token: drop a
-                  # client-supplied one before jwt_authn adds its own.
+                  # The user headers are only ever set from a verified token: drop
+                  # client-supplied ones before jwt_authn adds its own.
                   - name: envoy.filters.http.header_mutation
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.header_mutation.v3.HeaderMutation
                       mutations:
                         request_mutations:
                           - remove: x-kb-user
+                          - remove: x-kb-email
+                          - remove: x-kb-name
                   - name: envoy.filters.http.jwt_authn
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
@@ -115,6 +120,10 @@ static_resources:
                           claim_to_headers:
                             - header_name: x-kb-user
                               claim_name: sub
+                            - header_name: x-kb-email
+                              claim_name: email
+                            - header_name: x-kb-name
+                              claim_name: name
                       rules:
                         # Health checks stay reachable without a token.
                         - match: { prefix: "/grpc.health.v1.Health/" }
@@ -184,6 +193,22 @@ static_resources:
               - endpoint:
                   address:
                     socket_address: { address: document-service, port_value: 9001 }
+    - name: iam-service
+      connect_timeout: 1s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      typed_extension_protocol_options:
+        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+          explicit_http_config:
+            http2_protocol_options: {}
+      load_assignment:
+        cluster_name: iam-service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: iam-service, port_value: 9006 }
     - name: ingestion-service
       connect_timeout: 1s
       type: STRICT_DNS

@@ -14,6 +14,7 @@ body:
       options:
         - chat
         - document
+        - iam
         - ingestion
         - llm
         - platform

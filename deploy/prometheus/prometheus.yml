@@ -15,6 +15,10 @@ scrape_configs:
     static_configs:
       - targets: ["document-service:9101"]
         labels: { module: document }
+  - job_name: iam-service
+    static_configs:
+      - targets: ["iam-service:9106"]
+        labels: { module: iam }
   - job_name: ingestion-service
     static_configs:
       - targets: ["ingestion-service:9102"]

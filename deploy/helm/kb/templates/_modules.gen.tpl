@@ -8,6 +8,7 @@ Envoy, which routes the public methods and answers 404 for the rest.
 {{- define "kb.gatewayPrefixes" -}}
 - /knowcel.chat.v1.ChatService
 - /knowcel.document.v1.DocumentService
+- /knowcel.iam.v1.IamService
 - /knowcel.ingestion.v1.IngestionService
 - /knowcel.llm.v1.LlmService
 {{- end -}}

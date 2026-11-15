@@ -82,6 +82,17 @@ From `Config` in [modules/document/service/cmd/document-service](../modules/docu
 | `KNOWCEL_UPLOAD_TTL` | `24h` | How long a document may wait for its upload before it is removed. It must be longer than upload URLs stay valid (15 minutes). |
 | `KNOWCEL_ORPHAN_GRACE` | `1h` | How old an object without a document must be before it is removed, so that an upload racing a delete is not judged too early. |
 
+## iam-service
+
+From `Config` in [modules/iam/service/cmd/iam-service](../modules/iam/service/cmd/iam-service/main.go), in addition to the settings every Go service reads.
+
+| Variable | Default | Description |
+|---|---|---|
+| `KNOWCEL_GRPC_PORT` | `9006` | Serves the gRPC API; each service defaults it to the port in its module.yaml. |
+| `KNOWCEL_METRICS_PORT` | `9106` | Serves Prometheus metrics at /metrics (package metrics); like KNOWCEL_GRPC_PORT, each service defaults it to the port in its module.yaml. |
+| `KNOWCEL_DATABASE_URL` | `postgres://kb:kb@localhost:5432/kb?sslmode=disable` | The Postgres database holding the iam schema. |
+| `KNOWCEL_IAM_BOOTSTRAP_ADMINS` | empty | The subjects or emails of the users who become platform admins the first time they are seen (comma-separated). Later admins are designated in the product; a user already registered is not promoted by adding them here. |
+
 ## ingestion-service
 
 From `Config` in [modules/ingestion/service/cmd/ingestion-service](../modules/ingestion/service/cmd/ingestion-service/main.go), in addition to the settings every Go service reads.

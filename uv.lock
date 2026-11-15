@@ -13,6 +13,7 @@ members = [
     "knowcel-chat-service",
     "knowcel-common-api",
     "knowcel-document-api",
+    "knowcel-iam-api",
     "knowcel-ingestion-api",
     "knowcel-ingestion-worker",
     "knowcel-llm-api",
@@ -1014,6 +1015,23 @@ requires-dist = [
 name = "knowcel-document-api"
 version = "0.1.0"
 source = { editable = "modules/document/api/python" }
+dependencies = [
+    { name = "grpcio" },
+    { name = "knowcel-common-api" },
+    { name = "protobuf" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "grpcio", specifier = ">=1.85.0" },
+    { name = "knowcel-common-api", editable = "platform/api/python" },
+    { name = "protobuf", specifier = ">=7.35.1,<8" },
+]
+
+[[package]]
+name = "knowcel-iam-api"
+version = "0.1.0"
+source = { editable = "modules/iam/api/python" }
 dependencies = [
     { name = "grpcio" },
     { name = "knowcel-common-api" },

@@ -1,0 +1,16 @@
+# Module manifest — consumed by tools/modgen (`task gen`).
+id: iam
+title: Users & teams
+description: The registry of users, and the teams and roles that decide who sees what.
+services:
+  - name: iam-service
+    language: go
+    port: 9006
+    metrics_port: 9106
+    infra: [postgres]
+    # Deployment default (Helm components.iam-service.env): set it, or no one
+    # can designate platform admins.
+    env:
+      KNOWCEL_IAM_BOOTSTRAP_ADMINS: ""
+    grpc_services: [knowcel.iam.v1.IamService]
+ui: "@knowcel/module-iam"

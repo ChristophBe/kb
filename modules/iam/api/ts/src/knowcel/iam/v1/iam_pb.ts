@@ -2,15 +2,15 @@
 // @generated from file knowcel/iam/v1/iam.proto (package knowcel.iam.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file knowcel/iam/v1/iam.proto.
  */
 export const file_knowcel_iam_v1_iam: GenFile = /*@__PURE__*/
-  fileDesc("Chhrbm93Y2VsL2lhbS92MS9pYW0ucHJvdG8SDmtub3djZWwuaWFtLnYxIk8KBFVzZXISCgoCaWQYASABKAkSDQoFZW1haWwYAiABKAkSFAoMZGlzcGxheV9uYW1lGAMgASgJEhYKDnBsYXRmb3JtX2FkbWluGAQgASgIIhcKFUdldEN1cnJlbnRVc2VyUmVxdWVzdCI8ChZHZXRDdXJyZW50VXNlclJlc3BvbnNlEiIKBHVzZXIYASABKAsyFC5rbm93Y2VsLmlhbS52MS5Vc2VyMm0KCklhbVNlcnZpY2USXwoOR2V0Q3VycmVudFVzZXISJS5rbm93Y2VsLmlhbS52MS5HZXRDdXJyZW50VXNlclJlcXVlc3QaJi5rbm93Y2VsLmlhbS52MS5HZXRDdXJyZW50VXNlclJlc3BvbnNlQkJaQGdpdGh1Yi5jb20vQ2hyaXN0b3BoQmUva25vd2NlbGl1bS9tb2R1bGVzL2lhbS9hcGkvZ28vaWFtdjE7aWFtdjFiBnByb3RvMw");
+  fileDesc("Chhrbm93Y2VsL2lhbS92MS9pYW0ucHJvdG8SDmtub3djZWwuaWFtLnYxIk8KBFVzZXISCgoCaWQYASABKAkSDQoFZW1haWwYAiABKAkSFAoMZGlzcGxheV9uYW1lGAMgASgJEhYKDnBsYXRmb3JtX2FkbWluGAQgASgIIhcKFUdldEN1cnJlbnRVc2VyUmVxdWVzdCI8ChZHZXRDdXJyZW50VXNlclJlc3BvbnNlEiIKBHVzZXIYASABKAsyFC5rbm93Y2VsLmlhbS52MS5Vc2VyIngKBFRlYW0SCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIpCgdteV9yb2xlGAMgASgOMhgua25vd2NlbC5pYW0udjEuVGVhbVJvbGUSKwoHbWVtYmVycxgEIAMoCzIaLmtub3djZWwuaWFtLnYxLlRlYW1NZW1iZXIiagoKVGVhbU1lbWJlchIPCgd1c2VyX2lkGAEgASgJEg0KBWVtYWlsGAIgASgJEhQKDGRpc3BsYXlfbmFtZRgDIAEoCRImCgRyb2xlGAQgASgOMhgua25vd2NlbC5pYW0udjEuVGVhbVJvbGUiIQoRQ3JlYXRlVGVhbVJlcXVlc3QSDAoEbmFtZRgBIAEoCSI4ChJDcmVhdGVUZWFtUmVzcG9uc2USIgoEdGVhbRgBIAEoCzIULmtub3djZWwuaWFtLnYxLlRlYW0iHAoOR2V0VGVhbVJlcXVlc3QSCgoCaWQYASABKAkiNQoPR2V0VGVhbVJlc3BvbnNlEiIKBHRlYW0YASABKAsyFC5rbm93Y2VsLmlhbS52MS5UZWFtIhQKEkxpc3RNeVRlYW1zUmVxdWVzdCI6ChNMaXN0TXlUZWFtc1Jlc3BvbnNlEiMKBXRlYW1zGAEgAygLMhQua25vd2NlbC5pYW0udjEuVGVhbSItChFVcGRhdGVUZWFtUmVxdWVzdBIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJIjgKElVwZGF0ZVRlYW1SZXNwb25zZRIiCgR0ZWFtGAEgASgLMhQua25vd2NlbC5pYW0udjEuVGVhbSIfChFEZWxldGVUZWFtUmVxdWVzdBIKCgJpZBgBIAEoCSIUChJEZWxldGVUZWFtUmVzcG9uc2UiWgoQQWRkTWVtYmVyUmVxdWVzdBIPCgd0ZWFtX2lkGAEgASgJEg0KBWVtYWlsGAIgASgJEiYKBHJvbGUYAyABKA4yGC5rbm93Y2VsLmlhbS52MS5UZWFtUm9sZSI/ChFBZGRNZW1iZXJSZXNwb25zZRIqCgZtZW1iZXIYASABKAsyGi5rbm93Y2VsLmlhbS52MS5UZWFtTWVtYmVyIjcKE1JlbW92ZU1lbWJlclJlcXVlc3QSDwoHdGVhbV9pZBgBIAEoCRIPCgd1c2VyX2lkGAIgASgJIhYKFFJlbW92ZU1lbWJlclJlc3BvbnNlImAKFFNldE1lbWJlclJvbGVSZXF1ZXN0Eg8KB3RlYW1faWQYASABKAkSDwoHdXNlcl9pZBgCIAEoCRImCgRyb2xlGAMgASgOMhgua25vd2NlbC5pYW0udjEuVGVhbVJvbGUiQwoVU2V0TWVtYmVyUm9sZVJlc3BvbnNlEioKBm1lbWJlchgBIAEoCzIaLmtub3djZWwuaWFtLnYxLlRlYW1NZW1iZXIqUAoIVGVhbVJvbGUSGQoVVEVBTV9ST0xFX1VOU1BFQ0lGSUVEEAASEwoPVEVBTV9ST0xFX0FETUlOEAESFAoQVEVBTV9ST0xFX01FTUJFUhACMpsGCgpJYW1TZXJ2aWNlEl8KDkdldEN1cnJlbnRVc2VyEiUua25vd2NlbC5pYW0udjEuR2V0Q3VycmVudFVzZXJSZXF1ZXN0GiYua25vd2NlbC5pYW0udjEuR2V0Q3VycmVudFVzZXJSZXNwb25zZRJTCgpDcmVhdGVUZWFtEiEua25vd2NlbC5pYW0udjEuQ3JlYXRlVGVhbVJlcXVlc3QaIi5rbm93Y2VsLmlhbS52MS5DcmVhdGVUZWFtUmVzcG9uc2USSgoHR2V0VGVhbRIeLmtub3djZWwuaWFtLnYxLkdldFRlYW1SZXF1ZXN0Gh8ua25vd2NlbC5pYW0udjEuR2V0VGVhbVJlc3BvbnNlElYKC0xpc3RNeVRlYW1zEiIua25vd2NlbC5pYW0udjEuTGlzdE15VGVhbXNSZXF1ZXN0GiMua25vd2NlbC5pYW0udjEuTGlzdE15VGVhbXNSZXNwb25zZRJTCgpVcGRhdGVUZWFtEiEua25vd2NlbC5pYW0udjEuVXBkYXRlVGVhbVJlcXVlc3QaIi5rbm93Y2VsLmlhbS52MS5VcGRhdGVUZWFtUmVzcG9uc2USUwoKRGVsZXRlVGVhbRIhLmtub3djZWwuaWFtLnYxLkRlbGV0ZVRlYW1SZXF1ZXN0GiIua25vd2NlbC5pYW0udjEuRGVsZXRlVGVhbVJlc3BvbnNlElAKCUFkZE1lbWJlchIgLmtub3djZWwuaWFtLnYxLkFkZE1lbWJlclJlcXVlc3QaIS5rbm93Y2VsLmlhbS52MS5BZGRNZW1iZXJSZXNwb25zZRJZCgxSZW1vdmVNZW1iZXISIy5rbm93Y2VsLmlhbS52MS5SZW1vdmVNZW1iZXJSZXF1ZXN0GiQua25vd2NlbC5pYW0udjEuUmVtb3ZlTWVtYmVyUmVzcG9uc2USXAoNU2V0TWVtYmVyUm9sZRIkLmtub3djZWwuaWFtLnYxLlNldE1lbWJlclJvbGVSZXF1ZXN0GiUua25vd2NlbC5pYW0udjEuU2V0TWVtYmVyUm9sZVJlc3BvbnNlQkJaQGdpdGh1Yi5jb20vQ2hyaXN0b3BoQmUva25vd2NlbGl1bS9tb2R1bGVzL2lhbS9hcGkvZ28vaWFtdjE7aWFtdjFiBnByb3RvMw");
 
 /**
  * User is a registered user. The id is the subject of the user's OIDC token,
@@ -81,6 +81,392 @@ export const GetCurrentUserResponseSchema: GenMessage<GetCurrentUserResponse> = 
   messageDesc(file_knowcel_iam_v1_iam, 2);
 
 /**
+ * @generated from message knowcel.iam.v1.Team
+ */
+export type Team = Message<"knowcel.iam.v1.Team"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * my_role is the caller's role in the team.
+   *
+   * @generated from field: knowcel.iam.v1.TeamRole my_role = 3;
+   */
+  myRole: TeamRole;
+
+  /**
+   * members is filled by GetTeam and the member mutations, not by ListMyTeams.
+   *
+   * @generated from field: repeated knowcel.iam.v1.TeamMember members = 4;
+   */
+  members: TeamMember[];
+};
+
+/**
+ * Describes the message knowcel.iam.v1.Team.
+ * Use `create(TeamSchema)` to create a new message.
+ */
+export const TeamSchema: GenMessage<Team> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 3);
+
+/**
+ * @generated from message knowcel.iam.v1.TeamMember
+ */
+export type TeamMember = Message<"knowcel.iam.v1.TeamMember"> & {
+  /**
+   * @generated from field: string user_id = 1;
+   */
+  userId: string;
+
+  /**
+   * @generated from field: string email = 2;
+   */
+  email: string;
+
+  /**
+   * @generated from field: string display_name = 3;
+   */
+  displayName: string;
+
+  /**
+   * @generated from field: knowcel.iam.v1.TeamRole role = 4;
+   */
+  role: TeamRole;
+};
+
+/**
+ * Describes the message knowcel.iam.v1.TeamMember.
+ * Use `create(TeamMemberSchema)` to create a new message.
+ */
+export const TeamMemberSchema: GenMessage<TeamMember> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 4);
+
+/**
+ * @generated from message knowcel.iam.v1.CreateTeamRequest
+ */
+export type CreateTeamRequest = Message<"knowcel.iam.v1.CreateTeamRequest"> & {
+  /**
+   * @generated from field: string name = 1;
+   */
+  name: string;
+};
+
+/**
+ * Describes the message knowcel.iam.v1.CreateTeamRequest.
+ * Use `create(CreateTeamRequestSchema)` to create a new message.
+ */
+export const CreateTeamRequestSchema: GenMessage<CreateTeamRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 5);
+
+/**
+ * @generated from message knowcel.iam.v1.CreateTeamResponse
+ */
+export type CreateTeamResponse = Message<"knowcel.iam.v1.CreateTeamResponse"> & {
+  /**
+   * @generated from field: knowcel.iam.v1.Team team = 1;
+   */
+  team?: Team | undefined;
+};
+
+/**
+ * Describes the message knowcel.iam.v1.CreateTeamResponse.
+ * Use `create(CreateTeamResponseSchema)` to create a new message.
+ */
+export const CreateTeamResponseSchema: GenMessage<CreateTeamResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 6);
+
+/**
+ * @generated from message knowcel.iam.v1.GetTeamRequest
+ */
+export type GetTeamRequest = Message<"knowcel.iam.v1.GetTeamRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message knowcel.iam.v1.GetTeamRequest.
+ * Use `create(GetTeamRequestSchema)` to create a new message.
+ */
+export const GetTeamRequestSchema: GenMessage<GetTeamRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 7);
+
+/**
+ * @generated from message knowcel.iam.v1.GetTeamResponse
+ */
+export type GetTeamResponse = Message<"knowcel.iam.v1.GetTeamResponse"> & {
+  /**
+   * @generated from field: knowcel.iam.v1.Team team = 1;
+   */
+  team?: Team | undefined;
+};
+
+/**
+ * Describes the message knowcel.iam.v1.GetTeamResponse.
+ * Use `create(GetTeamResponseSchema)` to create a new message.
+ */
+export const GetTeamResponseSchema: GenMessage<GetTeamResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 8);
+
+/**
+ * @generated from message knowcel.iam.v1.ListMyTeamsRequest
+ */
+export type ListMyTeamsRequest = Message<"knowcel.iam.v1.ListMyTeamsRequest"> & {
+};
+
+/**
+ * Describes the message knowcel.iam.v1.ListMyTeamsRequest.
+ * Use `create(ListMyTeamsRequestSchema)` to create a new message.
+ */
+export const ListMyTeamsRequestSchema: GenMessage<ListMyTeamsRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 9);
+
+/**
+ * @generated from message knowcel.iam.v1.ListMyTeamsResponse
+ */
+export type ListMyTeamsResponse = Message<"knowcel.iam.v1.ListMyTeamsResponse"> & {
+  /**
+   * @generated from field: repeated knowcel.iam.v1.Team teams = 1;
+   */
+  teams: Team[];
+};
+
+/**
+ * Describes the message knowcel.iam.v1.ListMyTeamsResponse.
+ * Use `create(ListMyTeamsResponseSchema)` to create a new message.
+ */
+export const ListMyTeamsResponseSchema: GenMessage<ListMyTeamsResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 10);
+
+/**
+ * @generated from message knowcel.iam.v1.UpdateTeamRequest
+ */
+export type UpdateTeamRequest = Message<"knowcel.iam.v1.UpdateTeamRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+};
+
+/**
+ * Describes the message knowcel.iam.v1.UpdateTeamRequest.
+ * Use `create(UpdateTeamRequestSchema)` to create a new message.
+ */
+export const UpdateTeamRequestSchema: GenMessage<UpdateTeamRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 11);
+
+/**
+ * @generated from message knowcel.iam.v1.UpdateTeamResponse
+ */
+export type UpdateTeamResponse = Message<"knowcel.iam.v1.UpdateTeamResponse"> & {
+  /**
+   * @generated from field: knowcel.iam.v1.Team team = 1;
+   */
+  team?: Team | undefined;
+};
+
+/**
+ * Describes the message knowcel.iam.v1.UpdateTeamResponse.
+ * Use `create(UpdateTeamResponseSchema)` to create a new message.
+ */
+export const UpdateTeamResponseSchema: GenMessage<UpdateTeamResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 12);
+
+/**
+ * @generated from message knowcel.iam.v1.DeleteTeamRequest
+ */
+export type DeleteTeamRequest = Message<"knowcel.iam.v1.DeleteTeamRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message knowcel.iam.v1.DeleteTeamRequest.
+ * Use `create(DeleteTeamRequestSchema)` to create a new message.
+ */
+export const DeleteTeamRequestSchema: GenMessage<DeleteTeamRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 13);
+
+/**
+ * @generated from message knowcel.iam.v1.DeleteTeamResponse
+ */
+export type DeleteTeamResponse = Message<"knowcel.iam.v1.DeleteTeamResponse"> & {
+};
+
+/**
+ * Describes the message knowcel.iam.v1.DeleteTeamResponse.
+ * Use `create(DeleteTeamResponseSchema)` to create a new message.
+ */
+export const DeleteTeamResponseSchema: GenMessage<DeleteTeamResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 14);
+
+/**
+ * @generated from message knowcel.iam.v1.AddMemberRequest
+ */
+export type AddMemberRequest = Message<"knowcel.iam.v1.AddMemberRequest"> & {
+  /**
+   * @generated from field: string team_id = 1;
+   */
+  teamId: string;
+
+  /**
+   * @generated from field: string email = 2;
+   */
+  email: string;
+
+  /**
+   * role defaults to TEAM_ROLE_MEMBER when unspecified.
+   *
+   * @generated from field: knowcel.iam.v1.TeamRole role = 3;
+   */
+  role: TeamRole;
+};
+
+/**
+ * Describes the message knowcel.iam.v1.AddMemberRequest.
+ * Use `create(AddMemberRequestSchema)` to create a new message.
+ */
+export const AddMemberRequestSchema: GenMessage<AddMemberRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 15);
+
+/**
+ * @generated from message knowcel.iam.v1.AddMemberResponse
+ */
+export type AddMemberResponse = Message<"knowcel.iam.v1.AddMemberResponse"> & {
+  /**
+   * @generated from field: knowcel.iam.v1.TeamMember member = 1;
+   */
+  member?: TeamMember | undefined;
+};
+
+/**
+ * Describes the message knowcel.iam.v1.AddMemberResponse.
+ * Use `create(AddMemberResponseSchema)` to create a new message.
+ */
+export const AddMemberResponseSchema: GenMessage<AddMemberResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 16);
+
+/**
+ * @generated from message knowcel.iam.v1.RemoveMemberRequest
+ */
+export type RemoveMemberRequest = Message<"knowcel.iam.v1.RemoveMemberRequest"> & {
+  /**
+   * @generated from field: string team_id = 1;
+   */
+  teamId: string;
+
+  /**
+   * @generated from field: string user_id = 2;
+   */
+  userId: string;
+};
+
+/**
+ * Describes the message knowcel.iam.v1.RemoveMemberRequest.
+ * Use `create(RemoveMemberRequestSchema)` to create a new message.
+ */
+export const RemoveMemberRequestSchema: GenMessage<RemoveMemberRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 17);
+
+/**
+ * @generated from message knowcel.iam.v1.RemoveMemberResponse
+ */
+export type RemoveMemberResponse = Message<"knowcel.iam.v1.RemoveMemberResponse"> & {
+};
+
+/**
+ * Describes the message knowcel.iam.v1.RemoveMemberResponse.
+ * Use `create(RemoveMemberResponseSchema)` to create a new message.
+ */
+export const RemoveMemberResponseSchema: GenMessage<RemoveMemberResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 18);
+
+/**
+ * @generated from message knowcel.iam.v1.SetMemberRoleRequest
+ */
+export type SetMemberRoleRequest = Message<"knowcel.iam.v1.SetMemberRoleRequest"> & {
+  /**
+   * @generated from field: string team_id = 1;
+   */
+  teamId: string;
+
+  /**
+   * @generated from field: string user_id = 2;
+   */
+  userId: string;
+
+  /**
+   * @generated from field: knowcel.iam.v1.TeamRole role = 3;
+   */
+  role: TeamRole;
+};
+
+/**
+ * Describes the message knowcel.iam.v1.SetMemberRoleRequest.
+ * Use `create(SetMemberRoleRequestSchema)` to create a new message.
+ */
+export const SetMemberRoleRequestSchema: GenMessage<SetMemberRoleRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 19);
+
+/**
+ * @generated from message knowcel.iam.v1.SetMemberRoleResponse
+ */
+export type SetMemberRoleResponse = Message<"knowcel.iam.v1.SetMemberRoleResponse"> & {
+  /**
+   * @generated from field: knowcel.iam.v1.TeamMember member = 1;
+   */
+  member?: TeamMember | undefined;
+};
+
+/**
+ * Describes the message knowcel.iam.v1.SetMemberRoleResponse.
+ * Use `create(SetMemberRoleResponseSchema)` to create a new message.
+ */
+export const SetMemberRoleResponseSchema: GenMessage<SetMemberRoleResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_iam_v1_iam, 20);
+
+/**
+ * @generated from enum knowcel.iam.v1.TeamRole
+ */
+export enum TeamRole {
+  /**
+   * @generated from enum value: TEAM_ROLE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: TEAM_ROLE_ADMIN = 1;
+   */
+  ADMIN = 1,
+
+  /**
+   * @generated from enum value: TEAM_ROLE_MEMBER = 2;
+   */
+  MEMBER = 2,
+}
+
+/**
+ * Describes the enum knowcel.iam.v1.TeamRole.
+ */
+export const TeamRoleSchema: GenEnum<TeamRole> = /*@__PURE__*/
+  enumDesc(file_knowcel_iam_v1_iam, 0);
+
+/**
  * IamService owns the registry of users, and the teams and roles built on it.
  * Other modules access them only through this service.
  *
@@ -98,6 +484,92 @@ export const IamService: GenService<{
     methodKind: "unary";
     input: typeof GetCurrentUserRequestSchema;
     output: typeof GetCurrentUserResponseSchema;
+  },
+  /**
+   * CreateTeam creates a team with the caller as its first admin.
+   *
+   * @generated from rpc knowcel.iam.v1.IamService.CreateTeam
+   */
+  createTeam: {
+    methodKind: "unary";
+    input: typeof CreateTeamRequestSchema;
+    output: typeof CreateTeamResponseSchema;
+  },
+  /**
+   * GetTeam returns a team with its members. A caller who is not a member
+   * gets NOT_FOUND.
+   *
+   * @generated from rpc knowcel.iam.v1.IamService.GetTeam
+   */
+  getTeam: {
+    methodKind: "unary";
+    input: typeof GetTeamRequestSchema;
+    output: typeof GetTeamResponseSchema;
+  },
+  /**
+   * ListMyTeams returns the teams the caller is a member of, without members.
+   *
+   * @generated from rpc knowcel.iam.v1.IamService.ListMyTeams
+   */
+  listMyTeams: {
+    methodKind: "unary";
+    input: typeof ListMyTeamsRequestSchema;
+    output: typeof ListMyTeamsResponseSchema;
+  },
+  /**
+   * UpdateTeam renames a team. Team admins only.
+   *
+   * @generated from rpc knowcel.iam.v1.IamService.UpdateTeam
+   */
+  updateTeam: {
+    methodKind: "unary";
+    input: typeof UpdateTeamRequestSchema;
+    output: typeof UpdateTeamResponseSchema;
+  },
+  /**
+   * DeleteTeam deletes a team and its memberships. Team admins only.
+   *
+   * @generated from rpc knowcel.iam.v1.IamService.DeleteTeam
+   */
+  deleteTeam: {
+    methodKind: "unary";
+    input: typeof DeleteTeamRequestSchema;
+    output: typeof DeleteTeamResponseSchema;
+  },
+  /**
+   * AddMember adds a registered user, found by email, to a team. Team admins
+   * only. An unknown email returns NOT_FOUND, a user who is already a member
+   * ALREADY_EXISTS.
+   *
+   * @generated from rpc knowcel.iam.v1.IamService.AddMember
+   */
+  addMember: {
+    methodKind: "unary";
+    input: typeof AddMemberRequestSchema;
+    output: typeof AddMemberResponseSchema;
+  },
+  /**
+   * RemoveMember removes a member. Team admins may remove anyone; a member may
+   * remove only themselves (leave). The last admin cannot be removed
+   * (FAILED_PRECONDITION).
+   *
+   * @generated from rpc knowcel.iam.v1.IamService.RemoveMember
+   */
+  removeMember: {
+    methodKind: "unary";
+    input: typeof RemoveMemberRequestSchema;
+    output: typeof RemoveMemberResponseSchema;
+  },
+  /**
+   * SetMemberRole changes a member's role. Team admins only. The last admin
+   * cannot be demoted (FAILED_PRECONDITION).
+   *
+   * @generated from rpc knowcel.iam.v1.IamService.SetMemberRole
+   */
+  setMemberRole: {
+    methodKind: "unary";
+    input: typeof SetMemberRoleRequestSchema;
+    output: typeof SetMemberRoleResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_knowcel_iam_v1_iam, 0);

@@ -9,6 +9,29 @@ import (
 	"context"
 )
 
+const findUserByEmail = `-- name: FindUserByEmail :one
+SELECT id, email, display_name, platform_admin, created_at, updated_at FROM iam.users
+WHERE lower(email) = lower($1) AND email <> ''
+ORDER BY created_at, id
+LIMIT 1
+`
+
+// FindUserByEmail matches the email case-insensitively. Should several users
+// share an email, the one registered first wins.
+func (q *Queries) FindUserByEmail(ctx context.Context, email string) (IamUser, error) {
+	row := q.db.QueryRow(ctx, findUserByEmail, email)
+	var i IamUser
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.DisplayName,
+		&i.PlatformAdmin,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const upsertUser = `-- name: UpsertUser :one
 INSERT INTO iam.users (id, email, display_name, platform_admin)
 VALUES ($1, $2, $3, $4)

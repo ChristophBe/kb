@@ -5,8 +5,23 @@
 package store
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type IamTeam struct {
+	ID        uuid.UUID
+	Name      string
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type IamTeamMember struct {
+	TeamID    uuid.UUID
+	UserID    string
+	Role      int16
+	CreatedAt pgtype.Timestamptz
+}
 
 type IamUser struct {
 	ID            string

@@ -11,6 +11,29 @@ service IamService {
   // registers the user; later calls update the email and display name from
   // the token.
   rpc GetCurrentUser(GetCurrentUserRequest) returns (GetCurrentUserResponse);
+
+  // CreateTeam creates a team with the caller as its first admin.
+  rpc CreateTeam(CreateTeamRequest) returns (CreateTeamResponse);
+  // GetTeam returns a team with its members. A caller who is not a member
+  // gets NOT_FOUND.
+  rpc GetTeam(GetTeamRequest) returns (GetTeamResponse);
+  // ListMyTeams returns the teams the caller is a member of, without members.
+  rpc ListMyTeams(ListMyTeamsRequest) returns (ListMyTeamsResponse);
+  // UpdateTeam renames a team. Team admins only.
+  rpc UpdateTeam(UpdateTeamRequest) returns (UpdateTeamResponse);
+  // DeleteTeam deletes a team and its memberships. Team admins only.
+  rpc DeleteTeam(DeleteTeamRequest) returns (DeleteTeamResponse);
+  // AddMember adds a registered user, found by email, to a team. Team admins
+  // only. An unknown email returns NOT_FOUND, a user who is already a member
+  // ALREADY_EXISTS.
+  rpc AddMember(AddMemberRequest) returns (AddMemberResponse);
+  // RemoveMember removes a member. Team admins may remove anyone; a member may
+  // remove only themselves (leave). The last admin cannot be removed
+  // (FAILED_PRECONDITION).
+  rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse);
+  // SetMemberRole changes a member's role. Team admins only. The last admin
+  // cannot be demoted (FAILED_PRECONDITION).
+  rpc SetMemberRole(SetMemberRoleRequest) returns (SetMemberRoleResponse);
 }
 
 // User is a registered user. The id is the subject of the user's OIDC token,
@@ -28,4 +51,91 @@ message GetCurrentUserRequest {}
 
 message GetCurrentUserResponse {
   User user = 1;
+}
+
+enum TeamRole {
+  TEAM_ROLE_UNSPECIFIED = 0;
+  TEAM_ROLE_ADMIN = 1;
+  TEAM_ROLE_MEMBER = 2;
+}
+
+message Team {
+  string id = 1;
+  string name = 2;
+  // my_role is the caller's role in the team.
+  TeamRole my_role = 3;
+  // members is filled by GetTeam and the member mutations, not by ListMyTeams.
+  repeated TeamMember members = 4;
+}
+
+message TeamMember {
+  string user_id = 1;
+  string email = 2;
+  string display_name = 3;
+  TeamRole role = 4;
+}
+
+message CreateTeamRequest {
+  string name = 1;
+}
+
+message CreateTeamResponse {
+  Team team = 1;
+}
+
+message GetTeamRequest {
+  string id = 1;
+}
+
+message GetTeamResponse {
+  Team team = 1;
+}
+
+message ListMyTeamsRequest {}
+
+message ListMyTeamsResponse {
+  repeated Team teams = 1;
+}
+
+message UpdateTeamRequest {
+  string id = 1;
+  string name = 2;
+}
+
+message UpdateTeamResponse {
+  Team team = 1;
+}
+
+message DeleteTeamRequest {
+  string id = 1;
+}
+
+message DeleteTeamResponse {}
+
+message AddMemberRequest {
+  string team_id = 1;
+  string email = 2;
+  // role defaults to TEAM_ROLE_MEMBER when unspecified.
+  TeamRole role = 3;
+}
+
+message AddMemberResponse {
+  TeamMember member = 1;
+}
+
+message RemoveMemberRequest {
+  string team_id = 1;
+  string user_id = 2;
+}
+
+message RemoveMemberResponse {}
+
+message SetMemberRoleRequest {
+  string team_id = 1;
+  string user_id = 2;
+  TeamRole role = 3;
+}
+
+message SetMemberRoleResponse {
+  TeamMember member = 1;
 }

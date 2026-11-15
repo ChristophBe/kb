@@ -6,9 +6,30 @@ package store
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
+	CountTeamAdmins(ctx context.Context, arg CountTeamAdminsParams) (int64, error)
+	DeleteTeam(ctx context.Context, id uuid.UUID) error
+	DeleteTeamMember(ctx context.Context, arg DeleteTeamMemberParams) (int64, error)
+	// FindUserByEmail matches the email case-insensitively. Should several users
+	// share an email, the one registered first wins.
+	FindUserByEmail(ctx context.Context, email string) (IamUser, error)
+	// GetTeamForUser returns the team with the user's role, or no row when the
+	// user is not a member.
+	GetTeamForUser(ctx context.Context, arg GetTeamForUserParams) (GetTeamForUserRow, error)
+	GetTeamMember(ctx context.Context, arg GetTeamMemberParams) (GetTeamMemberRow, error)
+	InsertTeam(ctx context.Context, arg InsertTeamParams) (IamTeam, error)
+	InsertTeamMember(ctx context.Context, arg InsertTeamMemberParams) error
+	ListTeamMembers(ctx context.Context, teamID uuid.UUID) ([]ListTeamMembersRow, error)
+	ListTeamsForUser(ctx context.Context, userID string) ([]ListTeamsForUserRow, error)
+	// LockTeam serialises the membership changes of one team, so that two
+	// concurrent demotions cannot both leave the team without an admin.
+	LockTeam(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	SetTeamMemberRole(ctx context.Context, arg SetTeamMemberRoleParams) (int64, error)
+	UpdateTeamName(ctx context.Context, arg UpdateTeamNameParams) (IamTeam, error)
 	// UpsertUser registers a user or refreshes their email and display name. A
 	// claim the token lacks (empty) keeps the stored value. platform_admin is
 	// only set on insert: later changes belong to the admins, not to the token.

@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -25,7 +26,25 @@ const (
 // Repository is the persistence the server needs.
 type Repository interface {
 	UpsertUser(ctx context.Context, arg store.UpsertUserParams) (store.IamUser, error)
+	FindUserByEmail(ctx context.Context, email string) (store.IamUser, error)
+
+	CreateTeam(ctx context.Context, name, creator string) (store.IamTeam, error)
+	UpdateTeamName(ctx context.Context, arg store.UpdateTeamNameParams) (store.IamTeam, error)
+	DeleteTeam(ctx context.Context, id uuid.UUID) error
+	GetTeamForUser(ctx context.Context, arg store.GetTeamForUserParams) (store.GetTeamForUserRow, error)
+	ListTeamsForUser(ctx context.Context, userID string) ([]store.ListTeamsForUserRow, error)
+
+	ListTeamMembers(ctx context.Context, teamID uuid.UUID) ([]store.ListTeamMembersRow, error)
+	GetTeamMember(ctx context.Context, arg store.GetTeamMemberParams) (store.GetTeamMemberRow, error)
+	InsertTeamMember(ctx context.Context, arg store.InsertTeamMemberParams) error
+	// RemoveMember and SetMemberRole fail with store.ErrNotMember or
+	// store.ErrLastAdmin.
+	RemoveMember(ctx context.Context, teamID uuid.UUID, userID string) error
+	SetMemberRole(ctx context.Context, teamID uuid.UUID, userID string, role int16) error
 }
+
+// maxTeamNameRunes bounds a team name.
+const maxTeamNameRunes = 100
 
 // Server implements IamService.
 type Server struct {
@@ -50,9 +69,23 @@ func New(repo Repository, bootstrapAdmins []string, log *slog.Logger) *Server {
 // GetCurrentUser registers the caller on their first call and refreshes their
 // email and display name on later ones.
 func (s *Server) GetCurrentUser(ctx context.Context, _ *iamv1.GetCurrentUserRequest) (*iamv1.GetCurrentUserResponse, error) {
-	id, ok := grpcserver.UserFromContext(ctx)
-	if !ok {
-		return nil, status.Error(codes.Unauthenticated, "the call has no user")
+	u, err := s.register(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &iamv1.GetCurrentUserResponse{User: &iamv1.User{
+		Id:            u.ID,
+		Email:         u.Email,
+		DisplayName:   u.DisplayName,
+		PlatformAdmin: u.PlatformAdmin,
+	}}, nil
+}
+
+// register upserts the caller from the token's claims.
+func (s *Server) register(ctx context.Context) (store.IamUser, error) {
+	id, err := caller(ctx)
+	if err != nil {
+		return store.IamUser{}, err
 	}
 	md, _ := metadata.FromIncomingContext(ctx)
 	email, name := first(md, emailHeader), first(md, nameHeader)
@@ -63,15 +96,9 @@ func (s *Server) GetCurrentUser(ctx context.Context, _ *iamv1.GetCurrentUserRequ
 		PlatformAdmin: s.isBootstrapAdmin(id, email),
 	})
 	if err != nil {
-		s.log.ErrorContext(ctx, "register user failed", "error", err)
-		return nil, status.Error(codes.Internal, "get current user failed")
+		return store.IamUser{}, s.internal("register user", err)
 	}
-	return &iamv1.GetCurrentUserResponse{User: &iamv1.User{
-		Id:            u.ID,
-		Email:         u.Email,
-		DisplayName:   u.DisplayName,
-		PlatformAdmin: u.PlatformAdmin,
-	}}, nil
+	return u, nil
 }
 
 // isBootstrapAdmin reports whether the subject, or a non-empty email
@@ -90,4 +117,17 @@ func first(md metadata.MD, key string) string {
 		return v[0]
 	}
 	return ""
+}
+
+func caller(ctx context.Context) (string, error) {
+	id, ok := grpcserver.UserFromContext(ctx)
+	if !ok {
+		return "", status.Error(codes.Unauthenticated, "the call has no user")
+	}
+	return id, nil
+}
+
+func (s *Server) internal(op string, err error) error {
+	s.log.Error(op+" failed", "error", err)
+	return status.Errorf(codes.Internal, "%s failed", op)
 }

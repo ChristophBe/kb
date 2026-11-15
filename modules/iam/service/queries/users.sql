@@ -9,3 +9,11 @@ SET email        = coalesce(nullif(EXCLUDED.email, ''), iam.users.email),
     display_name = coalesce(nullif(EXCLUDED.display_name, ''), iam.users.display_name),
     updated_at   = now()
 RETURNING *;
+
+-- FindUserByEmail matches the email case-insensitively. Should several users
+-- share an email, the one registered first wins.
+-- name: FindUserByEmail :one
+SELECT * FROM iam.users
+WHERE lower(email) = lower(sqlc.arg(email)) AND email <> ''
+ORDER BY created_at, id
+LIMIT 1;

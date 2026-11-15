@@ -81,6 +81,6 @@ func run(cfg Config) error {
 	}
 
 	srv := grpcserver.New(log)
-	iamv1.RegisterIamServiceServer(srv, server.New(store.New(pool), cfg.BootstrapAdmins, log))
+	iamv1.RegisterIamServiceServer(srv, server.New(store.NewRepo(pool), cfg.BootstrapAdmins, log))
 	return srv.Run(ctx, cfg.GRPCPort)
 }

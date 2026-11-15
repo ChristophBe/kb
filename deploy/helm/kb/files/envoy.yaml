@@ -67,6 +67,22 @@ static_resources:
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.iam.v1.IamService/GetCurrentUser" }
                           route: { cluster: iam-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.iam.v1.IamService/CreateTeam" }
+                          route: { cluster: iam-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.iam.v1.IamService/GetTeam" }
+                          route: { cluster: iam-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.iam.v1.IamService/ListMyTeams" }
+                          route: { cluster: iam-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.iam.v1.IamService/UpdateTeam" }
+                          route: { cluster: iam-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.iam.v1.IamService/DeleteTeam" }
+                          route: { cluster: iam-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.iam.v1.IamService/AddMember" }
+                          route: { cluster: iam-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.iam.v1.IamService/RemoveMember" }
+                          route: { cluster: iam-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.iam.v1.IamService/SetMemberRole" }
+                          route: { cluster: iam-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.ingestion.v1.IngestionService/CreateUpload" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.ingestion.v1.IngestionService/CompleteUpload" }

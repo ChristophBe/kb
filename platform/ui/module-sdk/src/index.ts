@@ -32,3 +32,9 @@ export {
   type SearchHit,
   type SearchProvider,
 } from "./types.ts";
+export {
+  type CurrentUser,
+  CurrentUserProvider,
+  useCurrentUser,
+  useIsPlatformAdmin,
+} from "./user.tsx";

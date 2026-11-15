@@ -8,6 +8,11 @@ export interface NavItem {
   path: string;
   label: string;
   icon?: ComponentType<{ className?: string }>;
+  /**
+   * Show the entry only to platform admins. This hides the link, it does not
+   * protect the page: the module's service still has to check the role.
+   */
+  requiresPlatformAdmin?: boolean;
 }
 
 /** How the home page presents a module: one feature tile, possibly a hero action or the hero prompt. */

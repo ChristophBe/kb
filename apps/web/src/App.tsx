@@ -4,6 +4,7 @@ import {
   type RuntimeAuth,
   type RuntimeConfig,
   type SearchProvider,
+  useIsPlatformAdmin,
 } from "@knowcel/module-sdk";
 import { Area, IconButton, Logo, navItemClass, ThemeToggle } from "@knowcel/ui";
 import { CircleHelp, CircleUser, LogOut } from "lucide-react";
@@ -11,6 +12,7 @@ import { lazy, type ReactNode, useMemo } from "react";
 import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
 import { AuthGate, useSession } from "./auth/AuthGate.tsx";
 import { createUserManager } from "./auth/session.ts";
+import { CurrentUserLoader } from "./CurrentUserLoader.tsx";
 import { Home } from "./Home.tsx";
 import { ModuleBoundary } from "./ModuleBoundary.tsx";
 import { ModuleRoutes } from "./ModuleRoutes.tsx";
@@ -31,9 +33,17 @@ const HelpPage = lazy(() => import("./help/Help.tsx").then((m) => ({ default: m.
  */
 export function App({ config }: { config: RuntimeConfig }) {
   const manager = useMemo(() => config.auth && createUserManager(config.auth), [config]);
+  // Who is signed in comes from the IAM module, so only with it and a sign-in.
+  const identified = Boolean(config.auth) && activeModules(config).some((m) => m.id === "iam");
   const app = (auth?: RuntimeAuth) => (
     <KbRuntimeProvider config={config} auth={auth}>
-      <Routes config={config} />
+      {identified ? (
+        <CurrentUserLoader>
+          <Routes config={config} />
+        </CurrentUserLoader>
+      ) : (
+        <Routes config={config} />
+      )}
     </KbRuntimeProvider>
   );
   return manager ? <AuthGate manager={manager}>{app}</AuthGate> : app();
@@ -69,6 +79,7 @@ function Routes({ config }: { config: RuntimeConfig }) {
 }
 
 function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: SearchProvider[] }) {
+  const isPlatformAdmin = useIsPlatformAdmin();
   return (
     <div className="flex min-h-screen">
       <Area className="sticky top-0 w-60 shrink-0 overflow-y-auto border-r">
@@ -79,16 +90,18 @@ function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: S
           <HeaderSearch providers={providers} />
         </div>
         <nav className="flex flex-col gap-0.5 px-3">
-          {[searchNavEntry, ...navEntries(modules)].map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) => navItemClass(isActive)}
-            >
-              <Icon className="size-4" /> {label}
-            </NavLink>
-          ))}
+          {[searchNavEntry, ...navEntries(modules, isPlatformAdmin)].map(
+            ({ to, label, icon: Icon, end }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className={({ isActive }) => navItemClass(isActive)}
+              >
+                <Icon className="size-4" /> {label}
+              </NavLink>
+            ),
+          )}
         </nav>
         <nav aria-label="Help" className="mt-auto flex flex-col gap-0.5 px-3 pt-6">
           <NavLink to="/help" className={({ isActive }) => navItemClass(isActive)}>

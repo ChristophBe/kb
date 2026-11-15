@@ -183,6 +183,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@knowcel/iam-api':
+        specifier: workspace:*
+        version: link:../../modules/iam/api/ts
       '@knowcel/module-chat':
         specifier: workspace:*
         version: link:../../modules/chat/ui
@@ -235,6 +238,9 @@ importers:
       '@tailwindcss/vite':
         specifier: 'catalog:'
         version: 4.3.3(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0))
+      '@tanstack/react-query':
+        specifier: 'catalog:'
+        version: 5.105.0(@types/react@19.3.0)(react@19.3.1)
       '@testing-library/dom':
         specifier: 'catalog:'
         version: 10.4.2
@@ -415,15 +421,33 @@ importers:
         specifier: 'catalog:'
         version: 8.5.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
     devDependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.16.0
+      '@connectrpc/connect':
+        specifier: 'catalog:'
+        version: 2.2.0(@bufbuild/protobuf@2.16.0)
+      '@testing-library/dom':
+        specifier: 'catalog:'
+        version: 10.4.2
+      '@testing-library/react':
+        specifier: 'catalog:'
+        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
       react:
         specifier: 'catalog:'
         version: 19.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.1(react@19.3.1)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@26.6.5)(@vitest/coverage-v8@5.0.5)(jsdom@30.1.3)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0))
 
   modules/ingestion/api/ts:
     dependencies:

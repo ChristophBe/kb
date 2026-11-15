@@ -1,3 +1,4 @@
+import type { ModuleManifest } from "@knowcel/module-sdk";
 import { describe, expect, it } from "vitest";
 import { activeModules, navEntries } from "./registry.ts";
 
@@ -25,8 +26,27 @@ describe("navEntries", () => {
     expect(entries.map((e) => [e.label, e.to, e.end])).toEqual([
       ["Chat", "/m/chat", true],
       ["Documents", "/m/document", true],
+      ["Teams", "/m/iam/teams", false],
       ["Ingestion", "/m/ingestion", true],
       ["Models", "/m/llm", true],
     ]);
+  });
+
+  it("hides items that require a platform admin until the user is one", () => {
+    const Icon = () => null;
+    const modules: ModuleManifest[] = [
+      {
+        id: "x",
+        title: "X",
+        icon: Icon,
+        nav: [
+          { path: "", label: "Open" },
+          { path: "admin", label: "Admin only", requiresPlatformAdmin: true },
+        ],
+      },
+    ];
+    expect(navEntries(modules).map((e) => e.label)).toEqual(["Open"]);
+    expect(navEntries(modules, false).map((e) => e.label)).toEqual(["Open"]);
+    expect(navEntries(modules, true).map((e) => e.label)).toEqual(["Open", "Admin only"]);
   });
 });

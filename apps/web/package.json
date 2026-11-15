@@ -10,6 +10,7 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
+    "@knowcel/iam-api": "workspace:*",
     "@knowcel/module-chat": "workspace:*",
     "@knowcel/module-document": "workspace:*",
     "@knowcel/module-iam": "workspace:*",
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@connectrpc/connect": "catalog:",
     "@tailwindcss/vite": "catalog:",
+    "@tanstack/react-query": "catalog:",
     "@testing-library/dom": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",

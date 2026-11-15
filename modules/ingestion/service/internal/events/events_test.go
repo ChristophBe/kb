@@ -119,7 +119,8 @@ func (f *fakeSender) Publish(_ context.Context, subject string, msg proto.Messag
 }
 
 func TestPublishUploaded(t *testing.T) {
-	job := app.Job{ID: uuid.New(), DocumentID: uuid.New(), Filename: "a.md", ContentType: "text/markdown", Run: 2}
+	team := uuid.New()
+	job := app.Job{ID: uuid.New(), DocumentID: uuid.New(), TeamIDs: []uuid.UUID{team}, Filename: "a.md", ContentType: "text/markdown", Run: 2}
 	sender := &fakeSender{}
 	if err := NewPublisher(sender).PublishUploaded(t.Context(), job); err != nil {
 		t.Fatal(err)
@@ -128,7 +129,7 @@ func TestPublishUploaded(t *testing.T) {
 	if sender.subject != SubjectUploaded || sender.id != job.ID.String()+":2" || !ok {
 		t.Fatalf("sent %q %q %T", sender.subject, sender.id, sender.msg)
 	}
-	if ev.GetJobId() != job.ID.String() || ev.GetDocumentId() != job.DocumentID.String() || ev.GetFilename() != "a.md" || ev.GetContentType() != "text/markdown" || ev.GetRun() != 2 {
+	if ev.GetJobId() != job.ID.String() || ev.GetDocumentId() != job.DocumentID.String() || ev.GetFilename() != "a.md" || ev.GetContentType() != "text/markdown" || ev.GetRun() != 2 || !slices.Equal(ev.GetTeamIds(), []string{team.String()}) {
 		t.Errorf("event = %v", ev)
 	}
 }

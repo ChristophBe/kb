@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"reflect"
 	"testing"
 
 	"github.com/google/uuid"
@@ -112,7 +113,7 @@ func TestReplaceUploadPassesOnTheDocumentModulesRefusal(t *testing.T) {
 		if !errors.Is(err, refusal) {
 			t.Errorf("err = %v, want %v", err, refusal)
 		}
-		if jobs.jobs[from.ID] != from {
+		if !reflect.DeepEqual(jobs.jobs[from.ID], from) {
 			t.Errorf("the job changed after %v: %+v", refusal, jobs.jobs[from.ID])
 		}
 	}
@@ -124,7 +125,7 @@ func TestReplaceUploadLeavesOtherUsersJobsAlone(t *testing.T) {
 	jobs := newFakeJobs(theirs)
 	// The document module answers NotFound for bob's document.
 	_, _, err := New(jobs, &fakeDocuments{createErr: ErrDocumentNotFound}, &fakePublisher{}).ReplaceUpload(t.Context(), alice, theirs.DocumentID, NewUpload{})
-	if !errors.Is(err, ErrDocumentNotFound) || jobs.jobs[theirs.ID] != theirs {
+	if !errors.Is(err, ErrDocumentNotFound) || !reflect.DeepEqual(jobs.jobs[theirs.ID], theirs) {
 		t.Errorf("err = %v, job %+v", err, jobs.jobs[theirs.ID])
 	}
 }

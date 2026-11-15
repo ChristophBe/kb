@@ -160,13 +160,33 @@ func TestInternalRPCsAreNotRouted(t *testing.T) {
 // and returns the id of its document.
 func upload(ctx context.Context, t *testing.T, c *clients, filename, title, body string) string {
 	t.Helper()
-	created, err := c.createUpload.CallUnary(ctx, connect.NewRequest(&ingestionv1.CreateUploadRequest{
+	return uploadShared(ctx, t, c, filename, title, body, nil)
+}
+
+// uploadShared is upload to the given teams.
+func uploadShared(ctx context.Context, t *testing.T, c *clients, filename, title, body string, teamIDs []string) string {
+	t.Helper()
+	req := &ingestionv1.CreateUploadRequest{
 		Filename:    filename,
 		ContentType: "text/markdown",
 		SizeBytes:   int64(len(body)),
 		Title:       title,
 		Sha256:      fmt.Sprintf("%x", sha256.Sum256([]byte(body))),
-	}))
+		TeamIds:     teamIDs,
+	}
+	// The document module caches the teams IAM reports for a caller for a
+	// short while, so a team created a moment ago may still be unknown to it
+	// (NOT_FOUND, nothing created); try again until the cache has expired.
+	deadline := time.Now().Add(teamCacheTimeout)
+	var created *connect.Response[ingestionv1.CreateUploadResponse]
+	var err error
+	for {
+		created, err = c.createUpload.CallUnary(ctx, connect.NewRequest(req))
+		if err == nil || len(teamIDs) == 0 || connect.CodeOf(err) != connect.CodeNotFound || time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(3 * time.Second)
+	}
 	if err != nil {
 		t.Fatalf("CreateUpload: %v", err)
 	}
@@ -230,6 +250,8 @@ func ask(ctx context.Context, t *testing.T, c *clients, conversationID, question
 
 // clients calls the services over gRPC-Web through Envoy, like the browser.
 type clients struct {
+	// http authenticates calls to the services the other clients do not cover.
+	http               *http.Client
 	createUpload       *connect.Client[ingestionv1.CreateUploadRequest, ingestionv1.CreateUploadResponse]
 	completeUpload     *connect.Client[ingestionv1.CompleteUploadRequest, ingestionv1.CompleteUploadResponse]
 	watchJob           *connect.Client[ingestionv1.WatchJobRequest, ingestionv1.WatchJobResponse]
@@ -250,6 +272,7 @@ func newClients(gateway, token string) *clients {
 	h := bearer(token)
 	opt := connect.WithGRPCWeb()
 	return &clients{
+		http:               h,
 		createUpload:       connect.NewClient[ingestionv1.CreateUploadRequest, ingestionv1.CreateUploadResponse](h, gateway+ingestionv1.IngestionService_CreateUpload_FullMethodName, opt),
 		completeUpload:     connect.NewClient[ingestionv1.CompleteUploadRequest, ingestionv1.CompleteUploadResponse](h, gateway+ingestionv1.IngestionService_CompleteUpload_FullMethodName, opt),
 		watchJob:           connect.NewClient[ingestionv1.WatchJobRequest, ingestionv1.WatchJobResponse](h, gateway+ingestionv1.IngestionService_WatchJob_FullMethodName, opt),

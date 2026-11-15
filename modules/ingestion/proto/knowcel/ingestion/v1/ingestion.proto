@@ -93,6 +93,11 @@ message CreateUploadRequest {
   // Optional SHA-256 of the file, in hex. A file uploaded with other content
   // fails its job on CompleteUpload.
   string sha256 = 5;
+  // Teams to share the document with, which the caller must belong to; a
+  // team the caller is not in fails with NOT_FOUND (reason TEAM_NOT_FOUND).
+  // Empty keeps the document private to the caller. Changeable later with
+  // the document module's SetDocumentTeams.
+  repeated string team_ids = 6;
 }
 
 message CreateUploadResponse {

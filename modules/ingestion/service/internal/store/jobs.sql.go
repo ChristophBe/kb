@@ -18,7 +18,7 @@ SET status = $1, error = $2, chunk_count = $3,
     progress = CASE WHEN $1 = 4 THEN 100 ELSE progress END,
     updated_at = now()
 WHERE id = $4 AND run = $5 AND status < 4 AND status < $1
-RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id, team_ids
 `
 
 type AdvanceJobParams struct {
@@ -56,6 +56,7 @@ func (q *Queries) AdvanceJob(ctx context.Context, arg AdvanceJobParams) (Ingesti
 		&i.Progress,
 		&i.Stage,
 		&i.OwnerID,
+		&i.TeamIds,
 	)
 	return i, err
 }
@@ -93,9 +94,9 @@ func (q *Queries) CountJobsByStatus(ctx context.Context) ([]CountJobsByStatusRow
 
 const createJob = `-- name: CreateJob :one
 
-INSERT INTO ingestion.jobs (id, owner_id, document_id, filename, content_type, status)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id
+INSERT INTO ingestion.jobs (id, owner_id, document_id, filename, content_type, status, team_ids)
+VALUES ($1, $2, $3, $4, $5, $6, coalesce($7::uuid[], '{}'))
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id, team_ids
 `
 
 type CreateJobParams struct {
@@ -105,6 +106,7 @@ type CreateJobParams struct {
 	Filename    string
 	ContentType string
 	Status      int16
+	TeamIds     []uuid.UUID
 }
 
 // Queries taking an owner_id act for that user and find only their jobs. The
@@ -117,6 +119,7 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (Ingestion
 		arg.Filename,
 		arg.ContentType,
 		arg.Status,
+		arg.TeamIds,
 	)
 	var i IngestionJob
 	err := row.Scan(
@@ -133,12 +136,13 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (Ingestion
 		&i.Progress,
 		&i.Stage,
 		&i.OwnerID,
+		&i.TeamIds,
 	)
 	return i, err
 }
 
 const getDocumentJob = `-- name: GetDocumentJob :one
-SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id FROM ingestion.jobs
+SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id, team_ids FROM ingestion.jobs
 WHERE document_id = $1 AND owner_id = $2
 ORDER BY created_at DESC, id DESC
 LIMIT 1
@@ -168,12 +172,13 @@ func (q *Queries) GetDocumentJob(ctx context.Context, arg GetDocumentJobParams) 
 		&i.Progress,
 		&i.Stage,
 		&i.OwnerID,
+		&i.TeamIds,
 	)
 	return i, err
 }
 
 const getJob = `-- name: GetJob :one
-SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id FROM ingestion.jobs WHERE id = $1 AND owner_id = $2
+SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id, team_ids FROM ingestion.jobs WHERE id = $1 AND owner_id = $2
 `
 
 type GetJobParams struct {
@@ -198,12 +203,13 @@ func (q *Queries) GetJob(ctx context.Context, arg GetJobParams) (IngestionJob, e
 		&i.Progress,
 		&i.Stage,
 		&i.OwnerID,
+		&i.TeamIds,
 	)
 	return i, err
 }
 
 const listJobs = `-- name: ListJobs :many
-SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id FROM ingestion.jobs
+SELECT id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id, team_ids FROM ingestion.jobs
 WHERE owner_id = $1
   AND (created_at, id) < (
     coalesce($2::timestamptz, 'infinity'),
@@ -251,6 +257,7 @@ func (q *Queries) ListJobs(ctx context.Context, arg ListJobsParams) ([]Ingestion
 			&i.Progress,
 			&i.Stage,
 			&i.OwnerID,
+			&i.TeamIds,
 		); err != nil {
 			return nil, err
 		}
@@ -267,7 +274,7 @@ UPDATE ingestion.jobs
 SET status = 3, stage = $1, progress = $2, updated_at = now()
 WHERE id = $3 AND run = $4 AND status IN (2, 3)
   AND (stage, progress) < ($1::smallint, $2::smallint)
-RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id, team_ids
 `
 
 type ReportProgressParams struct {
@@ -303,6 +310,7 @@ func (q *Queries) ReportProgress(ctx context.Context, arg ReportProgressParams) 
 		&i.Progress,
 		&i.Stage,
 		&i.OwnerID,
+		&i.TeamIds,
 	)
 	return i, err
 }
@@ -311,7 +319,7 @@ const reprocessJob = `-- name: ReprocessJob :one
 UPDATE ingestion.jobs
 SET status = 2, error = '', chunk_count = 0, progress = 0, stage = 0, run = run + 1, updated_at = now()
 WHERE id = $1 AND owner_id = $2 AND status IN (4, 5)
-RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id, team_ids
 `
 
 type ReprocessJobParams struct {
@@ -339,6 +347,7 @@ func (q *Queries) ReprocessJob(ctx context.Context, arg ReprocessJobParams) (Ing
 		&i.Progress,
 		&i.Stage,
 		&i.OwnerID,
+		&i.TeamIds,
 	)
 	return i, err
 }
@@ -348,7 +357,7 @@ UPDATE ingestion.jobs
 SET status = 1, filename = $1, content_type = $2,
     error = '', chunk_count = 0, progress = 0, stage = 0, run = run + 1, updated_at = now()
 WHERE id = $3 AND owner_id = $4 AND status IN (1, 4, 5)
-RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id
+RETURNING id, document_id, filename, content_type, status, error, chunk_count, created_at, updated_at, run, progress, stage, owner_id, team_ids
 `
 
 type RestartJobParams struct {
@@ -384,6 +393,7 @@ func (q *Queries) RestartJob(ctx context.Context, arg RestartJobParams) (Ingesti
 		&i.Progress,
 		&i.Stage,
 		&i.OwnerID,
+		&i.TeamIds,
 	)
 	return i, err
 }

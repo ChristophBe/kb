@@ -289,7 +289,12 @@ type CreateUploadRequest struct {
 	Title string `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
 	// Optional SHA-256 of the file, in hex. A file uploaded with other content
 	// fails its job on CompleteUpload.
-	Sha256        string `protobuf:"bytes,5,opt,name=sha256,proto3" json:"sha256,omitempty"`
+	Sha256 string `protobuf:"bytes,5,opt,name=sha256,proto3" json:"sha256,omitempty"`
+	// Teams to share the document with, which the caller must belong to; a
+	// team the caller is not in fails with NOT_FOUND (reason TEAM_NOT_FOUND).
+	// Empty keeps the document private to the caller. Changeable later with
+	// the document module's SetDocumentTeams.
+	TeamIds       []string `protobuf:"bytes,6,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -357,6 +362,13 @@ func (x *CreateUploadRequest) GetSha256() string {
 		return x.Sha256
 	}
 	return ""
+}
+
+func (x *CreateUploadRequest) GetTeamIds() []string {
+	if x != nil {
+		return x.TeamIds
+	}
+	return nil
 }
 
 type CreateUploadResponse struct {
@@ -1015,14 +1027,15 @@ const file_knowcel_ingestion_v1_ingestion_proto_rawDesc = "" +
 	"\bprogress\x18\n" +
 	" \x01(\x05R\bprogress\x124\n" +
 	"\x05stage\x18\v \x01(\x0e2\x1e.knowcel.ingestion.v1.JobStageR\x05stage\x12\x19\n" +
-	"\bowner_id\x18\f \x01(\tR\aownerId\"\xa1\x01\n" +
+	"\bowner_id\x18\f \x01(\tR\aownerId\"\xbc\x01\n" +
 	"\x13CreateUploadRequest\x12\x1a\n" +
 	"\bfilename\x18\x01 \x01(\tR\bfilename\x12!\n" +
 	"\fcontent_type\x18\x02 \x01(\tR\vcontentType\x12\x1d\n" +
 	"\n" +
 	"size_bytes\x18\x03 \x01(\x03R\tsizeBytes\x12\x14\n" +
 	"\x05title\x18\x04 \x01(\tR\x05title\x12\x16\n" +
-	"\x06sha256\x18\x05 \x01(\tR\x06sha256\"b\n" +
+	"\x06sha256\x18\x05 \x01(\tR\x06sha256\x12\x19\n" +
+	"\bteam_ids\x18\x06 \x03(\tR\ateamIds\"b\n" +
 	"\x14CreateUploadResponse\x12+\n" +
 	"\x03job\x18\x01 \x01(\v2\x19.knowcel.ingestion.v1.JobR\x03job\x12\x1d\n" +
 	"\n" +

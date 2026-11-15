@@ -1,23 +1,27 @@
 from knowcel.ingestion.v1 import ingestion_pb2 as _ingestion_pb2
+from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
+from collections.abc import Iterable as _Iterable
 from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class DocumentUploaded(_message.Message):
-    __slots__ = ("job_id", "document_id", "filename", "content_type", "run")
+    __slots__ = ("job_id", "document_id", "filename", "content_type", "run", "team_ids")
     JOB_ID_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
     FILENAME_FIELD_NUMBER: _ClassVar[int]
     CONTENT_TYPE_FIELD_NUMBER: _ClassVar[int]
     RUN_FIELD_NUMBER: _ClassVar[int]
+    TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
     job_id: str
     document_id: str
     filename: str
     content_type: str
     run: int
-    def __init__(self, job_id: _Optional[str] = ..., document_id: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., run: _Optional[int] = ...) -> None: ...
+    team_ids: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, job_id: _Optional[str] = ..., document_id: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., run: _Optional[int] = ..., team_ids: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class ProcessingStarted(_message.Message):
     __slots__ = ("job_id", "document_id", "run")

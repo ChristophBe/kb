@@ -2,8 +2,8 @@
 -- others apply the worker's events, which carry no user, and act on any job.
 
 -- name: CreateJob :one
-INSERT INTO ingestion.jobs (id, owner_id, document_id, filename, content_type, status)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO ingestion.jobs (id, owner_id, document_id, filename, content_type, status, team_ids)
+VALUES ($1, $2, $3, $4, $5, $6, coalesce(sqlc.narg(team_ids)::uuid[], '{}'))
 RETURNING *;
 
 -- name: GetJob :one

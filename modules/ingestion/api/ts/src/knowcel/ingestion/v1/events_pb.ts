@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file knowcel/ingestion/v1/events.proto.
  */
 export const file_knowcel_ingestion_v1_events: GenFile = /*@__PURE__*/
-  fileDesc("CiFrbm93Y2VsL2luZ2VzdGlvbi92MS9ldmVudHMucHJvdG8SFGtub3djZWwuaW5nZXN0aW9uLnYxImwKEERvY3VtZW50VXBsb2FkZWQSDgoGam9iX2lkGAEgASgJEhMKC2RvY3VtZW50X2lkGAIgASgJEhAKCGZpbGVuYW1lGAMgASgJEhQKDGNvbnRlbnRfdHlwZRgEIAEoCRILCgNydW4YBSABKAUiRQoRUHJvY2Vzc2luZ1N0YXJ0ZWQSDgoGam9iX2lkGAEgASgJEhMKC2RvY3VtZW50X2lkGAIgASgJEgsKA3J1bhgDIAEoBSKHAQoSUHJvY2Vzc2luZ1Byb2dyZXNzEg4KBmpvYl9pZBgBIAEoCRITCgtkb2N1bWVudF9pZBgCIAEoCRILCgNydW4YAyABKAUSLQoFc3RhZ2UYBCABKA4yHi5rbm93Y2VsLmluZ2VzdGlvbi52MS5Kb2JTdGFnZRIQCghwcm9ncmVzcxgFIAEoBSJaChFEb2N1bWVudFByb2Nlc3NlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSEwoLY2h1bmtfY291bnQYAyABKAUSCwoDcnVuGAQgASgFIlMKEFByb2Nlc3NpbmdGYWlsZWQSDgoGam9iX2lkGAEgASgJEhMKC2RvY3VtZW50X2lkGAIgASgJEg0KBWVycm9yGAMgASgJEgsKA3J1bhgEIAEoBUJUWlJnaXRodWIuY29tL0NocmlzdG9waEJlL2tub3djZWxpdW0vbW9kdWxlcy9pbmdlc3Rpb24vYXBpL2dvL2luZ2VzdGlvbnYxO2luZ2VzdGlvbnYxYgZwcm90bzM", [file_knowcel_ingestion_v1_ingestion]);
+  fileDesc("CiFrbm93Y2VsL2luZ2VzdGlvbi92MS9ldmVudHMucHJvdG8SFGtub3djZWwuaW5nZXN0aW9uLnYxIn4KEERvY3VtZW50VXBsb2FkZWQSDgoGam9iX2lkGAEgASgJEhMKC2RvY3VtZW50X2lkGAIgASgJEhAKCGZpbGVuYW1lGAMgASgJEhQKDGNvbnRlbnRfdHlwZRgEIAEoCRILCgNydW4YBSABKAUSEAoIdGVhbV9pZHMYBiADKAkiRQoRUHJvY2Vzc2luZ1N0YXJ0ZWQSDgoGam9iX2lkGAEgASgJEhMKC2RvY3VtZW50X2lkGAIgASgJEgsKA3J1bhgDIAEoBSKHAQoSUHJvY2Vzc2luZ1Byb2dyZXNzEg4KBmpvYl9pZBgBIAEoCRITCgtkb2N1bWVudF9pZBgCIAEoCRILCgNydW4YAyABKAUSLQoFc3RhZ2UYBCABKA4yHi5rbm93Y2VsLmluZ2VzdGlvbi52MS5Kb2JTdGFnZRIQCghwcm9ncmVzcxgFIAEoBSJaChFEb2N1bWVudFByb2Nlc3NlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSEwoLY2h1bmtfY291bnQYAyABKAUSCwoDcnVuGAQgASgFIlMKEFByb2Nlc3NpbmdGYWlsZWQSDgoGam9iX2lkGAEgASgJEhMKC2RvY3VtZW50X2lkGAIgASgJEg0KBWVycm9yGAMgASgJEgsKA3J1bhgEIAEoBUJUWlJnaXRodWIuY29tL0NocmlzdG9waEJlL2tub3djZWxpdW0vbW9kdWxlcy9pbmdlc3Rpb24vYXBpL2dvL2luZ2VzdGlvbnYxO2luZ2VzdGlvbnYxYgZwcm90bzM", [file_knowcel_ingestion_v1_ingestion]);
 
 /**
  * Subject: knowcel.ingestion.uploaded
@@ -44,6 +44,15 @@ export type DocumentUploaded = Message<"knowcel.ingestion.v1.DocumentUploaded"> 
    * @generated from field: int32 run = 5;
    */
   run: number;
+
+  /**
+   * The teams the document was shared with at upload, for consumers that
+   * want them without asking the document module. Later changes to the
+   * sharing are not reflected; only the document module knows the current ones.
+   *
+   * @generated from field: repeated string team_ids = 6;
+   */
+  teamIds: string[];
 };
 
 /**

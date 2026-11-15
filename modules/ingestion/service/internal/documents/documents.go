@@ -26,13 +26,21 @@ func New(client documentv1.DocumentServiceClient) *Client {
 }
 
 func (c *Client) Create(ctx context.Context, upload app.NewUpload) (app.Document, error) {
+	teamIDs := make([]string, 0, len(upload.TeamIDs))
+	for _, id := range upload.TeamIDs {
+		teamIDs = append(teamIDs, id.String())
+	}
 	created, err := c.client.CreateDocument(ctx, &documentv1.CreateDocumentRequest{
 		Title:       upload.Title,
 		Filename:    upload.Filename,
 		ContentType: upload.ContentType,
 		SizeBytes:   upload.SizeBytes,
 		Sha256:      upload.SHA256,
+		TeamIds:     teamIDs,
 	})
+	if status.Code(err) == codes.NotFound && hasReason(err, "TEAM_NOT_FOUND") {
+		return app.Document{}, app.ErrTeamNotFound
+	}
 	if violations := grpcserver.FieldViolations(err); status.Code(err) == codes.InvalidArgument && len(violations) > 0 {
 		// The request's fields are named as in CreateUploadRequest, so the
 		// violations pass on unchanged.

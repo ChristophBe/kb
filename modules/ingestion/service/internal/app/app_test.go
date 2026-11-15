@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"slices"
 	"testing"
 
 	"github.com/google/uuid"
@@ -107,9 +108,11 @@ type fakeDocuments struct {
 	createErr error
 	markErr   error
 	marked    []uuid.UUID
+	created   []NewUpload
 }
 
-func (f *fakeDocuments) Create(context.Context, NewUpload) (Document, error) {
+func (f *fakeDocuments) Create(_ context.Context, upload NewUpload) (Document, error) {
+	f.created = append(f.created, upload)
 	return f.doc, f.createErr
 }
 
@@ -144,6 +147,45 @@ func TestCreateUploadStoresAPendingJob(t *testing.T) {
 	}
 	if _, ok := jobs.jobs[job.ID]; !ok {
 		t.Error("job not stored")
+	}
+}
+
+func TestCreateUploadSharesTheDocumentAndKeepsTheTeamsOnTheJob(t *testing.T) {
+	teams := []uuid.UUID{uuid.New(), uuid.New()}
+	docs := &fakeDocuments{doc: Document{ID: uuid.New()}}
+	jobs := newFakeJobs()
+	job, _, err := New(jobs, docs, &fakePublisher{}).CreateUpload(t.Context(), alice, NewUpload{Filename: "a.md", TeamIDs: teams})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(docs.created) != 1 || !slices.Equal(docs.created[0].TeamIDs, teams) {
+		t.Errorf("the document module got %+v, want teams %v", docs.created, teams)
+	}
+	if !slices.Equal(job.TeamIDs, teams) || !slices.Equal(jobs.jobs[job.ID].TeamIDs, teams) {
+		t.Errorf("job teams = %v, stored %v, want %v", job.TeamIDs, jobs.jobs[job.ID].TeamIDs, teams)
+	}
+}
+
+func TestCreateUploadPassesOnAnUnknownTeam(t *testing.T) {
+	jobs := newFakeJobs()
+	_, _, err := New(jobs, &fakeDocuments{createErr: ErrTeamNotFound}, &fakePublisher{}).CreateUpload(t.Context(), alice, NewUpload{TeamIDs: []uuid.UUID{uuid.New()}})
+	if !errors.Is(err, ErrTeamNotFound) {
+		t.Fatalf("err = %v, want %v", err, ErrTeamNotFound)
+	}
+	if len(jobs.jobs) != 0 {
+		t.Errorf("a job was stored for a refused upload: %v", jobs.jobs)
+	}
+}
+
+func TestReprocessKeepsTheTeamsOfTheJob(t *testing.T) {
+	job := doneJob()
+	job.TeamIDs = []uuid.UUID{uuid.New()}
+	pub := &fakePublisher{}
+	if _, err := New(newFakeJobs(job), &fakeDocuments{}, pub).ReprocessJob(t.Context(), alice, job.ID); err != nil {
+		t.Fatal(err)
+	}
+	if len(pub.sent) != 1 || !slices.Equal(pub.sent[0].TeamIDs, job.TeamIDs) {
+		t.Errorf("published %+v, want teams %v", pub.sent, job.TeamIDs)
 	}
 }
 

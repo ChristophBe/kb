@@ -437,3 +437,26 @@ kb_ingestion_jobs{status="queued"} 1
 		t.Error(err)
 	}
 }
+
+func TestCreateJobKeepsTheTeams(t *testing.T) {
+	q := New(pgtest.Start(t, "ingestion", migrations.FS))
+	teams := []uuid.UUID{uuid.New(), uuid.New()}
+	jobs := NewJobs(q)
+	shared, err := jobs.Create(t.Context(), app.Job{ID: uuid.New(), OwnerID: owner, DocumentID: uuid.New(), TeamIDs: teams, Filename: "a.md", Status: 2})
+	if err != nil || !slices.Equal(shared.TeamIDs, teams) {
+		t.Fatalf("shared job: teams %v, err %v, want %v", shared.TeamIDs, err, teams)
+	}
+	// A private job (no teams, nil or empty) stores an empty set, not NULL.
+	private, err := jobs.Create(t.Context(), app.Job{ID: uuid.New(), OwnerID: owner, DocumentID: uuid.New(), Filename: "b.md", Status: 2})
+	if err != nil || len(private.TeamIDs) != 0 {
+		t.Fatalf("private job: teams %v, err %v", private.TeamIDs, err)
+	}
+	// Reprocessing keeps the teams.
+	if _, err := q.AdvanceJob(t.Context(), AdvanceJobParams{ID: shared.ID, Run: 1, Status: done}); err != nil {
+		t.Fatal(err)
+	}
+	again, err := jobs.Reprocess(t.Context(), owner, shared.ID)
+	if err != nil || !slices.Equal(again.TeamIDs, teams) {
+		t.Fatalf("reprocessed job: teams %v, err %v, want %v", again.TeamIDs, err, teams)
+	}
+}

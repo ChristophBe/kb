@@ -33,7 +33,7 @@ export function Nav() {
         <a
           href={REPO}
           className={buttonClass("ghost", "ml-auto md:ml-0")}
-          aria-label="kb on GitHub"
+          aria-label="Knowcelium on GitHub"
         >
           <GithubMark className="size-4" />
         </a>

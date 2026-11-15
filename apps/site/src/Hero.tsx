@@ -15,20 +15,20 @@ export function Hero() {
           style={delay(0)}
         >
           <ShieldCheck className="size-3.5" aria-hidden="true" />
-          Open source · runs on your own machine
+          Open source · runs on your own infrastructure
         </p>
         <div className="animate-rise" style={delay(80)}>
           <PageTitle className="font-semibold tracking-tight text-balance">
-            Ask your documents <span className="text-gradient">anything.</span>
+            Everything your organization knows, <span className="text-gradient">connected.</span>
           </PageTitle>
         </div>
         <p
           className="mt-5 max-w-xl animate-rise text-base text-pretty text-fg-muted"
           style={delay(160)}
         >
-          kb reads the PDFs, Markdown and text files you give it, finds passages by meaning, and
-          answers your questions in plain language, with the exact passages to prove it. Your
-          documents never leave your machine.
+          Knowcelium grows into the systems you already use, connects what they know, and answers
+          your people and your tools in plain language, with the passages to prove it. Open source,
+          modular, and on your own infrastructure.
         </p>
         <div className="mt-8 flex animate-rise flex-wrap justify-center gap-3" style={delay(240)}>
           <a href="#quick-start" className={buttonClass("primary", "px-5 py-2.5")}>

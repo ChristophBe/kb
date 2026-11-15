@@ -32,7 +32,7 @@ const MODULES = [
   { id: "llm", lang: "Python", text: "The one gateway to language models" },
 ];
 
-/** For people who want to run, read or extend kb. */
+/** For people who want to run, read or extend Knowcelium. */
 export function Developers() {
   return (
     <section id="developers" aria-labelledby="dev-title" className="px-4 py-20 sm:px-8">
@@ -42,7 +42,7 @@ export function Developers() {
             id="dev-title"
             eyebrow="For developers"
             title="Small modules, clear contracts, easy to extend"
-            text="kb is a modular monorepo: Go for the core services, Python for the language work, React for the interface, and gRPC between all of them."
+            text="Knowcelium is a modular monorepo: Go for the core services, Python for the language work, React for the interface, and gRPC between all of them."
           />
           <ul className="space-y-6">
             {POINTS.map((p) => (

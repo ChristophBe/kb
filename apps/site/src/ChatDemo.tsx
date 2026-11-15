@@ -36,7 +36,7 @@ const WORD_MS = 45;
 const ANSWER_START_MS = 700;
 
 /**
- * A chat exchange as kb shows it: the question, an answer with citation
+ * A chat exchange as Knowcelium shows it: the question, an answer with citation
  * numbers and the sources beside it. Numbers and sources highlight each other
  * on hover and focus, as in the app. The answer streams in with CSS only, so
  * the prerendered page already contains all of it.
@@ -92,7 +92,7 @@ export function ChatDemo() {
           <span className="size-2.5 rounded-full bg-border" />
           <span className="size-2.5 rounded-full bg-border" />
         </span>
-        <span className="ml-2">kb / chat — an example answer</span>
+        <span className="ml-2">knowcelium / chat — an example answer</span>
       </figcaption>
 
       <div className="flex justify-end">

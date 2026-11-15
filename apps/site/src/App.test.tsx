@@ -31,7 +31,9 @@ describe("marketing site", () => {
 
   it("prerenders the content, so the page reads without JavaScript", () => {
     const html = renderStatic();
-    expect(html).toContain("Ask your documents");
+    expect(html).toContain("Everything your organization knows");
+    for (const pillar of ["Absorb", "Connect", "Renew"]) expect(html).toContain(pillar);
+    expect(html).toContain("On the roadmap");
     expect(html).toContain("task up -- --profile ollama");
   });
 });

@@ -5,6 +5,7 @@ import {
 } from "@knowcel/document-api/knowcel/document/v1/document_pb";
 import { useClient, useQuery, useQueryClient } from "@knowcel/module-sdk";
 import { Button, Card, DelayedLoading, EmptyState, ErrorMessage, SkeletonRows } from "@knowcel/ui";
+import { Layers } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export const CHUNK_PAGE_SIZE = 20;
@@ -123,7 +124,7 @@ export function ChunkList({
     );
   } else if (items.length === 0) {
     body = (
-      <EmptyState>
+      <EmptyState icon={Layers}>
         {status === DocumentStatus.FAILED
           ? `Processing failed${statusDetail ? `: ${statusDetail}` : "."}`
           : "This document has no chunks yet. They appear once processing has finished."}

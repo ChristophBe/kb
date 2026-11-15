@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import {
   type ComponentProps,
   type HTMLAttributes,
@@ -185,8 +186,10 @@ export function PageHeader({
   return (
     <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
-        {eyebrow && <p className="mb-2 font-mono text-xs text-fg-muted">{eyebrow}</p>}
-        <PageTitle>{title}</PageTitle>
+        {eyebrow && (
+          <p className="mb-2 font-mono text-xs tracking-wide text-accent uppercase">{eyebrow}</p>
+        )}
+        <PageTitle className="font-semibold tracking-tight">{title}</PageTitle>
         {description && <p className="mt-2 text-sm text-fg-muted">{description}</p>}
       </div>
       {actions && <div className="flex gap-2">{actions}</div>}
@@ -194,8 +197,18 @@ export function PageHeader({
   );
 }
 
-export function EmptyState({ children }: { children: ReactNode }) {
-  return <div className="py-12 text-center text-sm text-fg-muted">{children}</div>;
+/** Nothing to show yet; an `icon` adds an accent tile above the message. */
+export function EmptyState({ icon: Icon, children }: { icon?: LucideIcon; children: ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-3 py-12 text-center text-sm text-fg-muted">
+      {Icon && (
+        <span className="inline-flex size-10 items-center justify-center rounded-card bg-accent-subtle text-accent">
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+      )}
+      <div>{children}</div>
+    </div>
+  );
 }
 
 /**

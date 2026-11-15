@@ -8,7 +8,7 @@ import {
   PageHeader,
   SkeletonRows,
 } from "@knowcel/ui";
-import { Search } from "lucide-react";
+import { Search, SearchX } from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import type { NavEntry } from "../registry.ts";
@@ -112,7 +112,7 @@ function Group({ group: g }: { group: SearchGroup }) {
   } else if (g.status === "error") {
     body = <p className="px-4 py-3 text-sm text-danger">{g.error}</p>;
   } else if (g.hits.length === 0) {
-    body = <EmptyState>No matches.</EmptyState>;
+    body = <EmptyState icon={SearchX}>No matches.</EmptyState>;
   } else {
     body = (
       <ol className="divide-y divide-dotted divide-border">

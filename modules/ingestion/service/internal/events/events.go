@@ -67,12 +67,17 @@ type Publisher struct{ sender Sender }
 func NewPublisher(sender Sender) *Publisher { return &Publisher{sender: sender} }
 
 func (p *Publisher) PublishUploaded(ctx context.Context, job app.Job) error {
+	teamIDs := make([]string, 0, len(job.TeamIDs))
+	for _, id := range job.TeamIDs {
+		teamIDs = append(teamIDs, id.String())
+	}
 	return p.sender.Publish(ctx, SubjectUploaded, &ingestionv1.DocumentUploaded{
 		JobId:       job.ID.String(),
 		DocumentId:  job.DocumentID.String(),
 		Filename:    job.Filename,
 		ContentType: job.ContentType,
 		Run:         job.Run,
+		TeamIds:     teamIDs,
 	}, fmt.Sprintf("%s:%d", job.ID, job.Run))
 }
 

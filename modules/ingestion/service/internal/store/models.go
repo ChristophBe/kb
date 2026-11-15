@@ -23,4 +23,5 @@ type IngestionJob struct {
 	Progress    int16
 	Stage       int16
 	OwnerID     string
+	TeamIds     []uuid.UUID
 }

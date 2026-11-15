@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from knowcel.ingestion.v1 import ingestion_pb2 as knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!knowcel/ingestion/v1/events.proto\x12\x14knowcel.ingestion.v1\x1a$knowcel/ingestion/v1/ingestion.proto\"\x9b\x01\n\x10\x44ocumentUploaded\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x1a\n\x08\x66ilename\x18\x03 \x01(\tR\x08\x66ilename\x12!\n\x0c\x63ontent_type\x18\x04 \x01(\tR\x0b\x63ontentType\x12\x10\n\x03run\x18\x05 \x01(\x05R\x03run\"]\n\x11ProcessingStarted\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x10\n\x03run\x18\x03 \x01(\x05R\x03run\"\xb0\x01\n\x12ProcessingProgress\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x10\n\x03run\x18\x03 \x01(\x05R\x03run\x12\x34\n\x05stage\x18\x04 \x01(\x0e\x32\x1e.knowcel.ingestion.v1.JobStageR\x05stage\x12\x1a\n\x08progress\x18\x05 \x01(\x05R\x08progress\"~\n\x11\x44ocumentProcessed\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x1f\n\x0b\x63hunk_count\x18\x03 \x01(\x05R\nchunkCount\x12\x10\n\x03run\x18\x04 \x01(\x05R\x03run\"r\n\x10ProcessingFailed\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x14\n\x05\x65rror\x18\x03 \x01(\tR\x05\x65rror\x12\x10\n\x03run\x18\x04 \x01(\x05R\x03runBTZRgithub.com/ChristophBe/knowcelium/modules/ingestion/api/go/ingestionv1;ingestionv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!knowcel/ingestion/v1/events.proto\x12\x14knowcel.ingestion.v1\x1a$knowcel/ingestion/v1/ingestion.proto\"\xb6\x01\n\x10\x44ocumentUploaded\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x1a\n\x08\x66ilename\x18\x03 \x01(\tR\x08\x66ilename\x12!\n\x0c\x63ontent_type\x18\x04 \x01(\tR\x0b\x63ontentType\x12\x10\n\x03run\x18\x05 \x01(\x05R\x03run\x12\x19\n\x08team_ids\x18\x06 \x03(\tR\x07teamIds\"]\n\x11ProcessingStarted\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x10\n\x03run\x18\x03 \x01(\x05R\x03run\"\xb0\x01\n\x12ProcessingProgress\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x10\n\x03run\x18\x03 \x01(\x05R\x03run\x12\x34\n\x05stage\x18\x04 \x01(\x0e\x32\x1e.knowcel.ingestion.v1.JobStageR\x05stage\x12\x1a\n\x08progress\x18\x05 \x01(\x05R\x08progress\"~\n\x11\x44ocumentProcessed\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x1f\n\x0b\x63hunk_count\x18\x03 \x01(\x05R\nchunkCount\x12\x10\n\x03run\x18\x04 \x01(\x05R\x03run\"r\n\x10ProcessingFailed\x12\x15\n\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n\x0b\x64ocument_id\x18\x02 \x01(\tR\ndocumentId\x12\x14\n\x05\x65rror\x18\x03 \x01(\tR\x05\x65rror\x12\x10\n\x03run\x18\x04 \x01(\x05R\x03runBTZRgithub.com/ChristophBe/knowcelium/modules/ingestion/api/go/ingestionv1;ingestionv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,13 +34,13 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'ZRgithub.com/ChristophBe/knowcelium/modules/ingestion/api/go/ingestionv1;ingestionv1'
   _globals['_DOCUMENTUPLOADED']._serialized_start=98
-  _globals['_DOCUMENTUPLOADED']._serialized_end=253
-  _globals['_PROCESSINGSTARTED']._serialized_start=255
-  _globals['_PROCESSINGSTARTED']._serialized_end=348
-  _globals['_PROCESSINGPROGRESS']._serialized_start=351
-  _globals['_PROCESSINGPROGRESS']._serialized_end=527
-  _globals['_DOCUMENTPROCESSED']._serialized_start=529
-  _globals['_DOCUMENTPROCESSED']._serialized_end=655
-  _globals['_PROCESSINGFAILED']._serialized_start=657
-  _globals['_PROCESSINGFAILED']._serialized_end=771
+  _globals['_DOCUMENTUPLOADED']._serialized_end=280
+  _globals['_PROCESSINGSTARTED']._serialized_start=282
+  _globals['_PROCESSINGSTARTED']._serialized_end=375
+  _globals['_PROCESSINGPROGRESS']._serialized_start=378
+  _globals['_PROCESSINGPROGRESS']._serialized_end=554
+  _globals['_DOCUMENTPROCESSED']._serialized_start=556
+  _globals['_DOCUMENTPROCESSED']._serialized_end=682
+  _globals['_PROCESSINGFAILED']._serialized_start=684
+  _globals['_PROCESSINGFAILED']._serialized_end=798
 # @@protoc_insertion_point(module_scope)

@@ -23,12 +23,16 @@ const (
 
 // Subject: knowcel.ingestion.uploaded
 type DocumentUploaded struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
-	DocumentId    string                 `protobuf:"bytes,2,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
-	Filename      string                 `protobuf:"bytes,3,opt,name=filename,proto3" json:"filename,omitempty"`
-	ContentType   string                 `protobuf:"bytes,4,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
-	Run           int32                  `protobuf:"varint,5,opt,name=run,proto3" json:"run,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	JobId       string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	DocumentId  string                 `protobuf:"bytes,2,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
+	Filename    string                 `protobuf:"bytes,3,opt,name=filename,proto3" json:"filename,omitempty"`
+	ContentType string                 `protobuf:"bytes,4,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	Run         int32                  `protobuf:"varint,5,opt,name=run,proto3" json:"run,omitempty"`
+	// The teams the document was shared with at upload, for consumers that
+	// want them without asking the document module. Later changes to the
+	// sharing are not reflected; only the document module knows the current ones.
+	TeamIds       []string `protobuf:"bytes,6,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -96,6 +100,13 @@ func (x *DocumentUploaded) GetRun() int32 {
 		return x.Run
 	}
 	return 0
+}
+
+func (x *DocumentUploaded) GetTeamIds() []string {
+	if x != nil {
+		return x.TeamIds
+	}
+	return nil
 }
 
 // Subject: knowcel.ingestion.started
@@ -381,14 +392,15 @@ var File_knowcel_ingestion_v1_events_proto protoreflect.FileDescriptor
 
 const file_knowcel_ingestion_v1_events_proto_rawDesc = "" +
 	"\n" +
-	"!knowcel/ingestion/v1/events.proto\x12\x14knowcel.ingestion.v1\x1a$knowcel/ingestion/v1/ingestion.proto\"\x9b\x01\n" +
+	"!knowcel/ingestion/v1/events.proto\x12\x14knowcel.ingestion.v1\x1a$knowcel/ingestion/v1/ingestion.proto\"\xb6\x01\n" +
 	"\x10DocumentUploaded\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n" +
 	"\vdocument_id\x18\x02 \x01(\tR\n" +
 	"documentId\x12\x1a\n" +
 	"\bfilename\x18\x03 \x01(\tR\bfilename\x12!\n" +
 	"\fcontent_type\x18\x04 \x01(\tR\vcontentType\x12\x10\n" +
-	"\x03run\x18\x05 \x01(\x05R\x03run\"]\n" +
+	"\x03run\x18\x05 \x01(\x05R\x03run\x12\x19\n" +
+	"\bteam_ids\x18\x06 \x03(\tR\ateamIds\"]\n" +
 	"\x11ProcessingStarted\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n" +
 	"\vdocument_id\x18\x02 \x01(\tR\n" +

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -56,6 +57,17 @@ func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUpload
 		// Nothing could be extracted from an empty file; it would only fail later.
 		violations = append(violations, grpcserver.Violation("size_bytes", "The file is empty"))
 	}
+	teamIDs := make([]uuid.UUID, 0, len(req.GetTeamIds()))
+	for i, raw := range req.GetTeamIds() {
+		id, err := uuid.Parse(raw)
+		if err != nil {
+			violations = append(violations, grpcserver.Violation(fmt.Sprintf("team_ids[%d]", i), fmt.Sprintf("Invalid team id %q", raw)))
+			continue
+		}
+		if !slices.Contains(teamIDs, id) {
+			teamIDs = append(teamIDs, id)
+		}
+	}
 	if len(violations) > 0 {
 		return nil, grpcserver.InvalidArgument(violations...)
 	}
@@ -65,6 +77,7 @@ func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUpload
 		ContentType: req.GetContentType(),
 		SizeBytes:   req.GetSizeBytes(),
 		SHA256:      req.GetSha256(),
+		TeamIDs:     teamIDs,
 	})
 	if err != nil {
 		return nil, s.toStatus("create upload", err)
@@ -259,6 +272,8 @@ func (s *Server) toStatus(op string, err error) error {
 		return failedPrecondition("UPLOAD_MISSING", app.ErrUploadMissing)
 	case errors.Is(err, app.ErrNotReprocessable):
 		return failedPrecondition("JOB_NOT_REPROCESSABLE", app.ErrNotReprocessable)
+	case errors.Is(err, app.ErrTeamNotFound):
+		return grpcserver.WithDetails(codes.NotFound, app.ErrTeamNotFound.Error(), grpcserver.ErrorInfo(domain, "TEAM_NOT_FOUND", nil))
 	case errors.Is(err, app.ErrDocumentNotFound):
 		return status.Error(codes.NotFound, app.ErrDocumentNotFound.Error())
 	case errors.Is(err, app.ErrDocumentBusy):

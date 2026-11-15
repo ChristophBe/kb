@@ -29,6 +29,9 @@ var (
 	// ErrDocumentNotFound means the document module has no such document (or
 	// it is another user's).
 	ErrDocumentNotFound = errors.New("document not found")
+	// ErrTeamNotFound means a team to share a document with does not exist or
+	// the caller is not in it.
+	ErrTeamNotFound = errors.New("team not found")
 	// ErrDocumentBusy means the document can't take a new version yet: it or
 	// its job is still being uploaded or processed.
 	ErrDocumentBusy = errors.New("the document is still being uploaded or processed")
@@ -72,9 +75,12 @@ func (e *UploadRejectedError) Error() string { return "upload rejected: " + e.Re
 
 // Job is one document's way through ingestion.
 type Job struct {
-	ID          uuid.UUID
-	OwnerID     string // the user who created the upload; only they see the job
-	DocumentID  uuid.UUID
+	ID         uuid.UUID
+	OwnerID    string // the user who created the upload; only they see the job
+	DocumentID uuid.UUID
+	// TeamIDs are the teams the document was shared with at upload; the
+	// document module owns the current sharing.
+	TeamIDs     []uuid.UUID
 	Filename    string
 	ContentType string
 	Status      ingestionv1.JobStatus
@@ -145,6 +151,8 @@ type NewUpload struct {
 	SizeBytes   int64
 	// SHA256 is the file's checksum in hex, empty if the client sent none.
 	SHA256 string
+	// TeamIDs are the teams to share the new document with.
+	TeamIDs []uuid.UUID
 }
 
 // Document is what ingestion knows about a document of the document module.
@@ -157,7 +165,7 @@ type Document struct {
 
 // Documents is the document module. It returns ErrDocumentsUnavailable while
 // the module is unreachable. Create returns an *InvalidUploadError for a file
-// the module does not accept. MarkUploaded returns ErrUploadMissing when the
+// the module does not accept and ErrTeamNotFound for a team the caller is not in. MarkUploaded returns ErrUploadMissing when the
 // file is not there and an *UploadRejectedError when the module refuses it.
 // Replace starts a new version of a document; it returns an
 // *InvalidUploadError like Create, ErrDocumentNotFound and ErrDocumentBusy.
@@ -194,6 +202,7 @@ func (s *Service) CreateUpload(ctx context.Context, owner string, upload NewUplo
 		ID:          uuid.New(),
 		OwnerID:     owner,
 		DocumentID:  doc.ID,
+		TeamIDs:     upload.TeamIDs,
 		Filename:    doc.Filename,
 		ContentType: doc.ContentType,
 		Status:      ingestionv1.JobStatus_JOB_STATUS_PENDING_UPLOAD,

@@ -72,6 +72,14 @@ func TestInvalidUploadKeepsTheViolations(t *testing.T) {
 	}
 }
 
+func TestUnknownTeamIsAnApplicationError(t *testing.T) {
+	c := New(fakeClient{err: grpcserver.WithDetails(codes.NotFound, "team not found",
+		grpcserver.ErrorInfo("knowcel.document.v1", "TEAM_NOT_FOUND", nil))})
+	if _, err := c.Create(t.Context(), app.NewUpload{TeamIDs: []uuid.UUID{uuid.New()}}); !errors.Is(err, app.ErrTeamNotFound) {
+		t.Fatalf("err = %v, want %v", err, app.ErrTeamNotFound)
+	}
+}
+
 func TestOtherPeerErrorsMatchNoApplicationError(t *testing.T) {
 	c := New(fakeClient{err: status.Error(codes.NotFound, "no such document")})
 	err := c.MarkUploaded(t.Context(), uuid.New())

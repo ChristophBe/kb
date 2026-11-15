@@ -54,7 +54,7 @@ type fakeRepo struct {
 }
 
 func (f *fakeRepo) CreateJob(_ context.Context, p store.CreateJobParams) (store.IngestionJob, error) {
-	j := store.IngestionJob{ID: p.ID, OwnerID: p.OwnerID, DocumentID: p.DocumentID, Filename: p.Filename, Status: p.Status, Run: 1}
+	j := store.IngestionJob{ID: p.ID, OwnerID: p.OwnerID, DocumentID: p.DocumentID, TeamIds: p.TeamIds, Filename: p.Filename, Status: p.Status, Run: 1}
 	f.jobs[p.ID] = j
 	return j, nil
 }
@@ -272,6 +272,58 @@ func TestCreateUploadForwardsTheChecksum(t *testing.T) {
 	}
 	if len(docs.created) != 1 || docs.created[0].GetSha256() != "abc123" {
 		t.Errorf("created = %v, want the checksum passed on", docs.created)
+	}
+}
+
+func TestCreateUploadSharesTheDocumentWithTheTeams(t *testing.T) {
+	docs := &fakeDocuments{}
+	repo := &fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}
+	srv := New(app.New(store.NewJobs(repo), documents.New(docs), events.NewPublisher(&fakePublisher{})), slog.New(slog.DiscardHandler))
+	a, b := uuid.NewString(), uuid.NewString()
+	// A repeated team counts once.
+	if _, err := srv.CreateUpload(as(t, alice), &ingestionv1.CreateUploadRequest{Filename: "a.md", SizeBytes: 3, TeamIds: []string{a, b, a}}); err != nil {
+		t.Fatal(err)
+	}
+	if len(docs.created) != 1 || !slices.Equal(docs.created[0].GetTeamIds(), []string{a, b}) {
+		t.Errorf("created = %v, want the document shared with %v", docs.created, []string{a, b})
+	}
+	for _, j := range repo.jobs {
+		if len(j.TeamIds) != 2 {
+			t.Errorf("job teams = %v, want both", j.TeamIds)
+		}
+	}
+}
+
+func TestCreateUploadRejectsMalformedTeamIDs(t *testing.T) {
+	docs := &fakeDocuments{}
+	srv := New(app.New(store.NewJobs(&fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}), documents.New(docs), events.NewPublisher(&fakePublisher{})), slog.New(slog.DiscardHandler))
+	_, err := srv.CreateUpload(as(t, alice), &ingestionv1.CreateUploadRequest{Filename: "a.md", SizeBytes: 3, TeamIds: []string{uuid.NewString(), "nope"}})
+	violations := grpcserver.FieldViolations(err)
+	if status.Code(err) != codes.InvalidArgument || len(violations) != 1 || violations[0].GetField() != "team_ids[1]" {
+		t.Fatalf("err = %v, want InvalidArgument for team_ids[1]", err)
+	}
+	if len(docs.created) != 0 {
+		t.Errorf("a document was created: %v", docs.created)
+	}
+}
+
+func TestCreateUploadForATeamTheCallerIsNotInIsNotFound(t *testing.T) {
+	docs := &fakeDocuments{createErr: grpcserver.WithDetails(codes.NotFound, "team not found",
+		grpcserver.ErrorInfo("knowcel.document.v1", "TEAM_NOT_FOUND", nil))}
+	repo := &fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}
+	srv := New(app.New(store.NewJobs(repo), documents.New(docs), events.NewPublisher(&fakePublisher{})), slog.New(slog.DiscardHandler))
+	_, err := srv.CreateUpload(as(t, alice), &ingestionv1.CreateUploadRequest{Filename: "a.md", SizeBytes: 3, TeamIds: []string{uuid.NewString()}})
+	if status.Code(err) != codes.NotFound {
+		t.Fatalf("err = %v, want NotFound", err)
+	}
+	var reason string
+	for _, d := range status.Convert(err).Details() {
+		if info, ok := d.(*errdetails.ErrorInfo); ok {
+			reason = info.GetReason()
+		}
+	}
+	if reason != "TEAM_NOT_FOUND" || len(repo.jobs) != 0 {
+		t.Errorf("reason %q, jobs %v, want TEAM_NOT_FOUND and no job", reason, repo.jobs)
 	}
 }
 

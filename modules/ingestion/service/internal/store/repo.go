@@ -32,6 +32,7 @@ func (j *Jobs) Create(ctx context.Context, job app.Job) (app.Job, error) {
 		Filename:    job.Filename,
 		ContentType: job.ContentType,
 		Status:      int16(job.Status),
+		TeamIds:     job.TeamIDs,
 	})
 	if err != nil {
 		return app.Job{}, err
@@ -134,6 +135,7 @@ func toJob(row IngestionJob) app.Job {
 		ID:          row.ID,
 		OwnerID:     row.OwnerID,
 		DocumentID:  row.DocumentID,
+		TeamIDs:     row.TeamIds,
 		Filename:    row.Filename,
 		ContentType: row.ContentType,
 		Status:      ingestionv1.JobStatus(row.Status),

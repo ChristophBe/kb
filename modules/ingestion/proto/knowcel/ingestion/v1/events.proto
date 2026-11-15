@@ -21,6 +21,10 @@ message DocumentUploaded {
   string filename = 3;
   string content_type = 4;
   int32 run = 5;
+  // The teams the document was shared with at upload, for consumers that
+  // want them without asking the document module. Later changes to the
+  // sharing are not reflected; only the document module knows the current ones.
+  repeated string team_ids = 6;
 }
 
 // Subject: knowcel.ingestion.started

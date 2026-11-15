@@ -8,6 +8,10 @@ Ingestion is where you add files to your documents. Knowcelium uploads each file
 2. Drop one or more files onto the upload area, or select **Choose files** and pick them.
 3. Each file gets a row under **Uploads** with a progress bar. Files wait their turn (**Waiting**) when several are uploading.
 
+If you belong to teams, **Share new uploads with** lists them above the upload area. Tick the teams whose members should be able to read the files you add next; leave all unticked to keep them private. Each file's row shows **Shared with** and the teams it was added with, and changing the ticks afterwards doesn't affect files already added. You can change who a document is shared with later, on [its page](documents.md#share-a-document-with-teams).
+
+If a row says **Upload failed** because a chosen team isn't available, it may be a team you created or joined a moment ago, which can take up to half a minute to work here. Select **Retry upload** a little later.
+
 Knowcelium accepts PDF, Markdown and plain text files, including CSV, JSON, YAML, HTML and reStructuredText, of up to 50 MiB each (your administrator may have set another limit or allowed fewer types). Scanned PDFs without a text layer have no text to read and end up with no passages.
 
 Keep the page open until every file shows a processing status. Closing the tab, or leaving the page before a file has started uploading, can stop that file's upload.
@@ -29,7 +33,7 @@ A [new version of a document](documents.md#replace-a-document-with-a-new-version
 
 ## Who can see your uploads
 
-Your uploads are private: the list under **Uploads** shows only the files you uploaded, and only you can follow or retry their processing. Other people signed in to Knowcelium never see your uploads, and you never see theirs.
+Your uploads are private: the list under **Uploads** shows only the files you uploaded, and only you can follow or retry their processing. Other people signed in to Knowcelium never see your uploads, and you never see theirs. Sharing a document with a team lets its members read the document, not follow your upload.
 
 ## Cancel an upload
 

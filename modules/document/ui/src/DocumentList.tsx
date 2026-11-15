@@ -1,5 +1,12 @@
 import { DocumentService } from "@knowcel/document-api/knowcel/document/v1/document_pb";
-import { toast, useClient, useMutation, useQuery, useQueryClient } from "@knowcel/module-sdk";
+import {
+  toast,
+  useClient,
+  useCurrentUser,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@knowcel/module-sdk";
 import {
   Badge,
   buttonClass,
@@ -18,6 +25,7 @@ import {
 import { Download, FileText, Search as SearchIcon, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Link } from "react-router";
+import { SharedWith } from "./SharedWith.tsx";
 import { statusLabel } from "./status.ts";
 
 export function DocumentList() {
@@ -28,6 +36,12 @@ export function DocumentList() {
     queryFn: () => client.listDocuments({ page: { pageSize: 100 } }),
     refetchInterval: 5000,
   });
+  const user = useCurrentUser();
+  // Only the documents others have shared; the list holds the user's own and those.
+  const [sharedOnly, setSharedOnly] = useState(false);
+  const shown = (docs.data?.documents ?? []).filter(
+    (d) => !(sharedOnly && user) || d.ownerId !== user.id,
+  );
   // The document the delete confirmation asks about.
   const [deleting, setDeleting] = useState<{ id: string; title: string } | null>(null);
   const table = useRef<HTMLTableElement>(null);
@@ -60,12 +74,23 @@ export function DocumentList() {
         }
       />
       <ErrorMessage error={docs.error ?? remove.error} />
+      {user && (
+        <label className="mb-3 flex w-fit min-h-6 items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="size-4 accent-accent"
+            checked={sharedOnly}
+            onChange={(e) => setSharedOnly(e.target.checked)}
+          />
+          Shared with me
+        </label>
+      )}
       <Card>
         {docs.isPending ? (
           <DelayedLoading>
             <SkeletonRows label="Loading documents" />
           </DelayedLoading>
-        ) : docs.data?.documents.length ? (
+        ) : shown.length ? (
           <table ref={table} tabIndex={-1} aria-label="Documents" className="w-full text-sm">
             <thead className="border-b border-border text-left text-xs text-fg-muted uppercase">
               <tr>
@@ -78,7 +103,7 @@ export function DocumentList() {
               </tr>
             </thead>
             <tbody>
-              {docs.data.documents.map((d) => {
+              {shown.map((d) => {
                 const [label, tone] = statusLabel[d.status];
                 return (
                   <tr key={d.id} className="border-b border-border last:border-0">
@@ -86,6 +111,11 @@ export function DocumentList() {
                       <Link to={d.id} className="font-medium hover:underline">
                         {d.title}
                       </Link>
+                      {d.teamIds.length > 0 && (
+                        <div className="mt-1">
+                          <SharedWith teamIds={d.teamIds} />
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-2">
                       <Badge tone={tone}>{label}</Badge>
@@ -111,7 +141,11 @@ export function DocumentList() {
             </tbody>
           </table>
         ) : (
-          <EmptyState icon={FileText}>No documents yet. Upload some in Ingestion.</EmptyState>
+          <EmptyState icon={FileText}>
+            {sharedOnly
+              ? "No documents have been shared with you."
+              : "No documents yet. Upload some in Ingestion."}
+          </EmptyState>
         )}
       </Card>
       <ConfirmDialog

@@ -1,0 +1,133 @@
+import { renderModule } from "@knowcel/module-sdk/testing";
+import { expectNoAxeViolations } from "@knowcel/ui/testing";
+import { polyfillDialog } from "@knowcel/ui/testing/dialog";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { beforeAll, describe, expect, it } from "vitest";
+import documents from "./index.tsx";
+import { ADMIN, alice, bob, MEMBER, sharingService } from "./testing.ts";
+
+const teams = [
+  { id: "t1", name: "Platform", role: ADMIN },
+  { id: "t2", name: "Support", role: MEMBER },
+];
+
+async function sharedWithRow() {
+  const term = await screen.findByText("Shared with", { selector: "dt" });
+  return within(term.parentElement as HTMLElement);
+}
+
+describe("ShareEditor", () => {
+  beforeAll(polyfillDialog);
+
+  it("shows an unshared document as not shared", async () => {
+    const { transport } = sharingService([{ id: "d1", title: "Notes", ownerId: "alice" }], teams);
+    renderModule(documents, transport, "/d1", alice);
+    expect((await sharedWithRow()).getByText("Not shared")).toBeTruthy();
+  });
+
+  it("lets the owner share the document with chosen teams, and change them later", async () => {
+    const { transport, setDocumentTeams } = sharingService(
+      [{ id: "d1", title: "Notes", ownerId: "alice" }],
+      teams,
+    );
+    const { container } = renderModule(documents, transport, "/d1", alice);
+    fireEvent.click(await (await sharedWithRow()).findByRole("button", { name: "Share" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Share document" }));
+    await expectNoAxeViolations(container);
+    fireEvent.click(dialog.getByRole("checkbox", { name: "Platform" }));
+    fireEvent.click(dialog.getByRole("checkbox", { name: "Support" }));
+    fireEvent.click(dialog.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(setDocumentTeams).toHaveBeenCalledTimes(1));
+    expect(setDocumentTeams.mock.calls[0]?.[0]).toMatchObject({
+      id: "d1",
+      teamIds: ["t1", "t2"],
+    });
+    const row = await sharedWithRow();
+    await waitFor(() => expect(row.getByText("Platform")).toBeTruthy());
+    expect(row.getByText("Support")).toBeTruthy();
+
+    fireEvent.click(row.getByRole("button", { name: "Share" }));
+    const again = within(await screen.findByRole("dialog", { name: "Share document" }));
+    expect((again.getByRole("checkbox", { name: "Platform" }) as HTMLInputElement).checked).toBe(
+      true,
+    );
+    fireEvent.click(again.getByRole("checkbox", { name: "Platform" }));
+    fireEvent.click(again.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(setDocumentTeams).toHaveBeenCalledTimes(2));
+    expect(setDocumentTeams.mock.calls[1]?.[0]).toMatchObject({ teamIds: ["t2"] });
+  });
+
+  it("explains a team that isn't known yet, and saves on a second try", async () => {
+    const { transport, setDocumentTeams } = sharingService(
+      [{ id: "d1", title: "Notes", ownerId: "alice" }],
+      teams,
+      { rejections: 1 },
+    );
+    renderModule(documents, transport, "/d1", alice);
+    fireEvent.click(await (await sharedWithRow()).findByRole("button", { name: "Share" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Share document" }));
+    fireEvent.click(dialog.getByRole("checkbox", { name: "Platform" }));
+    fireEvent.click(dialog.getByRole("button", { name: "Save" }));
+    expect((await dialog.findByRole("alert")).textContent).toMatch(/half a minute/);
+    fireEvent.click(dialog.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(setDocumentTeams).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("lets an admin of a team stop sharing with it, and only with it", async () => {
+    const { transport, setDocumentTeams } = sharingService(
+      [{ id: "d1", title: "Notes", ownerId: "carol", teamIds: ["t1", "t2"] }],
+      teams,
+    );
+    renderModule(documents, transport, "/d1", bob);
+    fireEvent.click(await (await sharedWithRow()).findByRole("button", { name: "Stop sharing" }));
+    const dialog = within(
+      await screen.findByRole("dialog", { name: "Stop sharing with your team" }),
+    );
+    // Support is a team bob is only a member of.
+    expect((dialog.getByRole("checkbox", { name: "Support" }) as HTMLInputElement).disabled).toBe(
+      true,
+    );
+    fireEvent.click(dialog.getByRole("checkbox", { name: "Platform" }));
+    fireEvent.click(dialog.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(setDocumentTeams).toHaveBeenCalledTimes(1));
+    expect(setDocumentTeams.mock.calls[0]?.[0]).toMatchObject({ teamIds: ["t2"] });
+  });
+
+  it("leaves the page of a document nobody on the user's teams can see any more", async () => {
+    const { transport } = sharingService(
+      [{ id: "d1", title: "Notes", ownerId: "carol", teamIds: ["t1"] }],
+      teams,
+    );
+    renderModule(documents, transport, "/d1", bob);
+    fireEvent.click(await (await sharedWithRow()).findByRole("button", { name: "Stop sharing" }));
+    const dialog = within(await screen.findByRole("dialog"));
+    fireEvent.click(dialog.getByRole("checkbox", { name: "Platform" }));
+    fireEvent.click(dialog.getByRole("button", { name: "Save" }));
+    expect(await screen.findByRole("table", { name: "Documents" })).toBeTruthy();
+  });
+
+  it("offers a plain member of a shared team no way to change it", async () => {
+    const { transport } = sharingService(
+      [{ id: "d1", title: "Notes", ownerId: "carol", teamIds: ["t2"] }],
+      teams,
+    );
+    renderModule(documents, transport, "/d1", bob);
+    const row = await sharedWithRow();
+    await waitFor(() => expect(row.getByText("Support")).toBeTruthy());
+    expect(row.queryByRole("button")).toBeNull();
+  });
+
+  it("still shows the document without IAM, without naming teams or offering to share", async () => {
+    const { transport } = sharingService(
+      [{ id: "d1", title: "Notes", ownerId: "alice", teamIds: ["t1"] }],
+      teams,
+      { iam: false },
+    );
+    renderModule(documents, transport, "/d1", alice);
+    const row = await sharedWithRow();
+    expect(row.getByText("Shared")).toBeTruthy();
+    expect(row.queryByRole("button")).toBeNull();
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+});

@@ -82,6 +82,7 @@ linters:
           list-mode: lax
           allow:
             - github.com/ChristophBe/knowcelium/modules/document/api/go
+            - github.com/ChristophBe/knowcelium/modules/iam/api/go
             - github.com/ChristophBe/knowcelium/modules/llm/api/go
           deny:
             - pkg: github.com/ChristophBe/knowcelium/modules/chat
@@ -89,7 +90,7 @@ linters:
             - pkg: github.com/ChristophBe/knowcelium/modules/document
               desc: only the api/ of a module in depends_on may be imported
             - pkg: github.com/ChristophBe/knowcelium/modules/iam
-              desc: iam is not in depends_on of ingestion
+              desc: only the api/ of a module in depends_on may be imported
             - pkg: github.com/ChristophBe/knowcelium/modules/llm
               desc: only the api/ of a module in depends_on may be imported
         module-llm:

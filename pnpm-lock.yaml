@@ -353,6 +353,9 @@ importers:
       '@knowcel/document-api':
         specifier: workspace:*
         version: link:../api/ts
+      '@knowcel/iam-api':
+        specifier: workspace:*
+        version: link:../../iam/api/ts
       '@knowcel/module-sdk':
         specifier: workspace:*
         version: link:../../../platform/ui/module-sdk
@@ -460,6 +463,9 @@ importers:
 
   modules/ingestion/ui:
     dependencies:
+      '@knowcel/iam-api':
+        specifier: workspace:*
+        version: link:../../iam/api/ts
       '@knowcel/ingestion-api':
         specifier: workspace:*
         version: link:../api/ts

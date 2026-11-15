@@ -45,7 +45,6 @@ source_modules =
 forbidden_modules =
     knowcel.chat
     knowcel_chat
-    knowcel.iam
     knowcel_llm
 
 [importlinter:contract:module-llm]

@@ -15,6 +15,7 @@ import {
   IconButton,
   PageHeader,
   SkeletonRows,
+  TeamPicker,
   type Tone,
 } from "@knowcel/ui";
 import { AlertTriangle, FileUp, Upload as UploadIcon, X } from "lucide-react";
@@ -22,6 +23,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SUPPORTED_FORMATS } from "./files.ts";
 import { active, ProgressBar, stageLabel } from "./progress.tsx";
 import { putWithProgress } from "./put.ts";
+import { useMyTeams } from "./useMyTeams.ts";
 import { type Upload as UploadRow, useUploads } from "./useUploads.ts";
 
 const statusLabel: Record<JobStatus, [string, Tone]> = {
@@ -68,6 +70,9 @@ export function Upload() {
   const fileInput = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const { announce, regions } = useAnnouncer();
+  // The teams the next files are shared with; none by default, so uploads stay private.
+  const { teams } = useMyTeams();
+  const [teamIds, setTeamIds] = useState<string[]>([]);
   const jobs = useQuery({
     queryKey: ["ingestion-jobs"],
     queryFn: () => client.listJobs({ page: { pageSize: 50 } }),
@@ -143,6 +148,17 @@ export function Upload() {
         title="Ingestion"
         description="Upload documents to add them to the knowledge base."
       />
+      {teams.length > 0 && (
+        <div className="mb-4">
+          <TeamPicker
+            legend="Share new uploads with"
+            hint="Members of the chosen teams can find and read the documents. Leave all unchecked to keep them private."
+            options={teams.map((t) => ({ id: t.id, name: t.name }))}
+            selected={teamIds}
+            onChange={setTeamIds}
+          />
+        </div>
+      )}
       {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: drag and drop is a pointer shortcut; keyboard users use "Choose files". */}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: same reason. */}
       <div
@@ -154,7 +170,7 @@ export function Upload() {
         onDrop={(e) => {
           e.preventDefault();
           setDragging(false);
-          add(Array.from(e.dataTransfer.files));
+          add(Array.from(e.dataTransfer.files), teamIds);
         }}
         className={`mb-6 flex flex-col items-center gap-2 rounded-card border-2 border-dashed p-10 text-sm text-fg-muted transition-colors ${dragging ? "border-accent bg-accent-subtle" : "border-accent/40 bg-accent-subtle/40"}`}
       >
@@ -184,7 +200,7 @@ export function Upload() {
           aria-hidden="true"
           className="sr-only"
           onChange={(e) => {
-            add(Array.from(e.target.files ?? []));
+            add(Array.from(e.target.files ?? []), teamIds);
             e.target.value = "";
           }}
         />
@@ -205,6 +221,10 @@ export function Upload() {
               <UploadItem
                 key={u.key}
                 upload={u}
+                sharedWith={u.teamIds
+                  .map((id) => teams.find((t) => t.id === id)?.name)
+                  .filter(Boolean)
+                  .join(", ")}
                 onRetry={() => {
                   retry(u.key);
                   setFocusAfter(`upload-${u.key}`);
@@ -265,10 +285,13 @@ export function Upload() {
 
 function UploadItem({
   upload,
+  sharedWith,
   onRetry,
   onRemove,
 }: {
   upload: UploadRow;
+  /** The names of the teams the file is shared with; empty for a private upload. */
+  sharedWith: string;
   onRetry: () => void;
   onRemove: () => void;
 }) {
@@ -281,6 +304,7 @@ function UploadItem({
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2">
       <span className="min-w-0 flex-1 truncate font-medium">{file.name}</span>
+      {sharedWith && <span className="text-fg-muted">Shared with {sharedWith}</span>}
       {status === "waiting" && <span className="text-fg-muted">Waiting</span>}
       {status === "uploading" && <ProgressBar percent={percent} label={`Uploading ${file.name}`} />}
       {(status === "failed" || status === "rejected") && (

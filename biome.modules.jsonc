@@ -224,6 +224,8 @@
                       "!@knowcel/common-api/**",
                       "!@knowcel/document-api",
                       "!@knowcel/document-api/**",
+                      "!@knowcel/iam-api",
+                      "!@knowcel/iam-api/**",
                       "!@knowcel/ingestion-api",
                       "!@knowcel/ingestion-api/**",
                       "!@knowcel/llm-api",

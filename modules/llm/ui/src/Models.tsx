@@ -111,6 +111,8 @@ export function Models() {
 
   const remove = useMutation({
     mutationFn: (m: Model) => client.deleteModel({ provider: m.provider, model: m.id }),
+    // One error at a time: a failed pull is old news once something else is tried.
+    onMutate: () => setPullError(null),
     onSuccess: async (_, m) => {
       toast.success(`Deleted ${m.id}`);
       await queryClient.invalidateQueries({ queryKey: ["llm-models"] });

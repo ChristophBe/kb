@@ -27,11 +27,11 @@ type Limits struct {
 	AllowedContentTypes []string `env:"ALLOWED_CONTENT_TYPES" envSeparator:"," envDefault:"application/pdf,text/*,application/json,application/yaml,application/x-yaml"`
 }
 
-// Validate checks the limits (KB_MAX_UPLOAD_BYTES, KB_ALLOWED_CONTENT_TYPES).
+// Validate checks the limits (KNOWCEL_MAX_UPLOAD_BYTES, KNOWCEL_ALLOWED_CONTENT_TYPES).
 func (l Limits) Validate(p *config.Problems) {
-	config.Positive(p, "KB_MAX_UPLOAD_BYTES", l.MaxUploadBytes)
+	config.Positive(p, "KNOWCEL_MAX_UPLOAD_BYTES", l.MaxUploadBytes)
 	if len(l.AllowedContentTypes) == 0 {
-		p.Addf("KB_ALLOWED_CONTENT_TYPES", "must list at least one content type")
+		p.Addf("KNOWCEL_ALLOWED_CONTENT_TYPES", "must list at least one content type")
 	}
 	for _, allowed := range l.AllowedContentTypes {
 		allowed = strings.ToLower(strings.TrimSpace(allowed))
@@ -40,7 +40,7 @@ func (l Limits) Validate(p *config.Problems) {
 			sub = "x" // a wildcard is a valid type with any subtype
 		}
 		if mediaType, _, err := mime.ParseMediaType(kind + "/" + sub); !ok || err != nil || mediaType != kind+"/"+sub {
-			p.Addf("KB_ALLOWED_CONTENT_TYPES", "%q is not a media type (type/subtype) or a wildcard (type/*)", allowed)
+			p.Addf("KNOWCEL_ALLOWED_CONTENT_TYPES", "%q is not a media type (type/subtype) or a wildcard (type/*)", allowed)
 		}
 	}
 }

@@ -1,7 +1,9 @@
 package config
 
 import (
+	"bytes"
 	"errors"
+	"log/slog"
 	"slices"
 	"strings"
 	"testing"
@@ -17,13 +19,13 @@ type testConfig struct {
 
 func (c testConfig) Validate(p *Problems) {
 	c.Base.Validate(p)
-	p.Addr("KB_DOCUMENT_ADDR", c.DocumentAddr)
-	Positive(p, "KB_NESTED_SIZE", c.Nested.Size)
+	p.Addr("KNOWCEL_DOCUMENT_ADDR", c.DocumentAddr)
+	Positive(p, "KNOWCEL_NESTED_SIZE", c.Nested.Size)
 }
 
-func TestLoadReadsKBPrefixedEnv(t *testing.T) {
-	t.Setenv("KB_GRPC_PORT", "9100")
-	t.Setenv("KB_LOG_LEVEL", "debug")
+func TestLoadReadsKnowcelPrefixedEnv(t *testing.T) {
+	t.Setenv("KNOWCEL_GRPC_PORT", "9100")
+	t.Setenv("KNOWCEL_LOG_LEVEL", "debug")
 
 	cfg, err := Load[testConfig]()
 	if err != nil {
@@ -37,8 +39,53 @@ func TestLoadReadsKBPrefixedEnv(t *testing.T) {
 	}
 }
 
-func TestLoadAppliesDefaultPorts(t *testing.T) {
+func captureLog(t *testing.T) *bytes.Buffer {
+	t.Helper()
+	var buf bytes.Buffer
+	old := slog.Default()
+	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, nil)))
+	t.Cleanup(func() { slog.SetDefault(old) })
+	return &buf
+}
+
+func TestLoadAcceptsDeprecatedKBPrefixWithWarning(t *testing.T) {
+	logs := captureLog(t)
 	t.Setenv("KB_GRPC_PORT", "9100")
+	t.Setenv("KB_DOCUMENT_ADDR", "doc:9001")
+
+	cfg, err := Load[testConfig]()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.GRPCPort != 9100 || cfg.DocumentAddr != "doc:9001" {
+		t.Errorf("got port %d addr %q, want 9100 doc:9001", cfg.GRPCPort, cfg.DocumentAddr)
+	}
+	for _, v := range []string{"KB_GRPC_PORT", "KB_DOCUMENT_ADDR"} {
+		if !strings.Contains(logs.String(), v) {
+			t.Errorf("no deprecation warning for %s in %q", v, logs)
+		}
+	}
+}
+
+func TestLoadPrefersKnowcelOverDeprecatedKB(t *testing.T) {
+	logs := captureLog(t)
+	t.Setenv("KB_GRPC_PORT", "9100")
+	t.Setenv("KNOWCEL_GRPC_PORT", "9200")
+
+	cfg, err := Load[testConfig]()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.GRPCPort != 9200 {
+		t.Errorf("got port %d, want 9200", cfg.GRPCPort)
+	}
+	if !strings.Contains(logs.String(), "KB_GRPC_PORT") {
+		t.Errorf("no warning about the ignored KB_GRPC_PORT in %q", logs)
+	}
+}
+
+func TestLoadAppliesDefaultPorts(t *testing.T) {
+	t.Setenv("KNOWCEL_GRPC_PORT", "9100")
 	cfg, err := Load(func(c *testConfig) { c.DefaultPorts(9001, 9101) })
 	if err != nil {
 		t.Fatal(err)
@@ -60,13 +107,13 @@ func problems(t *testing.T) []string {
 }
 
 func TestLoadReportsEveryUnparsableValue(t *testing.T) {
-	t.Setenv("KB_GRPC_PORT", "not-a-port")
-	t.Setenv("KB_NESTED_SIZE", "big")
+	t.Setenv("KNOWCEL_GRPC_PORT", "not-a-port")
+	t.Setenv("KNOWCEL_NESTED_SIZE", "big")
 
 	got := problems(t)
 	want := []string{
-		`KB_GRPC_PORT: cannot parse as int: "not-a-port": invalid syntax`,
-		`KB_NESTED_SIZE: cannot parse as int: "big": invalid syntax`,
+		`KNOWCEL_GRPC_PORT: cannot parse as int: "not-a-port": invalid syntax`,
+		`KNOWCEL_NESTED_SIZE: cannot parse as int: "big": invalid syntax`,
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("problems = %q, want %q", got, want)
@@ -78,14 +125,14 @@ func TestValidateReportsEveryRule(t *testing.T) {
 		env  map[string]string
 		want string
 	}{
-		"log level":       {map[string]string{"KB_LOG_LEVEL": "loud"}, `KB_LOG_LEVEL: must be debug, info, warn or error, got "loud"`},
-		"log format":      {map[string]string{"KB_LOG_FORMAT": "xml"}, `KB_LOG_FORMAT: must be one of json, text, got "xml"`},
-		"grpc port":       {map[string]string{"KB_GRPC_PORT": "70000"}, "KB_GRPC_PORT: must be a port between 1 and 65535, got 70000"},
-		"metrics port":    {map[string]string{"KB_METRICS_PORT": "-1"}, "KB_METRICS_PORT: must be a port between 1 and 65535, got -1"},
-		"same ports":      {map[string]string{"KB_METRICS_PORT": "9001"}, "KB_METRICS_PORT: must differ from KB_GRPC_PORT (both 9001)"},
-		"otel scheme":     {map[string]string{"KB_OTEL_ENDPOINT": "otel:4317"}, `KB_OTEL_ENDPOINT: must be a URL with a host and scheme http or https, got "otel:4317"`},
-		"peer address":    {map[string]string{"KB_DOCUMENT_ADDR": "document"}, `KB_DOCUMENT_ADDR: must be host:port, got "document"`},
-		"positive number": {map[string]string{"KB_NESTED_SIZE": "0"}, "KB_NESTED_SIZE: must be positive, got 0"},
+		"log level":       {map[string]string{"KNOWCEL_LOG_LEVEL": "loud"}, `KNOWCEL_LOG_LEVEL: must be debug, info, warn or error, got "loud"`},
+		"log format":      {map[string]string{"KNOWCEL_LOG_FORMAT": "xml"}, `KNOWCEL_LOG_FORMAT: must be one of json, text, got "xml"`},
+		"grpc port":       {map[string]string{"KNOWCEL_GRPC_PORT": "70000"}, "KNOWCEL_GRPC_PORT: must be a port between 1 and 65535, got 70000"},
+		"metrics port":    {map[string]string{"KNOWCEL_METRICS_PORT": "-1"}, "KNOWCEL_METRICS_PORT: must be a port between 1 and 65535, got -1"},
+		"same ports":      {map[string]string{"KNOWCEL_METRICS_PORT": "9001"}, "KNOWCEL_METRICS_PORT: must differ from KNOWCEL_GRPC_PORT (both 9001)"},
+		"otel scheme":     {map[string]string{"KNOWCEL_OTEL_ENDPOINT": "otel:4317"}, `KNOWCEL_OTEL_ENDPOINT: must be a URL with a host and scheme http or https, got "otel:4317"`},
+		"peer address":    {map[string]string{"KNOWCEL_DOCUMENT_ADDR": "document"}, `KNOWCEL_DOCUMENT_ADDR: must be host:port, got "document"`},
+		"positive number": {map[string]string{"KNOWCEL_NESTED_SIZE": "0"}, "KNOWCEL_NESTED_SIZE: must be positive, got 0"},
 	}
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -100,16 +147,16 @@ func TestValidateReportsEveryRule(t *testing.T) {
 }
 
 func TestValidateReportsAllProblemsTogether(t *testing.T) {
-	t.Setenv("KB_LOG_LEVEL", "loud")
-	t.Setenv("KB_OTEL_ENDPOINT", "otel:4317")
-	t.Setenv("KB_DOCUMENT_ADDR", "document")
+	t.Setenv("KNOWCEL_LOG_LEVEL", "loud")
+	t.Setenv("KNOWCEL_OTEL_ENDPOINT", "otel:4317")
+	t.Setenv("KNOWCEL_DOCUMENT_ADDR", "document")
 
 	_, err := Load(func(c *testConfig) { c.DefaultPorts(9001, 9101) })
 	if err == nil {
 		t.Fatal("want an error")
 	}
 	msg := err.Error()
-	for _, setting := range []string{"KB_LOG_LEVEL", "KB_OTEL_ENDPOINT", "KB_DOCUMENT_ADDR"} {
+	for _, setting := range []string{"KNOWCEL_LOG_LEVEL", "KNOWCEL_OTEL_ENDPOINT", "KNOWCEL_DOCUMENT_ADDR"} {
 		if !strings.Contains(msg, "\n  "+setting+": ") {
 			t.Errorf("message lacks %s:\n%s", setting, msg)
 		}

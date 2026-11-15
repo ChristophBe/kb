@@ -1,5 +1,5 @@
 """Prometheus metrics. `start_metrics_server` serves the process's metrics at
-/metrics on their own port (KB_METRICS_PORT), apart from the gRPC port, so
+/metrics on their own port (KNOWCEL_METRICS_PORT), apart from the gRPC port, so
 scraping needs no gRPC and no token. Metrics register with prometheus_client's
 default registry, which also carries the process and Python runtime
 collectors. Names and labels are listed in docs/metrics.md; labels never

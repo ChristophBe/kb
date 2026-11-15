@@ -39,7 +39,7 @@ export function QuickStart() {
         <p className="mt-4 text-sm text-fg-muted">
           No GPU, or just trying it out? Start with{" "}
           <code className="font-mono text-xs text-fg">
-            KB_LLM_PROVIDER=fake KB_RAG_MIN_SCORE=-1 task up
+            KNOWCEL_LLM_PROVIDER=fake KNOWCEL_RAG_MIN_SCORE=-1 task up
           </code>{" "}
           for a quick tour without a model; its answers just echo the passages they found.
         </p>

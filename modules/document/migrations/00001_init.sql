@@ -18,7 +18,7 @@ CREATE TABLE document.documents (
 );
 CREATE INDEX documents_created_at_idx ON document.documents (created_at DESC, id DESC);
 
--- The vector dimension must match KB_EMBEDDING_DIMENSIONS of the llm module.
+-- The vector dimension must match KNOWCEL_EMBEDDING_DIMENSIONS of the llm module.
 CREATE TABLE document.chunks (
     document_id uuid    NOT NULL REFERENCES document.documents (id) ON DELETE CASCADE,
     idx         integer NOT NULL,

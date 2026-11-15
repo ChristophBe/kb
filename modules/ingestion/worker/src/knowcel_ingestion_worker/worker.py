@@ -125,8 +125,8 @@ class Processor:
         self._max_tokens = settings.embedding_max_tokens - self._tokens.special_tokens
         if settings.chunk_tokens > self._max_tokens:
             raise ValueError(
-                f"KB_CHUNK_TOKENS ({settings.chunk_tokens}) exceeds the embedding model's "
-                f"input limit of {self._max_tokens} tokens (KB_EMBEDDING_MAX_TOKENS "
+                f"KNOWCEL_CHUNK_TOKENS ({settings.chunk_tokens}) exceeds the embedding model's "
+                f"input limit of {self._max_tokens} tokens (KNOWCEL_EMBEDDING_MAX_TOKENS "
                 f"{settings.embedding_max_tokens} minus "
                 f"{self._tokens.special_tokens} special tokens)"
             )

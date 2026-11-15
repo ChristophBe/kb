@@ -45,12 +45,12 @@ type Config struct {
 
 func (c Config) Validate(p *config.Problems) {
 	c.Base.Validate(p)
-	p.URL("KB_DATABASE_URL", c.DatabaseURL, "postgres", "postgresql")
+	p.URL("KNOWCEL_DATABASE_URL", c.DatabaseURL, "postgres", "postgresql")
 	// A comma-separated list names several servers of one cluster.
 	for _, server := range strings.Split(c.NATSURL, ",") {
-		p.URL("KB_NATS_URL", strings.TrimSpace(server), "nats", "tls", "ws", "wss")
+		p.URL("KNOWCEL_NATS_URL", strings.TrimSpace(server), "nats", "tls", "ws", "wss")
 	}
-	p.Addr("KB_DOCUMENT_ADDR", c.DocumentAddr)
+	p.Addr("KNOWCEL_DOCUMENT_ADDR", c.DocumentAddr)
 }
 
 // loadConfig reads the configuration with the ports of module.yaml as defaults.

@@ -178,10 +178,10 @@ tasks:
   e2e:
     desc: >-
       End-to-end smoke test (needs Docker; not part of `test`): builds and starts the stack as
-      compose project kb-e2e on ports 21xxx, uploads a file and chats about it, tears it down.
-      With KB_E2E_GATEWAY set it tests that running stack instead (e.g. a Helm release).
+      compose project knowcelium-e2e on ports 21xxx, uploads a file and chats about it, tears it down.
+      With KNOWCEL_E2E_GATEWAY set it tests that running stack instead (e.g. a Helm release).
     vars:
-      PROJECT: '{{.KB_E2E_PROJECT | default "kb-e2e"}}'
+      PROJECT: '{{.KNOWCEL_E2E_PROJECT | default "knowcelium-e2e"}}'
     cmds:
       # The test tears the stack down itself; this also covers a killed test binary.
       - defer: docker compose -p {{.PROJECT}} -f compose.yaml -f tests/e2e/compose.e2e.yaml down --volumes --remove-orphans --timeout 10 >/dev/null 2>&1 || true
@@ -191,39 +191,39 @@ tasks:
   e2e:browser:
     desc: >-
       Browser tests (Playwright, Chromium; needs Docker; not part of `test`): builds and starts the
-      stack with the web shell as compose project kb-browser on ports 22xxx, signs in through Dex
-      and drives the UI, tears it down (KB_E2E_KEEP=1 keeps it). With KB_E2E_WEB set it tests that
+      stack with the web shell as compose project knowcelium-browser on ports 22xxx, signs in through Dex
+      and drives the UI, tears it down (KNOWCEL_E2E_KEEP=1 keeps it). With KNOWCEL_E2E_WEB set it tests that
       running web shell instead. Arguments after -- go to `playwright test`.
     vars:
-      PROJECT: '{{.KB_E2E_PROJECT | default "kb-browser"}}'
-      GATEWAY_PORT: '{{.KB_GATEWAY_PORT | default "22080"}}'
-      S3_PORT: '{{.KB_E2E_S3_PORT | default "22333"}}'
-      WEB_PORT: '{{.KB_WEB_PORT | default "22300"}}'
-      DEX_PORT: '{{.KB_DEX_PORT | default "22556"}}'
+      PROJECT: '{{.KNOWCEL_E2E_PROJECT | default "knowcelium-browser"}}'
+      GATEWAY_PORT: '{{.KNOWCEL_GATEWAY_PORT | default "22080"}}'
+      S3_PORT: '{{.KNOWCEL_E2E_S3_PORT | default "22333"}}'
+      WEB_PORT: '{{.KNOWCEL_WEB_PORT | default "22300"}}'
+      DEX_PORT: '{{.KNOWCEL_DEX_PORT | default "22556"}}'
       # The override of `task e2e`: only the gateway, S3, Dex and the web shell are published.
       COMPOSE: docker compose -p {{.PROJECT}} -f compose.yaml -f tests/e2e/compose.e2e.yaml
     env:
-      KB_LLM_PROVIDER: fake
+      KNOWCEL_LLM_PROVIDER: fake
       # Hash embeddings score like noise; keep every retrieved chunk.
-      KB_RAG_MIN_SCORE: "-1"
-      KB_GATEWAY_PORT: "{{.GATEWAY_PORT}}"
-      KB_E2E_S3_PORT: "{{.S3_PORT}}"
-      KB_WEB_PORT: "{{.WEB_PORT}}"
-      KB_DEX_PORT: "{{.DEX_PORT}}"
-      KB_API_BASE_URL: http://localhost:{{.GATEWAY_PORT}}
-      KB_S3_PUBLIC_ENDPOINT: localhost:{{.S3_PORT}}
-      KB_OIDC_ISSUER: http://localhost:{{.DEX_PORT}}/dex
+      KNOWCEL_RAG_MIN_SCORE: "-1"
+      KNOWCEL_GATEWAY_PORT: "{{.GATEWAY_PORT}}"
+      KNOWCEL_E2E_S3_PORT: "{{.S3_PORT}}"
+      KNOWCEL_WEB_PORT: "{{.WEB_PORT}}"
+      KNOWCEL_DEX_PORT: "{{.DEX_PORT}}"
+      KNOWCEL_API_BASE_URL: http://localhost:{{.GATEWAY_PORT}}
+      KNOWCEL_S3_PUBLIC_ENDPOINT: localhost:{{.S3_PORT}}
+      KNOWCEL_OIDC_ISSUER: http://localhost:{{.DEX_PORT}}/dex
     preconditions:
-      - sh: '[ "{{.PROJECT}}" != kb ]'
-        msg: "KB_E2E_PROJECT must not be kb: the run deletes the project's volumes"
+      - sh: '[ "{{.PROJECT}}" != knowcelium ]'
+        msg: "KNOWCEL_E2E_PROJECT must not be knowcelium: the run deletes the project's volumes"
     cmds:
       - defer: |
-          [ -n "$KB_E2E_WEB" ] && exit 0
+          [ -n "$KNOWCEL_E2E_WEB" ] && exit 0
           {{if .EXIT_CODE}}{{.COMPOSE}} ps --all; {{.COMPOSE}} logs --no-color --timestamps --tail 300{{end}}
-          [ -n "$KB_E2E_KEEP" ] && { echo "KB_E2E_KEEP is set, leaving compose project {{.PROJECT}} running"; exit 0; }
+          [ -n "$KNOWCEL_E2E_KEEP" ] && { echo "KNOWCEL_E2E_KEEP is set, leaving compose project {{.PROJECT}} running"; exit 0; }
           {{.COMPOSE}} down --volumes --remove-orphans --timeout 10 >/dev/null 2>&1 || true
       - pnpm --filter @knowcel/browser-tests exec playwright install chromium
-      - '[ -n "$KB_E2E_WEB" ] || {{.COMPOSE}} up --detach --build --wait --wait-timeout 600'
+      - '[ -n "$KNOWCEL_E2E_WEB" ] || {{.COMPOSE}} up --detach --build --wait --wait-timeout 600'
       - pnpm --filter @knowcel/browser-tests exec playwright test {{.CLI_ARGS}}
 
   test:fast:
@@ -251,7 +251,7 @@ tasks:
   up:
     desc: Build and start the whole stack (pass compose flags after --, e.g. -- --profile ollama).
     cmds:
-      - docker compose {{.CLI_ARGS}} up -d --build --wait
+      - . deploy/scripts/legacy-env.sh && docker compose {{.CLI_ARGS}} up -d --build --wait
 
   down:
     desc: Stop the stack (add -- -v to delete volumes).
@@ -266,7 +266,7 @@ tasks:
   dev:
     desc: Start the stack with hot reload (docker compose watch).
     cmds:
-      - docker compose watch
+      - . deploy/scripts/legacy-env.sh && docker compose watch
 
   web:
     desc: Run the web shell with Vite against the running stack.

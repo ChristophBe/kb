@@ -3,23 +3,23 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/go.Dockerfile
-      args: { CMD: ./modules/document/service/cmd/document-service, KB_VERSION: "${KB_VERSION:-dev}" }
+      args: { CMD: ./modules/document/service/cmd/document-service, KNOWCEL_VERSION: "${KNOWCEL_VERSION:-dev}" }
     environment:
-      KB_LOG_LEVEL: ${KB_LOG_LEVEL:-info}
-      KB_OTEL_ENDPOINT: ${KB_OTEL_ENDPOINT:-}
-      KB_DATABASE_URL: postgres://kb:kb@postgres:5432/kb?sslmode=disable
-      KB_NATS_URL: nats://nats:4222
-      KB_S3_ENDPOINT: s3:8333
-      KB_S3_PUBLIC_ENDPOINT: ${KB_S3_PUBLIC_ENDPOINT:-localhost:8333}
+      KNOWCEL_LOG_LEVEL: ${KNOWCEL_LOG_LEVEL:-info}
+      KNOWCEL_OTEL_ENDPOINT: ${KNOWCEL_OTEL_ENDPOINT:-}
+      KNOWCEL_DATABASE_URL: postgres://kb:kb@postgres:5432/kb?sslmode=disable
+      KNOWCEL_NATS_URL: nats://nats:4222
+      KNOWCEL_S3_ENDPOINT: s3:8333
+      KNOWCEL_S3_PUBLIC_ENDPOINT: ${KNOWCEL_S3_PUBLIC_ENDPOINT:-localhost:8333}
       # Soft dependency: no depends_on on llm-service, search returns UNAVAILABLE while it is down.
-      KB_LLM_ADDR: llm-service:9004
+      KNOWCEL_LLM_ADDR: llm-service:9004
       # Upload limits; the defaults are what the ingestion worker can read.
-      KB_MAX_UPLOAD_BYTES: ${KB_MAX_UPLOAD_BYTES:-52428800}
-      KB_ALLOWED_CONTENT_TYPES: ${KB_ALLOWED_CONTENT_TYPES:-application/pdf,text/*,application/json,application/yaml,application/x-yaml}
+      KNOWCEL_MAX_UPLOAD_BYTES: ${KNOWCEL_MAX_UPLOAD_BYTES:-52428800}
+      KNOWCEL_ALLOWED_CONTENT_TYPES: ${KNOWCEL_ALLOWED_CONTENT_TYPES:-application/pdf,text/*,application/json,application/yaml,application/x-yaml}
       # Cleanup of abandoned uploads and of files no document refers to.
-      KB_CLEANUP_INTERVAL: ${KB_CLEANUP_INTERVAL:-1h}
-      KB_UPLOAD_TTL: ${KB_UPLOAD_TTL:-24h}
-      KB_ORPHAN_GRACE: ${KB_ORPHAN_GRACE:-1h}
+      KNOWCEL_CLEANUP_INTERVAL: ${KNOWCEL_CLEANUP_INTERVAL:-1h}
+      KNOWCEL_UPLOAD_TTL: ${KNOWCEL_UPLOAD_TTL:-24h}
+      KNOWCEL_ORPHAN_GRACE: ${KNOWCEL_ORPHAN_GRACE:-1h}
     # gRPC and Prometheus /metrics (docs/metrics.md).
     ports: ["9001:9001", "9101:9101"]
     depends_on:

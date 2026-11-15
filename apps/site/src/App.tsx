@@ -1,4 +1,4 @@
-import { Mark } from "@kb/ui";
+import { Mark } from "@knowcel/ui";
 import { Developers } from "./Developers.tsx";
 import { Features } from "./Features.tsx";
 import { Hero } from "./Hero.tsx";

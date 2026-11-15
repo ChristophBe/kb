@@ -8,7 +8,7 @@ import (
 )
 
 // ImageRegistry is where releases publish the component images, as
-// <ImageRegistry>/kb-<component>:<version>.
+// <ImageRegistry>/knowcelium-<component>:<version>.
 const ImageRegistry = "ghcr.io/christophbe"
 
 // Image is one container image: a module component, or the web shell.
@@ -17,7 +17,7 @@ type Image struct {
 	Image      string `json:"image"`
 	Dockerfile string `json:"dockerfile"`
 	// BuildArgs are KEY=value lines for docker/build-push-action, without
-	// KB_VERSION (the workflow adds it).
+	// KNOWCEL_VERSION (the workflow adds it).
 	BuildArgs string `json:"build_args"`
 }
 
@@ -48,7 +48,7 @@ func images(modules []Module) []Image {
 	var out []Image
 	for _, m := range modules {
 		for _, s := range m.Services {
-			img := Image{Component: s.Name, Image: ImageRegistry + "/kb-" + s.Name}
+			img := Image{Component: s.Name, Image: ImageRegistry + "/knowcelium-" + s.Name}
 			switch s.Language {
 			case "go":
 				img.Dockerfile = "deploy/docker/go.Dockerfile"
@@ -61,7 +61,7 @@ func images(modules []Module) []Image {
 			out = append(out, img)
 		}
 	}
-	return append(out, Image{Component: "web", Image: ImageRegistry + "/kb-web", Dockerfile: "deploy/docker/web.Dockerfile"})
+	return append(out, Image{Component: "web", Image: ImageRegistry + "/knowcelium-web", Dockerfile: "deploy/docker/web.Dockerfile"})
 }
 
 // imagesJSON renders the images as a GitHub Actions matrix: its "include"

@@ -2,14 +2,14 @@ name: images
 
 # Builds the image of every component listed in deploy/images.json (generated
 # from the module manifests by `task gen`) and, for releases, pushes it to
-# ghcr.io/christophbe/kb-<component>:<version> (docs/operations/images.md).
+# ghcr.io/christophbe/knowcelium-<component>:<version> (docs/operations/images.md).
 # Called by ci.yml (build only) and by release.yml once a version is released;
 # run it by hand to republish a released version.
 on:
   workflow_call:
     inputs:
       version:
-        description: KB_VERSION baked into the images (no `v`), also the image tag when pushing.
+        description: KNOWCEL_VERSION baked into the images (no `v`), also the image tag when pushing.
         type: string
         default: dev
       push:
@@ -104,7 +104,7 @@ jobs:
           push: ${{ env.PUSH == 'true' }}
           build-args: |
             ${{ matrix.build_args }}
-            KB_VERSION=${{ inputs.version }}
+            KNOWCEL_VERSION=${{ inputs.version }}
           tags: ${{ steps.tags.outputs.tags }}
           outputs: ${{ inputs.artifact && format('type=docker,dest={0}/image.tar', runner.temp) || '' }}
           # Links the package to this repository on GHCR (access, README, source).

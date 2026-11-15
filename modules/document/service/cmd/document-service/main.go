@@ -39,20 +39,20 @@ type Config struct {
 	// LLMAddr is the llm module (host:port), needed by SearchDocuments and
 	// the startup check of the embedding dimension.
 	LLMAddr string `env:"LLM_ADDR" envDefault:"localhost:9004"`
-	// Limits bound uploads: KB_MAX_UPLOAD_BYTES, KB_ALLOWED_CONTENT_TYPES.
+	// Limits bound uploads: KNOWCEL_MAX_UPLOAD_BYTES, KNOWCEL_ALLOWED_CONTENT_TYPES.
 	Limits server.Limits
-	// Cleanup: KB_CLEANUP_INTERVAL, KB_UPLOAD_TTL, KB_ORPHAN_GRACE.
+	// Cleanup: KNOWCEL_CLEANUP_INTERVAL, KNOWCEL_UPLOAD_TTL, KNOWCEL_ORPHAN_GRACE.
 	Cleanup cleanup.Config
 }
 
 func (c Config) Validate(p *config.Problems) {
 	c.Base.Validate(p)
-	p.URL("KB_DATABASE_URL", c.DatabaseURL, "postgres", "postgresql")
+	p.URL("KNOWCEL_DATABASE_URL", c.DatabaseURL, "postgres", "postgresql")
 	for _, server := range strings.Split(c.NATSURL, ",") {
-		p.URL("KB_NATS_URL", strings.TrimSpace(server), "nats", "tls", "ws", "wss")
+		p.URL("KNOWCEL_NATS_URL", strings.TrimSpace(server), "nats", "tls", "ws", "wss")
 	}
 	c.Storage.Validate(p)
-	p.Addr("KB_LLM_ADDR", c.LLMAddr)
+	p.Addr("KNOWCEL_LLM_ADDR", c.LLMAddr)
 	c.Limits.Validate(p)
 	c.Cleanup.Validate(p)
 }

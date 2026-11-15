@@ -125,7 +125,7 @@ HELLO = [Message(Role.USER, "hello")]
 
 def test_registered_and_missing_key_fails_at_startup() -> None:
     assert "anthropic" in REGISTRY
-    with pytest.raises(ValueError, match="KB_ANTHROPIC_API_KEY is not set"):
+    with pytest.raises(ValueError, match="KNOWCEL_ANTHROPIC_API_KEY is not set"):
         build_provider(Settings(llm_provider="anthropic", anthropic_api_key=None))
     built = build_provider(Settings(llm_provider="anthropic", anthropic_api_key=SecretStr("k")))
     assert built.name == "anthropic"
@@ -382,7 +382,7 @@ async def test_grpc_status_is_unhealthy_when_the_chat_provider_is(
 
 def test_embeddings_from_anthropic_fail_at_startup() -> None:
     key = SecretStr("k")
-    with pytest.raises(ValueError, match="no embedding models; set KB_EMBEDDING_PROVIDER"):
+    with pytest.raises(ValueError, match="no embedding models; set KNOWCEL_EMBEDDING_PROVIDER"):
         build_providers(Settings(llm_provider="anthropic", anthropic_api_key=key))
     with pytest.raises(ValueError, match="no embedding models"):
         build_providers(Settings(embedding_provider="anthropic", anthropic_api_key=key))

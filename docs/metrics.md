@@ -2,7 +2,7 @@
 
 Every component serves Prometheus metrics at `/metrics` on its own port, apart from the gRPC port; scraping needs no token. Why native Prometheus clients: [ADR 0012](adr/0012-prometheus-metrics-with-native-clients.md). Running Prometheus locally: [Observability](operations/observability.md#metrics).
 
-| Component | Metrics port (`KB_METRICS_PORT`) |
+| Component | Metrics port (`KNOWCEL_METRICS_PORT`) |
 |---|---|
 | `document-service` | 9101 |
 | `ingestion-service` | 9102 |
@@ -46,7 +46,7 @@ Error rate of a service: `sum by (grpc_method) (rate(grpc_server_handled_total{j
 |---|---|---|---|
 | `kb_ingestion_worker_jobs_total` | counter | `outcome` | Processing attempts of uploads |
 | `kb_ingestion_worker_job_duration_seconds` | histogram | `outcome` | Time of one attempt: download, extraction, chunking, embedding and storing |
-| `kb_ingestion_worker_jobs_in_progress` | gauge | | Uploads the worker is processing right now (at most `KB_WORKER_CONCURRENCY`) |
+| `kb_ingestion_worker_jobs_in_progress` | gauge | | Uploads the worker is processing right now (at most `KNOWCEL_WORKER_CONCURRENCY`) |
 | `kb_ingestion_worker_chunks_total` | counter | | Chunks stored for processed uploads |
 
 `outcome`: `processed`, `failed` (for good) or `retried` (a transient error such as an unavailable peer; the upload is delivered again later).

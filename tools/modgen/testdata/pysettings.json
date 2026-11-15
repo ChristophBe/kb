@@ -2,21 +2,21 @@
   "platform": [
     {
       "field": "log_level",
-      "env": "KB_LOG_LEVEL",
+      "env": "KNOWCEL_LOG_LEVEL",
       "default": "INFO",
       "description": "Lowest level logged.",
       "own": true
     },
     {
       "field": "grpc_port",
-      "env": "KB_GRPC_PORT",
+      "env": "KNOWCEL_GRPC_PORT",
       "default": "0",
       "description": "Serves the gRPC API.",
       "own": true
     },
     {
       "field": "metrics_port",
-      "env": "KB_METRICS_PORT",
+      "env": "KNOWCEL_METRICS_PORT",
       "default": "0",
       "description": "Serves Prometheus metrics.",
       "own": true
@@ -25,28 +25,28 @@
   "search-worker": [
     {
       "field": "log_level",
-      "env": "KB_LOG_LEVEL",
+      "env": "KNOWCEL_LOG_LEVEL",
       "default": "INFO",
       "description": "Lowest level logged.",
       "own": false
     },
     {
       "field": "grpc_port",
-      "env": "KB_GRPC_PORT",
+      "env": "KNOWCEL_GRPC_PORT",
       "default": "0",
       "description": "Serves the gRPC API.",
       "own": false
     },
     {
       "field": "metrics_port",
-      "env": "KB_METRICS_PORT",
+      "env": "KNOWCEL_METRICS_PORT",
       "default": "9202",
       "description": "Serves Prometheus metrics.",
       "own": true
     },
     {
       "field": "batch_size",
-      "env": "KB_BATCH_SIZE",
+      "env": "KNOWCEL_BATCH_SIZE",
       "default": "32",
       "description": "Notes indexed at once.",
       "own": true

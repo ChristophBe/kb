@@ -6,7 +6,7 @@ Conventions for Go, Python and TypeScript in kb. Most of them are enforced by `t
 
 - **Read like the surrounding code.** Match the naming, comment density and idioms of the file you are in.
 - **Comments say why, not what.** Every package/module and exported identifier gets a short doc comment; inside functions, comment only non-obvious decisions (`// The vector type exists only after the first migration, …`).
-- **Configuration** comes from `KB_*` environment variables through the platform config helpers (`platform/go/config`, `knowcel_platform.config`), never from ad-hoc `os.Getenv` / `os.environ`. Defaults work for `task up`.
+- **Configuration** comes from `KNOWCEL_*` environment variables through the platform config helpers (`platform/go/config`, `knowcel_platform.config`), never from ad-hoc `os.Getenv` / `os.environ`. Defaults work for `task up`.
 - **Logging** is structured: a message that names the event plus key/value fields (`"apply event", "subject", …`). No secrets, tokens or document content in logs. Use `error` only for failures someone has to act on.
 - **Errors at the API boundary** are gRPC statuses. Map client mistakes to `INVALID_ARGUMENT` / `NOT_FOUND` / `FAILED_PRECONDITION`, a missing peer module to `UNAVAILABLE`, and everything else to `INTERNAL` with a generic message; log the cause server-side.
 - **Generated code** (`modules/*/api/**`, sqlc `store/`, `*.gen.ts`, …) is never edited or linted; change the source and run `task gen`.
@@ -63,8 +63,8 @@ Conventions for Go, Python and TypeScript in kb. Most of them are enforced by `t
 | Unit tests | `task test:fast` | pre-push |
 | Unit tests + coverage minimums | `task test` | CI |
 | Go integration tests against real Postgres (needs Docker) | `task test:integration` | CI |
-| End-to-end smoke test: upload → processing → RAG chat over gRPC-Web, own compose project `kb-e2e` on ports 21xxx (needs Docker) | `task e2e` | CI |
-| Browser tests (Playwright, Chromium): sign-in through Dex, upload, cited chat, a module disabled in the runtime config, ownership; own compose project `kb-browser` on ports 22xxx (needs Docker; Chromium is installed on first run). Failed tests keep a trace and a screenshot in `tests/browser/test-results`; open one with `pnpm --filter @knowcel/browser-tests exec playwright show-trace <trace.zip>` | `task e2e:browser` | CI (job `browser`, on changes to `apps/`, `platform/ui/`, `modules/*/ui/`; report and traces uploaded as artifact `playwright-report` on failure) |
+| End-to-end smoke test: upload → processing → RAG chat over gRPC-Web, own compose project `knowcelium-e2e` on ports 21xxx (needs Docker) | `task e2e` | CI |
+| Browser tests (Playwright, Chromium): sign-in through Dex, upload, cited chat, a module disabled in the runtime config, ownership; own compose project `knowcelium-browser` on ports 22xxx (needs Docker; Chromium is installed on first run). Failed tests keep a trace and a screenshot in `tests/browser/test-results`; open one with `pnpm --filter @knowcel/browser-tests exec playwright show-trace <trace.zip>` | `task e2e:browser` | CI (job `browser`, on changes to `apps/`, `platform/ui/`, `modules/*/ui/`; report and traces uploaded as artifact `playwright-report` on failure) |
 
 Every linter is pinned (`tools/go.mod`, `uv.lock`, `pnpm-lock.yaml`) and mandatory: `task lint` fails if one can't run.
 

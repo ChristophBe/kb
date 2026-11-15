@@ -5,15 +5,15 @@
 // shell does, over gRPC-Web through Envoy, authenticated with a token of a
 // dev user from Dex (password grant). Run it with `task e2e`.
 //
-// The stack runs as its own compose project (KB_E2E_PROJECT, default kb-e2e)
+// The stack runs as its own compose project (KNOWCEL_E2E_PROJECT, default knowcelium-e2e)
 // with only the gateway, S3 and Dex published, on non-default host ports, so it
 // does not collide with a developer's `kb` stack. It is torn down with its
-// volumes after the run, also on failure (set KB_E2E_KEEP=1 to keep it).
+// volumes after the run, also on failure (set KNOWCEL_E2E_KEEP=1 to keep it).
 //
-// KB_E2E_GATEWAY instead points the tests at a stack that is already running,
+// KNOWCEL_E2E_GATEWAY instead points the tests at a stack that is already running,
 // such as a Helm release (the `helm` CI job): no compose project is started,
-// and KB_E2E_ISSUER (default <gateway>/dex) is the Dex issuer. That stack must
-// run the fake LLM provider with KB_RAG_MIN_SCORE=-1, as the compose one does.
+// and KNOWCEL_E2E_ISSUER (default <gateway>/dex) is the Dex issuer. That stack must
+// run the fake LLM provider with KNOWCEL_RAG_MIN_SCORE=-1, as the compose one does.
 package e2e
 
 import (
@@ -43,7 +43,7 @@ type stack struct {
 	issuer  string   // URL of the dev OIDC issuer (Dex)
 	token   string   // access token of the test user, fetched once the stack is up
 	keep    bool     // leave the stack running after the run
-	// external is a stack the tests did not start (KB_E2E_GATEWAY); they
+	// external is a stack the tests did not start (KNOWCEL_E2E_GATEWAY); they
 	// neither start, stop nor print the logs of it.
 	external bool
 }
@@ -93,43 +93,43 @@ func run(m *testing.M) int {
 }
 
 func newStack() (*stack, error) {
-	if gateway := strings.TrimSuffix(os.Getenv("KB_E2E_GATEWAY"), "/"); gateway != "" {
-		issuer := strings.TrimSuffix(envOr("KB_E2E_ISSUER", gateway+"/dex"), "/")
+	if gateway := strings.TrimSuffix(os.Getenv("KNOWCEL_E2E_GATEWAY"), "/"); gateway != "" {
+		issuer := strings.TrimSuffix(envOr("KNOWCEL_E2E_ISSUER", gateway+"/dex"), "/")
 		return &stack{gateway: gateway, issuer: issuer, external: true}, nil
 	}
 	root, err := filepath.Abs(filepath.Join("..", ".."))
 	if err != nil {
 		return nil, err
 	}
-	project := envOr("KB_E2E_PROJECT", "kb-e2e")
+	project := envOr("KNOWCEL_E2E_PROJECT", "knowcelium-e2e")
 	if project == "kb" {
-		return nil, fmt.Errorf("KB_E2E_PROJECT must not be %q: the run deletes the project's volumes", project)
+		return nil, fmt.Errorf("KNOWCEL_E2E_PROJECT must not be %q: the run deletes the project's volumes", project)
 	}
-	gatewayPort := envOr("KB_GATEWAY_PORT", "21080")
-	s3Port := envOr("KB_E2E_S3_PORT", "21333")
-	webPort := envOr("KB_WEB_PORT", "21300")
-	dexPort := envOr("KB_DEX_PORT", "21556")
+	gatewayPort := envOr("KNOWCEL_GATEWAY_PORT", "21080")
+	s3Port := envOr("KNOWCEL_E2E_S3_PORT", "21333")
+	webPort := envOr("KNOWCEL_WEB_PORT", "21300")
+	dexPort := envOr("KNOWCEL_DEX_PORT", "21556")
 	gateway := "http://localhost:" + gatewayPort
 	issuer := "http://localhost:" + dexPort + "/dex"
 	return &stack{
 		root:    root,
 		project: project,
 		env: append(os.Environ(),
-			"KB_LLM_PROVIDER=fake",
+			"KNOWCEL_LLM_PROVIDER=fake",
 			// Hash embeddings score like noise (cosine similarity, -1 to 1); keep
 			// every retrieved chunk.
-			"KB_RAG_MIN_SCORE=-1",
-			"KB_GATEWAY_PORT="+gatewayPort,
-			"KB_E2E_S3_PORT="+s3Port,
-			"KB_WEB_PORT="+webPort,
-			"KB_API_BASE_URL="+gateway,
-			"KB_S3_PUBLIC_ENDPOINT=localhost:"+s3Port,
-			"KB_DEX_PORT="+dexPort,
-			"KB_OIDC_ISSUER="+issuer,
+			"KNOWCEL_RAG_MIN_SCORE=-1",
+			"KNOWCEL_GATEWAY_PORT="+gatewayPort,
+			"KNOWCEL_E2E_S3_PORT="+s3Port,
+			"KNOWCEL_WEB_PORT="+webPort,
+			"KNOWCEL_API_BASE_URL="+gateway,
+			"KNOWCEL_S3_PUBLIC_ENDPOINT=localhost:"+s3Port,
+			"KNOWCEL_DEX_PORT="+dexPort,
+			"KNOWCEL_OIDC_ISSUER="+issuer,
 		),
 		gateway: gateway,
 		issuer:  issuer,
-		keep:    os.Getenv("KB_E2E_KEEP") != "",
+		keep:    os.Getenv("KNOWCEL_E2E_KEEP") != "",
 	}, nil
 }
 
@@ -157,7 +157,7 @@ func (s *stack) down() {
 		return
 	}
 	if s.keep {
-		fmt.Printf("e2e: KB_E2E_KEEP is set, leaving compose project %s running\n", s.project)
+		fmt.Printf("e2e: KNOWCEL_E2E_KEEP is set, leaving compose project %s running\n", s.project)
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)

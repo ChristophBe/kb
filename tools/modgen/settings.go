@@ -20,7 +20,7 @@ import (
 	"strings"
 )
 
-// ConfigDocPath is the generated reference of every KB_* variable.
+// ConfigDocPath is the generated reference of every KNOWCEL_* variable.
 const ConfigDocPath = "docs/configuration.md"
 
 // Setting is one environment variable in docs/configuration.md.
@@ -213,7 +213,7 @@ func CollectSettings(root string, modules []Module, py PyRunner) ([]SettingsGrou
 func portsPerComponent(settings []Setting) []Setting {
 	out := slices.Clone(settings)
 	for i, s := range out {
-		if s.Env == "KB_GRPC_PORT" || s.Env == "KB_METRICS_PORT" {
+		if s.Env == "KNOWCEL_GRPC_PORT" || s.Env == "KNOWCEL_METRICS_PORT" {
 			out[i].Default = "per component"
 		}
 	}
@@ -232,15 +232,15 @@ func componentPorts(s Service, base SettingsGroup) []Setting {
 	}
 	var ports []Setting
 	if s.Port != 0 {
-		ports = append(ports, Setting{Env: "KB_GRPC_PORT", Default: strconv.Itoa(s.Port), Description: describe("KB_GRPC_PORT")})
+		ports = append(ports, Setting{Env: "KNOWCEL_GRPC_PORT", Default: strconv.Itoa(s.Port), Description: describe("KNOWCEL_GRPC_PORT")})
 	}
-	return append(ports, Setting{Env: "KB_METRICS_PORT", Default: strconv.Itoa(s.MetricsPort), Description: describe("KB_METRICS_PORT")})
+	return append(ports, Setting{Env: "KNOWCEL_METRICS_PORT", Default: strconv.Itoa(s.MetricsPort), Description: describe("KNOWCEL_METRICS_PORT")})
 }
 
 // checkPyPorts fails when a Python component's port defaults differ from
 // its module.yaml, which compose and the Helm chart use.
 func checkPyPorts(s Service, fields []PySetting) error {
-	want := map[string]int{"KB_GRPC_PORT": s.Port, "KB_METRICS_PORT": s.MetricsPort}
+	want := map[string]int{"KNOWCEL_GRPC_PORT": s.Port, "KNOWCEL_METRICS_PORT": s.MetricsPort}
 	for _, f := range fields {
 		if port, ok := want[f.Env]; ok && f.Default != strconv.Itoa(port) {
 			return fmt.Errorf("%s: %s defaults to %s in its Settings, but module.yaml says %d", s.Name, f.Env, f.Default, port)
@@ -254,7 +254,7 @@ func checkPyPorts(s Service, fields []PySetting) error {
 func pyOwn(fields []PySetting, own bool) []Setting {
 	var out []Setting
 	for _, f := range fields {
-		if own && (!f.Own || f.Env == "KB_GRPC_PORT" || f.Env == "KB_METRICS_PORT") {
+		if own && (!f.Own || f.Env == "KNOWCEL_GRPC_PORT" || f.Env == "KNOWCEL_METRICS_PORT") {
 			continue
 		}
 		out = append(out, Setting{Env: f.Env, Default: f.Default, Description: f.Description})
@@ -292,9 +292,9 @@ func pyPackage(root, module, name string) (string, error) {
 
 // goSettings reads the settings of struct typeName in the package in dir
 // (relative to root): fields with an env tag, embedded or nested structs
-// (resolved through their import, with their envPrefix), all prefixed KB_.
+// (resolved through their import, with their envPrefix), all prefixed KNOWCEL_.
 func goSettings(root, dir, typeName string) ([]Setting, error) {
-	return goStruct(root, dir, typeName, "KB_")
+	return goStruct(root, dir, typeName, "KNOWCEL_")
 }
 
 func goStruct(root, dir, typeName, prefix string) ([]Setting, error) {
@@ -441,11 +441,11 @@ func parseGoPackage(dir string) ([]*ast.File, error) {
 	return files, nil
 }
 
-// varRef matches ${KB_X}, ${KB_X:-default}, ${KB_X-default} and
-// ${KB_X:?message}, but not an escaped \${KB_X} (a sed placeholder).
-var varRef = regexp.MustCompile(`\$\{(KB_[A-Z0-9_]+)(?:(:?-)([^}]*)|:?\?[^}]*)?\}`)
+// varRef matches ${KNOWCEL_X}, ${KNOWCEL_X:-default}, ${KNOWCEL_X-default} and
+// ${KNOWCEL_X:?message}, but not an escaped \${KNOWCEL_X} (a sed placeholder).
+var varRef = regexp.MustCompile(`\$\{(KNOWCEL_[A-Z0-9_]+)(?:(:?-)([^}]*)|:?\?[^}]*)?\}`)
 
-// scriptVars lists the KB_* variables referenced in files (relative to
+// scriptVars lists the KNOWCEL_* variables referenced in files (relative to
 // root), in order of first appearance, with the first default given.
 func scriptVars(root string, files []string) ([]Setting, error) {
 	var out []Setting

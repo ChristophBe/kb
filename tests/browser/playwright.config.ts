@@ -3,8 +3,9 @@ import { users } from "./users.ts";
 
 // Browser tests of the web shell against the composed stack (fake LLM
 // provider). `task e2e:browser` starts the stack and runs them; with
-// KB_E2E_WEB set they test that running web shell instead.
-const baseURL = process.env.KB_E2E_WEB ?? `http://localhost:${process.env.KB_WEB_PORT ?? "22300"}`;
+// KNOWCEL_E2E_WEB set they test that running web shell instead.
+const baseURL =
+  process.env.KNOWCEL_E2E_WEB ?? `http://localhost:${process.env.KNOWCEL_WEB_PORT ?? "22300"}`;
 
 export default defineConfig({
   testDir: ".",

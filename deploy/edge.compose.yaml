@@ -6,23 +6,23 @@ services:
     entrypoint: ["/etc/envoy/entrypoint.sh"]
     command: ["--log-level", "warn"]
     environment:
-      KB_OIDC_ISSUER: ${KB_OIDC_ISSUER:-http://localhost:5556/dex}
-      KB_OIDC_JWKS_URL: ${KB_OIDC_JWKS_URL:-http://dex:5556/dex/keys}
-      KB_OIDC_AUDIENCES: ${KB_OIDC_AUDIENCES:-kb-web,kb-cli}
+      KNOWCEL_OIDC_ISSUER: ${KNOWCEL_OIDC_ISSUER:-http://localhost:5556/dex}
+      KNOWCEL_OIDC_JWKS_URL: ${KNOWCEL_OIDC_JWKS_URL:-http://dex:5556/dex/keys}
+      KNOWCEL_OIDC_AUDIENCES: ${KNOWCEL_OIDC_AUDIENCES:-kb-web,kb-cli}
     volumes:
       - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
       - ./envoy/entrypoint.sh:/etc/envoy/entrypoint.sh:ro
-    ports: ["${KB_GATEWAY_PORT:-8080}:8080"]
+    ports: ["${KNOWCEL_GATEWAY_PORT:-8080}:8080"]
 
   web:
     build:
       context: ..
       dockerfile: deploy/docker/web.Dockerfile
-      args: { KB_VERSION: "${KB_VERSION:-dev}" }
+      args: { KNOWCEL_VERSION: "${KNOWCEL_VERSION:-dev}" }
     environment:
-      KB_API_BASE_URL: ${KB_API_BASE_URL:-http://localhost:8080}
-      KB_ENABLED_MODULES: ${KB_ENABLED_MODULES:-}
-      KB_OIDC_ISSUER: ${KB_OIDC_ISSUER:-http://localhost:5556/dex}
-      KB_OIDC_CLIENT_ID: ${KB_OIDC_CLIENT_ID:-kb-web}
-    ports: ["${KB_WEB_PORT:-3000}:80"]
+      KNOWCEL_API_BASE_URL: ${KNOWCEL_API_BASE_URL:-http://localhost:8080}
+      KNOWCEL_ENABLED_MODULES: ${KNOWCEL_ENABLED_MODULES:-}
+      KNOWCEL_OIDC_ISSUER: ${KNOWCEL_OIDC_ISSUER:-http://localhost:5556/dex}
+      KNOWCEL_OIDC_CLIENT_ID: ${KNOWCEL_OIDC_CLIENT_ID:-kb-web}
+    ports: ["${KNOWCEL_WEB_PORT:-3000}:80"]
     depends_on: [envoy]

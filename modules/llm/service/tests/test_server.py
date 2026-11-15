@@ -118,36 +118,43 @@ def test_default_settings_are_valid() -> None:
     [
         (
             {"llm_provider": "openai"},
-            "KB_LLM_PROVIDER: must be one of anthropic, fake, ollama, got 'openai'",
+            "KNOWCEL_LLM_PROVIDER: must be one of anthropic, fake, ollama, got 'openai'",
         ),
         (
             {"chat_provider": "nope"},
-            "KB_CHAT_PROVIDER: must be one of anthropic, fake, ollama, got 'nope'",
+            "KNOWCEL_CHAT_PROVIDER: must be one of anthropic, fake, ollama, got 'nope'",
         ),
         (
             {"embedding_provider": "nope"},
-            "KB_EMBEDDING_PROVIDER: must be one of anthropic, fake, ollama, got 'nope'",
+            "KNOWCEL_EMBEDDING_PROVIDER: must be one of anthropic, fake, ollama, got 'nope'",
         ),
         (
             {"chat_provider": "anthropic"},
-            "KB_ANTHROPIC_API_KEY: must be set for the anthropic provider",
+            "KNOWCEL_ANTHROPIC_API_KEY: must be set for the anthropic provider",
         ),
         (
             {"ollama_url": "ollama:11434"},
-            "KB_OLLAMA_URL: must be a URL with a host and scheme http or https, got 'ollama:11434'",
+            "KNOWCEL_OLLAMA_URL: must be a URL with a host and scheme http or https, "
+            "got 'ollama:11434'",
         ),
-        ({"anthropic_max_tokens": 0}, "KB_ANTHROPIC_MAX_TOKENS: must be at least 1, got 0"),
-        ({"provider_embed_timeout": 0}, "KB_PROVIDER_EMBED_TIMEOUT: must be positive, got 0.0"),
-        ({"provider_attempts": 0}, "KB_PROVIDER_ATTEMPTS: must be at least 1, got 0"),
-        ({"provider_retry_delay": -1}, "KB_PROVIDER_RETRY_DELAY: must be at least 0, got -1.0"),
+        ({"anthropic_max_tokens": 0}, "KNOWCEL_ANTHROPIC_MAX_TOKENS: must be at least 1, got 0"),
+        (
+            {"provider_embed_timeout": 0},
+            "KNOWCEL_PROVIDER_EMBED_TIMEOUT: must be positive, got 0.0",
+        ),
+        ({"provider_attempts": 0}, "KNOWCEL_PROVIDER_ATTEMPTS: must be at least 1, got 0"),
+        (
+            {"provider_retry_delay": -1},
+            "KNOWCEL_PROVIDER_RETRY_DELAY: must be at least 0, got -1.0",
+        ),
         (
             {"provider_max_concurrency": 0},
-            "KB_PROVIDER_MAX_CONCURRENCY: must be at least 1, got 0",
+            "KNOWCEL_PROVIDER_MAX_CONCURRENCY: must be at least 1, got 0",
         ),
-        ({"fake_token_delay": -1}, "KB_FAKE_TOKEN_DELAY: must be at least 0, got -1.0"),
+        ({"fake_token_delay": -1}, "KNOWCEL_FAKE_TOKEN_DELAY: must be at least 0, got -1.0"),
         (
             {"embedding_dimensions": 0},
-            "KB_EMBEDDING_DIMENSIONS: must be between 1 and 2000, got 0",
+            "KNOWCEL_EMBEDDING_DIMENSIONS: must be between 1 and 2000, got 0",
         ),
     ],
 )
@@ -159,7 +166,7 @@ def test_fake_needs_no_ollama_url_and_problems_come_together() -> None:
     assert _problems(llm_provider="fake", ollama_url="") == []
     found = _problems(llm_provider="anthropic", provider_attempts=0, embedding_dimensions=0)
     assert [p.split(":")[0] for p in found] == [
-        "KB_ANTHROPIC_API_KEY",
-        "KB_PROVIDER_ATTEMPTS",
-        "KB_EMBEDDING_DIMENSIONS",
+        "KNOWCEL_ANTHROPIC_API_KEY",
+        "KNOWCEL_PROVIDER_ATTEMPTS",
+        "KNOWCEL_EMBEDDING_DIMENSIONS",
     ]

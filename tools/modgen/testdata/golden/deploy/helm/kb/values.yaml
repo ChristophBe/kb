@@ -76,7 +76,7 @@ ingress:
   # e.g. [{secretName: kb-tls, hosts: [kb.example.com]}]
   tls: []
 
-# Local model server for the llm module (KB_LLM_PROVIDER=ollama), reachable as
+# Local model server for the llm module (KNOWCEL_LLM_PROVIDER=ollama), reachable as
 # http://ollama:11434. The pull job downloads the models after install.
 ollama:
   enabled: false
@@ -100,7 +100,7 @@ envoy:
 web:
   replicas: 1
   image:
-    repository: kb-web
+    repository: knowcelium-web
   # Module ids to show (comma-separated); empty shows all.
   enabledModules: ""
   resources:
@@ -113,7 +113,7 @@ networkPolicy:
   enabled: true
 
 # OpenTelemetry: the OTLP endpoint every module component sends traces to
-# (KB_OTEL_ENDPOINT); empty leaves tracing off.
+# (KNOWCEL_OTEL_ENDPOINT); empty leaves tracing off.
 otel:
   endpoint: ""
 
@@ -122,19 +122,19 @@ nodeSelector: {}
 tolerations: []
 affinity: {}
 
-# One entry per module component (modules/*/module.yaml). env holds KB_*
+# One entry per module component (modules/*/module.yaml). env holds KNOWCEL_*
 # settings (README, .env.example); extraEnv takes full EnvVar entries, e.g. a
-# secretKeyRef for KB_ANTHROPIC_API_KEY. Components with infra get their
-# connection settings from the values above, peers their KB_<MODULE>_ADDR.
+# secretKeyRef for KNOWCEL_ANTHROPIC_API_KEY. Components with infra get their
+# connection settings from the values above, peers their KNOWCEL_<MODULE>_ADDR.
 components:
   # notes-service (notes module, go, gRPC :9101, metrics :9201; uses postgres, s3)
   notes-service:
     enabled: true
     replicas: 1
     image:
-      repository: kb-notes-service
+      repository: knowcelium-notes-service
     env:
-      KB_NOTES_LIMIT: "100"
+      KNOWCEL_NOTES_LIMIT: "100"
     extraEnv: []
     resources:
       requests: { cpu: 10m, memory: 32Mi }
@@ -144,7 +144,7 @@ components:
     enabled: true
     replicas: 1
     image:
-      repository: kb-search-worker
+      repository: knowcelium-search-worker
     env: {}
     extraEnv: []
     resources:

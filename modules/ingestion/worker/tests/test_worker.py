@@ -121,27 +121,28 @@ def test_default_settings_are_valid() -> None:
 @pytest.mark.parametrize(
     ("settings", "problem"),
     [
-        ({"document_addr": "document"}, "KB_DOCUMENT_ADDR: must be host:port, got 'document'"),
-        ({"llm_addr": "llm:x"}, "KB_LLM_ADDR: must be host:port, got 'llm:x'"),
+        ({"document_addr": "document"}, "KNOWCEL_DOCUMENT_ADDR: must be host:port, got 'document'"),
+        ({"llm_addr": "llm:x"}, "KNOWCEL_LLM_ADDR: must be host:port, got 'llm:x'"),
         (
             {"chunk_tokens": 100, "chunk_overlap_tokens": 100},
-            "KB_CHUNK_OVERLAP_TOKENS: must be at least 0 and below KB_CHUNK_TOKENS (100), got 100",
+            "KNOWCEL_CHUNK_OVERLAP_TOKENS: must be at least 0 and below "
+            "KNOWCEL_CHUNK_TOKENS (100), got 100",
         ),
         (
             {"chunk_min_section_tokens": -1},
-            "KB_CHUNK_MIN_SECTION_TOKENS: must be at least 0, got -1",
+            "KNOWCEL_CHUNK_MIN_SECTION_TOKENS: must be at least 0, got -1",
         ),
         (
             {"chunk_tokens": 511, "embedding_max_tokens": 512},
-            "KB_CHUNK_TOKENS: 511 exceeds the embedding model's input limit of 510 tokens "
-            "(KB_EMBEDDING_MAX_TOKENS 512 minus 2 special tokens)",
+            "KNOWCEL_CHUNK_TOKENS: 511 exceeds the embedding model's input limit of 510 tokens "
+            "(KNOWCEL_EMBEDDING_MAX_TOKENS 512 minus 2 special tokens)",
         ),
-        ({"embed_batch_size": 0}, "KB_EMBED_BATCH_SIZE: must be at least 1, got 0"),
-        ({"max_deliver": 0}, "KB_MAX_DELIVER: must be at least 1, got 0"),
-        ({"retry_delay": -1}, "KB_RETRY_DELAY: must be at least 0, got -1.0"),
+        ({"embed_batch_size": 0}, "KNOWCEL_EMBED_BATCH_SIZE: must be at least 1, got 0"),
+        ({"max_deliver": 0}, "KNOWCEL_MAX_DELIVER: must be at least 1, got 0"),
+        ({"retry_delay": -1}, "KNOWCEL_RETRY_DELAY: must be at least 0, got -1.0"),
         (
             {"retry_max_delay": 1},
-            "KB_RETRY_MAX_DELAY: must be at least KB_RETRY_DELAY (5.0), got 1.0",
+            "KNOWCEL_RETRY_MAX_DELAY: must be at least KNOWCEL_RETRY_DELAY (5.0), got 1.0",
         ),
     ],
 )
@@ -152,10 +153,10 @@ def test_each_setting_rule(settings: dict[str, Any], problem: str) -> None:
 def test_setting_problems_are_reported_together() -> None:
     found = problems(chunk_tokenizer="nope", chunk_tokens=0, max_deliver=0)
     assert [p.split(":")[0] for p in found] == [
-        "KB_CHUNK_TOKENS",
-        "KB_CHUNK_OVERLAP_TOKENS",
-        "KB_CHUNK_TOKENIZER",
-        "KB_MAX_DELIVER",
+        "KNOWCEL_CHUNK_TOKENS",
+        "KNOWCEL_CHUNK_OVERLAP_TOKENS",
+        "KNOWCEL_CHUNK_TOKENIZER",
+        "KNOWCEL_MAX_DELIVER",
     ]
 
 
@@ -541,9 +542,9 @@ async def test_consume_survives_a_failing_handler(caplog: pytest.LogCaptureFixtu
 
 def test_concurrency_comes_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     assert Settings().worker_concurrency == 2
-    monkeypatch.setenv("KB_WORKER_CONCURRENCY", "4")
+    monkeypatch.setenv("KNOWCEL_WORKER_CONCURRENCY", "4")
     assert Settings().worker_concurrency == 4
-    monkeypatch.setenv("KB_WORKER_CONCURRENCY", "0")
+    monkeypatch.setenv("KNOWCEL_WORKER_CONCURRENCY", "0")
     with pytest.raises(ValueError, match="worker_concurrency"):
         Settings()
 

@@ -78,9 +78,9 @@ message GetProviderStatusResponse {
   string default_chat_model = 4;
   string default_embedding_model = 5;
   int32 embedding_dimensions = 6;
-  // Provider serving Generate (KB_CHAT_PROVIDER).
+  // Provider serving Generate (KNOWCEL_CHAT_PROVIDER).
   ProviderHealth chat = 7;
-  // Provider serving Embed (KB_EMBEDDING_PROVIDER).
+  // Provider serving Embed (KNOWCEL_EMBEDDING_PROVIDER).
   ProviderHealth embedding = 8;
 }
 

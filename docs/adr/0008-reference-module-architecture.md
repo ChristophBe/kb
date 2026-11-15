@@ -18,7 +18,7 @@ Options considered:
 We will follow option 3, described in [docs/architecture/module.md](../architecture/module.md):
 
 - Layers contract → transport → application → adapters, plus wiring, with the allowed dependencies listed there and equivalent layouts for Go (`service/internal/...`) and Python (`src/kb_<component>/...`).
-- Configuration through `KB_*` variables and the platform helpers, platform logging, standard gRPC health reflecting only the module's own infrastructure, and one gRPC status mapping applied in transport.
+- Configuration through `KNOWCEL_*` variables and the platform helpers, platform logging, standard gRPC health reflecting only the module's own infrastructure, and one gRPC status mapping applied in transport.
 - Other modules are reached only through their generated clients or events, and they are **soft dependencies**: a module starts without them and answers `UNAVAILABLE` for calls that need them.
 - `module.yaml` declares the modules (`depends_on`) and event subjects (`consumes`) a module uses; tooling validates and enforces them (#68).
 - `document` (Go) and `llm` (Python) are the reference implementations.

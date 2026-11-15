@@ -1,6 +1,6 @@
 // Package embedcheck compares the dimension of the chunk index's vector
 // column with the dimension the llm module embeds with
-// (KB_EMBEDDING_DIMENSIONS of the llm service). When they differ, every
+// (KNOWCEL_EMBEDDING_DIMENSIONS of the llm service). When they differ, every
 // AddChunks and every search fails, so the service says so at startup rather
 // than on the first upload.
 //
@@ -83,7 +83,7 @@ func compare(column, llm int, log *slog.Logger) bool {
 	}
 	log.Error("embedding dimensions differ: uploads cannot be indexed and search fails until they match",
 		"llm_dimensions", llm, "column_dimensions", column,
-		"fix", "set KB_EMBEDDING_DIMENSIONS of the llm service to the chunk index's dimension, "+
+		"fix", "set KNOWCEL_EMBEDDING_DIMENSIONS of the llm service to the chunk index's dimension, "+
 			"or change the vector column with a new migration in modules/document/migrations")
 	return false
 }

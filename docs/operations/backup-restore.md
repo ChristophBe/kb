@@ -5,7 +5,7 @@ kb keeps state in three servers, each shared by the modules that use it. Back up
 | Store | Holds | Backed up with |
 |---|---|---|
 | Postgres | Schemas `document`, `ingestion` and `chat` (incl. the pgvector embeddings), and each module's migration table | `pg_dump` |
-| S3 (SeaweedFS) | Bucket `documents` (`KB_S3_BUCKET`): the uploaded files | `aws s3 sync` |
+| S3 (SeaweedFS) | Bucket `documents` (`KNOWCEL_S3_BUCKET`): the uploaded files | `aws s3 sync` |
 | NATS JetStream | Stream `INGESTION` with its consumer: ingestion events not yet processed | `nats stream backup` |
 
 Postgres and S3 are the data that matters. The stream only holds in-flight events; losing it means uploads that were mid-ingestion have to be re-ingested.
@@ -18,7 +18,7 @@ export BACKUP=$PWD/backup && mkdir -p $BACKUP
 
 ## Back up
 
-Take the database dump **before** the S3 copy. The document service removes objects that no document row refers to once they are older than `KB_ORPHAN_GRACE`; a copy that is newer than the dump only contains a few extra objects, which the sweeper cleans up after a restore, while an older copy would leave rows pointing at missing files. For a fully consistent backup, stop the writers first (`docker compose stop envoy`).
+Take the database dump **before** the S3 copy. The document service removes objects that no document row refers to once they are older than `KNOWCEL_ORPHAN_GRACE`; a copy that is newer than the dump only contains a few extra objects, which the sweeper cleans up after a restore, while an older copy would leave rows pointing at missing files. For a fully consistent backup, stop the writers first (`docker compose stop envoy`).
 
 ```sh
 # Postgres: one custom-format dump of the whole database
@@ -90,7 +90,7 @@ A new release therefore migrates the database as it starts. **Take a [backup](#b
 
 ### Roll back
 
-Migrations have `Down` steps, so a schema change can be undone, but only after the services that need it are stopped, and a service that is newer than the schema will fail or re-apply the migration when it starts. Roll back together with the images: stop the module, roll back, start the previous release (`KB_VERSION=<previous>`, see [Container images](images.md)).
+Migrations have `Down` steps, so a schema change can be undone, but only after the services that need it are stopped, and a service that is newer than the schema will fail or re-apply the migration when it starts. Roll back together with the images: stop the module, roll back, start the previous release (`KNOWCEL_VERSION=<previous>`, see [Container images](images.md)).
 
 Run the tools from a checkout of the release you are rolling back from, so the migration files are the ones the database has applied. Postgres must be reachable from the host (compose publishes 5432).
 

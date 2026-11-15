@@ -1,6 +1,6 @@
 {{- /*
-Local model server for the llm module (KB_LLM_PROVIDER=ollama with
-KB_OLLAMA_URL=http://ollama:11434, the llm-service defaults). The pull Job
+Local model server for the llm module (KNOWCEL_LLM_PROVIDER=ollama with
+KNOWCEL_OLLAMA_URL=http://ollama:11434, the llm-service defaults). The pull Job
 downloads ollama.models; it is named after them, so changing the list runs
 it again.
 */ -}}

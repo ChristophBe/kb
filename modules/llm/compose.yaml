@@ -3,21 +3,21 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/python.Dockerfile
-      args: { PACKAGE: knowcel-llm-service, KB_VERSION: "${KB_VERSION:-dev}" }
+      args: { PACKAGE: knowcel-llm-service, KNOWCEL_VERSION: "${KNOWCEL_VERSION:-dev}" }
     environment:
-      KB_LOG_LEVEL: ${KB_LOG_LEVEL:-INFO}
-      KB_OTEL_ENDPOINT: ${KB_OTEL_ENDPOINT:-}
-      KB_LLM_PROVIDER: ${KB_LLM_PROVIDER:-ollama}
-      KB_CHAT_PROVIDER: ${KB_CHAT_PROVIDER:-}
-      KB_EMBEDDING_PROVIDER: ${KB_EMBEDDING_PROVIDER:-}
-      KB_OLLAMA_URL: ${KB_OLLAMA_URL:-http://ollama:11434}
-      KB_CHAT_MODEL: ${KB_CHAT_MODEL:-llama3.2}
-      KB_EMBEDDING_MODEL: ${KB_EMBEDDING_MODEL:-nomic-embed-text}
-      KB_ANTHROPIC_API_KEY: ${KB_ANTHROPIC_API_KEY:-}
-      KB_ANTHROPIC_CHAT_MODEL: ${KB_ANTHROPIC_CHAT_MODEL:-claude-sonnet-5-5}
-      KB_EMBEDDING_DIMENSIONS: ${KB_EMBEDDING_DIMENSIONS:-768}
-      KB_FAKE_TOKEN_DELAY: ${KB_FAKE_TOKEN_DELAY:-0}
-      KB_FAKE_EMBEDDING_MODEL: ${KB_FAKE_EMBEDDING_MODEL:-fake-embed}
+      KNOWCEL_LOG_LEVEL: ${KNOWCEL_LOG_LEVEL:-INFO}
+      KNOWCEL_OTEL_ENDPOINT: ${KNOWCEL_OTEL_ENDPOINT:-}
+      KNOWCEL_LLM_PROVIDER: ${KNOWCEL_LLM_PROVIDER:-ollama}
+      KNOWCEL_CHAT_PROVIDER: ${KNOWCEL_CHAT_PROVIDER:-}
+      KNOWCEL_EMBEDDING_PROVIDER: ${KNOWCEL_EMBEDDING_PROVIDER:-}
+      KNOWCEL_OLLAMA_URL: ${KNOWCEL_OLLAMA_URL:-http://ollama:11434}
+      KNOWCEL_CHAT_MODEL: ${KNOWCEL_CHAT_MODEL:-llama3.2}
+      KNOWCEL_EMBEDDING_MODEL: ${KNOWCEL_EMBEDDING_MODEL:-nomic-embed-text}
+      KNOWCEL_ANTHROPIC_API_KEY: ${KNOWCEL_ANTHROPIC_API_KEY:-}
+      KNOWCEL_ANTHROPIC_CHAT_MODEL: ${KNOWCEL_ANTHROPIC_CHAT_MODEL:-claude-sonnet-5-5}
+      KNOWCEL_EMBEDDING_DIMENSIONS: ${KNOWCEL_EMBEDDING_DIMENSIONS:-768}
+      KNOWCEL_FAKE_TOKEN_DELAY: ${KNOWCEL_FAKE_TOKEN_DELAY:-0}
+      KNOWCEL_FAKE_EMBEDDING_MODEL: ${KNOWCEL_FAKE_EMBEDDING_MODEL:-fake-embed}
     # gRPC and Prometheus /metrics (docs/metrics.md).
     ports: ["9004:9004", "9104:9104"]
     depends_on:
@@ -33,7 +33,7 @@ services:
         - { action: sync+restart, path: ../../platform/python/src, target: /app/platform/python/src }
 
   # Local model server; enable with `--profile ollama`, or point
-  # KB_OLLAMA_URL at an Ollama running on the host (faster on macOS).
+  # KNOWCEL_OLLAMA_URL at an Ollama running on the host (faster on macOS).
   ollama:
     image: ollama/ollama:0.40.11
     profiles: [ollama]
@@ -44,7 +44,7 @@ services:
     image: ollama/ollama:0.40.11
     profiles: [ollama]
     environment: { OLLAMA_HOST: "ollama:11434" }
-    entrypoint: ["sh", "-c", "ollama pull ${KB_CHAT_MODEL:-llama3.2} && ollama pull ${KB_EMBEDDING_MODEL:-nomic-embed-text}"]
+    entrypoint: ["sh", "-c", "ollama pull ${KNOWCEL_CHAT_MODEL:-llama3.2} && ollama pull ${KNOWCEL_EMBEDDING_MODEL:-nomic-embed-text}"]
     depends_on: [ollama]
     restart: "no"
 

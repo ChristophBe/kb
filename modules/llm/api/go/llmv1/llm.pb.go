@@ -530,9 +530,9 @@ type GetProviderStatusResponse struct {
 	DefaultChatModel      string `protobuf:"bytes,4,opt,name=default_chat_model,json=defaultChatModel,proto3" json:"default_chat_model,omitempty"`
 	DefaultEmbeddingModel string `protobuf:"bytes,5,opt,name=default_embedding_model,json=defaultEmbeddingModel,proto3" json:"default_embedding_model,omitempty"`
 	EmbeddingDimensions   int32  `protobuf:"varint,6,opt,name=embedding_dimensions,json=embeddingDimensions,proto3" json:"embedding_dimensions,omitempty"`
-	// Provider serving Generate (KB_CHAT_PROVIDER).
+	// Provider serving Generate (KNOWCEL_CHAT_PROVIDER).
 	Chat *ProviderHealth `protobuf:"bytes,7,opt,name=chat,proto3" json:"chat,omitempty"`
-	// Provider serving Embed (KB_EMBEDDING_PROVIDER).
+	// Provider serving Embed (KNOWCEL_EMBEDDING_PROVIDER).
 	Embedding     *ProviderHealth `protobuf:"bytes,8,opt,name=embedding,proto3" json:"embedding,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

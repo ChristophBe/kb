@@ -1,6 +1,6 @@
 services:
   envoy:
     environment:
-      KB_OIDC_ISSUER: ${KB_OIDC_ISSUER:-http://localhost:5556/dex}
-      KB_LOG_LEVEL: ${KB_LOG_LEVEL:-info}
-    ports: ["${KB_GATEWAY_PORT:-8080}:8080"]
+      KNOWCEL_OIDC_ISSUER: ${KNOWCEL_OIDC_ISSUER:-http://localhost:5556/dex}
+      KNOWCEL_LOG_LEVEL: ${KNOWCEL_LOG_LEVEL:-info}
+    ports: ["${KNOWCEL_GATEWAY_PORT:-8080}:8080"]

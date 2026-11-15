@@ -4,7 +4,7 @@
 # get no route, so the browser sees 404 (UNIMPLEMENTED) for them.
 # Every routed call needs a JWT from the OIDC issuer (UNAUTHENTICATED
 # otherwise); Envoy forwards its subject to the services as x-kb-user.
-# The ${KB_OIDC_*} placeholders are filled in at startup by
+# The ${KNOWCEL_OIDC_*} placeholders are filled in at startup by
 # deploy/envoy/entrypoint.sh from the environment.
 static_resources:
   listeners:
@@ -58,12 +58,12 @@ static_resources:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
                       providers:
                         oidc:
-                          issuer: "${KB_OIDC_ISSUER}"
-                          audiences: [${KB_OIDC_AUDIENCES}]
+                          issuer: "${KNOWCEL_OIDC_ISSUER}"
+                          audiences: [${KNOWCEL_OIDC_AUDIENCES}]
                           remote_jwks:
                             http_uri:
-                              uri: "${KB_OIDC_JWKS_URL}"
-                              cluster: ${KB_OIDC_JWKS_CLUSTER}
+                              uri: "${KNOWCEL_OIDC_JWKS_URL}"
+                              cluster: ${KNOWCEL_OIDC_JWKS_CLUSTER}
                               timeout: 5s
                             cache_duration: 300s
                             async_fetch: {}
@@ -92,7 +92,7 @@ static_resources:
           - lb_endpoints:
               - endpoint:
                   address:
-                    socket_address: { address: "${KB_OIDC_JWKS_HOST}", port_value: ${KB_OIDC_JWKS_PORT} }
+                    socket_address: { address: "${KNOWCEL_OIDC_JWKS_HOST}", port_value: ${KNOWCEL_OIDC_JWKS_PORT} }
     - name: oidc_https
       connect_timeout: 5s
       type: STRICT_DNS
@@ -102,12 +102,12 @@ static_resources:
           - lb_endpoints:
               - endpoint:
                   address:
-                    socket_address: { address: "${KB_OIDC_JWKS_HOST}", port_value: ${KB_OIDC_JWKS_PORT} }
+                    socket_address: { address: "${KNOWCEL_OIDC_JWKS_HOST}", port_value: ${KNOWCEL_OIDC_JWKS_PORT} }
       transport_socket:
         name: envoy.transport_sockets.tls
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-          sni: "${KB_OIDC_JWKS_HOST}"
+          sni: "${KNOWCEL_OIDC_JWKS_HOST}"
 {{- range .Modules}}{{range .Services}}{{if .Routes}}
     - name: {{.Name}}
       connect_timeout: 1s

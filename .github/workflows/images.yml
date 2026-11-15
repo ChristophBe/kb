@@ -73,7 +73,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.version) || '' }}
-      # Python and web images build under emulation for arm64; Go cross-compiles.
+      # Python images build under emulation for arm64; Go and web build natively.
       - uses: docker/setup-qemu-action@v4
         if: contains(env.PLATFORMS, 'arm64')
       - uses: docker/setup-buildx-action@v4

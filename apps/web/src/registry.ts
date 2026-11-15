@@ -21,16 +21,19 @@ export interface NavEntry {
 
 /**
  * The modules' pages in sidebar order: a module's nav items, or one entry
- * for the module itself when it declares none. The sidebar and the Welcome
- * page both list these.
+ * for the module itself when it declares none. The sidebar and the page
+ * search both list these. Items that require a platform admin are left out
+ * unless `isPlatformAdmin`.
  */
-export function navEntries(modules: ModuleManifest[]): NavEntry[] {
+export function navEntries(modules: ModuleManifest[], isPlatformAdmin = false): NavEntry[] {
   return modules.flatMap((m) =>
-    (m.nav ?? [{ path: "", label: m.title, icon: m.icon }]).map((item) => ({
-      to: item.path ? `/m/${m.id}/${item.path}` : `/m/${m.id}`,
-      label: item.label,
-      icon: item.icon ?? m.icon,
-      end: !item.path,
-    })),
+    (m.nav ?? [{ path: "", label: m.title, icon: m.icon }])
+      .filter((item) => isPlatformAdmin || !item.requiresPlatformAdmin)
+      .map((item) => ({
+        to: item.path ? `/m/${m.id}/${item.path}` : `/m/${m.id}`,
+        label: item.label,
+        icon: item.icon ?? m.icon,
+        end: !item.path,
+      })),
   );
 }

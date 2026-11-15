@@ -5,19 +5,28 @@ import type { ComponentType, ReactNode } from "react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { KbRuntimeProvider } from "../runtime.tsx";
 import type { KbModule } from "../types.ts";
+import { type CurrentUser, CurrentUserProvider } from "../user.tsx";
 
 /**
  * Renders a module's routes, at `path` relative to the module root, against
  * `transport`: usually `createRouterTransport` from `@connectrpc/connect`,
  * answering the module's RPCs in memory. Every call gets a fresh query cache.
- * Returns the render result and the router, to check navigation.
+ * `user` is what `useCurrentUser` returns. Returns the render result and the
+ * router, to check navigation.
  */
-export function renderModule(module: KbModule, transport: Transport, path = "/") {
+export function renderModule(
+  module: KbModule,
+  transport: Transport,
+  path = "/",
+  user: CurrentUser | null = null,
+) {
   const router = createMemoryRouter(module.routes, { initialEntries: [path] });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const result = render(
     <KbRuntimeProvider config={{ apiBaseUrl: "http://test" }} transport={transport} client={client}>
-      <RouterProvider router={router} />
+      <CurrentUserProvider user={user}>
+        <RouterProvider router={router} />
+      </CurrentUserProvider>
     </KbRuntimeProvider>,
   );
   return { ...result, router };

@@ -16,8 +16,10 @@ import (
 	"github.com/ChristophBe/knowcelium/platform/go/grpcserver"
 )
 
-// fakeRepo records the upserts and answers with the registered user.
+// fakeRepo records the upserts and answers with the registered user. The team
+// methods are not implemented: the embedded nil Repository panics on them.
 type fakeRepo struct {
+	Repository
 	upserts []store.UpsertUserParams
 	err     error
 }

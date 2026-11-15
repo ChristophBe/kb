@@ -20,6 +20,14 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	IamService_GetCurrentUser_FullMethodName = "/knowcel.iam.v1.IamService/GetCurrentUser"
+	IamService_CreateTeam_FullMethodName     = "/knowcel.iam.v1.IamService/CreateTeam"
+	IamService_GetTeam_FullMethodName        = "/knowcel.iam.v1.IamService/GetTeam"
+	IamService_ListMyTeams_FullMethodName    = "/knowcel.iam.v1.IamService/ListMyTeams"
+	IamService_UpdateTeam_FullMethodName     = "/knowcel.iam.v1.IamService/UpdateTeam"
+	IamService_DeleteTeam_FullMethodName     = "/knowcel.iam.v1.IamService/DeleteTeam"
+	IamService_AddMember_FullMethodName      = "/knowcel.iam.v1.IamService/AddMember"
+	IamService_RemoveMember_FullMethodName   = "/knowcel.iam.v1.IamService/RemoveMember"
+	IamService_SetMemberRole_FullMethodName  = "/knowcel.iam.v1.IamService/SetMemberRole"
 )
 
 // IamServiceClient is the client API for IamService service.
@@ -33,6 +41,28 @@ type IamServiceClient interface {
 	// registers the user; later calls update the email and display name from
 	// the token.
 	GetCurrentUser(ctx context.Context, in *GetCurrentUserRequest, opts ...grpc.CallOption) (*GetCurrentUserResponse, error)
+	// CreateTeam creates a team with the caller as its first admin.
+	CreateTeam(ctx context.Context, in *CreateTeamRequest, opts ...grpc.CallOption) (*CreateTeamResponse, error)
+	// GetTeam returns a team with its members. A caller who is not a member
+	// gets NOT_FOUND.
+	GetTeam(ctx context.Context, in *GetTeamRequest, opts ...grpc.CallOption) (*GetTeamResponse, error)
+	// ListMyTeams returns the teams the caller is a member of, without members.
+	ListMyTeams(ctx context.Context, in *ListMyTeamsRequest, opts ...grpc.CallOption) (*ListMyTeamsResponse, error)
+	// UpdateTeam renames a team. Team admins only.
+	UpdateTeam(ctx context.Context, in *UpdateTeamRequest, opts ...grpc.CallOption) (*UpdateTeamResponse, error)
+	// DeleteTeam deletes a team and its memberships. Team admins only.
+	DeleteTeam(ctx context.Context, in *DeleteTeamRequest, opts ...grpc.CallOption) (*DeleteTeamResponse, error)
+	// AddMember adds a registered user, found by email, to a team. Team admins
+	// only. An unknown email returns NOT_FOUND, a user who is already a member
+	// ALREADY_EXISTS.
+	AddMember(ctx context.Context, in *AddMemberRequest, opts ...grpc.CallOption) (*AddMemberResponse, error)
+	// RemoveMember removes a member. Team admins may remove anyone; a member may
+	// remove only themselves (leave). The last admin cannot be removed
+	// (FAILED_PRECONDITION).
+	RemoveMember(ctx context.Context, in *RemoveMemberRequest, opts ...grpc.CallOption) (*RemoveMemberResponse, error)
+	// SetMemberRole changes a member's role. Team admins only. The last admin
+	// cannot be demoted (FAILED_PRECONDITION).
+	SetMemberRole(ctx context.Context, in *SetMemberRoleRequest, opts ...grpc.CallOption) (*SetMemberRoleResponse, error)
 }
 
 type iamServiceClient struct {
@@ -53,6 +83,86 @@ func (c *iamServiceClient) GetCurrentUser(ctx context.Context, in *GetCurrentUse
 	return out, nil
 }
 
+func (c *iamServiceClient) CreateTeam(ctx context.Context, in *CreateTeamRequest, opts ...grpc.CallOption) (*CreateTeamResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateTeamResponse)
+	err := c.cc.Invoke(ctx, IamService_CreateTeam_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iamServiceClient) GetTeam(ctx context.Context, in *GetTeamRequest, opts ...grpc.CallOption) (*GetTeamResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetTeamResponse)
+	err := c.cc.Invoke(ctx, IamService_GetTeam_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iamServiceClient) ListMyTeams(ctx context.Context, in *ListMyTeamsRequest, opts ...grpc.CallOption) (*ListMyTeamsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListMyTeamsResponse)
+	err := c.cc.Invoke(ctx, IamService_ListMyTeams_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iamServiceClient) UpdateTeam(ctx context.Context, in *UpdateTeamRequest, opts ...grpc.CallOption) (*UpdateTeamResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateTeamResponse)
+	err := c.cc.Invoke(ctx, IamService_UpdateTeam_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iamServiceClient) DeleteTeam(ctx context.Context, in *DeleteTeamRequest, opts ...grpc.CallOption) (*DeleteTeamResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteTeamResponse)
+	err := c.cc.Invoke(ctx, IamService_DeleteTeam_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iamServiceClient) AddMember(ctx context.Context, in *AddMemberRequest, opts ...grpc.CallOption) (*AddMemberResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AddMemberResponse)
+	err := c.cc.Invoke(ctx, IamService_AddMember_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iamServiceClient) RemoveMember(ctx context.Context, in *RemoveMemberRequest, opts ...grpc.CallOption) (*RemoveMemberResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RemoveMemberResponse)
+	err := c.cc.Invoke(ctx, IamService_RemoveMember_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iamServiceClient) SetMemberRole(ctx context.Context, in *SetMemberRoleRequest, opts ...grpc.CallOption) (*SetMemberRoleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetMemberRoleResponse)
+	err := c.cc.Invoke(ctx, IamService_SetMemberRole_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IamServiceServer is the server API for IamService service.
 // All implementations must embed UnimplementedIamServiceServer
 // for forward compatibility.
@@ -64,6 +174,28 @@ type IamServiceServer interface {
 	// registers the user; later calls update the email and display name from
 	// the token.
 	GetCurrentUser(context.Context, *GetCurrentUserRequest) (*GetCurrentUserResponse, error)
+	// CreateTeam creates a team with the caller as its first admin.
+	CreateTeam(context.Context, *CreateTeamRequest) (*CreateTeamResponse, error)
+	// GetTeam returns a team with its members. A caller who is not a member
+	// gets NOT_FOUND.
+	GetTeam(context.Context, *GetTeamRequest) (*GetTeamResponse, error)
+	// ListMyTeams returns the teams the caller is a member of, without members.
+	ListMyTeams(context.Context, *ListMyTeamsRequest) (*ListMyTeamsResponse, error)
+	// UpdateTeam renames a team. Team admins only.
+	UpdateTeam(context.Context, *UpdateTeamRequest) (*UpdateTeamResponse, error)
+	// DeleteTeam deletes a team and its memberships. Team admins only.
+	DeleteTeam(context.Context, *DeleteTeamRequest) (*DeleteTeamResponse, error)
+	// AddMember adds a registered user, found by email, to a team. Team admins
+	// only. An unknown email returns NOT_FOUND, a user who is already a member
+	// ALREADY_EXISTS.
+	AddMember(context.Context, *AddMemberRequest) (*AddMemberResponse, error)
+	// RemoveMember removes a member. Team admins may remove anyone; a member may
+	// remove only themselves (leave). The last admin cannot be removed
+	// (FAILED_PRECONDITION).
+	RemoveMember(context.Context, *RemoveMemberRequest) (*RemoveMemberResponse, error)
+	// SetMemberRole changes a member's role. Team admins only. The last admin
+	// cannot be demoted (FAILED_PRECONDITION).
+	SetMemberRole(context.Context, *SetMemberRoleRequest) (*SetMemberRoleResponse, error)
 	mustEmbedUnimplementedIamServiceServer()
 }
 
@@ -76,6 +208,30 @@ type UnimplementedIamServiceServer struct{}
 
 func (UnimplementedIamServiceServer) GetCurrentUser(context.Context, *GetCurrentUserRequest) (*GetCurrentUserResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetCurrentUser not implemented")
+}
+func (UnimplementedIamServiceServer) CreateTeam(context.Context, *CreateTeamRequest) (*CreateTeamResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateTeam not implemented")
+}
+func (UnimplementedIamServiceServer) GetTeam(context.Context, *GetTeamRequest) (*GetTeamResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetTeam not implemented")
+}
+func (UnimplementedIamServiceServer) ListMyTeams(context.Context, *ListMyTeamsRequest) (*ListMyTeamsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListMyTeams not implemented")
+}
+func (UnimplementedIamServiceServer) UpdateTeam(context.Context, *UpdateTeamRequest) (*UpdateTeamResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateTeam not implemented")
+}
+func (UnimplementedIamServiceServer) DeleteTeam(context.Context, *DeleteTeamRequest) (*DeleteTeamResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteTeam not implemented")
+}
+func (UnimplementedIamServiceServer) AddMember(context.Context, *AddMemberRequest) (*AddMemberResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AddMember not implemented")
+}
+func (UnimplementedIamServiceServer) RemoveMember(context.Context, *RemoveMemberRequest) (*RemoveMemberResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RemoveMember not implemented")
+}
+func (UnimplementedIamServiceServer) SetMemberRole(context.Context, *SetMemberRoleRequest) (*SetMemberRoleResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetMemberRole not implemented")
 }
 func (UnimplementedIamServiceServer) mustEmbedUnimplementedIamServiceServer() {}
 func (UnimplementedIamServiceServer) testEmbeddedByValue()                    {}
@@ -116,6 +272,150 @@ func _IamService_GetCurrentUser_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _IamService_CreateTeam_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTeamRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IamServiceServer).CreateTeam(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IamService_CreateTeam_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IamServiceServer).CreateTeam(ctx, req.(*CreateTeamRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IamService_GetTeam_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTeamRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IamServiceServer).GetTeam(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IamService_GetTeam_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IamServiceServer).GetTeam(ctx, req.(*GetTeamRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IamService_ListMyTeams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListMyTeamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IamServiceServer).ListMyTeams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IamService_ListMyTeams_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IamServiceServer).ListMyTeams(ctx, req.(*ListMyTeamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IamService_UpdateTeam_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTeamRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IamServiceServer).UpdateTeam(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IamService_UpdateTeam_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IamServiceServer).UpdateTeam(ctx, req.(*UpdateTeamRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IamService_DeleteTeam_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTeamRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IamServiceServer).DeleteTeam(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IamService_DeleteTeam_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IamServiceServer).DeleteTeam(ctx, req.(*DeleteTeamRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IamService_AddMember_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddMemberRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IamServiceServer).AddMember(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IamService_AddMember_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IamServiceServer).AddMember(ctx, req.(*AddMemberRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IamService_RemoveMember_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveMemberRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IamServiceServer).RemoveMember(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IamService_RemoveMember_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IamServiceServer).RemoveMember(ctx, req.(*RemoveMemberRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IamService_SetMemberRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetMemberRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IamServiceServer).SetMemberRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IamService_SetMemberRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IamServiceServer).SetMemberRole(ctx, req.(*SetMemberRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // IamService_ServiceDesc is the grpc.ServiceDesc for IamService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -126,6 +426,38 @@ var IamService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCurrentUser",
 			Handler:    _IamService_GetCurrentUser_Handler,
+		},
+		{
+			MethodName: "CreateTeam",
+			Handler:    _IamService_CreateTeam_Handler,
+		},
+		{
+			MethodName: "GetTeam",
+			Handler:    _IamService_GetTeam_Handler,
+		},
+		{
+			MethodName: "ListMyTeams",
+			Handler:    _IamService_ListMyTeams_Handler,
+		},
+		{
+			MethodName: "UpdateTeam",
+			Handler:    _IamService_UpdateTeam_Handler,
+		},
+		{
+			MethodName: "DeleteTeam",
+			Handler:    _IamService_DeleteTeam_Handler,
+		},
+		{
+			MethodName: "AddMember",
+			Handler:    _IamService_AddMember_Handler,
+		},
+		{
+			MethodName: "RemoveMember",
+			Handler:    _IamService_RemoveMember_Handler,
+		},
+		{
+			MethodName: "SetMemberRole",
+			Handler:    _IamService_SetMemberRole_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

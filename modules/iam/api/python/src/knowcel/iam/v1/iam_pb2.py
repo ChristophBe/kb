@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18knowcel/iam/v1/iam.proto\x12\x0eknowcel.iam.v1\"v\n\x04User\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n\x05\x65mail\x18\x02 \x01(\tR\x05\x65mail\x12!\n\x0c\x64isplay_name\x18\x03 \x01(\tR\x0b\x64isplayName\x12%\n\x0eplatform_admin\x18\x04 \x01(\x08R\rplatformAdmin\"\x17\n\x15GetCurrentUserRequest\"B\n\x16GetCurrentUserResponse\x12(\n\x04user\x18\x01 \x01(\x0b\x32\x14.knowcel.iam.v1.UserR\x04user2m\n\nIamService\x12_\n\x0eGetCurrentUser\x12%.knowcel.iam.v1.GetCurrentUserRequest\x1a&.knowcel.iam.v1.GetCurrentUserResponseBBZ@github.com/ChristophBe/knowcelium/modules/iam/api/go/iamv1;iamv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18knowcel/iam/v1/iam.proto\x12\x0eknowcel.iam.v1\"v\n\x04User\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n\x05\x65mail\x18\x02 \x01(\tR\x05\x65mail\x12!\n\x0c\x64isplay_name\x18\x03 \x01(\tR\x0b\x64isplayName\x12%\n\x0eplatform_admin\x18\x04 \x01(\x08R\rplatformAdmin\"\x17\n\x15GetCurrentUserRequest\"B\n\x16GetCurrentUserResponse\x12(\n\x04user\x18\x01 \x01(\x0b\x32\x14.knowcel.iam.v1.UserR\x04user\"\x93\x01\n\x04Team\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x31\n\x07my_role\x18\x03 \x01(\x0e\x32\x18.knowcel.iam.v1.TeamRoleR\x06myRole\x12\x34\n\x07members\x18\x04 \x03(\x0b\x32\x1a.knowcel.iam.v1.TeamMemberR\x07members\"\x8c\x01\n\nTeamMember\x12\x17\n\x07user_id\x18\x01 \x01(\tR\x06userId\x12\x14\n\x05\x65mail\x18\x02 \x01(\tR\x05\x65mail\x12!\n\x0c\x64isplay_name\x18\x03 \x01(\tR\x0b\x64isplayName\x12,\n\x04role\x18\x04 \x01(\x0e\x32\x18.knowcel.iam.v1.TeamRoleR\x04role\"\'\n\x11\x43reateTeamRequest\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\">\n\x12\x43reateTeamResponse\x12(\n\x04team\x18\x01 \x01(\x0b\x32\x14.knowcel.iam.v1.TeamR\x04team\" \n\x0eGetTeamRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\";\n\x0fGetTeamResponse\x12(\n\x04team\x18\x01 \x01(\x0b\x32\x14.knowcel.iam.v1.TeamR\x04team\"\x14\n\x12ListMyTeamsRequest\"A\n\x13ListMyTeamsResponse\x12*\n\x05teams\x18\x01 \x03(\x0b\x32\x14.knowcel.iam.v1.TeamR\x05teams\"7\n\x11UpdateTeamRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\">\n\x12UpdateTeamResponse\x12(\n\x04team\x18\x01 \x01(\x0b\x32\x14.knowcel.iam.v1.TeamR\x04team\"#\n\x11\x44\x65leteTeamRequest\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"\x14\n\x12\x44\x65leteTeamResponse\"o\n\x10\x41\x64\x64MemberRequest\x12\x17\n\x07team_id\x18\x01 \x01(\tR\x06teamId\x12\x14\n\x05\x65mail\x18\x02 \x01(\tR\x05\x65mail\x12,\n\x04role\x18\x03 \x01(\x0e\x32\x18.knowcel.iam.v1.TeamRoleR\x04role\"G\n\x11\x41\x64\x64MemberResponse\x12\x32\n\x06member\x18\x01 \x01(\x0b\x32\x1a.knowcel.iam.v1.TeamMemberR\x06member\"G\n\x13RemoveMemberRequest\x12\x17\n\x07team_id\x18\x01 \x01(\tR\x06teamId\x12\x17\n\x07user_id\x18\x02 \x01(\tR\x06userId\"\x16\n\x14RemoveMemberResponse\"v\n\x14SetMemberRoleRequest\x12\x17\n\x07team_id\x18\x01 \x01(\tR\x06teamId\x12\x17\n\x07user_id\x18\x02 \x01(\tR\x06userId\x12,\n\x04role\x18\x03 \x01(\x0e\x32\x18.knowcel.iam.v1.TeamRoleR\x04role\"K\n\x15SetMemberRoleResponse\x12\x32\n\x06member\x18\x01 \x01(\x0b\x32\x1a.knowcel.iam.v1.TeamMemberR\x06member*P\n\x08TeamRole\x12\x19\n\x15TEAM_ROLE_UNSPECIFIED\x10\x00\x12\x13\n\x0fTEAM_ROLE_ADMIN\x10\x01\x12\x14\n\x10TEAM_ROLE_MEMBER\x10\x02\x32\x9b\x06\n\nIamService\x12_\n\x0eGetCurrentUser\x12%.knowcel.iam.v1.GetCurrentUserRequest\x1a&.knowcel.iam.v1.GetCurrentUserResponse\x12S\n\nCreateTeam\x12!.knowcel.iam.v1.CreateTeamRequest\x1a\".knowcel.iam.v1.CreateTeamResponse\x12J\n\x07GetTeam\x12\x1e.knowcel.iam.v1.GetTeamRequest\x1a\x1f.knowcel.iam.v1.GetTeamResponse\x12V\n\x0bListMyTeams\x12\".knowcel.iam.v1.ListMyTeamsRequest\x1a#.knowcel.iam.v1.ListMyTeamsResponse\x12S\n\nUpdateTeam\x12!.knowcel.iam.v1.UpdateTeamRequest\x1a\".knowcel.iam.v1.UpdateTeamResponse\x12S\n\nDeleteTeam\x12!.knowcel.iam.v1.DeleteTeamRequest\x1a\".knowcel.iam.v1.DeleteTeamResponse\x12P\n\tAddMember\x12 .knowcel.iam.v1.AddMemberRequest\x1a!.knowcel.iam.v1.AddMemberResponse\x12Y\n\x0cRemoveMember\x12#.knowcel.iam.v1.RemoveMemberRequest\x1a$.knowcel.iam.v1.RemoveMemberResponse\x12\\\n\rSetMemberRole\x12$.knowcel.iam.v1.SetMemberRoleRequest\x1a%.knowcel.iam.v1.SetMemberRoleResponseBBZ@github.com/ChristophBe/knowcelium/modules/iam/api/go/iamv1;iamv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,12 +32,50 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'knowcel.iam.v1.iam_pb2', _g
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z@github.com/ChristophBe/knowcelium/modules/iam/api/go/iamv1;iamv1'
+  _globals['_TEAMROLE']._serialized_start=1499
+  _globals['_TEAMROLE']._serialized_end=1579
   _globals['_USER']._serialized_start=44
   _globals['_USER']._serialized_end=162
   _globals['_GETCURRENTUSERREQUEST']._serialized_start=164
   _globals['_GETCURRENTUSERREQUEST']._serialized_end=187
   _globals['_GETCURRENTUSERRESPONSE']._serialized_start=189
   _globals['_GETCURRENTUSERRESPONSE']._serialized_end=255
-  _globals['_IAMSERVICE']._serialized_start=257
-  _globals['_IAMSERVICE']._serialized_end=366
+  _globals['_TEAM']._serialized_start=258
+  _globals['_TEAM']._serialized_end=405
+  _globals['_TEAMMEMBER']._serialized_start=408
+  _globals['_TEAMMEMBER']._serialized_end=548
+  _globals['_CREATETEAMREQUEST']._serialized_start=550
+  _globals['_CREATETEAMREQUEST']._serialized_end=589
+  _globals['_CREATETEAMRESPONSE']._serialized_start=591
+  _globals['_CREATETEAMRESPONSE']._serialized_end=653
+  _globals['_GETTEAMREQUEST']._serialized_start=655
+  _globals['_GETTEAMREQUEST']._serialized_end=687
+  _globals['_GETTEAMRESPONSE']._serialized_start=689
+  _globals['_GETTEAMRESPONSE']._serialized_end=748
+  _globals['_LISTMYTEAMSREQUEST']._serialized_start=750
+  _globals['_LISTMYTEAMSREQUEST']._serialized_end=770
+  _globals['_LISTMYTEAMSRESPONSE']._serialized_start=772
+  _globals['_LISTMYTEAMSRESPONSE']._serialized_end=837
+  _globals['_UPDATETEAMREQUEST']._serialized_start=839
+  _globals['_UPDATETEAMREQUEST']._serialized_end=894
+  _globals['_UPDATETEAMRESPONSE']._serialized_start=896
+  _globals['_UPDATETEAMRESPONSE']._serialized_end=958
+  _globals['_DELETETEAMREQUEST']._serialized_start=960
+  _globals['_DELETETEAMREQUEST']._serialized_end=995
+  _globals['_DELETETEAMRESPONSE']._serialized_start=997
+  _globals['_DELETETEAMRESPONSE']._serialized_end=1017
+  _globals['_ADDMEMBERREQUEST']._serialized_start=1019
+  _globals['_ADDMEMBERREQUEST']._serialized_end=1130
+  _globals['_ADDMEMBERRESPONSE']._serialized_start=1132
+  _globals['_ADDMEMBERRESPONSE']._serialized_end=1203
+  _globals['_REMOVEMEMBERREQUEST']._serialized_start=1205
+  _globals['_REMOVEMEMBERREQUEST']._serialized_end=1276
+  _globals['_REMOVEMEMBERRESPONSE']._serialized_start=1278
+  _globals['_REMOVEMEMBERRESPONSE']._serialized_end=1300
+  _globals['_SETMEMBERROLEREQUEST']._serialized_start=1302
+  _globals['_SETMEMBERROLEREQUEST']._serialized_end=1420
+  _globals['_SETMEMBERROLERESPONSE']._serialized_start=1422
+  _globals['_SETMEMBERROLERESPONSE']._serialized_end=1497
+  _globals['_IAMSERVICE']._serialized_start=1582
+  _globals['_IAMSERVICE']._serialized_end=2377
 # @@protoc_insertion_point(module_scope)

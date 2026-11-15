@@ -41,6 +41,46 @@ class IamServiceStub:
                 request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.GetCurrentUserRequest.SerializeToString,
                 response_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.GetCurrentUserResponse.FromString,
                 _registered_method=True)
+        self.CreateTeam = channel.unary_unary(
+                '/knowcel.iam.v1.IamService/CreateTeam',
+                request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.CreateTeamRequest.SerializeToString,
+                response_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.CreateTeamResponse.FromString,
+                _registered_method=True)
+        self.GetTeam = channel.unary_unary(
+                '/knowcel.iam.v1.IamService/GetTeam',
+                request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.GetTeamRequest.SerializeToString,
+                response_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.GetTeamResponse.FromString,
+                _registered_method=True)
+        self.ListMyTeams = channel.unary_unary(
+                '/knowcel.iam.v1.IamService/ListMyTeams',
+                request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.ListMyTeamsRequest.SerializeToString,
+                response_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.ListMyTeamsResponse.FromString,
+                _registered_method=True)
+        self.UpdateTeam = channel.unary_unary(
+                '/knowcel.iam.v1.IamService/UpdateTeam',
+                request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.UpdateTeamRequest.SerializeToString,
+                response_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.UpdateTeamResponse.FromString,
+                _registered_method=True)
+        self.DeleteTeam = channel.unary_unary(
+                '/knowcel.iam.v1.IamService/DeleteTeam',
+                request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.DeleteTeamRequest.SerializeToString,
+                response_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.DeleteTeamResponse.FromString,
+                _registered_method=True)
+        self.AddMember = channel.unary_unary(
+                '/knowcel.iam.v1.IamService/AddMember',
+                request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.AddMemberRequest.SerializeToString,
+                response_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.AddMemberResponse.FromString,
+                _registered_method=True)
+        self.RemoveMember = channel.unary_unary(
+                '/knowcel.iam.v1.IamService/RemoveMember',
+                request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.RemoveMemberRequest.SerializeToString,
+                response_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.RemoveMemberResponse.FromString,
+                _registered_method=True)
+        self.SetMemberRole = channel.unary_unary(
+                '/knowcel.iam.v1.IamService/SetMemberRole',
+                request_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleRequest.SerializeToString,
+                response_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleResponse.FromString,
+                _registered_method=True)
 
 
 class IamServiceServicer:
@@ -57,6 +97,68 @@ class IamServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def CreateTeam(self, request, context):
+        """CreateTeam creates a team with the caller as its first admin.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetTeam(self, request, context):
+        """GetTeam returns a team with its members. A caller who is not a member
+        gets NOT_FOUND.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListMyTeams(self, request, context):
+        """ListMyTeams returns the teams the caller is a member of, without members.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateTeam(self, request, context):
+        """UpdateTeam renames a team. Team admins only.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteTeam(self, request, context):
+        """DeleteTeam deletes a team and its memberships. Team admins only.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def AddMember(self, request, context):
+        """AddMember adds a registered user, found by email, to a team. Team admins
+        only. An unknown email returns NOT_FOUND, a user who is already a member
+        ALREADY_EXISTS.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def RemoveMember(self, request, context):
+        """RemoveMember removes a member. Team admins may remove anyone; a member may
+        remove only themselves (leave). The last admin cannot be removed
+        (FAILED_PRECONDITION).
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetMemberRole(self, request, context):
+        """SetMemberRole changes a member's role. Team admins only. The last admin
+        cannot be demoted (FAILED_PRECONDITION).
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_IamServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -64,6 +166,46 @@ def add_IamServiceServicer_to_server(servicer, server):
                     servicer.GetCurrentUser,
                     request_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.GetCurrentUserRequest.FromString,
                     response_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.GetCurrentUserResponse.SerializeToString,
+            ),
+            'CreateTeam': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateTeam,
+                    request_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.CreateTeamRequest.FromString,
+                    response_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.CreateTeamResponse.SerializeToString,
+            ),
+            'GetTeam': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetTeam,
+                    request_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.GetTeamRequest.FromString,
+                    response_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.GetTeamResponse.SerializeToString,
+            ),
+            'ListMyTeams': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListMyTeams,
+                    request_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.ListMyTeamsRequest.FromString,
+                    response_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.ListMyTeamsResponse.SerializeToString,
+            ),
+            'UpdateTeam': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateTeam,
+                    request_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.UpdateTeamRequest.FromString,
+                    response_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.UpdateTeamResponse.SerializeToString,
+            ),
+            'DeleteTeam': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteTeam,
+                    request_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.DeleteTeamRequest.FromString,
+                    response_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.DeleteTeamResponse.SerializeToString,
+            ),
+            'AddMember': grpc.unary_unary_rpc_method_handler(
+                    servicer.AddMember,
+                    request_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.AddMemberRequest.FromString,
+                    response_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.AddMemberResponse.SerializeToString,
+            ),
+            'RemoveMember': grpc.unary_unary_rpc_method_handler(
+                    servicer.RemoveMember,
+                    request_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.RemoveMemberRequest.FromString,
+                    response_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.RemoveMemberResponse.SerializeToString,
+            ),
+            'SetMemberRole': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetMemberRole,
+                    request_deserializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleRequest.FromString,
+                    response_serializer=knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -95,6 +237,222 @@ class IamService:
             '/knowcel.iam.v1.IamService/GetCurrentUser',
             knowcel_dot_iam_dot_v1_dot_iam__pb2.GetCurrentUserRequest.SerializeToString,
             knowcel_dot_iam_dot_v1_dot_iam__pb2.GetCurrentUserResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateTeam(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.iam.v1.IamService/CreateTeam',
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.CreateTeamRequest.SerializeToString,
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.CreateTeamResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetTeam(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.iam.v1.IamService/GetTeam',
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.GetTeamRequest.SerializeToString,
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.GetTeamResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListMyTeams(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.iam.v1.IamService/ListMyTeams',
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.ListMyTeamsRequest.SerializeToString,
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.ListMyTeamsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateTeam(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.iam.v1.IamService/UpdateTeam',
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.UpdateTeamRequest.SerializeToString,
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.UpdateTeamResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeleteTeam(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.iam.v1.IamService/DeleteTeam',
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.DeleteTeamRequest.SerializeToString,
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.DeleteTeamResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AddMember(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.iam.v1.IamService/AddMember',
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.AddMemberRequest.SerializeToString,
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.AddMemberResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def RemoveMember(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.iam.v1.IamService/RemoveMember',
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.RemoveMemberRequest.SerializeToString,
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.RemoveMemberResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetMemberRole(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.iam.v1.IamService/SetMemberRole',
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleRequest.SerializeToString,
+            knowcel_dot_iam_dot_v1_dot_iam__pb2.SetMemberRoleResponse.FromString,
             options,
             channel_credentials,
             insecure,

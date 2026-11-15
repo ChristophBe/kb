@@ -21,6 +21,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type TeamRole int32
+
+const (
+	TeamRole_TEAM_ROLE_UNSPECIFIED TeamRole = 0
+	TeamRole_TEAM_ROLE_ADMIN       TeamRole = 1
+	TeamRole_TEAM_ROLE_MEMBER      TeamRole = 2
+)
+
+// Enum value maps for TeamRole.
+var (
+	TeamRole_name = map[int32]string{
+		0: "TEAM_ROLE_UNSPECIFIED",
+		1: "TEAM_ROLE_ADMIN",
+		2: "TEAM_ROLE_MEMBER",
+	}
+	TeamRole_value = map[string]int32{
+		"TEAM_ROLE_UNSPECIFIED": 0,
+		"TEAM_ROLE_ADMIN":       1,
+		"TEAM_ROLE_MEMBER":      2,
+	}
+)
+
+func (x TeamRole) Enum() *TeamRole {
+	p := new(TeamRole)
+	*p = x
+	return p
+}
+
+func (x TeamRole) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TeamRole) Descriptor() protoreflect.EnumDescriptor {
+	return file_knowcel_iam_v1_iam_proto_enumTypes[0].Descriptor()
+}
+
+func (TeamRole) Type() protoreflect.EnumType {
+	return &file_knowcel_iam_v1_iam_proto_enumTypes[0]
+}
+
+func (x TeamRole) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TeamRole.Descriptor instead.
+func (TeamRole) EnumDescriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{0}
+}
+
 // User is a registered user. The id is the subject of the user's OIDC token,
 // the same id other modules store as the owner of their data.
 type User struct {
@@ -173,6 +222,873 @@ func (x *GetCurrentUserResponse) GetUser() *User {
 	return nil
 }
 
+type Team struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name  string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	// my_role is the caller's role in the team.
+	MyRole TeamRole `protobuf:"varint,3,opt,name=my_role,json=myRole,proto3,enum=knowcel.iam.v1.TeamRole" json:"my_role,omitempty"`
+	// members is filled by GetTeam and the member mutations, not by ListMyTeams.
+	Members       []*TeamMember `protobuf:"bytes,4,rep,name=members,proto3" json:"members,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Team) Reset() {
+	*x = Team{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Team) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Team) ProtoMessage() {}
+
+func (x *Team) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Team.ProtoReflect.Descriptor instead.
+func (*Team) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Team) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Team) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Team) GetMyRole() TeamRole {
+	if x != nil {
+		return x.MyRole
+	}
+	return TeamRole_TEAM_ROLE_UNSPECIFIED
+}
+
+func (x *Team) GetMembers() []*TeamMember {
+	if x != nil {
+		return x.Members
+	}
+	return nil
+}
+
+type TeamMember struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	Role          TeamRole               `protobuf:"varint,4,opt,name=role,proto3,enum=knowcel.iam.v1.TeamRole" json:"role,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TeamMember) Reset() {
+	*x = TeamMember{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TeamMember) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TeamMember) ProtoMessage() {}
+
+func (x *TeamMember) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TeamMember.ProtoReflect.Descriptor instead.
+func (*TeamMember) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *TeamMember) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *TeamMember) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *TeamMember) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *TeamMember) GetRole() TeamRole {
+	if x != nil {
+		return x.Role
+	}
+	return TeamRole_TEAM_ROLE_UNSPECIFIED
+}
+
+type CreateTeamRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateTeamRequest) Reset() {
+	*x = CreateTeamRequest{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateTeamRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateTeamRequest) ProtoMessage() {}
+
+func (x *CreateTeamRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateTeamRequest.ProtoReflect.Descriptor instead.
+func (*CreateTeamRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *CreateTeamRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type CreateTeamResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Team          *Team                  `protobuf:"bytes,1,opt,name=team,proto3" json:"team,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateTeamResponse) Reset() {
+	*x = CreateTeamResponse{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateTeamResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateTeamResponse) ProtoMessage() {}
+
+func (x *CreateTeamResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateTeamResponse.ProtoReflect.Descriptor instead.
+func (*CreateTeamResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CreateTeamResponse) GetTeam() *Team {
+	if x != nil {
+		return x.Team
+	}
+	return nil
+}
+
+type GetTeamRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetTeamRequest) Reset() {
+	*x = GetTeamRequest{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetTeamRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetTeamRequest) ProtoMessage() {}
+
+func (x *GetTeamRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetTeamRequest.ProtoReflect.Descriptor instead.
+func (*GetTeamRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetTeamRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type GetTeamResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Team          *Team                  `protobuf:"bytes,1,opt,name=team,proto3" json:"team,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetTeamResponse) Reset() {
+	*x = GetTeamResponse{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetTeamResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetTeamResponse) ProtoMessage() {}
+
+func (x *GetTeamResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetTeamResponse.ProtoReflect.Descriptor instead.
+func (*GetTeamResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *GetTeamResponse) GetTeam() *Team {
+	if x != nil {
+		return x.Team
+	}
+	return nil
+}
+
+type ListMyTeamsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListMyTeamsRequest) Reset() {
+	*x = ListMyTeamsRequest{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListMyTeamsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListMyTeamsRequest) ProtoMessage() {}
+
+func (x *ListMyTeamsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListMyTeamsRequest.ProtoReflect.Descriptor instead.
+func (*ListMyTeamsRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{9}
+}
+
+type ListMyTeamsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Teams         []*Team                `protobuf:"bytes,1,rep,name=teams,proto3" json:"teams,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListMyTeamsResponse) Reset() {
+	*x = ListMyTeamsResponse{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListMyTeamsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListMyTeamsResponse) ProtoMessage() {}
+
+func (x *ListMyTeamsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListMyTeamsResponse.ProtoReflect.Descriptor instead.
+func (*ListMyTeamsResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ListMyTeamsResponse) GetTeams() []*Team {
+	if x != nil {
+		return x.Teams
+	}
+	return nil
+}
+
+type UpdateTeamRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateTeamRequest) Reset() {
+	*x = UpdateTeamRequest{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateTeamRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateTeamRequest) ProtoMessage() {}
+
+func (x *UpdateTeamRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateTeamRequest.ProtoReflect.Descriptor instead.
+func (*UpdateTeamRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *UpdateTeamRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateTeamRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type UpdateTeamResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Team          *Team                  `protobuf:"bytes,1,opt,name=team,proto3" json:"team,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateTeamResponse) Reset() {
+	*x = UpdateTeamResponse{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateTeamResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateTeamResponse) ProtoMessage() {}
+
+func (x *UpdateTeamResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateTeamResponse.ProtoReflect.Descriptor instead.
+func (*UpdateTeamResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *UpdateTeamResponse) GetTeam() *Team {
+	if x != nil {
+		return x.Team
+	}
+	return nil
+}
+
+type DeleteTeamRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteTeamRequest) Reset() {
+	*x = DeleteTeamRequest{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteTeamRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteTeamRequest) ProtoMessage() {}
+
+func (x *DeleteTeamRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteTeamRequest.ProtoReflect.Descriptor instead.
+func (*DeleteTeamRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *DeleteTeamRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type DeleteTeamResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteTeamResponse) Reset() {
+	*x = DeleteTeamResponse{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteTeamResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteTeamResponse) ProtoMessage() {}
+
+func (x *DeleteTeamResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteTeamResponse.ProtoReflect.Descriptor instead.
+func (*DeleteTeamResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{14}
+}
+
+type AddMemberRequest struct {
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	TeamId string                 `protobuf:"bytes,1,opt,name=team_id,json=teamId,proto3" json:"team_id,omitempty"`
+	Email  string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+	// role defaults to TEAM_ROLE_MEMBER when unspecified.
+	Role          TeamRole `protobuf:"varint,3,opt,name=role,proto3,enum=knowcel.iam.v1.TeamRole" json:"role,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddMemberRequest) Reset() {
+	*x = AddMemberRequest{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddMemberRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddMemberRequest) ProtoMessage() {}
+
+func (x *AddMemberRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddMemberRequest.ProtoReflect.Descriptor instead.
+func (*AddMemberRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *AddMemberRequest) GetTeamId() string {
+	if x != nil {
+		return x.TeamId
+	}
+	return ""
+}
+
+func (x *AddMemberRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *AddMemberRequest) GetRole() TeamRole {
+	if x != nil {
+		return x.Role
+	}
+	return TeamRole_TEAM_ROLE_UNSPECIFIED
+}
+
+type AddMemberResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Member        *TeamMember            `protobuf:"bytes,1,opt,name=member,proto3" json:"member,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddMemberResponse) Reset() {
+	*x = AddMemberResponse{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddMemberResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddMemberResponse) ProtoMessage() {}
+
+func (x *AddMemberResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddMemberResponse.ProtoReflect.Descriptor instead.
+func (*AddMemberResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *AddMemberResponse) GetMember() *TeamMember {
+	if x != nil {
+		return x.Member
+	}
+	return nil
+}
+
+type RemoveMemberRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TeamId        string                 `protobuf:"bytes,1,opt,name=team_id,json=teamId,proto3" json:"team_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RemoveMemberRequest) Reset() {
+	*x = RemoveMemberRequest{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RemoveMemberRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RemoveMemberRequest) ProtoMessage() {}
+
+func (x *RemoveMemberRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RemoveMemberRequest.ProtoReflect.Descriptor instead.
+func (*RemoveMemberRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *RemoveMemberRequest) GetTeamId() string {
+	if x != nil {
+		return x.TeamId
+	}
+	return ""
+}
+
+func (x *RemoveMemberRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type RemoveMemberResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RemoveMemberResponse) Reset() {
+	*x = RemoveMemberResponse{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RemoveMemberResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RemoveMemberResponse) ProtoMessage() {}
+
+func (x *RemoveMemberResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RemoveMemberResponse.ProtoReflect.Descriptor instead.
+func (*RemoveMemberResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{18}
+}
+
+type SetMemberRoleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TeamId        string                 `protobuf:"bytes,1,opt,name=team_id,json=teamId,proto3" json:"team_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Role          TeamRole               `protobuf:"varint,3,opt,name=role,proto3,enum=knowcel.iam.v1.TeamRole" json:"role,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetMemberRoleRequest) Reset() {
+	*x = SetMemberRoleRequest{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetMemberRoleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetMemberRoleRequest) ProtoMessage() {}
+
+func (x *SetMemberRoleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetMemberRoleRequest.ProtoReflect.Descriptor instead.
+func (*SetMemberRoleRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *SetMemberRoleRequest) GetTeamId() string {
+	if x != nil {
+		return x.TeamId
+	}
+	return ""
+}
+
+func (x *SetMemberRoleRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *SetMemberRoleRequest) GetRole() TeamRole {
+	if x != nil {
+		return x.Role
+	}
+	return TeamRole_TEAM_ROLE_UNSPECIFIED
+}
+
+type SetMemberRoleResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Member        *TeamMember            `protobuf:"bytes,1,opt,name=member,proto3" json:"member,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetMemberRoleResponse) Reset() {
+	*x = SetMemberRoleResponse{}
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetMemberRoleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetMemberRoleResponse) ProtoMessage() {}
+
+func (x *SetMemberRoleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_iam_v1_iam_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetMemberRoleResponse.ProtoReflect.Descriptor instead.
+func (*SetMemberRoleResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_iam_v1_iam_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *SetMemberRoleResponse) GetMember() *TeamMember {
+	if x != nil {
+		return x.Member
+	}
+	return nil
+}
+
 var File_knowcel_iam_v1_iam_proto protoreflect.FileDescriptor
 
 const file_knowcel_iam_v1_iam_proto_rawDesc = "" +
@@ -185,10 +1101,71 @@ const file_knowcel_iam_v1_iam_proto_rawDesc = "" +
 	"\x0eplatform_admin\x18\x04 \x01(\bR\rplatformAdmin\"\x17\n" +
 	"\x15GetCurrentUserRequest\"B\n" +
 	"\x16GetCurrentUserResponse\x12(\n" +
-	"\x04user\x18\x01 \x01(\v2\x14.knowcel.iam.v1.UserR\x04user2m\n" +
+	"\x04user\x18\x01 \x01(\v2\x14.knowcel.iam.v1.UserR\x04user\"\x93\x01\n" +
+	"\x04Team\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x121\n" +
+	"\amy_role\x18\x03 \x01(\x0e2\x18.knowcel.iam.v1.TeamRoleR\x06myRole\x124\n" +
+	"\amembers\x18\x04 \x03(\v2\x1a.knowcel.iam.v1.TeamMemberR\amembers\"\x8c\x01\n" +
+	"\n" +
+	"TeamMember\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x12!\n" +
+	"\fdisplay_name\x18\x03 \x01(\tR\vdisplayName\x12,\n" +
+	"\x04role\x18\x04 \x01(\x0e2\x18.knowcel.iam.v1.TeamRoleR\x04role\"'\n" +
+	"\x11CreateTeamRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\">\n" +
+	"\x12CreateTeamResponse\x12(\n" +
+	"\x04team\x18\x01 \x01(\v2\x14.knowcel.iam.v1.TeamR\x04team\" \n" +
+	"\x0eGetTeamRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\";\n" +
+	"\x0fGetTeamResponse\x12(\n" +
+	"\x04team\x18\x01 \x01(\v2\x14.knowcel.iam.v1.TeamR\x04team\"\x14\n" +
+	"\x12ListMyTeamsRequest\"A\n" +
+	"\x13ListMyTeamsResponse\x12*\n" +
+	"\x05teams\x18\x01 \x03(\v2\x14.knowcel.iam.v1.TeamR\x05teams\"7\n" +
+	"\x11UpdateTeamRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\">\n" +
+	"\x12UpdateTeamResponse\x12(\n" +
+	"\x04team\x18\x01 \x01(\v2\x14.knowcel.iam.v1.TeamR\x04team\"#\n" +
+	"\x11DeleteTeamRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"\x14\n" +
+	"\x12DeleteTeamResponse\"o\n" +
+	"\x10AddMemberRequest\x12\x17\n" +
+	"\ateam_id\x18\x01 \x01(\tR\x06teamId\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x12,\n" +
+	"\x04role\x18\x03 \x01(\x0e2\x18.knowcel.iam.v1.TeamRoleR\x04role\"G\n" +
+	"\x11AddMemberResponse\x122\n" +
+	"\x06member\x18\x01 \x01(\v2\x1a.knowcel.iam.v1.TeamMemberR\x06member\"G\n" +
+	"\x13RemoveMemberRequest\x12\x17\n" +
+	"\ateam_id\x18\x01 \x01(\tR\x06teamId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\"\x16\n" +
+	"\x14RemoveMemberResponse\"v\n" +
+	"\x14SetMemberRoleRequest\x12\x17\n" +
+	"\ateam_id\x18\x01 \x01(\tR\x06teamId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12,\n" +
+	"\x04role\x18\x03 \x01(\x0e2\x18.knowcel.iam.v1.TeamRoleR\x04role\"K\n" +
+	"\x15SetMemberRoleResponse\x122\n" +
+	"\x06member\x18\x01 \x01(\v2\x1a.knowcel.iam.v1.TeamMemberR\x06member*P\n" +
+	"\bTeamRole\x12\x19\n" +
+	"\x15TEAM_ROLE_UNSPECIFIED\x10\x00\x12\x13\n" +
+	"\x0fTEAM_ROLE_ADMIN\x10\x01\x12\x14\n" +
+	"\x10TEAM_ROLE_MEMBER\x10\x022\x9b\x06\n" +
 	"\n" +
 	"IamService\x12_\n" +
-	"\x0eGetCurrentUser\x12%.knowcel.iam.v1.GetCurrentUserRequest\x1a&.knowcel.iam.v1.GetCurrentUserResponseBBZ@github.com/ChristophBe/knowcelium/modules/iam/api/go/iamv1;iamv1b\x06proto3"
+	"\x0eGetCurrentUser\x12%.knowcel.iam.v1.GetCurrentUserRequest\x1a&.knowcel.iam.v1.GetCurrentUserResponse\x12S\n" +
+	"\n" +
+	"CreateTeam\x12!.knowcel.iam.v1.CreateTeamRequest\x1a\".knowcel.iam.v1.CreateTeamResponse\x12J\n" +
+	"\aGetTeam\x12\x1e.knowcel.iam.v1.GetTeamRequest\x1a\x1f.knowcel.iam.v1.GetTeamResponse\x12V\n" +
+	"\vListMyTeams\x12\".knowcel.iam.v1.ListMyTeamsRequest\x1a#.knowcel.iam.v1.ListMyTeamsResponse\x12S\n" +
+	"\n" +
+	"UpdateTeam\x12!.knowcel.iam.v1.UpdateTeamRequest\x1a\".knowcel.iam.v1.UpdateTeamResponse\x12S\n" +
+	"\n" +
+	"DeleteTeam\x12!.knowcel.iam.v1.DeleteTeamRequest\x1a\".knowcel.iam.v1.DeleteTeamResponse\x12P\n" +
+	"\tAddMember\x12 .knowcel.iam.v1.AddMemberRequest\x1a!.knowcel.iam.v1.AddMemberResponse\x12Y\n" +
+	"\fRemoveMember\x12#.knowcel.iam.v1.RemoveMemberRequest\x1a$.knowcel.iam.v1.RemoveMemberResponse\x12\\\n" +
+	"\rSetMemberRole\x12$.knowcel.iam.v1.SetMemberRoleRequest\x1a%.knowcel.iam.v1.SetMemberRoleResponseBBZ@github.com/ChristophBe/knowcelium/modules/iam/api/go/iamv1;iamv1b\x06proto3"
 
 var (
 	file_knowcel_iam_v1_iam_proto_rawDescOnce sync.Once
@@ -202,21 +1179,68 @@ func file_knowcel_iam_v1_iam_proto_rawDescGZIP() []byte {
 	return file_knowcel_iam_v1_iam_proto_rawDescData
 }
 
-var file_knowcel_iam_v1_iam_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_knowcel_iam_v1_iam_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_knowcel_iam_v1_iam_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_knowcel_iam_v1_iam_proto_goTypes = []any{
-	(*User)(nil),                   // 0: knowcel.iam.v1.User
-	(*GetCurrentUserRequest)(nil),  // 1: knowcel.iam.v1.GetCurrentUserRequest
-	(*GetCurrentUserResponse)(nil), // 2: knowcel.iam.v1.GetCurrentUserResponse
+	(TeamRole)(0),                  // 0: knowcel.iam.v1.TeamRole
+	(*User)(nil),                   // 1: knowcel.iam.v1.User
+	(*GetCurrentUserRequest)(nil),  // 2: knowcel.iam.v1.GetCurrentUserRequest
+	(*GetCurrentUserResponse)(nil), // 3: knowcel.iam.v1.GetCurrentUserResponse
+	(*Team)(nil),                   // 4: knowcel.iam.v1.Team
+	(*TeamMember)(nil),             // 5: knowcel.iam.v1.TeamMember
+	(*CreateTeamRequest)(nil),      // 6: knowcel.iam.v1.CreateTeamRequest
+	(*CreateTeamResponse)(nil),     // 7: knowcel.iam.v1.CreateTeamResponse
+	(*GetTeamRequest)(nil),         // 8: knowcel.iam.v1.GetTeamRequest
+	(*GetTeamResponse)(nil),        // 9: knowcel.iam.v1.GetTeamResponse
+	(*ListMyTeamsRequest)(nil),     // 10: knowcel.iam.v1.ListMyTeamsRequest
+	(*ListMyTeamsResponse)(nil),    // 11: knowcel.iam.v1.ListMyTeamsResponse
+	(*UpdateTeamRequest)(nil),      // 12: knowcel.iam.v1.UpdateTeamRequest
+	(*UpdateTeamResponse)(nil),     // 13: knowcel.iam.v1.UpdateTeamResponse
+	(*DeleteTeamRequest)(nil),      // 14: knowcel.iam.v1.DeleteTeamRequest
+	(*DeleteTeamResponse)(nil),     // 15: knowcel.iam.v1.DeleteTeamResponse
+	(*AddMemberRequest)(nil),       // 16: knowcel.iam.v1.AddMemberRequest
+	(*AddMemberResponse)(nil),      // 17: knowcel.iam.v1.AddMemberResponse
+	(*RemoveMemberRequest)(nil),    // 18: knowcel.iam.v1.RemoveMemberRequest
+	(*RemoveMemberResponse)(nil),   // 19: knowcel.iam.v1.RemoveMemberResponse
+	(*SetMemberRoleRequest)(nil),   // 20: knowcel.iam.v1.SetMemberRoleRequest
+	(*SetMemberRoleResponse)(nil),  // 21: knowcel.iam.v1.SetMemberRoleResponse
 }
 var file_knowcel_iam_v1_iam_proto_depIdxs = []int32{
-	0, // 0: knowcel.iam.v1.GetCurrentUserResponse.user:type_name -> knowcel.iam.v1.User
-	1, // 1: knowcel.iam.v1.IamService.GetCurrentUser:input_type -> knowcel.iam.v1.GetCurrentUserRequest
-	2, // 2: knowcel.iam.v1.IamService.GetCurrentUser:output_type -> knowcel.iam.v1.GetCurrentUserResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	1,  // 0: knowcel.iam.v1.GetCurrentUserResponse.user:type_name -> knowcel.iam.v1.User
+	0,  // 1: knowcel.iam.v1.Team.my_role:type_name -> knowcel.iam.v1.TeamRole
+	5,  // 2: knowcel.iam.v1.Team.members:type_name -> knowcel.iam.v1.TeamMember
+	0,  // 3: knowcel.iam.v1.TeamMember.role:type_name -> knowcel.iam.v1.TeamRole
+	4,  // 4: knowcel.iam.v1.CreateTeamResponse.team:type_name -> knowcel.iam.v1.Team
+	4,  // 5: knowcel.iam.v1.GetTeamResponse.team:type_name -> knowcel.iam.v1.Team
+	4,  // 6: knowcel.iam.v1.ListMyTeamsResponse.teams:type_name -> knowcel.iam.v1.Team
+	4,  // 7: knowcel.iam.v1.UpdateTeamResponse.team:type_name -> knowcel.iam.v1.Team
+	0,  // 8: knowcel.iam.v1.AddMemberRequest.role:type_name -> knowcel.iam.v1.TeamRole
+	5,  // 9: knowcel.iam.v1.AddMemberResponse.member:type_name -> knowcel.iam.v1.TeamMember
+	0,  // 10: knowcel.iam.v1.SetMemberRoleRequest.role:type_name -> knowcel.iam.v1.TeamRole
+	5,  // 11: knowcel.iam.v1.SetMemberRoleResponse.member:type_name -> knowcel.iam.v1.TeamMember
+	2,  // 12: knowcel.iam.v1.IamService.GetCurrentUser:input_type -> knowcel.iam.v1.GetCurrentUserRequest
+	6,  // 13: knowcel.iam.v1.IamService.CreateTeam:input_type -> knowcel.iam.v1.CreateTeamRequest
+	8,  // 14: knowcel.iam.v1.IamService.GetTeam:input_type -> knowcel.iam.v1.GetTeamRequest
+	10, // 15: knowcel.iam.v1.IamService.ListMyTeams:input_type -> knowcel.iam.v1.ListMyTeamsRequest
+	12, // 16: knowcel.iam.v1.IamService.UpdateTeam:input_type -> knowcel.iam.v1.UpdateTeamRequest
+	14, // 17: knowcel.iam.v1.IamService.DeleteTeam:input_type -> knowcel.iam.v1.DeleteTeamRequest
+	16, // 18: knowcel.iam.v1.IamService.AddMember:input_type -> knowcel.iam.v1.AddMemberRequest
+	18, // 19: knowcel.iam.v1.IamService.RemoveMember:input_type -> knowcel.iam.v1.RemoveMemberRequest
+	20, // 20: knowcel.iam.v1.IamService.SetMemberRole:input_type -> knowcel.iam.v1.SetMemberRoleRequest
+	3,  // 21: knowcel.iam.v1.IamService.GetCurrentUser:output_type -> knowcel.iam.v1.GetCurrentUserResponse
+	7,  // 22: knowcel.iam.v1.IamService.CreateTeam:output_type -> knowcel.iam.v1.CreateTeamResponse
+	9,  // 23: knowcel.iam.v1.IamService.GetTeam:output_type -> knowcel.iam.v1.GetTeamResponse
+	11, // 24: knowcel.iam.v1.IamService.ListMyTeams:output_type -> knowcel.iam.v1.ListMyTeamsResponse
+	13, // 25: knowcel.iam.v1.IamService.UpdateTeam:output_type -> knowcel.iam.v1.UpdateTeamResponse
+	15, // 26: knowcel.iam.v1.IamService.DeleteTeam:output_type -> knowcel.iam.v1.DeleteTeamResponse
+	17, // 27: knowcel.iam.v1.IamService.AddMember:output_type -> knowcel.iam.v1.AddMemberResponse
+	19, // 28: knowcel.iam.v1.IamService.RemoveMember:output_type -> knowcel.iam.v1.RemoveMemberResponse
+	21, // 29: knowcel.iam.v1.IamService.SetMemberRole:output_type -> knowcel.iam.v1.SetMemberRoleResponse
+	21, // [21:30] is the sub-list for method output_type
+	12, // [12:21] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_knowcel_iam_v1_iam_proto_init() }
@@ -229,13 +1253,14 @@ func file_knowcel_iam_v1_iam_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_knowcel_iam_v1_iam_proto_rawDesc), len(file_knowcel_iam_v1_iam_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   3,
+			NumEnums:      1,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_knowcel_iam_v1_iam_proto_goTypes,
 		DependencyIndexes: file_knowcel_iam_v1_iam_proto_depIdxs,
+		EnumInfos:         file_knowcel_iam_v1_iam_proto_enumTypes,
 		MessageInfos:      file_knowcel_iam_v1_iam_proto_msgTypes,
 	}.Build()
 	File_knowcel_iam_v1_iam_proto = out.File

@@ -135,7 +135,7 @@ From `Settings` in [modules/llm/service/src/knowcel_llm/config.py](../modules/ll
 | `KNOWCEL_GRPC_PORT` | `9004` | Serves the gRPC API; each component defaults it to the port in its module.yaml (0 for workers, which serve none). |
 | `KNOWCEL_METRICS_PORT` | `9104` | Serves Prometheus metrics at /metrics (knowcel_platform.metrics); like KNOWCEL_GRPC_PORT, each component defaults it to the port in its module.yaml. |
 | `KNOWCEL_IAM_ADDR` | `localhost:9006` | The iam module (host:port), which tells whether a caller is a platform admin. While it is down, nobody is one and models can't be changed. |
-| `KNOWCEL_LLM_PROVIDER` | `ollama` | Provider for chat and embeddings, a name in knowcel_llm.providers.REGISTRY: ollama, anthropic or fake. |
+| `KNOWCEL_LLM_PROVIDER` | `ollama` | Provider for chat and embeddings, a name in knowcel_llm.providers.REGISTRY: ollama, anthropic, openai or fake. |
 | `KNOWCEL_CHAT_PROVIDER` | empty | Provider for Generate (chat) only, e.g. anthropic with Ollama embeddings; empty falls back to KNOWCEL_LLM_PROVIDER. |
 | `KNOWCEL_EMBEDDING_PROVIDER` | empty | Provider for Embed only; empty falls back to KNOWCEL_LLM_PROVIDER. |
 | `KNOWCEL_OLLAMA_URL` | `http://localhost:11434` | Ollama server (provider ollama). |
@@ -144,6 +144,11 @@ From `Settings` in [modules/llm/service/src/knowcel_llm/config.py](../modules/ll
 | `KNOWCEL_ANTHROPIC_API_KEY` | empty | Anthropic API key, required by provider anthropic (chat only: Anthropic has no embeddings). |
 | `KNOWCEL_ANTHROPIC_CHAT_MODEL` | `claude-sonnet-5-5` | Default chat model of the anthropic provider. |
 | `KNOWCEL_ANTHROPIC_MAX_TOKENS` | `16000` | Upper bound for one answer when the caller sets none (the API requires one). |
+| `KNOWCEL_OPENAI_URL` | `https://api.openai.com/v1` | Base URL of an OpenAI-compatible API including its version path (provider openai): OpenAI itself, or a local server such as vLLM or LM Studio. |
+| `KNOWCEL_OPENAI_API_KEY` | empty | API key of that server, sent as a bearer token; empty for servers without auth. |
+| `KNOWCEL_OPENAI_CHAT_MODEL` | `gpt-4o-mini` | Default chat model of the openai provider. |
+| `KNOWCEL_OPENAI_EMBEDDING_MODEL` | `text-embedding-3-small` | Default embedding model of the openai provider; change the ingestion worker's KNOWCEL_CHUNK_TOKENIZER with it. |
+| `KNOWCEL_OPENAI_SEND_DIMENSIONS` | `true` | Ask the server for KNOWCEL_EMBEDDING_DIMENSIONS-long vectors, which OpenAI's text-embedding-3 models can shorten; turn off for a server that rejects it. |
 | `KNOWCEL_PROVIDER_CONNECT_TIMEOUT` | `5` | Seconds to connect to a provider. |
 | `KNOWCEL_PROVIDER_FIRST_TOKEN_TIMEOUT` | `120` | Seconds until the first token of an answer. Generous on purpose: a CPU-only Ollama can take minutes to load a model. |
 | `KNOWCEL_PROVIDER_GENERATE_TIMEOUT` | `600` | Seconds one whole answer may take. |

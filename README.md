@@ -28,7 +28,7 @@ Name, story and voice: [Brand](docs/brand.md).
 | `document` | Go service :9001 | Document metadata, raw files (S3), chunk + vector index (pgvector) |
 | `ingestion` | Go service :9002, Python worker | Presigned uploads, job tracking, extract → chunk → embed pipeline over NATS JetStream |
 | `chat` | Python service :9003 | Conversations, streaming retrieval-augmented answers with citations |
-| `llm` | Python service :9004 | Single gateway to LLM providers (Ollama by default, `fake` for tests) |
+| `llm` | Python service :9004 | Single gateway to LLM providers (Ollama by default, Anthropic, OpenAI-compatible servers, `fake` for tests) |
 | `iam` | Go service :9006 | Registry of users (registered on first sign-in) and platform admins; teams and roles follow |
 
 ```
@@ -56,7 +56,7 @@ task up -- --profile ollama     # full stack incl. Ollama (pulls llama3.2 + nomi
 open http://localhost:3000
 ```
 
-No GPU or want a fast smoke test? Use `KNOWCEL_LLM_PROVIDER=fake KNOWCEL_RAG_MIN_SCORE=-1 task up` (deterministic echo answers and hash embeddings, which need the relevance threshold off). To use an Ollama running on the host (faster on macOS), set `KNOWCEL_OLLAMA_URL=http://host.docker.internal:11434`. To chat with Claude, set `KNOWCEL_CHAT_PROVIDER=anthropic`, `KNOWCEL_EMBEDDING_PROVIDER=ollama` and `KNOWCEL_ANTHROPIC_API_KEY`: Anthropic has no embedding models, so search and document processing keep using Ollama. `KNOWCEL_CHAT_PROVIDER` and `KNOWCEL_EMBEDDING_PROVIDER` each fall back to `KNOWCEL_LLM_PROVIDER`. See `.env.example` for the common ones, including the host ports if 8080/3000 are taken, and [docs/configuration.md](docs/configuration.md) for every variable with its default. Services check their settings at startup and exit with one message listing every problem.
+No GPU or want a fast smoke test? Use `KNOWCEL_LLM_PROVIDER=fake KNOWCEL_RAG_MIN_SCORE=-1 task up` (deterministic echo answers and hash embeddings, which need the relevance threshold off). To use an Ollama running on the host (faster on macOS), set `KNOWCEL_OLLAMA_URL=http://host.docker.internal:11434`. To chat with Claude, set `KNOWCEL_CHAT_PROVIDER=anthropic`, `KNOWCEL_EMBEDDING_PROVIDER=ollama` and `KNOWCEL_ANTHROPIC_API_KEY`: Anthropic has no embedding models, so search and document processing keep using Ollama. To use OpenAI or a local OpenAI-compatible server (LM Studio, vLLM), set `KNOWCEL_LLM_PROVIDER=openai` with `KNOWCEL_OPENAI_URL` and, where the server checks one, `KNOWCEL_OPENAI_API_KEY`; it serves chat and embeddings. `KNOWCEL_CHAT_PROVIDER` and `KNOWCEL_EMBEDDING_PROVIDER` each fall back to `KNOWCEL_LLM_PROVIDER`. See `.env.example` for the common ones, including the host ports if 8080/3000 are taken, and [docs/configuration.md](docs/configuration.md) for every variable with its default. Services check their settings at startup and exit with one message listing every problem.
 
 To run a released version from the published images instead of building, see [Container images](docs/operations/images.md) (`KNOWCEL_VERSION=<version> docker compose -f compose.yaml -f deploy/release.compose.yaml up`). To deploy to Kubernetes, use the Helm chart in `deploy/helm/kb` ([Kubernetes](docs/operations/kubernetes.md)). To back up and restore the data or roll back migrations, see [Backup, restore and migrations](docs/operations/backup-restore.md).
 

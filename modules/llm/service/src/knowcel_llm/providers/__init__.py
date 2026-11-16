@@ -6,8 +6,9 @@ from .anthropic import AnthropicLimits, AnthropicProvider
 from .base import ModelKind, Provider
 from .fake import FakeProvider
 from .ollama import OllamaLimits, OllamaProvider
+from .openai_compat import OpenAICompatLimits, OpenAICompatProvider
 
-# Add new vendors here (e.g. "openai"); select with KNOWCEL_LLM_PROVIDER, or per task
+# Add new vendors here ; select with KNOWCEL_LLM_PROVIDER, or per task
 # with KNOWCEL_CHAT_PROVIDER / KNOWCEL_EMBEDDING_PROVIDER.
 REGISTRY: dict[str, Callable[[Settings], Provider]] = {
     "ollama": lambda s: OllamaProvider(
@@ -35,6 +36,22 @@ REGISTRY: dict[str, Callable[[Settings], Provider]] = {
             request_timeout=s.provider_generate_timeout,
             status_timeout=s.provider_list_timeout,
             attempts=s.provider_attempts,
+        ),
+    ),
+    "openai": lambda s: OpenAICompatProvider(
+        s.openai_url,
+        s.openai_api_key.get_secret_value() if s.openai_api_key else None,
+        s.openai_chat_model,
+        s.openai_embedding_model,
+        s.embedding_dimensions if s.openai_send_dimensions else None,
+        OpenAICompatLimits(
+            connect_timeout=s.provider_connect_timeout,
+            first_token_timeout=s.provider_first_token_timeout,
+            generate_timeout=s.provider_generate_timeout,
+            embed_timeout=s.provider_embed_timeout,
+            list_timeout=s.provider_list_timeout,
+            attempts=s.provider_attempts,
+            retry_delay=s.provider_retry_delay,
         ),
     ),
     "fake": lambda s: FakeProvider(

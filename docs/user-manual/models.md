@@ -26,7 +26,7 @@ Under the model list, **Usage** shows the last 30 days: for each day, model and 
 
 ## Pull and delete models (platform admins)
 
-Platform admins can install and remove models without access to the server. Everyone else sees only the list.
+Platform admins can install and remove models without access to the server. Everyone else sees only the list, with a note that a platform admin manages the models.
 
 To pull a model, enter its name under **Pull a model**, for example `llama3.2`, and choose **Pull**. A bar shows the download, with the step the provider reports next to it, and the model appears in the list when it is done. If chat and search use different providers, choose which one gets the model. **Cancel** stops a download; what has arrived stays and the next pull continues from it. Large models take a while, and you can leave the page open or come back to the list later.
 

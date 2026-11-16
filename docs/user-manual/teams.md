@@ -29,7 +29,7 @@ The person joins as a **Member**. They must have signed in to Knowcelium at leas
 
 ## Change a member's role
 
-Admins choose **Admin** or **Member** in the **Role** list next to a member. A team always keeps at least one admin: if you try to make the last admin a member, Knowcelium says "A team needs at least one admin. Make someone else an admin first."
+Admins choose **Admin** or **Member** in the **Role** list next to a member. A team always keeps at least one admin: if you try to make the last admin a member, Knowcelium says "A team needs at least one admin. Make someone else an admin first." Every change shows a short confirmation. If you make yourself a member, Knowcelium asks you to confirm first, because only another admin can make you an admin again.
 
 ## Remove a member
 

@@ -17,6 +17,7 @@ test("platform admins get the model controls, other users only the list", async 
   await expect(bob.getByRole("heading", { name: "Models" })).toBeVisible();
   await expect(bob.getByRole("list").getByText("fake-chat")).toBeVisible();
   await expect(bob.getByLabel("Pull a model")).toHaveCount(0);
+  await expect(bob.getByText(/A platform admin manages the models/)).toBeVisible();
   await expect(bob.getByRole("button", { name: /^Delete / })).toHaveCount(0);
 
   await page.goto("/m/llm");

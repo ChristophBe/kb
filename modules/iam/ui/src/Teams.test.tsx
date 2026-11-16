@@ -1,8 +1,9 @@
+import { toast } from "@knowcel/module-sdk";
 import { renderModule } from "@knowcel/module-sdk/testing";
 import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { polyfillDialog } from "@knowcel/ui/testing/dialog";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import iam from "./index.tsx";
 import { admin, alice, iamService, plain } from "./testing.ts";
 
@@ -120,8 +121,28 @@ describe("Teams", () => {
       "/teams/t1",
     );
     fireEvent.change(await screen.findByLabelText("Role of Alice"), { target: { value: "2" } });
+    fireEvent.click(
+      within(await screen.findByRole("dialog")).getByRole("button", { name: "Make me a member" }),
+    );
     expect(await screen.findByText(/A team needs at least one admin/)).toBeTruthy();
     expect((screen.getByLabelText("Role of Alice") as HTMLSelectElement).value).toBe("1");
+  });
+
+  it("asks before you demote yourself and confirms every role change", async () => {
+    const service = iamService([
+      { id: "t1", name: "Platform", members: [admin("alice"), admin("bob"), admin("carol")] },
+    ]);
+    const success = vi.spyOn(toast, "success");
+    render(service, "/teams/t1");
+    fireEvent.change(await screen.findByLabelText("Role of Bob"), { target: { value: "2" } });
+    await waitFor(() => expect(success).toHaveBeenCalledWith("Bob's role is now Member"));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.change(screen.getByLabelText("Role of Alice"), { target: { value: "2" } });
+    const dialog = await screen.findByRole("dialog");
+    expect(service.calls.setMemberRole).toHaveBeenCalledTimes(1);
+    fireEvent.click(within(dialog).getByRole("button", { name: "Make me a member" }));
+    await waitFor(() => expect(success).toHaveBeenCalledWith("Your role is now Member"));
+    expect(service.calls.setMemberRole).toHaveBeenCalledTimes(2);
   });
 
   it("removes a member after confirming", async () => {

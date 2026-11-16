@@ -166,6 +166,14 @@ describe("kit components have no axe violations", () => {
     await expectNoAxeViolations(container);
   });
 
+  it("EmptyState with an action", async () => {
+    const { container } = render(
+      <EmptyState action={<a href="/upload">Upload documents</a>}>No documents yet.</EmptyState>,
+    );
+    expect(container.querySelector("a")?.textContent).toBe("Upload documents");
+    await expectNoAxeViolations(container);
+  });
+
   it("ErrorMessage", async () => {
     const { container } = render(<ErrorMessage error={new Error("Couldn't load documents")} />);
     await expectNoAxeViolations(container);

@@ -197,12 +197,22 @@ export function DocumentList() {
             </tbody>
           </table>
         ) : (
-          <EmptyState icon={FileText}>
+          <EmptyState
+            icon={FileText}
+            action={
+              !needle &&
+              !sharedOnly && (
+                <Link to="/m/ingestion" className={buttonClass("primary")}>
+                  <Upload className="size-4" aria-hidden="true" /> Upload documents
+                </Link>
+              )
+            }
+          >
             {needle
               ? "No documents match this title."
               : sharedOnly
                 ? "No documents have been shared with you."
-                : "No documents yet. Upload some on the Upload page."}
+                : "No documents yet. Upload some to get started."}
           </EmptyState>
         )}
       </Card>

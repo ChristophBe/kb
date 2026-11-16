@@ -1,17 +1,20 @@
 import { ChatService } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { DocumentService } from "@knowcel/document-api/knowcel/document/v1/document_pb";
 import { toast, useClient, useMutation, useQuery, useQueryClient } from "@knowcel/module-sdk";
 import {
   Area,
   Button,
+  buttonClass,
   ConfirmDialog,
+  EmptyState,
   ErrorMessage,
   IconButton,
   navItemClass,
   RelativeTime,
 } from "@knowcel/ui";
-import { Plus, Trash2 } from "lucide-react";
+import { MessageSquare, Plus, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
-import { Navigate, NavLink, Outlet, useNavigate, useParams } from "react-router";
+import { Link, Navigate, NavLink, Outlet, useNavigate, useParams } from "react-router";
 import { UNTITLED } from "./ConversationHeader.tsx";
 
 /** The conversations, most recent message first. */
@@ -23,19 +26,27 @@ function useConversations() {
   });
 }
 
-export function ChatLayout() {
-  const { id: openId } = useParams();
+/** Creates a conversation and opens it. */
+function useCreateConversation() {
   const client = useClient(ChatService);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const conversations = useConversations();
-  const create = useMutation({
+  return useMutation({
     mutationFn: () => client.createConversation({}),
     onSuccess: ({ conversation }) => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       if (conversation) navigate(conversation.id);
     },
   });
+}
+
+export function ChatLayout() {
+  const { id: openId } = useParams();
+  const client = useClient(ChatService);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const conversations = useConversations();
+  const create = useCreateConversation();
   // The conversation the delete confirmation asks about.
   const [deleting, setDeleting] = useState<{ id: string; title: string } | null>(null);
   const list = useRef<HTMLElement>(null);
@@ -133,15 +144,49 @@ export function ChatLayout() {
   );
 }
 
+/** Whether the knowledge base has no documents; unknown (false) until known or if it can't be told. */
+function useNoDocuments(enabled: boolean) {
+  const client = useClient(DocumentService);
+  const documents = useQuery({
+    queryKey: ["chat", "any-document"],
+    enabled,
+    queryFn: () => client.listDocuments({ page: { pageSize: 1 } }),
+  });
+  return documents.data !== undefined && documents.data.documents.length === 0;
+}
+
 /** Opens the most recent conversation, or shows the empty state when there is none. */
 export function ChatIndex() {
   const conversations = useConversations();
+  const create = useCreateConversation();
   const latest = conversations.data?.conversations[0];
+  const noDocuments = useNoDocuments(conversations.data !== undefined && !latest);
   if (latest) return <Navigate to={latest.id} replace />;
   if (conversations.isPending) return null;
   return (
-    <div className="flex flex-1 items-center justify-center text-sm text-fg-muted">
-      Start a new chat.
+    <div className="flex flex-1 items-center justify-center">
+      <EmptyState
+        icon={MessageSquare}
+        action={
+          <>
+            <ErrorMessage error={create.error} />
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button onClick={() => create.mutate()} disabled={create.isPending}>
+                <Plus className="size-4" /> New chat
+              </Button>
+              {noDocuments && (
+                <Link to="/m/ingestion" className={buttonClass("secondary")}>
+                  <Upload className="size-4" aria-hidden="true" /> Upload documents
+                </Link>
+              )}
+            </div>
+          </>
+        }
+      >
+        {noDocuments
+          ? "Chat answers from your documents. Upload some first, then ask your questions here."
+          : "Start a new chat."}
+      </EmptyState>
     </div>
   );
 }

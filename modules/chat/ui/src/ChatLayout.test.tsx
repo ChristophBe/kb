@@ -6,6 +6,10 @@ import {
   ConversationSchema,
   MessageRole,
 } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import {
+  DocumentSchema,
+  DocumentService,
+} from "@knowcel/document-api/knowcel/document/v1/document_pb";
 import { renderModule } from "@knowcel/module-sdk/testing";
 import { polyfillDialog } from "@knowcel/ui/testing/dialog";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
@@ -23,13 +27,20 @@ const conversation = (id: string, title: string) => create(ConversationSchema, {
 /** A chat service backed by an in-memory list of conversations. */
 // `listDelay` slows the list down, as a real network does, so a redirect from a
 // stale list shows.
-function chatService(initial: Conversation[], listDelay = 0) {
+function chatService(initial: Conversation[], listDelay = 0, documentCount = 1) {
   let conversations = initial;
   const deleteConversation = vi.fn(({ id }: { id: string }) => {
     conversations = conversations.filter((c) => c.id !== id);
     return {};
   });
-  const transport = createRouterTransport(({ service }) =>
+  const transport = createRouterTransport(({ service }) => {
+    service(DocumentService, {
+      listDocuments: () => ({
+        documents: Array.from({ length: documentCount }, (_, i) =>
+          create(DocumentSchema, { id: `d${i}`, title: `Doc ${i}` }),
+        ),
+      }),
+    });
     service(ChatService, {
       listConversations: async () => {
         await new Promise((resolve) => setTimeout(resolve, listDelay));
@@ -48,8 +59,8 @@ function chatService(initial: Conversation[], listDelay = 0) {
         ],
       }),
       deleteConversation,
-    }),
-  );
+    });
+  });
   return { transport, deleteConversation };
 }
 
@@ -93,6 +104,25 @@ describe("ChatLayout", () => {
     const { router } = renderModule(chat, transport);
     expect(await screen.findByText("Start a new chat.")).toBeTruthy();
     expect(router.state.location.pathname).toBe("/");
+    expect(screen.queryByRole("link", { name: "Upload documents" })).toBeNull();
+  });
+
+  it("starts a chat from the empty state's button", async () => {
+    const { transport } = chatService([]);
+    const { router } = renderModule(chat, transport);
+    await screen.findByText("Start a new chat.");
+    const main = screen.getByText("Start a new chat.").closest("div")?.parentElement;
+    fireEvent.click(within(main as HTMLElement).getByRole("button", { name: "New chat" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/c9"));
+  });
+
+  it("tells a user without documents to upload some first", async () => {
+    const { transport } = chatService([], 0, 0);
+    renderModule(chat, transport);
+    expect(await screen.findByText(/Upload some first/)).toBeTruthy();
+    expect(
+      (await screen.findByRole("link", { name: "Upload documents" })).getAttribute("href"),
+    ).toBe("/m/ingestion");
   });
 
   it("shows the last message's preview and age", async () => {

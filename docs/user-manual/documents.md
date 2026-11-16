@@ -6,7 +6,7 @@ Documents lists your documents and those that teams you belong to [share with yo
 
 Open **Documents**. The table shows each document's **Title**, **Status**, **Chunks** (how many passages it was split into), **Size** and when it was **Added**. The list updates by itself while documents are being processed.
 
-Select **Upload documents** at the top to add more in [Upload](ingestion.md#upload-documents). With no documents yet, the page says so.
+Select **Upload documents** at the top to add more in [Upload](ingestion.md#upload-documents). With no documents yet, the page says so and offers an **Upload documents** link there too.
 
 ## Sort and filter the list
 

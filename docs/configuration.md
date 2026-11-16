@@ -136,7 +136,7 @@ From `Settings` in [modules/llm/service/src/knowcel_llm/config.py](../modules/ll
 | `KNOWCEL_METRICS_PORT` | `9104` | Serves Prometheus metrics at /metrics (knowcel_platform.metrics); like KNOWCEL_GRPC_PORT, each component defaults it to the port in its module.yaml. |
 | `KNOWCEL_IAM_ADDR` | `localhost:9006` | The iam module (host:port), which tells whether a caller is a platform admin. While it is down, nobody is one and models can't be changed. |
 | `KNOWCEL_DATABASE_URL` | `postgresql+asyncpg://kb:kb@localhost:5432/kb` | The Postgres database holding the llm schema (the usage of generations), as an SQLAlchemy URL. |
-| `KNOWCEL_LLM_PROVIDER` | `ollama` | Provider for chat and embeddings, a name in knowcel_llm.providers.REGISTRY: ollama, anthropic or fake. |
+| `KNOWCEL_LLM_PROVIDER` | `ollama` | Provider for chat and embeddings, a name in knowcel_llm.providers.REGISTRY: ollama, anthropic, openai or fake. |
 | `KNOWCEL_CHAT_PROVIDER` | empty | Provider for Generate (chat) only, e.g. anthropic with Ollama embeddings; empty falls back to KNOWCEL_LLM_PROVIDER. |
 | `KNOWCEL_EMBEDDING_PROVIDER` | empty | Provider for Embed only; empty falls back to KNOWCEL_LLM_PROVIDER. |
 | `KNOWCEL_OLLAMA_URL` | `http://localhost:11434` | Ollama server (provider ollama). |

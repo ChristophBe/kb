@@ -103,6 +103,14 @@ export function QuickStart() {
           </code>{" "}
           for a quick tour without a model; its answers just echo the passages they found.
         </p>
+        <p className="mt-4 text-left text-base text-fg-muted">
+          Want Claude to write the chat answers instead? Start with{" "}
+          <code className="font-mono text-sm break-words text-fg">
+            KNOWCEL_CHAT_PROVIDER=anthropic KNOWCEL_ANTHROPIC_API_KEY=&lt;your key&gt; task
+            up:release
+          </code>
+          . Search keeps using the local model.
+        </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <a href={REPO} className={buttonClass("primary", "px-6 py-3 text-base")}>
             <GithubMark className="size-4" />

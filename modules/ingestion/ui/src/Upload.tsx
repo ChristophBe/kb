@@ -171,8 +171,8 @@ export function Upload() {
   return (
     <div>
       <PageHeader
-        eyebrow="knowcelium / ingestion"
-        title="Ingestion"
+        eyebrow="knowcelium / upload"
+        title="Upload"
         description="Upload documents to add them to the knowledge base."
       />
       {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: drag and drop is a pointer shortcut; keyboard users use "Choose files". */}

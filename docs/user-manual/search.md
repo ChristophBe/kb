@@ -1,6 +1,6 @@
 # Search
 
-Search finds what you are looking for across Knowcelium: the documents that best match, with the passage in each that matches best, your conversations, pages of Knowcelium and sections of this help. Documents match by meaning, not only by exact words, so a question or a description works as well as keywords. There are two ways into the same search: the search box at the top of the sidebar, and the **Search** page.
+Search finds what you are looking for across Knowcelium: the documents that best match, with the passage in each that matches best, your conversations, pages of Knowcelium and sections of this help. Documents match by meaning, not only by exact words, so a question or a description works as well as keywords. There are two ways into the same search: the search box at the top of the sidebar, and the **Search** page, which has no sidebar entry and opens from **See all results for …**.
 
 ## Search from any page
 

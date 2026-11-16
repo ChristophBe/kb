@@ -13,6 +13,11 @@ export interface NavItem {
    * protect the page: the module's service still has to check the role.
    */
   requiresPlatformAdmin?: boolean;
+  /**
+   * Position in the sidebar, lowest first. Entries without one come after all
+   * ordered entries, in module order.
+   */
+  order?: number;
 }
 
 /** One result of a global search. */
@@ -57,6 +62,8 @@ export interface ModuleManifest {
   icon: ComponentType<{ className?: string }>;
   /** Sidebar entries; defaults to a single entry for the module root. */
   nav?: NavItem[];
+  /** Sidebar position of the default entry (used when `nav` is not set); see `NavItem.order`. */
+  order?: number;
   /** The module's group in the global search, usually from `lazySearch`. */
   search?: SearchProvider;
 }

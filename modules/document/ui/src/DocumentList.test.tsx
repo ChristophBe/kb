@@ -97,7 +97,9 @@ describe("DocumentList", () => {
   it("points to ingestion while the knowledge base is empty", async () => {
     const { transport } = documentService([]);
     renderModule(documents, transport);
-    expect(await screen.findByText("No documents yet. Upload some in Ingestion.")).toBeTruthy();
+    expect(
+      await screen.findByText("No documents yet. Upload some on the Upload page."),
+    ).toBeTruthy();
   });
 
   it("shows why the documents can't be loaded", async () => {

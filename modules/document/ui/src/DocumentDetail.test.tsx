@@ -57,13 +57,7 @@ describe("DocumentDetail", () => {
     const dialog = within(screen.getByRole("dialog", { name: "Delete document?" }));
     expect(deleteDocument).not.toHaveBeenCalled();
     fireEvent.click(dialog.getByRole("button", { name: "Delete" }));
-    expect(
-      await screen.findByText(
-        "No documents yet. Upload some on the Upload page.",
-        {},
-        { timeout: 5000 },
-      ),
-    ).toBeTruthy();
+    expect(await screen.findByText("No documents yet. Upload some to get started.")).toBeTruthy();
     expect(deleteDocument).toHaveBeenCalledOnce();
   });
 

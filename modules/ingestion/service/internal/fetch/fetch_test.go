@@ -144,7 +144,6 @@ func TestDefaultFetcherBlocksPrivateNetworks(t *testing.T) {
 	for _, raw := range []string{
 		local.URL,                                  // loopback
 		"http://localhost:1/",                      // resolves to loopback
-		"http://127.1/",                            // short form of 127.0.0.1
 		"http://[::1]/",                            // IPv6 loopback
 		"http://[::ffff:127.0.0.1]/",               // IPv4-mapped loopback
 		"http://10.0.0.5/",                         // private

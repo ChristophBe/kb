@@ -152,7 +152,7 @@ describe("useUploads", () => {
     expect(hook.result.current.uploads[0]?.status).toBe("rejected");
     expect(client.createUpload).not.toHaveBeenCalled();
     expect(events.announce).toHaveBeenCalledWith(
-      "slides.pptx isn't supported. Use PDF, Markdown or plain text.",
+      "slides.pptx isn't supported. Use PDF, Word, HTML, Markdown or plain text.",
     );
   });
 

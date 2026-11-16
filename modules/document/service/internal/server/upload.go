@@ -24,7 +24,7 @@ type Limits struct {
 	// AllowedContentTypes are media types ("application/pdf") or wildcards of
 	// a top-level type ("text/*"). The default is what the ingestion worker
 	// extracts text from (extract_pages in knowcel_ingestion_worker/extract.py).
-	AllowedContentTypes []string `env:"ALLOWED_CONTENT_TYPES" envSeparator:"," envDefault:"application/pdf,text/*,application/json,application/yaml,application/x-yaml"`
+	AllowedContentTypes []string `env:"ALLOWED_CONTENT_TYPES" envSeparator:"," envDefault:"application/pdf,text/*,application/json,application/yaml,application/x-yaml,application/vnd.openxmlformats-officedocument.wordprocessingml.document"`
 }
 
 // Validate checks the limits (KNOWCEL_MAX_UPLOAD_BYTES, KNOWCEL_ALLOWED_CONTENT_TYPES).
@@ -78,6 +78,8 @@ var extensionTypes = map[string]string{
 	".yml":      "application/yaml",
 	".html":     "text/html",
 	".rst":      "text/x-rst",
+	".htm":      "text/html",
+	".docx":     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 }
 
 // declaredContentType is the type a new document is stored with: the

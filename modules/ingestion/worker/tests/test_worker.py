@@ -10,6 +10,7 @@ from google.protobuf.message import Message
 from knowcel.document.v1 import document_pb2
 from knowcel.ingestion.v1 import events_pb2, ingestion_pb2
 from knowcel.llm.v1 import llm_pb2
+from knowcel_ingestion_worker import extract
 from knowcel_ingestion_worker.config import Settings
 from knowcel_ingestion_worker.worker import (
     SUBJECT_FAILED,
@@ -116,6 +117,19 @@ def problems(**settings: Any) -> list[str]:
 
 def test_default_settings_are_valid() -> None:
     assert problems() == []
+
+
+def test_ocr_is_off_by_default() -> None:
+    assert Settings().ocr_enabled is False
+
+
+def test_ocr_languages_are_checked_only_when_ocr_is_on() -> None:
+    assert problems(ocr_languages="eng, deu") == []
+    assert problems(ocr_enabled=True, ocr_languages="eng+deu") == []
+    assert problems(ocr_enabled=True, ocr_languages="eng, deu") == [
+        'KNOWCEL_OCR_LANGUAGES: must be Tesseract language codes joined with "+" '
+        "(\"eng+deu\"), got 'eng, deu'"
+    ]
 
 
 @pytest.mark.parametrize(
@@ -229,6 +243,31 @@ async def test_pdf_chunks_store_their_page() -> None:
     await proc.handle(uploaded("pages.pdf", "application/pdf"))
 
     assert [dict(c.metadata) for c in docs.chunks] == [{"page": "1"}, {"page": "3"}]
+
+
+async def test_docx_upload_is_chunked_and_stored() -> None:
+    docx = (pathlib.Path(__file__).parent / "fixtures" / "report.docx").read_bytes()
+    proc, docs, published = make(docx)
+    await proc.handle(uploaded("report.docx", extract.DOCX_TYPE))
+
+    assert "mycelium network" in "".join(c.text for c in docs.chunks)
+    assert published[-1][0] == SUBJECT_PROCESSED
+
+
+async def test_scanned_pdf_fails_with_ocr_off_and_succeeds_with_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    scan = (pathlib.Path(__file__).parent / "fixtures" / "scan.pdf").read_bytes()
+    monkeypatch.setattr(extract.pytesseract, "image_to_string", lambda *_, **__: "Invoice 4711")
+
+    off, _, off_published = make(scan)
+    await off.handle(uploaded("scan.pdf", "application/pdf"))
+    on, docs, on_published = make(scan, ocr_enabled=True)
+    await on.handle(uploaded("scan.pdf", "application/pdf"))
+
+    assert off_published[-1][0] == SUBJECT_FAILED
+    assert on_published[-1][0] == SUBJECT_PROCESSED
+    assert [c.text for c in docs.chunks] == ["Invoice 4711"]
 
 
 async def test_unsupported_content_marks_failure() -> None:

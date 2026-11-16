@@ -8,6 +8,9 @@ describe("isSupported", () => {
     ["notes.MD", ""],
     ["data.csv", ""],
     ["page", "text/html"],
+    ["page.HTM", ""],
+    ["letter.docx", ""],
+    ["letter", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
   ])("accepts %s (%s)", (name, type) => {
     expect(isSupported({ name, type })).toBe(true);
   });

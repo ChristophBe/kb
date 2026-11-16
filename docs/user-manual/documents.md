@@ -67,7 +67,7 @@ Select the download button in the document's row in **Documents**. The original 
 When a file changes, upload its new version into the same document instead of adding a second one. The document keeps its title, metadata and ID, so links to it and chat sources that cite it keep working.
 
 1. Open the document and select **Upload new version** next to **Version**.
-2. Select **Choose file** and pick the new file. It can be of another type than the old one, as long as Knowcelium can read it (PDF, Markdown or plain text).
+2. Select **Choose file** and pick the new file. It can be of another type than the old one, as long as Knowcelium can read it (PDF, Word, HTML, Markdown or plain text).
 3. When the upload is done, Knowcelium takes you back to the document, which shows the new version as **Processing** next to **Version**.
 
 While the new version is processed, the document stays as it was: search, chat and **Download** use the current version. Once the new version is ready, its passages, file name and size replace the old ones and **Version** goes up by one; the old file is removed.

@@ -8,6 +8,12 @@ ENV UV_LINK_MODE=copy \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
     PATH=/opt/venv/bin:$PATH \
     PYTHONUNBUFFERED=1
+ARG PACKAGE
+# The ingestion worker's optional OCR (KNOWCEL_OCR_ENABLED) calls the tesseract binary.
+RUN if [ "${PACKAGE}" = knowcel-ingestion-worker ]; then \
+      apt-get update && apt-get install -y --no-install-recommends tesseract-ocr \
+      && rm -rf /var/lib/apt/lists/*; \
+    fi
 WORKDIR /app
 COPY pyproject.toml uv.lock .python-version ./
 COPY platform/python platform/python

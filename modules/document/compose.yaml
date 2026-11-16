@@ -17,7 +17,7 @@ services:
       KNOWCEL_IAM_ADDR: iam-service:9006
       # Upload limits; the defaults are what the ingestion worker can read.
       KNOWCEL_MAX_UPLOAD_BYTES: ${KNOWCEL_MAX_UPLOAD_BYTES:-52428800}
-      KNOWCEL_ALLOWED_CONTENT_TYPES: ${KNOWCEL_ALLOWED_CONTENT_TYPES:-application/pdf,text/*,application/json,application/yaml,application/x-yaml}
+      KNOWCEL_ALLOWED_CONTENT_TYPES: ${KNOWCEL_ALLOWED_CONTENT_TYPES:-application/pdf,text/*,application/json,application/yaml,application/x-yaml,application/vnd.openxmlformats-officedocument.wordprocessingml.document}
       # Cleanup of abandoned uploads and of files no document refers to.
       KNOWCEL_CLEANUP_INTERVAL: ${KNOWCEL_CLEANUP_INTERVAL:-1h}
       KNOWCEL_UPLOAD_TTL: ${KNOWCEL_UPLOAD_TTL:-24h}

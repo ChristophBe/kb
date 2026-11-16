@@ -9,16 +9,20 @@ const TEXT_SUFFIXES = [
   ".yaml",
   ".yml",
   ".html",
+  ".htm",
   ".rst",
 ];
 
-export const SUPPORTED_FORMATS = "PDF, Markdown or plain text";
+const DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+export const SUPPORTED_FORMATS = "PDF, Word, HTML, Markdown or plain text";
 
 /** Whether the worker can extract text from the file, judged before any upload. */
 export function isSupported(file: { name: string; type: string }): boolean {
   const dot = file.name.lastIndexOf(".");
   const suffix = dot >= 0 ? file.name.slice(dot).toLowerCase() : "";
   if (file.type === "application/pdf" || suffix === ".pdf") return true;
+  if (file.type === DOCX_TYPE || suffix === ".docx") return true;
   return file.type.startsWith("text/") || TEXT_SUFFIXES.includes(suffix);
 }
 

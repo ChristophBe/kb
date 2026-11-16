@@ -222,8 +222,9 @@ class Processor:
             data.extend(part.data)
         # Extraction and chunking are CPU-bound; a thread keeps the other jobs
         # and the delivery heartbeats going meanwhile.
+        ocr = self._settings.ocr_languages if self._settings.ocr_enabled else None
         pages = await asyncio.to_thread(
-            extract_pages, bytes(data), event.filename, event.content_type
+            extract_pages, bytes(data), event.filename, event.content_type, ocr
         )
         await self._report(event, _CHUNKING, 5)
         size, overlap = self._settings.chunk_tokens, self._settings.chunk_overlap_tokens

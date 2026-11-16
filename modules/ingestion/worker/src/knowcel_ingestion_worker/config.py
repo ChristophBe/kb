@@ -1,3 +1,5 @@
+import re
+
 from knowcel_platform.config import PlatformSettings, Problems
 from pydantic import Field
 
@@ -11,6 +13,13 @@ class Settings(PlatformSettings):
     document_addr: str = "localhost:9001"
     # The llm module (host:port), which embeds the chunks.
     llm_addr: str = "localhost:9004"
+    # Read PDF pages without a text layer (scans) with Tesseract OCR. Off by
+    # default: it is slow and the image needs the tesseract binary (the
+    # Docker image of the worker has it).
+    ocr_enabled: bool = False
+    # Languages Tesseract reads, as its codes joined with "+" ("eng+deu"). Each
+    # needs its tesseract-ocr-<code> package.
+    ocr_languages: str = "eng"
     # Chunks are measured in tokens of the embedding model's tokenizer: a name
     # bundled in knowcel_ingestion_worker/vocab (nomic-embed-text) or a path to a
     # Hugging Face tokenizer.json. Change it together with KNOWCEL_EMBEDDING_MODEL
@@ -46,6 +55,12 @@ class Settings(PlatformSettings):
         super().check(problems)
         problems.addr("document_addr", self.document_addr)
         problems.addr("llm_addr", self.llm_addr)
+        if self.ocr_enabled and not re.fullmatch(r"\w+(\+\w+)*", self.ocr_languages):
+            problems.add(
+                "ocr_languages",
+                f'must be Tesseract language codes joined with "+" ("eng+deu"), '
+                f"got {self.ocr_languages!r}",
+            )
         problems.at_least("chunk_tokens", self.chunk_tokens, 1)
         if not 0 <= self.chunk_overlap_tokens < self.chunk_tokens:
             problems.add(

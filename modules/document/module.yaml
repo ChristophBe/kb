@@ -12,7 +12,7 @@ services:
     # limits, and the cleanup of abandoned uploads and orphaned files.
     env:
       KNOWCEL_MAX_UPLOAD_BYTES: "52428800"
-      KNOWCEL_ALLOWED_CONTENT_TYPES: application/pdf,text/*,application/json,application/yaml,application/x-yaml
+      KNOWCEL_ALLOWED_CONTENT_TYPES: application/pdf,text/*,application/json,application/yaml,application/x-yaml,application/vnd.openxmlformats-officedocument.wordprocessingml.document
       KNOWCEL_CLEANUP_INTERVAL: 1h
       KNOWCEL_UPLOAD_TTL: 24h
       KNOWCEL_ORPHAN_GRACE: 1h

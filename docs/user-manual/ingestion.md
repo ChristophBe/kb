@@ -13,7 +13,7 @@ Ingestion is where you add files to your documents. Knowcelium uploads each file
 
 If a row says **Upload failed** because a chosen team isn't available, it may be a team you created or joined a moment ago, which can take up to half a minute to work here. Select **Retry upload** a little later.
 
-Knowcelium accepts PDF, Markdown and plain text files, including CSV, JSON, YAML, HTML and reStructuredText, of up to 50 MiB each (your administrator may have set another limit or allowed fewer types). Scanned PDFs without a text layer have no text to read and end up with no passages.
+Knowcelium accepts PDF, Word (.docx), HTML, Markdown and plain text files, including CSV, JSON, YAML and reStructuredText, of up to 50 MiB each (your administrator may have set another limit or allowed fewer types). From an HTML page Knowcelium reads the title and the main article, without menus and footers. Scanned PDFs without a text layer have no text to read and end up with no passages, unless your administrator has turned on text recognition (OCR); then Knowcelium reads those pages from their image, which makes processing slower and may misread poor scans.
 
 Keep the page open until every file shows a processing status. Closing the tab, or leaving the page before a file has started uploading, can stop that file's upload.
 
@@ -49,7 +49,7 @@ If the connection breaks, the row shows **Upload failed** with the reason.
 
 ## Files that can't be uploaded
 
-A file Knowcelium can't read, such as an image or a Word document, shows "Not supported (PDF, Markdown or plain text)" and isn't uploaded. Select **×** to dismiss it. Save the content as PDF or plain text and upload that instead.
+A file Knowcelium can't read, such as an image or a PowerPoint presentation, shows "Not supported (PDF, Word, HTML, Markdown or plain text)" and isn't uploaded. Select **×** to dismiss it. Save the content as PDF, Word or plain text and upload that instead.
 
 Some files are refused when the upload starts. The row shows why, and the file isn't uploaded:
 

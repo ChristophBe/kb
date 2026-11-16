@@ -1,18 +1,10 @@
 import { DocumentService } from "@knowcel/document-api/knowcel/document/v1/document_pb";
-import {
-  toast,
-  useClient,
-  useCurrentUser,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@knowcel/module-sdk";
+import { useClient, useCurrentUser, useQuery } from "@knowcel/module-sdk";
 import {
   Badge,
   buttonClass,
   Card,
   ChunkStrip,
-  ConfirmDialog,
   DelayedLoading,
   EmptyState,
   ErrorMessage,
@@ -26,6 +18,7 @@ import {
 import { Download, FileText, Search as SearchIcon, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { Link } from "react-router";
+import { DeleteDocumentDialog, useDownloadDocument } from "./documentActions.tsx";
 import { SharedWith } from "./SharedWith.tsx";
 import { statusLabel } from "./status.ts";
 
@@ -42,7 +35,6 @@ const time = (d: { createTime?: { seconds: bigint; nanos: number } }) =>
 
 export function DocumentList() {
   const client = useClient(DocumentService);
-  const queryClient = useQueryClient();
   const docs = useQuery({
     queryKey: ["documents"],
     queryFn: () => client.listDocuments({ page: { pageSize: 100 } }),
@@ -72,21 +64,7 @@ export function DocumentList() {
   // The document the delete confirmation asks about.
   const [deleting, setDeleting] = useState<{ id: string; title: string } | null>(null);
   const table = useRef<HTMLTableElement>(null);
-  const remove = useMutation({
-    mutationFn: (id: string) => client.deleteDocument({ id }),
-    onSuccess: () => {
-      toast.success("Document deleted");
-      return queryClient.invalidateQueries({ queryKey: ["documents"] });
-    },
-  });
-  const confirmDelete = (id: string) =>
-    remove.mutate(id, {
-      onSettled: () => setDeleting(null),
-    });
-  const download = async (id: string) => {
-    const { url } = await client.getDownloadUrl({ id });
-    window.open(url, "_blank");
-  };
+  const download = useDownloadDocument();
 
   return (
     <div>
@@ -105,7 +83,7 @@ export function DocumentList() {
           </>
         }
       />
-      <ErrorMessage error={docs.error ?? remove.error} />
+      <ErrorMessage error={docs.error} />
       <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
         <Input
           type="search"
@@ -216,19 +194,12 @@ export function DocumentList() {
           </EmptyState>
         )}
       </Card>
-      <ConfirmDialog
-        open={deleting !== null}
-        title="Delete document?"
-        confirmLabel="Delete"
-        pending={remove.isPending}
-        onConfirm={() => deleting && confirmDelete(deleting.id)}
-        onCancel={() => setDeleting(null)}
+      <DeleteDocumentDialog
+        document={deleting}
+        onClose={() => setDeleting(null)}
         // After a delete, the row's button is gone; the focus stays in the list.
         fallbackFocus={table}
-      >
-        “{deleting?.title}” and its passages will be deleted. Chat can no longer use them. This
-        can't be undone.
-      </ConfirmDialog>
+      />
     </div>
   );
 }

@@ -15,12 +15,11 @@ import {
 } from "@knowcel/ui";
 import { useRef, useState } from "react";
 import { shareError } from "./errors.ts";
-import { SharedWith } from "./SharedWith.tsx";
 import { useMyTeams } from "./useMyTeams.ts";
 
 /**
- * Who can read a document, and a dialog for its owner to change that: public,
- * or the teams of the owner. Anyone else uses ShareEditor.
+ * The "Change access" button and dialog for the owner of a document: public, or
+ * the teams of the owner. Anyone else uses ShareEditor.
  */
 export function AccessEditor({ document: d }: { document: Document }) {
   const client = useClient(DocumentService);
@@ -59,11 +58,9 @@ export function AccessEditor({ document: d }: { document: Document }) {
 
   return (
     <>
-      <SharedWith access={d.access} teamIds={d.teamIds} />
       <Button
         ref={changeButton}
-        variant="ghost"
-        className="mt-1 -ml-3 block"
+        variant="secondary"
         onClick={() => {
           save.reset();
           setChoice({ team: d.access === Access.TEAM, teamIds: d.teamIds });

@@ -23,14 +23,9 @@ export function inProgress(d: Document): boolean {
   );
 }
 
-/**
- * The document's version, the state of a new version on its way, and the link to upload
- * one. Uploading happens in ingestion, like any upload; the document keeps its current
- * version until the new one is ready.
- */
+/** The document's version and the state of a new version on its way. */
 export function VersionInfo({ document: d }: { document: Document }) {
   const pending = d.pendingVersion;
-  const canReplace = !inProgress(d);
   return (
     <div className="flex flex-col items-start gap-2">
       <span>{d.version}</span>
@@ -41,15 +36,6 @@ export function VersionInfo({ document: d }: { document: Document }) {
           filename={pending.filename}
           detail={pending.statusDetail}
         />
-      )}
-      {canReplace && (
-        <Link
-          to={`/m/ingestion/replace/${d.id}`}
-          state={{ title: d.title }}
-          className={buttonClass("secondary")}
-        >
-          <Upload className="size-4" aria-hidden="true" /> Upload new version
-        </Link>
       )}
     </div>
   );
@@ -75,5 +61,23 @@ function PendingVersion({
       <Badge tone={tone}>{label}</Badge>
       {status === DocumentStatus.FAILED && detail && <span className="text-danger">{detail}</span>}
     </span>
+  );
+}
+
+/**
+ * The link to upload a new version, nothing while the document or a new version is
+ * processed. Uploading happens in ingestion, like any upload; the document keeps its
+ * current version until the new one is ready.
+ */
+export function UploadVersionLink({ document: d }: { document: Document }) {
+  if (inProgress(d)) return null;
+  return (
+    <Link
+      to={`/m/ingestion/replace/${d.id}`}
+      state={{ title: d.title }}
+      className={buttonClass("secondary")}
+    >
+      <Upload className="size-4" aria-hidden="true" /> Upload new version
+    </Link>
   );
 }

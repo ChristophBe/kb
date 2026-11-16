@@ -28,7 +28,7 @@ describe("ShareEditor", () => {
     renderModule(documents, transport, "/d1", alice);
     const row = await sharedWithRow();
     expect(row.getByText("Public")).toBeTruthy();
-    expect(row.getByRole("button", { name: "Change access" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Change access" })).toBeTruthy();
   });
 
   it("lets the owner switch a document between public and team", async () => {
@@ -37,7 +37,8 @@ describe("ShareEditor", () => {
       teams,
     );
     const { container } = renderModule(documents, transport, "/d1", alice);
-    fireEvent.click(await (await sharedWithRow()).findByRole("button", { name: "Change access" }));
+    await sharedWithRow();
+    fireEvent.click(await screen.findByRole("button", { name: "Change access" }));
     const dialog = within(
       await screen.findByRole("dialog", { name: "Who can read this document?" }),
     );
@@ -59,7 +60,7 @@ describe("ShareEditor", () => {
     await waitFor(() => expect(row.getByText("Platform")).toBeTruthy());
     expect(row.getByText("Support")).toBeTruthy();
 
-    fireEvent.click(row.getByRole("button", { name: "Change access" }));
+    fireEvent.click(screen.getByRole("button", { name: "Change access" }));
     const again = within(
       await screen.findByRole("dialog", { name: "Who can read this document?" }),
     );
@@ -83,7 +84,8 @@ describe("ShareEditor", () => {
       { rejections: 1 },
     );
     renderModule(documents, transport, "/d1", alice);
-    fireEvent.click(await (await sharedWithRow()).findByRole("button", { name: "Change access" }));
+    await sharedWithRow();
+    fireEvent.click(await screen.findByRole("button", { name: "Change access" }));
     const dialog = within(
       await screen.findByRole("dialog", { name: "Who can read this document?" }),
     );
@@ -162,7 +164,7 @@ describe("ShareEditor", () => {
     const row = await sharedWithRow();
     expect(row.getByText("Team")).toBeTruthy();
     expect(screen.queryByRole("alert")).toBeNull();
-    fireEvent.click(row.getByRole("button", { name: "Change access" }));
+    fireEvent.click(screen.getByRole("button", { name: "Change access" }));
     const dialog = within(
       await screen.findByRole("dialog", { name: "Who can read this document?" }),
     );

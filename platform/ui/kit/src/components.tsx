@@ -198,8 +198,19 @@ export function PageHeader({
   );
 }
 
-/** Nothing to show yet; an `icon` adds an accent tile above the message. */
-export function EmptyState({ icon: Icon, children }: { icon?: LucideIcon; children: ReactNode }) {
+/**
+ * Nothing to show yet; an `icon` adds an accent tile above the message and an
+ * `action` (a button or link) the next step below it.
+ */
+export function EmptyState({
+  icon: Icon,
+  action,
+  children,
+}: {
+  icon?: LucideIcon;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <div className="flex flex-col items-center gap-3 py-12 text-center text-sm text-fg-muted">
       {Icon && (
@@ -208,6 +219,7 @@ export function EmptyState({ icon: Icon, children }: { icon?: LucideIcon; childr
         </span>
       )}
       <div>{children}</div>
+      {action}
     </div>
   );
 }

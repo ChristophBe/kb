@@ -36,7 +36,7 @@ The files then appear under **Documents** with the status **Ready**. More in [Up
 
 ## Ask your first question
 
-1. Open **Chat** and select **New chat**.
+1. Open **Chat** and select **New chat**. On an empty workspace, Chat points you to the upload page first.
 2. Type your question in the box at the bottom and press Enter.
 3. The answer appears as it is written. Numbers like [1] point to the passages it is based on; the sources are listed next to the answer.
 

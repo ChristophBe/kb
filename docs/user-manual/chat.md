@@ -8,7 +8,7 @@ Your conversations are private: only you see them, and only you can find, rename
 
 ## Start a conversation
 
-Opening **Chat** shows the conversation with the most recent message, so you can carry on where you left off. If you have no conversations yet, it asks you to start a new chat.
+Opening **Chat** shows the conversation with the most recent message, so you can carry on where you left off. If you have no conversations yet, it offers a **New chat** button. If you have no documents either, it also tells you to upload some first and offers an **Upload documents** link to [Upload](ingestion.md#upload-documents), because answers come from your documents.
 
 1. Open **Chat**.
 2. Select **New chat**.

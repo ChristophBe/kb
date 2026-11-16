@@ -103,9 +103,10 @@ describe("DocumentList", () => {
   it("points to ingestion while the knowledge base is empty", async () => {
     const { transport } = documentService([]);
     renderModule(documents, transport);
-    expect(
-      await screen.findByText("No documents yet. Upload some on the Upload page."),
-    ).toBeTruthy();
+    expect(await screen.findByText("No documents yet. Upload some to get started.")).toBeTruthy();
+    const links = screen.getAllByRole("link", { name: "Upload documents" });
+    expect(links).toHaveLength(2);
+    expect(links.map((l) => l.getAttribute("href"))).toEqual(["/m/ingestion", "/m/ingestion"]);
   });
 
   it("shows why the documents can't be loaded", async () => {

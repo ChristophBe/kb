@@ -144,7 +144,7 @@ export function DocumentList() {
           <EmptyState icon={FileText}>
             {sharedOnly
               ? "No documents have been shared with you."
-              : "No documents yet. Upload some in Ingestion."}
+              : "No documents yet. Upload some on the Upload page."}
           </EmptyState>
         )}
       </Card>

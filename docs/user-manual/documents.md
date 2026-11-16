@@ -6,7 +6,7 @@ Documents lists your documents and those that teams you belong to [share with yo
 
 Open **Documents**. The table shows each document's **Title**, **Status**, **Chunks** (how many passages it was split into), **Size** and when it was **Added**. The list updates by itself while documents are being processed.
 
-With no documents yet, the page says so; add some in [Ingestion](ingestion.md#upload-documents).
+With no documents yet, the page says so; add some in [Upload](ingestion.md#upload-documents).
 
 ## Who can see your documents
 
@@ -72,7 +72,7 @@ When a file changes, upload its new version into the same document instead of ad
 
 While the new version is processed, the document stays as it was: search, chat and **Download** use the current version. Once the new version is ready, its passages, file name and size replace the old ones and **Version** goes up by one; the old file is removed.
 
-If the new version can't be processed, it shows as **Failed** with the reason, and the document keeps its current version. Select **Upload new version** to try another file, or retry processing in [Ingestion](ingestion.md#retry-processing).
+If the new version can't be processed, it shows as **Failed** with the reason, and the document keeps its current version. Select **Upload new version** to try another file, or retry processing in [Upload](ingestion.md#retry-processing).
 
 **Upload new version** isn't offered while the document or a new version of it is still being uploaded or processed. If a file is too large or of a type Knowcelium doesn't read, the upload page says so; choose another file. Select **← Back to the document** to leave without uploading.
 

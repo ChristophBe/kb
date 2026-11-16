@@ -21,13 +21,25 @@ describe("activeModules", () => {
 });
 
 describe("navEntries", () => {
+  it("orders entries by `order` and puts unordered ones last, in module order", () => {
+    const Icon = () => null;
+    const m = (id: string, order?: number): ModuleManifest => ({
+      id,
+      title: id,
+      icon: Icon,
+      order,
+    });
+    const entries = navEntries([m("a"), m("b", 2), m("c"), m("d", 1)]);
+    expect(entries.map((e) => e.label)).toEqual(["d", "b", "a", "c"]);
+  });
+
   it("lists a module's nav items, or the module itself when it declares none", () => {
     const entries = navEntries(activeModules({ apiBaseUrl: "" }));
     expect(entries.map((e) => [e.label, e.to, e.end])).toEqual([
       ["Chat", "/m/chat", false],
       ["Documents", "/m/document", false],
+      ["Upload", "/m/ingestion", false],
       ["Teams", "/m/iam/teams", false],
-      ["Ingestion", "/m/ingestion", false],
       ["Models", "/m/llm", false],
     ]);
   });

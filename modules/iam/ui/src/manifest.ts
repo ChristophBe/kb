@@ -6,7 +6,7 @@ export default defineManifest({
   title: "Teams",
   icon: UsersRound,
   nav: [
-    { path: "teams", label: "Teams", icon: UsersRound },
-    { path: "users", label: "Users", icon: UserRoundCog, requiresPlatformAdmin: true },
+    { path: "teams", label: "Teams", icon: UsersRound, order: 40 },
+    { path: "users", label: "Users", icon: UserRoundCog, requiresPlatformAdmin: true, order: 50 },
   ],
 });

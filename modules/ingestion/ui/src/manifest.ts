@@ -3,6 +3,7 @@ import { Upload } from "lucide-react";
 
 export default defineManifest({
   id: "ingestion",
-  title: "Ingestion",
+  title: "Upload",
+  order: 30,
   icon: Upload,
 });

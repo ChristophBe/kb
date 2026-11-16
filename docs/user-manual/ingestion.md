@@ -1,10 +1,10 @@
-# Ingestion
+# Upload
 
-Ingestion is where you add files to your documents. Knowcelium uploads each file, reads its text, splits it into passages and prepares them for search and chat.
+The Upload page is where you add files to your documents. Knowcelium uploads each file, reads its text, splits it into passages and prepares them for search and chat.
 
 ## Upload documents
 
-1. Open **Ingestion**.
+1. Open **Upload**.
 2. Drop one or more files onto the upload area, or select **Choose files** and pick them.
 3. Choose who can read the files under **Who can read this?**, then select **Upload**. Nothing is uploaded before you confirm; **Cancel** drops the files you added.
 4. Each file gets a row under **Uploads** with a progress bar. Files wait their turn (**Waiting**) when several are uploading.

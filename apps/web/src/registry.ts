@@ -24,21 +24,27 @@ export interface NavEntry {
 }
 
 /**
- * The modules' pages in sidebar order: a module's nav items, or one entry
+ * The modules' pages in sidebar order (by each item's `order`, then module order): a module's nav items, or one entry
  * for the module itself when it declares none. The sidebar and the page
  * search both list these. Items that require a platform admin are left out
  * unless `isPlatformAdmin`.
  */
 export function navEntries(modules: ModuleManifest[], isPlatformAdmin = false): NavEntry[] {
-  return modules.flatMap((m) => {
-    const items = m.nav ?? [{ path: "", label: m.title, icon: m.icon }];
-    return items
-      .filter((item) => isPlatformAdmin || !item.requiresPlatformAdmin)
-      .map((item) => ({
-        to: item.path ? `/m/${m.id}/${item.path}` : `/m/${m.id}`,
-        label: item.label,
-        icon: item.icon ?? m.icon,
-        end: !item.path && items.length > 1,
-      }));
-  });
+  return modules
+    .flatMap((m) => {
+      const items = m.nav ?? [{ path: "", label: m.title, icon: m.icon, order: m.order }];
+      return items
+        .filter((item) => isPlatformAdmin || !item.requiresPlatformAdmin)
+        .map((item) => ({
+          order: item.order ?? Number.POSITIVE_INFINITY,
+          entry: {
+            to: item.path ? `/m/${m.id}/${item.path}` : `/m/${m.id}`,
+            label: item.label,
+            icon: item.icon ?? m.icon,
+            end: !item.path && items.length > 1,
+          },
+        }));
+    })
+    .sort((a, b) => (a.order === b.order ? 0 : a.order < b.order ? -1 : 1))
+    .map((x) => x.entry);
 }

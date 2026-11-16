@@ -10,10 +10,11 @@ Knowcelium asks you to sign in when you open it, and shows who is signed in at t
 
 The sidebar on the left leads to every area:
 
-- **Search**: find documents, conversations, pages and help in one place. See [Search](search.md).
 - **Chat**: ask questions about your documents. See [Chat](chat.md).
 - **Documents**: everything in your account. See [Documents](documents.md).
-- **Ingestion**: upload files to add them. See [Ingestion](ingestion.md).
+- **Upload**: add files. See [Upload](ingestion.md).
+- **Teams**: create teams and manage who is in them. See [Teams](teams.md).
+- **Users**, for platform admins only: see who has signed in and who is a platform admin. See [Users](users.md).
 - **Models**: check that the language model behind search and chat is available. See [Models](models.md).
 - **Help**, at the bottom of the sidebar: this manual, one page per area.
 
@@ -23,7 +24,7 @@ Knowcelium opens on **Chat**.
 
 ## Add your first documents
 
-1. Open **Ingestion**.
+1. Open **Upload**.
 2. Drop files onto the upload area, or select **Choose files**. PDF, Markdown and plain text files work.
 3. Wait until each file shows **Done** under **Uploads**.
 

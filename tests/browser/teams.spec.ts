@@ -31,6 +31,8 @@ test("a role change shows a toast, and demoting yourself asks first", async ({ p
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByRole("heading", { name: "Make yourself a member?" })).toBeVisible();
   await dialog.getByRole("button", { name: "Cancel" }).click();
+  // The native dialog reports its close asynchronously; reopening before that would be undone by it.
+  await expect(dialog).toBeHidden();
   await expect(aliceRow.getByRole("combobox")).toHaveValue("1");
 
   await aliceRow.getByRole("combobox").selectOption("Member");

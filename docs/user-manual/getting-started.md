@@ -22,6 +22,10 @@ The search box at the top of the sidebar searches from anywhere; press ⌘K or C
 
 Knowcelium opens on **Chat**.
 
+When you open an area, your keyboard focus moves to the page's title, so you can start reading or press Tab to reach its first control without going back through the sidebar. To jump past the sidebar at any time, press Tab right after the page loads: the first stop is **Skip to content**, and Enter takes you to the page itself.
+
+If you type an address that doesn't exist, you see **Page not found** with a link, **Go to the start page**.
+
 ## Add your first documents
 
 1. Open **Upload**.

@@ -1,6 +1,5 @@
 import type { RuntimeAuth } from "@knowcel/module-sdk";
-import { Button, DelayedLoading, ErrorMessage, PageTitle, Spinner } from "@knowcel/ui";
-import { Library } from "lucide-react";
+import { Button, DelayedLoading, ErrorMessage, Logo, PageTitle, Spinner } from "@knowcel/ui";
 import type { User, UserManager } from "oidc-client-ts";
 import {
   createContext,
@@ -162,10 +161,7 @@ function signInError(error: unknown): string {
 function SignInScreen({ children }: { children: ReactNode }) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
-      <p className="flex items-center gap-2 font-semibold">
-        <Library className="size-5 text-accent" aria-hidden="true" />
-        <span className="font-mono font-medium">knowcelium</span>
-      </p>
+      <Logo size={24} className="font-serif" />
       {children}
     </main>
   );

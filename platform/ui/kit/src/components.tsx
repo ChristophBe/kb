@@ -90,12 +90,13 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
  * is a lighter shade for a list pane beside it (the conversation list).
  */
 export function Area({
+  as: Element = "div",
   tone = "primary",
   className,
   ...props
-}: HTMLAttributes<HTMLDivElement> & { tone?: "primary" | "secondary" }) {
+}: HTMLAttributes<HTMLElement> & { as?: "div" | "aside"; tone?: "primary" | "secondary" }) {
   return (
-    <div
+    <Element
       className={cn(
         tone === "primary" ? "glass-area" : "glass-subtle",
         "flex h-screen flex-col border-border",

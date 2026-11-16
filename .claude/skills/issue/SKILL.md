@@ -39,6 +39,14 @@ Rules (these implement the **Definition of Ready** in CONTRIBUTING.md; read its 
 - Milestone: work items get one (match the phase goals); epics get none.
 - Dependencies and open questions go under Notes with issue links (`Depends on #n`); record dependencies on GitHub too (see section 4). No open question may block the work.
 
+**UX check for work items that touch the UI** (a `lang:ts` item with a user-visible change). General UX comes before a specific flow: a flow is only done when the user can reach it and recover from its failure states. Fold these into **Changes** and **Acceptance criteria** (see `docs/ux-standards.md` and `docs/brand.md`):
+- **Entry point:** say where the user reaches the feature from (nav entry, button on which page, link from which empty state). A feature on a page nobody links to is not done; actions belong on the page where the user needs them next (e.g. Download on the document page, not only in the list).
+- **States:** loading, empty (say what to do next, with a link), error (inline, with a retry or next step) and, for background work, progress and completion.
+- **Feedback and safety:** a result the user can see (toast or inline confirmation), a confirmation for destructive or disclosing actions, and an error shown where the user is looking, not behind a closing dialog.
+- **Access:** operable by keyboard and by touch (no hover-only controls), accessible names, usable at 320 px.
+- **Words:** the same term as the rest of the UI and the user manual (no "chunk" next to "passage", no internal module names such as "Ingestion" in labels).
+- **No duplicate surface:** search the shell and kit for an existing component or pattern (e.g. the header search, `ConfirmDialog`, `PageHeader`) and extend it instead of adding a second one.
+
 Example work item (title "Global command palette (⌘K) with document search", labels `type:feature area:ui-shell lang:ts`, milestone `Navigation & UI polish`):
 
 ```markdown
@@ -67,7 +75,7 @@ Check it against section 2 and the Definition of Ready and report concrete findi
 
 ## 4. Check the Definition of Ready
 
-Before showing a draft or a refinement, go through every check of the **Definition of Ready** in CONTRIBUTING.md for the issue's type and list the result (✅ / ❌ with the reason). Fix what you can in the draft; anything that can't be fixed without the user (an open question, an unclear dependency) is reported as a blocker, and the issue is not ready.
+Before showing a draft or a refinement, go through every check of the **Definition of Ready** in CONTRIBUTING.md for the issue's type and list the result (✅ / ❌ with the reason). For UI work items also list the result of the UX check from section 2 (entry point, states, feedback and safety, access, words, no duplicate surface). Fix what you can in the draft; anything that can't be fixed without the user (an open question, an unclear dependency) is reported as a blocker, and the issue is not ready.
 
 ## 5. Apply (only after confirmation)
 

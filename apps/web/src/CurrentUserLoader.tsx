@@ -1,5 +1,11 @@
 import { IamService } from "@knowcel/iam-api/knowcel/iam/v1/iam_pb";
-import { type CurrentUser, CurrentUserProvider, useClient, useQuery } from "@knowcel/module-sdk";
+import {
+  type CurrentUser,
+  CurrentUserProvider,
+  type CurrentUserStatus,
+  useClient,
+  useQuery,
+} from "@knowcel/module-sdk";
 import { type ReactNode, useMemo } from "react";
 import { useSession } from "./auth/AuthGate.tsx";
 
@@ -14,7 +20,7 @@ export function CurrentUserLoader({ children }: { children: ReactNode }) {
   const client = useClient(IamService);
   const session = useSession();
   const who = session?.email ?? session?.name;
-  const { data } = useQuery({
+  const { data, status } = useQuery({
     // Keyed by who is signed in, so another user never sees this user's entry.
     queryKey: ["current-user", who],
     queryFn: async () => (await client.getCurrentUser({})).user,
@@ -35,5 +41,18 @@ export function CurrentUserLoader({ children }: { children: ReactNode }) {
         : null,
     [data],
   );
-  return <CurrentUserProvider user={user}>{children}</CurrentUserProvider>;
+  // Without a sign-in the query never runs: no user is expected then.
+  const state: CurrentUserStatus =
+    who === undefined
+      ? "ready"
+      : status === "pending"
+        ? "loading"
+        : status === "error"
+          ? "failed"
+          : "ready";
+  return (
+    <CurrentUserProvider user={user} status={state}>
+      {children}
+    </CurrentUserProvider>
+  );
 }

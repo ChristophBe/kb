@@ -67,4 +67,27 @@ describe("Users", () => {
     );
     expect(await screen.findByText(/needs at least one admin/)).toBeTruthy();
   });
+
+  it("waits for the current user instead of denying", () => {
+    const service = directory();
+    renderModule(iam, service.transport, "/users", null, "loading");
+    expect(screen.queryByText("Only platform admins can see the users.")).toBeNull();
+    expect(service.calls.listUsers).not.toHaveBeenCalled();
+  });
+
+  it("says some actions are unavailable when the current user could not be loaded", () => {
+    renderModule(iam, directory().transport, "/users", null, "failed");
+    expect(screen.getByText(/Your account could not be loaded/)).toBeTruthy();
+    expect(screen.queryByText("Only platform admins can see the users.")).toBeNull();
+  });
+
+  it("keeps the dialog open with the error when demoting fails", async () => {
+    renderModule(iam, directory().transport, "/users", admin);
+    fireEvent.click(await screen.findByRole("button", { name: "Demote Alice" }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Demote" }));
+    const alert = await within(dialog).findByRole("alert");
+    expect(alert.textContent).toMatch(/needs at least one admin/);
+    expect(screen.getByRole("dialog")).toBeTruthy();
+  });
 });

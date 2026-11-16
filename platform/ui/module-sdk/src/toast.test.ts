@@ -36,6 +36,23 @@ describe("toast", () => {
     expect(result.current.map((t) => t.message)).toEqual(["t2", "t3", "t4"]);
   });
 
+  it("does not evict an error for newer toasts", () => {
+    const { result } = current();
+    act(() => {
+      toast.error("failed");
+      for (const n of [1, 2, 3]) toast.success(`ok${n}`);
+    });
+    expect(result.current.map((t) => t.message)).toEqual(["failed", "ok2", "ok3"]);
+  });
+
+  it("drops the oldest error when only errors remain", () => {
+    const { result } = current();
+    act(() => {
+      for (const n of [1, 2, 3, 4]) toast.error(`e${n}`);
+    });
+    expect(result.current.map((t) => t.message)).toEqual(["e2", "e3", "e4"]);
+  });
+
   it("dismisses one toast", () => {
     const { result } = current();
     act(() => {

@@ -77,7 +77,8 @@ describe("HeaderSearch", () => {
     ]);
     type("cha");
 
-    const list = await screen.findByRole("listbox", { name: "Search results" });
+    await screen.findByRole("group", { name: "Pages" });
+    const list = screen.getByRole("listbox", { name: "Search results" });
     expect(field().getAttribute("aria-expanded")).toBe("true");
     expect(field().getAttribute("aria-controls")).toBe(list.id);
     expect(within(list).getAllByRole("group")).toHaveLength(3);
@@ -156,6 +157,14 @@ describe("HeaderSearch", () => {
     fireEvent.keyDown(field(), { key: "Escape" });
     fireEvent.keyDown(field(), { key: "Escape" });
     expect((field() as HTMLInputElement).value).toBe("");
+  });
+
+  it("says Searching… at once and shows No results when nothing matches", async () => {
+    renderSearch([provider("Documents", 0)]);
+    type("zzz");
+    const list = screen.getByRole("listbox");
+    expect(within(list).getByText("Searching…")).toBeTruthy();
+    expect(await within(list).findByText("No results")).toBeTruthy();
   });
 
   it("opens a hit on click", async () => {

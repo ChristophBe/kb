@@ -8,7 +8,9 @@ Open **Users** in the sidebar. The table lists each person's name and email addr
 
 A person appears in the list once they have signed in to Knowcelium for the first time.
 
-If you open the page without being a platform admin, Knowcelium says "Only platform admins can see the users."
+While Knowcelium loads your account, the page shows a loading placeholder. If you open the page without being a platform admin, it says "Only platform admins can see the users."
+
+If your account can't be loaded, for example because the user service is unavailable, the page says so and that some actions are unavailable. Reload the page to try again.
 
 ## Make someone a platform admin
 
@@ -18,6 +20,8 @@ Select **Promote** in the person's row. They are a platform admin from then on a
 
 1. Select **Demote** in the person's row.
 2. Confirm with **Demote**.
+
+If demoting fails, the reason appears in the confirmation and it stays open. Select **Cancel** to close it, or try again.
 
 The person is an ordinary user again. You can demote yourself too, as long as another platform admin remains; then the Users page closes for you.
 

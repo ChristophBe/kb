@@ -220,7 +220,7 @@ describe("Conversation", () => {
     expect(signal.aborted).toBe(true);
   });
 
-  it("shows a reloaded stopped answer with its label and without Retry", async () => {
+  it("shows a reloaded stopped answer with its label and a Retry that asks the question again", async () => {
     saved = [
       message(MessageRole.USER, "first"),
       message(MessageRole.ASSISTANT, "partial", MessageStatus.STOPPED),
@@ -230,7 +230,32 @@ describe("Conversation", () => {
     expect(await screen.findByText("partial")).toBeTruthy();
     expect(screen.getByText("Stopped")).toBeTruthy();
     expect(screen.queryByText("The answer was interrupted.")).toBeNull();
+
+    streamChat.mockImplementation(completeStream("Full answer."));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    });
+    expect(streamChat.mock.calls[0]?.[0]).toMatchObject({ content: "first" });
+  });
+
+  it("offers Copy answer on the newest answer only, not on questions or while streaming", async () => {
+    saved = [
+      message(MessageRole.USER, "first"),
+      message(MessageRole.ASSISTANT, "old **answer**"),
+      message(MessageRole.USER, "second"),
+      message(MessageRole.ASSISTANT, "new **answer**"),
+    ];
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    await renderConversation();
+
+    const copy = await screen.findAllByRole("button", { name: "Copy answer" });
+    expect(copy).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+    await act(async () => {
+      fireEvent.click(copy[0] as HTMLElement);
+    });
+    expect(writeText).toHaveBeenCalledWith("new **answer**");
   });
 
   it("offers Sources and the scope only when answering from your documents", async () => {

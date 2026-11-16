@@ -1109,22 +1109,28 @@ name = "knowcel-llm-service"
 version = "0.1.0"
 source = { editable = "modules/llm/service" }
 dependencies = [
+    { name = "alembic" },
     { name = "anthropic" },
+    { name = "asyncpg" },
     { name = "httpx" },
     { name = "knowcel-iam-api" },
     { name = "knowcel-llm-api" },
     { name = "knowcel-platform" },
     { name = "prometheus-client" },
+    { name = "sqlalchemy", extra = ["asyncio"] },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "alembic", specifier = ">=1.16" },
     { name = "anthropic", specifier = ">=2.3" },
+    { name = "asyncpg", specifier = ">=0.30" },
     { name = "httpx", specifier = ">=0.28" },
     { name = "knowcel-iam-api", editable = "modules/iam/api/python" },
     { name = "knowcel-llm-api", editable = "modules/llm/api/python" },
     { name = "knowcel-platform", editable = "platform/python" },
     { name = "prometheus-client", specifier = ">=0.26" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.40" },
 ]
 
 [[package]]

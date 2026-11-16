@@ -25,6 +25,7 @@ const (
 	LlmService_Embed_FullMethodName             = "/knowcel.llm.v1.LlmService/Embed"
 	LlmService_PullModel_FullMethodName         = "/knowcel.llm.v1.LlmService/PullModel"
 	LlmService_DeleteModel_FullMethodName       = "/knowcel.llm.v1.LlmService/DeleteModel"
+	LlmService_GetUsage_FullMethodName          = "/knowcel.llm.v1.LlmService/GetUsage"
 )
 
 // LlmServiceClient is the client API for LlmService service.
@@ -47,6 +48,10 @@ type LlmServiceClient interface {
 	// DeleteModel removes a model from a provider. Platform admins only;
 	// providers that can't manage models return UNIMPLEMENTED.
 	DeleteModel(ctx context.Context, in *DeleteModelRequest, opts ...grpc.CallOption) (*DeleteModelResponse, error)
+	// GetUsage sums the tokens of recorded generations per day, model and
+	// calling module. Platform admins see every user's usage, everyone else
+	// their own; calls without a user are rejected with UNAUTHENTICATED.
+	GetUsage(ctx context.Context, in *GetUsageRequest, opts ...grpc.CallOption) (*GetUsageResponse, error)
 }
 
 type llmServiceClient struct {
@@ -135,6 +140,16 @@ func (c *llmServiceClient) DeleteModel(ctx context.Context, in *DeleteModelReque
 	return out, nil
 }
 
+func (c *llmServiceClient) GetUsage(ctx context.Context, in *GetUsageRequest, opts ...grpc.CallOption) (*GetUsageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUsageResponse)
+	err := c.cc.Invoke(ctx, LlmService_GetUsage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LlmServiceServer is the server API for LlmService service.
 // All implementations must embed UnimplementedLlmServiceServer
 // for forward compatibility.
@@ -155,6 +170,10 @@ type LlmServiceServer interface {
 	// DeleteModel removes a model from a provider. Platform admins only;
 	// providers that can't manage models return UNIMPLEMENTED.
 	DeleteModel(context.Context, *DeleteModelRequest) (*DeleteModelResponse, error)
+	// GetUsage sums the tokens of recorded generations per day, model and
+	// calling module. Platform admins see every user's usage, everyone else
+	// their own; calls without a user are rejected with UNAUTHENTICATED.
+	GetUsage(context.Context, *GetUsageRequest) (*GetUsageResponse, error)
 	mustEmbedUnimplementedLlmServiceServer()
 }
 
@@ -182,6 +201,9 @@ func (UnimplementedLlmServiceServer) PullModel(*PullModelRequest, grpc.ServerStr
 }
 func (UnimplementedLlmServiceServer) DeleteModel(context.Context, *DeleteModelRequest) (*DeleteModelResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteModel not implemented")
+}
+func (UnimplementedLlmServiceServer) GetUsage(context.Context, *GetUsageRequest) (*GetUsageResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetUsage not implemented")
 }
 func (UnimplementedLlmServiceServer) mustEmbedUnimplementedLlmServiceServer() {}
 func (UnimplementedLlmServiceServer) testEmbeddedByValue()                    {}
@@ -298,6 +320,24 @@ func _LlmService_DeleteModel_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LlmService_GetUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUsageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LlmServiceServer).GetUsage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LlmService_GetUsage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LlmServiceServer).GetUsage(ctx, req.(*GetUsageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LlmService_ServiceDesc is the grpc.ServiceDesc for LlmService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -320,6 +360,10 @@ var LlmService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteModel",
 			Handler:    _LlmService_DeleteModel_Handler,
+		},
+		{
+			MethodName: "GetUsage",
+			Handler:    _LlmService_GetUsage_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

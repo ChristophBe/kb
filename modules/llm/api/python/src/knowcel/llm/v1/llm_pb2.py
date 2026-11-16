@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18knowcel/llm/v1/llm.proto\x12\x0eknowcel.llm.v1\"b\n\x05Model\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n\x08provider\x18\x02 \x01(\tR\x08provider\x12-\n\x04kind\x18\x03 \x01(\x0e\x32\x19.knowcel.llm.v1.ModelKindR\x04kind\"M\n\x07Message\x12(\n\x04role\x18\x01 \x01(\x0e\x32\x14.knowcel.llm.v1.RoleR\x04role\x12\x18\n\x07\x63ontent\x18\x02 \x01(\tR\x07\x63ontent\"}\n\x11GenerationOptions\x12%\n\x0btemperature\x18\x01 \x01(\x02H\x00R\x0btemperature\x88\x01\x01\x12\"\n\nmax_tokens\x18\x02 \x01(\x05H\x01R\tmaxTokens\x88\x01\x01\x42\x0e\n\x0c_temperatureB\r\n\x0b_max_tokens\"O\n\x05Usage\x12!\n\x0cinput_tokens\x18\x01 \x01(\x05R\x0binputTokens\x12#\n\routput_tokens\x18\x02 \x01(\x05R\x0coutputTokens\"\x13\n\x11ListModelsRequest\"C\n\x12ListModelsResponse\x12-\n\x06models\x18\x01 \x03(\x0b\x32\x15.knowcel.llm.v1.ModelR\x06models\"\x1a\n\x18GetProviderStatusRequest\"^\n\x0eProviderHealth\x12\x1a\n\x08provider\x18\x01 \x01(\tR\x08provider\x12\x18\n\x07healthy\x18\x02 \x01(\x08R\x07healthy\x12\x16\n\x06\x64\x65tail\x18\x03 \x01(\tR\x06\x64\x65tail\"\xf4\x02\n\x19GetProviderStatusResponse\x12\x1a\n\x08provider\x18\x01 \x01(\tR\x08provider\x12\x18\n\x07healthy\x18\x02 \x01(\x08R\x07healthy\x12\x16\n\x06\x64\x65tail\x18\x03 \x01(\tR\x06\x64\x65tail\x12,\n\x12\x64\x65\x66\x61ult_chat_model\x18\x04 \x01(\tR\x10\x64\x65\x66\x61ultChatModel\x12\x36\n\x17\x64\x65\x66\x61ult_embedding_model\x18\x05 \x01(\tR\x15\x64\x65\x66\x61ultEmbeddingModel\x12\x31\n\x14\x65mbedding_dimensions\x18\x06 \x01(\x05R\x13\x65mbeddingDimensions\x12\x32\n\x04\x63hat\x18\x07 \x01(\x0b\x32\x1e.knowcel.llm.v1.ProviderHealthR\x04\x63hat\x12<\n\tembedding\x18\x08 \x01(\x0b\x32\x1e.knowcel.llm.v1.ProviderHealthR\tembedding\"\x99\x01\n\x0fGenerateRequest\x12\x14\n\x05model\x18\x01 \x01(\tR\x05model\x12\x33\n\x08messages\x18\x02 \x03(\x0b\x32\x17.knowcel.llm.v1.MessageR\x08messages\x12;\n\x07options\x18\x03 \x01(\x0b\x32!.knowcel.llm.v1.GenerationOptionsR\x07options\"\x7f\n\x10GenerateResponse\x12\x14\n\x05\x64\x65lta\x18\x01 \x01(\tR\x05\x64\x65lta\x12\x12\n\x04\x64one\x18\x02 \x01(\x08R\x04\x64one\x12+\n\x05usage\x18\x03 \x01(\x0b\x32\x15.knowcel.llm.v1.UsageR\x05usage\x12\x14\n\x05model\x18\x04 \x01(\tR\x05model\"<\n\x0c\x45mbedRequest\x12\x14\n\x05model\x18\x01 \x01(\tR\x05model\x12\x16\n\x06inputs\x18\x02 \x03(\tR\x06inputs\"#\n\tEmbedding\x12\x16\n\x06values\x18\x01 \x03(\x02R\x06values\"\x80\x01\n\rEmbedResponse\x12\x39\n\nembeddings\x18\x01 \x03(\x0b\x32\x19.knowcel.llm.v1.EmbeddingR\nembeddings\x12\x14\n\x05model\x18\x02 \x01(\tR\x05model\x12\x1e\n\ndimensions\x18\x03 \x01(\x05R\ndimensions\"D\n\x10PullModelRequest\x12\x1a\n\x08provider\x18\x01 \x01(\tR\x08provider\x12\x14\n\x05model\x18\x02 \x01(\tR\x05model\"s\n\x11PullModelResponse\x12\x16\n\x06status\x18\x01 \x01(\tR\x06status\x12\x1c\n\tcompleted\x18\x02 \x01(\x03R\tcompleted\x12\x14\n\x05total\x18\x03 \x01(\x03R\x05total\x12\x12\n\x04\x64one\x18\x04 \x01(\x08R\x04\x64one\"F\n\x12\x44\x65leteModelRequest\x12\x1a\n\x08provider\x18\x01 \x01(\tR\x08provider\x12\x14\n\x05model\x18\x02 \x01(\tR\x05model\"\x15\n\x13\x44\x65leteModelResponse*P\n\x04Role\x12\x14\n\x10ROLE_UNSPECIFIED\x10\x00\x12\x0f\n\x0bROLE_SYSTEM\x10\x01\x12\r\n\tROLE_USER\x10\x02\x12\x12\n\x0eROLE_ASSISTANT\x10\x03*V\n\tModelKind\x12\x1a\n\x16MODEL_KIND_UNSPECIFIED\x10\x00\x12\x13\n\x0fMODEL_KIND_CHAT\x10\x01\x12\x18\n\x14MODEL_KIND_EMBEDDING\x10\x02\x32\x8e\x04\n\nLlmService\x12S\n\nListModels\x12!.knowcel.llm.v1.ListModelsRequest\x1a\".knowcel.llm.v1.ListModelsResponse\x12h\n\x11GetProviderStatus\x12(.knowcel.llm.v1.GetProviderStatusRequest\x1a).knowcel.llm.v1.GetProviderStatusResponse\x12O\n\x08Generate\x12\x1f.knowcel.llm.v1.GenerateRequest\x1a .knowcel.llm.v1.GenerateResponse0\x01\x12\x44\n\x05\x45mbed\x12\x1c.knowcel.llm.v1.EmbedRequest\x1a\x1d.knowcel.llm.v1.EmbedResponse\x12R\n\tPullModel\x12 .knowcel.llm.v1.PullModelRequest\x1a!.knowcel.llm.v1.PullModelResponse0\x01\x12V\n\x0b\x44\x65leteModel\x12\".knowcel.llm.v1.DeleteModelRequest\x1a#.knowcel.llm.v1.DeleteModelResponseBBZ@github.com/ChristophBe/knowcelium/modules/llm/api/go/llmv1;llmv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18knowcel/llm/v1/llm.proto\x12\x0eknowcel.llm.v1\"b\n\x05Model\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n\x08provider\x18\x02 \x01(\tR\x08provider\x12-\n\x04kind\x18\x03 \x01(\x0e\x32\x19.knowcel.llm.v1.ModelKindR\x04kind\"M\n\x07Message\x12(\n\x04role\x18\x01 \x01(\x0e\x32\x14.knowcel.llm.v1.RoleR\x04role\x12\x18\n\x07\x63ontent\x18\x02 \x01(\tR\x07\x63ontent\"}\n\x11GenerationOptions\x12%\n\x0btemperature\x18\x01 \x01(\x02H\x00R\x0btemperature\x88\x01\x01\x12\"\n\nmax_tokens\x18\x02 \x01(\x05H\x01R\tmaxTokens\x88\x01\x01\x42\x0e\n\x0c_temperatureB\r\n\x0b_max_tokens\"O\n\x05Usage\x12!\n\x0cinput_tokens\x18\x01 \x01(\x05R\x0binputTokens\x12#\n\routput_tokens\x18\x02 \x01(\x05R\x0coutputTokens\"\x13\n\x11ListModelsRequest\"C\n\x12ListModelsResponse\x12-\n\x06models\x18\x01 \x03(\x0b\x32\x15.knowcel.llm.v1.ModelR\x06models\"\x1a\n\x18GetProviderStatusRequest\"^\n\x0eProviderHealth\x12\x1a\n\x08provider\x18\x01 \x01(\tR\x08provider\x12\x18\n\x07healthy\x18\x02 \x01(\x08R\x07healthy\x12\x16\n\x06\x64\x65tail\x18\x03 \x01(\tR\x06\x64\x65tail\"\xf4\x02\n\x19GetProviderStatusResponse\x12\x1a\n\x08provider\x18\x01 \x01(\tR\x08provider\x12\x18\n\x07healthy\x18\x02 \x01(\x08R\x07healthy\x12\x16\n\x06\x64\x65tail\x18\x03 \x01(\tR\x06\x64\x65tail\x12,\n\x12\x64\x65\x66\x61ult_chat_model\x18\x04 \x01(\tR\x10\x64\x65\x66\x61ultChatModel\x12\x36\n\x17\x64\x65\x66\x61ult_embedding_model\x18\x05 \x01(\tR\x15\x64\x65\x66\x61ultEmbeddingModel\x12\x31\n\x14\x65mbedding_dimensions\x18\x06 \x01(\x05R\x13\x65mbeddingDimensions\x12\x32\n\x04\x63hat\x18\x07 \x01(\x0b\x32\x1e.knowcel.llm.v1.ProviderHealthR\x04\x63hat\x12<\n\tembedding\x18\x08 \x01(\x0b\x32\x1e.knowcel.llm.v1.ProviderHealthR\tembedding\"\xbe\x01\n\x0fGenerateRequest\x12\x14\n\x05model\x18\x01 \x01(\tR\x05model\x12\x33\n\x08messages\x18\x02 \x03(\x0b\x32\x17.knowcel.llm.v1.MessageR\x08messages\x12;\n\x07options\x18\x03 \x01(\x0b\x32!.knowcel.llm.v1.GenerationOptionsR\x07options\x12#\n\rcaller_module\x18\x04 \x01(\tR\x0c\x63\x61llerModule\"\x7f\n\x10GenerateResponse\x12\x14\n\x05\x64\x65lta\x18\x01 \x01(\tR\x05\x64\x65lta\x12\x12\n\x04\x64one\x18\x02 \x01(\x08R\x04\x64one\x12+\n\x05usage\x18\x03 \x01(\x0b\x32\x15.knowcel.llm.v1.UsageR\x05usage\x12\x14\n\x05model\x18\x04 \x01(\tR\x05model\"<\n\x0c\x45mbedRequest\x12\x14\n\x05model\x18\x01 \x01(\tR\x05model\x12\x16\n\x06inputs\x18\x02 \x03(\tR\x06inputs\"#\n\tEmbedding\x12\x16\n\x06values\x18\x01 \x03(\x02R\x06values\"\x80\x01\n\rEmbedResponse\x12\x39\n\nembeddings\x18\x01 \x03(\x0b\x32\x19.knowcel.llm.v1.EmbeddingR\nembeddings\x12\x14\n\x05model\x18\x02 \x01(\tR\x05model\x12\x1e\n\ndimensions\x18\x03 \x01(\x05R\ndimensions\"D\n\x10PullModelRequest\x12\x1a\n\x08provider\x18\x01 \x01(\tR\x08provider\x12\x14\n\x05model\x18\x02 \x01(\tR\x05model\"s\n\x11PullModelResponse\x12\x16\n\x06status\x18\x01 \x01(\tR\x06status\x12\x1c\n\tcompleted\x18\x02 \x01(\x03R\tcompleted\x12\x14\n\x05total\x18\x03 \x01(\x03R\x05total\x12\x12\n\x04\x64one\x18\x04 \x01(\x08R\x04\x64one\"F\n\x12\x44\x65leteModelRequest\x12\x1a\n\x08provider\x18\x01 \x01(\tR\x08provider\x12\x14\n\x05model\x18\x02 \x01(\tR\x05model\"\x15\n\x13\x44\x65leteModelResponse\"%\n\x0fGetUsageRequest\x12\x12\n\x04\x64\x61ys\x18\x01 \x01(\x05R\x04\x64\x61ys\"\xdb\x01\n\nUsageEntry\x12\x12\n\x04\x64\x61te\x18\x01 \x01(\tR\x04\x64\x61te\x12\x1a\n\x08provider\x18\x02 \x01(\tR\x08provider\x12\x14\n\x05model\x18\x03 \x01(\tR\x05model\x12#\n\rcaller_module\x18\x04 \x01(\tR\x0c\x63\x61llerModule\x12\x1a\n\x08requests\x18\x05 \x01(\x03R\x08requests\x12!\n\x0cinput_tokens\x18\x06 \x01(\x03R\x0binputTokens\x12#\n\routput_tokens\x18\x07 \x01(\x03R\x0coutputTokens\"H\n\x10GetUsageResponse\x12\x34\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\x1a.knowcel.llm.v1.UsageEntryR\x07\x65ntries*P\n\x04Role\x12\x14\n\x10ROLE_UNSPECIFIED\x10\x00\x12\x0f\n\x0bROLE_SYSTEM\x10\x01\x12\r\n\tROLE_USER\x10\x02\x12\x12\n\x0eROLE_ASSISTANT\x10\x03*V\n\tModelKind\x12\x1a\n\x16MODEL_KIND_UNSPECIFIED\x10\x00\x12\x13\n\x0fMODEL_KIND_CHAT\x10\x01\x12\x18\n\x14MODEL_KIND_EMBEDDING\x10\x02\x32\xdd\x04\n\nLlmService\x12S\n\nListModels\x12!.knowcel.llm.v1.ListModelsRequest\x1a\".knowcel.llm.v1.ListModelsResponse\x12h\n\x11GetProviderStatus\x12(.knowcel.llm.v1.GetProviderStatusRequest\x1a).knowcel.llm.v1.GetProviderStatusResponse\x12O\n\x08Generate\x12\x1f.knowcel.llm.v1.GenerateRequest\x1a .knowcel.llm.v1.GenerateResponse0\x01\x12\x44\n\x05\x45mbed\x12\x1c.knowcel.llm.v1.EmbedRequest\x1a\x1d.knowcel.llm.v1.EmbedResponse\x12R\n\tPullModel\x12 .knowcel.llm.v1.PullModelRequest\x1a!.knowcel.llm.v1.PullModelResponse0\x01\x12V\n\x0b\x44\x65leteModel\x12\".knowcel.llm.v1.DeleteModelRequest\x1a#.knowcel.llm.v1.DeleteModelResponse\x12M\n\x08GetUsage\x12\x1f.knowcel.llm.v1.GetUsageRequest\x1a .knowcel.llm.v1.GetUsageResponseBBZ@github.com/ChristophBe/knowcelium/modules/llm/api/go/llmv1;llmv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,10 +32,10 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'knowcel.llm.v1.llm_pb2', _g
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z@github.com/ChristophBe/knowcelium/modules/llm/api/go/llmv1;llmv1'
-  _globals['_ROLE']._serialized_start=1817
-  _globals['_ROLE']._serialized_end=1897
-  _globals['_MODELKIND']._serialized_start=1899
-  _globals['_MODELKIND']._serialized_end=1985
+  _globals['_ROLE']._serialized_start=2189
+  _globals['_ROLE']._serialized_end=2269
+  _globals['_MODELKIND']._serialized_start=2271
+  _globals['_MODELKIND']._serialized_end=2357
   _globals['_MODEL']._serialized_start=44
   _globals['_MODEL']._serialized_end=142
   _globals['_MESSAGE']._serialized_start=144
@@ -55,23 +55,29 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_GETPROVIDERSTATUSRESPONSE']._serialized_start=646
   _globals['_GETPROVIDERSTATUSRESPONSE']._serialized_end=1018
   _globals['_GENERATEREQUEST']._serialized_start=1021
-  _globals['_GENERATEREQUEST']._serialized_end=1174
-  _globals['_GENERATERESPONSE']._serialized_start=1176
-  _globals['_GENERATERESPONSE']._serialized_end=1303
-  _globals['_EMBEDREQUEST']._serialized_start=1305
-  _globals['_EMBEDREQUEST']._serialized_end=1365
-  _globals['_EMBEDDING']._serialized_start=1367
-  _globals['_EMBEDDING']._serialized_end=1402
-  _globals['_EMBEDRESPONSE']._serialized_start=1405
-  _globals['_EMBEDRESPONSE']._serialized_end=1533
-  _globals['_PULLMODELREQUEST']._serialized_start=1535
-  _globals['_PULLMODELREQUEST']._serialized_end=1603
-  _globals['_PULLMODELRESPONSE']._serialized_start=1605
-  _globals['_PULLMODELRESPONSE']._serialized_end=1720
-  _globals['_DELETEMODELREQUEST']._serialized_start=1722
-  _globals['_DELETEMODELREQUEST']._serialized_end=1792
-  _globals['_DELETEMODELRESPONSE']._serialized_start=1794
-  _globals['_DELETEMODELRESPONSE']._serialized_end=1815
-  _globals['_LLMSERVICE']._serialized_start=1988
-  _globals['_LLMSERVICE']._serialized_end=2514
+  _globals['_GENERATEREQUEST']._serialized_end=1211
+  _globals['_GENERATERESPONSE']._serialized_start=1213
+  _globals['_GENERATERESPONSE']._serialized_end=1340
+  _globals['_EMBEDREQUEST']._serialized_start=1342
+  _globals['_EMBEDREQUEST']._serialized_end=1402
+  _globals['_EMBEDDING']._serialized_start=1404
+  _globals['_EMBEDDING']._serialized_end=1439
+  _globals['_EMBEDRESPONSE']._serialized_start=1442
+  _globals['_EMBEDRESPONSE']._serialized_end=1570
+  _globals['_PULLMODELREQUEST']._serialized_start=1572
+  _globals['_PULLMODELREQUEST']._serialized_end=1640
+  _globals['_PULLMODELRESPONSE']._serialized_start=1642
+  _globals['_PULLMODELRESPONSE']._serialized_end=1757
+  _globals['_DELETEMODELREQUEST']._serialized_start=1759
+  _globals['_DELETEMODELREQUEST']._serialized_end=1829
+  _globals['_DELETEMODELRESPONSE']._serialized_start=1831
+  _globals['_DELETEMODELRESPONSE']._serialized_end=1852
+  _globals['_GETUSAGEREQUEST']._serialized_start=1854
+  _globals['_GETUSAGEREQUEST']._serialized_end=1891
+  _globals['_USAGEENTRY']._serialized_start=1894
+  _globals['_USAGEENTRY']._serialized_end=2113
+  _globals['_GETUSAGERESPONSE']._serialized_start=2115
+  _globals['_GETUSAGERESPONSE']._serialized_end=2187
+  _globals['_LLMSERVICE']._serialized_start=2360
+  _globals['_LLMSERVICE']._serialized_end=2965
 # @@protoc_insertion_point(module_scope)

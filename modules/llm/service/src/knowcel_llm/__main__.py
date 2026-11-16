@@ -8,9 +8,11 @@ from knowcel_platform.grpc import PrincipalResolver, channel, serve
 from knowcel_platform.logging import setup_logging
 from knowcel_platform.metrics import start_metrics_server
 from knowcel_platform.telemetry import setup_tracing
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from .callers import resolver
 from .config import Settings
+from .db import SqlUsageStore, migrate
 from .providers import build_providers
 from .server import LlmServicer
 
@@ -22,6 +24,7 @@ async def run() -> None:
     setup_logging(settings.log_level, settings.log_format)
     setup_tracing(settings.otel_endpoint, "llm-service")
     start_metrics_server(settings.metrics_port)
+    await migrate(settings.database_url)
     try:
         providers = build_providers(settings)
     except ValueError as exc:  # e.g. a provider without the task it is chosen for
@@ -31,7 +34,8 @@ async def run() -> None:
         providers.chat.name,
         providers.embedding.name,
     )
-    servicer = LlmServicer(providers, settings)
+    engine = create_async_engine(settings.database_url, pool_pre_ping=True)
+    servicer = LlmServicer(providers, settings, SqlUsageStore(engine))
     try:
         # Soft dependency: while iam is down nobody is a platform admin, so
         # models can't be changed; everything else works.
@@ -45,6 +49,7 @@ async def run() -> None:
             )
     finally:
         await providers.aclose()
+        await engine.dispose()
 
 
 def main() -> None:

@@ -20,6 +20,10 @@ service LlmService {
   // DeleteModel removes a model from a provider. Platform admins only;
   // providers that can't manage models return UNIMPLEMENTED.
   rpc DeleteModel(DeleteModelRequest) returns (DeleteModelResponse);
+  // GetUsage sums the tokens of recorded generations per day, model and
+  // calling module. Platform admins see every user's usage, everyone else
+  // their own; calls without a user are rejected with UNAUTHENTICATED.
+  rpc GetUsage(GetUsageRequest) returns (GetUsageResponse);
 }
 
 enum Role {
@@ -96,6 +100,9 @@ message GenerateRequest {
   string model = 1;
   repeated Message messages = 2;
   GenerationOptions options = 3;
+  // Id of the calling module (e.g. "chat"), under which the generation is
+  // recorded in the usage; empty is recorded as "unknown".
+  string caller_module = 4;
 }
 
 message GenerateResponse {
@@ -146,3 +153,25 @@ message DeleteModelRequest {
 }
 
 message DeleteModelResponse {}
+
+message GetUsageRequest {
+  // How many days back to sum, today included; 0 selects 30. At most 366.
+  int32 days = 1;
+}
+
+// UsageEntry sums the generations of one day, model and calling module.
+message UsageEntry {
+  // The day in UTC, as YYYY-MM-DD.
+  string date = 1;
+  string provider = 2;
+  string model = 3;
+  string caller_module = 4;
+  int64 requests = 5;
+  int64 input_tokens = 6;
+  int64 output_tokens = 7;
+}
+
+message GetUsageResponse {
+  // Newest day first, then by model and calling module.
+  repeated UsageEntry entries = 1;
+}

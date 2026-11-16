@@ -175,6 +175,7 @@ tasks:
     cmds:
       - go test -tags integration -count=1 ./modules/document/service/internal/... ./modules/iam/service/internal/store/... ./modules/ingestion/service/internal/store/...
       - uv run pytest -q -m integration --rootdir modules/chat/service modules/chat/service
+      - uv run pytest -q -m integration --rootdir modules/llm/service modules/llm/service
 
   e2e:
     desc: >-

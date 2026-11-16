@@ -7,8 +7,14 @@ from typing import Any
 
 import grpc
 from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
-from knowcel_platform.grpc import abort_invalid_argument, current_principal, violation
+from knowcel_platform.grpc import (
+    abort_invalid_argument,
+    current_principal,
+    current_user,
+    violation,
+)
 from prometheus_client import Counter, Histogram
+from sqlalchemy.exc import SQLAlchemyError
 
 from .config import Settings
 from .providers import Providers
@@ -26,6 +32,7 @@ from .providers.base import (
     Role,
     Status,
 )
+from .usage import UsageRecord, UsageStore
 
 log = logging.getLogger("knowcel_llm")
 
@@ -64,6 +71,13 @@ EMBEDDING_INPUTS = Counter(
     ["provider", "model"],
 )
 
+# Seconds recording a generation's usage may take before it is given up, so a
+# slow database can't hold back the end of an answer.
+_RECORD_TIMEOUT = 2
+_UNKNOWN_CALLER = "unknown"
+_DEFAULT_USAGE_DAYS = 30
+_MAX_USAGE_DAYS = 366
+
 _ROLES = {
     llm_pb2.ROLE_SYSTEM: Role.SYSTEM,
     llm_pb2.ROLE_USER: Role.USER,
@@ -79,7 +93,10 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
     """Serves Generate from the chat provider and Embed from the embedding
     provider, which may be the same one."""
 
-    def __init__(self, providers: Providers, settings: Settings) -> None:
+    def __init__(
+        self, providers: Providers, settings: Settings, usage: UsageStore | None = None
+    ) -> None:
+        self._usage = usage
         self._chat = providers.chat
         self._embedding = providers.embedding
         self._split = providers.split
@@ -169,6 +186,17 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
                     GENERATION_SECONDS.labels(provider, model).observe(time.perf_counter() - start)
                     TOKENS.labels(provider, model, "input").inc(chunk.input_tokens)
                     TOKENS.labels(provider, model, "output").inc(chunk.output_tokens)
+                    await self._record_usage(
+                        UsageRecord(
+                            user_id=current_user() or "",
+                            caller_module=request.caller_module[:64] or _UNKNOWN_CALLER,
+                            provider=provider,
+                            model=model,
+                            input_tokens=chunk.input_tokens,
+                            output_tokens=chunk.output_tokens,
+                            latency_ms=round((time.perf_counter() - start) * 1000),
+                        )
+                    )
                     yield llm_pb2.GenerateResponse(
                         done=True,
                         model=model,
@@ -178,6 +206,53 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
                     )
                 elif chunk.delta:
                     yield llm_pb2.GenerateResponse(delta=chunk.delta, model=model)
+
+    async def _record_usage(self, record: UsageRecord) -> None:
+        """Keeps the usage of a generation. A failure is logged and never
+        reaches the caller, whose answer is complete."""
+        if self._usage is None:
+            return
+        try:
+            await asyncio.wait_for(self._usage.record(record), _RECORD_TIMEOUT)
+        except Exception:
+            log.exception("recording the usage of a generation failed")
+
+    async def GetUsage(
+        self, request: llm_pb2.GetUsageRequest, context: _Context
+    ) -> llm_pb2.GetUsageResponse:
+        user = current_user()
+        if user is None:
+            await context.abort(grpc.StatusCode.UNAUTHENTICATED, "sign in to see the usage")
+        principal = current_principal()
+        days = request.days or _DEFAULT_USAGE_DAYS
+        if not 1 <= days <= _MAX_USAGE_DAYS:
+            await abort_invalid_argument(
+                context, violation("days", f"Days must be between 1 and {_MAX_USAGE_DAYS}")
+            )
+        if self._usage is None:
+            await context.abort(grpc.StatusCode.UNAVAILABLE, "usage is not recorded")
+        # Fails closed like _require_platform_admin: without a principal, only
+        # the caller's own usage.
+        everyone = principal is not None and principal.platform_admin
+        try:
+            sums = await self._usage.summarize(days, None if everyone else user)
+        except (SQLAlchemyError, OSError) as exc:
+            log.error("reading the usage failed: %s", exc)
+            await context.abort(grpc.StatusCode.UNAVAILABLE, "the usage is unavailable")
+        return llm_pb2.GetUsageResponse(
+            entries=[
+                llm_pb2.UsageEntry(
+                    date=s.date,
+                    provider=s.provider,
+                    model=s.model,
+                    caller_module=s.caller_module,
+                    requests=s.requests,
+                    input_tokens=s.input_tokens,
+                    output_tokens=s.output_tokens,
+                )
+                for s in sums
+            ]
+        )
 
     async def PullModel(
         self, request: llm_pb2.PullModelRequest, context: _Context

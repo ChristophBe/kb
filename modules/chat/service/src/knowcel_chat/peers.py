@@ -95,7 +95,9 @@ class PeerGenerator:
     async def generate(self, model: str, prompt: list[PromptMessage]) -> AsyncGenerator[str]:
         messages = [llm_pb2.Message(role=_LLM_ROLES[m.role], content=m.content) for m in prompt]
         with _peer_errors(Peer.LLM):
-            call = self._llm.Generate(llm_pb2.GenerateRequest(model=model, messages=messages))
+            call = self._llm.Generate(
+                llm_pb2.GenerateRequest(model=model, messages=messages, caller_module="chat")
+            )
             try:
                 async for chunk in call:
                     if chunk.delta:

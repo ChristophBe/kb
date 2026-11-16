@@ -627,9 +627,12 @@ func (x *GetProviderStatusResponse) GetEmbedding() *ProviderHealth {
 type GenerateRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Model id; empty selects the chat provider's default chat model.
-	Model         string             `protobuf:"bytes,1,opt,name=model,proto3" json:"model,omitempty"`
-	Messages      []*Message         `protobuf:"bytes,2,rep,name=messages,proto3" json:"messages,omitempty"`
-	Options       *GenerationOptions `protobuf:"bytes,3,opt,name=options,proto3" json:"options,omitempty"`
+	Model    string             `protobuf:"bytes,1,opt,name=model,proto3" json:"model,omitempty"`
+	Messages []*Message         `protobuf:"bytes,2,rep,name=messages,proto3" json:"messages,omitempty"`
+	Options  *GenerationOptions `protobuf:"bytes,3,opt,name=options,proto3" json:"options,omitempty"`
+	// Id of the calling module (e.g. "chat"), under which the generation is
+	// recorded in the usage; empty is recorded as "unknown".
+	CallerModule  string `protobuf:"bytes,4,opt,name=caller_module,json=callerModule,proto3" json:"caller_module,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -683,6 +686,13 @@ func (x *GenerateRequest) GetOptions() *GenerationOptions {
 		return x.Options
 	}
 	return nil
+}
+
+func (x *GenerateRequest) GetCallerModule() string {
+	if x != nil {
+		return x.CallerModule
+	}
+	return ""
 }
 
 type GenerateResponse struct {
@@ -1125,6 +1135,190 @@ func (*DeleteModelResponse) Descriptor() ([]byte, []int) {
 	return file_knowcel_llm_v1_llm_proto_rawDescGZIP(), []int{17}
 }
 
+type GetUsageRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// How many days back to sum, today included; 0 selects 30. At most 366.
+	Days          int32 `protobuf:"varint,1,opt,name=days,proto3" json:"days,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUsageRequest) Reset() {
+	*x = GetUsageRequest{}
+	mi := &file_knowcel_llm_v1_llm_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUsageRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUsageRequest) ProtoMessage() {}
+
+func (x *GetUsageRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_llm_v1_llm_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUsageRequest.ProtoReflect.Descriptor instead.
+func (*GetUsageRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_llm_v1_llm_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *GetUsageRequest) GetDays() int32 {
+	if x != nil {
+		return x.Days
+	}
+	return 0
+}
+
+// UsageEntry sums the generations of one day, model and calling module.
+type UsageEntry struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The day in UTC, as YYYY-MM-DD.
+	Date          string `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`
+	Provider      string `protobuf:"bytes,2,opt,name=provider,proto3" json:"provider,omitempty"`
+	Model         string `protobuf:"bytes,3,opt,name=model,proto3" json:"model,omitempty"`
+	CallerModule  string `protobuf:"bytes,4,opt,name=caller_module,json=callerModule,proto3" json:"caller_module,omitempty"`
+	Requests      int64  `protobuf:"varint,5,opt,name=requests,proto3" json:"requests,omitempty"`
+	InputTokens   int64  `protobuf:"varint,6,opt,name=input_tokens,json=inputTokens,proto3" json:"input_tokens,omitempty"`
+	OutputTokens  int64  `protobuf:"varint,7,opt,name=output_tokens,json=outputTokens,proto3" json:"output_tokens,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UsageEntry) Reset() {
+	*x = UsageEntry{}
+	mi := &file_knowcel_llm_v1_llm_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UsageEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UsageEntry) ProtoMessage() {}
+
+func (x *UsageEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_llm_v1_llm_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UsageEntry.ProtoReflect.Descriptor instead.
+func (*UsageEntry) Descriptor() ([]byte, []int) {
+	return file_knowcel_llm_v1_llm_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *UsageEntry) GetDate() string {
+	if x != nil {
+		return x.Date
+	}
+	return ""
+}
+
+func (x *UsageEntry) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+func (x *UsageEntry) GetModel() string {
+	if x != nil {
+		return x.Model
+	}
+	return ""
+}
+
+func (x *UsageEntry) GetCallerModule() string {
+	if x != nil {
+		return x.CallerModule
+	}
+	return ""
+}
+
+func (x *UsageEntry) GetRequests() int64 {
+	if x != nil {
+		return x.Requests
+	}
+	return 0
+}
+
+func (x *UsageEntry) GetInputTokens() int64 {
+	if x != nil {
+		return x.InputTokens
+	}
+	return 0
+}
+
+func (x *UsageEntry) GetOutputTokens() int64 {
+	if x != nil {
+		return x.OutputTokens
+	}
+	return 0
+}
+
+type GetUsageResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Newest day first, then by model and calling module.
+	Entries       []*UsageEntry `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUsageResponse) Reset() {
+	*x = GetUsageResponse{}
+	mi := &file_knowcel_llm_v1_llm_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUsageResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUsageResponse) ProtoMessage() {}
+
+func (x *GetUsageResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_llm_v1_llm_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUsageResponse.ProtoReflect.Descriptor instead.
+func (*GetUsageResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_llm_v1_llm_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *GetUsageResponse) GetEntries() []*UsageEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
 var File_knowcel_llm_v1_llm_proto protoreflect.FileDescriptor
 
 const file_knowcel_llm_v1_llm_proto_rawDesc = "" +
@@ -1162,11 +1356,12 @@ const file_knowcel_llm_v1_llm_proto_rawDesc = "" +
 	"\x17default_embedding_model\x18\x05 \x01(\tR\x15defaultEmbeddingModel\x121\n" +
 	"\x14embedding_dimensions\x18\x06 \x01(\x05R\x13embeddingDimensions\x122\n" +
 	"\x04chat\x18\a \x01(\v2\x1e.knowcel.llm.v1.ProviderHealthR\x04chat\x12<\n" +
-	"\tembedding\x18\b \x01(\v2\x1e.knowcel.llm.v1.ProviderHealthR\tembedding\"\x99\x01\n" +
+	"\tembedding\x18\b \x01(\v2\x1e.knowcel.llm.v1.ProviderHealthR\tembedding\"\xbe\x01\n" +
 	"\x0fGenerateRequest\x12\x14\n" +
 	"\x05model\x18\x01 \x01(\tR\x05model\x123\n" +
 	"\bmessages\x18\x02 \x03(\v2\x17.knowcel.llm.v1.MessageR\bmessages\x12;\n" +
-	"\aoptions\x18\x03 \x01(\v2!.knowcel.llm.v1.GenerationOptionsR\aoptions\"\x7f\n" +
+	"\aoptions\x18\x03 \x01(\v2!.knowcel.llm.v1.GenerationOptionsR\aoptions\x12#\n" +
+	"\rcaller_module\x18\x04 \x01(\tR\fcallerModule\"\x7f\n" +
 	"\x10GenerateResponse\x12\x14\n" +
 	"\x05delta\x18\x01 \x01(\tR\x05delta\x12\x12\n" +
 	"\x04done\x18\x02 \x01(\bR\x04done\x12+\n" +
@@ -1196,7 +1391,20 @@ const file_knowcel_llm_v1_llm_proto_rawDesc = "" +
 	"\x12DeleteModelRequest\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x14\n" +
 	"\x05model\x18\x02 \x01(\tR\x05model\"\x15\n" +
-	"\x13DeleteModelResponse*P\n" +
+	"\x13DeleteModelResponse\"%\n" +
+	"\x0fGetUsageRequest\x12\x12\n" +
+	"\x04days\x18\x01 \x01(\x05R\x04days\"\xdb\x01\n" +
+	"\n" +
+	"UsageEntry\x12\x12\n" +
+	"\x04date\x18\x01 \x01(\tR\x04date\x12\x1a\n" +
+	"\bprovider\x18\x02 \x01(\tR\bprovider\x12\x14\n" +
+	"\x05model\x18\x03 \x01(\tR\x05model\x12#\n" +
+	"\rcaller_module\x18\x04 \x01(\tR\fcallerModule\x12\x1a\n" +
+	"\brequests\x18\x05 \x01(\x03R\brequests\x12!\n" +
+	"\finput_tokens\x18\x06 \x01(\x03R\vinputTokens\x12#\n" +
+	"\routput_tokens\x18\a \x01(\x03R\foutputTokens\"H\n" +
+	"\x10GetUsageResponse\x124\n" +
+	"\aentries\x18\x01 \x03(\v2\x1a.knowcel.llm.v1.UsageEntryR\aentries*P\n" +
 	"\x04Role\x12\x14\n" +
 	"\x10ROLE_UNSPECIFIED\x10\x00\x12\x0f\n" +
 	"\vROLE_SYSTEM\x10\x01\x12\r\n" +
@@ -1205,7 +1413,7 @@ const file_knowcel_llm_v1_llm_proto_rawDesc = "" +
 	"\tModelKind\x12\x1a\n" +
 	"\x16MODEL_KIND_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fMODEL_KIND_CHAT\x10\x01\x12\x18\n" +
-	"\x14MODEL_KIND_EMBEDDING\x10\x022\x8e\x04\n" +
+	"\x14MODEL_KIND_EMBEDDING\x10\x022\xdd\x04\n" +
 	"\n" +
 	"LlmService\x12S\n" +
 	"\n" +
@@ -1214,7 +1422,8 @@ const file_knowcel_llm_v1_llm_proto_rawDesc = "" +
 	"\bGenerate\x12\x1f.knowcel.llm.v1.GenerateRequest\x1a .knowcel.llm.v1.GenerateResponse0\x01\x12D\n" +
 	"\x05Embed\x12\x1c.knowcel.llm.v1.EmbedRequest\x1a\x1d.knowcel.llm.v1.EmbedResponse\x12R\n" +
 	"\tPullModel\x12 .knowcel.llm.v1.PullModelRequest\x1a!.knowcel.llm.v1.PullModelResponse0\x01\x12V\n" +
-	"\vDeleteModel\x12\".knowcel.llm.v1.DeleteModelRequest\x1a#.knowcel.llm.v1.DeleteModelResponseBBZ@github.com/ChristophBe/knowcelium/modules/llm/api/go/llmv1;llmv1b\x06proto3"
+	"\vDeleteModel\x12\".knowcel.llm.v1.DeleteModelRequest\x1a#.knowcel.llm.v1.DeleteModelResponse\x12M\n" +
+	"\bGetUsage\x12\x1f.knowcel.llm.v1.GetUsageRequest\x1a .knowcel.llm.v1.GetUsageResponseBBZ@github.com/ChristophBe/knowcelium/modules/llm/api/go/llmv1;llmv1b\x06proto3"
 
 var (
 	file_knowcel_llm_v1_llm_proto_rawDescOnce sync.Once
@@ -1229,7 +1438,7 @@ func file_knowcel_llm_v1_llm_proto_rawDescGZIP() []byte {
 }
 
 var file_knowcel_llm_v1_llm_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_knowcel_llm_v1_llm_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_knowcel_llm_v1_llm_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_knowcel_llm_v1_llm_proto_goTypes = []any{
 	(Role)(0),                         // 0: knowcel.llm.v1.Role
 	(ModelKind)(0),                    // 1: knowcel.llm.v1.ModelKind
@@ -1251,6 +1460,9 @@ var file_knowcel_llm_v1_llm_proto_goTypes = []any{
 	(*PullModelResponse)(nil),         // 17: knowcel.llm.v1.PullModelResponse
 	(*DeleteModelRequest)(nil),        // 18: knowcel.llm.v1.DeleteModelRequest
 	(*DeleteModelResponse)(nil),       // 19: knowcel.llm.v1.DeleteModelResponse
+	(*GetUsageRequest)(nil),           // 20: knowcel.llm.v1.GetUsageRequest
+	(*UsageEntry)(nil),                // 21: knowcel.llm.v1.UsageEntry
+	(*GetUsageResponse)(nil),          // 22: knowcel.llm.v1.GetUsageResponse
 }
 var file_knowcel_llm_v1_llm_proto_depIdxs = []int32{
 	1,  // 0: knowcel.llm.v1.Model.kind:type_name -> knowcel.llm.v1.ModelKind
@@ -1262,23 +1474,26 @@ var file_knowcel_llm_v1_llm_proto_depIdxs = []int32{
 	4,  // 6: knowcel.llm.v1.GenerateRequest.options:type_name -> knowcel.llm.v1.GenerationOptions
 	5,  // 7: knowcel.llm.v1.GenerateResponse.usage:type_name -> knowcel.llm.v1.Usage
 	14, // 8: knowcel.llm.v1.EmbedResponse.embeddings:type_name -> knowcel.llm.v1.Embedding
-	6,  // 9: knowcel.llm.v1.LlmService.ListModels:input_type -> knowcel.llm.v1.ListModelsRequest
-	8,  // 10: knowcel.llm.v1.LlmService.GetProviderStatus:input_type -> knowcel.llm.v1.GetProviderStatusRequest
-	11, // 11: knowcel.llm.v1.LlmService.Generate:input_type -> knowcel.llm.v1.GenerateRequest
-	13, // 12: knowcel.llm.v1.LlmService.Embed:input_type -> knowcel.llm.v1.EmbedRequest
-	16, // 13: knowcel.llm.v1.LlmService.PullModel:input_type -> knowcel.llm.v1.PullModelRequest
-	18, // 14: knowcel.llm.v1.LlmService.DeleteModel:input_type -> knowcel.llm.v1.DeleteModelRequest
-	7,  // 15: knowcel.llm.v1.LlmService.ListModels:output_type -> knowcel.llm.v1.ListModelsResponse
-	10, // 16: knowcel.llm.v1.LlmService.GetProviderStatus:output_type -> knowcel.llm.v1.GetProviderStatusResponse
-	12, // 17: knowcel.llm.v1.LlmService.Generate:output_type -> knowcel.llm.v1.GenerateResponse
-	15, // 18: knowcel.llm.v1.LlmService.Embed:output_type -> knowcel.llm.v1.EmbedResponse
-	17, // 19: knowcel.llm.v1.LlmService.PullModel:output_type -> knowcel.llm.v1.PullModelResponse
-	19, // 20: knowcel.llm.v1.LlmService.DeleteModel:output_type -> knowcel.llm.v1.DeleteModelResponse
-	15, // [15:21] is the sub-list for method output_type
-	9,  // [9:15] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	21, // 9: knowcel.llm.v1.GetUsageResponse.entries:type_name -> knowcel.llm.v1.UsageEntry
+	6,  // 10: knowcel.llm.v1.LlmService.ListModels:input_type -> knowcel.llm.v1.ListModelsRequest
+	8,  // 11: knowcel.llm.v1.LlmService.GetProviderStatus:input_type -> knowcel.llm.v1.GetProviderStatusRequest
+	11, // 12: knowcel.llm.v1.LlmService.Generate:input_type -> knowcel.llm.v1.GenerateRequest
+	13, // 13: knowcel.llm.v1.LlmService.Embed:input_type -> knowcel.llm.v1.EmbedRequest
+	16, // 14: knowcel.llm.v1.LlmService.PullModel:input_type -> knowcel.llm.v1.PullModelRequest
+	18, // 15: knowcel.llm.v1.LlmService.DeleteModel:input_type -> knowcel.llm.v1.DeleteModelRequest
+	20, // 16: knowcel.llm.v1.LlmService.GetUsage:input_type -> knowcel.llm.v1.GetUsageRequest
+	7,  // 17: knowcel.llm.v1.LlmService.ListModels:output_type -> knowcel.llm.v1.ListModelsResponse
+	10, // 18: knowcel.llm.v1.LlmService.GetProviderStatus:output_type -> knowcel.llm.v1.GetProviderStatusResponse
+	12, // 19: knowcel.llm.v1.LlmService.Generate:output_type -> knowcel.llm.v1.GenerateResponse
+	15, // 20: knowcel.llm.v1.LlmService.Embed:output_type -> knowcel.llm.v1.EmbedResponse
+	17, // 21: knowcel.llm.v1.LlmService.PullModel:output_type -> knowcel.llm.v1.PullModelResponse
+	19, // 22: knowcel.llm.v1.LlmService.DeleteModel:output_type -> knowcel.llm.v1.DeleteModelResponse
+	22, // 23: knowcel.llm.v1.LlmService.GetUsage:output_type -> knowcel.llm.v1.GetUsageResponse
+	17, // [17:24] is the sub-list for method output_type
+	10, // [10:17] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_knowcel_llm_v1_llm_proto_init() }
@@ -1293,7 +1508,7 @@ func file_knowcel_llm_v1_llm_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_knowcel_llm_v1_llm_proto_rawDesc), len(file_knowcel_llm_v1_llm_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   18,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

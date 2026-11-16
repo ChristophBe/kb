@@ -106,14 +106,16 @@ class GetProviderStatusResponse(_message.Message):
     def __init__(self, provider: _Optional[str] = ..., healthy: _Optional[bool] = ..., detail: _Optional[str] = ..., default_chat_model: _Optional[str] = ..., default_embedding_model: _Optional[str] = ..., embedding_dimensions: _Optional[int] = ..., chat: _Optional[_Union[ProviderHealth, _Mapping]] = ..., embedding: _Optional[_Union[ProviderHealth, _Mapping]] = ...) -> None: ...
 
 class GenerateRequest(_message.Message):
-    __slots__ = ("model", "messages", "options")
+    __slots__ = ("model", "messages", "options", "caller_module")
     MODEL_FIELD_NUMBER: _ClassVar[int]
     MESSAGES_FIELD_NUMBER: _ClassVar[int]
     OPTIONS_FIELD_NUMBER: _ClassVar[int]
+    CALLER_MODULE_FIELD_NUMBER: _ClassVar[int]
     model: str
     messages: _containers.RepeatedCompositeFieldContainer[Message]
     options: GenerationOptions
-    def __init__(self, model: _Optional[str] = ..., messages: _Optional[_Iterable[_Union[Message, _Mapping]]] = ..., options: _Optional[_Union[GenerationOptions, _Mapping]] = ...) -> None: ...
+    caller_module: str
+    def __init__(self, model: _Optional[str] = ..., messages: _Optional[_Iterable[_Union[Message, _Mapping]]] = ..., options: _Optional[_Union[GenerationOptions, _Mapping]] = ..., caller_module: _Optional[str] = ...) -> None: ...
 
 class GenerateResponse(_message.Message):
     __slots__ = ("delta", "done", "usage", "model")
@@ -182,3 +184,33 @@ class DeleteModelRequest(_message.Message):
 class DeleteModelResponse(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
+
+class GetUsageRequest(_message.Message):
+    __slots__ = ("days",)
+    DAYS_FIELD_NUMBER: _ClassVar[int]
+    days: int
+    def __init__(self, days: _Optional[int] = ...) -> None: ...
+
+class UsageEntry(_message.Message):
+    __slots__ = ("date", "provider", "model", "caller_module", "requests", "input_tokens", "output_tokens")
+    DATE_FIELD_NUMBER: _ClassVar[int]
+    PROVIDER_FIELD_NUMBER: _ClassVar[int]
+    MODEL_FIELD_NUMBER: _ClassVar[int]
+    CALLER_MODULE_FIELD_NUMBER: _ClassVar[int]
+    REQUESTS_FIELD_NUMBER: _ClassVar[int]
+    INPUT_TOKENS_FIELD_NUMBER: _ClassVar[int]
+    OUTPUT_TOKENS_FIELD_NUMBER: _ClassVar[int]
+    date: str
+    provider: str
+    model: str
+    caller_module: str
+    requests: int
+    input_tokens: int
+    output_tokens: int
+    def __init__(self, date: _Optional[str] = ..., provider: _Optional[str] = ..., model: _Optional[str] = ..., caller_module: _Optional[str] = ..., requests: _Optional[int] = ..., input_tokens: _Optional[int] = ..., output_tokens: _Optional[int] = ...) -> None: ...
+
+class GetUsageResponse(_message.Message):
+    __slots__ = ("entries",)
+    ENTRIES_FIELD_NUMBER: _ClassVar[int]
+    entries: _containers.RepeatedCompositeFieldContainer[UsageEntry]
+    def __init__(self, entries: _Optional[_Iterable[_Union[UsageEntry, _Mapping]]] = ...) -> None: ...

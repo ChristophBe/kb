@@ -8,6 +8,9 @@ class Settings(PlatformSettings):
     # The iam module (host:port), which tells whether a caller is a platform
     # admin. While it is down, nobody is one and models can't be changed.
     iam_addr: str = "localhost:9006"
+    # The Postgres database holding the llm schema (the usage of generations),
+    # as an SQLAlchemy URL.
+    database_url: str = "postgresql+asyncpg://kb:kb@localhost:5432/kb"
     # Provider for chat and embeddings, a name in knowcel_llm.providers.REGISTRY:
     # ollama, anthropic or fake.
     llm_provider: str = "ollama"
@@ -68,6 +71,7 @@ class Settings(PlatformSettings):
     def check(self, problems: Problems) -> None:
         super().check(problems)
         problems.addr("iam_addr", self.iam_addr)
+        problems.url("database_url", self.database_url, ["postgresql+asyncpg"])
         # Imported here: the providers import these settings.
         from .providers import REGISTRY
 

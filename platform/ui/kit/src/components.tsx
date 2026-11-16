@@ -56,7 +56,7 @@ export function IconButton({
       aria-label={label}
       title={label}
       className={cn(
-        "inline-flex size-7 shrink-0 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-surface-muted disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex size-7 pointer-coarse:size-11 shrink-0 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-surface-muted disabled:pointer-events-none disabled:opacity-50",
         tone === "danger" ? "hover:text-danger" : "hover:text-fg",
         className,
       )}
@@ -94,7 +94,7 @@ export function Area({
   tone = "primary",
   className,
   ...props
-}: HTMLAttributes<HTMLElement> & { as?: "div" | "aside"; tone?: "primary" | "secondary" }) {
+}: ComponentProps<"div"> & { as?: "div" | "aside"; tone?: "primary" | "secondary" }) {
   return (
     <Element
       className={cn(
@@ -235,7 +235,10 @@ export function ErrorMessage({ error, exclude = [] }: { error: unknown; exclude?
   const shown = violations.filter((v) => !exclude.includes(v.field));
   if (violations.length > 0 && shown.length === 0) return null;
   return (
-    <div role="alert" className="rounded-control bg-danger-subtle px-3 py-2 text-sm text-danger">
+    <div
+      role="alert"
+      className="rounded-control bg-danger-subtle break-words px-3 py-2 text-sm text-danger"
+    >
       {shown.length === 0 ? (
         error instanceof Error ? (
           error.message

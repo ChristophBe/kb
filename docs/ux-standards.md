@@ -120,10 +120,12 @@ Tailwind's default breakpoints apply. Design mobile first:
 
 | Width | Layout |
 |---|---|
-| < 640 px (default) | Single column; the shell's navigation collapses into a menu button; secondary panes (e.g. the chat conversation list) become their own view. |
+| < 768 px (default) | Single column. The shell's sidebar is a drawer opened from a labelled menu button in a top bar (`App.tsx`): it traps focus while open and closes on navigation, `Esc` and its backdrop, returning focus to the button. Secondary panes become their own full-width view (chat: the conversation list is the index route and a conversation has an "All conversations" back link). Page padding is `p-4`; full-height panes use `dvh`, so the mobile browser's toolbar does not cover the composer. |
 | `sm` ≥ 640 px | Forms and dialogs get their max width; tables may show more columns. |
-| `md` ≥ 768 px | Shell sidebar visible; two-pane layouts (list + detail, conversations + chat). |
+| `md` ≥ 768 px | Shell sidebar visible; page padding `p-8`; two-pane layouts (list + detail, conversations + chat). |
 | `lg` ≥ 1024 px | Wider content area; optional third column (e.g. citations panel). |
+
+Wide tables sit in an `overflow-x-auto` container. Icon buttons (`IconButton`) grow to 44 px on coarse pointers (`pointer-coarse:`); actions are never hover-only. The narrow check in code is `useMediaQuery(NARROW_QUERY)` from `@knowcel/ui`.
 
 Content stays usable at 320 px and at 200 % zoom; text never truncates without a way to see the full value (tooltip, wrap or detail view).
 

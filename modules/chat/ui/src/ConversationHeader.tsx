@@ -1,11 +1,13 @@
 import { ChatService, type Conversation } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
 import { ConnectError, toast, useClient, useMutation, useQueryClient } from "@knowcel/module-sdk";
 import { Button, Input } from "@knowcel/ui";
+import { ChevronLeft } from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
+import { Link } from "react-router";
 
 /** Frosted and sticky: messages scroll under it, blurred. It spans the scroll container's padding. */
 const HEADER =
-  "glass-subtle sticky top-0 z-10 -mx-8 flex flex-col gap-1 border-b border-border px-8 py-3";
+  "glass-subtle sticky top-0 z-10 -mx-4 flex flex-col gap-1 border-b border-border px-4 py-3 md:-mx-8 md:px-8";
 
 export const UNTITLED = "New conversation";
 
@@ -61,6 +63,14 @@ export function ConversationHeader({ conversation }: { conversation: Conversatio
     return (
       <header className={HEADER}>
         <div className="flex items-center gap-3">
+          <Link
+            to=".."
+            aria-label="All conversations"
+            title="All conversations"
+            className="-ml-2 inline-flex size-9 shrink-0 items-center justify-center rounded-control text-fg-muted hover:bg-surface-muted hover:text-fg md:hidden"
+          >
+            <ChevronLeft className="size-5" aria-hidden="true" />
+          </Link>
           <h1 className="min-w-0 flex-1 truncate font-sans font-medium">
             {conversation.title || UNTITLED}
           </h1>

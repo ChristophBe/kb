@@ -9,8 +9,10 @@ import {
   EmptyState,
   ErrorMessage,
   IconButton,
+  NARROW_QUERY,
   navItemClass,
   RelativeTime,
+  useMediaQuery,
 } from "@knowcel/ui";
 import { MessageSquare, Plus, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
@@ -68,8 +70,13 @@ export function ChatLayout() {
     });
 
   return (
-    <div className="-m-8 flex h-screen">
-      <Area tone="secondary" className="w-64 shrink-0 border-r">
+    // At narrow widths the list and the conversation are separate full-width views;
+    // 3.5rem is the shell's top bar.
+    <div className="-m-4 flex h-[calc(100dvh-3.5rem)] md:-m-8 md:h-dvh">
+      <Area
+        tone="secondary"
+        className={`h-full w-full shrink-0 border-r md:w-64 ${openId ? "max-md:hidden" : ""}`}
+      >
         <div className="p-3">
           <Button className="w-full" onClick={() => create.mutate()} disabled={create.isPending}>
             <Plus className="size-4" /> New chat
@@ -137,7 +144,7 @@ export function ChatLayout() {
       >
         “{deleting?.title}” and all its messages will be deleted. This can't be undone.
       </ConfirmDialog>
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className={`min-w-0 flex-1 flex-col ${openId ? "flex" : "hidden md:flex"}`}>
         <Outlet />
       </div>
     </div>
@@ -159,9 +166,11 @@ function useNoDocuments(enabled: boolean) {
 export function ChatIndex() {
   const conversations = useConversations();
   const create = useCreateConversation();
+  // At narrow widths the index is the list of conversations itself.
+  const narrow = useMediaQuery(NARROW_QUERY);
   const latest = conversations.data?.conversations[0];
   const noDocuments = useNoDocuments(conversations.data !== undefined && !latest);
-  if (latest) return <Navigate to={latest.id} replace />;
+  if (latest && !narrow) return <Navigate to={latest.id} replace />;
   if (conversations.isPending) return null;
   return (
     <div className="flex flex-1 items-center justify-center">

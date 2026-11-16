@@ -40,6 +40,7 @@ export {
 export { formatBytes, formatRelativeTime, formatTime } from "./format.ts";
 export { DelayedLoading, Skeleton, SkeletonRows } from "./loading.tsx";
 export { Logo, Mark } from "./logo.tsx";
+export { NARROW_QUERY, useMediaQuery } from "./media.ts";
 export { headingSlug } from "./slug.ts";
 export {
   isTeamNotFound,

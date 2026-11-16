@@ -3,6 +3,7 @@ import { Code, ConnectError } from "@connectrpc/connect";
 import { ConversationSchema } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
 import { KbRuntimeProvider, useToasts } from "@knowcel/module-sdk";
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ConversationHeader } from "./ConversationHeader.tsx";
 
@@ -28,7 +29,9 @@ function renderHeader(title = "Q3 revenue") {
   const conversation = create(ConversationSchema, { id: "c1", title });
   return render(
     <KbRuntimeProvider config={{ apiBaseUrl: "http://test" }}>
-      <ConversationHeader conversation={conversation} />
+      <MemoryRouter>
+        <ConversationHeader conversation={conversation} />
+      </MemoryRouter>
       <Toasts />
     </KbRuntimeProvider>,
   );

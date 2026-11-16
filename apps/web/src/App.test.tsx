@@ -1,6 +1,6 @@
 import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App.tsx";
 
 function renderAt(path: string) {
@@ -45,6 +45,50 @@ describe("App shell", () => {
     await waitFor(() => {
       const h1 = screen.getByRole("heading", { level: 1 });
       expect(document.activeElement).toBe(h1);
+    });
+  });
+
+  describe("at a narrow width", () => {
+    beforeEach(() => {
+      vi.stubGlobal("matchMedia", (query: string) => ({
+        matches: true,
+        media: query,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }));
+    });
+    afterEach(() => vi.unstubAllGlobals());
+
+    // jsdom applies no CSS: a closed drawer is `inert` (out of the tab order and the
+    // accessibility tree), where a browser also hides it.
+    const sidebarClosed = (c: HTMLElement) => c.querySelector("aside")?.hasAttribute("inert");
+
+    it("keeps the sidebar closed until the menu button opens it", () => {
+      const { container } = renderAt("/nope");
+      expect(sidebarClosed(container)).toBe(true);
+      const menu = screen.getByRole("button", { name: "Open menu" });
+      expect(menu.getAttribute("aria-expanded")).toBe("false");
+      fireEvent.click(menu);
+      expect(sidebarClosed(container)).toBe(false);
+      expect(menu.getAttribute("aria-expanded")).toBe("true");
+      expect(container.querySelector("main")?.hasAttribute("inert")).toBe(true);
+      expect(container.querySelector("aside")?.contains(document.activeElement)).toBe(true);
+    });
+
+    it("closes on Escape and returns focus to the menu button", () => {
+      const { container } = renderAt("/nope");
+      const menu = screen.getByRole("button", { name: "Open menu" });
+      fireEvent.click(menu);
+      fireEvent.keyDown(screen.getByRole("navigation", { name: "Help" }), { key: "Escape" });
+      expect(sidebarClosed(container)).toBe(true);
+      expect(document.activeElement).toBe(menu);
+    });
+
+    it("closes on navigation", async () => {
+      const { container } = renderAt("/nope");
+      fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+      fireEvent.click(screen.getByRole("link", { name: "Help" }));
+      await waitFor(() => expect(sidebarClosed(container)).toBe(true));
     });
   });
 });

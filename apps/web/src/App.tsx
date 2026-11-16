@@ -10,13 +10,24 @@ import {
   Area,
   IconButton,
   Logo,
+  NARROW_QUERY,
   navItemClass,
   PageTitle,
   ThemeToggle,
   useDocumentTitle,
+  useMediaQuery,
 } from "@knowcel/ui";
-import { CircleHelp, CircleUser, LogOut } from "lucide-react";
-import { lazy, type ReactNode, type RefObject, useEffect, useMemo, useRef } from "react";
+import { CircleHelp, CircleUser, LogOut, Menu, X } from "lucide-react";
+import {
+  type KeyboardEvent,
+  lazy,
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   createBrowserRouter,
   Link,
@@ -100,17 +111,58 @@ function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: S
   const isPlatformAdmin = useIsPlatformAdmin();
   const main = useRef<HTMLElement>(null);
   useFocusOnNavigation(main);
+  const narrow = useMediaQuery(NARROW_QUERY);
+  const drawer = useDrawer(narrow);
+  // While the drawer is open, the rest of the page is out of reach.
+  const behind = drawer.open ? { inert: true } : {};
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen flex-col md:flex-row">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg"
       >
         Skip to content
       </a>
-      <Area as="aside" className="sticky top-0 w-60 shrink-0 overflow-y-auto border-r">
-        <div className="flex items-center px-5 py-5">
+      <header
+        {...behind}
+        className="glass-area sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b border-border px-3 md:hidden"
+      >
+        <IconButton
+          ref={drawer.opener}
+          label="Open menu"
+          aria-expanded={drawer.open}
+          aria-controls="sidebar"
+          onClick={drawer.show}
+        >
+          <Menu className="size-5" />
+        </IconButton>
+        <Logo size={22} className="font-serif" />
+      </header>
+      {drawer.open && (
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label="Close menu"
+          onClick={drawer.hide}
+          className="fixed inset-0 z-30 cursor-default bg-fg/40 md:hidden"
+        />
+      )}
+      <Area
+        as="aside"
+        id="sidebar"
+        ref={drawer.panel}
+        // Closed on a narrow screen, the sidebar is not in the tab order or the accessibility tree.
+        {...(narrow && !drawer.open ? { inert: true } : {})}
+        onKeyDown={drawer.onKeyDown}
+        className={`w-60 shrink-0 overflow-y-auto border-r max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40 max-md:h-dvh max-md:max-w-[85vw] max-md:shadow-xl md:sticky md:top-0 ${drawer.open ? "" : "max-md:hidden"}`}
+      >
+        <div className="flex items-center justify-between px-5 py-5">
           <Logo size={24} className="font-serif" />
+          {narrow && (
+            <IconButton label="Close menu" onClick={drawer.hide}>
+              <X className="size-5" />
+            </IconButton>
+          )}
         </div>
         <div className="px-3 pb-4">
           <HeaderSearch providers={providers} />
@@ -137,12 +189,72 @@ function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: S
           <ThemeToggle />
         </div>
       </Area>
-      <main id="main" ref={main} tabIndex={-1} className="min-w-0 flex-1 p-8 outline-none">
+      <main
+        id="main"
+        ref={main}
+        tabIndex={-1}
+        {...behind}
+        className="min-w-0 flex-1 p-4 outline-none md:p-8"
+      >
         <Outlet />
       </main>
       <ToastHost />
     </div>
   );
+}
+
+/**
+ * The sidebar as a drawer on narrow screens. Opening moves focus into it;
+ * Esc, the close button, the backdrop and any navigation close it and return
+ * focus to the menu button (or, after navigation, to the new page: see
+ * `useFocusOnNavigation`). Tab wraps inside it while it is open.
+ */
+function useDrawer(narrow: boolean) {
+  // The path it was opened on: navigating elsewhere closes it in the same render,
+  // so the new page is not inert when focus moves to it.
+  const [openedOn, setOpenedOn] = useState<string | null>(null);
+  const opener = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const { pathname } = useLocation();
+  const shown = openedOn === pathname && narrow;
+
+  // Focus moves once the page behind is no longer inert.
+  const restoreFocus = useRef(false);
+  useEffect(() => {
+    if (shown) {
+      panel.current?.querySelector<HTMLElement>("input, a, button")?.focus();
+    } else if (restoreFocus.current) {
+      restoreFocus.current = false;
+      opener.current?.focus();
+    }
+  }, [shown]);
+
+  const hide = () => {
+    restoreFocus.current = true;
+    setOpenedOn(null);
+  };
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (!shown) return;
+    if (e.key === "Escape") {
+      e.stopPropagation();
+      hide();
+      return;
+    }
+    if (e.key !== "Tab" || !panel.current) return;
+    const items = [...panel.current.querySelectorAll<HTMLElement>("a[href], button, input")].filter(
+      (el) => !el.hasAttribute("disabled"),
+    );
+    const first = items[0];
+    const last = items.at(-1);
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last?.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first?.focus();
+    }
+  };
+  return { open: shown, show: () => setOpenedOn(pathname), hide, onKeyDown, opener, panel };
 }
 
 /**

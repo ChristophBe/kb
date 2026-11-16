@@ -143,7 +143,7 @@ FROM (
       AND c.embedding_model = $4
       AND (cardinality($5::uuid[]) = 0
            OR c.document_id = ANY($5::uuid[]))
-      AND (cardinality($6::uuid[]) = 0
+      AND (coalesce(cardinality($6::uuid[]), 0) = 0
            OR EXISTS (SELECT 1 FROM document.document_teams o
                       WHERE o.document_id = d.id AND o.team_id = ANY($6::uuid[])))
     ORDER BY c.document_id, c.embedding <=> $1::vector, c.idx
@@ -223,7 +223,7 @@ WHERE (d.access = 1
   AND c.embedding_model = $4
   AND (cardinality($5::uuid[]) = 0
        OR c.document_id = ANY($5::uuid[]))
-  AND (cardinality($6::uuid[]) = 0
+  AND (coalesce(cardinality($6::uuid[]), 0) = 0
        OR EXISTS (SELECT 1 FROM document.document_teams o
                   WHERE o.document_id = d.id AND o.team_id = ANY($6::uuid[])))
 ORDER BY c.embedding <=> $1::vector

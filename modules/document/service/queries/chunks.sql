@@ -24,7 +24,7 @@ WHERE (d.access = 1
   AND c.embedding_model = sqlc.arg('embedding_model')
   AND (cardinality(sqlc.arg('document_ids')::uuid[]) = 0
        OR c.document_id = ANY(sqlc.arg('document_ids')::uuid[]))
-  AND (cardinality(sqlc.arg('only_team_ids')::uuid[]) = 0
+  AND (coalesce(cardinality(sqlc.arg('only_team_ids')::uuid[]), 0) = 0
        OR EXISTS (SELECT 1 FROM document.document_teams o
                   WHERE o.document_id = d.id AND o.team_id = ANY(sqlc.arg('only_team_ids')::uuid[])))
 ORDER BY c.embedding <=> sqlc.arg('embedding')::vector
@@ -50,7 +50,7 @@ FROM (
       AND c.embedding_model = sqlc.arg('embedding_model')
       AND (cardinality(sqlc.arg('document_ids')::uuid[]) = 0
            OR c.document_id = ANY(sqlc.arg('document_ids')::uuid[]))
-      AND (cardinality(sqlc.arg('only_team_ids')::uuid[]) = 0
+      AND (coalesce(cardinality(sqlc.arg('only_team_ids')::uuid[]), 0) = 0
            OR EXISTS (SELECT 1 FROM document.document_teams o
                       WHERE o.document_id = d.id AND o.team_id = ANY(sqlc.arg('only_team_ids')::uuid[])))
     ORDER BY c.document_id, c.embedding <=> sqlc.arg('embedding')::vector, c.idx

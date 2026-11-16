@@ -5,7 +5,7 @@ import warnings
 
 from knowcel.iam.v1 import iam_pb2 as knowcel_dot_iam_dot_v1_dot_iam__pb2
 
-GRPC_GENERATED_VERSION = '1.85.0'
+GRPC_GENERATED_VERSION = '1.85.1'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 

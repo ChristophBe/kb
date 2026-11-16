@@ -5,7 +5,7 @@ import warnings
 
 from knowcel.ingestion.v1 import ingestion_pb2 as knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2
 
-GRPC_GENERATED_VERSION = '1.85.0'
+GRPC_GENERATED_VERSION = '1.85.1'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 

@@ -6,7 +6,7 @@ requires-python = ">=3.13"
 
 [dependency-groups]
 dev = [
-    "grpcio-tools==1.85.0", # pins generated Python code (tools/protoc-gen-kbpy)
+    "grpcio-tools==1.85.1", # pins generated Python code (tools/protoc-gen-kbpy)
     "import-linter>=2.1",
     "pyright>=1.1.400",
     "pytest>=9.0",

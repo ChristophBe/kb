@@ -259,3 +259,31 @@ func TestConfigDocRejectsPortMismatch(t *testing.T) {
 		t.Fatalf("err = %v, want a port mismatch error", err)
 	}
 }
+
+func TestAffected(t *testing.T) {
+	modules := []Module{
+		{ID: "iam"},
+		{ID: "llm", DependsOn: []string{"iam"}},
+		{ID: "document", DependsOn: []string{"llm", "iam"}},
+		{ID: "chat", DependsOn: []string{"document", "llm"}},
+		{ID: "ingestion", DependsOn: []string{"document", "llm", "iam"}},
+	}
+	tests := []struct {
+		name  string
+		files []string
+		want  string
+	}{
+		{"docs only", []string{"docs/x.md", "README.md"}, ""},
+		{"leaf module", []string{"modules/chat/service/a.py"}, "chat"},
+		{"dependents", []string{"modules/document/service/a.go"}, "chat document ingestion"},
+		{"transitive", []string{"modules/llm/ui/a.ts"}, "chat document ingestion llm"},
+		{"shared code", []string{"modules/chat/a.py", "platform/go/a.go"}, "all"},
+		{"unknown module dir", []string{"modules/new/a.go"}, "all"},
+		{"ci", []string{".github/workflows/ci.yml"}, "all"},
+	}
+	for _, tt := range tests {
+		if got := strings.Join(Affected(modules, tt.files), " "); got != tt.want {
+			t.Errorf("%s: got %q, want %q", tt.name, got, tt.want)
+		}
+	}
+}

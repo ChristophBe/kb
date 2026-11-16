@@ -39,12 +39,33 @@ jobs:
           git show "origin/${{ github.base_ref }}:buf.yaml" | grep -q modules/iam/proto || exclude=(--exclude-path modules/iam/proto/knowcel)
           go tool -modfile=tools/go.mod buf breaking --against ".git#branch=origin/${{ github.base_ref }}" "${exclude[@]}"
       - run: $TASK lint
+      # Pull requests test the modules the change can affect (the changed ones and those
+      # depending on them; shared code, tooling and CI changes affect all); main tests all.
+      # Empty: only docs changed.
+      - name: Affected modules
+        id: affected
+        run: |
+          if [ "${{ github.event_name }}" = pull_request ]; then
+            modules=$(go -C tools run ./modgen affected -root .. -base "origin/${{ github.base_ref }}")
+          else
+            modules=all
+          fi
+          echo "modules=$modules" >> "$GITHUB_OUTPUT"
+          echo "Affected modules: ${modules:-none}"
       - run: $TASK test
+        if: steps.affected.outputs.modules != ''
+        env:
+          MODULES: ${{ steps.affected.outputs.modules }}
       - run: $TASK test:integration
+        if: steps.affected.outputs.modules != ''
+        env:
+          MODULES: ${{ steps.affected.outputs.modules }}
 
   # The release images (deploy/images.json), built for amd64 without pushing.
   # The helm job installs them from the artifacts.
   images:
+    needs: changes
+    if: github.event_name != 'pull_request' || needs.changes.outputs.images == 'true'
     # images.yml declares packages: write for its push; it stays off here.
     permissions:
       contents: read
@@ -57,7 +78,8 @@ jobs:
   # infrastructure and the images of this run, then the e2e smoke test against
   # the release through its Ingress (docs/operations/kubernetes.md).
   helm:
-    needs: images
+    needs: [changes, images]
+    if: github.event_name != 'pull_request' || needs.changes.outputs.images == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -151,7 +173,8 @@ jobs:
             tools/go.sum
       - run: go tool -modfile=tools/go.mod task e2e
 
-  # Whether a change touches the web UI, for the browser job.
+  # Whether a change touches the web UI, for the browser job, and whether it can change
+  # a release image or the chart, for the images and helm jobs (pull requests only).
   changes:
     runs-on: ubuntu-latest
     permissions:
@@ -159,6 +182,7 @@ jobs:
       pull-requests: read
     outputs:
       ui: ${{ steps.filter.outputs.ui }}
+      images: ${{ steps.filter.outputs.images }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -172,6 +196,23 @@ jobs:
               - tests/browser/**
               - pnpm-lock.yaml
               - .github/workflows/ci.yml
+            # Everything an image or the chart is built from, plus the smoke test the helm
+            # job runs; docs, the browser tests and other workflows cannot change either.
+            images:
+              - modules/**
+              - platform/**
+              - apps/**
+              - deploy/**
+              - tests/e2e/**
+              - go.mod
+              - go.sum
+              - uv.lock
+              - pyproject.toml
+              - pnpm-lock.yaml
+              - pnpm-workspace.yaml
+              - package.json
+              - .github/workflows/ci.yml
+              - .github/workflows/images.yml
 
   # Playwright (Chromium) against the composed stack with the web shell: sign-in
   # through Dex, upload, cited chat, a module disabled in the runtime config,

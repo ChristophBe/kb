@@ -10,6 +10,9 @@
 // Run from the repository root (`task gen` does this):
 //
 //	go -C tools run ./modgen -root ..
+//
+// `modgen affected -base <ref>` instead prints the modules whose tests a change
+// since <ref> can affect (see Affected), for CI.
 package main
 
 import (
@@ -21,6 +24,12 @@ import (
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "affected" {
+		if err := runAffected(os.Args[2:]); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 	root := flag.String("root", ".", "repository root")
 	configDoc := flag.Bool("config-doc", true, "generate "+ConfigDocPath+" (needs the whole repository and uv)")
 	flag.Parse()

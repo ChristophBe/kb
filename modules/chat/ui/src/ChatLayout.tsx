@@ -72,7 +72,7 @@ export function ChatLayout() {
           className="flex-1 overflow-y-auto px-3 pb-3"
         >
           {conversations.data?.conversations.map((c) => (
-            <div key={c.id} className={navItemClass(c.id === openId, "group gap-0 p-0")}>
+            <div key={c.id} className={navItemClass(c.id === openId, "gap-0 p-0")}>
               <NavLink
                 to={c.id}
                 aria-labelledby={`${c.id}-title`}
@@ -105,7 +105,7 @@ export function ChatLayout() {
               <IconButton
                 label={`Delete conversation ${c.title || UNTITLED}`}
                 tone="danger"
-                className="mr-1 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
+                className="mr-1"
                 onClick={() => setDeleting({ id: c.id, title: c.title || UNTITLED })}
               >
                 <Trash2 className="size-4" />

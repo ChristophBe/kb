@@ -22,6 +22,8 @@ The new conversation is called **New conversation** until you ask your first que
 
 The answer appears as it is written. While it is being written, you can't send another question; wait for it or [stop it](#stop-an-answer). Answers can contain lists, tables and code; select **Copy code** on a code block to copy it.
 
+Under the newest answer, select **Copy answer** to copy its text to the clipboard (a notification confirms it). Older answers can't be copied this way; select their text instead.
+
 Follow-up questions in the same conversation can refer to earlier questions and answers.
 
 ## Check the sources of an answer
@@ -78,13 +80,13 @@ When teams are ticked:
 
 While an answer is being written, select **Stop** next to the question box, or press Escape.
 
-The text written so far is kept and marked **Stopped**. You can ask the next question right away. Leaving the conversation or closing the tab also stops an answer that is being written.
+The text written so far is kept and marked **Stopped**. You can ask the next question right away, or select **Retry** under the newest answer to ask the same question again. Leaving the conversation or closing the tab also stops an answer that is being written.
 
 ## When an answer fails
 
 If an answer can't be completed, it shows "The answer was interrupted." with the reason when Knowcelium knows it, for example that a service isn't available. The text written until then is kept.
 
-Select **Retry** under the newest answer to ask the same question again. Older failed answers keep their note but can't be retried; ask the question again instead.
+Select **Retry** under the newest answer to ask the same question again, as you can for a stopped answer. Older answers keep their note but can't be retried; ask the question again instead.
 
 If the whole conversation can't be loaded or the question can't be sent, a message above the conversation says what went wrong, for example "The Chat service isn't available. Try again in a moment." When answers keep failing, check [Models](models.md).
 
@@ -107,7 +109,7 @@ Select **Cancel** or press Escape to keep the old title. The title can't be empt
 
 ## Delete a conversation
 
-1. Point at the conversation in the list, or move to it with the Tab key, and select the delete button (the bin) that appears.
+1. Select the delete button (the bin) at the right of the conversation in the list. It is always shown, so it works by touch and with the keyboard too.
 2. Check the conversation's title in the question **Delete conversation?** and select **Delete**. Select **Cancel** or press Escape to keep it.
 
 The conversation and all its messages are deleted, and a notification says "Conversation deleted". This can't be undone. If it was the open conversation, the next most recent one opens.

@@ -6,9 +6,16 @@ import {
   MessageRole,
   MessageStatus,
 } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
-import { Code, ConnectError, useClient, useQuery, useQueryClient } from "@knowcel/module-sdk";
+import {
+  Code,
+  ConnectError,
+  toast,
+  useClient,
+  useQuery,
+  useQueryClient,
+} from "@knowcel/module-sdk";
 import { Button, buttonClass, ErrorMessage, Spinner } from "@knowcel/ui";
-import { ArrowUp, MessageSquare, RotateCcw, Square, TriangleAlert } from "lucide-react";
+import { ArrowUp, Copy, MessageSquare, RotateCcw, Square, TriangleAlert } from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { Answer } from "./Answer.tsx";
@@ -45,6 +52,16 @@ function readableError(err: unknown): string {
       return "This conversation no longer exists.";
     default:
       return "Something went wrong. Try again.";
+  }
+}
+
+/** Copies an answer's text (Markdown, without the source notes) to the clipboard. */
+async function copyAnswer(content: string) {
+  try {
+    await navigator.clipboard.writeText(content);
+    toast.success("Answer copied");
+  } catch {
+    toast.error("Couldn't copy the answer. Select its text and copy it instead.");
   }
 }
 
@@ -170,11 +187,13 @@ export function Conversation() {
   };
 
   const messages = conversation.data?.messages ?? [];
-  // Only the newest answer can be retried: retrying resends the question before it.
+  // Only the newest answer can be retried or stopped: retrying resends the question before it.
   const last = messages.at(-1);
   const lastQuestion = messages.at(-2);
   const retry =
-    last?.status === MessageStatus.FAILED && lastQuestion?.role === MessageRole.USER && !pending
+    (last?.status === MessageStatus.FAILED || last?.status === MessageStatus.STOPPED) &&
+    lastQuestion?.role === MessageRole.USER &&
+    !pending
       ? () => ask(lastQuestion.content)
       : undefined;
   return (
@@ -196,6 +215,7 @@ export function Conversation() {
               failure={m.status === MessageStatus.FAILED ? (failures[m.id] ?? "") : undefined}
               stopped={m.status === MessageStatus.STOPPED}
               announce={m.id in failures}
+              actions={m === last && !pending && m.role === MessageRole.ASSISTANT}
               onRetry={m === last ? retry : undefined}
             />
           ))}
@@ -312,6 +332,7 @@ function Bubble({
   failure,
   stopped = false,
   announce = false,
+  actions = false,
   onRetry,
 }: Pick<ChatMessage, "role" | "content" | "citations"> & {
   /** Set when the answer failed: the reason, or "" when it isn't known. */
@@ -320,6 +341,8 @@ function Bubble({
   stopped?: boolean;
   /** Announces the failure as an alert; only for saved answers that just failed. */
   announce?: boolean;
+  /** Shows the answer's actions: Copy, and Retry when `onRetry` is set. */
+  actions?: boolean;
   onRetry?: () => void;
 }) {
   if (role === MessageRole.USER) {
@@ -346,6 +369,16 @@ function Bubble({
             <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <span>{failure ? `${INTERRUPTED} ${failure}` : INTERRUPTED}</span>
           </p>
+        </div>
+      )}
+      {actions && (content || onRetry) && (
+        <div className="flex flex-wrap items-center gap-2">
+          {content && (
+            <Button variant="ghost" onClick={() => copyAnswer(content)}>
+              <Copy className="size-4" aria-hidden="true" />
+              Copy answer
+            </Button>
+          )}
           {onRetry && (
             <Button variant="secondary" onClick={onRetry}>
               <RotateCcw className="size-4" aria-hidden="true" />

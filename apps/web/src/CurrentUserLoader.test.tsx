@@ -69,6 +69,9 @@ describe("CurrentUserLoader", () => {
     });
     renderLoader(getCurrentUser);
     await vi.waitFor(() => expect(getCurrentUser).toHaveBeenCalled());
-    await vi.waitFor(() => expect(screen.getByText("unknown failed")).toBeTruthy());
+    // The query retries once before it gives up.
+    await vi.waitFor(() => expect(screen.getByText("unknown failed")).toBeTruthy(), {
+      timeout: 5000,
+    });
   });
 });

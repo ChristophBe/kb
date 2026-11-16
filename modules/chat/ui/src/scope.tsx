@@ -10,7 +10,7 @@ import {
   useQueryClient,
 } from "@knowcel/module-sdk";
 import { Button, Dialog, ErrorMessage, IconButton, Input, Spinner, TeamPicker } from "@knowcel/ui";
-import { FileText, Users, X } from "lucide-react";
+import { Library, X } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { useMyTeams } from "./useMyTeams.ts";
@@ -53,19 +53,21 @@ export function useScopeTeams(conversation: Conversation): { names: string[]; kn
   return { names, known };
 }
 
-/** Replaces a conversation's teams; an empty list means all documents. */
-export function useSetTeams(conversation: Conversation) {
+/** Replaces a conversation's documents and teams in one request; empty lists mean all documents. */
+export function useSetSources(conversation: Conversation) {
   const client = useClient(ChatService);
   const queryClient = useQueryClient();
   const { teams } = useMyTeams();
   return useMutation({
-    mutationFn: (ids: string[]) =>
-      client.updateConversation({ id: conversation.id, teamIds: { ids } }),
-    onSuccess: (_, ids) => {
-      const names = ids.flatMap((id) => teams.find((t) => t.id === id)?.name ?? []);
-      toast.success(
-        `Knowledge changed to ${describeScope(conversation.documentIds.length, names)}`,
-      );
+    mutationFn: (sources: { documentIds: string[]; teamIds: string[] }) =>
+      client.updateConversation({
+        id: conversation.id,
+        documentIds: { ids: sources.documentIds },
+        teamIds: { ids: sources.teamIds },
+      }),
+    onSuccess: (_, sources) => {
+      const names = sources.teamIds.flatMap((id) => teams.find((t) => t.id === id)?.name ?? []);
+      toast.success(`Sources changed to ${describeScope(sources.documentIds.length, names)}`);
       return queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onError: (err) => {
@@ -77,7 +79,7 @@ export function useSetTeams(conversation: Conversation) {
       } else if (code === Code.Unavailable) {
         toast.error("Teams can't be looked up right now. Try again in a moment.");
       } else {
-        toast.error("The teams couldn't be changed. Try again.");
+        toast.error("The sources couldn't be changed. Try again.");
       }
     },
   });
@@ -174,68 +176,18 @@ export function ScopeChips({ conversation }: { conversation: Conversation }) {
   );
 }
 
-/** "Choose teams": a dialog to limit the answers to documents of the user's teams. */
-export function TeamScopePicker({ conversation }: { conversation: Conversation }) {
-  const { teams, known } = useMyTeams();
-  const setTeams = useSetTeams(conversation);
-  const [selected, setSelected] = useState<string[] | null>(null);
-  const opener = useRef<HTMLButtonElement>(null);
-  const current = useScopeTeams(conversation).names.length;
-
-  // Without teams (none joined, or iam down) there is nothing to choose.
-  if (!known || teams.length === 0) return null;
-  const close = () => {
-    setSelected(null);
-    opener.current?.focus();
-  };
-  return (
-    <>
-      <Button
-        ref={opener}
-        variant="ghost"
-        className="-ml-3 text-xs"
-        onClick={() =>
-          setSelected(conversation.teamIds.filter((id) => teams.some((t) => t.id === id)))
-        }
-      >
-        <Users className="size-4" aria-hidden="true" />
-        {current === 0 ? "Choose teams" : `Teams (${current})`}
-      </Button>
-      <Dialog
-        open={selected !== null}
-        onClose={close}
-        title="Choose teams for this chat"
-        footer={
-          <>
-            <Button variant="ghost" onClick={close}>
-              Cancel
-            </Button>
-            <Button
-              disabled={setTeams.isPending}
-              onClick={() => selected && setTeams.mutate(selected, { onSuccess: close })}
-            >
-              Apply
-            </Button>
-          </>
-        }
-      >
-        <TeamPicker
-          legend="Use documents of"
-          hint="Leave all unticked to use every document you can read: public ones and those of your teams. With teams ticked, only documents of those teams are used, not public ones."
-          options={teams.map((t) => ({ id: t.id, name: t.name }))}
-          selected={selected ?? []}
-          onChange={setSelected}
-        />
-      </Dialog>
-    </>
-  );
-}
-
-/** "Choose documents": a dialog with a searchable checklist of all documents. */
-export function DocumentPicker({ conversation }: { conversation: Conversation }) {
+/**
+ * "Sources": one dialog to choose the documents and teams that answers come
+ * from. A searchable checklist of documents, and the user's teams when they
+ * have any; one Apply saves both.
+ */
+export function SourcesControl({ conversation }: { conversation: Conversation }) {
   const documents = useClient(DocumentService);
-  const setScope = useSetScope(conversation);
-  const [selected, setSelected] = useState<string[] | null>(null);
+  const { teams, known } = useMyTeams();
+  const setSources = useSetSources(conversation);
+  const [selected, setSelected] = useState<{ documentIds: string[]; teamIds: string[] } | null>(
+    null,
+  );
   const [search, setSearch] = useState("");
   const opener = useRef<HTMLButtonElement>(null);
   const hint = useId();
@@ -251,17 +203,23 @@ export function DocumentPicker({ conversation }: { conversation: Conversation })
     opener.current?.focus();
   };
   const apply = () => {
-    if (!selected) return;
-    setScope.mutate(selected, { onSuccess: close });
+    if (selected) setSources.mutate(selected, { onSuccess: close });
   };
   const toggle = (id: string, on: boolean) =>
-    setSelected((s) => (s === null ? s : on ? [...s, id] : s.filter((x) => x !== id)));
+    setSelected((s) =>
+      s === null
+        ? s
+        : {
+            ...s,
+            documentIds: on ? [...s.documentIds, id] : s.documentIds.filter((x) => x !== id),
+          },
+    );
 
   const query = search.trim().toLowerCase();
   const shown = (list.data?.documents ?? []).filter(
     (d) => !query || `${d.title} ${d.filename}`.toLowerCase().includes(query),
   );
-  const count = conversation.documentIds.length;
+  const hasTeams = known && teams.length > 0;
   return (
     <>
       <Button
@@ -270,66 +228,81 @@ export function DocumentPicker({ conversation }: { conversation: Conversation })
         className="-ml-3 text-xs"
         onClick={() => {
           setSearch("");
-          setSelected([...conversation.documentIds]);
+          setSelected({
+            documentIds: [...conversation.documentIds],
+            // A team the user left or that was deleted no longer counts.
+            teamIds: conversation.teamIds.filter((id) => teams.some((t) => t.id === id)),
+          });
         }}
       >
-        <FileText className="size-4" aria-hidden="true" />
-        {count === 0 ? "Choose documents" : `Documents (${count})`}
+        <Library className="size-4" aria-hidden="true" />
+        Sources
       </Button>
       <Dialog
         open={open}
         onClose={close}
-        title="Choose documents for this chat"
+        title="Sources for this chat"
         footer={
           <>
             <p id={hint} className="mr-auto self-center text-xs text-fg-muted">
-              Leave empty to use all documents.
+              Leave everything empty to use all documents you can read.
             </p>
             <Button variant="ghost" onClick={close}>
               Cancel
             </Button>
-            <Button onClick={apply} disabled={setScope.isPending}>
+            <Button onClick={apply} disabled={setSources.isPending}>
               Apply
             </Button>
           </>
         }
       >
-        <div className="flex flex-col gap-3">
-          <Input
-            type="search"
-            aria-label="Search documents"
-            placeholder="Search documents…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {list.isPending && <Spinner />}
-          <ErrorMessage
-            error={list.error ? "The Documents service isn't available. Try again later." : null}
-          />
-          {list.data && (
-            <fieldset aria-describedby={hint}>
-              <legend className="sr-only">Documents</legend>
-              {shown.length === 0 ? (
-                <p className="text-fg-muted">
-                  {query ? "No documents match your search." : "No documents yet."}
-                </p>
-              ) : (
-                <ul className="max-h-72 overflow-y-auto">
-                  {shown.map((d) => (
-                    <li key={d.id}>
-                      <label className="flex items-center gap-2 rounded-control px-1 py-1 hover:bg-surface-muted">
-                        <input
-                          type="checkbox"
-                          checked={selected?.includes(d.id) ?? false}
-                          onChange={(e) => toggle(d.id, e.target.checked)}
-                        />
-                        <span className="min-w-0 truncate">{d.title || d.filename}</span>
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </fieldset>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
+            <Input
+              type="search"
+              aria-label="Search documents"
+              placeholder="Search documents…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {list.isPending && <Spinner />}
+            <ErrorMessage
+              error={list.error ? "The Documents service isn't available. Try again later." : null}
+            />
+            {list.data && (
+              <fieldset aria-describedby={hint}>
+                <legend className="sr-only">Documents</legend>
+                {shown.length === 0 ? (
+                  <p className="text-fg-muted">
+                    {query ? "No documents match your search." : "No documents yet."}
+                  </p>
+                ) : (
+                  <ul className="max-h-72 overflow-y-auto">
+                    {shown.map((d) => (
+                      <li key={d.id}>
+                        <label className="flex items-center gap-2 rounded-control px-1 py-1 hover:bg-surface-muted">
+                          <input
+                            type="checkbox"
+                            checked={selected?.documentIds.includes(d.id) ?? false}
+                            onChange={(e) => toggle(d.id, e.target.checked)}
+                          />
+                          <span className="min-w-0 truncate">{d.title || d.filename}</span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </fieldset>
+            )}
+          </div>
+          {hasTeams && (
+            <TeamPicker
+              legend="Use documents of"
+              hint="With teams ticked, only documents of those teams are used, not public ones."
+              options={teams.map((t) => ({ id: t.id, name: t.name }))}
+              selected={selected?.teamIds ?? []}
+              onChange={(teamIds) => setSelected((s) => (s === null ? s : { ...s, teamIds }))}
+            />
           )}
         </div>
       </Dialog>

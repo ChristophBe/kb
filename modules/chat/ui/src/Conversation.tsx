@@ -15,7 +15,7 @@ import { Answer } from "./Answer.tsx";
 import { ConversationHeader } from "./ConversationHeader.tsx";
 import { ModelPicker, useModelChoice } from "./model.tsx";
 import type { StartState } from "./StartChat.tsx";
-import { DocumentPicker, TeamScopePicker } from "./scope.tsx";
+import { ScopeChips, SourcesControl } from "./scope.tsx";
 
 interface Pending {
   question: string;
@@ -281,13 +281,23 @@ export function Conversation() {
                 Answer from your documents
               </label>
               {conversation.data?.conversation && useKnowledgeBase && (
-                <DocumentPicker conversation={conversation.data.conversation} />
-              )}
-              {conversation.data?.conversation && useKnowledgeBase && (
-                <TeamScopePicker conversation={conversation.data.conversation} />
+                <SourcesControl conversation={conversation.data.conversation} />
               )}
               {modelChoice && <ModelPicker choice={modelChoice} disabled={pending !== null} />}
             </div>
+            {conversation.data?.conversation && useKnowledgeBase && (
+              <div className="flex flex-col gap-1 pb-1">
+                <ScopeChips conversation={conversation.data.conversation} />
+                {messages.length === 0 && !pending && (
+                  <p className="text-xs text-fg-muted">
+                    {conversation.data.conversation.documentIds.length === 0 &&
+                    conversation.data.conversation.teamIds.length === 0
+                      ? "Answers use all documents you can read. Select Sources to limit them to some documents or teams."
+                      : "Answers use the sources chosen here. Select Sources to change them."}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </form>
       </div>

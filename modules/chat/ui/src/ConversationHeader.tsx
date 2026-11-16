@@ -2,7 +2,6 @@ import { ChatService, type Conversation } from "@knowcel/chat-api/knowcel/chat/v
 import { ConnectError, toast, useClient, useMutation, useQueryClient } from "@knowcel/module-sdk";
 import { Button, Input } from "@knowcel/ui";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
-import { ScopeChips } from "./scope.tsx";
 
 /** Frosted and sticky: messages scroll under it, blurred. It spans the scroll container's padding. */
 const HEADER =
@@ -10,7 +9,7 @@ const HEADER =
 
 export const UNTITLED = "New conversation";
 
-/** Title of the open conversation, with rename in place, and its document scope. */
+/** Title of the open conversation, with rename in place. */
 export function ConversationHeader({ conversation }: { conversation: Conversation }) {
   const client = useClient(ChatService);
   const queryClient = useQueryClient();
@@ -69,7 +68,6 @@ export function ConversationHeader({ conversation }: { conversation: Conversatio
             Rename
           </Button>
         </div>
-        <ScopeChips conversation={conversation} />
       </header>
     );
   }
@@ -102,7 +100,6 @@ export function ConversationHeader({ conversation }: { conversation: Conversatio
           Cancel
         </Button>
       </form>
-      <ScopeChips conversation={conversation} />
     </header>
   );
 }

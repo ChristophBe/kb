@@ -8,7 +8,7 @@ import { polyfillDialog } from "@knowcel/ui/testing/dialog";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { DocumentPicker, describeScope, ScopeChips, TeamScopePicker } from "./scope.tsx";
+import { describeScope, ScopeChips, SourcesControl } from "./scope.tsx";
 
 const updateConversation = vi.fn();
 const getDocument = vi.fn();
@@ -59,8 +59,7 @@ function renderScope(documentIds: string[], teamIds: string[] = []) {
       <FreshCache />
       <MemoryRouter>
         <ScopeChips conversation={conversation} />
-        <DocumentPicker conversation={conversation} />
-        <TeamScopePicker conversation={conversation} />
+        <SourcesControl conversation={conversation} />
         <Toasts />
       </MemoryRouter>
     </KbRuntimeProvider>,
@@ -102,7 +101,7 @@ describe("ScopeChips", () => {
   it("says all documents without a scope", () => {
     renderScope([]);
     expect(screen.getByText("all documents")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Choose documents" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Sources" })).toBeTruthy();
   });
 
   it("shows the scoped documents as links, and deleted ones as such", async () => {
@@ -111,7 +110,6 @@ describe("ScopeChips", () => {
     const link = await chips.findByRole("link", { name: "Quarterly report.pdf" });
     expect(link.getAttribute("href")).toBe("/m/document/d1");
     expect(chips.getByRole("link", { name: "Deleted document" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Documents (2)" })).toBeTruthy();
     await expectNoAxeViolations(container);
   });
 
@@ -131,7 +129,7 @@ describe("ScopeChips", () => {
   });
 });
 
-describe("DocumentPicker", () => {
+describe("SourcesControl documents", () => {
   beforeAll(polyfillDialog);
   beforeEach(() => {
     updateConversation.mockReset();
@@ -151,7 +149,7 @@ describe("DocumentPicker", () => {
   it("selects documents, filters by title and applies the scope", async () => {
     updateConversation.mockResolvedValue({});
     renderScope(["d1"]);
-    const group = within(await openPicker("Documents (1)"));
+    const group = within(await openPicker("Sources"));
     expect(
       (group.getByRole("checkbox", { name: "Quarterly report.pdf" }) as HTMLInputElement).checked,
     ).toBe(true);
@@ -168,47 +166,53 @@ describe("DocumentPicker", () => {
     expect(updateConversation).toHaveBeenCalledWith({
       id: "c1",
       documentIds: { ids: ["d1", "d3"] },
+      teamIds: { ids: [] },
     });
-    expect(screen.getByText("Scope changed to 2 documents")).toBeTruthy();
+    expect(screen.getByText("Sources changed to 2 documents")).toBeTruthy();
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Documents (1)" }));
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Sources" }));
   });
 
   it("clears the scope when nothing is selected", async () => {
     updateConversation.mockResolvedValue({});
     renderScope(["d2"]);
-    const group = within(await openPicker("Documents (1)"));
+    const group = within(await openPicker("Sources"));
     fireEvent.click(group.getByRole("checkbox", { name: "Board minutes.md" }));
     await act(async () => {
       fireEvent.click(dialog().getByRole("button", { name: "Apply" }));
     });
-    expect(updateConversation).toHaveBeenCalledWith({ id: "c1", documentIds: { ids: [] } });
-    expect(screen.getByText("Scope changed to all documents")).toBeTruthy();
+    expect(updateConversation).toHaveBeenCalledWith({
+      id: "c1",
+      documentIds: { ids: [] },
+      teamIds: { ids: [] },
+    });
+    expect(screen.getByText("Sources changed to all documents")).toBeTruthy();
   });
 
   it("cancels without changing the scope", async () => {
     renderScope([]);
-    const group = within(await openPicker("Choose documents"));
+    const group = within(await openPicker("Sources"));
     fireEvent.click(group.getByRole("checkbox", { name: "Board minutes.md" }));
     fireEvent.click(dialog().getByRole("button", { name: "Cancel" }));
     expect(updateConversation).not.toHaveBeenCalled();
-    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Choose documents" }));
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Sources" }));
   });
 
   it("explains when the documents can't be listed", async () => {
     listDocuments.mockRejectedValue(new ConnectError("down", Code.Unavailable));
     renderScope([]);
-    fireEvent.click(screen.getByRole("button", { name: "Choose documents" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sources" }));
     expect((await dialog().findByRole("alert")).textContent).toBe(
       "The Documents service isn't available. Try again later.",
     );
   });
 });
 
+const teamlessDialog = dialog;
 const teamDialog = () =>
-  within(screen.getByRole("dialog", { name: "Choose teams for this chat", hidden: true }));
+  within(screen.getByRole("dialog", { name: "Sources for this chat", hidden: true }));
 
-describe("TeamScopePicker", () => {
+describe("SourcesControl teams", () => {
   beforeAll(polyfillDialog);
   beforeEach(() => {
     updateConversation.mockReset();
@@ -226,7 +230,7 @@ describe("TeamScopePicker", () => {
   it("uses all documents by default, with the teams to choose from", async () => {
     renderScope([]);
     expect(screen.getByText("all documents")).toBeTruthy();
-    fireEvent.click(await screen.findByRole("button", { name: "Choose teams" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Sources" }));
     const group = within(await teamDialog().findByRole("group", { name: "Use documents of" }));
     expect(group.getAllByRole("checkbox").map((c) => (c as HTMLInputElement).checked)).toEqual([
       false,
@@ -237,16 +241,20 @@ describe("TeamScopePicker", () => {
   it("limits the answers to the chosen teams, and names them", async () => {
     updateConversation.mockResolvedValue({});
     renderScope([]);
-    fireEvent.click(await screen.findByRole("button", { name: "Choose teams" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Sources" }));
     const group = within(await teamDialog().findByRole("group", { name: "Use documents of" }));
     fireEvent.click(group.getByRole("checkbox", { name: "Platform" }));
     fireEvent.click(group.getByRole("checkbox", { name: "Support" }));
     await act(async () => {
       fireEvent.click(teamDialog().getByRole("button", { name: "Apply" }));
     });
-    expect(updateConversation).toHaveBeenCalledWith({ id: "c1", teamIds: { ids: ["t1", "t2"] } });
+    expect(updateConversation).toHaveBeenCalledWith({
+      id: "c1",
+      documentIds: { ids: [] },
+      teamIds: { ids: ["t1", "t2"] },
+    });
     expect(
-      screen.getByText("Knowledge changed to documents of teams Platform, Support"),
+      screen.getByText("Sources changed to documents of teams Platform, Support"),
     ).toBeTruthy();
   });
 
@@ -255,7 +263,7 @@ describe("TeamScopePicker", () => {
     renderScope([], ["t2"]);
     expect(await screen.findByText("Support")).toBeTruthy();
     expect(screen.queryByText("all documents")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Teams (1)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sources" }));
     const group = within(await teamDialog().findByRole("group", { name: "Use documents of" }));
     expect((group.getByRole("checkbox", { name: "Support" }) as HTMLInputElement).checked).toBe(
       true,
@@ -264,19 +272,23 @@ describe("TeamScopePicker", () => {
     await act(async () => {
       fireEvent.click(teamDialog().getByRole("button", { name: "Apply" }));
     });
-    expect(updateConversation).toHaveBeenCalledWith({ id: "c1", teamIds: { ids: [] } });
+    expect(updateConversation).toHaveBeenCalledWith({
+      id: "c1",
+      documentIds: { ids: [] },
+      teamIds: { ids: [] },
+    });
   });
 
   it("falls back to all documents when the teams are gone", async () => {
     renderScope([], ["deleted-team"]);
-    await screen.findByRole("button", { name: "Choose teams" });
+    await screen.findByRole("button", { name: "Sources" });
     expect(screen.getByText("all documents")).toBeTruthy();
   });
 
   it("explains a team the server doesn't accept", async () => {
     updateConversation.mockRejectedValue(new ConnectError("no", Code.PermissionDenied));
     renderScope([]);
-    fireEvent.click(await screen.findByRole("button", { name: "Choose teams" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Sources" }));
     const group = within(await teamDialog().findByRole("group", { name: "Use documents of" }));
     fireEvent.click(group.getByRole("checkbox", { name: "Platform" }));
     await act(async () => {
@@ -287,8 +299,31 @@ describe("TeamScopePicker", () => {
 
   it("offers no team choice without teams", async () => {
     listMyTeams.mockResolvedValue({ teams: [] });
+    listDocuments.mockResolvedValue({ documents: DOCS });
     renderScope([]);
     await screen.findByText("all documents");
-    expect(screen.queryByRole("button", { name: /teams/i })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Sources" }));
+    await teamlessDialog().findByRole("group", { name: "Documents" });
+    expect(teamlessDialog().queryByRole("group", { name: "Use documents of" })).toBeNull();
+  });
+
+  it("applies documents and teams in one request", async () => {
+    updateConversation.mockResolvedValue({});
+    listDocuments.mockResolvedValue({ documents: DOCS });
+    renderScope([]);
+    fireEvent.click(await screen.findByRole("button", { name: "Sources" }));
+    const docs = within(await teamDialog().findByRole("group", { name: "Documents" }));
+    fireEvent.click(await docs.findByRole("checkbox", { name: "Board minutes.md" }));
+    const teams = within(await teamDialog().findByRole("group", { name: "Use documents of" }));
+    fireEvent.click(teams.getByRole("checkbox", { name: "Platform" }));
+    await act(async () => {
+      fireEvent.click(teamDialog().getByRole("button", { name: "Apply" }));
+    });
+    expect(updateConversation).toHaveBeenCalledTimes(1);
+    expect(updateConversation).toHaveBeenCalledWith({
+      id: "c1",
+      documentIds: { ids: ["d2"] },
+      teamIds: { ids: ["t1"] },
+    });
   });
 });

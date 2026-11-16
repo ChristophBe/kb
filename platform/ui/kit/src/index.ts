@@ -43,4 +43,3 @@ export {
 } from "./team-picker.tsx";
 export { applyThemePref, readThemePref, type ThemePref, useThemePref } from "./theme.ts";
 export { ThemeToggle } from "./theme-toggle.tsx";
-export { Widget, WidgetMessage } from "./widget.tsx";

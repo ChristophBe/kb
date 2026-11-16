@@ -12,7 +12,7 @@ const helpProvider = lazySearch("Help", () =>
 );
 
 /**
- * The shell's own search group: the pages in the sidebar (Home, Search, the
+ * The shell's own search group: the pages of the app (Search, the
  * modules' nav items, then Help), matched by their label. Labels that start with the query
  * come first. Pages for platform admins are listed while `isPlatformAdmin()` is true; it
  * is read on every search, because the user is only known after the shell has started.
@@ -22,7 +22,6 @@ export function pagesProvider(
   isPlatformAdmin: () => boolean = () => false,
 ): SearchProvider {
   const pagesFor = (admin: boolean): SearchHit[] => [
-    { title: "Home", href: "/" },
     { title: "Search", href: "/search" },
     ...navEntries(modules, admin).map(({ to, label }) => {
       const module = modules.find((m) => to === `/m/${m.id}` || to.startsWith(`/m/${m.id}/`));

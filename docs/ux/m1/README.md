@@ -40,7 +40,7 @@ flowchart LR
     conv -- "scope chip" --> doc
 ```
 
-- **Entry points:** the shell sidebar lists each module's nav items (Documents, Search, Ingestion, Chat, Models). Home leads with a hero (a prompt that starts a chat with the question, plus buttons to search and upload), then one feature tile per module.
+- **Entry points:** the shell sidebar lists each module's nav items (Documents, Ingestion, Chat, Models). The app opens on Chat.
 - **Chat → documents:** every citation links to `/m/document/:id#chunk-:index`, which scrolls to and focuses the chunk in the detail page's chunk list (#21, #41). Scope chips in the conversation header link to the document.
 - **Documents → chat:** the detail page has "Chat about this document", which opens `/m/chat/new?documents=:id`. The chat module creates a scoped conversation and redirects to it (#44 follow-up).
 - **Ingestion → documents:** a finished job's filename links to its document.

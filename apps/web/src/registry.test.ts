@@ -24,11 +24,30 @@ describe("navEntries", () => {
   it("lists a module's nav items, or the module itself when it declares none", () => {
     const entries = navEntries(activeModules({ apiBaseUrl: "" }));
     expect(entries.map((e) => [e.label, e.to, e.end])).toEqual([
-      ["Chat", "/m/chat", true],
-      ["Documents", "/m/document", true],
+      ["Chat", "/m/chat", false],
+      ["Documents", "/m/document", false],
       ["Teams", "/m/iam/teams", false],
-      ["Ingestion", "/m/ingestion", true],
-      ["Models", "/m/llm", true],
+      ["Ingestion", "/m/ingestion", false],
+      ["Models", "/m/llm", false],
+    ]);
+  });
+
+  it("matches a module root exactly only when the module has other entries", () => {
+    const Icon = () => null;
+    const modules: ModuleManifest[] = [
+      {
+        id: "x",
+        title: "X",
+        icon: Icon,
+        nav: [
+          { path: "", label: "Open" },
+          { path: "more", label: "More" },
+        ],
+      },
+    ];
+    expect(navEntries(modules).map((e) => [e.to, e.end])).toEqual([
+      ["/m/x", true],
+      ["/m/x/more", false],
     ]);
   });
 

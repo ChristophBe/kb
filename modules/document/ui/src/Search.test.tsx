@@ -70,9 +70,8 @@ describe("Search", () => {
     expect(searchDocuments).not.toHaveBeenCalled();
   });
 
-  it("leaves the search out of the module's navigation and points its entry points at /search", () => {
+  it("leaves the search out of the module's navigation", () => {
     expect(documents.nav).toBeUndefined();
-    expect(documents.feature?.cta.path).toBe("/search");
   });
 
   it("puts each document once under Documents in the global search", async () => {

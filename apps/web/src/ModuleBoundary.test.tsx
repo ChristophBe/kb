@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { type ComponentType, lazy, useState } from "react";
+import { lazy, useState } from "react";
 import { createMemoryRouter, Link, Outlet, RouterProvider } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { isChunkLoadError, ModuleBoundary, ModuleLoadError } from "./ModuleBoundary.tsx";
@@ -96,54 +96,17 @@ describe("ModuleBoundary", () => {
     );
     expect(screen.getByText("count 1")).toBeTruthy();
   });
-  it("keeps a failing home widget contained, without taking focus", () => {
-    const router = createMemoryRouter([
-      {
-        path: "/",
-        element: (
-          <>
-            <h1>Home</h1>
-            <ModuleBoundary title="Chat" widget>
-              <Flaky />
-            </ModuleBoundary>
-          </>
-        ),
-      },
-    ]);
-    render(<RouterProvider router={router} />);
-    const heading = screen.getByRole("heading", { name: "Something went wrong in Chat." });
-    expect(heading.tagName).toBe("H3");
-    expect(document.activeElement).not.toBe(heading);
-    expect(screen.queryByRole("link", { name: "Go to home" })).toBeNull();
-  });
-
-  it("shows a placeholder while a lazy widget loads, then the widget", async () => {
-    let resolve: (m: { default: ComponentType }) => void = () => {};
-    const Widget = lazy(() => new Promise<{ default: ComponentType }>((r) => (resolve = r)));
+  it("offers a reload when a lazy page's code can't be loaded", async () => {
+    const Page = lazy(() => Promise.reject(new TypeError("Importing a module script failed.")));
     await act(async () => {
       render(
-        <ModuleBoundaryInRouter widget>
-          <Widget />
-        </ModuleBoundaryInRouter>,
-      );
-    });
-    expect(screen.getByText("Loading Chat")).toBeTruthy();
-    await act(async () => resolve({ default: () => <p>recent chats</p> }));
-    expect(await screen.findByText("recent chats")).toBeTruthy();
-  });
-
-  it("offers a reload when a lazy widget's code can't be loaded", async () => {
-    const Widget = lazy(() => Promise.reject(new TypeError("Importing a module script failed.")));
-    await act(async () => {
-      render(
-        <ModuleBoundaryInRouter widget>
-          <Widget />
+        <ModuleBoundaryInRouter>
+          <Page />
         </ModuleBoundaryInRouter>,
       );
     });
     const heading = await screen.findByRole("heading", { name: "Chat couldn't be loaded." });
-    expect(heading.tagName).toBe("H3");
-    expect(document.activeElement).not.toBe(heading);
+    expect(document.activeElement).toBe(heading);
     expect(screen.getByRole("button", { name: "Reload page" })).toBeTruthy();
   });
 
@@ -154,21 +117,11 @@ describe("ModuleBoundary", () => {
   });
 });
 
-function ModuleBoundaryInRouter({
-  widget,
-  children,
-}: {
-  widget?: boolean;
-  children: React.ReactNode;
-}) {
+function ModuleBoundaryInRouter({ children }: { children: React.ReactNode }) {
   const router = createMemoryRouter([
     {
       path: "/",
-      element: (
-        <ModuleBoundary title="Chat" widget={widget}>
-          {children}
-        </ModuleBoundary>
-      ),
+      element: <ModuleBoundary title="Chat">{children}</ModuleBoundary>,
     },
   ]);
   return <RouterProvider router={router} />;

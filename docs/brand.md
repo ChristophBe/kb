@@ -71,7 +71,7 @@ One geometry on a 48-unit grid, drawn twice. `Mark` picks the cut from its size.
 
 | Cut | Size | Use |
 |---|---|---|
-| Full | 32px and up | site nav, README, home page, social card |
+| Full | 32px and up | site nav, README, social card |
 | Small | 24px and below | favicons, app tile, app shell sidebar; thicker waists and larger nodes keep the five nodes and the hub apart at 16px |
 
 ### Rules

@@ -1,5 +1,6 @@
 import { create } from "@bufbuild/protobuf";
 import {
+  Access,
   type Job,
   JobSchema,
   JobStatus,
@@ -98,6 +99,7 @@ describe("useUploads", () => {
       sizeBytes: 7n,
       // SHA-256 of "content".
       sha256: "ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73",
+      access: Access.PUBLIC,
       teamIds: [],
     });
     expect(put.mock.calls[0]?.[2]).toBe("text/markdown");
@@ -108,7 +110,7 @@ describe("useUploads", () => {
     act(() => hook.result.current.add([file("a.md")], ["t1", "t2"]));
     await waitFor(() => expect(hook.result.current.uploads).toEqual([]));
     expect(client.createUpload).toHaveBeenCalledWith(
-      expect.objectContaining({ filename: "a.md", teamIds: ["t1", "t2"] }),
+      expect.objectContaining({ filename: "a.md", access: Access.TEAM, teamIds: ["t1", "t2"] }),
     );
   });
 

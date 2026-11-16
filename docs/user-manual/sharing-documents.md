@@ -1,24 +1,29 @@
 # Sharing documents
 
-A document is private to the person who added it until they share it with [teams](teams.md). Sharing lets the members of those teams find and read the document; it never lets them change it.
+A document has one of two access levels, which you choose when you [upload](ingestion.md#upload-documents) it:
+
+- **Public** (the default): every signed-in user can find and read it.
+- **Team**: only you and the members of the teams you attach to it can find and read it.
+
+There is no owner-only level; to restrict a document, attach it to a team. Reading never lets anyone change a document.
 
 ## Who can see your documents
 
-Only you, and the members of the teams you share a document with, can see it in the list, in search results and in chat answers. Other people signed in to Knowcelium never see it; if you send them a link, they get an error that the document was not found. Platform admins see no more of your documents than anyone else.
+A public document is visible to every signed-in user in the list, in search results and in chat answers. A team document is visible only to you and the members of its teams; other people never see it, and if you send them a link they get an error that the document was not found. Platform admins see no more of your documents than anyone else. Documents that existed before access levels were introduced are public.
 
-Only you can change or delete a document you added. Members of a team it is shared with can read it, search it and use it in chat, but not rename, replace or delete it. Your conversations and your uploads stay yours: sharing a document doesn't share how you used it.
+Only you can change or delete a document you added. Other readers can read it, search it and use it in chat, but not rename, replace or delete it. Your conversations and your uploads stay yours: sharing a document doesn't share how you used it.
 
-If a team you shared a document with is deleted, the document is private to you again.
+If a team a document was attached to is deleted, a team document with no other team is visible only to you.
 
-## See which documents are shared
+## See who can read a document
 
-In the list, a document that is shared shows a badge per team under its title. The badge names the teams you belong to; a team you are no longer in shows as **Another team**. Documents other people have shared with you are listed too. Tick **Shared with me** above the table to see only those.
+In the list, each document shows a badge under its title: **Public**, or one per team. The badge names the teams you belong to; a team you are no longer in shows as **Another team**. Documents other people have added are listed too. Tick **Shared with me** above the table to see only those.
 
-If the teams can't be looked up for a moment, shared documents show a single **Shared** badge instead of the team names.
+If the teams can't be looked up for a moment, a team document shows a single **Team** badge instead of the team names, and your own and public documents stay available.
 
-## Share a document with teams
+## Change the teams of a team document
 
-1. Open the document. **Shared with** shows the teams it is shared with, or **Not shared**.
+1. Open the document. **Access** shows **Public**, or the teams of a team document.
 2. Select **Share**.
 3. Tick the teams whose members should be able to read the document, and untick the ones that should no longer. You can choose among the teams you belong to.
 4. Select **Save**.

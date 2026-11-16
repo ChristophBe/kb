@@ -34,10 +34,6 @@ test("a document is shared with a team, and its member sees it", async ({ page, 
   // Upload to the team. A team created a moment ago may not be known to the
   // document module yet: the row then says so and offers "Retry upload".
   await page.goto("/m/ingestion");
-  await page
-    .getByRole("group", { name: "Share new uploads with" })
-    .getByRole("checkbox", { name: team })
-    .check();
   const chooser = page.waitForEvent("filechooser");
   await page.getByRole("button", { name: "Choose files" }).click();
   await (await chooser).setFiles({
@@ -45,8 +41,14 @@ test("a document is shared with a team, and its member sees it", async ({ page, 
     mimeType: "text/markdown",
     buffer: Buffer.from("# Sharing\n\nThe team shares this note.\n"),
   });
+  // The upload starts only once the access is confirmed.
+  const access = page.getByRole("group", { name: "Who can read this?" });
+  await expect(access.getByRole("radio", { name: /Public/ })).toBeChecked();
+  await access.getByRole("radio", { name: /Team/ }).check();
+  await access.getByRole("checkbox", { name: team }).check();
+  await page.getByRole("button", { name: "Upload", exact: true }).click();
   const job = page.getByRole("listitem").filter({ hasText: filename });
-  await expect(job).toContainText(`Shared with ${team}`);
+  await expect(job).toContainText(`Team: ${team}`);
   await expect(async () => {
     const retry = job.getByRole("button", { name: "Retry upload" });
     if (await retry.isVisible()) await retry.click();
@@ -67,7 +69,7 @@ test("a document is shared with a team, and its member sees it", async ({ page, 
   }).toPass({ timeout: LEARNING_TIME, intervals: [2_000] });
   await expect(bobRow.getByText(team)).toBeVisible();
   await bobRow.getByRole("link", { name: filename }).click();
-  const bobShared = bob.locator("dt:text-is('Shared with') + dd");
+  const bobShared = bob.locator("dt:text-is('Access') + dd");
   await expect(bobShared.getByText(team)).toBeVisible();
   await expect(bobShared.getByRole("button")).toHaveCount(0);
   // The owner's controls are not offered either.
@@ -75,13 +77,13 @@ test("a document is shared with a team, and its member sees it", async ({ page, 
 
   // alice stops sharing from the document's page; bob loses it at once.
   await aliceRow.getByRole("link", { name: filename }).click();
-  const shared = page.locator("dt:text-is('Shared with') + dd");
+  const shared = page.locator("dt:text-is('Access') + dd");
   await shared.getByRole("button", { name: "Share" }).click();
   const dialog = page.getByRole("dialog", { name: "Share document" });
   await expect(dialog.getByRole("checkbox", { name: team })).toBeChecked();
   await dialog.getByRole("checkbox", { name: team }).uncheck();
   await dialog.getByRole("button", { name: "Save" }).click();
-  await expect(shared.getByText("Not shared")).toBeVisible();
+  await expect(shared.getByText("Team", { exact: true })).toBeVisible();
   await bob.goto("/m/document");
   await bob.getByRole("checkbox", { name: "Shared with me" }).check();
   await expect(bob.getByText("No documents have been shared with you.")).toBeVisible();

@@ -1,5 +1,5 @@
 import type { Job } from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
-import { JobStatus } from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
+import { Access, JobStatus } from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 import { Code, ConnectError } from "@knowcel/module-sdk";
 import { fieldViolations, isTeamNotFound } from "@knowcel/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -18,6 +18,7 @@ export interface UploadClient {
     contentType: string;
     sizeBytes: bigint;
     sha256: string;
+    access: Access;
     teamIds: string[];
   }): Promise<{ job?: Job; uploadUrl: string }>;
   completeUpload(req: { jobId: string }): Promise<{ job?: Job }>;
@@ -35,7 +36,7 @@ export interface Upload {
   /** 0 to 1 while uploading. */
   progress: number;
   error?: string;
-  /** The teams the document is shared with, as chosen when the file was added. */
+  /** The teams of a team document, as chosen when the file was added; none for a public one. */
   teamIds: string[];
 }
 
@@ -142,6 +143,7 @@ export function useUploads(client: UploadClient, put: Put, events: UploadEvents,
             contentType: file.type || "application/octet-stream",
             sizeBytes: BigInt(file.size),
             sha256: await sha256(file),
+            access: upload.teamIds.length > 0 ? Access.TEAM : Access.PUBLIC,
             teamIds: upload.teamIds,
           });
           target = {

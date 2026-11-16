@@ -49,7 +49,7 @@ describe("DocumentList sharing", () => {
     expect(screen.getByText("No documents have been shared with you.")).toBeTruthy();
   });
 
-  it("badges a shared document as shared, without names, while IAM is down", async () => {
+  it("badges a team document as a team, without names, while IAM is down", async () => {
     const { transport } = sharingService(
       [{ id: "d1", title: "Notes", ownerId: "alice", teamIds: ["t1"] }],
       teams,
@@ -57,7 +57,7 @@ describe("DocumentList sharing", () => {
     );
     renderModule(documents, transport, "/", alice);
     await screen.findByRole("link", { name: "Notes" });
-    expect(row("Notes").getByText("Shared")).toBeTruthy();
+    expect(row("Notes").getByText("Team")).toBeTruthy();
     expect(screen.queryByRole("alert")).toBeNull();
   });
 });

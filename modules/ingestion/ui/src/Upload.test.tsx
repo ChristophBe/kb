@@ -150,21 +150,58 @@ describe("Upload", () => {
         }
       });
 
-    it("offers the user's teams, none chosen so that uploads stay private", async () => {
-      renderModule(ingestion, transport(true));
-      const group = await screen.findByRole("group", { name: "Share new uploads with" });
-      const boxes = within(group).getAllByRole("checkbox") as HTMLInputElement[];
-      expect(boxes.map((b) => b.checked)).toEqual([false, false]);
-      fireEvent.click(within(group).getByRole("checkbox", { name: "Support" }));
+    const choose = (...names: string[]) => {
+      const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+      fireEvent.change(input as HTMLInputElement, {
+        target: { files: names.map((n) => new File(["x"], n, { type: "text/markdown" })) },
+      });
+    };
+
+    it("asks for the access before uploading, public preselected", async () => {
+      const createUpload = vi.fn();
+      const t = createRouterTransport(({ service }) => {
+        service(IngestionService, { listJobs: () => ({ jobs: [] }), createUpload });
+        service(IamService, { listMyTeams: () => ({ teams: [] }) });
+      });
+      renderModule(ingestion, t);
+      await screen.findByText("No uploads yet. Drop files above to add documents.");
+      choose("a.md");
+      const group = await screen.findByRole("group", { name: "Who can read this?" });
       expect(
-        (within(group).getByRole("checkbox", { name: "Support" }) as HTMLInputElement).checked,
+        (within(group).getByRole("radio", { name: /Public/ }) as HTMLInputElement).checked,
       ).toBe(true);
+      expect(screen.getByText("is ready to upload.")).toBeTruthy();
+      expect(createUpload).not.toHaveBeenCalled();
     });
 
-    it("shows no picker without IAM, and no error", async () => {
+    it("needs a team for team access", async () => {
+      renderModule(ingestion, transport(true));
+      await screen.findByText("No uploads yet. Drop files above to add documents.");
+      choose("a.md", "b.md");
+      const group = await screen.findByRole("group", { name: "Who can read this?" });
+      fireEvent.click(within(group).getByRole("radio", { name: /Team/ }));
+      const upload = screen.getByRole("button", { name: "Upload" }) as HTMLButtonElement;
+      expect(upload.disabled).toBe(true);
+      fireEvent.click(within(group).getByRole("checkbox", { name: "Support" }));
+      expect(upload.disabled).toBe(false);
+    });
+
+    it("drops the staged files on cancel", async () => {
+      renderModule(ingestion, transport(true));
+      await screen.findByText("No uploads yet. Drop files above to add documents.");
+      choose("a.md");
+      fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+      expect(screen.queryByRole("group", { name: "Who can read this?" })).toBeNull();
+    });
+
+    it("offers only public without IAM, and no error", async () => {
       renderModule(ingestion, transport(false));
       await screen.findByText("No uploads yet. Drop files above to add documents.");
-      expect(screen.queryByRole("group", { name: "Share new uploads with" })).toBeNull();
+      choose("a.md");
+      const group = await screen.findByRole("group", { name: "Who can read this?" });
+      expect(
+        (within(group).getByRole("radio", { name: /Team/ }) as HTMLInputElement).disabled,
+      ).toBe(true);
       // The page's own urgent live region is always there, and empty.
       expect(screen.queryAllByRole("alert").map((a) => a.textContent)).toEqual([""]);
     });

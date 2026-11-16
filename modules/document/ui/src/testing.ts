@@ -1,5 +1,6 @@
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
 import {
+  Access,
   type Document,
   DocumentService,
   DocumentStatus,
@@ -22,6 +23,8 @@ export interface TestDoc {
   id: string;
   title: string;
   ownerId: string;
+  /** Defaults to a team document, which is what the sharing tests are about. */
+  access?: Access;
   teamIds?: string[];
 }
 
@@ -51,6 +54,7 @@ export function sharingService(
       filename: `${d.title}.md`,
       status: DocumentStatus.READY,
       ownerId: d.ownerId,
+      access: d.access ?? Access.TEAM,
       teamIds: d.teamIds,
     }) as Document;
   const transport = createRouterTransport(({ service }) => {

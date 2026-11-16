@@ -58,7 +58,7 @@ export function DocumentDetail() {
     ["Content type", d.contentType],
     ["Size", formatBytes(d.sizeBytes)],
     ["Chunks", <ChunkStrip count={d.chunkCount} />],
-    ["Shared with", <ShareEditor document={d} />],
+    ["Access", <ShareEditor document={d} />],
     ["Created", formatTime(d.createTime)],
     ["Updated", formatTime(d.updateTime)],
     ["Metadata", <MetadataEditor id={d.id} metadata={d.metadata} />],

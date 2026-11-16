@@ -111,11 +111,9 @@ export function DocumentList() {
                       <Link to={d.id} className="font-medium hover:underline">
                         {d.title}
                       </Link>
-                      {d.teamIds.length > 0 && (
-                        <div className="mt-1">
-                          <SharedWith teamIds={d.teamIds} />
-                        </div>
-                      )}
+                      <div className="mt-1">
+                        <SharedWith access={d.access} teamIds={d.teamIds} />
+                      </div>
                     </td>
                     <td className="px-4 py-2">
                       <Badge tone={tone}>{label}</Badge>

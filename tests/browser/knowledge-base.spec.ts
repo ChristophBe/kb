@@ -27,6 +27,7 @@ test("an uploaded document becomes ready", async ({ page }) => {
     mimeType: "text/markdown",
     buffer: Buffer.from(body),
   });
+  await page.getByRole("button", { name: "Upload", exact: true }).click(); // public
   const job = page.getByRole("listitem").filter({ hasText: filename });
   await expect(job.getByText("Done")).toBeVisible({ timeout: 60_000 });
 

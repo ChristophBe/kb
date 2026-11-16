@@ -144,7 +144,7 @@ export function Conversation() {
     composer.current?.focus();
   };
 
-  // A question handed over by StartChat (the home page's prompt): ask it once,
+  // A question handed over by StartChat: ask it once,
   // then drop it from the history entry so a reload doesn't ask again. Asked a
   // tick later and cancelled on cleanup: StrictMode's simulated unmount would
   // otherwise run the cleanup above and stop the answer it just started.
@@ -227,7 +227,7 @@ export function Conversation() {
           {status}
         </p>
         <form onSubmit={send} className="sticky bottom-4 mx-auto mt-6 mb-4 w-full max-w-3xl">
-          {/* Styled like the home page's prompt: one glass field with a round Ask button. */}
+          {/* One glass field with a round Ask button. */}
           <div className="glass-strong flex flex-col gap-1 rounded-panel py-2 pr-2 pl-5 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus">
             <div className="flex items-end gap-3">
               <MessageSquare className="mb-3.5 size-5 shrink-0 text-accent" aria-hidden="true" />

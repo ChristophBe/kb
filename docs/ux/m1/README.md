@@ -15,7 +15,7 @@ Low-fidelity wireframes and flows for every UI area M1 adds or reworks. The M1 i
 
 ```mermaid
 flowchart LR
-    home["Home<br/>/"]
+    start["Start<br/>/ redirects to chat"]
     docs["Documents<br/>/m/document"]
     doc["Document detail<br/>/m/document/:id"]
     chunk["Chunk anchor<br/>/m/document/:id#chunk-:n"]
@@ -25,7 +25,8 @@ flowchart LR
     conv["Conversation<br/>/m/chat/:id"]
     newscoped["New scoped chat<br/>/m/chat/new?documents=:id"]
 
-    home --> docs & upload & chat
+    start --> chat
+    chat -.-> docs & upload
     docs --> doc
     docs -- "Search" --> search
     search -- "result" --> chunk
@@ -40,7 +41,7 @@ flowchart LR
     conv -- "scope chip" --> doc
 ```
 
-- **Entry points:** the shell sidebar lists each module's nav items (Documents, Search, Ingestion, Chat, Models). Home leads with a hero (a prompt that starts a chat with the question, plus buttons to search and upload), then one feature tile per module.
+- **Entry points:** the shell sidebar lists each module's nav items (Documents, Ingestion, Chat, Models). The app opens on Chat.
 - **Chat → documents:** every citation links to `/m/document/:id#chunk-:index`, which scrolls to and focuses the chunk in the detail page's chunk list (#21, #41). Scope chips in the conversation header link to the document.
 - **Documents → chat:** the detail page has "Chat about this document", which opens `/m/chat/new?documents=:id`. The chat module creates a scoped conversation and redirects to it (#44 follow-up).
 - **Ingestion → documents:** a finished job's filename links to its document.

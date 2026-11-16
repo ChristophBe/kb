@@ -8,14 +8,10 @@ import {
   PageHeader,
   SkeletonRows,
 } from "@knowcel/ui";
-import { Search, SearchX } from "lucide-react";
+import { SearchX } from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import type { NavEntry } from "../registry.ts";
 import { resultCount, type SearchGroup, useSearch } from "./useSearch.ts";
-
-/** The search page's entry in the sidebar, above the modules' pages. */
-export const searchNavEntry: NavEntry = { to: "/search", label: "Search", icon: Search, end: true };
 
 /**
  * Every provider's hits for `?q=`, grouped, so a search can be shared as a

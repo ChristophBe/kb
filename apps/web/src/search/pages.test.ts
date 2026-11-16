@@ -25,7 +25,6 @@ describe("pagesProvider", () => {
       { title: "Chat", href: "/m/chat" },
     ]);
     expect((await pages.search("h", signal, context)).map((h) => h.title)).toEqual([
-      "Home",
       "Help",
       "Search",
       "Chat",

@@ -12,7 +12,7 @@ class Settings(PlatformSettings):
     # as an SQLAlchemy URL.
     database_url: str = "postgresql+asyncpg://kb:kb@localhost:5432/kb"
     # Provider for chat and embeddings, a name in knowcel_llm.providers.REGISTRY:
-    # ollama, anthropic or fake.
+    # ollama, anthropic, openai or fake.
     llm_provider: str = "ollama"
     # Provider for Generate (chat) only, e.g. anthropic with Ollama embeddings;
     # empty falls back to KNOWCEL_LLM_PROVIDER.
@@ -33,6 +33,19 @@ class Settings(PlatformSettings):
     anthropic_chat_model: str = "claude-sonnet-5-5"
     # Upper bound for one answer when the caller sets none (the API requires one).
     anthropic_max_tokens: int = 16000
+    # Base URL of an OpenAI-compatible API including its version path (provider
+    # openai): OpenAI itself, or a local server such as vLLM or LM Studio.
+    openai_url: str = "https://api.openai.com/v1"
+    # API key of that server, sent as a bearer token; empty for servers without auth.
+    openai_api_key: SecretStr | None = None
+    # Default chat model of the openai provider.
+    openai_chat_model: str = "gpt-4o-mini"
+    # Default embedding model of the openai provider; change the ingestion
+    # worker's KNOWCEL_CHUNK_TOKENIZER with it.
+    openai_embedding_model: str = "text-embedding-3-small"
+    # Ask the server for KNOWCEL_EMBEDDING_DIMENSIONS-long vectors, which OpenAI's
+    # text-embedding-3 models can shorten; turn off for a server that rejects it.
+    openai_send_dimensions: bool = True
     # Seconds to connect to a provider.
     provider_connect_timeout: float = 5
     # Seconds until the first token of an answer. Generous on purpose: a
@@ -86,6 +99,12 @@ class Settings(PlatformSettings):
             problems.add("anthropic_api_key", "must be set for the anthropic provider")
         if "ollama" in resolved:
             problems.url("ollama_url", self.ollama_url, ["http", "https"])
+        if "openai" in resolved:
+            problems.url("openai_url", self.openai_url, ["http", "https"])
+            if self.openai_url.startswith("https://api.openai.com") and not (
+                self.openai_api_key and self.openai_api_key.get_secret_value()
+            ):
+                problems.add("openai_api_key", "must be set to use api.openai.com")
         problems.at_least("anthropic_max_tokens", self.anthropic_max_tokens, 1)
         for field in (
             "provider_connect_timeout",

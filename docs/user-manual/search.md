@@ -20,7 +20,7 @@ While a group is still searching it shows a spinning circle and "Searching…"; 
 
 ## See all results
 
-The **Search** page lists every match, grouped the same way as below the search box and in the same order, so its first five matches in each group are the ones the box shows. It opens from **See all results for …**; you can also open it with **Search** in the sidebar, **Search** on the **Documents** page, or **Search documents** on the home page.
+The **Search** page lists every match, grouped the same way as below the search box and in the same order, so its first five matches in each group are the ones the box shows. It opens from **See all results for …**; you can also open it with **Search** on the **Documents** page.
 
 1. Type what you are looking for in the box at the top of the page.
 2. Select **Search**, or press Enter.

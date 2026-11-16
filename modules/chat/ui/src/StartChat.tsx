@@ -11,7 +11,7 @@ export interface StartState {
 
 /**
  * `/m/chat/new?q=…`: creates a conversation and opens it, asking `q` there.
- * The home page's prompt submits here. The URL is replaced, so going back
+ * The URL is replaced, so going back
  * doesn't create another conversation.
  */
 export function StartChat() {

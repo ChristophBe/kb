@@ -15,7 +15,7 @@ Low-fidelity wireframes and flows for every UI area M1 adds or reworks. The M1 i
 
 ```mermaid
 flowchart LR
-    home["Home<br/>/"]
+    start["Start<br/>/ redirects to chat"]
     docs["Documents<br/>/m/document"]
     doc["Document detail<br/>/m/document/:id"]
     chunk["Chunk anchor<br/>/m/document/:id#chunk-:n"]
@@ -25,7 +25,8 @@ flowchart LR
     conv["Conversation<br/>/m/chat/:id"]
     newscoped["New scoped chat<br/>/m/chat/new?documents=:id"]
 
-    home --> docs & upload & chat
+    start --> chat
+    chat -.-> docs & upload
     docs --> doc
     docs -- "Search" --> search
     search -- "result" --> chunk

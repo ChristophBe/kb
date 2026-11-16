@@ -26,7 +26,7 @@ If the teams can't be looked up for a moment, a team document shows a single **T
 Only the owner can do this, also for documents that were public from the start.
 
 1. Open the document. **Access** shows **Public**, or the teams of a team document.
-2. Select **Change access**.
+2. Select **Change access** under the title.
 3. Choose **Public**, or **Team** and tick the teams whose members should be able to read the document. You can choose among the teams you belong to; a team document needs at least one.
 4. Select **Save**.
 

@@ -32,7 +32,9 @@ Only **Ready** documents show up in search results and chat answers.
 
 Select a document's title. The page shows its **Status**, **Detail** (the reason when processing failed), its **Version** (1 for the first upload, one more for every [new version](#replace-a-document-with-a-new-version)), **Filename**, **Content type**, **Size**, **Chunks**, when it was **Created** and **Updated**, its **Metadata** and its **ID**.
 
-Select **← Documents** to go back to the list.
+Under the title, a row of buttons offers what you can do with the document: **Download**, **Upload new version** (not while the document or a new version is being processed), and, if you own it, **Change access** and **Delete**. **Owner** says who uploaded the document; for someone else's document it shows their name when they share a team with you, otherwise "Another user". Documents of others have no **Delete**.
+
+While the document loads, the page shows placeholders. If it doesn't exist, was deleted or you can't read it, the page says so and offers **Back to Documents**; **← Documents** goes back to the list at any time.
 
 ## Read the passages of a document
 
@@ -66,13 +68,13 @@ Each key can be used only once and can't be empty; the dialog points out the row
 
 ## Download a document
 
-Select the download button in the document's row in **Documents**. The original file opens in a new tab, where you can save it.
+Select the download button in the document's row in **Documents**, or **Download** under the title on the document's page. The original file opens in a new tab, where you can save it.
 
 ## Replace a document with a new version
 
 When a file changes, upload its new version into the same document instead of adding a second one. The document keeps its title, metadata and ID, so links to it and chat sources that cite it keep working.
 
-1. Open the document and select **Upload new version** next to **Version**.
+1. Open the document and select **Upload new version** under the title.
 2. Select **Choose file** and pick the new file. It can be of another type than the old one, as long as Knowcelium can read it (PDF, Word, HTML, Markdown or plain text).
 3. When the upload is done, Knowcelium takes you back to the document, which shows the new version as **Processing** next to **Version**.
 
@@ -84,9 +86,9 @@ If the new version can't be processed, it shows as **Failed** with the reason, a
 
 ## Delete a document
 
-1. In **Documents**, select the delete button (the bin) in the document's row.
+1. In **Documents**, select the delete button (the bin) in the document's row, or open the document and select **Delete** under the title. Only the owner can delete a document.
 2. A dialog asks **Delete document?** and names the document. Select **Delete** to delete it, or **Cancel** (or press Escape) to keep it.
 
-When it is deleted, a notification says "Document deleted". This can't be undone.
+When it is deleted, a notification says "Document deleted" and, if you deleted it from its page, you return to **Documents**. This can't be undone.
 
 The document and its passages disappear from search and are no longer used in chat answers. Chats restricted to it show it as **Deleted document**.

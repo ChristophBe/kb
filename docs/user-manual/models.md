@@ -26,4 +26,4 @@ To pull a model, enter its name under **Pull a model**, for example `llama3.2`, 
 
 To remove a model, choose **Delete** next to it and confirm. Search, chat or processing that uses the model stops working until you pull it again.
 
-Some providers, such as Anthropic, host their models themselves; pulling or deleting there isn't possible. While Knowcelium can't check who is a platform admin, nobody can pull or delete models; the list and everything else keep working.
+Some providers, such as Anthropic, OpenAI and other OpenAI-compatible servers, host their models themselves; pulling or deleting there isn't possible. While Knowcelium can't check who is a platform admin, nobody can pull or delete models; the list and everything else keep working.

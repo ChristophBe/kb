@@ -117,16 +117,26 @@ def test_default_settings_are_valid() -> None:
     ("settings", "problem"),
     [
         (
-            {"llm_provider": "openai"},
-            "KNOWCEL_LLM_PROVIDER: must be one of anthropic, fake, ollama, got 'openai'",
+            {"llm_provider": "nope"},
+            "KNOWCEL_LLM_PROVIDER: must be one of anthropic, fake, ollama, openai, got 'nope'",
+        ),
+        (
+            {"chat_provider": "openai"},
+            "KNOWCEL_OPENAI_API_KEY: must be set to use api.openai.com",
+        ),
+        (
+            {"chat_provider": "openai", "openai_url": "llm:8000/v1", "openai_api_key": "k"},
+            "KNOWCEL_OPENAI_URL: must be a URL with a host and scheme http or https, "
+            "got 'llm:8000/v1'",
         ),
         (
             {"chat_provider": "nope"},
-            "KNOWCEL_CHAT_PROVIDER: must be one of anthropic, fake, ollama, got 'nope'",
+            "KNOWCEL_CHAT_PROVIDER: must be one of anthropic, fake, ollama, openai, got 'nope'",
         ),
         (
             {"embedding_provider": "nope"},
-            "KNOWCEL_EMBEDDING_PROVIDER: must be one of anthropic, fake, ollama, got 'nope'",
+            "KNOWCEL_EMBEDDING_PROVIDER: must be one of anthropic, fake, ollama, openai, "
+            "got 'nope'",
         ),
         (
             {"chat_provider": "anthropic"},

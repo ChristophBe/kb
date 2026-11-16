@@ -6,10 +6,26 @@ import {
   type SearchProvider,
   useIsPlatformAdmin,
 } from "@knowcel/module-sdk";
-import { Area, IconButton, Logo, navItemClass, ThemeToggle } from "@knowcel/ui";
+import {
+  Area,
+  IconButton,
+  Logo,
+  navItemClass,
+  PageTitle,
+  ThemeToggle,
+  useDocumentTitle,
+} from "@knowcel/ui";
 import { CircleHelp, CircleUser, LogOut } from "lucide-react";
-import { lazy, type ReactNode, useMemo, useRef } from "react";
-import { createBrowserRouter, Navigate, NavLink, Outlet, RouterProvider } from "react-router";
+import { lazy, type ReactNode, type RefObject, useEffect, useMemo, useRef } from "react";
+import {
+  createBrowserRouter,
+  Link,
+  Navigate,
+  NavLink,
+  Outlet,
+  RouterProvider,
+  useLocation,
+} from "react-router";
 import { AuthGate, useSession } from "./auth/AuthGate.tsx";
 import { createUserManager } from "./auth/session.ts";
 import { CurrentUserLoader } from "./CurrentUserLoader.tsx";
@@ -72,7 +88,7 @@ function Routes({ config }: { config: RuntimeConfig }) {
           { path: "search", element: <SearchPage providers={providers} /> },
           { path: "help", element: <Help page={<HelpIndex />} /> },
           { path: "help/:page", element: <Help page={<HelpPage />} /> },
-          { path: "*", element: <p className="text-sm text-fg-muted">Page not found.</p> },
+          { path: "*", element: <NotFound /> },
         ],
       },
     ]);
@@ -82,16 +98,24 @@ function Routes({ config }: { config: RuntimeConfig }) {
 
 function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: SearchProvider[] }) {
   const isPlatformAdmin = useIsPlatformAdmin();
+  const main = useRef<HTMLElement>(null);
+  useFocusOnNavigation(main);
   return (
     <div className="flex min-h-screen">
-      <Area className="sticky top-0 w-60 shrink-0 overflow-y-auto border-r">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg"
+      >
+        Skip to content
+      </a>
+      <Area as="aside" className="sticky top-0 w-60 shrink-0 overflow-y-auto border-r">
         <div className="flex items-center px-5 py-5">
           <Logo size={24} className="font-serif" />
         </div>
         <div className="px-3 pb-4">
           <HeaderSearch providers={providers} />
         </div>
-        <nav className="flex flex-col gap-0.5 px-3">
+        <nav aria-label="Main" className="flex flex-col gap-0.5 px-3">
           {navEntries(modules, isPlatformAdmin).map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
@@ -113,10 +137,70 @@ function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: S
           <ThemeToggle />
         </div>
       </Area>
-      <main className="min-w-0 flex-1 p-8">
+      <main id="main" ref={main} tabIndex={-1} className="min-w-0 flex-1 p-8 outline-none">
         <Outlet />
       </main>
       <ToastHost />
+    </div>
+  );
+}
+
+/**
+ * After a route change, moves focus to the new page's `<h1>` (or to `<main>`
+ * when there is none), so keyboard and screen-reader users start at the top of
+ * the new page instead of on the sidebar link. A module's page loads lazily, so
+ * it waits briefly for the heading to appear. The first page load is left alone,
+ * including the redirect from the start page.
+ */
+function useFocusOnNavigation(main: RefObject<HTMLElement | null>) {
+  const { pathname } = useLocation();
+  const previous = useRef<string | null>(null);
+  const skip = useRef(false);
+  useEffect(() => {
+    const before = previous.current;
+    // StrictMode runs effects twice; a repeat for the same path is not a navigation.
+    if (before === pathname) return;
+    previous.current = pathname;
+    if (before === null) {
+      skip.current = pathname === "/";
+      return;
+    }
+    if (skip.current) {
+      skip.current = false;
+      return;
+    }
+    const root = main.current;
+    if (!root) return;
+    const focus = () => {
+      const h1 = root.querySelector<HTMLElement>("h1");
+      if (!h1) return false;
+      h1.tabIndex = -1;
+      h1.focus({ preventScroll: false });
+      return true;
+    };
+    if (focus()) return;
+    const observer = new MutationObserver(() => focus() && observer.disconnect());
+    observer.observe(root, { childList: true, subtree: true });
+    const giveUp = setTimeout(() => {
+      observer.disconnect();
+      if (!root.contains(document.activeElement)) root.focus();
+    }, 2000);
+    return () => {
+      observer.disconnect();
+      clearTimeout(giveUp);
+    };
+  }, [pathname, main]);
+}
+
+function NotFound() {
+  useDocumentTitle("Page not found");
+  return (
+    <div className="flex flex-col items-start gap-3">
+      <PageTitle>Page not found</PageTitle>
+      <p className="text-sm text-fg-muted">There is nothing at this address.</p>
+      <Link to="/" className="text-sm text-accent underline">
+        Go to the start page
+      </Link>
     </div>
   );
 }

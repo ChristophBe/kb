@@ -32,5 +32,5 @@ test("a module disabled in the runtime config is gone from nav and search", asyn
   await expect(conversations).toHaveCount(0);
 
   await page.goto("/m/chat");
-  await expect(page.getByText("Page not found.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
 });

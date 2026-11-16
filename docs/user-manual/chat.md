@@ -51,23 +51,22 @@ The manual is searched alongside your documents and only when **Answer from your
 
 ## Restrict a chat to some documents
 
-By default, answers come from all the documents you can read: the public ones and those of your [teams](teams.md) (**Scope: all documents** under the conversation's title). To use only some of them:
+By default, answers come from all the documents you can read: the public ones and those of your [teams](teams.md). A new conversation says so in a short hint above the question box. To use only some of them:
 
-1. Select **Choose documents** below the question box.
+1. Select **Sources** below the question box.
 2. Tick the documents to use. Type in **Search documents…** to filter the list by title or file name.
-3. Select **Apply**.
+3. If you belong to teams, tick one or more of them under **Use documents of** to use only the documents of those teams, not public ones.
+4. Select **Apply**.
 
-The documents now appear as chips next to **Scope:** under the title, and the button shows how many are chosen, for example **Documents (2)**. The choice is saved with the conversation and applies to all its later answers.
+The choice appears next to **Scope:** below the question box, for example **documents of team Platform**, with the chosen documents as chips. It is saved with the conversation and applies to all its later answers.
 
 - Select a chip to open that document; select its **×** to remove it from the scope.
 - To use all documents again, open the dialog, clear every tick and select **Apply**.
 - A document that was deleted shows as **Deleted document**; remove it from the scope.
 
-**Choose documents** is hidden while **Answer from your documents** is cleared.
+**Sources** and the scope are hidden while **Answer from your documents** is cleared.
 
-### Choose teams
-
-If you belong to teams, **Choose teams** appears next to **Choose documents**. Select it, tick one or more of your teams and select **Apply** to use only the documents of those teams. The header then says, for example, **documents of team Platform**, and the button shows **Teams (1)**.
+When teams are ticked:
 
 - Public documents are not used while teams are ticked, only documents attached to one of the teams.
 - If you also chose documents, a document has to match both.

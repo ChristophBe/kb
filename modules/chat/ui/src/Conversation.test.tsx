@@ -233,13 +233,19 @@ describe("Conversation", () => {
     expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
   });
 
-  it("offers the document picker only when answering from your documents", async () => {
+  it("offers Sources and the scope only when answering from your documents", async () => {
     await renderConversation();
     expect(screen.getByText("all documents")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Choose documents" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Sources" })).toBeTruthy();
 
     fireEvent.click(screen.getByRole("checkbox", { name: "Answer from your documents" }));
-    expect(screen.queryByRole("button", { name: "Choose documents" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Sources" })).toBeNull();
+    expect(screen.queryByText("all documents")).toBeNull();
+  });
+
+  it("hints at the scope of a new conversation only", async () => {
+    await renderConversation();
+    expect(screen.getByText(/Answers use all documents you can read/)).toBeTruthy();
   });
 
   it("answers with the model picked for the conversation", async () => {

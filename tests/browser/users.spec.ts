@@ -4,7 +4,7 @@ import { users } from "./users.ts";
 // Alice is the platform admin the dev stack bootstraps (KNOWCEL_IAM_BOOTSTRAP_ADMINS);
 // bob is not. The shell registers each user when they open it, so bob has to have
 // opened the app before alice sees him in the directory (#265).
-// The sidebar's page list; the home page and other pages link to Teams too.
+// The sidebar's page list; other pages link to Teams too.
 const sidebar = (p: Page) => p.getByRole("navigation").first();
 
 test("platform admins manage the user directory, other users never see it", async ({

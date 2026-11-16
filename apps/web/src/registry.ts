@@ -15,7 +15,11 @@ export interface NavEntry {
   to: string;
   label: string;
   icon: NonNullable<NavItem["icon"]>;
-  /** True for a module root, which matches only itself when highlighting. */
+  /**
+   * True for a module's root entry when the module has other entries, so the
+   * root doesn't stay highlighted on their pages. Otherwise the entry also
+   * covers the module's subpages, e.g. /m/chat/new.
+   */
   end: boolean;
 }
 
@@ -26,14 +30,15 @@ export interface NavEntry {
  * unless `isPlatformAdmin`.
  */
 export function navEntries(modules: ModuleManifest[], isPlatformAdmin = false): NavEntry[] {
-  return modules.flatMap((m) =>
-    (m.nav ?? [{ path: "", label: m.title, icon: m.icon }])
+  return modules.flatMap((m) => {
+    const items = m.nav ?? [{ path: "", label: m.title, icon: m.icon }];
+    return items
       .filter((item) => isPlatformAdmin || !item.requiresPlatformAdmin)
       .map((item) => ({
         to: item.path ? `/m/${m.id}/${item.path}` : `/m/${m.id}`,
         label: item.label,
         icon: item.icon ?? m.icon,
-        end: !item.path,
-      })),
-  );
+        end: !item.path && items.length > 1,
+      }));
+  });
 }

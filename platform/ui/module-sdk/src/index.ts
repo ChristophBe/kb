@@ -22,7 +22,6 @@ export {
 export {
   defineManifest,
   defineModule,
-  type Feature,
   type KbModule,
   type LazyModule,
   lazySearch,

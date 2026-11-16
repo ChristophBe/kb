@@ -1,4 +1,4 @@
-import { Button, buttonClass, Card, DelayedLoading, SkeletonRows } from "@knowcel/ui";
+import { Button, buttonClass, DelayedLoading, SkeletonRows } from "@knowcel/ui";
 import { Component, type ReactNode, Suspense, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router";
 
@@ -16,7 +16,7 @@ export class ModuleLoadError extends Error {
 }
 
 /**
- * A chunk of the app failed to load: a module's code, or a widget or page a
+ * A chunk of the app failed to load: a module's code, or a page a
  * module imports lazily. Mostly the app was redeployed and the old chunk is
  * gone (or the network dropped); reloading the page fixes both. The browsers'
  * messages for a failed `import()`, and Vite's for a failed preload, differ.
@@ -34,7 +34,6 @@ interface BoundaryProps {
   title: string;
   /** A change resets the boundary, so that navigating away recovers. */
   resetKey: string;
-  widget: boolean;
   children: ReactNode;
 }
 
@@ -58,7 +57,6 @@ class Boundary extends Component<BoundaryProps, { error: Error | null }> {
       <ErrorPanel
         title={this.props.title}
         message={error.message}
-        widget={this.props.widget}
         chunk={isChunkLoadError(error)}
         onRetry={() => this.setState({ error: null })}
       />
@@ -69,28 +67,24 @@ class Boundary extends Component<BoundaryProps, { error: Error | null }> {
 function ErrorPanel({
   title,
   message,
-  widget,
   chunk,
   onRetry,
 }: {
   title: string;
   message: string;
-  widget: boolean;
   /** The code didn't load, so only a reload helps, rather than trying again. */
   chunk: boolean;
   onRetry: () => void;
 }) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    // A page-level failure takes focus; a widget's doesn't pull focus away from the page.
-    if (!widget) heading.current?.focus();
-  }, [widget]);
-  const Heading = widget ? "h3" : "h1";
+    heading.current?.focus();
+  }, []);
   return (
     <div role="alert" className="rounded-card bg-danger-subtle p-4 text-sm">
-      <Heading ref={heading} tabIndex={-1} className="font-semibold text-danger">
+      <h1 ref={heading} tabIndex={-1} className="font-semibold text-danger">
         {chunk ? `${title} couldn't be loaded.` : `Something went wrong in ${title}.`}
-      </Heading>
+      </h1>
       <p className="mt-1">
         {chunk
           ? "Knowcelium may have been updated since you opened it. Reload the page to get the latest version."
@@ -106,11 +100,9 @@ function ErrorPanel({
             Try again
           </Button>
         )}
-        {!widget && (
-          <Link to="/" className={buttonClass("ghost", "hover:bg-surface")}>
-            Go to home
-          </Link>
-        )}
+        <Link to="/" className={buttonClass("ghost", "hover:bg-surface")}>
+          Go to start page
+        </Link>
       </div>
       <details className="mt-3">
         <summary className="cursor-pointer">Details</summary>
@@ -120,32 +112,25 @@ function ErrorPanel({
   );
 }
 
-/** What shows while a module's code, or a lazy widget, loads. */
-function ModuleLoading({ title, widget }: { title: string; widget: boolean }) {
-  const rows = <SkeletonRows label={`Loading ${title}`} rows={widget ? 2 : 3} />;
-  // A widget keeps its place in the grid; a page shows nothing on fast loads.
-  return widget ? <Card>{rows}</Card> : <DelayedLoading>{rows}</DelayedLoading>;
-}
-
 /**
- * Keeps a module's render errors inside `<main>`, or inside one home-page
- * `widget`; the shell and other modules keep working. It also shows the
- * loading state while the module's code loads (the module's pages and lazy
- * widgets suspend), and offers a reload when that code can't be loaded.
+ * Keeps a module's render errors inside `<main>`; the shell and other modules
+ * keep working. It also shows the loading state while the module's code loads
+ * (the module's pages suspend; a page shows nothing on fast loads), and offers
+ * a reload when that code can't be loaded.
  */
-export function ModuleBoundary({
-  title,
-  widget = false,
-  children,
-}: {
-  title: string;
-  widget?: boolean;
-  children: ReactNode;
-}) {
+export function ModuleBoundary({ title, children }: { title: string; children: ReactNode }) {
   const { pathname } = useLocation();
   return (
-    <Boundary title={title} resetKey={pathname} widget={widget}>
-      <Suspense fallback={<ModuleLoading title={title} widget={widget} />}>{children}</Suspense>
+    <Boundary title={title} resetKey={pathname}>
+      <Suspense
+        fallback={
+          <DelayedLoading>
+            <SkeletonRows label={`Loading ${title}`} rows={3} />
+          </DelayedLoading>
+        }
+      >
+        {children}
+      </Suspense>
     </Boundary>
   );
 }

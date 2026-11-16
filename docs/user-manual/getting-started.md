@@ -19,18 +19,7 @@ The sidebar on the left leads to every area:
 
 The search box at the top of the sidebar searches from anywhere; press ⌘K or Ctrl+K to jump into it. See [Search from any page](search.md#search-from-any-page).
 
-The **knowcelium** logo at the top of the sidebar takes you to the home page. Type a question into its box and press Enter to start a new chat with it. Below the box are shortcuts to **Search documents** and **Upload documents**, and cards that lead to chatting, searching, uploading and the models.
-
-## Pick up where you left off
-
-The bottom of the home page, under **Pick up where you left off**, shows what is going on in your account:
-
-- **Recent conversations**: your latest chats with their last message. Select one to continue it, or **New chat** to start another.
-- **Recent documents**: the documents you added last and their status. Select one to open it, or **All documents** for the full list.
-- **Processing**: the files that are waiting for or in processing, with what is being done (for example **Indexing**) and how far it got. Uploads that are done disappear from here; you find them under **Ingestion**.
-- **Models**: whether the providers behind chat and search are **healthy** or **unavailable**, and which model each uses. **View models** shows the details.
-
-Each box shows only your own items. If one of them says it can't be loaded right now, that part of Knowcelium is not reachable at the moment; the rest keeps working. Select **Try again** a little later.
+Knowcelium opens on **Chat**.
 
 ## Add your first documents
 

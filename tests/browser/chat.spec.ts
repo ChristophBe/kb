@@ -30,3 +30,12 @@ test("picking a conversation in the list opens it", async ({ page }) => {
   await expect(page).toHaveURL(new RegExp(`${second}$`));
   await expect(list.locator(`a[href="${second}"]`)).toHaveAttribute("aria-current", "page");
 });
+
+test("the Chat entry in the sidebar stays active on the chat pages", async ({ page }) => {
+  const nav = page.getByRole("link", { name: "Chat", exact: true });
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/m\/chat$/);
+  await expect(nav).toHaveAttribute("aria-current", "page");
+  await page.goto("/m/chat/new");
+  await expect(nav).toHaveAttribute("aria-current", "page");
+});

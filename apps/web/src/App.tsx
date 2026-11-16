@@ -9,17 +9,16 @@ import {
 import { Area, IconButton, Logo, navItemClass, ThemeToggle } from "@knowcel/ui";
 import { CircleHelp, CircleUser, LogOut } from "lucide-react";
 import { lazy, type ReactNode, useMemo, useRef } from "react";
-import { createBrowserRouter, Link, NavLink, Outlet, RouterProvider } from "react-router";
+import { createBrowserRouter, Navigate, NavLink, Outlet, RouterProvider } from "react-router";
 import { AuthGate, useSession } from "./auth/AuthGate.tsx";
 import { createUserManager } from "./auth/session.ts";
 import { CurrentUserLoader } from "./CurrentUserLoader.tsx";
-import { Home } from "./Home.tsx";
 import { ModuleBoundary } from "./ModuleBoundary.tsx";
 import { ModuleRoutes } from "./ModuleRoutes.tsx";
 import { activeModules, navEntries } from "./registry.ts";
 import { HeaderSearch } from "./search/HeaderSearch.tsx";
 import { searchProviders } from "./search/pages.ts";
-import { SearchPage, searchNavEntry } from "./search/SearchPage.tsx";
+import { SearchPage } from "./search/SearchPage.tsx";
 import { ToastHost } from "./ToastHost.tsx";
 
 // The user manual and its Markdown renderer load on the first visit to /help.
@@ -60,7 +59,7 @@ function Routes({ config }: { config: RuntimeConfig }) {
       {
         element: <Shell modules={modules} providers={providers} />,
         children: [
-          { index: true, element: <Home modules={modules} /> },
+          { index: true, element: <Start modules={modules} /> },
           // A module's code loads on the first visit to its pages.
           ...modules.map((m) => ({
             path: `m/${m.id}/*`,
@@ -86,25 +85,23 @@ function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: S
   return (
     <div className="flex min-h-screen">
       <Area className="sticky top-0 w-60 shrink-0 overflow-y-auto border-r">
-        <Link to="/" aria-label="Knowcelium" className="flex items-center px-5 py-5">
-          <Logo size={24} />
-        </Link>
+        <div className="flex items-center px-5 py-5">
+          <Logo size={24} className="font-serif" />
+        </div>
         <div className="px-3 pb-4">
           <HeaderSearch providers={providers} />
         </div>
         <nav className="flex flex-col gap-0.5 px-3">
-          {[searchNavEntry, ...navEntries(modules, isPlatformAdmin)].map(
-            ({ to, label, icon: Icon, end }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={end}
-                className={({ isActive }) => navItemClass(isActive)}
-              >
-                <Icon className="size-4" /> {label}
-              </NavLink>
-            ),
-          )}
+          {navEntries(modules, isPlatformAdmin).map(({ to, label, icon: Icon, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) => navItemClass(isActive)}
+            >
+              <Icon className="size-4" /> {label}
+            </NavLink>
+          ))}
         </nav>
         <nav aria-label="Help" className="mt-auto flex flex-col gap-0.5 px-3 pt-6">
           <NavLink to="/help" className={({ isActive }) => navItemClass(isActive)}>
@@ -121,6 +118,16 @@ function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: S
       </main>
       <ToastHost />
     </div>
+  );
+}
+
+/** The entry point: the first page in the sidebar, which is chat when it's enabled. */
+function Start({ modules }: { modules: ModuleManifest[] }) {
+  const first = navEntries(modules)[0];
+  return first ? (
+    <Navigate to={first.to} replace />
+  ) : (
+    <p className="text-sm text-fg-muted">No modules are enabled.</p>
   );
 }
 

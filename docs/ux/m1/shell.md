@@ -33,7 +33,7 @@ A module that throws while rendering shows an error panel in `<main>`. The sideb
 │ ┌──────────────────────────────────────────────────┐ │
 │ │ ⚠ Something went wrong in Documents.             │ │
 │ │   The rest of the app still works.               │ │
-│ │   [Try again]   [Go to home]                     │ │
+│ │   [Try again]   [Go to start page]                     │ │
 │ │   ▸ Details (collapsed: error message)           │ │
 │ └──────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────┘

@@ -327,3 +327,99 @@ func TestSetDocumentTeamsValidates(t *testing.T) {
 		t.Errorf("without a user: %v, want Unauthenticated", err)
 	}
 }
+
+func TestOwnerSetsTheAccessOfADocument(t *testing.T) {
+	repo, doc := sharedRepo()
+	s := newServer(repo)
+	id := doc.ID.String()
+	member := asUser(t, alice, []uuid.UUID{teamA, teamB})
+
+	resp, err := s.SetDocumentAccess(member, &documentv1.SetDocumentAccessRequest{Id: id, Access: documentv1.Access_ACCESS_TEAM, TeamIds: []string{teamB.String()}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := repo.accessSet[0]; got.access != int16(documentv1.Access_ACCESS_TEAM) || len(got.teams) != 1 || got.teams[0] != teamB {
+		t.Errorf("applied %+v, want TEAM with team B", got)
+	}
+	if got := resp.GetDocument(); got.GetAccess() != documentv1.Access_ACCESS_TEAM || len(got.GetTeamIds()) != 1 || got.GetTeamIds()[0] != teamB.String() {
+		t.Errorf("document = %v, want a team document of B", got)
+	}
+
+	// Public, by saying so or by leaving it unset, drops the teams.
+	for _, level := range []documentv1.Access{documentv1.Access_ACCESS_PUBLIC, documentv1.Access_ACCESS_UNSPECIFIED} {
+		resp, err = s.SetDocumentAccess(member, &documentv1.SetDocumentAccessRequest{Id: id, Access: level})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := resp.GetDocument(); got.GetAccess() != documentv1.Access_ACCESS_PUBLIC || len(got.GetTeamIds()) != 0 {
+			t.Errorf("after %v: document = %v, want public without teams", level, got)
+		}
+	}
+	// The change reaches the next read.
+	if got, err := s.GetDocument(asUser(t, bob, nil), &documentv1.GetDocumentRequest{Id: id}); err != nil || got.GetDocument().GetAccess() != documentv1.Access_ACCESS_PUBLIC {
+		t.Errorf("a stranger reads %v, %v; want the public document", got, err)
+	}
+}
+
+func TestOnlyTheOwnerSetsTheAccess(t *testing.T) {
+	repo, doc := sharedRepo()
+	s := newServer(repo)
+	req := &documentv1.SetDocumentAccessRequest{Id: doc.ID.String(), Access: documentv1.Access_ACCESS_PUBLIC}
+	for name, tc := range map[string]struct {
+		ctx  context.Context
+		want codes.Code
+	}{
+		"a team member":  {asUser(t, bob, []uuid.UUID{teamA}), codes.PermissionDenied},
+		"a team admin":   {asUser(t, bob, []uuid.UUID{teamA}, teamA), codes.PermissionDenied},
+		"a stranger":     {asUser(t, "carol", nil), codes.NotFound},
+		"without a user": {t.Context(), codes.Unauthenticated},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := s.SetDocumentAccess(tc.ctx, req); status.Code(err) != tc.want {
+				t.Errorf("err = %v, want %v", err, tc.want)
+			}
+		})
+	}
+	// Even a public document is only its owner's to change.
+	repo.doc.Access = int16(documentv1.Access_ACCESS_PUBLIC)
+	if _, err := s.SetDocumentAccess(asUser(t, bob, nil), req); status.Code(err) != codes.PermissionDenied {
+		t.Errorf("another user on a public document: %v, want PermissionDenied", err)
+	}
+	if len(repo.accessSet) != 0 {
+		t.Errorf("the access was changed: %+v", repo.accessSet)
+	}
+}
+
+func TestSetDocumentAccessValidates(t *testing.T) {
+	repo, doc := sharedRepo()
+	s := newServer(repo)
+	id := doc.ID.String()
+	owner := asUser(t, alice, []uuid.UUID{teamA})
+	for name, tc := range map[string]struct {
+		ctx  context.Context
+		req  *documentv1.SetDocumentAccessRequest
+		want codes.Code
+	}{
+		"team without a team":    {owner, &documentv1.SetDocumentAccessRequest{Id: id, Access: documentv1.Access_ACCESS_TEAM}, codes.InvalidArgument},
+		"public with a team":     {owner, &documentv1.SetDocumentAccessRequest{Id: id, Access: documentv1.Access_ACCESS_PUBLIC, TeamIds: []string{teamA.String()}}, codes.InvalidArgument},
+		"unknown access":         {owner, &documentv1.SetDocumentAccessRequest{Id: id, Access: 9}, codes.InvalidArgument},
+		"bad id":                 {owner, &documentv1.SetDocumentAccessRequest{Id: "x"}, codes.InvalidArgument},
+		"bad team id":            {owner, &documentv1.SetDocumentAccessRequest{Id: id, Access: documentv1.Access_ACCESS_TEAM, TeamIds: []string{"x"}}, codes.InvalidArgument},
+		"a team of someone else": {owner, &documentv1.SetDocumentAccessRequest{Id: id, Access: documentv1.Access_ACCESS_TEAM, TeamIds: []string{teamB.String()}}, codes.NotFound},
+		"iam unavailable":        {grpcserver.WithPrincipal(t.Context(), grpcserver.Principal{UserID: alice, Unavailable: true}), &documentv1.SetDocumentAccessRequest{Id: id, Access: documentv1.Access_ACCESS_TEAM, TeamIds: []string{teamA.String()}}, codes.Unavailable},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := s.SetDocumentAccess(tc.ctx, tc.req); status.Code(err) != tc.want {
+				t.Errorf("err = %v, want %v", err, tc.want)
+			}
+		})
+	}
+	// Going public needs no team, so it works while iam is down.
+	down := grpcserver.WithPrincipal(t.Context(), grpcserver.Principal{UserID: alice, Unavailable: true})
+	if _, err := s.SetDocumentAccess(down, &documentv1.SetDocumentAccessRequest{Id: id, Access: documentv1.Access_ACCESS_PUBLIC}); err != nil {
+		t.Errorf("going public while iam is down: %v", err)
+	}
+	if len(repo.accessSet) != 1 {
+		t.Errorf("applied %d changes, want only the last one", len(repo.accessSet))
+	}
+}

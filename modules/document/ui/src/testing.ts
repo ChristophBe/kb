@@ -37,7 +37,7 @@ export interface TestTeam {
 /**
  * A document service over `initial`, and an IAM service listing `teams` as the
  * caller's. `iam: false` leaves IAM unimplemented, like a stack without it.
- * `setDocumentTeams` rejects with TEAM_NOT_FOUND `rejections` times first.
+ * `setDocumentAccess` and `setDocumentTeams` reject with TEAM_NOT_FOUND `rejections` times first.
  */
 export function sharingService(
   initial: TestDoc[],
@@ -46,6 +46,7 @@ export function sharingService(
 ) {
   const docs = initial.map((d) => ({ ...d, teamIds: [...(d.teamIds ?? [])] }));
   const setDocumentTeams = vi.fn();
+  const setDocumentAccess = vi.fn();
   let rejected = 0;
   const view = (d: (typeof docs)[number]) =>
     ({
@@ -66,6 +67,22 @@ export function sharingService(
         return { document: view(d) };
       },
       listChunks: () => ({ chunks: [] }),
+      setDocumentAccess: (req) => {
+        setDocumentAccess(req);
+        if (rejected < rejections) {
+          rejected++;
+          const err = new ConnectError("team not found", Code.NotFound);
+          err.details.push(
+            errorInfoDetail({ reason: "TEAM_NOT_FOUND", domain: "knowcel.document.v1" }),
+          );
+          throw err;
+        }
+        const d = docs.find((x) => x.id === req.id);
+        if (!d) throw new ConnectError("not found", Code.NotFound);
+        d.access = req.access;
+        d.teamIds = [...req.teamIds];
+        return { document: view(d) };
+      },
       setDocumentTeams: (req) => {
         setDocumentTeams(req);
         if (rejected < rejections) {
@@ -90,7 +107,7 @@ export function sharingService(
       });
     }
   });
-  return { transport, setDocumentTeams };
+  return { transport, setDocumentTeams, setDocumentAccess };
 }
 
 export const ADMIN = TeamRole.ADMIN;

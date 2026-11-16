@@ -23,6 +23,7 @@ service DocumentService {
   rpc UpdateDocument(UpdateDocumentRequest) returns (UpdateDocumentResponse);
   rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
   rpc SetDocumentTeams(SetDocumentTeamsRequest) returns (SetDocumentTeamsResponse);
+  rpc SetDocumentAccess(SetDocumentAccessRequest) returns (SetDocumentAccessResponse);
   rpc SetDocumentStatus(SetDocumentStatusRequest) returns (SetDocumentStatusResponse);
   // GetDownloadUrl returns a short-lived URL for downloading the raw file.
   rpc GetDownloadUrl(GetDownloadUrlRequest) returns (GetDownloadUrlResponse);
@@ -246,6 +247,24 @@ message SetDocumentTeamsRequest {
 }
 
 message SetDocumentTeamsResponse {
+  Document document = 1;
+}
+
+// SetDocumentAccess changes who can read a document, with the same rules as
+// CreateDocument: unset access means ACCESS_PUBLIC and takes no teams;
+// ACCESS_TEAM needs at least one team of the caller (INVALID_ARGUMENT
+// without, NOT_FOUND for a team the caller is not in, UNAVAILABLE while the
+// caller's teams are unknown). The teams replace the document's current ones.
+// Only the owner may call it: another user who can read the document gets
+// PERMISSION_DENIED, one who can't gets NOT_FOUND. The change applies to the
+// next read.
+message SetDocumentAccessRequest {
+  string id = 1;
+  Access access = 2;
+  repeated string team_ids = 3;
+}
+
+message SetDocumentAccessResponse {
   Document document = 1;
 }
 

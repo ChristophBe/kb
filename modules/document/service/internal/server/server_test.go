@@ -59,6 +59,15 @@ type fakeRepo struct {
 	// shared holds the teams each document is shared with.
 	shared  map[uuid.UUID][]uuid.UUID
 	applied []appliedTeams
+	// accessSet holds the calls of ApplyDocumentAccess.
+	accessSet []accessChange
+}
+
+// accessChange is a call of ApplyDocumentAccess.
+type accessChange struct {
+	id     uuid.UUID
+	access int16
+	teams  []uuid.UUID
 }
 
 // appliedTeams is a call of ApplyDocumentTeams.
@@ -69,6 +78,17 @@ type appliedTeams struct {
 
 func (f *fakeRepo) ApplyDocumentTeams(_ context.Context, id uuid.UUID, add, remove []uuid.UUID) error {
 	f.applied = append(f.applied, appliedTeams{id, add, remove})
+	return nil
+}
+
+// ApplyDocumentAccess records the change and applies it to the fake's document.
+func (f *fakeRepo) ApplyDocumentAccess(_ context.Context, id uuid.UUID, access int16, teams []uuid.UUID) error {
+	f.accessSet = append(f.accessSet, accessChange{id, access, teams})
+	f.doc.Access = access
+	if f.shared == nil {
+		f.shared = map[uuid.UUID][]uuid.UUID{}
+	}
+	f.shared[id] = teams
 	return nil
 }
 

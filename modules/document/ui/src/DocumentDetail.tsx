@@ -1,5 +1,5 @@
 import { DocumentService } from "@knowcel/document-api/knowcel/document/v1/document_pb";
-import { useClient, useQuery, useQueryClient } from "@knowcel/module-sdk";
+import { useClient, useCurrentUser, useQuery, useQueryClient } from "@knowcel/module-sdk";
 import {
   Badge,
   Card,
@@ -11,6 +11,7 @@ import {
 } from "@knowcel/ui";
 import { useEffect, useRef } from "react";
 import { Link, useLocation, useParams } from "react-router";
+import { AccessEditor } from "./AccessEditor.tsx";
 import { ChunkList } from "./ChunkList.tsx";
 import { MetadataEditor } from "./MetadataEditor.tsx";
 import { ShareEditor } from "./ShareEditor.tsx";
@@ -25,6 +26,7 @@ export function DocumentDetail() {
   const { id = "" } = useParams();
   const client = useClient(DocumentService);
   const queryClient = useQueryClient();
+  const user = useCurrentUser();
   const doc = useQuery({
     queryKey: ["documents", id],
     queryFn: () => client.getDocument({ id }),
@@ -58,7 +60,10 @@ export function DocumentDetail() {
     ["Content type", d.contentType],
     ["Size", formatBytes(d.sizeBytes)],
     ["Chunks", <ChunkStrip count={d.chunkCount} />],
-    ["Access", <ShareEditor document={d} />],
+    [
+      "Access",
+      user?.id === d.ownerId ? <AccessEditor document={d} /> : <ShareEditor document={d} />,
+    ],
     ["Created", formatTime(d.createTime)],
     ["Updated", formatTime(d.updateTime)],
     ["Metadata", <MetadataEditor id={d.id} metadata={d.metadata} />],

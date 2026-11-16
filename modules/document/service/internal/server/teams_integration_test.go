@@ -179,6 +179,36 @@ func TestTeamsCanChangeAndTakeEffectImmediately(t *testing.T) {
 	}
 }
 
+func TestAccessChangesTakeEffectImmediately(t *testing.T) {
+	h := newTeamHarness(t)
+	id := h.upload(t, teamA)
+	owner := asUser(t, alice, []uuid.UUID{teamA, teamB})
+	set := func(level documentv1.Access, teams ...uuid.UUID) {
+		t.Helper()
+		if _, err := h.server.SetDocumentAccess(owner, &documentv1.SetDocumentAccessRequest{Id: id, Access: level, TeamIds: ids(teams)}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	outsider := func() int { return h.reads(t, carol, nil, id) }
+	if outsider() != 0 {
+		t.Fatal("an outsider sees the team document")
+	}
+	set(documentv1.Access_ACCESS_PUBLIC)
+	if outsider() != allReads {
+		t.Error("an outsider should see the document once it is public")
+	}
+	if rows, err := h.repo.ListDocumentTeams(t.Context(), []uuid.UUID{uuid.MustParse(id)}); err != nil || len(rows) != 0 {
+		t.Errorf("teams of a public document = %v, %v; want none", rows, err)
+	}
+	set(documentv1.Access_ACCESS_TEAM, teamB)
+	if outsider() != 0 || h.reads(t, bob, []uuid.UUID{teamA}, id) != 0 {
+		t.Error("only team B should see the document once it is a team document of B")
+	}
+	if h.reads(t, bob, []uuid.UUID{teamB}, id) != allReads {
+		t.Error("a member of B should see the document")
+	}
+}
+
 func TestATeamAdminRemovesTheirTeamButAMemberCannot(t *testing.T) {
 	h := newTeamHarness(t)
 	id := h.upload(t, teamA, teamB)

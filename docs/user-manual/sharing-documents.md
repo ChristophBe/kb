@@ -21,16 +21,18 @@ In the list, each document shows a badge under its title: **Public**, or one per
 
 If the teams can't be looked up for a moment, a team document shows a single **Team** badge instead of the team names, and your own and public documents stay available.
 
-## Change the teams of a team document
+## Change who can read a document
+
+Only the owner can do this, also for documents that were public from the start.
 
 1. Open the document. **Access** shows **Public**, or the teams of a team document.
-2. Select **Share**.
-3. Tick the teams whose members should be able to read the document, and untick the ones that should no longer. You can choose among the teams you belong to.
+2. Select **Change access**.
+3. Choose **Public**, or **Team** and tick the teams whose members should be able to read the document. You can choose among the teams you belong to; a team document needs at least one.
 4. Select **Save**.
 
-The change applies at once: members of a team you unticked no longer find the document, and members of a team you ticked do. You can change the teams again at any time. You can also choose teams when you [upload](ingestion.md#upload-documents).
+The change applies at once: people who can no longer read the document stop finding it in the list, in search and in chat answers, and people who now can, find it. You can change it again at any time. Changing a document to **Public** removes its teams.
 
-If Knowcelium says that one of the teams isn't available, it may be a team you created or joined a moment ago, which can take up to half a minute to work here. Select **Save** again a little later. The same message appears if the teams can't be looked up at all for a moment; try again shortly.
+If Knowcelium says that one of the teams isn't available, it may be a team you created or joined a moment ago, which can take up to half a minute to work here. Select **Save** again a little later. The same message appears if the teams can't be looked up at all for a moment; try again shortly. Making a document public needs no team and works regardless.
 
 ## Stop sharing a document with your team
 

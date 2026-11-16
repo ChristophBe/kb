@@ -31,34 +31,38 @@ export function Usage() {
             <Spinner />
           </EmptyState>
         ) : usage.data?.entries.length ? (
-          <table aria-labelledby="usage-heading" className="w-full text-sm">
-            <thead className="border-b border-border text-left text-xs text-fg-muted uppercase">
-              <tr>
-                <th className="px-4 py-2 font-medium">Day</th>
-                <th className="px-4 py-2 font-medium">Model</th>
-                <th className="px-4 py-2 font-medium">Module</th>
-                <th className="px-4 py-2 text-right font-medium">Requests</th>
-                <th className="px-4 py-2 text-right font-medium">Input</th>
-                <th className="px-4 py-2 text-right font-medium">Output</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-dotted divide-border">
-              {usage.data.entries.map((e) => (
-                <tr key={`${e.date}/${e.provider}/${e.model}/${e.callerModule}`}>
-                  <td className="px-4 py-2 tabular-nums">{e.date}</td>
-                  <td className="px-4 py-2 font-mono">{e.model}</td>
-                  <td className="px-4 py-2">{e.callerModule}</td>
-                  <td className="px-4 py-2 text-right tabular-nums">{number.format(e.requests)}</td>
-                  <td className="px-4 py-2 text-right tabular-nums">
-                    {number.format(e.inputTokens)}
-                  </td>
-                  <td className="px-4 py-2 text-right tabular-nums">
-                    {number.format(e.outputTokens)}
-                  </td>
+          <div className="overflow-x-auto">
+            <table aria-labelledby="usage-heading" className="w-full text-sm">
+              <thead className="border-b border-border text-left text-xs text-fg-muted uppercase">
+                <tr>
+                  <th className="px-4 py-2 font-medium">Day</th>
+                  <th className="px-4 py-2 font-medium">Model</th>
+                  <th className="px-4 py-2 font-medium">Module</th>
+                  <th className="px-4 py-2 text-right font-medium">Requests</th>
+                  <th className="px-4 py-2 text-right font-medium">Input</th>
+                  <th className="px-4 py-2 text-right font-medium">Output</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-dotted divide-border">
+                {usage.data.entries.map((e) => (
+                  <tr key={`${e.date}/${e.provider}/${e.model}/${e.callerModule}`}>
+                    <td className="px-4 py-2 tabular-nums">{e.date}</td>
+                    <td className="px-4 py-2 font-mono">{e.model}</td>
+                    <td className="px-4 py-2">{e.callerModule}</td>
+                    <td className="px-4 py-2 text-right tabular-nums">
+                      {number.format(e.requests)}
+                    </td>
+                    <td className="px-4 py-2 text-right tabular-nums">
+                      {number.format(e.inputTokens)}
+                    </td>
+                    <td className="px-4 py-2 text-right tabular-nums">
+                      {number.format(e.outputTokens)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           !usage.error && <EmptyState icon={BarChart3}>No usage yet.</EmptyState>
         )}

@@ -29,7 +29,11 @@ export function Dialog({
     <dialog
       ref={ref}
       aria-labelledby={titleId}
-      onClose={onClose}
+      // The browser reports a close asynchronously: one that arrives after the dialog
+      // was reopened is stale and must not close it again.
+      onClose={(e) => {
+        if (!e.currentTarget.open) onClose();
+      }}
       className="m-auto w-[min(36rem,calc(100vw-2rem))] glass-strong rounded-panel p-0 text-fg backdrop:bg-black/30 backdrop:backdrop-blur-sm"
     >
       {open && (

@@ -38,4 +38,16 @@ describe("Dialog", () => {
     );
     expect(screen.queryByText("x")).toBeNull();
   });
+
+  it("ignores a close event that arrives after it was reopened", () => {
+    const onClose = vi.fn();
+    render(
+      <Dialog open onClose={onClose} title="T" footer={null}>
+        x
+      </Dialog>,
+    );
+    // The browser queues the event of an earlier close; by then the dialog is open again.
+    screen.getByRole("dialog").dispatchEvent(new Event("close"));
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });

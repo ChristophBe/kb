@@ -15,7 +15,7 @@ export interface Toast {
   action?: ToastAction;
 }
 
-/** Older toasts make room; the shell shows at most this many. */
+/** Older toasts make room, errors last; the shell shows at most this many. */
 const MAX_VISIBLE = 3;
 
 let toasts: readonly Toast[] = [];
@@ -28,7 +28,13 @@ function publish(next: readonly Toast[]) {
 }
 
 function show(kind: ToastKind, message: string, action?: ToastAction) {
-  publish([...toasts, { id: nextId++, kind, message, action }].slice(-MAX_VISIBLE));
+  const next = [...toasts, { id: nextId++, kind, message, action }];
+  // Errors stay until dismissed, so the oldest other toast makes room first.
+  while (next.length > MAX_VISIBLE) {
+    const i = next.findIndex((t) => t.kind !== "error");
+    next.splice(i === -1 || i === next.length - 1 ? 0 : i, 1);
+  }
+  publish(next);
 }
 
 /** Confirms background actions. A plain object, so it also works outside of render. */

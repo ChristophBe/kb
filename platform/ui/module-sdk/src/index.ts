@@ -34,6 +34,8 @@ export {
 export {
   type CurrentUser,
   CurrentUserProvider,
+  type CurrentUserStatus,
   useCurrentUser,
+  useCurrentUserStatus,
   useIsPlatformAdmin,
 } from "./user.tsx";

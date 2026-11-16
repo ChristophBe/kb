@@ -1,6 +1,11 @@
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
 import { IamService } from "@knowcel/iam-api/knowcel/iam/v1/iam_pb";
-import { KbRuntimeProvider, useCurrentUser, useIsPlatformAdmin } from "@knowcel/module-sdk";
+import {
+  KbRuntimeProvider,
+  useCurrentUser,
+  useCurrentUserStatus,
+  useIsPlatformAdmin,
+} from "@knowcel/module-sdk";
 import { QueryClient } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -11,7 +16,8 @@ import { CurrentUserLoader } from "./CurrentUserLoader.tsx";
 function Probe() {
   const user = useCurrentUser();
   const admin = useIsPlatformAdmin();
-  return <p>{user ? `${user.displayName} ${admin ? "admin" : "member"}` : "unknown"}</p>;
+  const status = useCurrentUserStatus();
+  return <p>{user ? `${user.displayName} ${admin ? "admin" : "member"}` : `unknown ${status}`}</p>;
 }
 
 /** The loader inside a signed-in shell, against `getCurrentUser`. */
@@ -63,6 +69,9 @@ describe("CurrentUserLoader", () => {
     });
     renderLoader(getCurrentUser);
     await vi.waitFor(() => expect(getCurrentUser).toHaveBeenCalled());
-    expect(screen.getByText("unknown")).toBeTruthy();
+    // The query retries once before it gives up.
+    await vi.waitFor(() => expect(screen.getByText("unknown failed")).toBeTruthy(), {
+      timeout: 5000,
+    });
   });
 });

@@ -49,14 +49,16 @@ export function HeaderSearch({ providers }: { providers: SearchProvider[] }) {
   const q = query.trim();
   const groups = useSearch(providers, query);
   const shown = groups.map((g) => ({ ...g, hits: g.hits.slice(0, POPUP_HITS) }));
-  const expanded = open && q !== "" && groups.length > 0;
+  // Until the providers run (the debounce), there are no groups yet: say so rather than show nothing.
+  const waiting = q !== "" && groups.length === 0;
+  const expanded = open && q !== "";
 
   const seeAll: Option = { key: "all", href: searchPageHref(q) };
   const options: Option[] = [
     ...shown.flatMap((g, gi) => g.hits.map((h, hi) => ({ key: `${gi}-${hi}`, href: h.href }))),
     seeAll,
   ];
-  const active = expanded ? options.find((o) => o.key === activeKey) : undefined;
+  const active = expanded && !waiting ? options.find((o) => o.key === activeKey) : undefined;
 
   // A new query starts without a highlighted option.
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset whenever the query changes
@@ -166,7 +168,7 @@ export function HeaderSearch({ providers }: { providers: SearchProvider[] }) {
         )}
       </div>
       <p role="status" className="sr-only">
-        {expanded ? announce(shown) : ""}
+        {expanded ? (waiting ? "Searching…" : announce(shown)) : ""}
       </p>
       {expanded &&
         createPortal(
@@ -180,6 +182,7 @@ export function HeaderSearch({ providers }: { providers: SearchProvider[] }) {
             onHover={setActiveKey}
             onPick={go}
             seeAllHref={seeAll.href}
+            waiting={waiting}
           />,
           document.body,
         )}
@@ -211,6 +214,7 @@ function Popup({
   onHover,
   onPick,
   seeAllHref,
+  waiting,
 }: {
   anchor: React.RefObject<HTMLDivElement | null>;
   listId: string;
@@ -221,6 +225,7 @@ function Popup({
   onHover: (key: string) => void;
   onPick: (href: string) => void;
   seeAllHref: string;
+  waiting: boolean;
 }) {
   const style = useAnchoredStyle(anchor);
   const optionClass = (key: string) =>
@@ -289,6 +294,16 @@ function Popup({
           </div>
         );
       })}
+      {waiting && (
+        <div role="presentation" className="px-3 py-2 text-sm text-fg-muted">
+          Searching…
+        </div>
+      )}
+      {!waiting && groups.every((g) => g.status === "done" && g.hits.length === 0) && (
+        <div role="presentation" className="px-3 py-2 text-sm text-fg-muted">
+          No results
+        </div>
+      )}
       <div
         {...optionProps("all", seeAllHref)}
         className={cn(optionClass("all"), "flex items-center gap-2 text-sm text-fg")}

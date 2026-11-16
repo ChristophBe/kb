@@ -3,6 +3,7 @@ import {
   toast,
   useClient,
   useCurrentUser,
+  useCurrentUserStatus,
   useIsPlatformAdmin,
   useMutation,
   useQuery,
@@ -20,7 +21,7 @@ import {
   SkeletonRows,
   useDocumentTitle,
 } from "@knowcel/ui";
-import { ShieldAlert } from "lucide-react";
+import { CircleAlert, ShieldAlert } from "lucide-react";
 import { useRef, useState } from "react";
 import { userError } from "./errors.ts";
 
@@ -34,6 +35,7 @@ const userName = (u: User) => u.displayName || u.email || u.id;
 export function Users() {
   useDocumentTitle("Users");
   const isAdmin = useIsPlatformAdmin();
+  const status = useCurrentUserStatus();
   return (
     <div>
       <PageHeader
@@ -41,8 +43,21 @@ export function Users() {
         title="Users"
         description="Everyone who has signed in to Knowcelium. Platform admins can designate other platform admins."
       />
-      {isAdmin ? (
+      {status === "loading" ? (
+        <Card>
+          <DelayedLoading>
+            <SkeletonRows label="Loading your account" />
+          </DelayedLoading>
+        </Card>
+      ) : isAdmin ? (
         <Directory />
+      ) : status === "failed" ? (
+        <Card>
+          <EmptyState icon={CircleAlert}>
+            Your account could not be loaded, so some actions, such as the user directory, are
+            unavailable. Reload the page to try again.
+          </EmptyState>
+        </Card>
       ) : (
         <Card>
           <EmptyState icon={ShieldAlert}>Only platform admins can see the users.</EmptyState>
@@ -64,7 +79,9 @@ function Directory() {
   const setAdmin = useMutation({
     mutationFn: (v: { user: User; platformAdmin: boolean }) =>
       client.setPlatformAdmin({ userId: v.user.id, platformAdmin: v.platformAdmin }),
+    // Only success closes the dialog: a failure shows its error inside and stays open.
     onSuccess: async (_, { user, platformAdmin }) => {
+      setDemoting(null);
       toast.success(
         platformAdmin
           ? `${userName(user)} is now a platform admin`
@@ -76,7 +93,6 @@ function Directory() {
         user.id === me?.id && queryClient.invalidateQueries({ queryKey: ["current-user"] }),
       ]);
     },
-    onSettled: () => setDemoting(null),
   });
 
   if (users.isPending) {
@@ -92,7 +108,7 @@ function Directory() {
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      <ErrorMessage error={userError(setAdmin.error)} />
+      {demoting === null && <ErrorMessage error={userError(setAdmin.error)} />}
       <Card className="overflow-x-auto">
         <table ref={table} tabIndex={-1} aria-label="Users" className="w-full text-sm">
           <thead className="border-b border-border text-left text-xs text-fg-muted uppercase">
@@ -128,7 +144,10 @@ function Directory() {
                       variant="ghost"
                       disabled={setAdmin.isPending}
                       aria-label={`Demote ${userName(u)}`}
-                      onClick={() => setDemoting(u)}
+                      onClick={() => {
+                        setAdmin.reset();
+                        setDemoting(u);
+                      }}
                     >
                       Demote
                     </Button>
@@ -154,7 +173,11 @@ function Directory() {
         confirmLabel="Demote"
         pending={setAdmin.isPending}
         onConfirm={() => demoting && setAdmin.mutate({ user: demoting, platformAdmin: false })}
-        onCancel={() => setDemoting(null)}
+        onCancel={() => {
+          setAdmin.reset();
+          setDemoting(null);
+        }}
+        error={userError(setAdmin.error)?.message}
         fallbackFocus={table}
       >
         {demoting?.id === me?.id

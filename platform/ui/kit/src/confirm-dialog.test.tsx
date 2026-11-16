@@ -5,7 +5,11 @@ import { ConfirmDialog } from "./confirm-dialog.tsx";
 import { expectNoAxeViolations } from "./testing/axe.ts";
 import { polyfillDialog } from "./testing/dialog.ts";
 
-function Harness({ onConfirm = () => {}, pending = false }) {
+function Harness({
+  onConfirm = () => {},
+  pending = false,
+  error = undefined as string | undefined,
+}) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -17,6 +21,7 @@ function Harness({ onConfirm = () => {}, pending = false }) {
         title="Delete document?"
         confirmLabel="Delete for good"
         pending={pending}
+        error={error}
         onConfirm={onConfirm}
         onCancel={() => setOpen(false)}
       >
@@ -106,6 +111,14 @@ describe("ConfirmDialog", () => {
     // The browser closes a modal dialog on Escape.
     (screen.getByRole("dialog") as HTMLDialogElement).close();
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("shows an error inside the open dialog", () => {
+    render(<Harness error="Could not delete" />);
+    open();
+    const alert = screen.getByRole("alert");
+    expect(alert.textContent).toBe("Could not delete");
+    expect(screen.getByRole("dialog").contains(alert)).toBe(true);
   });
 
   it("disables both actions while pending", () => {

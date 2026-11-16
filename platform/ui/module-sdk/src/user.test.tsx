@@ -4,6 +4,7 @@ import {
   type CurrentUser,
   CurrentUserProvider,
   useCurrentUser,
+  useCurrentUserStatus,
   useIsPlatformAdmin,
 } from "./user.tsx";
 
@@ -45,5 +46,20 @@ describe("current user", () => {
       </CurrentUserProvider>,
     );
     expect(screen.getByText("alice@example.com not admin")).toBeTruthy();
+  });
+
+  it("is ready without a provider and carries the status it is given", () => {
+    function Status() {
+      return <p>{useCurrentUserStatus()}</p>;
+    }
+    const { unmount } = render(<Status />);
+    expect(screen.getByText("ready")).toBeTruthy();
+    unmount();
+    render(
+      <CurrentUserProvider user={null} status="failed">
+        <Status />
+      </CurrentUserProvider>,
+    );
+    expect(screen.getByText("failed")).toBeTruthy();
   });
 });

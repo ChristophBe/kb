@@ -6,7 +6,8 @@ import { Dialog } from "./dialog.tsx";
  * Asks before a destructive action. Cancel comes first, so it has the focus when
  * the dialog opens; Escape cancels. On closing, the focus returns to the element
  * that opened it, or to `fallbackFocus` when that is gone (e.g. the list after
- * its row was deleted). While `pending`, both buttons are disabled.
+ * its row was deleted). While `pending`, both buttons are disabled. A failed
+ * action keeps the dialog open: pass its message as `error` to show it inside.
  */
 export function ConfirmDialog({
   open,
@@ -14,6 +15,7 @@ export function ConfirmDialog({
   children,
   confirmLabel,
   pending = false,
+  error,
   onConfirm,
   onCancel,
   fallbackFocus,
@@ -23,6 +25,7 @@ export function ConfirmDialog({
   children: ReactNode;
   confirmLabel: string;
   pending?: boolean;
+  error?: ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
   fallbackFocus?: RefObject<HTMLElement | null>;
@@ -62,6 +65,14 @@ export function ConfirmDialog({
       }
     >
       {children}
+      {error && (
+        <div
+          role="alert"
+          className="mt-4 rounded-control bg-danger-subtle px-3 py-2 text-sm text-danger"
+        >
+          {error}
+        </div>
+      )}
     </Dialog>
   );
 }

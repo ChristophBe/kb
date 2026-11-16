@@ -159,6 +159,11 @@ export function Models() {
           <span>{status.data.detail}</span>
         </Card>
       )}
+      {!isAdmin && (
+        <p className="mb-6 max-w-2xl text-sm text-fg-muted">
+          A platform admin manages the models: ask one if a model needs to be pulled or deleted.
+        </p>
+      )}
       {isAdmin && (
         <form onSubmit={submit} className="mb-6 flex max-w-2xl flex-col gap-2">
           <label htmlFor="model-name" className="text-sm font-medium">

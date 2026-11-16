@@ -131,6 +131,7 @@ describe("Models", () => {
         const { unmount } = renderModule(llm, transport, "/", user);
         expect(await screen.findByText("llama3.2", { selector: "span.font-mono" })).toBeTruthy();
         expect(screen.queryByLabelText("Pull a model")).toBeNull();
+        expect(screen.getByText(/A platform admin manages the models/)).toBeTruthy();
         expect(screen.queryByRole("button", { name: "Delete llama3.2" })).toBeNull();
         unmount();
       }

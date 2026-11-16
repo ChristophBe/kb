@@ -84,6 +84,8 @@ function TeamView({ team }: { team: Team }) {
   const [deleting, setDeleting] = useState(false);
   // The member the remove or leave confirmation asks about.
   const [removing, setRemoving] = useState<TeamMember | null>(null);
+  // A demotion of yourself waits here for confirmation.
+  const [demoting, setDemoting] = useState<TeamMember | null>(null);
   const members = useRef<HTMLTableElement>(null);
 
   const refresh = () =>
@@ -100,7 +102,13 @@ function TeamView({ team }: { team: Team }) {
   const setRole = useMutation({
     mutationFn: (v: { userId: string; role: TeamRole }) =>
       client.setMemberRole({ teamId: team.id, ...v }),
-    onSuccess: refresh,
+    onSuccess: async (_, v) => {
+      const m = team.members.find((x) => x.userId === v.userId);
+      const name = v.userId === me?.id ? "Your" : `${m ? memberName(m) : "The"}'s`;
+      toast.success(`${name} role is now ${roleLabel[v.role]}`);
+      await refresh();
+    },
+    onSettled: () => setDemoting(null),
   });
   const remove = useMutation({
     mutationFn: (userId: string) => client.removeMember({ teamId: team.id, userId }),
@@ -178,9 +186,12 @@ function TeamView({ team }: { team: Team }) {
                         aria-label={`Role of ${memberName(m)}`}
                         value={m.role}
                         disabled={setRole.isPending}
-                        onChange={(e) =>
-                          setRole.mutate({ userId: m.userId, role: Number(e.target.value) })
-                        }
+                        onChange={(e) => {
+                          const role = Number(e.target.value);
+                          // Demoting yourself can't be undone by yourself.
+                          if (self && role !== TeamRole.ADMIN) setDemoting(m);
+                          else setRole.mutate({ userId: m.userId, role });
+                        }}
                         className="rounded-control border border-border-strong bg-surface px-2 py-1 text-sm hover:border-fg-muted"
                       >
                         <option value={TeamRole.ADMIN}>Admin</option>
@@ -227,6 +238,20 @@ function TeamView({ team }: { team: Team }) {
         {leaving
           ? `You will no longer see documents shared with “${team.name}”.`
           : `${removing ? memberName(removing) : ""} will no longer see documents shared with “${team.name}”.`}
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={demoting !== null}
+        title="Make yourself a member?"
+        confirmLabel="Make me a member"
+        pending={setRole.isPending}
+        onConfirm={() =>
+          demoting && setRole.mutate({ userId: demoting.userId, role: TeamRole.MEMBER })
+        }
+        onCancel={() => setDemoting(null)}
+        fallbackFocus={members}
+      >
+        You will no longer be able to rename or delete “{team.name}” or manage its members. Only
+        another admin can make you an admin again.
       </ConfirmDialog>
       <ConfirmDialog
         open={deleting}

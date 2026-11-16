@@ -59,8 +59,8 @@ func TestReindexDocuments(t *testing.T) {
 		t.Fatalf("token for %s: %v", otherUser, err)
 	}
 	bobReindex := connect.NewClient[documentv1.ReindexDocumentsRequest, documentv1.ReindexDocumentsResponse](bearer(bobToken), kb.gateway+documentv1.DocumentService_ReindexDocuments_FullMethodName, opt)
-	if _, err := bobReindex.CallUnary(ctx, connect.NewRequest(&documentv1.ReindexDocumentsRequest{DocumentIds: []string{id}, Force: true})); connect.CodeOf(err) != connect.CodeNotFound {
-		t.Errorf("ReindexDocuments as %s: err = %v, want %s", otherUser, err, connect.CodeNotFound)
+	if _, err := bobReindex.CallUnary(ctx, connect.NewRequest(&documentv1.ReindexDocumentsRequest{DocumentIds: []string{id}, Force: true})); connect.CodeOf(err) != connect.CodePermissionDenied {
+		t.Errorf("ReindexDocuments as %s: err = %v, want %s", otherUser, err, connect.CodePermissionDenied)
 	}
 
 	before := jobOf(ctx, t, c, id).GetUpdateTime().AsTime()

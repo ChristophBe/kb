@@ -277,6 +277,8 @@ func (s *Server) toStatus(op string, err error) error {
 		return grpcserver.WithDetails(codes.NotFound, app.ErrTeamNotFound.Error(), grpcserver.ErrorInfo(domain, "TEAM_NOT_FOUND", nil))
 	case errors.Is(err, app.ErrDocumentNotFound):
 		return status.Error(codes.NotFound, app.ErrDocumentNotFound.Error())
+	case errors.Is(err, app.ErrNotOwner):
+		return status.Error(codes.PermissionDenied, app.ErrNotOwner.Error())
 	case errors.Is(err, app.ErrDocumentBusy):
 		return failedPrecondition("DOCUMENT_BUSY", app.ErrDocumentBusy)
 	case errors.Is(err, app.ErrDocumentsUnavailable):

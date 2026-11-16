@@ -29,6 +29,9 @@ var (
 	// ErrDocumentNotFound means the document module has no such document (or
 	// it is another user's).
 	ErrDocumentNotFound = errors.New("document not found")
+	// ErrNotOwner means the document is readable by the caller but belongs to
+	// another user, so the caller may not change it.
+	ErrNotOwner = errors.New("only the owner can change the document")
 	// ErrTeamNotFound means a team to share a document with does not exist or
 	// the caller is not in it.
 	ErrTeamNotFound = errors.New("team not found")

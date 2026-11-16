@@ -37,7 +37,7 @@ export function DocumentList() {
     refetchInterval: 5000,
   });
   const user = useCurrentUser();
-  // Only the documents others have shared; the list holds the user's own and those.
+  // Only the documents of others; the list holds the user's own, public ones and those of their teams.
   const [sharedOnly, setSharedOnly] = useState(false);
   const shown = (docs.data?.documents ?? []).filter(
     (d) => !(sharedOnly && user) || d.ownerId !== user.id,
@@ -129,9 +129,11 @@ export function DocumentList() {
                       <IconButton label="Download" onClick={() => download(d.id)}>
                         <Download className="size-4" />
                       </IconButton>
-                      <IconButton label="Delete" tone="danger" onClick={() => setDeleting(d)}>
-                        <Trash2 className="size-4" />
-                      </IconButton>
+                      {user?.id === d.ownerId && (
+                        <IconButton label="Delete" tone="danger" onClick={() => setDeleting(d)}>
+                          <Trash2 className="size-4" />
+                        </IconButton>
+                      )}
                     </td>
                   </tr>
                 );

@@ -90,6 +90,8 @@ func (c *Client) Replace(ctx context.Context, id uuid.UUID, upload app.NewUpload
 	switch {
 	case status.Code(err) == codes.NotFound:
 		return app.Document{}, app.ErrDocumentNotFound
+	case status.Code(err) == codes.PermissionDenied:
+		return app.Document{}, app.ErrNotOwner
 	case status.Code(err) == codes.FailedPrecondition && hasReason(err, "DOCUMENT_BUSY"):
 		return app.Document{}, app.ErrDocumentBusy
 	case err != nil:

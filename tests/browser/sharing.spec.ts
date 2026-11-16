@@ -84,9 +84,11 @@ test("a document is shared with a team, and its member sees it", async ({ page, 
   await dialog.getByRole("checkbox", { name: team }).uncheck();
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(shared.getByText("Team", { exact: true })).toBeVisible();
-  await bob.goto("/m/document");
-  await bob.getByRole("checkbox", { name: "Shared with me" }).check();
-  await expect(bob.getByText("No documents have been shared with you.")).toBeVisible();
+  await expect(async () => {
+    await bob.goto("/m/document");
+    await expect(bob.getByRole("table", { name: "Documents" })).toBeVisible({ timeout: 3_000 });
+    await expect(bobRow).toHaveCount(0, { timeout: 3_000 });
+  }).toPass({ timeout: LEARNING_TIME, intervals: [2_000] });
 
   // ... and shares it again.
   await shared.getByRole("button", { name: "Share" }).click();

@@ -80,7 +80,7 @@ test("a chat answer cites the document and opens the passage", async ({ page }) 
   documentPath = new URL(page.url()).pathname;
 });
 
-test("another user does not see the document", async ({ browser }) => {
+test("another user reads the public document but cannot delete it", async ({ browser }) => {
   test.skip(!documentPath, "needs the document of the previous tests");
   const context = await browser.newContext({ storageState: users.bob.storageState });
   const page = await context.newPage();
@@ -91,11 +91,14 @@ test("another user does not see the document", async ({ browser }) => {
   await expect(
     page.getByRole("table", { name: "Documents" }).or(page.getByText("No documents yet")),
   ).toBeVisible();
-  await expect(page.getByText(title)).toHaveCount(0);
+  const row = page.getByRole("row").filter({ hasText: title });
+  await expect(row).toBeVisible();
+  await expect(row.getByText("Public")).toBeVisible();
+  // Reading is open to everyone, changing is the owner's.
+  await expect(row.getByRole("button", { name: "Download" })).toBeVisible();
+  await expect(row.getByRole("button", { name: "Delete" })).toHaveCount(0);
 
-  // Not even the link: the document service answers NOT_FOUND.
   await page.goto(documentPath);
-  await expect(page.getByRole("alert").filter({ hasText: /not found/i })).toBeVisible();
-  await expect(page.getByText(title)).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: title })).toBeVisible();
   await context.close();
 });

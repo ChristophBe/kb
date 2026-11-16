@@ -21,7 +21,7 @@ Keep the page open until every file shows a processing status. Closing the tab, 
 
 Instead of a file you can add a web page by its address.
 
-1. Open **Ingestion**.
+1. Open **Upload**.
 2. Type or paste the address under **Add a web page**, for example `https://example.com/article`.
 3. Choose who can read the page under **Who can read this page?**, as for [files](#upload-documents).
 4. Select **Add page**. Knowcelium fetches the page, which can take a few seconds, and adds it to the list under **Uploads**.

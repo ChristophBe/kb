@@ -2,6 +2,8 @@
 
 Models shows the language models Knowcelium uses for search, chat and processing documents, and whether they are available.
 
+Chat and embeddings each have their own provider, and each can be local (Ollama, on your own hardware, the default) or hosted (Anthropic, OpenAI or another OpenAI-compatible server). Whoever runs Knowcelium chooses them; this page shows what they chose.
+
 ## Check that the language models are available
 
 Open **Models**. The top box names two providers, each with a status badge. They can be the same:

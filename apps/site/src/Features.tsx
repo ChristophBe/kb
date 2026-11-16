@@ -61,8 +61,8 @@ const FEATURES: Feature[] = [
   },
   {
     icon: Cpu,
-    title: "Local language models",
-    text: "Search and chat run on Ollama on your own hardware by default. No API keys, no per-question bill, and nothing is sent to a cloud.",
+    title: "Your choice of model provider",
+    text: "Search and chat run on Ollama on your own hardware by default. Prefer a hosted model? Switch chat or search to Claude or any OpenAI-compatible server. You decide what is sent where.",
     demo: (
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <Badge tone="success">healthy</Badge>

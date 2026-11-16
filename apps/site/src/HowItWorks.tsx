@@ -20,7 +20,7 @@ const STEPS: { icon: LucideIcon; title: string; text: string }[] = [
   {
     icon: ScanText,
     title: "Knowcelium reads them",
-    text: "Each file is split into passages, and a local model captures what every passage means.",
+    text: "Each file is split into passages, and a model you choose, local by default, captures what every passage means.",
   },
   {
     icon: MessageSquare,
@@ -32,8 +32,8 @@ const STEPS: { icon: LucideIcon; title: string; text: string }[] = [
 const PROMISES: { icon: LucideIcon; title: string; text: string }[] = [
   {
     icon: WifiOff,
-    title: "Nothing leaves your machine",
-    text: "Documents, passages and conversations stay in your own deployment. Even the fonts are self-hosted.",
+    title: "You decide what leaves your machine",
+    text: "Documents, passages and conversations stay in your own deployment. With the default local models nothing is sent out; if you choose a hosted provider, only what that model needs to answer goes to it. Even the fonts are self-hosted.",
   },
   {
     icon: ShieldCheck,

@@ -45,6 +45,9 @@ func (f *fakeJobs) Create(_ context.Context, job Job) (Job, error) {
 	if f.createErr != nil {
 		return Job{}, f.createErr
 	}
+	if job.Run == 0 {
+		job.Run = 1 // the column's default
+	}
 	f.jobs[job.ID] = job
 	return job, nil
 }

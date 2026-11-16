@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/sync/errgroup"
@@ -20,6 +21,7 @@ import (
 	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/app"
 	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/documents"
 	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/events"
+	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/fetch"
 	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/server"
 	"github.com/ChristophBe/knowcelium/modules/ingestion/service/internal/store"
 	"github.com/ChristophBe/knowcelium/platform/go/config"
@@ -41,6 +43,14 @@ type Config struct {
 	// DocumentAddr is the document module (host:port), where uploads are
 	// created and their status is set.
 	DocumentAddr string `env:"DOCUMENT_ADDR" envDefault:"localhost:9001"`
+	// URLMaxBytes is the largest page accepted when ingesting from a URL.
+	URLMaxBytes int64 `env:"URL_MAX_BYTES" envDefault:"20971520"`
+	// URLTimeout bounds fetching one page.
+	URLTimeout time.Duration `env:"URL_TIMEOUT" envDefault:"20s"`
+	// UploadEndpoint is the S3 address (host:port) this service uploads
+	// fetched pages to, if the upload URLs of the document module (signed for
+	// the address browsers use) are not reachable from here.
+	UploadEndpoint string `env:"UPLOAD_ENDPOINT"`
 }
 
 func (c Config) Validate(p *config.Problems) {
@@ -51,6 +61,15 @@ func (c Config) Validate(p *config.Problems) {
 		p.URL("KNOWCEL_NATS_URL", strings.TrimSpace(server), "nats", "tls", "ws", "wss")
 	}
 	p.Addr("KNOWCEL_DOCUMENT_ADDR", c.DocumentAddr)
+	if c.URLMaxBytes < 1 {
+		p.Addf("KNOWCEL_URL_MAX_BYTES", "must be at least 1, got %d", c.URLMaxBytes)
+	}
+	if c.URLTimeout <= 0 {
+		p.Addf("KNOWCEL_URL_TIMEOUT", "must be positive, got %s", c.URLTimeout)
+	}
+	if c.UploadEndpoint != "" {
+		p.Addr("KNOWCEL_UPLOAD_ENDPOINT", c.UploadEndpoint)
+	}
 }
 
 // loadConfig reads the configuration with the ports of module.yaml as defaults.
@@ -117,6 +136,9 @@ func run(cfg Config) error {
 		store.NewJobs(queries),
 		documents.New(documentv1.NewDocumentServiceClient(conn)),
 		events.NewPublisher(events.NewJetStream(js)),
+	).WithURLImport(
+		fetch.New(fetch.Options{MaxBytes: cfg.URLMaxBytes, Timeout: cfg.URLTimeout}),
+		documents.NewUploader(cfg.UploadEndpoint),
 	)
 	srv := grpcserver.New(log)
 	ingestionv1.RegisterIngestionServiceServer(srv, server.New(service, log))

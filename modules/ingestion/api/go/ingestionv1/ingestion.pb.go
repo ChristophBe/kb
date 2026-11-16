@@ -487,6 +487,122 @@ func (x *CreateUploadResponse) GetUploadUrl() string {
 	return ""
 }
 
+type CreateFromUrlRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// An http or https address on the public internet.
+	Url string `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
+	// Defaults to the page's title, or its address when it has none.
+	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	// Who can read the document; unset means ACCESS_PUBLIC.
+	Access Access `protobuf:"varint,3,opt,name=access,proto3,enum=knowcel.ingestion.v1.Access" json:"access,omitempty"`
+	// The teams of an ACCESS_TEAM document, as in CreateUploadRequest.
+	TeamIds       []string `protobuf:"bytes,4,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateFromUrlRequest) Reset() {
+	*x = CreateFromUrlRequest{}
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateFromUrlRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateFromUrlRequest) ProtoMessage() {}
+
+func (x *CreateFromUrlRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateFromUrlRequest.ProtoReflect.Descriptor instead.
+func (*CreateFromUrlRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CreateFromUrlRequest) GetUrl() string {
+	if x != nil {
+		return x.Url
+	}
+	return ""
+}
+
+func (x *CreateFromUrlRequest) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *CreateFromUrlRequest) GetAccess() Access {
+	if x != nil {
+		return x.Access
+	}
+	return Access_ACCESS_UNSPECIFIED
+}
+
+func (x *CreateFromUrlRequest) GetTeamIds() []string {
+	if x != nil {
+		return x.TeamIds
+	}
+	return nil
+}
+
+type CreateFromUrlResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Job           *Job                   `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateFromUrlResponse) Reset() {
+	*x = CreateFromUrlResponse{}
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateFromUrlResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateFromUrlResponse) ProtoMessage() {}
+
+func (x *CreateFromUrlResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateFromUrlResponse.ProtoReflect.Descriptor instead.
+func (*CreateFromUrlResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *CreateFromUrlResponse) GetJob() *Job {
+	if x != nil {
+		return x.Job
+	}
+	return nil
+}
+
 type ReplaceUploadRequest struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	DocumentId  string                 `protobuf:"bytes,1,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
@@ -502,7 +618,7 @@ type ReplaceUploadRequest struct {
 
 func (x *ReplaceUploadRequest) Reset() {
 	*x = ReplaceUploadRequest{}
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[3]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -514,7 +630,7 @@ func (x *ReplaceUploadRequest) String() string {
 func (*ReplaceUploadRequest) ProtoMessage() {}
 
 func (x *ReplaceUploadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[3]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -527,7 +643,7 @@ func (x *ReplaceUploadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReplaceUploadRequest.ProtoReflect.Descriptor instead.
 func (*ReplaceUploadRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{3}
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ReplaceUploadRequest) GetDocumentId() string {
@@ -577,7 +693,7 @@ type ReplaceUploadResponse struct {
 
 func (x *ReplaceUploadResponse) Reset() {
 	*x = ReplaceUploadResponse{}
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[4]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -589,7 +705,7 @@ func (x *ReplaceUploadResponse) String() string {
 func (*ReplaceUploadResponse) ProtoMessage() {}
 
 func (x *ReplaceUploadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[4]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -602,7 +718,7 @@ func (x *ReplaceUploadResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReplaceUploadResponse.ProtoReflect.Descriptor instead.
 func (*ReplaceUploadResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{4}
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ReplaceUploadResponse) GetJob() *Job {
@@ -628,7 +744,7 @@ type CompleteUploadRequest struct {
 
 func (x *CompleteUploadRequest) Reset() {
 	*x = CompleteUploadRequest{}
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[5]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -640,7 +756,7 @@ func (x *CompleteUploadRequest) String() string {
 func (*CompleteUploadRequest) ProtoMessage() {}
 
 func (x *CompleteUploadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[5]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -653,7 +769,7 @@ func (x *CompleteUploadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CompleteUploadRequest.ProtoReflect.Descriptor instead.
 func (*CompleteUploadRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{5}
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CompleteUploadRequest) GetJobId() string {
@@ -672,7 +788,7 @@ type CompleteUploadResponse struct {
 
 func (x *CompleteUploadResponse) Reset() {
 	*x = CompleteUploadResponse{}
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[6]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -684,7 +800,7 @@ func (x *CompleteUploadResponse) String() string {
 func (*CompleteUploadResponse) ProtoMessage() {}
 
 func (x *CompleteUploadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[6]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -697,7 +813,7 @@ func (x *CompleteUploadResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CompleteUploadResponse.ProtoReflect.Descriptor instead.
 func (*CompleteUploadResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{6}
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *CompleteUploadResponse) GetJob() *Job {
@@ -716,7 +832,7 @@ type GetJobRequest struct {
 
 func (x *GetJobRequest) Reset() {
 	*x = GetJobRequest{}
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[7]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -728,7 +844,7 @@ func (x *GetJobRequest) String() string {
 func (*GetJobRequest) ProtoMessage() {}
 
 func (x *GetJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[7]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -741,7 +857,7 @@ func (x *GetJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetJobRequest.ProtoReflect.Descriptor instead.
 func (*GetJobRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{7}
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetJobRequest) GetId() string {
@@ -760,7 +876,7 @@ type GetJobResponse struct {
 
 func (x *GetJobResponse) Reset() {
 	*x = GetJobResponse{}
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[8]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -772,7 +888,7 @@ func (x *GetJobResponse) String() string {
 func (*GetJobResponse) ProtoMessage() {}
 
 func (x *GetJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[8]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -785,7 +901,7 @@ func (x *GetJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetJobResponse.ProtoReflect.Descriptor instead.
 func (*GetJobResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{8}
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetJobResponse) GetJob() *Job {
@@ -804,7 +920,7 @@ type ListJobsRequest struct {
 
 func (x *ListJobsRequest) Reset() {
 	*x = ListJobsRequest{}
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[9]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -816,7 +932,7 @@ func (x *ListJobsRequest) String() string {
 func (*ListJobsRequest) ProtoMessage() {}
 
 func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[9]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -829,7 +945,7 @@ func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListJobsRequest.ProtoReflect.Descriptor instead.
 func (*ListJobsRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{9}
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ListJobsRequest) GetPage() *commonv1.PageRequest {
@@ -849,7 +965,7 @@ type ListJobsResponse struct {
 
 func (x *ListJobsResponse) Reset() {
 	*x = ListJobsResponse{}
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[10]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -861,7 +977,7 @@ func (x *ListJobsResponse) String() string {
 func (*ListJobsResponse) ProtoMessage() {}
 
 func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[10]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -874,7 +990,7 @@ func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListJobsResponse.ProtoReflect.Descriptor instead.
 func (*ListJobsResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{10}
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ListJobsResponse) GetJobs() []*Job {
@@ -900,7 +1016,7 @@ type WatchJobRequest struct {
 
 func (x *WatchJobRequest) Reset() {
 	*x = WatchJobRequest{}
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[11]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -912,7 +1028,7 @@ func (x *WatchJobRequest) String() string {
 func (*WatchJobRequest) ProtoMessage() {}
 
 func (x *WatchJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[11]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -925,7 +1041,7 @@ func (x *WatchJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WatchJobRequest.ProtoReflect.Descriptor instead.
 func (*WatchJobRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{11}
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *WatchJobRequest) GetId() string {
@@ -944,7 +1060,7 @@ type WatchJobResponse struct {
 
 func (x *WatchJobResponse) Reset() {
 	*x = WatchJobResponse{}
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[12]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -956,7 +1072,7 @@ func (x *WatchJobResponse) String() string {
 func (*WatchJobResponse) ProtoMessage() {}
 
 func (x *WatchJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[12]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -969,7 +1085,7 @@ func (x *WatchJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WatchJobResponse.ProtoReflect.Descriptor instead.
 func (*WatchJobResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{12}
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *WatchJobResponse) GetJob() *Job {
@@ -988,7 +1104,7 @@ type ReprocessJobRequest struct {
 
 func (x *ReprocessJobRequest) Reset() {
 	*x = ReprocessJobRequest{}
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[13]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1000,7 +1116,7 @@ func (x *ReprocessJobRequest) String() string {
 func (*ReprocessJobRequest) ProtoMessage() {}
 
 func (x *ReprocessJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[13]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1013,7 +1129,7 @@ func (x *ReprocessJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReprocessJobRequest.ProtoReflect.Descriptor instead.
 func (*ReprocessJobRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{13}
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ReprocessJobRequest) GetId() string {
@@ -1032,7 +1148,7 @@ type ReprocessJobResponse struct {
 
 func (x *ReprocessJobResponse) Reset() {
 	*x = ReprocessJobResponse{}
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[14]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1044,7 +1160,7 @@ func (x *ReprocessJobResponse) String() string {
 func (*ReprocessJobResponse) ProtoMessage() {}
 
 func (x *ReprocessJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[14]
+	mi := &file_knowcel_ingestion_v1_ingestion_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1057,7 +1173,7 @@ func (x *ReprocessJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReprocessJobResponse.ProtoReflect.Descriptor instead.
 func (*ReprocessJobResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{14}
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ReprocessJobResponse) GetJob() *Job {
@@ -1102,7 +1218,14 @@ const file_knowcel_ingestion_v1_ingestion_proto_rawDesc = "" +
 	"\x14CreateUploadResponse\x12+\n" +
 	"\x03job\x18\x01 \x01(\v2\x19.knowcel.ingestion.v1.JobR\x03job\x12\x1d\n" +
 	"\n" +
-	"upload_url\x18\x02 \x01(\tR\tuploadUrl\"\xad\x01\n" +
+	"upload_url\x18\x02 \x01(\tR\tuploadUrl\"\x8f\x01\n" +
+	"\x14CreateFromUrlRequest\x12\x10\n" +
+	"\x03url\x18\x01 \x01(\tR\x03url\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x124\n" +
+	"\x06access\x18\x03 \x01(\x0e2\x1c.knowcel.ingestion.v1.AccessR\x06access\x12\x19\n" +
+	"\bteam_ids\x18\x04 \x03(\tR\ateamIds\"D\n" +
+	"\x15CreateFromUrlResponse\x12+\n" +
+	"\x03job\x18\x01 \x01(\v2\x19.knowcel.ingestion.v1.JobR\x03job\"\xad\x01\n" +
 	"\x14ReplaceUploadRequest\x12\x1f\n" +
 	"\vdocument_id\x18\x01 \x01(\tR\n" +
 	"documentId\x12\x1a\n" +
@@ -1152,11 +1275,12 @@ const file_knowcel_ingestion_v1_ingestion_proto_rawDesc = "" +
 	"\x14JOB_STAGE_EXTRACTING\x10\x01\x12\x16\n" +
 	"\x12JOB_STAGE_CHUNKING\x10\x02\x12\x17\n" +
 	"\x13JOB_STAGE_EMBEDDING\x10\x03\x12\x15\n" +
-	"\x11JOB_STAGE_STORING\x10\x042\xc4\x05\n" +
+	"\x11JOB_STAGE_STORING\x10\x042\xae\x06\n" +
 	"\x10IngestionService\x12e\n" +
 	"\fCreateUpload\x12).knowcel.ingestion.v1.CreateUploadRequest\x1a*.knowcel.ingestion.v1.CreateUploadResponse\x12k\n" +
 	"\x0eCompleteUpload\x12+.knowcel.ingestion.v1.CompleteUploadRequest\x1a,.knowcel.ingestion.v1.CompleteUploadResponse\x12h\n" +
-	"\rReplaceUpload\x12*.knowcel.ingestion.v1.ReplaceUploadRequest\x1a+.knowcel.ingestion.v1.ReplaceUploadResponse\x12S\n" +
+	"\rReplaceUpload\x12*.knowcel.ingestion.v1.ReplaceUploadRequest\x1a+.knowcel.ingestion.v1.ReplaceUploadResponse\x12h\n" +
+	"\rCreateFromUrl\x12*.knowcel.ingestion.v1.CreateFromUrlRequest\x1a+.knowcel.ingestion.v1.CreateFromUrlResponse\x12S\n" +
 	"\x06GetJob\x12#.knowcel.ingestion.v1.GetJobRequest\x1a$.knowcel.ingestion.v1.GetJobResponse\x12Y\n" +
 	"\bListJobs\x12%.knowcel.ingestion.v1.ListJobsRequest\x1a&.knowcel.ingestion.v1.ListJobsResponse\x12[\n" +
 	"\bWatchJob\x12%.knowcel.ingestion.v1.WatchJobRequest\x1a&.knowcel.ingestion.v1.WatchJobResponse0\x01\x12e\n" +
@@ -1175,7 +1299,7 @@ func file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP() []byte {
 }
 
 var file_knowcel_ingestion_v1_ingestion_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_knowcel_ingestion_v1_ingestion_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_knowcel_ingestion_v1_ingestion_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_knowcel_ingestion_v1_ingestion_proto_goTypes = []any{
 	(Access)(0),                    // 0: knowcel.ingestion.v1.Access
 	(JobStatus)(0),                 // 1: knowcel.ingestion.v1.JobStatus
@@ -1183,56 +1307,62 @@ var file_knowcel_ingestion_v1_ingestion_proto_goTypes = []any{
 	(*Job)(nil),                    // 3: knowcel.ingestion.v1.Job
 	(*CreateUploadRequest)(nil),    // 4: knowcel.ingestion.v1.CreateUploadRequest
 	(*CreateUploadResponse)(nil),   // 5: knowcel.ingestion.v1.CreateUploadResponse
-	(*ReplaceUploadRequest)(nil),   // 6: knowcel.ingestion.v1.ReplaceUploadRequest
-	(*ReplaceUploadResponse)(nil),  // 7: knowcel.ingestion.v1.ReplaceUploadResponse
-	(*CompleteUploadRequest)(nil),  // 8: knowcel.ingestion.v1.CompleteUploadRequest
-	(*CompleteUploadResponse)(nil), // 9: knowcel.ingestion.v1.CompleteUploadResponse
-	(*GetJobRequest)(nil),          // 10: knowcel.ingestion.v1.GetJobRequest
-	(*GetJobResponse)(nil),         // 11: knowcel.ingestion.v1.GetJobResponse
-	(*ListJobsRequest)(nil),        // 12: knowcel.ingestion.v1.ListJobsRequest
-	(*ListJobsResponse)(nil),       // 13: knowcel.ingestion.v1.ListJobsResponse
-	(*WatchJobRequest)(nil),        // 14: knowcel.ingestion.v1.WatchJobRequest
-	(*WatchJobResponse)(nil),       // 15: knowcel.ingestion.v1.WatchJobResponse
-	(*ReprocessJobRequest)(nil),    // 16: knowcel.ingestion.v1.ReprocessJobRequest
-	(*ReprocessJobResponse)(nil),   // 17: knowcel.ingestion.v1.ReprocessJobResponse
-	(*timestamppb.Timestamp)(nil),  // 18: google.protobuf.Timestamp
-	(*commonv1.PageRequest)(nil),   // 19: knowcel.common.v1.PageRequest
-	(*commonv1.PageResponse)(nil),  // 20: knowcel.common.v1.PageResponse
+	(*CreateFromUrlRequest)(nil),   // 6: knowcel.ingestion.v1.CreateFromUrlRequest
+	(*CreateFromUrlResponse)(nil),  // 7: knowcel.ingestion.v1.CreateFromUrlResponse
+	(*ReplaceUploadRequest)(nil),   // 8: knowcel.ingestion.v1.ReplaceUploadRequest
+	(*ReplaceUploadResponse)(nil),  // 9: knowcel.ingestion.v1.ReplaceUploadResponse
+	(*CompleteUploadRequest)(nil),  // 10: knowcel.ingestion.v1.CompleteUploadRequest
+	(*CompleteUploadResponse)(nil), // 11: knowcel.ingestion.v1.CompleteUploadResponse
+	(*GetJobRequest)(nil),          // 12: knowcel.ingestion.v1.GetJobRequest
+	(*GetJobResponse)(nil),         // 13: knowcel.ingestion.v1.GetJobResponse
+	(*ListJobsRequest)(nil),        // 14: knowcel.ingestion.v1.ListJobsRequest
+	(*ListJobsResponse)(nil),       // 15: knowcel.ingestion.v1.ListJobsResponse
+	(*WatchJobRequest)(nil),        // 16: knowcel.ingestion.v1.WatchJobRequest
+	(*WatchJobResponse)(nil),       // 17: knowcel.ingestion.v1.WatchJobResponse
+	(*ReprocessJobRequest)(nil),    // 18: knowcel.ingestion.v1.ReprocessJobRequest
+	(*ReprocessJobResponse)(nil),   // 19: knowcel.ingestion.v1.ReprocessJobResponse
+	(*timestamppb.Timestamp)(nil),  // 20: google.protobuf.Timestamp
+	(*commonv1.PageRequest)(nil),   // 21: knowcel.common.v1.PageRequest
+	(*commonv1.PageResponse)(nil),  // 22: knowcel.common.v1.PageResponse
 }
 var file_knowcel_ingestion_v1_ingestion_proto_depIdxs = []int32{
 	1,  // 0: knowcel.ingestion.v1.Job.status:type_name -> knowcel.ingestion.v1.JobStatus
-	18, // 1: knowcel.ingestion.v1.Job.create_time:type_name -> google.protobuf.Timestamp
-	18, // 2: knowcel.ingestion.v1.Job.update_time:type_name -> google.protobuf.Timestamp
+	20, // 1: knowcel.ingestion.v1.Job.create_time:type_name -> google.protobuf.Timestamp
+	20, // 2: knowcel.ingestion.v1.Job.update_time:type_name -> google.protobuf.Timestamp
 	2,  // 3: knowcel.ingestion.v1.Job.stage:type_name -> knowcel.ingestion.v1.JobStage
 	0,  // 4: knowcel.ingestion.v1.CreateUploadRequest.access:type_name -> knowcel.ingestion.v1.Access
 	3,  // 5: knowcel.ingestion.v1.CreateUploadResponse.job:type_name -> knowcel.ingestion.v1.Job
-	3,  // 6: knowcel.ingestion.v1.ReplaceUploadResponse.job:type_name -> knowcel.ingestion.v1.Job
-	3,  // 7: knowcel.ingestion.v1.CompleteUploadResponse.job:type_name -> knowcel.ingestion.v1.Job
-	3,  // 8: knowcel.ingestion.v1.GetJobResponse.job:type_name -> knowcel.ingestion.v1.Job
-	19, // 9: knowcel.ingestion.v1.ListJobsRequest.page:type_name -> knowcel.common.v1.PageRequest
-	3,  // 10: knowcel.ingestion.v1.ListJobsResponse.jobs:type_name -> knowcel.ingestion.v1.Job
-	20, // 11: knowcel.ingestion.v1.ListJobsResponse.page:type_name -> knowcel.common.v1.PageResponse
-	3,  // 12: knowcel.ingestion.v1.WatchJobResponse.job:type_name -> knowcel.ingestion.v1.Job
-	3,  // 13: knowcel.ingestion.v1.ReprocessJobResponse.job:type_name -> knowcel.ingestion.v1.Job
-	4,  // 14: knowcel.ingestion.v1.IngestionService.CreateUpload:input_type -> knowcel.ingestion.v1.CreateUploadRequest
-	8,  // 15: knowcel.ingestion.v1.IngestionService.CompleteUpload:input_type -> knowcel.ingestion.v1.CompleteUploadRequest
-	6,  // 16: knowcel.ingestion.v1.IngestionService.ReplaceUpload:input_type -> knowcel.ingestion.v1.ReplaceUploadRequest
-	10, // 17: knowcel.ingestion.v1.IngestionService.GetJob:input_type -> knowcel.ingestion.v1.GetJobRequest
-	12, // 18: knowcel.ingestion.v1.IngestionService.ListJobs:input_type -> knowcel.ingestion.v1.ListJobsRequest
-	14, // 19: knowcel.ingestion.v1.IngestionService.WatchJob:input_type -> knowcel.ingestion.v1.WatchJobRequest
-	16, // 20: knowcel.ingestion.v1.IngestionService.ReprocessJob:input_type -> knowcel.ingestion.v1.ReprocessJobRequest
-	5,  // 21: knowcel.ingestion.v1.IngestionService.CreateUpload:output_type -> knowcel.ingestion.v1.CreateUploadResponse
-	9,  // 22: knowcel.ingestion.v1.IngestionService.CompleteUpload:output_type -> knowcel.ingestion.v1.CompleteUploadResponse
-	7,  // 23: knowcel.ingestion.v1.IngestionService.ReplaceUpload:output_type -> knowcel.ingestion.v1.ReplaceUploadResponse
-	11, // 24: knowcel.ingestion.v1.IngestionService.GetJob:output_type -> knowcel.ingestion.v1.GetJobResponse
-	13, // 25: knowcel.ingestion.v1.IngestionService.ListJobs:output_type -> knowcel.ingestion.v1.ListJobsResponse
-	15, // 26: knowcel.ingestion.v1.IngestionService.WatchJob:output_type -> knowcel.ingestion.v1.WatchJobResponse
-	17, // 27: knowcel.ingestion.v1.IngestionService.ReprocessJob:output_type -> knowcel.ingestion.v1.ReprocessJobResponse
-	21, // [21:28] is the sub-list for method output_type
-	14, // [14:21] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	0,  // 6: knowcel.ingestion.v1.CreateFromUrlRequest.access:type_name -> knowcel.ingestion.v1.Access
+	3,  // 7: knowcel.ingestion.v1.CreateFromUrlResponse.job:type_name -> knowcel.ingestion.v1.Job
+	3,  // 8: knowcel.ingestion.v1.ReplaceUploadResponse.job:type_name -> knowcel.ingestion.v1.Job
+	3,  // 9: knowcel.ingestion.v1.CompleteUploadResponse.job:type_name -> knowcel.ingestion.v1.Job
+	3,  // 10: knowcel.ingestion.v1.GetJobResponse.job:type_name -> knowcel.ingestion.v1.Job
+	21, // 11: knowcel.ingestion.v1.ListJobsRequest.page:type_name -> knowcel.common.v1.PageRequest
+	3,  // 12: knowcel.ingestion.v1.ListJobsResponse.jobs:type_name -> knowcel.ingestion.v1.Job
+	22, // 13: knowcel.ingestion.v1.ListJobsResponse.page:type_name -> knowcel.common.v1.PageResponse
+	3,  // 14: knowcel.ingestion.v1.WatchJobResponse.job:type_name -> knowcel.ingestion.v1.Job
+	3,  // 15: knowcel.ingestion.v1.ReprocessJobResponse.job:type_name -> knowcel.ingestion.v1.Job
+	4,  // 16: knowcel.ingestion.v1.IngestionService.CreateUpload:input_type -> knowcel.ingestion.v1.CreateUploadRequest
+	10, // 17: knowcel.ingestion.v1.IngestionService.CompleteUpload:input_type -> knowcel.ingestion.v1.CompleteUploadRequest
+	8,  // 18: knowcel.ingestion.v1.IngestionService.ReplaceUpload:input_type -> knowcel.ingestion.v1.ReplaceUploadRequest
+	6,  // 19: knowcel.ingestion.v1.IngestionService.CreateFromUrl:input_type -> knowcel.ingestion.v1.CreateFromUrlRequest
+	12, // 20: knowcel.ingestion.v1.IngestionService.GetJob:input_type -> knowcel.ingestion.v1.GetJobRequest
+	14, // 21: knowcel.ingestion.v1.IngestionService.ListJobs:input_type -> knowcel.ingestion.v1.ListJobsRequest
+	16, // 22: knowcel.ingestion.v1.IngestionService.WatchJob:input_type -> knowcel.ingestion.v1.WatchJobRequest
+	18, // 23: knowcel.ingestion.v1.IngestionService.ReprocessJob:input_type -> knowcel.ingestion.v1.ReprocessJobRequest
+	5,  // 24: knowcel.ingestion.v1.IngestionService.CreateUpload:output_type -> knowcel.ingestion.v1.CreateUploadResponse
+	11, // 25: knowcel.ingestion.v1.IngestionService.CompleteUpload:output_type -> knowcel.ingestion.v1.CompleteUploadResponse
+	9,  // 26: knowcel.ingestion.v1.IngestionService.ReplaceUpload:output_type -> knowcel.ingestion.v1.ReplaceUploadResponse
+	7,  // 27: knowcel.ingestion.v1.IngestionService.CreateFromUrl:output_type -> knowcel.ingestion.v1.CreateFromUrlResponse
+	13, // 28: knowcel.ingestion.v1.IngestionService.GetJob:output_type -> knowcel.ingestion.v1.GetJobResponse
+	15, // 29: knowcel.ingestion.v1.IngestionService.ListJobs:output_type -> knowcel.ingestion.v1.ListJobsResponse
+	17, // 30: knowcel.ingestion.v1.IngestionService.WatchJob:output_type -> knowcel.ingestion.v1.WatchJobResponse
+	19, // 31: knowcel.ingestion.v1.IngestionService.ReprocessJob:output_type -> knowcel.ingestion.v1.ReprocessJobResponse
+	24, // [24:32] is the sub-list for method output_type
+	16, // [16:24] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_knowcel_ingestion_v1_ingestion_proto_init() }
@@ -1246,7 +1376,7 @@ func file_knowcel_ingestion_v1_ingestion_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_knowcel_ingestion_v1_ingestion_proto_rawDesc), len(file_knowcel_ingestion_v1_ingestion_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   15,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

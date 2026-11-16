@@ -51,6 +51,11 @@ class IngestionServiceStub:
                 request_serializer=knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2.ReplaceUploadRequest.SerializeToString,
                 response_deserializer=knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2.ReplaceUploadResponse.FromString,
                 _registered_method=True)
+        self.CreateFromUrl = channel.unary_unary(
+                '/knowcel.ingestion.v1.IngestionService/CreateFromUrl',
+                request_serializer=knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2.CreateFromUrlRequest.SerializeToString,
+                response_deserializer=knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2.CreateFromUrlResponse.FromString,
+                _registered_method=True)
         self.GetJob = channel.unary_unary(
                 '/knowcel.ingestion.v1.IngestionService/GetJob',
                 request_serializer=knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2.GetJobRequest.SerializeToString,
@@ -113,6 +118,18 @@ class IngestionServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def CreateFromUrl(self, request, context):
+        """CreateFromUrl fetches a web page (or a file at an address) and ingests it
+        as a new document, which takes its title from the page. The job is
+        returned already QUEUED, so there is nothing to upload or complete. An
+        address that cannot be used (not http or https, on a private network,
+        unreachable, too large, of a type the document module does not take) is
+        rejected with a violation on url; the team rules are those of CreateUpload.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def GetJob(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -158,6 +175,11 @@ def add_IngestionServiceServicer_to_server(servicer, server):
                     servicer.ReplaceUpload,
                     request_deserializer=knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2.ReplaceUploadRequest.FromString,
                     response_serializer=knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2.ReplaceUploadResponse.SerializeToString,
+            ),
+            'CreateFromUrl': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateFromUrl,
+                    request_deserializer=knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2.CreateFromUrlRequest.FromString,
+                    response_serializer=knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2.CreateFromUrlResponse.SerializeToString,
             ),
             'GetJob': grpc.unary_unary_rpc_method_handler(
                     servicer.GetJob,
@@ -263,6 +285,33 @@ class IngestionService:
             '/knowcel.ingestion.v1.IngestionService/ReplaceUpload',
             knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2.ReplaceUploadRequest.SerializeToString,
             knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2.ReplaceUploadResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateFromUrl(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.ingestion.v1.IngestionService/CreateFromUrl',
+            knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2.CreateFromUrlRequest.SerializeToString,
+            knowcel_dot_ingestion_dot_v1_dot_ingestion__pb2.CreateFromUrlResponse.FromString,
             options,
             channel_credentials,
             insecure,

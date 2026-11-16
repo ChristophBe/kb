@@ -26,6 +26,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SUPPORTED_FORMATS } from "./files.ts";
 import { active, ProgressBar, stageLabel } from "./progress.tsx";
 import { putWithProgress } from "./put.ts";
+import { UrlImport } from "./UrlImport.tsx";
 import { useMyTeams } from "./useMyTeams.ts";
 import { type Upload as UploadRow, useUploads } from "./useUploads.ts";
 
@@ -173,7 +174,7 @@ export function Upload() {
       <PageHeader
         eyebrow="knowcelium / upload"
         title="Upload"
-        description="Upload documents to add them to the knowledge base."
+        description="Upload documents or add web pages to the knowledge base."
       />
       {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: drag and drop is a pointer shortcut; keyboard users use "Choose files". */}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: same reason. */}
@@ -221,6 +222,12 @@ export function Upload() {
           }}
         />
       </div>
+      <UrlImport
+        client={client}
+        teams={teams.map((t) => ({ id: t.id, name: t.name }))}
+        onJob={events.onJob}
+        announce={announce}
+      />
       {staged.length > 0 && (
         <form
           className="mb-6 rounded-card border border-border p-4"

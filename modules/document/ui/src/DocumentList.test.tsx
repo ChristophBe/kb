@@ -12,7 +12,13 @@ import { alice } from "./testing.ts";
 
 /** A document service backed by an in-memory list. */
 function documentService(
-  initial: { id: string; title: string; status: DocumentStatus; ownerId?: string }[],
+  initial: {
+    id: string;
+    title: string;
+    status: DocumentStatus;
+    ownerId?: string;
+    createTime?: { seconds: bigint; nanos: number };
+  }[],
 ) {
   let docs = initial;
   const deleteDocument = vi.fn(({ id }: { id: string }) => {
@@ -114,5 +120,58 @@ describe("DocumentList", () => {
     expect((await screen.findByRole("alert")).textContent).toBe(
       "[unavailable] document service down",
     );
+  });
+
+  it("links to the upload page", async () => {
+    const { transport } = documentService([]);
+    renderModule(documents, transport);
+    const link = await screen.findByRole("link", { name: /Upload documents/ });
+    expect(link.getAttribute("href")).toBe("/m/ingestion");
+  });
+
+  it("sorts by date or title and filters by title", async () => {
+    const { transport } = documentService([
+      {
+        id: "d1",
+        title: "Beta",
+        status: DocumentStatus.READY,
+        createTime: { seconds: 100n, nanos: 0 },
+      },
+      {
+        id: "d2",
+        title: "Alpha",
+        status: DocumentStatus.READY,
+        createTime: { seconds: 300n, nanos: 0 },
+      },
+      {
+        id: "d3",
+        title: "Gamma",
+        status: DocumentStatus.READY,
+        createTime: { seconds: 200n, nanos: 0 },
+      },
+    ]);
+    renderModule(documents, transport);
+    await screen.findByRole("link", { name: "Beta" });
+    const titles = () =>
+      screen
+        .getAllByRole("row")
+        .slice(1)
+        .map((r) => within(r).getAllByRole("link")[0]?.textContent);
+    expect(titles()).toEqual(["Alpha", "Gamma", "Beta"]);
+    const sort = screen.getByRole("combobox", { name: "Sort by" });
+    fireEvent.change(sort, { target: { value: "oldest" } });
+    expect(titles()).toEqual(["Beta", "Gamma", "Alpha"]);
+    fireEvent.change(sort, { target: { value: "title-asc" } });
+    expect(titles()).toEqual(["Alpha", "Beta", "Gamma"]);
+    fireEvent.change(sort, { target: { value: "title-desc" } });
+    expect(titles()).toEqual(["Gamma", "Beta", "Alpha"]);
+    fireEvent.change(screen.getByRole("searchbox", { name: "Filter by title" }), {
+      target: { value: "ALP" },
+    });
+    expect(titles()).toEqual(["Alpha"]);
+    fireEvent.change(screen.getByRole("searchbox", { name: "Filter by title" }), {
+      target: { value: "zzz" },
+    });
+    expect(screen.getByText("No documents match this title.")).toBeTruthy();
   });
 });

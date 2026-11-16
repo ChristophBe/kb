@@ -77,6 +77,7 @@ func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUpload
 		ContentType: req.GetContentType(),
 		SizeBytes:   req.GetSizeBytes(),
 		SHA256:      req.GetSha256(),
+		Access:      req.GetAccess(),
 		TeamIDs:     teamIDs,
 	})
 	if err != nil {
@@ -276,6 +277,8 @@ func (s *Server) toStatus(op string, err error) error {
 		return grpcserver.WithDetails(codes.NotFound, app.ErrTeamNotFound.Error(), grpcserver.ErrorInfo(domain, "TEAM_NOT_FOUND", nil))
 	case errors.Is(err, app.ErrDocumentNotFound):
 		return status.Error(codes.NotFound, app.ErrDocumentNotFound.Error())
+	case errors.Is(err, app.ErrNotOwner):
+		return status.Error(codes.PermissionDenied, app.ErrNotOwner.Error())
 	case errors.Is(err, app.ErrDocumentBusy):
 		return failedPrecondition("DOCUMENT_BUSY", app.ErrDocumentBusy)
 	case errors.Is(err, app.ErrDocumentsUnavailable):

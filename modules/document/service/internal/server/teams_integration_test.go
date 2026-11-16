@@ -37,12 +37,16 @@ func oneHot(i int) []float32 {
 	return v
 }
 
-// upload creates a ready document of alice's with one chunk, shared with
-// teams (alice belongs to them).
+// upload creates a ready document of alice's with one chunk: a team document
+// of teams (alice belongs to them), or a public one without any.
 func (h *teamHarness) upload(t *testing.T, teams ...uuid.UUID) string {
 	t.Helper()
+	level := documentv1.Access_ACCESS_TEAM
+	if len(teams) == 0 {
+		level = documentv1.Access_ACCESS_PUBLIC
+	}
 	resp, err := h.server.CreateDocument(asUser(t, alice, teams), &documentv1.CreateDocumentRequest{
-		Filename: "notes.md", SizeBytes: 1, TeamIds: ids(teams),
+		Filename: "notes.md", SizeBytes: 1, Access: level, TeamIds: ids(teams),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -127,6 +131,23 @@ func TestSharedDocumentIsVisibleToTheTeamOnly(t *testing.T) {
 	} {
 		if got := h.reads(t, tc.user, tc.teams, id); got != tc.want {
 			t.Errorf("%s: found the document %d times, want %d", name, got, tc.want)
+		}
+	}
+}
+
+func TestPublicDocumentIsVisibleToEveryone(t *testing.T) {
+	h := newTeamHarness(t)
+	id := h.upload(t)
+	for name, tc := range map[string]struct {
+		user  string
+		teams []uuid.UUID
+	}{
+		"owner":              {alice, nil},
+		"user without teams": {bob, nil},
+		"member of a team":   {carol, []uuid.UUID{teamB}},
+	} {
+		if got := h.reads(t, tc.user, tc.teams, id); got != allReads {
+			t.Errorf("%s: found the document %d times, want %d", name, got, allReads)
 		}
 	}
 }

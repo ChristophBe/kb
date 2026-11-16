@@ -1,3 +1,9 @@
+export {
+  type AccessChoice,
+  AccessPicker,
+  isValidAccess,
+  PUBLIC_ACCESS,
+} from "./access-picker.tsx";
 export { cn } from "./cn.ts";
 export {
   Area,

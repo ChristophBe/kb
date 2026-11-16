@@ -83,8 +83,8 @@ func TestResolverWithoutIAMHasNoTeams(t *testing.T) {
 	r.now = c.now
 
 	p := r.Resolve(t.Context(), "ann")
-	if p.UserID != "ann" || len(p.Teams) != 0 || p.PlatformAdmin {
-		t.Fatalf("degraded principal = %+v, want ann without teams", p)
+	if p.UserID != "ann" || len(p.Teams) != 0 || p.PlatformAdmin || !p.Unavailable {
+		t.Fatalf("degraded principal = %+v, want ann without teams, marked unavailable", p)
 	}
 	r.Resolve(t.Context(), "ann")
 	if calls != 1 {
@@ -92,7 +92,7 @@ func TestResolverWithoutIAMHasNoTeams(t *testing.T) {
 	}
 	fail = false
 	c.t = c.t.Add(failureTTL + time.Second)
-	if p := r.Resolve(t.Context(), "ann"); len(p.Teams) != 1 || !p.PlatformAdmin {
+	if p := r.Resolve(t.Context(), "ann"); len(p.Teams) != 1 || !p.PlatformAdmin || p.Unavailable {
 		t.Errorf("principal after recovery = %+v", p)
 	}
 }

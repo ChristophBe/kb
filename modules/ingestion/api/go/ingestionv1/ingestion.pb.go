@@ -23,6 +23,59 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Access says who can read a document, as in the document module.
+type Access int32
+
+const (
+	// Treated as ACCESS_PUBLIC.
+	Access_ACCESS_UNSPECIFIED Access = 0
+	// Every signed-in user can read the document.
+	Access_ACCESS_PUBLIC Access = 1
+	// Its owner and the members of its teams can read the document.
+	Access_ACCESS_TEAM Access = 2
+)
+
+// Enum value maps for Access.
+var (
+	Access_name = map[int32]string{
+		0: "ACCESS_UNSPECIFIED",
+		1: "ACCESS_PUBLIC",
+		2: "ACCESS_TEAM",
+	}
+	Access_value = map[string]int32{
+		"ACCESS_UNSPECIFIED": 0,
+		"ACCESS_PUBLIC":      1,
+		"ACCESS_TEAM":        2,
+	}
+)
+
+func (x Access) Enum() *Access {
+	p := new(Access)
+	*p = x
+	return p
+}
+
+func (x Access) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Access) Descriptor() protoreflect.EnumDescriptor {
+	return file_knowcel_ingestion_v1_ingestion_proto_enumTypes[0].Descriptor()
+}
+
+func (Access) Type() protoreflect.EnumType {
+	return &file_knowcel_ingestion_v1_ingestion_proto_enumTypes[0]
+}
+
+func (x Access) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Access.Descriptor instead.
+func (Access) EnumDescriptor() ([]byte, []int) {
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{0}
+}
+
 type JobStatus int32
 
 const (
@@ -65,11 +118,11 @@ func (x JobStatus) String() string {
 }
 
 func (JobStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_knowcel_ingestion_v1_ingestion_proto_enumTypes[0].Descriptor()
+	return file_knowcel_ingestion_v1_ingestion_proto_enumTypes[1].Descriptor()
 }
 
 func (JobStatus) Type() protoreflect.EnumType {
-	return &file_knowcel_ingestion_v1_ingestion_proto_enumTypes[0]
+	return &file_knowcel_ingestion_v1_ingestion_proto_enumTypes[1]
 }
 
 func (x JobStatus) Number() protoreflect.EnumNumber {
@@ -78,7 +131,7 @@ func (x JobStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use JobStatus.Descriptor instead.
 func (JobStatus) EnumDescriptor() ([]byte, []int) {
-	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{0}
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{1}
 }
 
 // JobStage is the step of processing a job is in. Stages run in this order.
@@ -125,11 +178,11 @@ func (x JobStage) String() string {
 }
 
 func (JobStage) Descriptor() protoreflect.EnumDescriptor {
-	return file_knowcel_ingestion_v1_ingestion_proto_enumTypes[1].Descriptor()
+	return file_knowcel_ingestion_v1_ingestion_proto_enumTypes[2].Descriptor()
 }
 
 func (JobStage) Type() protoreflect.EnumType {
-	return &file_knowcel_ingestion_v1_ingestion_proto_enumTypes[1]
+	return &file_knowcel_ingestion_v1_ingestion_proto_enumTypes[2]
 }
 
 func (x JobStage) Number() protoreflect.EnumNumber {
@@ -138,7 +191,7 @@ func (x JobStage) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use JobStage.Descriptor instead.
 func (JobStage) EnumDescriptor() ([]byte, []int) {
-	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{1}
+	return file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP(), []int{2}
 }
 
 type Job struct {
@@ -290,10 +343,12 @@ type CreateUploadRequest struct {
 	// Optional SHA-256 of the file, in hex. A file uploaded with other content
 	// fails its job on CompleteUpload.
 	Sha256 string `protobuf:"bytes,5,opt,name=sha256,proto3" json:"sha256,omitempty"`
-	// Teams to share the document with, which the caller must belong to; a
-	// team the caller is not in fails with NOT_FOUND (reason TEAM_NOT_FOUND).
-	// Empty keeps the document private to the caller. Changeable later with
-	// the document module's SetDocumentTeams.
+	// Who can read the document; unset means ACCESS_PUBLIC. Changeable later
+	// in the document module.
+	Access Access `protobuf:"varint,7,opt,name=access,proto3,enum=knowcel.ingestion.v1.Access" json:"access,omitempty"`
+	// The teams of an ACCESS_TEAM document, at least one, which the caller must
+	// belong to; a team the caller is not in fails with NOT_FOUND (reason
+	// TEAM_NOT_FOUND). A public document takes none (INVALID_ARGUMENT).
 	TeamIds       []string `protobuf:"bytes,6,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -362,6 +417,13 @@ func (x *CreateUploadRequest) GetSha256() string {
 		return x.Sha256
 	}
 	return ""
+}
+
+func (x *CreateUploadRequest) GetAccess() Access {
+	if x != nil {
+		return x.Access
+	}
+	return Access_ACCESS_UNSPECIFIED
 }
 
 func (x *CreateUploadRequest) GetTeamIds() []string {
@@ -1027,14 +1089,15 @@ const file_knowcel_ingestion_v1_ingestion_proto_rawDesc = "" +
 	"\bprogress\x18\n" +
 	" \x01(\x05R\bprogress\x124\n" +
 	"\x05stage\x18\v \x01(\x0e2\x1e.knowcel.ingestion.v1.JobStageR\x05stage\x12\x19\n" +
-	"\bowner_id\x18\f \x01(\tR\aownerId\"\xbc\x01\n" +
+	"\bowner_id\x18\f \x01(\tR\aownerId\"\xf2\x01\n" +
 	"\x13CreateUploadRequest\x12\x1a\n" +
 	"\bfilename\x18\x01 \x01(\tR\bfilename\x12!\n" +
 	"\fcontent_type\x18\x02 \x01(\tR\vcontentType\x12\x1d\n" +
 	"\n" +
 	"size_bytes\x18\x03 \x01(\x03R\tsizeBytes\x12\x14\n" +
 	"\x05title\x18\x04 \x01(\tR\x05title\x12\x16\n" +
-	"\x06sha256\x18\x05 \x01(\tR\x06sha256\x12\x19\n" +
+	"\x06sha256\x18\x05 \x01(\tR\x06sha256\x124\n" +
+	"\x06access\x18\a \x01(\x0e2\x1c.knowcel.ingestion.v1.AccessR\x06access\x12\x19\n" +
 	"\bteam_ids\x18\x06 \x03(\tR\ateamIds\"b\n" +
 	"\x14CreateUploadResponse\x12+\n" +
 	"\x03job\x18\x01 \x01(\v2\x19.knowcel.ingestion.v1.JobR\x03job\x12\x1d\n" +
@@ -1072,7 +1135,11 @@ const file_knowcel_ingestion_v1_ingestion_proto_rawDesc = "" +
 	"\x13ReprocessJobRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"C\n" +
 	"\x14ReprocessJobResponse\x12+\n" +
-	"\x03job\x18\x01 \x01(\v2\x19.knowcel.ingestion.v1.JobR\x03job*\xa4\x01\n" +
+	"\x03job\x18\x01 \x01(\v2\x19.knowcel.ingestion.v1.JobR\x03job*D\n" +
+	"\x06Access\x12\x16\n" +
+	"\x12ACCESS_UNSPECIFIED\x10\x00\x12\x11\n" +
+	"\rACCESS_PUBLIC\x10\x01\x12\x0f\n" +
+	"\vACCESS_TEAM\x10\x02*\xa4\x01\n" +
 	"\tJobStatus\x12\x1a\n" +
 	"\x16JOB_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19JOB_STATUS_PENDING_UPLOAD\x10\x01\x12\x15\n" +
@@ -1107,63 +1174,65 @@ func file_knowcel_ingestion_v1_ingestion_proto_rawDescGZIP() []byte {
 	return file_knowcel_ingestion_v1_ingestion_proto_rawDescData
 }
 
-var file_knowcel_ingestion_v1_ingestion_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_knowcel_ingestion_v1_ingestion_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
 var file_knowcel_ingestion_v1_ingestion_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_knowcel_ingestion_v1_ingestion_proto_goTypes = []any{
-	(JobStatus)(0),                 // 0: knowcel.ingestion.v1.JobStatus
-	(JobStage)(0),                  // 1: knowcel.ingestion.v1.JobStage
-	(*Job)(nil),                    // 2: knowcel.ingestion.v1.Job
-	(*CreateUploadRequest)(nil),    // 3: knowcel.ingestion.v1.CreateUploadRequest
-	(*CreateUploadResponse)(nil),   // 4: knowcel.ingestion.v1.CreateUploadResponse
-	(*ReplaceUploadRequest)(nil),   // 5: knowcel.ingestion.v1.ReplaceUploadRequest
-	(*ReplaceUploadResponse)(nil),  // 6: knowcel.ingestion.v1.ReplaceUploadResponse
-	(*CompleteUploadRequest)(nil),  // 7: knowcel.ingestion.v1.CompleteUploadRequest
-	(*CompleteUploadResponse)(nil), // 8: knowcel.ingestion.v1.CompleteUploadResponse
-	(*GetJobRequest)(nil),          // 9: knowcel.ingestion.v1.GetJobRequest
-	(*GetJobResponse)(nil),         // 10: knowcel.ingestion.v1.GetJobResponse
-	(*ListJobsRequest)(nil),        // 11: knowcel.ingestion.v1.ListJobsRequest
-	(*ListJobsResponse)(nil),       // 12: knowcel.ingestion.v1.ListJobsResponse
-	(*WatchJobRequest)(nil),        // 13: knowcel.ingestion.v1.WatchJobRequest
-	(*WatchJobResponse)(nil),       // 14: knowcel.ingestion.v1.WatchJobResponse
-	(*ReprocessJobRequest)(nil),    // 15: knowcel.ingestion.v1.ReprocessJobRequest
-	(*ReprocessJobResponse)(nil),   // 16: knowcel.ingestion.v1.ReprocessJobResponse
-	(*timestamppb.Timestamp)(nil),  // 17: google.protobuf.Timestamp
-	(*commonv1.PageRequest)(nil),   // 18: knowcel.common.v1.PageRequest
-	(*commonv1.PageResponse)(nil),  // 19: knowcel.common.v1.PageResponse
+	(Access)(0),                    // 0: knowcel.ingestion.v1.Access
+	(JobStatus)(0),                 // 1: knowcel.ingestion.v1.JobStatus
+	(JobStage)(0),                  // 2: knowcel.ingestion.v1.JobStage
+	(*Job)(nil),                    // 3: knowcel.ingestion.v1.Job
+	(*CreateUploadRequest)(nil),    // 4: knowcel.ingestion.v1.CreateUploadRequest
+	(*CreateUploadResponse)(nil),   // 5: knowcel.ingestion.v1.CreateUploadResponse
+	(*ReplaceUploadRequest)(nil),   // 6: knowcel.ingestion.v1.ReplaceUploadRequest
+	(*ReplaceUploadResponse)(nil),  // 7: knowcel.ingestion.v1.ReplaceUploadResponse
+	(*CompleteUploadRequest)(nil),  // 8: knowcel.ingestion.v1.CompleteUploadRequest
+	(*CompleteUploadResponse)(nil), // 9: knowcel.ingestion.v1.CompleteUploadResponse
+	(*GetJobRequest)(nil),          // 10: knowcel.ingestion.v1.GetJobRequest
+	(*GetJobResponse)(nil),         // 11: knowcel.ingestion.v1.GetJobResponse
+	(*ListJobsRequest)(nil),        // 12: knowcel.ingestion.v1.ListJobsRequest
+	(*ListJobsResponse)(nil),       // 13: knowcel.ingestion.v1.ListJobsResponse
+	(*WatchJobRequest)(nil),        // 14: knowcel.ingestion.v1.WatchJobRequest
+	(*WatchJobResponse)(nil),       // 15: knowcel.ingestion.v1.WatchJobResponse
+	(*ReprocessJobRequest)(nil),    // 16: knowcel.ingestion.v1.ReprocessJobRequest
+	(*ReprocessJobResponse)(nil),   // 17: knowcel.ingestion.v1.ReprocessJobResponse
+	(*timestamppb.Timestamp)(nil),  // 18: google.protobuf.Timestamp
+	(*commonv1.PageRequest)(nil),   // 19: knowcel.common.v1.PageRequest
+	(*commonv1.PageResponse)(nil),  // 20: knowcel.common.v1.PageResponse
 }
 var file_knowcel_ingestion_v1_ingestion_proto_depIdxs = []int32{
-	0,  // 0: knowcel.ingestion.v1.Job.status:type_name -> knowcel.ingestion.v1.JobStatus
-	17, // 1: knowcel.ingestion.v1.Job.create_time:type_name -> google.protobuf.Timestamp
-	17, // 2: knowcel.ingestion.v1.Job.update_time:type_name -> google.protobuf.Timestamp
-	1,  // 3: knowcel.ingestion.v1.Job.stage:type_name -> knowcel.ingestion.v1.JobStage
-	2,  // 4: knowcel.ingestion.v1.CreateUploadResponse.job:type_name -> knowcel.ingestion.v1.Job
-	2,  // 5: knowcel.ingestion.v1.ReplaceUploadResponse.job:type_name -> knowcel.ingestion.v1.Job
-	2,  // 6: knowcel.ingestion.v1.CompleteUploadResponse.job:type_name -> knowcel.ingestion.v1.Job
-	2,  // 7: knowcel.ingestion.v1.GetJobResponse.job:type_name -> knowcel.ingestion.v1.Job
-	18, // 8: knowcel.ingestion.v1.ListJobsRequest.page:type_name -> knowcel.common.v1.PageRequest
-	2,  // 9: knowcel.ingestion.v1.ListJobsResponse.jobs:type_name -> knowcel.ingestion.v1.Job
-	19, // 10: knowcel.ingestion.v1.ListJobsResponse.page:type_name -> knowcel.common.v1.PageResponse
-	2,  // 11: knowcel.ingestion.v1.WatchJobResponse.job:type_name -> knowcel.ingestion.v1.Job
-	2,  // 12: knowcel.ingestion.v1.ReprocessJobResponse.job:type_name -> knowcel.ingestion.v1.Job
-	3,  // 13: knowcel.ingestion.v1.IngestionService.CreateUpload:input_type -> knowcel.ingestion.v1.CreateUploadRequest
-	7,  // 14: knowcel.ingestion.v1.IngestionService.CompleteUpload:input_type -> knowcel.ingestion.v1.CompleteUploadRequest
-	5,  // 15: knowcel.ingestion.v1.IngestionService.ReplaceUpload:input_type -> knowcel.ingestion.v1.ReplaceUploadRequest
-	9,  // 16: knowcel.ingestion.v1.IngestionService.GetJob:input_type -> knowcel.ingestion.v1.GetJobRequest
-	11, // 17: knowcel.ingestion.v1.IngestionService.ListJobs:input_type -> knowcel.ingestion.v1.ListJobsRequest
-	13, // 18: knowcel.ingestion.v1.IngestionService.WatchJob:input_type -> knowcel.ingestion.v1.WatchJobRequest
-	15, // 19: knowcel.ingestion.v1.IngestionService.ReprocessJob:input_type -> knowcel.ingestion.v1.ReprocessJobRequest
-	4,  // 20: knowcel.ingestion.v1.IngestionService.CreateUpload:output_type -> knowcel.ingestion.v1.CreateUploadResponse
-	8,  // 21: knowcel.ingestion.v1.IngestionService.CompleteUpload:output_type -> knowcel.ingestion.v1.CompleteUploadResponse
-	6,  // 22: knowcel.ingestion.v1.IngestionService.ReplaceUpload:output_type -> knowcel.ingestion.v1.ReplaceUploadResponse
-	10, // 23: knowcel.ingestion.v1.IngestionService.GetJob:output_type -> knowcel.ingestion.v1.GetJobResponse
-	12, // 24: knowcel.ingestion.v1.IngestionService.ListJobs:output_type -> knowcel.ingestion.v1.ListJobsResponse
-	14, // 25: knowcel.ingestion.v1.IngestionService.WatchJob:output_type -> knowcel.ingestion.v1.WatchJobResponse
-	16, // 26: knowcel.ingestion.v1.IngestionService.ReprocessJob:output_type -> knowcel.ingestion.v1.ReprocessJobResponse
-	20, // [20:27] is the sub-list for method output_type
-	13, // [13:20] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	1,  // 0: knowcel.ingestion.v1.Job.status:type_name -> knowcel.ingestion.v1.JobStatus
+	18, // 1: knowcel.ingestion.v1.Job.create_time:type_name -> google.protobuf.Timestamp
+	18, // 2: knowcel.ingestion.v1.Job.update_time:type_name -> google.protobuf.Timestamp
+	2,  // 3: knowcel.ingestion.v1.Job.stage:type_name -> knowcel.ingestion.v1.JobStage
+	0,  // 4: knowcel.ingestion.v1.CreateUploadRequest.access:type_name -> knowcel.ingestion.v1.Access
+	3,  // 5: knowcel.ingestion.v1.CreateUploadResponse.job:type_name -> knowcel.ingestion.v1.Job
+	3,  // 6: knowcel.ingestion.v1.ReplaceUploadResponse.job:type_name -> knowcel.ingestion.v1.Job
+	3,  // 7: knowcel.ingestion.v1.CompleteUploadResponse.job:type_name -> knowcel.ingestion.v1.Job
+	3,  // 8: knowcel.ingestion.v1.GetJobResponse.job:type_name -> knowcel.ingestion.v1.Job
+	19, // 9: knowcel.ingestion.v1.ListJobsRequest.page:type_name -> knowcel.common.v1.PageRequest
+	3,  // 10: knowcel.ingestion.v1.ListJobsResponse.jobs:type_name -> knowcel.ingestion.v1.Job
+	20, // 11: knowcel.ingestion.v1.ListJobsResponse.page:type_name -> knowcel.common.v1.PageResponse
+	3,  // 12: knowcel.ingestion.v1.WatchJobResponse.job:type_name -> knowcel.ingestion.v1.Job
+	3,  // 13: knowcel.ingestion.v1.ReprocessJobResponse.job:type_name -> knowcel.ingestion.v1.Job
+	4,  // 14: knowcel.ingestion.v1.IngestionService.CreateUpload:input_type -> knowcel.ingestion.v1.CreateUploadRequest
+	8,  // 15: knowcel.ingestion.v1.IngestionService.CompleteUpload:input_type -> knowcel.ingestion.v1.CompleteUploadRequest
+	6,  // 16: knowcel.ingestion.v1.IngestionService.ReplaceUpload:input_type -> knowcel.ingestion.v1.ReplaceUploadRequest
+	10, // 17: knowcel.ingestion.v1.IngestionService.GetJob:input_type -> knowcel.ingestion.v1.GetJobRequest
+	12, // 18: knowcel.ingestion.v1.IngestionService.ListJobs:input_type -> knowcel.ingestion.v1.ListJobsRequest
+	14, // 19: knowcel.ingestion.v1.IngestionService.WatchJob:input_type -> knowcel.ingestion.v1.WatchJobRequest
+	16, // 20: knowcel.ingestion.v1.IngestionService.ReprocessJob:input_type -> knowcel.ingestion.v1.ReprocessJobRequest
+	5,  // 21: knowcel.ingestion.v1.IngestionService.CreateUpload:output_type -> knowcel.ingestion.v1.CreateUploadResponse
+	9,  // 22: knowcel.ingestion.v1.IngestionService.CompleteUpload:output_type -> knowcel.ingestion.v1.CompleteUploadResponse
+	7,  // 23: knowcel.ingestion.v1.IngestionService.ReplaceUpload:output_type -> knowcel.ingestion.v1.ReplaceUploadResponse
+	11, // 24: knowcel.ingestion.v1.IngestionService.GetJob:output_type -> knowcel.ingestion.v1.GetJobResponse
+	13, // 25: knowcel.ingestion.v1.IngestionService.ListJobs:output_type -> knowcel.ingestion.v1.ListJobsResponse
+	15, // 26: knowcel.ingestion.v1.IngestionService.WatchJob:output_type -> knowcel.ingestion.v1.WatchJobResponse
+	17, // 27: knowcel.ingestion.v1.IngestionService.ReprocessJob:output_type -> knowcel.ingestion.v1.ReprocessJobResponse
+	21, // [21:28] is the sub-list for method output_type
+	14, // [14:21] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_knowcel_ingestion_v1_ingestion_proto_init() }
@@ -1176,7 +1245,7 @@ func file_knowcel_ingestion_v1_ingestion_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_knowcel_ingestion_v1_ingestion_proto_rawDesc), len(file_knowcel_ingestion_v1_ingestion_proto_rawDesc)),
-			NumEnums:      2,
+			NumEnums:      3,
 			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,

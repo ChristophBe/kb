@@ -5,6 +5,8 @@ import {
 } from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 import { toast, useClient, useQuery, useQueryClient } from "@knowcel/module-sdk";
 import {
+  type AccessChoice,
+  AccessPicker,
   Badge,
   Button,
   Card,
@@ -13,9 +15,10 @@ import {
   ErrorMessage,
   formatTime,
   IconButton,
+  isValidAccess,
   PageHeader,
+  PUBLIC_ACCESS,
   SkeletonRows,
-  TeamPicker,
   type Tone,
 } from "@knowcel/ui";
 import { AlertTriangle, FileUp, Upload as UploadIcon, X } from "lucide-react";
@@ -70,9 +73,15 @@ export function Upload() {
   const fileInput = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const { announce, regions } = useAnnouncer();
-  // The teams the next files are shared with; none by default, so uploads stay private.
+  // Added files wait here until the user has confirmed who can read them.
   const { teams } = useMyTeams();
-  const [teamIds, setTeamIds] = useState<string[]>([]);
+  const [staged, setStaged] = useState<File[]>([]);
+  const [choice, setChoice] = useState<AccessChoice>(PUBLIC_ACCESS);
+  const accessStep = useRef<HTMLDivElement>(null);
+  const stage = (files: File[]) => {
+    if (files.length === 0) return;
+    setStaged((s) => [...s, ...files]);
+  };
   const jobs = useQuery({
     queryKey: ["ingestion-jobs"],
     queryFn: () => client.listJobs({ page: { pageSize: 50 } }),
@@ -97,6 +106,24 @@ export function Upload() {
     putWithProgress,
     events,
   );
+
+  // The access step is new content: focus moves into it.
+  const hasStaged = staged.length > 0;
+  useEffect(() => {
+    if (hasStaged) accessStep.current?.querySelector<HTMLElement>("input")?.focus();
+  }, [hasStaged]);
+
+  const confirmAccess = () => {
+    add(staged, choice.team ? choice.teamIds : []);
+    setStaged([]);
+    setChoice(PUBLIC_ACCESS);
+    setFocusAfter("choose");
+  };
+  const cancelAccess = () => {
+    setStaged([]);
+    setChoice(PUBLIC_ACCESS);
+    setFocusAfter("choose");
+  };
 
   // Focus moves once the rows have rendered: to a row control, or back to "Choose files".
   useEffect(() => {
@@ -148,17 +175,6 @@ export function Upload() {
         title="Ingestion"
         description="Upload documents to add them to the knowledge base."
       />
-      {teams.length > 0 && (
-        <div className="mb-4">
-          <TeamPicker
-            legend="Share new uploads with"
-            hint="Members of the chosen teams can find and read the documents. Leave all unchecked to keep them private."
-            options={teams.map((t) => ({ id: t.id, name: t.name }))}
-            selected={teamIds}
-            onChange={setTeamIds}
-          />
-        </div>
-      )}
       {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: drag and drop is a pointer shortcut; keyboard users use "Choose files". */}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: same reason. */}
       <div
@@ -170,7 +186,7 @@ export function Upload() {
         onDrop={(e) => {
           e.preventDefault();
           setDragging(false);
-          add(Array.from(e.dataTransfer.files), teamIds);
+          stage(Array.from(e.dataTransfer.files));
         }}
         className={`mb-6 flex flex-col items-center gap-2 rounded-card border-2 border-dashed p-10 text-sm text-fg-muted transition-colors ${dragging ? "border-accent bg-accent-subtle" : "border-accent/40 bg-accent-subtle/40"}`}
       >
@@ -200,11 +216,48 @@ export function Upload() {
           aria-hidden="true"
           className="sr-only"
           onChange={(e) => {
-            add(Array.from(e.target.files ?? []), teamIds);
+            stage(Array.from(e.target.files ?? []));
             e.target.value = "";
           }}
         />
       </div>
+      {staged.length > 0 && (
+        <form
+          className="mb-6 rounded-card border border-border p-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (isValidAccess(choice)) confirmAccess();
+          }}
+        >
+          <p className="mb-3 text-sm">
+            {staged.length === 1 ? (
+              <span className="font-medium">{staged[0]?.name}</span>
+            ) : (
+              <span className="font-medium">{staged.length} files</span>
+            )}{" "}
+            {staged.length === 1 ? "is" : "are"} ready to upload.
+          </p>
+          <div ref={accessStep}>
+            <AccessPicker
+              legend="Who can read this?"
+              teams={teams.map((t) => ({ id: t.id, name: t.name }))}
+              value={choice}
+              onChange={setChoice}
+            />
+          </div>
+          {choice.team && choice.teamIds.length === 0 && (
+            <p className="mt-2 text-xs text-fg-muted">Choose at least one team.</p>
+          )}
+          <div className="mt-4 flex gap-2">
+            <Button type="submit" disabled={!isValidAccess(choice)}>
+              Upload
+            </Button>
+            <Button type="button" variant="secondary" onClick={cancelAccess}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      )}
       {regions}
       <h2 className="mb-2 font-medium">Uploads</h2>
       <ErrorMessage error={jobs.error} />
@@ -221,10 +274,14 @@ export function Upload() {
               <UploadItem
                 key={u.key}
                 upload={u}
-                sharedWith={u.teamIds
-                  .map((id) => teams.find((t) => t.id === id)?.name)
-                  .filter(Boolean)
-                  .join(", ")}
+                access={
+                  u.teamIds.length === 0
+                    ? "Public"
+                    : `Team: ${u.teamIds
+                        .map((id) => teams.find((t) => t.id === id)?.name)
+                        .filter(Boolean)
+                        .join(", ")}`
+                }
                 onRetry={() => {
                   retry(u.key);
                   setFocusAfter(`upload-${u.key}`);
@@ -285,13 +342,13 @@ export function Upload() {
 
 function UploadItem({
   upload,
-  sharedWith,
+  access,
   onRetry,
   onRemove,
 }: {
   upload: UploadRow;
-  /** The names of the teams the file is shared with; empty for a private upload. */
-  sharedWith: string;
+  /** Who can read the document: "Public" or the names of its teams. */
+  access: string;
   onRetry: () => void;
   onRemove: () => void;
 }) {
@@ -304,7 +361,7 @@ function UploadItem({
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2">
       <span className="min-w-0 flex-1 truncate font-medium">{file.name}</span>
-      {sharedWith && <span className="text-fg-muted">Shared with {sharedWith}</span>}
+      <span className="text-fg-muted">{access}</span>
       {status === "waiting" && <span className="text-fg-muted">Waiting</span>}
       {status === "uploading" && <ProgressBar percent={percent} label={`Uploading ${file.name}`} />}
       {(status === "failed" || status === "rejected") && (

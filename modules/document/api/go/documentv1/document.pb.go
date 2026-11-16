@@ -23,6 +23,60 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Access says who can read a document. An owner who wants to restrict one
+// attaches it to a team; there is no owner-only level.
+type Access int32
+
+const (
+	// Treated as ACCESS_PUBLIC where a request sets an access.
+	Access_ACCESS_UNSPECIFIED Access = 0
+	// Every signed-in user can read the document.
+	Access_ACCESS_PUBLIC Access = 1
+	// Its owner and the members of its teams can read the document.
+	Access_ACCESS_TEAM Access = 2
+)
+
+// Enum value maps for Access.
+var (
+	Access_name = map[int32]string{
+		0: "ACCESS_UNSPECIFIED",
+		1: "ACCESS_PUBLIC",
+		2: "ACCESS_TEAM",
+	}
+	Access_value = map[string]int32{
+		"ACCESS_UNSPECIFIED": 0,
+		"ACCESS_PUBLIC":      1,
+		"ACCESS_TEAM":        2,
+	}
+)
+
+func (x Access) Enum() *Access {
+	p := new(Access)
+	*p = x
+	return p
+}
+
+func (x Access) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Access) Descriptor() protoreflect.EnumDescriptor {
+	return file_knowcel_document_v1_document_proto_enumTypes[0].Descriptor()
+}
+
+func (Access) Type() protoreflect.EnumType {
+	return &file_knowcel_document_v1_document_proto_enumTypes[0]
+}
+
+func (x Access) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Access.Descriptor instead.
+func (Access) EnumDescriptor() ([]byte, []int) {
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{0}
+}
+
 type DocumentStatus int32
 
 const (
@@ -65,11 +119,11 @@ func (x DocumentStatus) String() string {
 }
 
 func (DocumentStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_knowcel_document_v1_document_proto_enumTypes[0].Descriptor()
+	return file_knowcel_document_v1_document_proto_enumTypes[1].Descriptor()
 }
 
 func (DocumentStatus) Type() protoreflect.EnumType {
-	return &file_knowcel_document_v1_document_proto_enumTypes[0]
+	return &file_knowcel_document_v1_document_proto_enumTypes[1]
 }
 
 func (x DocumentStatus) Number() protoreflect.EnumNumber {
@@ -78,7 +132,7 @@ func (x DocumentStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DocumentStatus.Descriptor instead.
 func (DocumentStatus) EnumDescriptor() ([]byte, []int) {
-	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{0}
+	return file_knowcel_document_v1_document_proto_rawDescGZIP(), []int{1}
 }
 
 type Document struct {
@@ -109,9 +163,12 @@ type Document struct {
 	// The new version being uploaded or processed, or the last one that failed;
 	// unset when there is none.
 	PendingVersion *PendingVersion `protobuf:"bytes,15,opt,name=pending_version,json=pendingVersion,proto3" json:"pending_version,omitempty"`
-	// The teams the document is shared with, whose members can read it. The
-	// owner sees all of them; anyone else only those they are a member of.
-	TeamIds       []string `protobuf:"bytes,16,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
+	// The teams the document is shared with, whose members can read it. Only
+	// ACCESS_TEAM documents have teams. The owner sees all of them; anyone else
+	// only those they are a member of.
+	TeamIds []string `protobuf:"bytes,16,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
+	// Who can read the document: never ACCESS_UNSPECIFIED.
+	Access        Access `protobuf:"varint,17,opt,name=access,proto3,enum=knowcel.document.v1.Access" json:"access,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -256,6 +313,13 @@ func (x *Document) GetTeamIds() []string {
 		return x.TeamIds
 	}
 	return nil
+}
+
+func (x *Document) GetAccess() Access {
+	if x != nil {
+		return x.Access
+	}
+	return Access_ACCESS_UNSPECIFIED
 }
 
 // PendingVersion is a new file for a document, from ReplaceContent. While it
@@ -573,8 +637,11 @@ type CreateDocumentRequest struct {
 	// Optional SHA-256 of the file, in hex. When set, SetDocumentStatus(UPLOADED)
 	// checks the uploaded file against it and fails the document on a mismatch.
 	Sha256 string `protobuf:"bytes,6,opt,name=sha256,proto3" json:"sha256,omitempty"`
-	// Teams to share the document with from the start. The caller must be a
-	// member of each; otherwise the call fails with NOT_FOUND.
+	// Who can read the document; unset means ACCESS_PUBLIC.
+	Access Access `protobuf:"varint,8,opt,name=access,proto3,enum=knowcel.document.v1.Access" json:"access,omitempty"`
+	// The teams of an ACCESS_TEAM document, at least one. The caller must be a
+	// member of each; otherwise the call fails with NOT_FOUND. A public document
+	// takes none (INVALID_ARGUMENT).
 	TeamIds       []string `protobuf:"bytes,7,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -650,6 +717,13 @@ func (x *CreateDocumentRequest) GetSha256() string {
 		return x.Sha256
 	}
 	return ""
+}
+
+func (x *CreateDocumentRequest) GetAccess() Access {
+	if x != nil {
+		return x.Access
+	}
+	return Access_ACCESS_UNSPECIFIED
 }
 
 func (x *CreateDocumentRequest) GetTeamIds() []string {
@@ -1155,7 +1229,8 @@ func (x *UpdateDocumentResponse) GetDocument() *Document {
 // share with the teams they are a member of and stop sharing with any team.
 // An admin of a team the document is shared with may only stop sharing it
 // with their own team; anyone else who can read the document gets
-// PERMISSION_DENIED. A caller who can't see the document gets NOT_FOUND, and
+// PERMISSION_DENIED. A public document has no teams: the call fails with
+// FAILED_PRECONDITION. A caller who can't see the document gets NOT_FOUND, and
 // so does one who names a team they are not a member of. The set applies to
 // the teams the caller sees, so teams they don't belong to stay untouched.
 type SetDocumentTeamsRequest struct {
@@ -2252,7 +2327,7 @@ var File_knowcel_document_v1_document_proto protoreflect.FileDescriptor
 
 const file_knowcel_document_v1_document_proto_rawDesc = "" +
 	"\n" +
-	"\"knowcel/document/v1/document.proto\x12\x13knowcel.document.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eknowcel/common/v1/common.proto\"\xc7\x05\n" +
+	"\"knowcel/document/v1/document.proto\x12\x13knowcel.document.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1eknowcel/common/v1/common.proto\"\xfc\x05\n" +
 	"\bDocument\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x1a\n" +
@@ -2274,7 +2349,8 @@ const file_knowcel_document_v1_document_proto_rawDesc = "" +
 	"\x06sha256\x18\r \x01(\tR\x06sha256\x12\x18\n" +
 	"\aversion\x18\x0e \x01(\x05R\aversion\x12L\n" +
 	"\x0fpending_version\x18\x0f \x01(\v2#.knowcel.document.v1.PendingVersionR\x0ependingVersion\x12\x19\n" +
-	"\bteam_ids\x18\x10 \x03(\tR\ateamIds\x1a;\n" +
+	"\bteam_ids\x18\x10 \x03(\tR\ateamIds\x123\n" +
+	"\x06access\x18\x11 \x01(\x0e2\x1b.knowcel.document.v1.AccessR\x06access\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x82\x02\n" +
@@ -2306,7 +2382,7 @@ const file_knowcel_document_v1_document_proto_rawDesc = "" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x14\n" +
 	"\x05score\x18\x03 \x01(\x02R\x05score\x129\n" +
 	"\n" +
-	"best_chunk\x18\x04 \x01(\v2\x1a.knowcel.document.v1.ChunkR\tbestChunk\"\xd1\x02\n" +
+	"best_chunk\x18\x04 \x01(\v2\x1a.knowcel.document.v1.ChunkR\tbestChunk\"\x86\x03\n" +
 	"\x15CreateDocumentRequest\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12\x1a\n" +
 	"\bfilename\x18\x02 \x01(\tR\bfilename\x12!\n" +
@@ -2314,7 +2390,8 @@ const file_knowcel_document_v1_document_proto_rawDesc = "" +
 	"\n" +
 	"size_bytes\x18\x04 \x01(\x03R\tsizeBytes\x12T\n" +
 	"\bmetadata\x18\x05 \x03(\v28.knowcel.document.v1.CreateDocumentRequest.MetadataEntryR\bmetadata\x12\x16\n" +
-	"\x06sha256\x18\x06 \x01(\tR\x06sha256\x12\x19\n" +
+	"\x06sha256\x18\x06 \x01(\tR\x06sha256\x123\n" +
+	"\x06access\x18\b \x01(\x0e2\x1b.knowcel.document.v1.AccessR\x06access\x12\x19\n" +
 	"\bteam_ids\x18\a \x03(\tR\ateamIds\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
@@ -2419,7 +2496,11 @@ const file_knowcel_document_v1_document_proto_rawDesc = "" +
 	"\x05force\x18\x02 \x01(\bR\x05force\"a\n" +
 	"\x18ReindexDocumentsResponse\x12\x1c\n" +
 	"\trequested\x18\x01 \x01(\x05R\trequested\x12'\n" +
-	"\x0fembedding_model\x18\x02 \x01(\tR\x0eembeddingModel*\xca\x01\n" +
+	"\x0fembedding_model\x18\x02 \x01(\tR\x0eembeddingModel*D\n" +
+	"\x06Access\x12\x16\n" +
+	"\x12ACCESS_UNSPECIFIED\x10\x00\x12\x11\n" +
+	"\rACCESS_PUBLIC\x10\x01\x12\x0f\n" +
+	"\vACCESS_TEAM\x10\x02*\xca\x01\n" +
 	"\x0eDocumentStatus\x12\x1f\n" +
 	"\x1bDOCUMENT_STATUS_UNSPECIFIED\x10\x00\x12\"\n" +
 	"\x1eDOCUMENT_STATUS_PENDING_UPLOAD\x10\x01\x12\x1c\n" +
@@ -2457,120 +2538,123 @@ func file_knowcel_document_v1_document_proto_rawDescGZIP() []byte {
 	return file_knowcel_document_v1_document_proto_rawDescData
 }
 
-var file_knowcel_document_v1_document_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_knowcel_document_v1_document_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_knowcel_document_v1_document_proto_msgTypes = make([]protoimpl.MessageInfo, 41)
 var file_knowcel_document_v1_document_proto_goTypes = []any{
-	(DocumentStatus)(0),               // 0: knowcel.document.v1.DocumentStatus
-	(*Document)(nil),                  // 1: knowcel.document.v1.Document
-	(*PendingVersion)(nil),            // 2: knowcel.document.v1.PendingVersion
-	(*Chunk)(nil),                     // 3: knowcel.document.v1.Chunk
-	(*ScoredChunk)(nil),               // 4: knowcel.document.v1.ScoredChunk
-	(*ScoredDocument)(nil),            // 5: knowcel.document.v1.ScoredDocument
-	(*CreateDocumentRequest)(nil),     // 6: knowcel.document.v1.CreateDocumentRequest
-	(*CreateDocumentResponse)(nil),    // 7: knowcel.document.v1.CreateDocumentResponse
-	(*ReplaceContentRequest)(nil),     // 8: knowcel.document.v1.ReplaceContentRequest
-	(*ReplaceContentResponse)(nil),    // 9: knowcel.document.v1.ReplaceContentResponse
-	(*GetDocumentRequest)(nil),        // 10: knowcel.document.v1.GetDocumentRequest
-	(*GetDocumentResponse)(nil),       // 11: knowcel.document.v1.GetDocumentResponse
-	(*ListDocumentsRequest)(nil),      // 12: knowcel.document.v1.ListDocumentsRequest
-	(*ListDocumentsResponse)(nil),     // 13: knowcel.document.v1.ListDocumentsResponse
-	(*UpdateDocumentRequest)(nil),     // 14: knowcel.document.v1.UpdateDocumentRequest
-	(*UpdateDocumentResponse)(nil),    // 15: knowcel.document.v1.UpdateDocumentResponse
-	(*SetDocumentTeamsRequest)(nil),   // 16: knowcel.document.v1.SetDocumentTeamsRequest
-	(*SetDocumentTeamsResponse)(nil),  // 17: knowcel.document.v1.SetDocumentTeamsResponse
-	(*DeleteDocumentRequest)(nil),     // 18: knowcel.document.v1.DeleteDocumentRequest
-	(*DeleteDocumentResponse)(nil),    // 19: knowcel.document.v1.DeleteDocumentResponse
-	(*SetDocumentStatusRequest)(nil),  // 20: knowcel.document.v1.SetDocumentStatusRequest
-	(*SetDocumentStatusResponse)(nil), // 21: knowcel.document.v1.SetDocumentStatusResponse
-	(*GetDownloadUrlRequest)(nil),     // 22: knowcel.document.v1.GetDownloadUrlRequest
-	(*GetDownloadUrlResponse)(nil),    // 23: knowcel.document.v1.GetDownloadUrlResponse
-	(*ReadContentRequest)(nil),        // 24: knowcel.document.v1.ReadContentRequest
-	(*ReadContentResponse)(nil),       // 25: knowcel.document.v1.ReadContentResponse
-	(*ChunkInput)(nil),                // 26: knowcel.document.v1.ChunkInput
-	(*AddChunksRequest)(nil),          // 27: knowcel.document.v1.AddChunksRequest
-	(*AddChunksResponse)(nil),         // 28: knowcel.document.v1.AddChunksResponse
-	(*ListChunksRequest)(nil),         // 29: knowcel.document.v1.ListChunksRequest
-	(*ListChunksResponse)(nil),        // 30: knowcel.document.v1.ListChunksResponse
-	(*SearchChunksRequest)(nil),       // 31: knowcel.document.v1.SearchChunksRequest
-	(*SearchChunksResponse)(nil),      // 32: knowcel.document.v1.SearchChunksResponse
-	(*SearchDocumentsRequest)(nil),    // 33: knowcel.document.v1.SearchDocumentsRequest
-	(*SearchDocumentsResponse)(nil),   // 34: knowcel.document.v1.SearchDocumentsResponse
-	(*ReindexDocumentsRequest)(nil),   // 35: knowcel.document.v1.ReindexDocumentsRequest
-	(*ReindexDocumentsResponse)(nil),  // 36: knowcel.document.v1.ReindexDocumentsResponse
-	nil,                               // 37: knowcel.document.v1.Document.MetadataEntry
-	nil,                               // 38: knowcel.document.v1.Chunk.MetadataEntry
-	nil,                               // 39: knowcel.document.v1.CreateDocumentRequest.MetadataEntry
-	nil,                               // 40: knowcel.document.v1.UpdateDocumentRequest.MetadataEntry
-	nil,                               // 41: knowcel.document.v1.ChunkInput.MetadataEntry
-	(*timestamppb.Timestamp)(nil),     // 42: google.protobuf.Timestamp
-	(*commonv1.PageRequest)(nil),      // 43: knowcel.common.v1.PageRequest
-	(*commonv1.PageResponse)(nil),     // 44: knowcel.common.v1.PageResponse
+	(Access)(0),                       // 0: knowcel.document.v1.Access
+	(DocumentStatus)(0),               // 1: knowcel.document.v1.DocumentStatus
+	(*Document)(nil),                  // 2: knowcel.document.v1.Document
+	(*PendingVersion)(nil),            // 3: knowcel.document.v1.PendingVersion
+	(*Chunk)(nil),                     // 4: knowcel.document.v1.Chunk
+	(*ScoredChunk)(nil),               // 5: knowcel.document.v1.ScoredChunk
+	(*ScoredDocument)(nil),            // 6: knowcel.document.v1.ScoredDocument
+	(*CreateDocumentRequest)(nil),     // 7: knowcel.document.v1.CreateDocumentRequest
+	(*CreateDocumentResponse)(nil),    // 8: knowcel.document.v1.CreateDocumentResponse
+	(*ReplaceContentRequest)(nil),     // 9: knowcel.document.v1.ReplaceContentRequest
+	(*ReplaceContentResponse)(nil),    // 10: knowcel.document.v1.ReplaceContentResponse
+	(*GetDocumentRequest)(nil),        // 11: knowcel.document.v1.GetDocumentRequest
+	(*GetDocumentResponse)(nil),       // 12: knowcel.document.v1.GetDocumentResponse
+	(*ListDocumentsRequest)(nil),      // 13: knowcel.document.v1.ListDocumentsRequest
+	(*ListDocumentsResponse)(nil),     // 14: knowcel.document.v1.ListDocumentsResponse
+	(*UpdateDocumentRequest)(nil),     // 15: knowcel.document.v1.UpdateDocumentRequest
+	(*UpdateDocumentResponse)(nil),    // 16: knowcel.document.v1.UpdateDocumentResponse
+	(*SetDocumentTeamsRequest)(nil),   // 17: knowcel.document.v1.SetDocumentTeamsRequest
+	(*SetDocumentTeamsResponse)(nil),  // 18: knowcel.document.v1.SetDocumentTeamsResponse
+	(*DeleteDocumentRequest)(nil),     // 19: knowcel.document.v1.DeleteDocumentRequest
+	(*DeleteDocumentResponse)(nil),    // 20: knowcel.document.v1.DeleteDocumentResponse
+	(*SetDocumentStatusRequest)(nil),  // 21: knowcel.document.v1.SetDocumentStatusRequest
+	(*SetDocumentStatusResponse)(nil), // 22: knowcel.document.v1.SetDocumentStatusResponse
+	(*GetDownloadUrlRequest)(nil),     // 23: knowcel.document.v1.GetDownloadUrlRequest
+	(*GetDownloadUrlResponse)(nil),    // 24: knowcel.document.v1.GetDownloadUrlResponse
+	(*ReadContentRequest)(nil),        // 25: knowcel.document.v1.ReadContentRequest
+	(*ReadContentResponse)(nil),       // 26: knowcel.document.v1.ReadContentResponse
+	(*ChunkInput)(nil),                // 27: knowcel.document.v1.ChunkInput
+	(*AddChunksRequest)(nil),          // 28: knowcel.document.v1.AddChunksRequest
+	(*AddChunksResponse)(nil),         // 29: knowcel.document.v1.AddChunksResponse
+	(*ListChunksRequest)(nil),         // 30: knowcel.document.v1.ListChunksRequest
+	(*ListChunksResponse)(nil),        // 31: knowcel.document.v1.ListChunksResponse
+	(*SearchChunksRequest)(nil),       // 32: knowcel.document.v1.SearchChunksRequest
+	(*SearchChunksResponse)(nil),      // 33: knowcel.document.v1.SearchChunksResponse
+	(*SearchDocumentsRequest)(nil),    // 34: knowcel.document.v1.SearchDocumentsRequest
+	(*SearchDocumentsResponse)(nil),   // 35: knowcel.document.v1.SearchDocumentsResponse
+	(*ReindexDocumentsRequest)(nil),   // 36: knowcel.document.v1.ReindexDocumentsRequest
+	(*ReindexDocumentsResponse)(nil),  // 37: knowcel.document.v1.ReindexDocumentsResponse
+	nil,                               // 38: knowcel.document.v1.Document.MetadataEntry
+	nil,                               // 39: knowcel.document.v1.Chunk.MetadataEntry
+	nil,                               // 40: knowcel.document.v1.CreateDocumentRequest.MetadataEntry
+	nil,                               // 41: knowcel.document.v1.UpdateDocumentRequest.MetadataEntry
+	nil,                               // 42: knowcel.document.v1.ChunkInput.MetadataEntry
+	(*timestamppb.Timestamp)(nil),     // 43: google.protobuf.Timestamp
+	(*commonv1.PageRequest)(nil),      // 44: knowcel.common.v1.PageRequest
+	(*commonv1.PageResponse)(nil),     // 45: knowcel.common.v1.PageResponse
 }
 var file_knowcel_document_v1_document_proto_depIdxs = []int32{
-	0,  // 0: knowcel.document.v1.Document.status:type_name -> knowcel.document.v1.DocumentStatus
-	37, // 1: knowcel.document.v1.Document.metadata:type_name -> knowcel.document.v1.Document.MetadataEntry
-	42, // 2: knowcel.document.v1.Document.create_time:type_name -> google.protobuf.Timestamp
-	42, // 3: knowcel.document.v1.Document.update_time:type_name -> google.protobuf.Timestamp
-	2,  // 4: knowcel.document.v1.Document.pending_version:type_name -> knowcel.document.v1.PendingVersion
-	0,  // 5: knowcel.document.v1.PendingVersion.status:type_name -> knowcel.document.v1.DocumentStatus
-	38, // 6: knowcel.document.v1.Chunk.metadata:type_name -> knowcel.document.v1.Chunk.MetadataEntry
-	3,  // 7: knowcel.document.v1.ScoredChunk.chunk:type_name -> knowcel.document.v1.Chunk
-	3,  // 8: knowcel.document.v1.ScoredDocument.best_chunk:type_name -> knowcel.document.v1.Chunk
-	39, // 9: knowcel.document.v1.CreateDocumentRequest.metadata:type_name -> knowcel.document.v1.CreateDocumentRequest.MetadataEntry
-	1,  // 10: knowcel.document.v1.CreateDocumentResponse.document:type_name -> knowcel.document.v1.Document
-	1,  // 11: knowcel.document.v1.ReplaceContentResponse.document:type_name -> knowcel.document.v1.Document
-	1,  // 12: knowcel.document.v1.GetDocumentResponse.document:type_name -> knowcel.document.v1.Document
-	43, // 13: knowcel.document.v1.ListDocumentsRequest.page:type_name -> knowcel.common.v1.PageRequest
-	1,  // 14: knowcel.document.v1.ListDocumentsResponse.documents:type_name -> knowcel.document.v1.Document
-	44, // 15: knowcel.document.v1.ListDocumentsResponse.page:type_name -> knowcel.common.v1.PageResponse
-	40, // 16: knowcel.document.v1.UpdateDocumentRequest.metadata:type_name -> knowcel.document.v1.UpdateDocumentRequest.MetadataEntry
-	1,  // 17: knowcel.document.v1.UpdateDocumentResponse.document:type_name -> knowcel.document.v1.Document
-	1,  // 18: knowcel.document.v1.SetDocumentTeamsResponse.document:type_name -> knowcel.document.v1.Document
-	0,  // 19: knowcel.document.v1.SetDocumentStatusRequest.status:type_name -> knowcel.document.v1.DocumentStatus
-	1,  // 20: knowcel.document.v1.SetDocumentStatusResponse.document:type_name -> knowcel.document.v1.Document
-	41, // 21: knowcel.document.v1.ChunkInput.metadata:type_name -> knowcel.document.v1.ChunkInput.MetadataEntry
-	26, // 22: knowcel.document.v1.AddChunksRequest.chunks:type_name -> knowcel.document.v1.ChunkInput
-	43, // 23: knowcel.document.v1.ListChunksRequest.page:type_name -> knowcel.common.v1.PageRequest
-	3,  // 24: knowcel.document.v1.ListChunksResponse.chunks:type_name -> knowcel.document.v1.Chunk
-	44, // 25: knowcel.document.v1.ListChunksResponse.page:type_name -> knowcel.common.v1.PageResponse
-	4,  // 26: knowcel.document.v1.SearchChunksResponse.results:type_name -> knowcel.document.v1.ScoredChunk
-	4,  // 27: knowcel.document.v1.SearchDocumentsResponse.results:type_name -> knowcel.document.v1.ScoredChunk
-	5,  // 28: knowcel.document.v1.SearchDocumentsResponse.documents:type_name -> knowcel.document.v1.ScoredDocument
-	6,  // 29: knowcel.document.v1.DocumentService.CreateDocument:input_type -> knowcel.document.v1.CreateDocumentRequest
-	8,  // 30: knowcel.document.v1.DocumentService.ReplaceContent:input_type -> knowcel.document.v1.ReplaceContentRequest
-	10, // 31: knowcel.document.v1.DocumentService.GetDocument:input_type -> knowcel.document.v1.GetDocumentRequest
-	12, // 32: knowcel.document.v1.DocumentService.ListDocuments:input_type -> knowcel.document.v1.ListDocumentsRequest
-	14, // 33: knowcel.document.v1.DocumentService.UpdateDocument:input_type -> knowcel.document.v1.UpdateDocumentRequest
-	18, // 34: knowcel.document.v1.DocumentService.DeleteDocument:input_type -> knowcel.document.v1.DeleteDocumentRequest
-	16, // 35: knowcel.document.v1.DocumentService.SetDocumentTeams:input_type -> knowcel.document.v1.SetDocumentTeamsRequest
-	20, // 36: knowcel.document.v1.DocumentService.SetDocumentStatus:input_type -> knowcel.document.v1.SetDocumentStatusRequest
-	22, // 37: knowcel.document.v1.DocumentService.GetDownloadUrl:input_type -> knowcel.document.v1.GetDownloadUrlRequest
-	24, // 38: knowcel.document.v1.DocumentService.ReadContent:input_type -> knowcel.document.v1.ReadContentRequest
-	27, // 39: knowcel.document.v1.DocumentService.AddChunks:input_type -> knowcel.document.v1.AddChunksRequest
-	29, // 40: knowcel.document.v1.DocumentService.ListChunks:input_type -> knowcel.document.v1.ListChunksRequest
-	31, // 41: knowcel.document.v1.DocumentService.SearchChunks:input_type -> knowcel.document.v1.SearchChunksRequest
-	33, // 42: knowcel.document.v1.DocumentService.SearchDocuments:input_type -> knowcel.document.v1.SearchDocumentsRequest
-	35, // 43: knowcel.document.v1.DocumentService.ReindexDocuments:input_type -> knowcel.document.v1.ReindexDocumentsRequest
-	7,  // 44: knowcel.document.v1.DocumentService.CreateDocument:output_type -> knowcel.document.v1.CreateDocumentResponse
-	9,  // 45: knowcel.document.v1.DocumentService.ReplaceContent:output_type -> knowcel.document.v1.ReplaceContentResponse
-	11, // 46: knowcel.document.v1.DocumentService.GetDocument:output_type -> knowcel.document.v1.GetDocumentResponse
-	13, // 47: knowcel.document.v1.DocumentService.ListDocuments:output_type -> knowcel.document.v1.ListDocumentsResponse
-	15, // 48: knowcel.document.v1.DocumentService.UpdateDocument:output_type -> knowcel.document.v1.UpdateDocumentResponse
-	19, // 49: knowcel.document.v1.DocumentService.DeleteDocument:output_type -> knowcel.document.v1.DeleteDocumentResponse
-	17, // 50: knowcel.document.v1.DocumentService.SetDocumentTeams:output_type -> knowcel.document.v1.SetDocumentTeamsResponse
-	21, // 51: knowcel.document.v1.DocumentService.SetDocumentStatus:output_type -> knowcel.document.v1.SetDocumentStatusResponse
-	23, // 52: knowcel.document.v1.DocumentService.GetDownloadUrl:output_type -> knowcel.document.v1.GetDownloadUrlResponse
-	25, // 53: knowcel.document.v1.DocumentService.ReadContent:output_type -> knowcel.document.v1.ReadContentResponse
-	28, // 54: knowcel.document.v1.DocumentService.AddChunks:output_type -> knowcel.document.v1.AddChunksResponse
-	30, // 55: knowcel.document.v1.DocumentService.ListChunks:output_type -> knowcel.document.v1.ListChunksResponse
-	32, // 56: knowcel.document.v1.DocumentService.SearchChunks:output_type -> knowcel.document.v1.SearchChunksResponse
-	34, // 57: knowcel.document.v1.DocumentService.SearchDocuments:output_type -> knowcel.document.v1.SearchDocumentsResponse
-	36, // 58: knowcel.document.v1.DocumentService.ReindexDocuments:output_type -> knowcel.document.v1.ReindexDocumentsResponse
-	44, // [44:59] is the sub-list for method output_type
-	29, // [29:44] is the sub-list for method input_type
-	29, // [29:29] is the sub-list for extension type_name
-	29, // [29:29] is the sub-list for extension extendee
-	0,  // [0:29] is the sub-list for field type_name
+	1,  // 0: knowcel.document.v1.Document.status:type_name -> knowcel.document.v1.DocumentStatus
+	38, // 1: knowcel.document.v1.Document.metadata:type_name -> knowcel.document.v1.Document.MetadataEntry
+	43, // 2: knowcel.document.v1.Document.create_time:type_name -> google.protobuf.Timestamp
+	43, // 3: knowcel.document.v1.Document.update_time:type_name -> google.protobuf.Timestamp
+	3,  // 4: knowcel.document.v1.Document.pending_version:type_name -> knowcel.document.v1.PendingVersion
+	0,  // 5: knowcel.document.v1.Document.access:type_name -> knowcel.document.v1.Access
+	1,  // 6: knowcel.document.v1.PendingVersion.status:type_name -> knowcel.document.v1.DocumentStatus
+	39, // 7: knowcel.document.v1.Chunk.metadata:type_name -> knowcel.document.v1.Chunk.MetadataEntry
+	4,  // 8: knowcel.document.v1.ScoredChunk.chunk:type_name -> knowcel.document.v1.Chunk
+	4,  // 9: knowcel.document.v1.ScoredDocument.best_chunk:type_name -> knowcel.document.v1.Chunk
+	40, // 10: knowcel.document.v1.CreateDocumentRequest.metadata:type_name -> knowcel.document.v1.CreateDocumentRequest.MetadataEntry
+	0,  // 11: knowcel.document.v1.CreateDocumentRequest.access:type_name -> knowcel.document.v1.Access
+	2,  // 12: knowcel.document.v1.CreateDocumentResponse.document:type_name -> knowcel.document.v1.Document
+	2,  // 13: knowcel.document.v1.ReplaceContentResponse.document:type_name -> knowcel.document.v1.Document
+	2,  // 14: knowcel.document.v1.GetDocumentResponse.document:type_name -> knowcel.document.v1.Document
+	44, // 15: knowcel.document.v1.ListDocumentsRequest.page:type_name -> knowcel.common.v1.PageRequest
+	2,  // 16: knowcel.document.v1.ListDocumentsResponse.documents:type_name -> knowcel.document.v1.Document
+	45, // 17: knowcel.document.v1.ListDocumentsResponse.page:type_name -> knowcel.common.v1.PageResponse
+	41, // 18: knowcel.document.v1.UpdateDocumentRequest.metadata:type_name -> knowcel.document.v1.UpdateDocumentRequest.MetadataEntry
+	2,  // 19: knowcel.document.v1.UpdateDocumentResponse.document:type_name -> knowcel.document.v1.Document
+	2,  // 20: knowcel.document.v1.SetDocumentTeamsResponse.document:type_name -> knowcel.document.v1.Document
+	1,  // 21: knowcel.document.v1.SetDocumentStatusRequest.status:type_name -> knowcel.document.v1.DocumentStatus
+	2,  // 22: knowcel.document.v1.SetDocumentStatusResponse.document:type_name -> knowcel.document.v1.Document
+	42, // 23: knowcel.document.v1.ChunkInput.metadata:type_name -> knowcel.document.v1.ChunkInput.MetadataEntry
+	27, // 24: knowcel.document.v1.AddChunksRequest.chunks:type_name -> knowcel.document.v1.ChunkInput
+	44, // 25: knowcel.document.v1.ListChunksRequest.page:type_name -> knowcel.common.v1.PageRequest
+	4,  // 26: knowcel.document.v1.ListChunksResponse.chunks:type_name -> knowcel.document.v1.Chunk
+	45, // 27: knowcel.document.v1.ListChunksResponse.page:type_name -> knowcel.common.v1.PageResponse
+	5,  // 28: knowcel.document.v1.SearchChunksResponse.results:type_name -> knowcel.document.v1.ScoredChunk
+	5,  // 29: knowcel.document.v1.SearchDocumentsResponse.results:type_name -> knowcel.document.v1.ScoredChunk
+	6,  // 30: knowcel.document.v1.SearchDocumentsResponse.documents:type_name -> knowcel.document.v1.ScoredDocument
+	7,  // 31: knowcel.document.v1.DocumentService.CreateDocument:input_type -> knowcel.document.v1.CreateDocumentRequest
+	9,  // 32: knowcel.document.v1.DocumentService.ReplaceContent:input_type -> knowcel.document.v1.ReplaceContentRequest
+	11, // 33: knowcel.document.v1.DocumentService.GetDocument:input_type -> knowcel.document.v1.GetDocumentRequest
+	13, // 34: knowcel.document.v1.DocumentService.ListDocuments:input_type -> knowcel.document.v1.ListDocumentsRequest
+	15, // 35: knowcel.document.v1.DocumentService.UpdateDocument:input_type -> knowcel.document.v1.UpdateDocumentRequest
+	19, // 36: knowcel.document.v1.DocumentService.DeleteDocument:input_type -> knowcel.document.v1.DeleteDocumentRequest
+	17, // 37: knowcel.document.v1.DocumentService.SetDocumentTeams:input_type -> knowcel.document.v1.SetDocumentTeamsRequest
+	21, // 38: knowcel.document.v1.DocumentService.SetDocumentStatus:input_type -> knowcel.document.v1.SetDocumentStatusRequest
+	23, // 39: knowcel.document.v1.DocumentService.GetDownloadUrl:input_type -> knowcel.document.v1.GetDownloadUrlRequest
+	25, // 40: knowcel.document.v1.DocumentService.ReadContent:input_type -> knowcel.document.v1.ReadContentRequest
+	28, // 41: knowcel.document.v1.DocumentService.AddChunks:input_type -> knowcel.document.v1.AddChunksRequest
+	30, // 42: knowcel.document.v1.DocumentService.ListChunks:input_type -> knowcel.document.v1.ListChunksRequest
+	32, // 43: knowcel.document.v1.DocumentService.SearchChunks:input_type -> knowcel.document.v1.SearchChunksRequest
+	34, // 44: knowcel.document.v1.DocumentService.SearchDocuments:input_type -> knowcel.document.v1.SearchDocumentsRequest
+	36, // 45: knowcel.document.v1.DocumentService.ReindexDocuments:input_type -> knowcel.document.v1.ReindexDocumentsRequest
+	8,  // 46: knowcel.document.v1.DocumentService.CreateDocument:output_type -> knowcel.document.v1.CreateDocumentResponse
+	10, // 47: knowcel.document.v1.DocumentService.ReplaceContent:output_type -> knowcel.document.v1.ReplaceContentResponse
+	12, // 48: knowcel.document.v1.DocumentService.GetDocument:output_type -> knowcel.document.v1.GetDocumentResponse
+	14, // 49: knowcel.document.v1.DocumentService.ListDocuments:output_type -> knowcel.document.v1.ListDocumentsResponse
+	16, // 50: knowcel.document.v1.DocumentService.UpdateDocument:output_type -> knowcel.document.v1.UpdateDocumentResponse
+	20, // 51: knowcel.document.v1.DocumentService.DeleteDocument:output_type -> knowcel.document.v1.DeleteDocumentResponse
+	18, // 52: knowcel.document.v1.DocumentService.SetDocumentTeams:output_type -> knowcel.document.v1.SetDocumentTeamsResponse
+	22, // 53: knowcel.document.v1.DocumentService.SetDocumentStatus:output_type -> knowcel.document.v1.SetDocumentStatusResponse
+	24, // 54: knowcel.document.v1.DocumentService.GetDownloadUrl:output_type -> knowcel.document.v1.GetDownloadUrlResponse
+	26, // 55: knowcel.document.v1.DocumentService.ReadContent:output_type -> knowcel.document.v1.ReadContentResponse
+	29, // 56: knowcel.document.v1.DocumentService.AddChunks:output_type -> knowcel.document.v1.AddChunksResponse
+	31, // 57: knowcel.document.v1.DocumentService.ListChunks:output_type -> knowcel.document.v1.ListChunksResponse
+	33, // 58: knowcel.document.v1.DocumentService.SearchChunks:output_type -> knowcel.document.v1.SearchChunksResponse
+	35, // 59: knowcel.document.v1.DocumentService.SearchDocuments:output_type -> knowcel.document.v1.SearchDocumentsResponse
+	37, // 60: knowcel.document.v1.DocumentService.ReindexDocuments:output_type -> knowcel.document.v1.ReindexDocumentsResponse
+	46, // [46:61] is the sub-list for method output_type
+	31, // [31:46] is the sub-list for method input_type
+	31, // [31:31] is the sub-list for extension type_name
+	31, // [31:31] is the sub-list for extension extendee
+	0,  // [0:31] is the sub-list for field type_name
 }
 
 func init() { file_knowcel_document_v1_document_proto_init() }
@@ -2584,7 +2668,7 @@ func file_knowcel_document_v1_document_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_knowcel_document_v1_document_proto_rawDesc), len(file_knowcel_document_v1_document_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      2,
 			NumMessages:   41,
 			NumExtensions: 0,
 			NumServices:   1,

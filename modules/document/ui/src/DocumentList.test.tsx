@@ -8,9 +8,12 @@ import { polyfillDialog } from "@knowcel/ui/testing/dialog";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import documents from "./index.tsx";
+import { alice } from "./testing.ts";
 
 /** A document service backed by an in-memory list. */
-function documentService(initial: { id: string; title: string; status: DocumentStatus }[]) {
+function documentService(
+  initial: { id: string; title: string; status: DocumentStatus; ownerId?: string }[],
+) {
   let docs = initial;
   const deleteDocument = vi.fn(({ id }: { id: string }) => {
     docs = docs.filter((d) => d.id !== id);
@@ -42,12 +45,24 @@ describe("DocumentList", () => {
     expect(row("Notes").getByText("Processing")).toBeTruthy();
   });
 
+  it("offers deleting only on the user's own documents", async () => {
+    const { transport } = documentService([
+      { id: "d1", title: "Mine", status: DocumentStatus.READY, ownerId: "alice" },
+      { id: "d2", title: "Theirs", status: DocumentStatus.READY, ownerId: "carol" },
+    ]);
+    renderModule(documents, transport, "/", alice);
+    await screen.findByRole("link", { name: "Theirs" });
+    expect(row("Mine").queryByRole("button", { name: "Delete" })).toBeTruthy();
+    expect(row("Theirs").queryByRole("button", { name: "Delete" })).toBeNull();
+    expect(row("Theirs").getByRole("button", { name: "Download" })).toBeTruthy();
+  });
+
   it("deletes a document after confirming, keeping the focus in the list", async () => {
     const { transport, deleteDocument } = documentService([
-      { id: "d1", title: "Quarterly report", status: DocumentStatus.READY },
-      { id: "d2", title: "Notes", status: DocumentStatus.READY },
+      { id: "d1", title: "Quarterly report", status: DocumentStatus.READY, ownerId: "alice" },
+      { id: "d2", title: "Notes", status: DocumentStatus.READY, ownerId: "alice" },
     ]);
-    renderModule(documents, transport);
+    renderModule(documents, transport, "/", alice);
     await screen.findByRole("link", { name: "Notes" });
     const button = row("Notes").getByRole("button", { name: "Delete" });
     button.focus();
@@ -65,9 +80,9 @@ describe("DocumentList", () => {
 
   it("keeps the document when the deletion is cancelled", async () => {
     const { transport, deleteDocument } = documentService([
-      { id: "d1", title: "Notes", status: DocumentStatus.READY },
+      { id: "d1", title: "Notes", status: DocumentStatus.READY, ownerId: "alice" },
     ]);
-    renderModule(documents, transport);
+    renderModule(documents, transport, "/", alice);
     await screen.findByRole("link", { name: "Notes" });
     const button = row("Notes").getByRole("button", { name: "Delete" });
     button.focus();

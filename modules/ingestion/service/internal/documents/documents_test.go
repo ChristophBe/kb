@@ -128,6 +128,7 @@ func TestReplaceMapsTheDocumentModulesErrors(t *testing.T) {
 		want error
 	}{
 		{"not found", status.Error(codes.NotFound, "document not found"), app.ErrDocumentNotFound},
+		{"not the owner", status.Error(codes.PermissionDenied, "only the owner can change the document"), app.ErrNotOwner},
 		{"busy", grpcserver.WithDetails(codes.FailedPrecondition, "busy", grpcserver.ErrorInfo("knowcel.document.v1", "DOCUMENT_BUSY", nil)), app.ErrDocumentBusy},
 		{"down", status.Error(codes.Unavailable, "down"), app.ErrDocumentsUnavailable},
 	} {

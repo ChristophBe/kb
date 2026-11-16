@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	documentv1 "github.com/ChristophBe/knowcelium/modules/document/api/go/documentv1"
 	"github.com/ChristophBe/knowcelium/modules/document/service/internal/store"
@@ -14,8 +15,8 @@ import (
 )
 
 // access is who a user-facing call is made for: the user, and the teams they
-// belong to, whose shared documents they may read. Without a resolver, or
-// while iam is down, they belong to none and see only their own documents.
+// belong to, whose documents they may read. Without a resolver, or while iam
+// is down, they belong to none and see only public and their own documents.
 type access struct {
 	user string
 	p    grpcserver.Principal
@@ -62,23 +63,55 @@ func parseTeamIDs(field string, raw []string) ([]uuid.UUID, error) {
 	return ids, nil
 }
 
-// shareable parses team ids a document is to be shared with: the caller must
-// belong to each, and a team they don't belong to is not found.
-func (a access) shareable(raw []string) ([]uuid.UUID, error) {
+// requireMember checks that the caller belongs to each team: one they don't
+// belong to is not found, and while iam is down, which of them they belong to
+// is not known.
+func (a access) requireMember(ids []uuid.UUID) error {
+	for _, id := range ids {
+		if a.inTeam(id) {
+			continue
+		}
+		if a.p.Unavailable {
+			return errTeamsUnavailable()
+		}
+		return errTeamNotFound()
+	}
+	return nil
+}
+
+// forDocument validates the access of a new document or an access change,
+// with the teams it is given: unset means public, which takes no team, and a
+// team document takes at least one the caller belongs to.
+func (a access) forDocument(level documentv1.Access, raw []string) (documentv1.Access, []uuid.UUID, error) {
 	ids, err := parseTeamIDs("team_ids", raw)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
-	for _, id := range ids {
-		if !a.inTeam(id) {
-			return nil, errTeamNotFound()
+	switch level {
+	case documentv1.Access_ACCESS_UNSPECIFIED, documentv1.Access_ACCESS_PUBLIC:
+		if len(ids) > 0 {
+			return 0, nil, grpcserver.InvalidArgument(grpcserver.Violation("team_ids", "A public document takes no teams"))
 		}
+		return documentv1.Access_ACCESS_PUBLIC, nil, nil
+	case documentv1.Access_ACCESS_TEAM:
+		if len(ids) == 0 {
+			return 0, nil, grpcserver.InvalidArgument(grpcserver.Violation("team_ids", "A team document needs at least one team"))
+		}
+		if err := a.requireMember(ids); err != nil {
+			return 0, nil, err
+		}
+		return level, ids, nil
+	default:
+		return 0, nil, grpcserver.InvalidArgument(grpcserver.Violation("access", fmt.Sprintf("Unknown access %d", level)))
 	}
-	return ids, nil
 }
 
 func errTeamNotFound() error {
 	return grpcserver.WithDetails(codes.NotFound, "team not found", grpcserver.ErrorInfo(domain, "TEAM_NOT_FOUND", nil))
+}
+
+func errTeamsUnavailable() error {
+	return grpcserver.WithDetails(codes.Unavailable, "teams are unavailable", grpcserver.ErrorInfo(domain, "TEAMS_UNAVAILABLE", nil))
 }
 
 func errSharingNotAllowed(msg string) error {
@@ -140,6 +173,9 @@ func (s *Server) SetDocumentTeams(ctx context.Context, req *documentv1.SetDocume
 	if err != nil {
 		return nil, s.internal("list document teams", err)
 	}
+	if documentv1.Access(doc.Access) == documentv1.Access_ACCESS_PUBLIC {
+		return nil, status.Error(codes.FailedPrecondition, "a public document has no teams")
+	}
 	isOwner := doc.OwnerID == a.user
 	var current []uuid.UUID
 	for _, r := range rows {
@@ -159,10 +195,8 @@ func (s *Server) SetDocumentTeams(ctx context.Context, req *documentv1.SetDocume
 		}
 	}
 	if isOwner {
-		for _, t := range add {
-			if !a.inTeam(t) {
-				return nil, errTeamNotFound()
-			}
+		if err := a.requireMember(add); err != nil {
+			return nil, err
 		}
 	} else {
 		if len(add) > 0 {

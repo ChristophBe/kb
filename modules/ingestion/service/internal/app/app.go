@@ -29,6 +29,9 @@ var (
 	// ErrDocumentNotFound means the document module has no such document (or
 	// it is another user's).
 	ErrDocumentNotFound = errors.New("document not found")
+	// ErrNotOwner means the document is readable by the caller but belongs to
+	// another user, so the caller may not change it.
+	ErrNotOwner = errors.New("only the owner can change the document")
 	// ErrTeamNotFound means a team to share a document with does not exist or
 	// the caller is not in it.
 	ErrTeamNotFound = errors.New("team not found")
@@ -151,7 +154,9 @@ type NewUpload struct {
 	SizeBytes   int64
 	// SHA256 is the file's checksum in hex, empty if the client sent none.
 	SHA256 string
-	// TeamIDs are the teams to share the new document with.
+	// Access is who can read the new document; unset means public.
+	Access ingestionv1.Access
+	// TeamIDs are the teams of a team document.
 	TeamIDs []uuid.UUID
 }
 

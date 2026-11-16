@@ -275,6 +275,25 @@ func TestCreateUploadForwardsTheChecksum(t *testing.T) {
 	}
 }
 
+func TestCreateUploadPassesTheAccessOn(t *testing.T) {
+	docs := &fakeDocuments{}
+	srv := New(app.New(store.NewJobs(&fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}), documents.New(docs), events.NewPublisher(&fakePublisher{})), slog.New(slog.DiscardHandler))
+	team := uuid.NewString()
+	for _, req := range []*ingestionv1.CreateUploadRequest{
+		{Filename: "a.md", SizeBytes: 3},
+		{Filename: "b.md", SizeBytes: 3, Access: ingestionv1.Access_ACCESS_TEAM, TeamIds: []string{team}},
+	} {
+		if _, err := srv.CreateUpload(as(t, alice), req); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// The document module defaults an unset access to public.
+	if len(docs.created) != 2 || docs.created[0].GetAccess() != documentv1.Access_ACCESS_UNSPECIFIED ||
+		docs.created[1].GetAccess() != documentv1.Access_ACCESS_TEAM {
+		t.Errorf("created = %v, want the access passed on as sent", docs.created)
+	}
+}
+
 func TestCreateUploadSharesTheDocumentWithTheTeams(t *testing.T) {
 	docs := &fakeDocuments{}
 	repo := &fakeRepo{jobs: map[uuid.UUID]store.IngestionJob{}}

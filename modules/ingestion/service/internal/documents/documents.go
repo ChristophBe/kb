@@ -36,6 +36,7 @@ func (c *Client) Create(ctx context.Context, upload app.NewUpload) (app.Document
 		ContentType: upload.ContentType,
 		SizeBytes:   upload.SizeBytes,
 		Sha256:      upload.SHA256,
+		Access:      documentv1.Access(upload.Access),
 		TeamIds:     teamIDs,
 	})
 	if status.Code(err) == codes.NotFound && hasReason(err, "TEAM_NOT_FOUND") {
@@ -89,6 +90,8 @@ func (c *Client) Replace(ctx context.Context, id uuid.UUID, upload app.NewUpload
 	switch {
 	case status.Code(err) == codes.NotFound:
 		return app.Document{}, app.ErrDocumentNotFound
+	case status.Code(err) == codes.PermissionDenied:
+		return app.Document{}, app.ErrNotOwner
 	case status.Code(err) == codes.FailedPrecondition && hasReason(err, "DOCUMENT_BUSY"):
 		return app.Document{}, app.ErrDocumentBusy
 	case err != nil:

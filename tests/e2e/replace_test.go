@@ -41,8 +41,8 @@ func TestReplaceContent(t *testing.T) {
 	bobReplace := connect.NewClient[ingestionv1.ReplaceUploadRequest, ingestionv1.ReplaceUploadResponse](bearer(bobToken), kb.gateway+ingestionv1.IngestionService_ReplaceUpload_FullMethodName, opt)
 	if _, err := bobReplace.CallUnary(ctx, connect.NewRequest(&ingestionv1.ReplaceUploadRequest{
 		DocumentId: id, Filename: "x.md", SizeBytes: 1,
-	})); connect.CodeOf(err) != connect.CodeNotFound {
-		t.Errorf("ReplaceUpload as %s: err = %v, want %s", otherUser, err, connect.CodeNotFound)
+	})); connect.CodeOf(err) != connect.CodePermissionDenied {
+		t.Errorf("ReplaceUpload as %s: err = %v, want %s", otherUser, err, connect.CodePermissionDenied)
 	}
 
 	body := "# Volcanoes, revised\n\nBasalt lava flows far because it is runny.\n"

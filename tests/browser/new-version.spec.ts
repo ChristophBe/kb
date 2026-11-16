@@ -14,6 +14,7 @@ test("a new version replaces the file and passages of a document", async ({ page
     mimeType: "text/markdown",
     buffer: Buffer.from("# Glaciers\n\nGlaciers form where snow piles up faster than it melts.\n"),
   });
+  await page.getByRole("button", { name: "Upload", exact: true }).click(); // public
   await expect(
     page.getByRole("listitem").filter({ hasText: filename }).getByText("Done"),
   ).toBeVisible({ timeout: 60_000 });

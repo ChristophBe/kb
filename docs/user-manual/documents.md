@@ -10,7 +10,7 @@ With no documents yet, the page says so; add some in [Ingestion](ingestion.md#up
 
 ## Who can see your documents
 
-A document is private to you until you share it with [teams](teams.md). Only you and the members of those teams can see it in the list, in search results and in chat answers. See [Sharing documents](sharing-documents.md) for how to share, who can change what, and how to stop sharing.
+A document is either **public**, so that every signed-in user can see it, or a **team** document, which only you and the members of its [teams](teams.md) can see. You choose when you add it; public is the default. It shows in the list, in search results and in chat answers accordingly. See [Sharing documents](sharing-documents.md) for who can change what, and how to restrict a document to teams.
 
 ## Understand the status of a document
 

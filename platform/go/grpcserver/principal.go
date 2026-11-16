@@ -21,6 +21,11 @@ type Principal struct {
 	UserID        string
 	PlatformAdmin bool
 	Teams         []Team
+	// Unavailable is set when the principal could not be resolved, for
+	// instance because IAM is down: Teams and PlatformAdmin are then empty
+	// without being known to be. Calls that depend on teams should fail with
+	// UNAVAILABLE rather than treat the caller as having none.
+	Unavailable bool
 }
 
 // TeamIDs returns the ids of all teams the user belongs to.
@@ -77,7 +82,8 @@ const (
 
 // Resolver resolves principals through a ResolveFunc and caches the results.
 // When the lookup fails, for instance because IAM is down, the principal has
-// no teams and no admin rights: owner-only access keeps working.
+// no teams and no admin rights, and is marked Unavailable: access that needs
+// no team keeps working.
 type Resolver struct {
 	resolve ResolveFunc
 	ttl     time.Duration
@@ -113,11 +119,11 @@ func (r *Resolver) Resolve(ctx context.Context, user string) Principal {
 	ttl := r.ttl
 	if err != nil && parent.Err() != nil {
 		// The call itself ended, which says nothing about IAM: do not cache.
-		return Principal{UserID: user}
+		return Principal{UserID: user, Unavailable: true}
 	}
 	if err != nil {
 		r.log.WarnContext(ctx, "resolve caller failed; continuing without teams", "error", err)
-		p, ttl = Principal{}, min(failureTTL, r.ttl)
+		p, ttl = Principal{Unavailable: true}, min(failureTTL, r.ttl)
 	}
 	p.UserID = user
 	r.mu.Lock()

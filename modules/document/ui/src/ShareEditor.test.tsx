@@ -1,3 +1,4 @@
+import { Access } from "@knowcel/document-api/knowcel/document/v1/document_pb";
 import { renderModule } from "@knowcel/module-sdk/testing";
 import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { polyfillDialog } from "@knowcel/ui/testing/dialog";
@@ -12,17 +13,22 @@ const teams = [
 ];
 
 async function sharedWithRow() {
-  const term = await screen.findByText("Shared with", { selector: "dt" });
+  const term = await screen.findByText("Access", { selector: "dt" });
   return within(term.parentElement as HTMLElement);
 }
 
 describe("ShareEditor", () => {
   beforeAll(polyfillDialog);
 
-  it("shows an unshared document as not shared", async () => {
-    const { transport } = sharingService([{ id: "d1", title: "Notes", ownerId: "alice" }], teams);
+  it("shows a public document as public, with nothing to share", async () => {
+    const { transport } = sharingService(
+      [{ id: "d1", title: "Notes", ownerId: "alice", access: Access.PUBLIC }],
+      teams,
+    );
     renderModule(documents, transport, "/d1", alice);
-    expect((await sharedWithRow()).getByText("Not shared")).toBeTruthy();
+    const row = await sharedWithRow();
+    expect(row.getByText("Public")).toBeTruthy();
+    expect(row.queryByRole("button")).toBeNull();
   });
 
   it("lets the owner share the document with chosen teams, and change them later", async () => {
@@ -126,7 +132,7 @@ describe("ShareEditor", () => {
     );
     renderModule(documents, transport, "/d1", alice);
     const row = await sharedWithRow();
-    expect(row.getByText("Shared")).toBeTruthy();
+    expect(row.getByText("Team")).toBeTruthy();
     expect(row.queryByRole("button")).toBeNull();
     expect(screen.queryByRole("alert")).toBeNull();
   });

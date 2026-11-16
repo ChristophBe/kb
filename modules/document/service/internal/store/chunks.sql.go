@@ -136,7 +136,8 @@ FROM (
            (1 - (c.embedding <=> $1::vector))::real AS score
     FROM document.chunks c
     JOIN document.documents d ON d.id = c.document_id
-    WHERE (d.owner_id = $2
+    WHERE (d.access = 1
+           OR d.owner_id = $2
            OR EXISTS (SELECT 1 FROM document.document_teams t
                       WHERE t.document_id = d.id AND t.team_id = ANY($3::uuid[])))
       AND c.embedding_model = $4
@@ -210,7 +211,8 @@ SELECT c.document_id, c.idx, c.text, c.metadata, d.title AS document_title,
        (1 - (c.embedding <=> $1::vector))::real AS score
 FROM document.chunks c
 JOIN document.documents d ON d.id = c.document_id
-WHERE (d.owner_id = $2
+WHERE (d.access = 1
+       OR d.owner_id = $2
        OR EXISTS (SELECT 1 FROM document.document_teams t
                   WHERE t.document_id = d.id AND t.team_id = ANY($3::uuid[])))
   AND c.embedding_model = $4
@@ -238,8 +240,8 @@ type SearchChunksRow struct {
 	Score         float32
 }
 
-// SearchChunks returns the chunks of the owner's documents and of those shared
-// with team_ids that are most similar to the embedding, among those made by
+// SearchChunks returns the chunks of the public documents, the owner's and
+// those of team_ids that are most similar to the embedding, among those made by
 // the same embedding model: vectors of different models are not comparable.
 // The HNSW index yields candidates before the visibility filter applies, so the pool
 // sets hnsw.iterative_scan (store.ConfigurePool) to keep scanning until the

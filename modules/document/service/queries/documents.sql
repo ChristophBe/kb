@@ -1,11 +1,11 @@
 -- Queries taking an owner_id act for that user and find only their documents;
--- those that also take team_ids find the documents shared with any of those
--- teams too (the caller's). The others serve the internal RPCs of the ingestion pipeline, which acts on
+-- those that also take team_ids find the public documents (access 1) and those
+-- of the teams (the caller's) too. The others serve the internal RPCs of the ingestion pipeline, which acts on
 -- any document.
 
 -- name: CreateDocument :one
-INSERT INTO document.documents (id, owner_id, title, filename, content_type, size_bytes, object_key, status, metadata, sha256)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+INSERT INTO document.documents (id, owner_id, title, filename, content_type, size_bytes, object_key, status, metadata, sha256, access)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 RETURNING *;
 
 -- name: GetDocument :one
@@ -14,7 +14,8 @@ SELECT * FROM document.documents WHERE id = $1 AND owner_id = $2;
 -- name: GetVisibleDocument :one
 SELECT d.* FROM document.documents d
 WHERE d.id = sqlc.arg(id)
-  AND (d.owner_id = sqlc.arg(owner_id)
+  AND (d.access = 1
+       OR d.owner_id = sqlc.arg(owner_id)
        OR EXISTS (SELECT 1 FROM document.document_teams t
                   WHERE t.document_id = d.id AND t.team_id = ANY(sqlc.arg(team_ids)::uuid[])));
 
@@ -23,10 +24,10 @@ SELECT * FROM document.documents WHERE id = $1;
 
 -- ListDocuments is keyset-paginated: a page continues after the (created_at, id) of
 -- the last row of the previous one (both after_* NULL for the first page), so
--- rows inserted meanwhile never shift it. It lists the user's documents and
--- those shared with their teams: each of the two sets is read in order from
--- its index (the owner's, and the teams') and cut to a page before they are
--- merged, which an OR of both conditions could not do.
+-- rows inserted meanwhile never shift it. It lists the public documents, the
+-- user's own and those of their teams: each of the three sets is read in order
+-- from its index and cut to a page before they are merged, which an OR of the
+-- conditions could not do.
 -- name: ListDocuments :many
 SELECT d.* FROM document.documents d
 WHERE d.id IN (
@@ -36,6 +37,14 @@ WHERE d.id IN (
          coalesce(sqlc.narg(after_created_at)::timestamptz, 'infinity'),
          coalesce(sqlc.narg(after_id)::uuid, 'ffffffff-ffff-ffff-ffff-ffffffffffff'))
      ORDER BY o.created_at DESC, o.id DESC
+     LIMIT sqlc.arg(max_results))
+    UNION
+    (SELECT p.id FROM document.documents p
+     WHERE p.access = 1
+       AND (p.created_at, p.id) < (
+         coalesce(sqlc.narg(after_created_at)::timestamptz, 'infinity'),
+         coalesce(sqlc.narg(after_id)::uuid, 'ffffffff-ffff-ffff-ffff-ffffffffffff'))
+     ORDER BY p.created_at DESC, p.id DESC
      LIMIT sqlc.arg(max_results))
     UNION
     (SELECT s.id FROM document.documents s

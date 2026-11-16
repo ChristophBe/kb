@@ -69,11 +69,11 @@ type ReindexPublisher interface {
 }
 
 // Server implements DocumentService. Documents belong to the user who uploaded
-// them and can be shared with teams. The RPCs a user calls, and the internal
-// CreateDocument and SearchChunks that services call on a user's behalf
-// (passing the user on), read the user's documents and those shared with the
-// teams they belong to (the call's grpcserver.Principal; without teams, for
-// instance while iam is down, only their own); changing or deleting a
+// them and are public or attached to teams. The RPCs a user calls, and the
+// internal CreateDocument and SearchChunks that services call on a user's
+// behalf (passing the user on), read the public documents, the user's own and
+// those of the teams they belong to (the call's grpcserver.Principal; without
+// teams, for instance while iam is down, only the first two); changing or deleting a
 // document is the owner's alone, and anything the caller can't read is
 // reported as not found. The other internal RPCs serve the ingestion
 // pipeline, which runs without a user, and act on any document.
@@ -124,7 +124,7 @@ func (s *Server) CreateDocument(ctx context.Context, req *documentv1.CreateDocum
 	if len(violations) > 0 {
 		return nil, grpcserver.InvalidArgument(violations...)
 	}
-	teams, err := a.shareable(req.GetTeamIds())
+	level, teams, err := a.forDocument(req.GetAccess(), req.GetTeamIds())
 	if err != nil {
 		return nil, err
 	}
@@ -145,6 +145,7 @@ func (s *Server) CreateDocument(ctx context.Context, req *documentv1.CreateDocum
 		Status:      int16(documentv1.DocumentStatus_DOCUMENT_STATUS_PENDING_UPLOAD),
 		Metadata:    nonNil(req.GetMetadata()),
 		Sha256:      checksum,
+		Access:      int16(level),
 	})
 	if err != nil {
 		return nil, s.internal("create document", err)
@@ -494,7 +495,7 @@ func (s *Server) ListChunks(ctx context.Context, req *documentv1.ListChunksReque
 }
 
 // SearchChunks searches the chunks of the documents the calling user can read
-// (their own and those shared with their teams); chat calls it on behalf of
+// (public, their own and those of their teams); chat calls it on behalf of
 // the user asking.
 func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksRequest) (*documentv1.SearchChunksResponse, error) {
 	a, err := accessOf(ctx)
@@ -686,8 +687,8 @@ func (s *Server) get(ctx context.Context, rawID string) (access, store.DocumentD
 	return a, doc, err
 }
 
-// getVisible returns a document its owner or a member of a team it is shared
-// with can read; for anyone else it is not found.
+// getVisible returns a document if it is public, or the caller owns it or is a
+// member of one of its teams; for anyone else it is not found.
 func (s *Server) getVisible(ctx context.Context, a access, id uuid.UUID) (store.DocumentDocument, error) {
 	doc, err := s.repo.GetVisibleDocument(ctx, store.GetVisibleDocumentParams{ID: id, OwnerID: a.user, TeamIds: a.teamIDs()})
 	if err != nil {
@@ -829,5 +830,6 @@ func toProto(d store.DocumentDocument) *documentv1.Document {
 		Sha256:         d.Sha256,
 		Version:        d.Version,
 		PendingVersion: pendingProto(d),
+		Access:         documentv1.Access(d.Access),
 	}
 }

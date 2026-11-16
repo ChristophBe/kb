@@ -1,4 +1,5 @@
 import {
+  Access,
   type Document,
   DocumentService,
 } from "@knowcel/document-api/knowcel/document/v1/document_pb";
@@ -12,8 +13,9 @@ import { SharedWith } from "./SharedWith.tsx";
 import { useMyTeams } from "./useMyTeams.ts";
 
 /**
- * The teams a document is shared with, and a dialog to change them: the owner
- * picks among their teams; a team admin can only stop sharing with their team.
+ * Who can read a document and, for a team document, a dialog to change its
+ * teams: the owner picks among their teams; a team admin can only stop sharing
+ * with their team.
  */
 export function ShareEditor({ document: d }: { document: Document }) {
   const client = useClient(DocumentService);
@@ -35,7 +37,7 @@ export function ShareEditor({ document: d }: { document: Document }) {
       disabled: !isOwner && team?.myRole !== TeamRole.ADMIN,
     };
   });
-  const canChange = known && options.some((o) => !o.disabled);
+  const canChange = d.access === Access.TEAM && known && options.some((o) => !o.disabled);
 
   const close = () => {
     setSelected(null);
@@ -60,11 +62,7 @@ export function ShareEditor({ document: d }: { document: Document }) {
 
   return (
     <>
-      {d.teamIds.length > 0 ? (
-        <SharedWith teamIds={d.teamIds} />
-      ) : (
-        <span className="text-fg-muted">Not shared</span>
-      )}
+      <SharedWith access={d.access} teamIds={d.teamIds} />
       {canChange && (
         <Button
           ref={shareButton}

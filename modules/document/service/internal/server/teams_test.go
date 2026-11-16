@@ -36,9 +36,9 @@ func asUser(t *testing.T, user string, teams []uuid.UUID, admin ...uuid.UUID) co
 	return grpcserver.WithPrincipal(t.Context(), p)
 }
 
-// sharedRepo has alice's document shared with team A.
+// sharedRepo has alice's team document, shared with team A.
 func sharedRepo() (*fakeRepo, store.DocumentDocument) {
-	doc := store.DocumentDocument{ID: uuid.New(), OwnerID: alice, ObjectKey: "k"}
+	doc := store.DocumentDocument{ID: uuid.New(), OwnerID: alice, ObjectKey: "k", Access: int16(documentv1.Access_ACCESS_TEAM)}
 	return &fakeRepo{doc: doc, list: []store.DocumentDocument{doc}, shared: map[uuid.UUID][]uuid.UUID{doc.ID: {teamA}}}, doc
 }
 
@@ -131,10 +131,13 @@ func TestCreateDocumentSharesWithTheCallersTeams(t *testing.T) {
 	repo := &fakeRepo{}
 	s := newServer(repo)
 	resp, err := s.CreateDocument(asUser(t, alice, []uuid.UUID{teamA, teamB}), &documentv1.CreateDocumentRequest{
-		Filename: "a.md", SizeBytes: 1, TeamIds: []string{teamB.String(), teamA.String(), teamA.String()},
+		Filename: "a.md", SizeBytes: 1, Access: documentv1.Access_ACCESS_TEAM, TeamIds: []string{teamB.String(), teamA.String(), teamA.String()},
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+	if got := repo.created[0].Access; got != int16(documentv1.Access_ACCESS_TEAM) {
+		t.Errorf("created with access %d, want TEAM", got)
 	}
 	if len(repo.applied) != 1 || len(repo.applied[0].add) != 2 || len(repo.applied[0].remove) != 0 {
 		t.Errorf("applied = %+v, want both teams added once", repo.applied)
@@ -147,23 +150,98 @@ func TestCreateDocumentSharesWithTheCallersTeams(t *testing.T) {
 func TestCreateDocumentRejectsTeamsTheCallerDoesNotBelongTo(t *testing.T) {
 	repo := &fakeRepo{}
 	s := newServer(repo)
-	for name, ctx := range map[string]context.Context{
-		"another team":    asUser(t, alice, []uuid.UUID{teamB}),
-		"iam unavailable": asAlice(t),
+	for name, tc := range map[string]struct {
+		ctx  context.Context
+		want codes.Code
+	}{
+		"another team":    {asUser(t, alice, []uuid.UUID{teamB}), codes.NotFound},
+		"no team":         {asAlice(t), codes.NotFound},
+		"iam unavailable": {grpcserver.WithPrincipal(t.Context(), grpcserver.Principal{UserID: alice, Unavailable: true}), codes.Unavailable},
 	} {
 		t.Run(name, func(t *testing.T) {
-			_, err := s.CreateDocument(ctx, &documentv1.CreateDocumentRequest{Filename: "a.md", SizeBytes: 1, TeamIds: []string{teamA.String()}})
-			if status.Code(err) != codes.NotFound {
-				t.Errorf("err = %v, want NotFound", err)
+			_, err := s.CreateDocument(tc.ctx, &documentv1.CreateDocumentRequest{
+				Filename: "a.md", SizeBytes: 1, Access: documentv1.Access_ACCESS_TEAM, TeamIds: []string{teamA.String()},
+			})
+			if status.Code(err) != tc.want {
+				t.Errorf("err = %v, want %v", err, tc.want)
 			}
 			if len(repo.created) != 0 {
 				t.Errorf("a document was created: %+v", repo.created)
 			}
 		})
 	}
-	_, err := s.CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{Filename: "a.md", SizeBytes: 1, TeamIds: []string{"x"}})
+	_, err := s.CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{
+		Filename: "a.md", SizeBytes: 1, Access: documentv1.Access_ACCESS_TEAM, TeamIds: []string{"x"},
+	})
 	if status.Code(err) != codes.InvalidArgument {
 		t.Errorf("invalid id: %v, want InvalidArgument", err)
+	}
+}
+
+func TestCreateDocumentValidatesAccess(t *testing.T) {
+	repo := &fakeRepo{}
+	s := newServer(repo)
+	member := asUser(t, alice, []uuid.UUID{teamA})
+	for name, req := range map[string]*documentv1.CreateDocumentRequest{
+		"a team document without teams": {Access: documentv1.Access_ACCESS_TEAM},
+		"a public document with teams":  {Access: documentv1.Access_ACCESS_PUBLIC, TeamIds: []string{teamA.String()}},
+		"an unset access with teams":    {TeamIds: []string{teamA.String()}},
+		"an unknown access":             {Access: 9},
+	} {
+		t.Run(name, func(t *testing.T) {
+			req.Filename, req.SizeBytes = "a.md", 1
+			if _, err := s.CreateDocument(member, req); status.Code(err) != codes.InvalidArgument {
+				t.Errorf("err = %v, want InvalidArgument", err)
+			}
+		})
+	}
+	if len(repo.created) != 0 {
+		t.Errorf("a document was created: %+v", repo.created)
+	}
+}
+
+func TestCreateDocumentIsPublicUnlessSaidOtherwise(t *testing.T) {
+	repo := &fakeRepo{}
+	s := newServer(repo)
+	for _, level := range []documentv1.Access{documentv1.Access_ACCESS_UNSPECIFIED, documentv1.Access_ACCESS_PUBLIC} {
+		resp, err := s.CreateDocument(asAlice(t), &documentv1.CreateDocumentRequest{Filename: "a.md", SizeBytes: 1, Access: level})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := resp.GetDocument().GetAccess(); got != documentv1.Access_ACCESS_PUBLIC {
+			t.Errorf("access %v gave %v, want PUBLIC", level, got)
+		}
+	}
+	if len(repo.applied) != 0 {
+		t.Errorf("applied teams %+v to a public document", repo.applied)
+	}
+}
+
+func TestEveryoneReadsAPublicDocument(t *testing.T) {
+	doc := store.DocumentDocument{ID: uuid.New(), OwnerID: alice, ObjectKey: "k", Access: int16(documentv1.Access_ACCESS_PUBLIC)}
+	s := newServer(&fakeRepo{doc: doc, list: []store.DocumentDocument{doc}})
+	for name, ctx := range map[string]context.Context{
+		"user without teams": asUser(t, bob, nil),
+		"without a resolver": grpcserver.WithUser(t.Context(), bob),
+		"iam unavailable":    grpcserver.WithPrincipal(t.Context(), grpcserver.Principal{UserID: bob, Unavailable: true}),
+	} {
+		t.Run(name, func(t *testing.T) {
+			got, err := s.GetDocument(ctx, &documentv1.GetDocumentRequest{Id: doc.ID.String()})
+			if err != nil || got.GetDocument().GetAccess() != documentv1.Access_ACCESS_PUBLIC {
+				t.Errorf("get = %v, %v; want the public document", got, err)
+			}
+			if list, err := s.ListDocuments(ctx, &documentv1.ListDocumentsRequest{}); err != nil || len(list.GetDocuments()) != 1 {
+				t.Errorf("list = %v, %v; want the public document", list.GetDocuments(), err)
+			}
+		})
+	}
+	// Only the owner changes it.
+	if _, err := s.DeleteDocument(asUser(t, bob, nil), &documentv1.DeleteDocumentRequest{Id: doc.ID.String()}); status.Code(err) != codes.PermissionDenied {
+		t.Errorf("delete by another user: %v, want PermissionDenied", err)
+	}
+	// It has no teams to set.
+	if _, err := s.SetDocumentTeams(asUser(t, alice, []uuid.UUID{teamA}), &documentv1.SetDocumentTeamsRequest{Id: doc.ID.String(), TeamIds: []string{teamA.String()}}); status.Code(err) != codes.FailedPrecondition {
+		t.Errorf("set teams of a public document: %v, want FailedPrecondition", err)
 	}
 }
 

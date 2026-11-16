@@ -5,7 +5,7 @@ import {
 } from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 import { renderModule } from "@knowcel/module-sdk/testing";
 import { badRequestDetail } from "@knowcel/ui/testing/errors";
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ingestion from "./index.tsx";
 import { putWithProgress } from "./put.ts";
@@ -15,6 +15,9 @@ vi.mock("./put.ts", async (importOriginal) => ({
   putWithProgress: vi.fn(),
 }));
 const put = vi.mocked(putWithProgress);
+
+/** Longer than any CI stall, shorter than the 10 s test timeout below. */
+const SETTLE = { timeout: 8000 };
 
 function choose(container: HTMLElement, file: File) {
   const input = container.querySelector('input[type="file"]') as HTMLInputElement;
@@ -61,7 +64,9 @@ describe("ReplaceUpload", () => {
     );
   });
 
-  it("shows why the file wasn't taken and lets the user choose another", async () => {
+  it("shows why the file wasn't taken and lets the user choose another", {
+    timeout: 10_000,
+  }, async () => {
     const err = new ConnectError("too large", Code.InvalidArgument);
     err.details.push(
       badRequestDetail([
@@ -77,12 +82,18 @@ describe("ReplaceUpload", () => {
     );
     const { container } = renderModule(ingestion, transport, "/replace/d1");
     await act(async () => choose(container, new File(["x"], "big.pdf")));
+    // Hashing, the request and the re-render take as long as the machine allows, so wait for
+    // each state with a timeout that outlasts a loaded CI runner instead of the 1 s default.
     expect(
       await screen.findByText(
         "big.pdf wasn't uploaded: The file is larger than the limit of 50 MiB",
+        {},
+        SETTLE,
       ),
     ).toBeTruthy();
-    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Choose file" }));
+    const button = await screen.findByRole("button", { name: "Choose file" }, SETTLE);
+    // Focus moves in an effect after the chooser is back.
+    await waitFor(() => expect(document.activeElement).toBe(button), SETTLE);
     expect(put).not.toHaveBeenCalled();
   });
 

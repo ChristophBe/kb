@@ -42,11 +42,21 @@ function fakeClient(outcome = JobStatus.DONE) {
 
 /** A put that waits until the test settles it. */
 function controlledPut() {
-  const calls: { url: string; progress: (f: number) => void; settle: (err?: Error) => void }[] = [];
-  const put: Put = (url, _file, _contentType, onProgress, signal) =>
+  const calls: {
+    url: string;
+    file: File;
+    progress: (f: number) => void;
+    settle: (err?: Error) => void;
+  }[] = [];
+  const put: Put = (url, file, _contentType, onProgress, signal) =>
     new Promise((resolve, reject) => {
       signal.addEventListener("abort", () => reject(new DOMException("cancelled", "AbortError")));
-      calls.push({ url, progress: onProgress, settle: (err) => (err ? reject(err) : resolve()) });
+      calls.push({
+        url,
+        file,
+        progress: onProgress,
+        settle: (err) => (err ? reject(err) : resolve()),
+      });
     });
   return { put, calls };
 }
@@ -140,7 +150,8 @@ describe("useUploads", () => {
     act(() => hook.result.current.add([file("a.md"), file("b.md")]));
     await waitFor(() => expect(calls).toHaveLength(2));
 
-    act(() => calls[0]?.progress(0.5));
+    // Hashing finishes in no fixed order, so look the call up by file, not by position.
+    act(() => calls.find((c) => c.file.name === "a.md")?.progress(0.5));
     const byName = () => new Map(hook.result.current.uploads.map((u) => [u.file.name, u]));
     expect(byName().get("a.md")?.progress).toBe(0.5);
     expect(byName().get("b.md")?.progress).toBe(0);

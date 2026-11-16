@@ -79,7 +79,8 @@ test("a document is shared with a team, and its member sees it", async ({ page, 
   // now as a public document, and a signed-in user outside the team can read it.
   await aliceRow.getByRole("link", { name: filename }).click();
   const shared = page.locator("dt:text-is('Access') + dd");
-  await shared.getByRole("button", { name: "Change access" }).click();
+  const actions = page.getByRole("toolbar", { name: "Document actions" });
+  await actions.getByRole("button", { name: "Change access" }).click();
   const dialog = page.getByRole("dialog", { name: "Who can read this document?" });
   await expect(dialog.getByRole("checkbox", { name: team })).toBeChecked();
   await dialog.getByRole("radio", { name: /Public/ }).check();
@@ -91,7 +92,7 @@ test("a document is shared with a team, and its member sees it", async ({ page, 
   ).toBeVisible();
 
   // ... and back to the team.
-  await shared.getByRole("button", { name: "Change access" }).click();
+  await actions.getByRole("button", { name: "Change access" }).click();
   await dialog.getByRole("radio", { name: /Team/ }).check();
   await dialog.getByRole("checkbox", { name: team }).check();
   await dialog.getByRole("button", { name: "Save" }).click();

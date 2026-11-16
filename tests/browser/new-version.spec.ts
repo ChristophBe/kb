@@ -23,9 +23,12 @@ test("a new version replaces the file and passages of a document", async ({ page
   await page.getByRole("link", { name: filename }).click();
   const documentUrl = page.url();
   const version = page.locator("dt", { hasText: "Version" }).locator("..");
-  await expect(version.locator("dd")).toHaveText(/^1\s*Upload new version$/);
+  await expect(version.locator("dd")).toHaveText(/^1$/);
 
-  await version.getByRole("link", { name: "Upload new version" }).click();
+  await page
+    .getByRole("toolbar", { name: "Document actions" })
+    .getByRole("link", { name: "Upload new version" })
+    .click();
   await expect(page.getByRole("heading", { name: "Upload new version" })).toBeVisible();
   const replacement = page.waitForEvent("filechooser");
   await page.getByRole("button", { name: "Choose file" }).click();
@@ -37,7 +40,7 @@ test("a new version replaces the file and passages of a document", async ({ page
 
   // Back on the same document, which takes on the new version once processed.
   await expect(page).toHaveURL(documentUrl);
-  await expect(version.locator("dd")).toHaveText(/^2\s*Upload new version$/, { timeout: 60_000 });
+  await expect(version.locator("dd")).toHaveText(/^2$/, { timeout: 60_000 });
   const file = page.locator("dt", { hasText: "Filename" }).locator("..");
   await expect(file).toContainText(`glacier-${run}-v2.md`);
   await expect(page.getByRole("heading", { name: filename })).toBeVisible();

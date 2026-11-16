@@ -83,6 +83,29 @@ func (r *Repo) ApplyDocumentTeams(ctx context.Context, documentID uuid.UUID, add
 	return tx.Commit(ctx)
 }
 
+// ApplyDocumentAccess sets a document's access and replaces its teams with
+// teams, in one step.
+func (r *Repo) ApplyDocumentAccess(ctx context.Context, documentID uuid.UUID, access int16, teams []uuid.UUID) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck // no-op after commit
+	q := r.WithTx(tx)
+	if err := q.SetDocumentAccess(ctx, SetDocumentAccessParams{ID: documentID, Access: access}); err != nil {
+		return err
+	}
+	if err := q.ClearDocumentTeams(ctx, documentID); err != nil {
+		return err
+	}
+	if len(teams) > 0 {
+		if err := q.AddDocumentTeams(ctx, AddDocumentTeamsParams{DocumentID: documentID, TeamIds: teams}); err != nil {
+			return err
+		}
+	}
+	return tx.Commit(ctx)
+}
+
 // WithLock runs fn while holding the Postgres advisory lock key, so that of
 // several replicas only one runs fn at a time. It returns false without
 // running fn when another holds the lock. The lock is held by a transaction

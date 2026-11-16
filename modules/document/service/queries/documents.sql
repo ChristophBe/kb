@@ -63,6 +63,12 @@ LIMIT sqlc.arg(max_results);
 SELECT document_id, team_id FROM document.document_teams
 WHERE document_id = ANY(sqlc.arg(document_ids)::uuid[]);
 
+-- name: SetDocumentAccess :exec
+UPDATE document.documents SET access = $2, updated_at = now() WHERE id = $1;
+
+-- name: ClearDocumentTeams :exec
+DELETE FROM document.document_teams WHERE document_id = $1;
+
 -- AddDocumentTeams and RemoveDocumentTeams are idempotent.
 -- name: AddDocumentTeams :exec
 INSERT INTO document.document_teams (document_id, team_id)

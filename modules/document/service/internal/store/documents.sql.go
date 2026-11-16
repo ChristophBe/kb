@@ -29,6 +29,15 @@ func (q *Queries) AddDocumentTeams(ctx context.Context, arg AddDocumentTeamsPara
 	return err
 }
 
+const clearDocumentTeams = `-- name: ClearDocumentTeams :exec
+DELETE FROM document.document_teams WHERE document_id = $1
+`
+
+func (q *Queries) ClearDocumentTeams(ctx context.Context, documentID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearDocumentTeams, documentID)
+	return err
+}
+
 const createDocument = `-- name: CreateDocument :one
 
 INSERT INTO document.documents (id, owner_id, title, filename, content_type, size_bytes, object_key, status, metadata, sha256, access)
@@ -576,6 +585,20 @@ type SetChunkCountParams struct {
 
 func (q *Queries) SetChunkCount(ctx context.Context, arg SetChunkCountParams) error {
 	_, err := q.db.Exec(ctx, setChunkCount, arg.ID, arg.ChunkCount, arg.Status)
+	return err
+}
+
+const setDocumentAccess = `-- name: SetDocumentAccess :exec
+UPDATE document.documents SET access = $2, updated_at = now() WHERE id = $1
+`
+
+type SetDocumentAccessParams struct {
+	ID     uuid.UUID
+	Access int16
+}
+
+func (q *Queries) SetDocumentAccess(ctx context.Context, arg SetDocumentAccessParams) error {
+	_, err := q.db.Exec(ctx, setDocumentAccess, arg.ID, arg.Access)
 	return err
 }
 

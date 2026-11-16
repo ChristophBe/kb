@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { users } from "./users.ts";
 
-// A document is uploaded to a team, then shared, unshared and shared again from
-// its page, and a member of the team sees it come and go (#269). Unique per run,
+// A document is uploaded to a team, then made public and back to the team from
+// its page, and a member of the team sees its access change (#269, #286). Unique per run,
 // so the test also passes against a stack that already holds earlier runs'
 // documents and teams.
 const run = Date.now().toString(36);
@@ -75,29 +75,30 @@ test("a document is shared with a team, and its member sees it", async ({ page, 
   // The owner's controls are not offered either.
   await expect(bob.getByRole("button", { name: "Delete" })).toHaveCount(0);
 
-  // alice stops sharing from the document's page; bob loses it at once.
+  // alice makes the document public from its page; it stays visible to bob,
+  // now as a public document, and a signed-in user outside the team can read it.
   await aliceRow.getByRole("link", { name: filename }).click();
   const shared = page.locator("dt:text-is('Access') + dd");
-  await shared.getByRole("button", { name: "Share" }).click();
-  const dialog = page.getByRole("dialog", { name: "Share document" });
+  await shared.getByRole("button", { name: "Change access" }).click();
+  const dialog = page.getByRole("dialog", { name: "Who can read this document?" });
   await expect(dialog.getByRole("checkbox", { name: team })).toBeChecked();
-  await dialog.getByRole("checkbox", { name: team }).uncheck();
+  await dialog.getByRole("radio", { name: /Public/ }).check();
   await dialog.getByRole("button", { name: "Save" }).click();
-  await expect(shared.getByText("Team", { exact: true })).toBeVisible();
-  await expect(async () => {
-    await bob.goto("/m/document");
-    await expect(bob.getByRole("table", { name: "Documents" })).toBeVisible({ timeout: 3_000 });
-    await expect(bobRow).toHaveCount(0, { timeout: 3_000 });
-  }).toPass({ timeout: LEARNING_TIME, intervals: [2_000] });
+  await expect(shared.getByText("Public")).toBeVisible();
+  await bob.goto("/m/document");
+  await expect(
+    bob.getByRole("row").filter({ hasText: filename }).getByText("Public"),
+  ).toBeVisible();
 
-  // ... and shares it again.
-  await shared.getByRole("button", { name: "Share" }).click();
+  // ... and back to the team.
+  await shared.getByRole("button", { name: "Change access" }).click();
+  await dialog.getByRole("radio", { name: /Team/ }).check();
   await dialog.getByRole("checkbox", { name: team }).check();
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(shared.getByText(team)).toBeVisible();
   await bob.goto("/m/document");
   await bob.getByRole("checkbox", { name: "Shared with me" }).check();
-  await expect(bobRow).toBeVisible();
+  await expect(bobRow.getByText(team)).toBeVisible();
 
   // Cleanup: alice deletes the document, then the team.
   await page.goto("/m/document");

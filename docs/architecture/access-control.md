@@ -9,7 +9,7 @@ Who may see and change what, and how the services find out. Users, teams and rol
 | Resource | Owner / creator | Team admin | Team member | Platform admin | Other users |
 |---|---|---|---|---|---|
 | Document content, search, chat citations | full | read (public, or attached to their team) | read (public, or attached to their team) | read public only | read public only |
-| Document access and teams (`SetDocumentTeams`) | attach own teams, detach any | remove their own team only | none | none | none |
+| Document access and teams (`SetDocumentAccess`, `SetDocumentTeams`) | change access (public or team) and the teams of a team document, attaching own teams only | remove their own team only | none | none | none |
 | Update, replace, reindex, delete a document | owner only | none | none | none | none |
 | Conversations, ingestion jobs | own only | none | none | none | none |
 | Team | creator becomes first admin | rename, delete, manage members and roles | read team and members, leave | none beyond their own teams | create a team |
@@ -32,6 +32,7 @@ The `document` module owns access: `document.documents.access` is `PUBLIC` (1, t
 
 - **Access at creation:** an unset `access` is `PUBLIC` and takes no teams (`INVALID_ARGUMENT` on field `team_ids` otherwise); `TEAM` needs at least one team. While IAM is down a `TEAM` document fails with `UNAVAILABLE` (reason `TEAMS_UNAVAILABLE`), because the caller's teams are not known.
 - **Sharing** (`modules/document/service/internal/server/teams.go`): `SetDocumentTeams` applies to `TEAM` documents only (`FAILED_PRECONDITION` for a public one). The owner shares only with teams they belong to (otherwise `NOT_FOUND`, reason `TEAM_NOT_FOUND`) and may stop sharing with any team. Anyone else who can see the document may only remove a team they administer; adding teams or removing someone else's gives `PERMISSION_DENIED` (reason `SHARING_NOT_ALLOWED`).
+- **Changing access** (`SetDocumentAccess`): owner only (`PERMISSION_DENIED` for another reader, `NOT_FOUND` for one who can't read the document), with the same validation as at creation. It replaces the document's teams in one transaction, and public takes none.
 - **Teams on a document:** the owner sees all of them, anyone else only those they belong to.
 - **Upload:** ingestion passes `CreateUploadRequest.access` and `team_ids` to `CreateDocument` with the same rules; the UI asks for the access after the files are added and uploads only once it is confirmed. The teams are stored on the job so reprocessing and reindexing republish them. Replacing a document's file keeps its access.
 - **Chat:** chat retrieves through `SearchChunks` as the caller, so citations come only from visible documents.

@@ -217,3 +217,35 @@ func (s *Server) SetDocumentTeams(ctx context.Context, req *documentv1.SetDocume
 	}
 	return &documentv1.SetDocumentTeamsResponse{Document: docs[0]}, nil
 }
+
+// SetDocumentAccess changes who can read a document, which only its owner may
+// do, and replaces its teams: the same rules as at creation apply.
+func (s *Server) SetDocumentAccess(ctx context.Context, req *documentv1.SetDocumentAccessRequest) (*documentv1.SetDocumentAccessResponse, error) {
+	a, err := accessOf(ctx)
+	if err != nil {
+		return nil, err
+	}
+	id, err := parseID("id", req.GetId())
+	if err != nil {
+		return nil, err
+	}
+	if _, err := s.getOwned(ctx, a.user, id); err != nil {
+		return nil, err
+	}
+	level, teams, err := a.forDocument(req.GetAccess(), req.GetTeamIds())
+	if err != nil {
+		return nil, err
+	}
+	if err := s.repo.ApplyDocumentAccess(ctx, id, int16(level), teams); err != nil {
+		return nil, s.internal("set document access", err)
+	}
+	doc, err := s.getOwned(ctx, a.user, id)
+	if err != nil {
+		return nil, err
+	}
+	docs, err := s.protos(ctx, a, doc)
+	if err != nil {
+		return nil, err
+	}
+	return &documentv1.SetDocumentAccessResponse{Document: docs[0]}, nil
+}

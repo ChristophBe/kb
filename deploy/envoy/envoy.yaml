@@ -59,6 +59,8 @@ static_resources:
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.document.v1.DocumentService/SetDocumentTeams" }
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.document.v1.DocumentService/SetDocumentAccess" }
+                          route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.document.v1.DocumentService/GetDownloadUrl" }
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.document.v1.DocumentService/ListChunks" }

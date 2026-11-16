@@ -20,7 +20,7 @@ async function sharedWithRow() {
 describe("ShareEditor", () => {
   beforeAll(polyfillDialog);
 
-  it("shows a public document as public, with nothing to share", async () => {
+  it("shows a public document as public, to its owner with a way to change it", async () => {
     const { transport } = sharingService(
       [{ id: "d1", title: "Notes", ownerId: "alice", access: Access.PUBLIC }],
       teams,
@@ -28,56 +28,84 @@ describe("ShareEditor", () => {
     renderModule(documents, transport, "/d1", alice);
     const row = await sharedWithRow();
     expect(row.getByText("Public")).toBeTruthy();
-    expect(row.queryByRole("button")).toBeNull();
+    expect(row.getByRole("button", { name: "Change access" })).toBeTruthy();
   });
 
-  it("lets the owner share the document with chosen teams, and change them later", async () => {
-    const { transport, setDocumentTeams } = sharingService(
-      [{ id: "d1", title: "Notes", ownerId: "alice" }],
+  it("lets the owner switch a document between public and team", async () => {
+    const { transport, setDocumentAccess } = sharingService(
+      [{ id: "d1", title: "Notes", ownerId: "alice", access: Access.PUBLIC }],
       teams,
     );
     const { container } = renderModule(documents, transport, "/d1", alice);
-    fireEvent.click(await (await sharedWithRow()).findByRole("button", { name: "Share" }));
-    const dialog = within(await screen.findByRole("dialog", { name: "Share document" }));
+    fireEvent.click(await (await sharedWithRow()).findByRole("button", { name: "Change access" }));
+    const dialog = within(
+      await screen.findByRole("dialog", { name: "Who can read this document?" }),
+    );
     await expectNoAxeViolations(container);
+    expect((dialog.getByRole("radio", { name: /Public/ }) as HTMLInputElement).checked).toBe(true);
+    fireEvent.click(dialog.getByRole("radio", { name: /Team/ }));
+    // A team document needs a team.
+    expect((dialog.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(dialog.getByRole("checkbox", { name: "Platform" }));
     fireEvent.click(dialog.getByRole("checkbox", { name: "Support" }));
     fireEvent.click(dialog.getByRole("button", { name: "Save" }));
-    await waitFor(() => expect(setDocumentTeams).toHaveBeenCalledTimes(1));
-    expect(setDocumentTeams.mock.calls[0]?.[0]).toMatchObject({
+    await waitFor(() => expect(setDocumentAccess).toHaveBeenCalledTimes(1));
+    expect(setDocumentAccess.mock.calls[0]?.[0]).toMatchObject({
       id: "d1",
+      access: Access.TEAM,
       teamIds: ["t1", "t2"],
     });
     const row = await sharedWithRow();
     await waitFor(() => expect(row.getByText("Platform")).toBeTruthy());
     expect(row.getByText("Support")).toBeTruthy();
 
-    fireEvent.click(row.getByRole("button", { name: "Share" }));
-    const again = within(await screen.findByRole("dialog", { name: "Share document" }));
+    fireEvent.click(row.getByRole("button", { name: "Change access" }));
+    const again = within(
+      await screen.findByRole("dialog", { name: "Who can read this document?" }),
+    );
     expect((again.getByRole("checkbox", { name: "Platform" }) as HTMLInputElement).checked).toBe(
       true,
     );
-    fireEvent.click(again.getByRole("checkbox", { name: "Platform" }));
+    fireEvent.click(again.getByRole("radio", { name: /Public/ }));
     fireEvent.click(again.getByRole("button", { name: "Save" }));
-    await waitFor(() => expect(setDocumentTeams).toHaveBeenCalledTimes(2));
-    expect(setDocumentTeams.mock.calls[1]?.[0]).toMatchObject({ teamIds: ["t2"] });
+    await waitFor(() => expect(setDocumentAccess).toHaveBeenCalledTimes(2));
+    expect(setDocumentAccess.mock.calls[1]?.[0]).toMatchObject({
+      access: Access.PUBLIC,
+      teamIds: [],
+    });
+    await waitFor(() => expect(row.getByText("Public")).toBeTruthy());
   });
 
   it("explains a team that isn't known yet, and saves on a second try", async () => {
-    const { transport, setDocumentTeams } = sharingService(
-      [{ id: "d1", title: "Notes", ownerId: "alice" }],
+    const { transport, setDocumentAccess } = sharingService(
+      [{ id: "d1", title: "Notes", ownerId: "alice", access: Access.PUBLIC }],
       teams,
       { rejections: 1 },
     );
     renderModule(documents, transport, "/d1", alice);
-    fireEvent.click(await (await sharedWithRow()).findByRole("button", { name: "Share" }));
-    const dialog = within(await screen.findByRole("dialog", { name: "Share document" }));
+    fireEvent.click(await (await sharedWithRow()).findByRole("button", { name: "Change access" }));
+    const dialog = within(
+      await screen.findByRole("dialog", { name: "Who can read this document?" }),
+    );
+    fireEvent.click(dialog.getByRole("radio", { name: /Team/ }));
     fireEvent.click(dialog.getByRole("checkbox", { name: "Platform" }));
     fireEvent.click(dialog.getByRole("button", { name: "Save" }));
     expect((await dialog.findByRole("alert")).textContent).toMatch(/half a minute/);
     fireEvent.click(dialog.getByRole("button", { name: "Save" }));
-    await waitFor(() => expect(setDocumentTeams).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(setDocumentAccess).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("offers no access editor to anyone but the owner", async () => {
+    const { transport } = sharingService(
+      [{ id: "d1", title: "Notes", ownerId: "carol", access: Access.PUBLIC }],
+      teams,
+    );
+    renderModule(documents, transport, "/d1", bob);
+    const row = await sharedWithRow();
+    await waitFor(() => expect(row.getByText("Public")).toBeTruthy());
+    expect(row.queryByRole("button")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Change access" })).toBeNull();
   });
 
   it("lets an admin of a team stop sharing with it, and only with it", async () => {
@@ -124,7 +152,7 @@ describe("ShareEditor", () => {
     expect(row.queryByRole("button")).toBeNull();
   });
 
-  it("still shows the document without IAM, without naming teams or offering to share", async () => {
+  it("without IAM names no teams, and the owner can still make the document public", async () => {
     const { transport } = sharingService(
       [{ id: "d1", title: "Notes", ownerId: "alice", teamIds: ["t1"] }],
       teams,
@@ -133,7 +161,12 @@ describe("ShareEditor", () => {
     renderModule(documents, transport, "/d1", alice);
     const row = await sharedWithRow();
     expect(row.getByText("Team")).toBeTruthy();
-    expect(row.queryByRole("button")).toBeNull();
     expect(screen.queryByRole("alert")).toBeNull();
+    fireEvent.click(row.getByRole("button", { name: "Change access" }));
+    const dialog = within(
+      await screen.findByRole("dialog", { name: "Who can read this document?" }),
+    );
+    // The teams can't be looked up, but the document's own team is kept.
+    expect((dialog.getByRole("radio", { name: /Public/ }) as HTMLInputElement).checked).toBe(false);
   });
 });

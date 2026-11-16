@@ -261,6 +261,22 @@ class SetDocumentTeamsResponse(_message.Message):
     document: Document
     def __init__(self, document: _Optional[_Union[Document, _Mapping]] = ...) -> None: ...
 
+class SetDocumentAccessRequest(_message.Message):
+    __slots__ = ("id", "access", "team_ids")
+    ID_FIELD_NUMBER: _ClassVar[int]
+    ACCESS_FIELD_NUMBER: _ClassVar[int]
+    TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
+    id: str
+    access: Access
+    team_ids: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, id: _Optional[str] = ..., access: _Optional[_Union[Access, str]] = ..., team_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class SetDocumentAccessResponse(_message.Message):
+    __slots__ = ("document",)
+    DOCUMENT_FIELD_NUMBER: _ClassVar[int]
+    document: Document
+    def __init__(self, document: _Optional[_Union[Document, _Mapping]] = ...) -> None: ...
+
 class DeleteDocumentRequest(_message.Message):
     __slots__ = ("id",)
     ID_FIELD_NUMBER: _ClassVar[int]

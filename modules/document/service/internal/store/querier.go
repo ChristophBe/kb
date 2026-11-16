@@ -13,6 +13,7 @@ import (
 type Querier interface {
 	// AddDocumentTeams and RemoveDocumentTeams are idempotent.
 	AddDocumentTeams(ctx context.Context, arg AddDocumentTeamsParams) error
+	ClearDocumentTeams(ctx context.Context, documentID uuid.UUID) error
 	// Queries taking an owner_id act for that user and find only their documents;
 	// those that also take team_ids find the public documents (access 1) and those
 	// of the teams (the caller's) too. The others serve the internal RPCs of the ingestion pipeline, which acts on
@@ -69,6 +70,7 @@ type Querier interface {
 	// limit is filled.
 	SearchChunks(ctx context.Context, arg SearchChunksParams) ([]SearchChunksRow, error)
 	SetChunkCount(ctx context.Context, arg SetChunkCountParams) error
+	SetDocumentAccess(ctx context.Context, arg SetDocumentAccessParams) error
 	SetDocumentStatus(ctx context.Context, arg SetDocumentStatusParams) (DocumentDocument, error)
 	SetPendingStatus(ctx context.Context, arg SetPendingStatusParams) (DocumentDocument, error)
 	// The pending version's queries: a new file from ReplaceContent that becomes

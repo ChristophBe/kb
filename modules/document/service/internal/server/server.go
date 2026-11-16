@@ -48,6 +48,7 @@ type Repository interface {
 	store.Querier
 	ReplaceChunks(ctx context.Context, documentID uuid.UUID, chunks []store.InsertChunksParams, readyStatus int16) (int32, error)
 	ApplyDocumentTeams(ctx context.Context, documentID uuid.UUID, add, remove []uuid.UUID) error
+	ApplyDocumentAccess(ctx context.Context, documentID uuid.UUID, access int16, teams []uuid.UUID) error
 }
 
 // ObjectStore holds the raw files.

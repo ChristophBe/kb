@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -57,17 +58,8 @@ func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUpload
 		// Nothing could be extracted from an empty file; it would only fail later.
 		violations = append(violations, grpcserver.Violation("size_bytes", "The file is empty"))
 	}
-	teamIDs := make([]uuid.UUID, 0, len(req.GetTeamIds()))
-	for i, raw := range req.GetTeamIds() {
-		id, err := uuid.Parse(raw)
-		if err != nil {
-			violations = append(violations, grpcserver.Violation(fmt.Sprintf("team_ids[%d]", i), fmt.Sprintf("Invalid team id %q", raw)))
-			continue
-		}
-		if !slices.Contains(teamIDs, id) {
-			teamIDs = append(teamIDs, id)
-		}
-	}
+	teamIDs, teamViolations := parseTeamIDs(req.GetTeamIds())
+	violations = append(violations, teamViolations...)
 	if len(violations) > 0 {
 		return nil, grpcserver.InvalidArgument(violations...)
 	}
@@ -84,6 +76,51 @@ func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUpload
 		return nil, s.toStatus("create upload", err)
 	}
 	return &ingestionv1.CreateUploadResponse{Job: toProto(job), UploadUrl: uploadURL}, nil
+}
+
+// CreateFromUrl ingests the page at an address as a new document of the caller.
+func (s *Server) CreateFromUrl(ctx context.Context, req *ingestionv1.CreateFromUrlRequest) (*ingestionv1.CreateFromUrlResponse, error) {
+	owner, err := caller(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var violations []*errdetails.BadRequest_FieldViolation
+	if strings.TrimSpace(req.GetUrl()) == "" {
+		violations = append(violations, grpcserver.Violation("url", "An address is required"))
+	}
+	teamIDs, teamViolations := parseTeamIDs(req.GetTeamIds())
+	violations = append(violations, teamViolations...)
+	if len(violations) > 0 {
+		return nil, grpcserver.InvalidArgument(violations...)
+	}
+	job, err := s.app.CreateFromURL(ctx, owner, app.NewURLImport{
+		URL:     req.GetUrl(),
+		Title:   req.GetTitle(),
+		Access:  req.GetAccess(),
+		TeamIDs: teamIDs,
+	})
+	if err != nil {
+		return nil, s.toStatus("create from url", err)
+	}
+	return &ingestionv1.CreateFromUrlResponse{Job: toProto(job)}, nil
+}
+
+// parseTeamIDs parses the team ids of a request, without duplicates, and
+// returns a violation per invalid one.
+func parseTeamIDs(raw []string) ([]uuid.UUID, []*errdetails.BadRequest_FieldViolation) {
+	var violations []*errdetails.BadRequest_FieldViolation
+	ids := make([]uuid.UUID, 0, len(raw))
+	for i, r := range raw {
+		id, err := uuid.Parse(r)
+		if err != nil {
+			violations = append(violations, grpcserver.Violation(fmt.Sprintf("team_ids[%d]", i), fmt.Sprintf("Invalid team id %q", r)))
+			continue
+		}
+		if !slices.Contains(ids, id) {
+			ids = append(ids, id)
+		}
+	}
+	return ids, violations
 }
 
 // ReplaceUpload starts a new version of the calling user's document.
@@ -256,6 +293,10 @@ func parseID(field, raw string) (uuid.UUID, error) {
 }
 
 func (s *Server) toStatus(op string, err error) error {
+	var fetchFailed *app.FetchError
+	if errors.As(err, &fetchFailed) {
+		return grpcserver.InvalidArgument(grpcserver.Violation("url", fetchFailed.Reason))
+	}
 	var invalid *app.InvalidUploadError
 	if errors.As(err, &invalid) {
 		violations := make([]*errdetails.BadRequest_FieldViolation, 0, len(invalid.Violations))
@@ -265,6 +306,8 @@ func (s *Server) toStatus(op string, err error) error {
 		return grpcserver.InvalidArgument(violations...)
 	}
 	switch {
+	case errors.Is(err, app.ErrURLImportDisabled):
+		return status.Error(codes.Unimplemented, err.Error())
 	case errors.Is(err, app.ErrNotFound):
 		return status.Error(codes.NotFound, err.Error())
 	case errors.Is(err, app.ErrAlreadyCompleted):

@@ -27,7 +27,7 @@ The design drafts in [`docs/ux/`](../ux/) are for contributors; this manual is f
 
 - [Getting started](getting-started.md) — the areas of Knowcelium, your first documents and question, light and dark mode
 - [Sign in](sign-in.md) — signing in, coming back to the page you asked for, expired sessions, seeing who is signed in, signing out
-- [Upload](ingestion.md) — uploading files, choosing the teams to share them with, following their processing, retrying failed uploads and processing
+- [Upload](ingestion.md) — uploading files and adding web pages, choosing the teams to share them with, following their processing, retrying failed uploads and processing
 - [Documents](documents.md) — browsing, opening and reading documents, their status, renaming, metadata, downloading, replacing, deleting
 - [Sharing documents](sharing-documents.md) — who can see a document, sharing it with teams, the Shared with me filter, a team admin stopping sharing
 - [Search](search.md) — one search, from the box in the sidebar or the Search page: documents by their best matching passage, conversations, pages and help sections, and opening a document at that passage

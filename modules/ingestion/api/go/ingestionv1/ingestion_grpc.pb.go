@@ -22,6 +22,7 @@ const (
 	IngestionService_CreateUpload_FullMethodName   = "/knowcel.ingestion.v1.IngestionService/CreateUpload"
 	IngestionService_CompleteUpload_FullMethodName = "/knowcel.ingestion.v1.IngestionService/CompleteUpload"
 	IngestionService_ReplaceUpload_FullMethodName  = "/knowcel.ingestion.v1.IngestionService/ReplaceUpload"
+	IngestionService_CreateFromUrl_FullMethodName  = "/knowcel.ingestion.v1.IngestionService/CreateFromUrl"
 	IngestionService_GetJob_FullMethodName         = "/knowcel.ingestion.v1.IngestionService/GetJob"
 	IngestionService_ListJobs_FullMethodName       = "/knowcel.ingestion.v1.IngestionService/ListJobs"
 	IngestionService_WatchJob_FullMethodName       = "/knowcel.ingestion.v1.IngestionService/WatchJob"
@@ -55,6 +56,13 @@ type IngestionServiceClient interface {
 	// uploaded or processed, fails with FAILED_PRECONDITION (reason
 	// DOCUMENT_BUSY); another user's document is NOT_FOUND.
 	ReplaceUpload(ctx context.Context, in *ReplaceUploadRequest, opts ...grpc.CallOption) (*ReplaceUploadResponse, error)
+	// CreateFromUrl fetches a web page (or a file at an address) and ingests it
+	// as a new document, which takes its title from the page. The job is
+	// returned already QUEUED, so there is nothing to upload or complete. An
+	// address that cannot be used (not http or https, on a private network,
+	// unreachable, too large, of a type the document module does not take) is
+	// rejected with a violation on url; the team rules are those of CreateUpload.
+	CreateFromUrl(ctx context.Context, in *CreateFromUrlRequest, opts ...grpc.CallOption) (*CreateFromUrlResponse, error)
 	GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error)
 	ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
 	// WatchJob streams the job every time it changes until it is terminal.
@@ -97,6 +105,16 @@ func (c *ingestionServiceClient) ReplaceUpload(ctx context.Context, in *ReplaceU
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ReplaceUploadResponse)
 	err := c.cc.Invoke(ctx, IngestionService_ReplaceUpload_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ingestionServiceClient) CreateFromUrl(ctx context.Context, in *CreateFromUrlRequest, opts ...grpc.CallOption) (*CreateFromUrlResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateFromUrlResponse)
+	err := c.cc.Invoke(ctx, IngestionService_CreateFromUrl_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -179,6 +197,13 @@ type IngestionServiceServer interface {
 	// uploaded or processed, fails with FAILED_PRECONDITION (reason
 	// DOCUMENT_BUSY); another user's document is NOT_FOUND.
 	ReplaceUpload(context.Context, *ReplaceUploadRequest) (*ReplaceUploadResponse, error)
+	// CreateFromUrl fetches a web page (or a file at an address) and ingests it
+	// as a new document, which takes its title from the page. The job is
+	// returned already QUEUED, so there is nothing to upload or complete. An
+	// address that cannot be used (not http or https, on a private network,
+	// unreachable, too large, of a type the document module does not take) is
+	// rejected with a violation on url; the team rules are those of CreateUpload.
+	CreateFromUrl(context.Context, *CreateFromUrlRequest) (*CreateFromUrlResponse, error)
 	GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error)
 	ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
 	// WatchJob streams the job every time it changes until it is terminal.
@@ -205,6 +230,9 @@ func (UnimplementedIngestionServiceServer) CompleteUpload(context.Context, *Comp
 }
 func (UnimplementedIngestionServiceServer) ReplaceUpload(context.Context, *ReplaceUploadRequest) (*ReplaceUploadResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ReplaceUpload not implemented")
+}
+func (UnimplementedIngestionServiceServer) CreateFromUrl(context.Context, *CreateFromUrlRequest) (*CreateFromUrlResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateFromUrl not implemented")
 }
 func (UnimplementedIngestionServiceServer) GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetJob not implemented")
@@ -293,6 +321,24 @@ func _IngestionService_ReplaceUpload_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _IngestionService_CreateFromUrl_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateFromUrlRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IngestionServiceServer).CreateFromUrl(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IngestionService_CreateFromUrl_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IngestionServiceServer).CreateFromUrl(ctx, req.(*CreateFromUrlRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _IngestionService_GetJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetJobRequest)
 	if err := dec(in); err != nil {
@@ -376,6 +422,10 @@ var IngestionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReplaceUpload",
 			Handler:    _IngestionService_ReplaceUpload_Handler,
+		},
+		{
+			MethodName: "CreateFromUrl",
+			Handler:    _IngestionService_CreateFromUrl_Handler,
 		},
 		{
 			MethodName: "GetJob",

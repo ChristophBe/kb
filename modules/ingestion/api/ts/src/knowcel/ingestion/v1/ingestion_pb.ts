@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file knowcel/ingestion/v1/ingestion.proto.
  */
 export const file_knowcel_ingestion_v1_ingestion: GenFile = /*@__PURE__*/
-  fileDesc("CiRrbm93Y2VsL2luZ2VzdGlvbi92MS9pbmdlc3Rpb24ucHJvdG8SFGtub3djZWwuaW5nZXN0aW9uLnYxItgCCgNKb2ISCgoCaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSEAoIZmlsZW5hbWUYAyABKAkSFAoMY29udGVudF90eXBlGAQgASgJEi8KBnN0YXR1cxgFIAEoDjIfLmtub3djZWwuaW5nZXN0aW9uLnYxLkpvYlN0YXR1cxINCgVlcnJvchgGIAEoCRITCgtjaHVua19jb3VudBgHIAEoBRIvCgtjcmVhdGVfdGltZRgIIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLwoLdXBkYXRlX3RpbWUYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhAKCHByb2dyZXNzGAogASgFEi0KBXN0YWdlGAsgASgOMh4ua25vd2NlbC5pbmdlc3Rpb24udjEuSm9iU3RhZ2USEAoIb3duZXJfaWQYDCABKAkisAEKE0NyZWF0ZVVwbG9hZFJlcXVlc3QSEAoIZmlsZW5hbWUYASABKAkSFAoMY29udGVudF90eXBlGAIgASgJEhIKCnNpemVfYnl0ZXMYAyABKAMSDQoFdGl0bGUYBCABKAkSDgoGc2hhMjU2GAUgASgJEiwKBmFjY2VzcxgHIAEoDjIcLmtub3djZWwuaW5nZXN0aW9uLnYxLkFjY2VzcxIQCgh0ZWFtX2lkcxgGIAMoCSJSChRDcmVhdGVVcGxvYWRSZXNwb25zZRImCgNqb2IYASABKAsyGS5rbm93Y2VsLmluZ2VzdGlvbi52MS5Kb2ISEgoKdXBsb2FkX3VybBgCIAEoCSJ3ChRSZXBsYWNlVXBsb2FkUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCRIQCghmaWxlbmFtZRgCIAEoCRIUCgxjb250ZW50X3R5cGUYAyABKAkSEgoKc2l6ZV9ieXRlcxgEIAEoAxIOCgZzaGEyNTYYBSABKAkiUwoVUmVwbGFjZVVwbG9hZFJlc3BvbnNlEiYKA2pvYhgBIAEoCzIZLmtub3djZWwuaW5nZXN0aW9uLnYxLkpvYhISCgp1cGxvYWRfdXJsGAIgASgJIicKFUNvbXBsZXRlVXBsb2FkUmVxdWVzdBIOCgZqb2JfaWQYASABKAkiQAoWQ29tcGxldGVVcGxvYWRSZXNwb25zZRImCgNqb2IYASABKAsyGS5rbm93Y2VsLmluZ2VzdGlvbi52MS5Kb2IiGwoNR2V0Sm9iUmVxdWVzdBIKCgJpZBgBIAEoCSI4Cg5HZXRKb2JSZXNwb25zZRImCgNqb2IYASABKAsyGS5rbm93Y2VsLmluZ2VzdGlvbi52MS5Kb2IiPwoPTGlzdEpvYnNSZXF1ZXN0EiwKBHBhZ2UYASABKAsyHi5rbm93Y2VsLmNvbW1vbi52MS5QYWdlUmVxdWVzdCJqChBMaXN0Sm9ic1Jlc3BvbnNlEicKBGpvYnMYASADKAsyGS5rbm93Y2VsLmluZ2VzdGlvbi52MS5Kb2ISLQoEcGFnZRgCIAEoCzIfLmtub3djZWwuY29tbW9uLnYxLlBhZ2VSZXNwb25zZSIdCg9XYXRjaEpvYlJlcXVlc3QSCgoCaWQYASABKAkiOgoQV2F0Y2hKb2JSZXNwb25zZRImCgNqb2IYASABKAsyGS5rbm93Y2VsLmluZ2VzdGlvbi52MS5Kb2IiIQoTUmVwcm9jZXNzSm9iUmVxdWVzdBIKCgJpZBgBIAEoCSI+ChRSZXByb2Nlc3NKb2JSZXNwb25zZRImCgNqb2IYASABKAsyGS5rbm93Y2VsLmluZ2VzdGlvbi52MS5Kb2IqRAoGQWNjZXNzEhYKEkFDQ0VTU19VTlNQRUNJRklFRBAAEhEKDUFDQ0VTU19QVUJMSUMQARIPCgtBQ0NFU1NfVEVBTRACKqQBCglKb2JTdGF0dXMSGgoWSk9CX1NUQVRVU19VTlNQRUNJRklFRBAAEh0KGUpPQl9TVEFUVVNfUEVORElOR19VUExPQUQQARIVChFKT0JfU1RBVFVTX1FVRVVFRBACEhkKFUpPQl9TVEFUVVNfUFJPQ0VTU0lORxADEhMKD0pPQl9TVEFUVVNfRE9ORRAEEhUKEUpPQl9TVEFUVVNfRkFJTEVEEAUqhwEKCEpvYlN0YWdlEhkKFUpPQl9TVEFHRV9VTlNQRUNJRklFRBAAEhgKFEpPQl9TVEFHRV9FWFRSQUNUSU5HEAESFgoSSk9CX1NUQUdFX0NIVU5LSU5HEAISFwoTSk9CX1NUQUdFX0VNQkVERElORxADEhUKEUpPQl9TVEFHRV9TVE9SSU5HEAQyxAUKEEluZ2VzdGlvblNlcnZpY2USZQoMQ3JlYXRlVXBsb2FkEikua25vd2NlbC5pbmdlc3Rpb24udjEuQ3JlYXRlVXBsb2FkUmVxdWVzdBoqLmtub3djZWwuaW5nZXN0aW9uLnYxLkNyZWF0ZVVwbG9hZFJlc3BvbnNlEmsKDkNvbXBsZXRlVXBsb2FkEisua25vd2NlbC5pbmdlc3Rpb24udjEuQ29tcGxldGVVcGxvYWRSZXF1ZXN0Giwua25vd2NlbC5pbmdlc3Rpb24udjEuQ29tcGxldGVVcGxvYWRSZXNwb25zZRJoCg1SZXBsYWNlVXBsb2FkEioua25vd2NlbC5pbmdlc3Rpb24udjEuUmVwbGFjZVVwbG9hZFJlcXVlc3QaKy5rbm93Y2VsLmluZ2VzdGlvbi52MS5SZXBsYWNlVXBsb2FkUmVzcG9uc2USUwoGR2V0Sm9iEiMua25vd2NlbC5pbmdlc3Rpb24udjEuR2V0Sm9iUmVxdWVzdBokLmtub3djZWwuaW5nZXN0aW9uLnYxLkdldEpvYlJlc3BvbnNlElkKCExpc3RKb2JzEiUua25vd2NlbC5pbmdlc3Rpb24udjEuTGlzdEpvYnNSZXF1ZXN0GiYua25vd2NlbC5pbmdlc3Rpb24udjEuTGlzdEpvYnNSZXNwb25zZRJbCghXYXRjaEpvYhIlLmtub3djZWwuaW5nZXN0aW9uLnYxLldhdGNoSm9iUmVxdWVzdBomLmtub3djZWwuaW5nZXN0aW9uLnYxLldhdGNoSm9iUmVzcG9uc2UwARJlCgxSZXByb2Nlc3NKb2ISKS5rbm93Y2VsLmluZ2VzdGlvbi52MS5SZXByb2Nlc3NKb2JSZXF1ZXN0Gioua25vd2NlbC5pbmdlc3Rpb24udjEuUmVwcm9jZXNzSm9iUmVzcG9uc2VCVFpSZ2l0aHViLmNvbS9DaHJpc3RvcGhCZS9rbm93Y2VsaXVtL21vZHVsZXMvaW5nZXN0aW9uL2FwaS9nby9pbmdlc3Rpb252MTtpbmdlc3Rpb252MWIGcHJvdG8z", [file_google_protobuf_timestamp, file_knowcel_common_v1_common]);
+  fileDesc("CiRrbm93Y2VsL2luZ2VzdGlvbi92MS9pbmdlc3Rpb24ucHJvdG8SFGtub3djZWwuaW5nZXN0aW9uLnYxItgCCgNKb2ISCgoCaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSEAoIZmlsZW5hbWUYAyABKAkSFAoMY29udGVudF90eXBlGAQgASgJEi8KBnN0YXR1cxgFIAEoDjIfLmtub3djZWwuaW5nZXN0aW9uLnYxLkpvYlN0YXR1cxINCgVlcnJvchgGIAEoCRITCgtjaHVua19jb3VudBgHIAEoBRIvCgtjcmVhdGVfdGltZRgIIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLwoLdXBkYXRlX3RpbWUYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhAKCHByb2dyZXNzGAogASgFEi0KBXN0YWdlGAsgASgOMh4ua25vd2NlbC5pbmdlc3Rpb24udjEuSm9iU3RhZ2USEAoIb3duZXJfaWQYDCABKAkisAEKE0NyZWF0ZVVwbG9hZFJlcXVlc3QSEAoIZmlsZW5hbWUYASABKAkSFAoMY29udGVudF90eXBlGAIgASgJEhIKCnNpemVfYnl0ZXMYAyABKAMSDQoFdGl0bGUYBCABKAkSDgoGc2hhMjU2GAUgASgJEiwKBmFjY2VzcxgHIAEoDjIcLmtub3djZWwuaW5nZXN0aW9uLnYxLkFjY2VzcxIQCgh0ZWFtX2lkcxgGIAMoCSJSChRDcmVhdGVVcGxvYWRSZXNwb25zZRImCgNqb2IYASABKAsyGS5rbm93Y2VsLmluZ2VzdGlvbi52MS5Kb2ISEgoKdXBsb2FkX3VybBgCIAEoCSJyChRDcmVhdGVGcm9tVXJsUmVxdWVzdBILCgN1cmwYASABKAkSDQoFdGl0bGUYAiABKAkSLAoGYWNjZXNzGAMgASgOMhwua25vd2NlbC5pbmdlc3Rpb24udjEuQWNjZXNzEhAKCHRlYW1faWRzGAQgAygJIj8KFUNyZWF0ZUZyb21VcmxSZXNwb25zZRImCgNqb2IYASABKAsyGS5rbm93Y2VsLmluZ2VzdGlvbi52MS5Kb2IidwoUUmVwbGFjZVVwbG9hZFJlcXVlc3QSEwoLZG9jdW1lbnRfaWQYASABKAkSEAoIZmlsZW5hbWUYAiABKAkSFAoMY29udGVudF90eXBlGAMgASgJEhIKCnNpemVfYnl0ZXMYBCABKAMSDgoGc2hhMjU2GAUgASgJIlMKFVJlcGxhY2VVcGxvYWRSZXNwb25zZRImCgNqb2IYASABKAsyGS5rbm93Y2VsLmluZ2VzdGlvbi52MS5Kb2ISEgoKdXBsb2FkX3VybBgCIAEoCSInChVDb21wbGV0ZVVwbG9hZFJlcXVlc3QSDgoGam9iX2lkGAEgASgJIkAKFkNvbXBsZXRlVXBsb2FkUmVzcG9uc2USJgoDam9iGAEgASgLMhkua25vd2NlbC5pbmdlc3Rpb24udjEuSm9iIhsKDUdldEpvYlJlcXVlc3QSCgoCaWQYASABKAkiOAoOR2V0Sm9iUmVzcG9uc2USJgoDam9iGAEgASgLMhkua25vd2NlbC5pbmdlc3Rpb24udjEuSm9iIj8KD0xpc3RKb2JzUmVxdWVzdBIsCgRwYWdlGAEgASgLMh4ua25vd2NlbC5jb21tb24udjEuUGFnZVJlcXVlc3QiagoQTGlzdEpvYnNSZXNwb25zZRInCgRqb2JzGAEgAygLMhkua25vd2NlbC5pbmdlc3Rpb24udjEuSm9iEi0KBHBhZ2UYAiABKAsyHy5rbm93Y2VsLmNvbW1vbi52MS5QYWdlUmVzcG9uc2UiHQoPV2F0Y2hKb2JSZXF1ZXN0EgoKAmlkGAEgASgJIjoKEFdhdGNoSm9iUmVzcG9uc2USJgoDam9iGAEgASgLMhkua25vd2NlbC5pbmdlc3Rpb24udjEuSm9iIiEKE1JlcHJvY2Vzc0pvYlJlcXVlc3QSCgoCaWQYASABKAkiPgoUUmVwcm9jZXNzSm9iUmVzcG9uc2USJgoDam9iGAEgASgLMhkua25vd2NlbC5pbmdlc3Rpb24udjEuSm9iKkQKBkFjY2VzcxIWChJBQ0NFU1NfVU5TUEVDSUZJRUQQABIRCg1BQ0NFU1NfUFVCTElDEAESDwoLQUNDRVNTX1RFQU0QAiqkAQoJSm9iU3RhdHVzEhoKFkpPQl9TVEFUVVNfVU5TUEVDSUZJRUQQABIdChlKT0JfU1RBVFVTX1BFTkRJTkdfVVBMT0FEEAESFQoRSk9CX1NUQVRVU19RVUVVRUQQAhIZChVKT0JfU1RBVFVTX1BST0NFU1NJTkcQAxITCg9KT0JfU1RBVFVTX0RPTkUQBBIVChFKT0JfU1RBVFVTX0ZBSUxFRBAFKocBCghKb2JTdGFnZRIZChVKT0JfU1RBR0VfVU5TUEVDSUZJRUQQABIYChRKT0JfU1RBR0VfRVhUUkFDVElORxABEhYKEkpPQl9TVEFHRV9DSFVOS0lORxACEhcKE0pPQl9TVEFHRV9FTUJFRERJTkcQAxIVChFKT0JfU1RBR0VfU1RPUklORxAEMq4GChBJbmdlc3Rpb25TZXJ2aWNlEmUKDENyZWF0ZVVwbG9hZBIpLmtub3djZWwuaW5nZXN0aW9uLnYxLkNyZWF0ZVVwbG9hZFJlcXVlc3QaKi5rbm93Y2VsLmluZ2VzdGlvbi52MS5DcmVhdGVVcGxvYWRSZXNwb25zZRJrCg5Db21wbGV0ZVVwbG9hZBIrLmtub3djZWwuaW5nZXN0aW9uLnYxLkNvbXBsZXRlVXBsb2FkUmVxdWVzdBosLmtub3djZWwuaW5nZXN0aW9uLnYxLkNvbXBsZXRlVXBsb2FkUmVzcG9uc2USaAoNUmVwbGFjZVVwbG9hZBIqLmtub3djZWwuaW5nZXN0aW9uLnYxLlJlcGxhY2VVcGxvYWRSZXF1ZXN0Gisua25vd2NlbC5pbmdlc3Rpb24udjEuUmVwbGFjZVVwbG9hZFJlc3BvbnNlEmgKDUNyZWF0ZUZyb21VcmwSKi5rbm93Y2VsLmluZ2VzdGlvbi52MS5DcmVhdGVGcm9tVXJsUmVxdWVzdBorLmtub3djZWwuaW5nZXN0aW9uLnYxLkNyZWF0ZUZyb21VcmxSZXNwb25zZRJTCgZHZXRKb2ISIy5rbm93Y2VsLmluZ2VzdGlvbi52MS5HZXRKb2JSZXF1ZXN0GiQua25vd2NlbC5pbmdlc3Rpb24udjEuR2V0Sm9iUmVzcG9uc2USWQoITGlzdEpvYnMSJS5rbm93Y2VsLmluZ2VzdGlvbi52MS5MaXN0Sm9ic1JlcXVlc3QaJi5rbm93Y2VsLmluZ2VzdGlvbi52MS5MaXN0Sm9ic1Jlc3BvbnNlElsKCFdhdGNoSm9iEiUua25vd2NlbC5pbmdlc3Rpb24udjEuV2F0Y2hKb2JSZXF1ZXN0GiYua25vd2NlbC5pbmdlc3Rpb24udjEuV2F0Y2hKb2JSZXNwb25zZTABEmUKDFJlcHJvY2Vzc0pvYhIpLmtub3djZWwuaW5nZXN0aW9uLnYxLlJlcHJvY2Vzc0pvYlJlcXVlc3QaKi5rbm93Y2VsLmluZ2VzdGlvbi52MS5SZXByb2Nlc3NKb2JSZXNwb25zZUJUWlJnaXRodWIuY29tL0NocmlzdG9waEJlL2tub3djZWxpdW0vbW9kdWxlcy9pbmdlc3Rpb24vYXBpL2dvL2luZ2VzdGlvbnYxO2luZ2VzdGlvbnYxYgZwcm90bzM", [file_google_protobuf_timestamp, file_knowcel_common_v1_common]);
 
 /**
  * @generated from message knowcel.ingestion.v1.Job
@@ -184,6 +184,63 @@ export const CreateUploadResponseSchema: GenMessage<CreateUploadResponse> = /*@_
   messageDesc(file_knowcel_ingestion_v1_ingestion, 2);
 
 /**
+ * @generated from message knowcel.ingestion.v1.CreateFromUrlRequest
+ */
+export type CreateFromUrlRequest = Message<"knowcel.ingestion.v1.CreateFromUrlRequest"> & {
+  /**
+   * An http or https address on the public internet.
+   *
+   * @generated from field: string url = 1;
+   */
+  url: string;
+
+  /**
+   * Defaults to the page's title, or its address when it has none.
+   *
+   * @generated from field: string title = 2;
+   */
+  title: string;
+
+  /**
+   * Who can read the document; unset means ACCESS_PUBLIC.
+   *
+   * @generated from field: knowcel.ingestion.v1.Access access = 3;
+   */
+  access: Access;
+
+  /**
+   * The teams of an ACCESS_TEAM document, as in CreateUploadRequest.
+   *
+   * @generated from field: repeated string team_ids = 4;
+   */
+  teamIds: string[];
+};
+
+/**
+ * Describes the message knowcel.ingestion.v1.CreateFromUrlRequest.
+ * Use `create(CreateFromUrlRequestSchema)` to create a new message.
+ */
+export const CreateFromUrlRequestSchema: GenMessage<CreateFromUrlRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_ingestion_v1_ingestion, 3);
+
+/**
+ * @generated from message knowcel.ingestion.v1.CreateFromUrlResponse
+ */
+export type CreateFromUrlResponse = Message<"knowcel.ingestion.v1.CreateFromUrlResponse"> & {
+  /**
+   * @generated from field: knowcel.ingestion.v1.Job job = 1;
+   */
+  job?: Job | undefined;
+};
+
+/**
+ * Describes the message knowcel.ingestion.v1.CreateFromUrlResponse.
+ * Use `create(CreateFromUrlResponseSchema)` to create a new message.
+ */
+export const CreateFromUrlResponseSchema: GenMessage<CreateFromUrlResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_ingestion_v1_ingestion, 4);
+
+/**
  * @generated from message knowcel.ingestion.v1.ReplaceUploadRequest
  */
 export type ReplaceUploadRequest = Message<"knowcel.ingestion.v1.ReplaceUploadRequest"> & {
@@ -222,7 +279,7 @@ export type ReplaceUploadRequest = Message<"knowcel.ingestion.v1.ReplaceUploadRe
  * Use `create(ReplaceUploadRequestSchema)` to create a new message.
  */
 export const ReplaceUploadRequestSchema: GenMessage<ReplaceUploadRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_ingestion_v1_ingestion, 3);
+  messageDesc(file_knowcel_ingestion_v1_ingestion, 5);
 
 /**
  * @generated from message knowcel.ingestion.v1.ReplaceUploadResponse
@@ -247,7 +304,7 @@ export type ReplaceUploadResponse = Message<"knowcel.ingestion.v1.ReplaceUploadR
  * Use `create(ReplaceUploadResponseSchema)` to create a new message.
  */
 export const ReplaceUploadResponseSchema: GenMessage<ReplaceUploadResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_ingestion_v1_ingestion, 4);
+  messageDesc(file_knowcel_ingestion_v1_ingestion, 6);
 
 /**
  * @generated from message knowcel.ingestion.v1.CompleteUploadRequest
@@ -264,7 +321,7 @@ export type CompleteUploadRequest = Message<"knowcel.ingestion.v1.CompleteUpload
  * Use `create(CompleteUploadRequestSchema)` to create a new message.
  */
 export const CompleteUploadRequestSchema: GenMessage<CompleteUploadRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_ingestion_v1_ingestion, 5);
+  messageDesc(file_knowcel_ingestion_v1_ingestion, 7);
 
 /**
  * @generated from message knowcel.ingestion.v1.CompleteUploadResponse
@@ -281,7 +338,7 @@ export type CompleteUploadResponse = Message<"knowcel.ingestion.v1.CompleteUploa
  * Use `create(CompleteUploadResponseSchema)` to create a new message.
  */
 export const CompleteUploadResponseSchema: GenMessage<CompleteUploadResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_ingestion_v1_ingestion, 6);
+  messageDesc(file_knowcel_ingestion_v1_ingestion, 8);
 
 /**
  * @generated from message knowcel.ingestion.v1.GetJobRequest
@@ -298,7 +355,7 @@ export type GetJobRequest = Message<"knowcel.ingestion.v1.GetJobRequest"> & {
  * Use `create(GetJobRequestSchema)` to create a new message.
  */
 export const GetJobRequestSchema: GenMessage<GetJobRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_ingestion_v1_ingestion, 7);
+  messageDesc(file_knowcel_ingestion_v1_ingestion, 9);
 
 /**
  * @generated from message knowcel.ingestion.v1.GetJobResponse
@@ -315,7 +372,7 @@ export type GetJobResponse = Message<"knowcel.ingestion.v1.GetJobResponse"> & {
  * Use `create(GetJobResponseSchema)` to create a new message.
  */
 export const GetJobResponseSchema: GenMessage<GetJobResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_ingestion_v1_ingestion, 8);
+  messageDesc(file_knowcel_ingestion_v1_ingestion, 10);
 
 /**
  * @generated from message knowcel.ingestion.v1.ListJobsRequest
@@ -332,7 +389,7 @@ export type ListJobsRequest = Message<"knowcel.ingestion.v1.ListJobsRequest"> & 
  * Use `create(ListJobsRequestSchema)` to create a new message.
  */
 export const ListJobsRequestSchema: GenMessage<ListJobsRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_ingestion_v1_ingestion, 9);
+  messageDesc(file_knowcel_ingestion_v1_ingestion, 11);
 
 /**
  * @generated from message knowcel.ingestion.v1.ListJobsResponse
@@ -354,7 +411,7 @@ export type ListJobsResponse = Message<"knowcel.ingestion.v1.ListJobsResponse"> 
  * Use `create(ListJobsResponseSchema)` to create a new message.
  */
 export const ListJobsResponseSchema: GenMessage<ListJobsResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_ingestion_v1_ingestion, 10);
+  messageDesc(file_knowcel_ingestion_v1_ingestion, 12);
 
 /**
  * @generated from message knowcel.ingestion.v1.WatchJobRequest
@@ -371,7 +428,7 @@ export type WatchJobRequest = Message<"knowcel.ingestion.v1.WatchJobRequest"> & 
  * Use `create(WatchJobRequestSchema)` to create a new message.
  */
 export const WatchJobRequestSchema: GenMessage<WatchJobRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_ingestion_v1_ingestion, 11);
+  messageDesc(file_knowcel_ingestion_v1_ingestion, 13);
 
 /**
  * @generated from message knowcel.ingestion.v1.WatchJobResponse
@@ -388,7 +445,7 @@ export type WatchJobResponse = Message<"knowcel.ingestion.v1.WatchJobResponse"> 
  * Use `create(WatchJobResponseSchema)` to create a new message.
  */
 export const WatchJobResponseSchema: GenMessage<WatchJobResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_ingestion_v1_ingestion, 12);
+  messageDesc(file_knowcel_ingestion_v1_ingestion, 14);
 
 /**
  * @generated from message knowcel.ingestion.v1.ReprocessJobRequest
@@ -405,7 +462,7 @@ export type ReprocessJobRequest = Message<"knowcel.ingestion.v1.ReprocessJobRequ
  * Use `create(ReprocessJobRequestSchema)` to create a new message.
  */
 export const ReprocessJobRequestSchema: GenMessage<ReprocessJobRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_ingestion_v1_ingestion, 13);
+  messageDesc(file_knowcel_ingestion_v1_ingestion, 15);
 
 /**
  * @generated from message knowcel.ingestion.v1.ReprocessJobResponse
@@ -422,7 +479,7 @@ export type ReprocessJobResponse = Message<"knowcel.ingestion.v1.ReprocessJobRes
  * Use `create(ReprocessJobResponseSchema)` to create a new message.
  */
 export const ReprocessJobResponseSchema: GenMessage<ReprocessJobResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_ingestion_v1_ingestion, 14);
+  messageDesc(file_knowcel_ingestion_v1_ingestion, 16);
 
 /**
  * Access says who can read a document, as in the document module.
@@ -595,6 +652,21 @@ export const IngestionService: GenService<{
     methodKind: "unary";
     input: typeof ReplaceUploadRequestSchema;
     output: typeof ReplaceUploadResponseSchema;
+  },
+  /**
+   * CreateFromUrl fetches a web page (or a file at an address) and ingests it
+   * as a new document, which takes its title from the page. The job is
+   * returned already QUEUED, so there is nothing to upload or complete. An
+   * address that cannot be used (not http or https, on a private network,
+   * unreachable, too large, of a type the document module does not take) is
+   * rejected with a violation on url; the team rules are those of CreateUpload.
+   *
+   * @generated from rpc knowcel.ingestion.v1.IngestionService.CreateFromUrl
+   */
+  createFromUrl: {
+    methodKind: "unary";
+    input: typeof CreateFromUrlRequestSchema;
+    output: typeof CreateFromUrlResponseSchema;
   },
   /**
    * @generated from rpc knowcel.ingestion.v1.IngestionService.GetJob

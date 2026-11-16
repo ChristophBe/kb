@@ -257,6 +257,7 @@ type clients struct {
 	// http authenticates calls to the services the other clients do not cover.
 	http               *http.Client
 	createUpload       *connect.Client[ingestionv1.CreateUploadRequest, ingestionv1.CreateUploadResponse]
+	createFromURL      *connect.Client[ingestionv1.CreateFromUrlRequest, ingestionv1.CreateFromUrlResponse]
 	completeUpload     *connect.Client[ingestionv1.CompleteUploadRequest, ingestionv1.CompleteUploadResponse]
 	watchJob           *connect.Client[ingestionv1.WatchJobRequest, ingestionv1.WatchJobResponse]
 	listJobs           *connect.Client[ingestionv1.ListJobsRequest, ingestionv1.ListJobsResponse]
@@ -278,6 +279,7 @@ func newClients(gateway, token string) *clients {
 	return &clients{
 		http:               h,
 		createUpload:       connect.NewClient[ingestionv1.CreateUploadRequest, ingestionv1.CreateUploadResponse](h, gateway+ingestionv1.IngestionService_CreateUpload_FullMethodName, opt),
+		createFromURL:      connect.NewClient[ingestionv1.CreateFromUrlRequest, ingestionv1.CreateFromUrlResponse](h, gateway+ingestionv1.IngestionService_CreateFromUrl_FullMethodName, opt),
 		completeUpload:     connect.NewClient[ingestionv1.CompleteUploadRequest, ingestionv1.CompleteUploadResponse](h, gateway+ingestionv1.IngestionService_CompleteUpload_FullMethodName, opt),
 		watchJob:           connect.NewClient[ingestionv1.WatchJobRequest, ingestionv1.WatchJobResponse](h, gateway+ingestionv1.IngestionService_WatchJob_FullMethodName, opt),
 		listJobs:           connect.NewClient[ingestionv1.ListJobsRequest, ingestionv1.ListJobsResponse](h, gateway+ingestionv1.IngestionService_ListJobs_FullMethodName, opt),

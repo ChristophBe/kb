@@ -27,6 +27,7 @@ import {
 import { Cpu } from "lucide-react";
 import { type FormEvent, useRef, useState } from "react";
 import { modelError } from "./errors.ts";
+import { Usage } from "./Usage.tsx";
 
 function Provider({ health }: { health: Pick<ProviderHealth, "provider" | "healthy"> }) {
   return (
@@ -272,6 +273,7 @@ export function Models() {
         {deleting?.id} will be removed from {deleting?.provider}. Search, chat or processing that
         uses it stops working until it is pulled again.
       </ConfirmDialog>
+      <Usage />
     </div>
   );
 }

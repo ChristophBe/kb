@@ -50,6 +50,7 @@ conversations = Table(
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
     Column("updated_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
     Column("document_ids", ARRAY(Uuid), nullable=False, server_default="{}"),
+    Column("team_ids", ARRAY(Uuid), nullable=False, server_default="{}"),
     Column("owner_id", Text, nullable=False),
 )
 
@@ -123,12 +124,22 @@ class SqlRepository:
         self._engine = engine
 
     async def create_conversation(
-        self, owner: str, title: str, document_ids: list[uuid.UUID]
+        self,
+        owner: str,
+        title: str,
+        document_ids: list[uuid.UUID],
+        team_ids: list[uuid.UUID] | None = None,
     ) -> ConversationRow:
         async with self._engine.begin() as conn:
             result = await conn.execute(
                 insert(conversations)
-                .values(id=uuid.uuid4(), owner_id=owner, title=title, document_ids=document_ids)
+                .values(
+                    id=uuid.uuid4(),
+                    owner_id=owner,
+                    title=title,
+                    document_ids=document_ids,
+                    team_ids=team_ids or [],
+                )
                 .returning(conversations)
             )
             row = result.mappings().one()
@@ -241,12 +252,15 @@ class SqlRepository:
         *,
         title: str | None = None,
         document_ids: list[uuid.UUID] | None = None,
+        team_ids: list[uuid.UUID] | None = None,
     ) -> ConversationRow | None:
         values: dict[str, Any] = {"updated_at": func.now()}
         if title is not None:
             values["title"] = title
         if document_ids is not None:
             values["document_ids"] = document_ids
+        if team_ids is not None:
+            values["team_ids"] = team_ids
         async with self._engine.begin() as conn:
             await conn.execute(update(conversations).where(_owned(owner, id)).values(**values))
             result = await conn.execute(_conversations_with_last_message.where(_owned(owner, id)))

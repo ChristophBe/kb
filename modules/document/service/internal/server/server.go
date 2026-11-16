@@ -510,13 +510,17 @@ func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksR
 	if err != nil {
 		return nil, err
 	}
+	onlyTeams, err := parseTeamIDs("team_ids", req.GetTeamIds())
+	if err != nil {
+		return nil, err
+	}
 	model := req.GetEmbeddingModel()
 	if model == "" {
 		if model, err = s.currentModel(ctx); err != nil {
 			return nil, err
 		}
 	}
-	results, err := s.search(ctx, a, req.GetEmbedding(), model, req.GetLimit(), ids)
+	results, err := s.search(ctx, a, req.GetEmbedding(), model, req.GetLimit(), ids, onlyTeams)
 	if err != nil {
 		return nil, err
 	}
@@ -549,13 +553,13 @@ func (s *Server) SearchDocuments(ctx context.Context, req *documentv1.SearchDocu
 	}
 	embedding := embedded.GetEmbeddings()[0].GetValues()
 	model := embedded.GetModel()
-	results, err := s.search(ctx, a, embedding, model, req.GetLimit(), ids)
+	results, err := s.search(ctx, a, embedding, model, req.GetLimit(), ids, []uuid.UUID{})
 	if err != nil {
 		return nil, err
 	}
 	rows, err := s.repo.SearchBestChunks(ctx, store.SearchBestChunksParams{
 		Embedding: pgvector.NewVector(embedding), OwnerID: a.user, TeamIds: a.teamIDs(), EmbeddingModel: model,
-		DocumentIds: ids, MaxResults: clampLimit(req.GetLimit()),
+		DocumentIds: ids, OnlyTeamIds: []uuid.UUID{}, MaxResults: clampLimit(req.GetLimit()),
 	})
 	if err != nil {
 		return nil, s.internal("search documents", err)
@@ -652,10 +656,10 @@ func clampLimit(limit int32) int32 {
 
 // search finds the chunks the caller can read that are most similar to an
 // embedding that model made; chunks of other models are never compared with it.
-func (s *Server) search(ctx context.Context, a access, embedding []float32, model string, limit int32, ids []uuid.UUID) ([]*documentv1.ScoredChunk, error) {
+func (s *Server) search(ctx context.Context, a access, embedding []float32, model string, limit int32, ids, onlyTeams []uuid.UUID) ([]*documentv1.ScoredChunk, error) {
 	rows, err := s.repo.SearchChunks(ctx, store.SearchChunksParams{
 		Embedding: pgvector.NewVector(embedding), OwnerID: a.user, TeamIds: a.teamIDs(), EmbeddingModel: model,
-		DocumentIds: ids, MaxResults: clampLimit(limit),
+		DocumentIds: ids, OnlyTeamIds: onlyTeams, MaxResults: clampLimit(limit),
 	})
 	if err != nil {
 		return nil, s.internal("search chunks", err)

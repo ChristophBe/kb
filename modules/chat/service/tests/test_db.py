@@ -53,6 +53,22 @@ async def test_conversations_sort_by_their_latest_message(repo: SqlRepository) -
     assert [c.title for c in listed] == ["first", "second", "empty"]
 
 
+async def test_the_team_scope_is_stored_and_updated(repo: SqlRepository) -> None:
+    a, b = uuid.uuid4(), uuid.uuid4()
+    conv = await repo.create_conversation(ALICE, "scoped", [], [a, b])
+    assert conv.team_ids == [a, b]
+    assert (await repo.create_conversation(ALICE, "all", [])).team_ids == []
+    kept = await repo.update_conversation(ALICE, conv.id, title="renamed")
+    assert kept is not None
+    assert kept.team_ids == [a, b]
+    changed = await repo.update_conversation(ALICE, conv.id, team_ids=[b])
+    assert changed is not None
+    assert changed.team_ids == [b]
+    cleared = await repo.update_conversation(ALICE, conv.id, team_ids=[])
+    assert cleared is not None
+    assert cleared.team_ids == []
+
+
 async def test_renaming_or_rescoping_does_not_move_a_conversation(repo: SqlRepository) -> None:
     older = await repo.create_conversation(ALICE, "older", [])
     newer = await repo.create_conversation(ALICE, "newer", [])

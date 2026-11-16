@@ -143,10 +143,13 @@ FROM (
       AND c.embedding_model = $4
       AND (cardinality($5::uuid[]) = 0
            OR c.document_id = ANY($5::uuid[]))
+      AND (cardinality($6::uuid[]) = 0
+           OR EXISTS (SELECT 1 FROM document.document_teams o
+                      WHERE o.document_id = d.id AND o.team_id = ANY($6::uuid[])))
     ORDER BY c.document_id, c.embedding <=> $1::vector, c.idx
 ) best
 ORDER BY score DESC, document_id
-LIMIT $6
+LIMIT $7
 `
 
 type SearchBestChunksParams struct {
@@ -155,6 +158,7 @@ type SearchBestChunksParams struct {
 	TeamIds        []uuid.UUID
 	EmbeddingModel string
 	DocumentIds    []uuid.UUID
+	OnlyTeamIds    []uuid.UUID
 	MaxResults     int32
 }
 
@@ -179,6 +183,7 @@ func (q *Queries) SearchBestChunks(ctx context.Context, arg SearchBestChunksPara
 		arg.TeamIds,
 		arg.EmbeddingModel,
 		arg.DocumentIds,
+		arg.OnlyTeamIds,
 		arg.MaxResults,
 	)
 	if err != nil {
@@ -218,8 +223,11 @@ WHERE (d.access = 1
   AND c.embedding_model = $4
   AND (cardinality($5::uuid[]) = 0
        OR c.document_id = ANY($5::uuid[]))
+  AND (cardinality($6::uuid[]) = 0
+       OR EXISTS (SELECT 1 FROM document.document_teams o
+                  WHERE o.document_id = d.id AND o.team_id = ANY($6::uuid[])))
 ORDER BY c.embedding <=> $1::vector
-LIMIT $6
+LIMIT $7
 `
 
 type SearchChunksParams struct {
@@ -228,6 +236,7 @@ type SearchChunksParams struct {
 	TeamIds        []uuid.UUID
 	EmbeddingModel string
 	DocumentIds    []uuid.UUID
+	OnlyTeamIds    []uuid.UUID
 	MaxResults     int32
 }
 
@@ -245,7 +254,8 @@ type SearchChunksRow struct {
 // the same embedding model: vectors of different models are not comparable.
 // The HNSW index yields candidates before the visibility filter applies, so the pool
 // sets hnsw.iterative_scan (store.ConfigurePool) to keep scanning until the
-// limit is filled.
+// limit is filled. only_team_ids, when not empty, further limits the search
+// to the documents attached to one of those teams (not the public ones).
 func (q *Queries) SearchChunks(ctx context.Context, arg SearchChunksParams) ([]SearchChunksRow, error) {
 	rows, err := q.db.Query(ctx, searchChunks,
 		arg.Embedding,
@@ -253,6 +263,7 @@ func (q *Queries) SearchChunks(ctx context.Context, arg SearchChunksParams) ([]S
 		arg.TeamIds,
 		arg.EmbeddingModel,
 		arg.DocumentIds,
+		arg.OnlyTeamIds,
 		arg.MaxResults,
 	)
 	if err != nil {

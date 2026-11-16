@@ -342,6 +342,10 @@ message SearchChunksRequest {
   // Empty means the llm module's current default embedding model, which is
   // what an Embed call without a model uses.
   string embedding_model = 4;
+  // Restricts the search to documents attached to one of these teams when
+  // non-empty, on top of what the caller can read; public documents are left
+  // out. A team the caller is not in matches nothing the caller can read.
+  repeated string team_ids = 5;
 }
 
 message SearchChunksResponse {

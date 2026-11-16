@@ -2093,8 +2093,12 @@ type SearchChunksRequest struct {
 	// Empty means the llm module's current default embedding model, which is
 	// what an Embed call without a model uses.
 	EmbeddingModel string `protobuf:"bytes,4,opt,name=embedding_model,json=embeddingModel,proto3" json:"embedding_model,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// Restricts the search to documents attached to one of these teams when
+	// non-empty, on top of what the caller can read; public documents are left
+	// out. A team the caller is not in matches nothing the caller can read.
+	TeamIds       []string `protobuf:"bytes,5,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SearchChunksRequest) Reset() {
@@ -2153,6 +2157,13 @@ func (x *SearchChunksRequest) GetEmbeddingModel() string {
 		return x.EmbeddingModel
 	}
 	return ""
+}
+
+func (x *SearchChunksRequest) GetTeamIds() []string {
+	if x != nil {
+		return x.TeamIds
+	}
+	return nil
 }
 
 type SearchChunksResponse struct {
@@ -2594,12 +2605,13 @@ const file_knowcel_document_v1_document_proto_rawDesc = "" +
 	"\x04page\x18\x02 \x01(\v2\x1e.knowcel.common.v1.PageRequestR\x04page\"}\n" +
 	"\x12ListChunksResponse\x122\n" +
 	"\x06chunks\x18\x01 \x03(\v2\x1a.knowcel.document.v1.ChunkR\x06chunks\x123\n" +
-	"\x04page\x18\x02 \x01(\v2\x1f.knowcel.common.v1.PageResponseR\x04page\"\x95\x01\n" +
+	"\x04page\x18\x02 \x01(\v2\x1f.knowcel.common.v1.PageResponseR\x04page\"\xb0\x01\n" +
 	"\x13SearchChunksRequest\x12\x1c\n" +
 	"\tembedding\x18\x01 \x03(\x02R\tembedding\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12!\n" +
 	"\fdocument_ids\x18\x03 \x03(\tR\vdocumentIds\x12'\n" +
-	"\x0fembedding_model\x18\x04 \x01(\tR\x0eembeddingModel\"R\n" +
+	"\x0fembedding_model\x18\x04 \x01(\tR\x0eembeddingModel\x12\x19\n" +
+	"\bteam_ids\x18\x05 \x03(\tR\ateamIds\"R\n" +
 	"\x14SearchChunksResponse\x12:\n" +
 	"\aresults\x18\x01 \x03(\v2 .knowcel.document.v1.ScoredChunkR\aresults\"g\n" +
 	"\x16SearchDocumentsRequest\x12\x14\n" +

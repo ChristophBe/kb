@@ -15,7 +15,7 @@ import { Answer } from "./Answer.tsx";
 import { ConversationHeader } from "./ConversationHeader.tsx";
 import { ModelPicker, useModelChoice } from "./model.tsx";
 import type { StartState } from "./StartChat.tsx";
-import { DocumentPicker } from "./scope.tsx";
+import { DocumentPicker, TeamScopePicker } from "./scope.tsx";
 
 interface Pending {
   question: string;
@@ -282,6 +282,9 @@ export function Conversation() {
               </label>
               {conversation.data?.conversation && useKnowledgeBase && (
                 <DocumentPicker conversation={conversation.data.conversation} />
+              )}
+              {conversation.data?.conversation && useKnowledgeBase && (
+                <TeamScopePicker conversation={conversation.data.conversation} />
               )}
               {modelChoice && <ModelPicker choice={modelChoice} disabled={pending !== null} />}
             </div>

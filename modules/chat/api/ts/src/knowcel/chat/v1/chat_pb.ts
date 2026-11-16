@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file knowcel/chat/v1/chat.proto.
  */
 export const file_knowcel_chat_v1_chat: GenFile = /*@__PURE__*/
-  fileDesc("Chprbm93Y2VsL2NoYXQvdjEvY2hhdC5wcm90bxIPa25vd2NlbC5jaGF0LnYxIpkBCghDaXRhdGlvbhITCgtkb2N1bWVudF9pZBgBIAEoCRIWCg5kb2N1bWVudF90aXRsZRgCIAEoCRITCgtjaHVua19pbmRleBgDIAEoBRIPCgdzbmlwcGV0GAQgASgJEg0KBXNjb3JlGAUgASgCEhMKC21hbnVhbF9wYWdlGAYgASgJEhYKDm1hbnVhbF9zZWN0aW9uGAcgASgJIuUBCgtDaGF0TWVzc2FnZRIKCgJpZBgBIAEoCRIqCgRyb2xlGAIgASgOMhwua25vd2NlbC5jaGF0LnYxLk1lc3NhZ2VSb2xlEg8KB2NvbnRlbnQYAyABKAkSLAoJY2l0YXRpb25zGAQgAygLMhkua25vd2NlbC5jaGF0LnYxLkNpdGF0aW9uEi8KC2NyZWF0ZV90aW1lGAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgZzdGF0dXMYBiABKA4yHi5rbm93Y2VsLmNoYXQudjEuTWVzc2FnZVN0YXR1cyKIAgoMQ29udmVyc2F0aW9uEgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEi8KC2NyZWF0ZV90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIvCgt1cGRhdGVfdGltZRgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASFAoMZG9jdW1lbnRfaWRzGAUgAygJEjUKEWxhc3RfbWVzc2FnZV90aW1lGAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIcChRsYXN0X21lc3NhZ2VfcHJldmlldxgHIAEoCRIQCghvd25lcl9pZBgIIAEoCSIaCgtEb2N1bWVudElkcxILCgNpZHMYASADKAkiQAoZQ3JlYXRlQ29udmVyc2F0aW9uUmVxdWVzdBINCgV0aXRsZRgBIAEoCRIUCgxkb2N1bWVudF9pZHMYAiADKAkiUQoaQ3JlYXRlQ29udmVyc2F0aW9uUmVzcG9uc2USMwoMY29udmVyc2F0aW9uGAEgASgLMh0ua25vd2NlbC5jaGF0LnYxLkNvbnZlcnNhdGlvbiIkChZHZXRDb252ZXJzYXRpb25SZXF1ZXN0EgoKAmlkGAEgASgJIn4KF0dldENvbnZlcnNhdGlvblJlc3BvbnNlEjMKDGNvbnZlcnNhdGlvbhgBIAEoCzIdLmtub3djZWwuY2hhdC52MS5Db252ZXJzYXRpb24SLgoIbWVzc2FnZXMYAiADKAsyHC5rbm93Y2VsLmNoYXQudjEuQ2hhdE1lc3NhZ2UiSAoYTGlzdENvbnZlcnNhdGlvbnNSZXF1ZXN0EiwKBHBhZ2UYASABKAsyHi5rbm93Y2VsLmNvbW1vbi52MS5QYWdlUmVxdWVzdCKAAQoZTGlzdENvbnZlcnNhdGlvbnNSZXNwb25zZRI0Cg1jb252ZXJzYXRpb25zGAEgAygLMh0ua25vd2NlbC5jaGF0LnYxLkNvbnZlcnNhdGlvbhItCgRwYWdlGAIgASgLMh8ua25vd2NlbC5jb21tb24udjEuUGFnZVJlc3BvbnNlIicKGURlbGV0ZUNvbnZlcnNhdGlvblJlcXVlc3QSCgoCaWQYASABKAkiHAoaRGVsZXRlQ29udmVyc2F0aW9uUmVzcG9uc2UieQoZVXBkYXRlQ29udmVyc2F0aW9uUmVxdWVzdBIKCgJpZBgBIAEoCRISCgV0aXRsZRgCIAEoCUgAiAEBEjIKDGRvY3VtZW50X2lkcxgDIAEoCzIcLmtub3djZWwuY2hhdC52MS5Eb2N1bWVudElkc0IICgZfdGl0bGUiUQoaVXBkYXRlQ29udmVyc2F0aW9uUmVzcG9uc2USMwoMY29udmVyc2F0aW9uGAEgASgLMh0ua25vd2NlbC5jaGF0LnYxLkNvbnZlcnNhdGlvbiI6ChpTZWFyY2hDb252ZXJzYXRpb25zUmVxdWVzdBINCgVxdWVyeRgBIAEoCRINCgVsaW1pdBgCIAEoBSJSChtTZWFyY2hDb252ZXJzYXRpb25zUmVzcG9uc2USMwoHcmVzdWx0cxgBIAMoCzIiLmtub3djZWwuY2hhdC52MS5Db252ZXJzYXRpb25NYXRjaCJZChFDb252ZXJzYXRpb25NYXRjaBIzCgxjb252ZXJzYXRpb24YASABKAsyHS5rbm93Y2VsLmNoYXQudjEuQ29udmVyc2F0aW9uEg8KB3NuaXBwZXQYAiABKAkiaAoRU3RyZWFtQ2hhdFJlcXVlc3QSFwoPY29udmVyc2F0aW9uX2lkGAEgASgJEg8KB2NvbnRlbnQYAiABKAkSGgoSdXNlX2tub3dsZWRnZV9iYXNlGAMgASgIEg0KBW1vZGVsGAQgASgJIr0BChJTdHJlYW1DaGF0UmVzcG9uc2USLwoJY2l0YXRpb25zGAEgASgLMhoua25vd2NlbC5jaGF0LnYxLkNpdGF0aW9uc0gAEg8KBWRlbHRhGAIgASgJSAASLwoHbWVzc2FnZRgDIAEoCzIcLmtub3djZWwuY2hhdC52MS5DaGF0TWVzc2FnZUgAEisKBWVycm9yGAQgASgLMhoua25vd2NlbC5jaGF0LnYxLkNoYXRFcnJvckgAQgcKBWV2ZW50IkoKCUNoYXRFcnJvchIsCgRjb2RlGAEgASgOMh4ua25vd2NlbC5jaGF0LnYxLkNoYXRFcnJvckNvZGUSDwoHbWVzc2FnZRgCIAEoCSI1CglDaXRhdGlvbnMSKAoFaXRlbXMYASADKAsyGS5rbm93Y2VsLmNoYXQudjEuQ2l0YXRpb24qXgoLTWVzc2FnZVJvbGUSHAoYTUVTU0FHRV9ST0xFX1VOU1BFQ0lGSUVEEAASFQoRTUVTU0FHRV9ST0xFX1VTRVIQARIaChZNRVNTQUdFX1JPTEVfQVNTSVNUQU5UEAIqgwEKDU1lc3NhZ2VTdGF0dXMSHgoaTUVTU0FHRV9TVEFUVVNfVU5TUEVDSUZJRUQQABIbChdNRVNTQUdFX1NUQVRVU19DT01QTEVURRABEhoKFk1FU1NBR0VfU1RBVFVTX1NUT1BQRUQQAhIZChVNRVNTQUdFX1NUQVRVU19GQUlMRUQQAypvCg1DaGF0RXJyb3JDb2RlEh8KG0NIQVRfRVJST1JfQ09ERV9VTlNQRUNJRklFRBAAEh8KG0NIQVRfRVJST1JfQ09ERV9VTkFWQUlMQUJMRRABEhwKGENIQVRfRVJST1JfQ09ERV9JTlRFUk5BTBACMvcFCgtDaGF0U2VydmljZRJtChJDcmVhdGVDb252ZXJzYXRpb24SKi5rbm93Y2VsLmNoYXQudjEuQ3JlYXRlQ29udmVyc2F0aW9uUmVxdWVzdBorLmtub3djZWwuY2hhdC52MS5DcmVhdGVDb252ZXJzYXRpb25SZXNwb25zZRJkCg9HZXRDb252ZXJzYXRpb24SJy5rbm93Y2VsLmNoYXQudjEuR2V0Q29udmVyc2F0aW9uUmVxdWVzdBooLmtub3djZWwuY2hhdC52MS5HZXRDb252ZXJzYXRpb25SZXNwb25zZRJqChFMaXN0Q29udmVyc2F0aW9ucxIpLmtub3djZWwuY2hhdC52MS5MaXN0Q29udmVyc2F0aW9uc1JlcXVlc3QaKi5rbm93Y2VsLmNoYXQudjEuTGlzdENvbnZlcnNhdGlvbnNSZXNwb25zZRJtChJEZWxldGVDb252ZXJzYXRpb24SKi5rbm93Y2VsLmNoYXQudjEuRGVsZXRlQ29udmVyc2F0aW9uUmVxdWVzdBorLmtub3djZWwuY2hhdC52MS5EZWxldGVDb252ZXJzYXRpb25SZXNwb25zZRJtChJVcGRhdGVDb252ZXJzYXRpb24SKi5rbm93Y2VsLmNoYXQudjEuVXBkYXRlQ29udmVyc2F0aW9uUmVxdWVzdBorLmtub3djZWwuY2hhdC52MS5VcGRhdGVDb252ZXJzYXRpb25SZXNwb25zZRJwChNTZWFyY2hDb252ZXJzYXRpb25zEisua25vd2NlbC5jaGF0LnYxLlNlYXJjaENvbnZlcnNhdGlvbnNSZXF1ZXN0Giwua25vd2NlbC5jaGF0LnYxLlNlYXJjaENvbnZlcnNhdGlvbnNSZXNwb25zZRJXCgpTdHJlYW1DaGF0EiIua25vd2NlbC5jaGF0LnYxLlN0cmVhbUNoYXRSZXF1ZXN0GiMua25vd2NlbC5jaGF0LnYxLlN0cmVhbUNoYXRSZXNwb25zZTABQkVaQ2dpdGh1Yi5jb20vQ2hyaXN0b3BoQmUva25vd2NlbGl1bS9tb2R1bGVzL2NoYXQvYXBpL2dvL2NoYXR2MTtjaGF0djFiBnByb3RvMw", [file_google_protobuf_timestamp, file_knowcel_common_v1_common]);
+  fileDesc("Chprbm93Y2VsL2NoYXQvdjEvY2hhdC5wcm90bxIPa25vd2NlbC5jaGF0LnYxIpkBCghDaXRhdGlvbhITCgtkb2N1bWVudF9pZBgBIAEoCRIWCg5kb2N1bWVudF90aXRsZRgCIAEoCRITCgtjaHVua19pbmRleBgDIAEoBRIPCgdzbmlwcGV0GAQgASgJEg0KBXNjb3JlGAUgASgCEhMKC21hbnVhbF9wYWdlGAYgASgJEhYKDm1hbnVhbF9zZWN0aW9uGAcgASgJIuUBCgtDaGF0TWVzc2FnZRIKCgJpZBgBIAEoCRIqCgRyb2xlGAIgASgOMhwua25vd2NlbC5jaGF0LnYxLk1lc3NhZ2VSb2xlEg8KB2NvbnRlbnQYAyABKAkSLAoJY2l0YXRpb25zGAQgAygLMhkua25vd2NlbC5jaGF0LnYxLkNpdGF0aW9uEi8KC2NyZWF0ZV90aW1lGAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgZzdGF0dXMYBiABKA4yHi5rbm93Y2VsLmNoYXQudjEuTWVzc2FnZVN0YXR1cyKaAgoMQ29udmVyc2F0aW9uEgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEi8KC2NyZWF0ZV90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIvCgt1cGRhdGVfdGltZRgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASFAoMZG9jdW1lbnRfaWRzGAUgAygJEjUKEWxhc3RfbWVzc2FnZV90aW1lGAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIcChRsYXN0X21lc3NhZ2VfcHJldmlldxgHIAEoCRIQCghvd25lcl9pZBgIIAEoCRIQCgh0ZWFtX2lkcxgJIAMoCSIWCgdUZWFtSWRzEgsKA2lkcxgBIAMoCSIaCgtEb2N1bWVudElkcxILCgNpZHMYASADKAkiUgoZQ3JlYXRlQ29udmVyc2F0aW9uUmVxdWVzdBINCgV0aXRsZRgBIAEoCRIUCgxkb2N1bWVudF9pZHMYAiADKAkSEAoIdGVhbV9pZHMYAyADKAkiUQoaQ3JlYXRlQ29udmVyc2F0aW9uUmVzcG9uc2USMwoMY29udmVyc2F0aW9uGAEgASgLMh0ua25vd2NlbC5jaGF0LnYxLkNvbnZlcnNhdGlvbiIkChZHZXRDb252ZXJzYXRpb25SZXF1ZXN0EgoKAmlkGAEgASgJIn4KF0dldENvbnZlcnNhdGlvblJlc3BvbnNlEjMKDGNvbnZlcnNhdGlvbhgBIAEoCzIdLmtub3djZWwuY2hhdC52MS5Db252ZXJzYXRpb24SLgoIbWVzc2FnZXMYAiADKAsyHC5rbm93Y2VsLmNoYXQudjEuQ2hhdE1lc3NhZ2UiSAoYTGlzdENvbnZlcnNhdGlvbnNSZXF1ZXN0EiwKBHBhZ2UYASABKAsyHi5rbm93Y2VsLmNvbW1vbi52MS5QYWdlUmVxdWVzdCKAAQoZTGlzdENvbnZlcnNhdGlvbnNSZXNwb25zZRI0Cg1jb252ZXJzYXRpb25zGAEgAygLMh0ua25vd2NlbC5jaGF0LnYxLkNvbnZlcnNhdGlvbhItCgRwYWdlGAIgASgLMh8ua25vd2NlbC5jb21tb24udjEuUGFnZVJlc3BvbnNlIicKGURlbGV0ZUNvbnZlcnNhdGlvblJlcXVlc3QSCgoCaWQYASABKAkiHAoaRGVsZXRlQ29udmVyc2F0aW9uUmVzcG9uc2UipQEKGVVwZGF0ZUNvbnZlcnNhdGlvblJlcXVlc3QSCgoCaWQYASABKAkSEgoFdGl0bGUYAiABKAlIAIgBARIyCgxkb2N1bWVudF9pZHMYAyABKAsyHC5rbm93Y2VsLmNoYXQudjEuRG9jdW1lbnRJZHMSKgoIdGVhbV9pZHMYBCABKAsyGC5rbm93Y2VsLmNoYXQudjEuVGVhbUlkc0IICgZfdGl0bGUiUQoaVXBkYXRlQ29udmVyc2F0aW9uUmVzcG9uc2USMwoMY29udmVyc2F0aW9uGAEgASgLMh0ua25vd2NlbC5jaGF0LnYxLkNvbnZlcnNhdGlvbiI6ChpTZWFyY2hDb252ZXJzYXRpb25zUmVxdWVzdBINCgVxdWVyeRgBIAEoCRINCgVsaW1pdBgCIAEoBSJSChtTZWFyY2hDb252ZXJzYXRpb25zUmVzcG9uc2USMwoHcmVzdWx0cxgBIAMoCzIiLmtub3djZWwuY2hhdC52MS5Db252ZXJzYXRpb25NYXRjaCJZChFDb252ZXJzYXRpb25NYXRjaBIzCgxjb252ZXJzYXRpb24YASABKAsyHS5rbm93Y2VsLmNoYXQudjEuQ29udmVyc2F0aW9uEg8KB3NuaXBwZXQYAiABKAkiaAoRU3RyZWFtQ2hhdFJlcXVlc3QSFwoPY29udmVyc2F0aW9uX2lkGAEgASgJEg8KB2NvbnRlbnQYAiABKAkSGgoSdXNlX2tub3dsZWRnZV9iYXNlGAMgASgIEg0KBW1vZGVsGAQgASgJIr0BChJTdHJlYW1DaGF0UmVzcG9uc2USLwoJY2l0YXRpb25zGAEgASgLMhoua25vd2NlbC5jaGF0LnYxLkNpdGF0aW9uc0gAEg8KBWRlbHRhGAIgASgJSAASLwoHbWVzc2FnZRgDIAEoCzIcLmtub3djZWwuY2hhdC52MS5DaGF0TWVzc2FnZUgAEisKBWVycm9yGAQgASgLMhoua25vd2NlbC5jaGF0LnYxLkNoYXRFcnJvckgAQgcKBWV2ZW50IkoKCUNoYXRFcnJvchIsCgRjb2RlGAEgASgOMh4ua25vd2NlbC5jaGF0LnYxLkNoYXRFcnJvckNvZGUSDwoHbWVzc2FnZRgCIAEoCSI1CglDaXRhdGlvbnMSKAoFaXRlbXMYASADKAsyGS5rbm93Y2VsLmNoYXQudjEuQ2l0YXRpb24qXgoLTWVzc2FnZVJvbGUSHAoYTUVTU0FHRV9ST0xFX1VOU1BFQ0lGSUVEEAASFQoRTUVTU0FHRV9ST0xFX1VTRVIQARIaChZNRVNTQUdFX1JPTEVfQVNTSVNUQU5UEAIqgwEKDU1lc3NhZ2VTdGF0dXMSHgoaTUVTU0FHRV9TVEFUVVNfVU5TUEVDSUZJRUQQABIbChdNRVNTQUdFX1NUQVRVU19DT01QTEVURRABEhoKFk1FU1NBR0VfU1RBVFVTX1NUT1BQRUQQAhIZChVNRVNTQUdFX1NUQVRVU19GQUlMRUQQAypvCg1DaGF0RXJyb3JDb2RlEh8KG0NIQVRfRVJST1JfQ09ERV9VTlNQRUNJRklFRBAAEh8KG0NIQVRfRVJST1JfQ09ERV9VTkFWQUlMQUJMRRABEhwKGENIQVRfRVJST1JfQ09ERV9JTlRFUk5BTBACMvcFCgtDaGF0U2VydmljZRJtChJDcmVhdGVDb252ZXJzYXRpb24SKi5rbm93Y2VsLmNoYXQudjEuQ3JlYXRlQ29udmVyc2F0aW9uUmVxdWVzdBorLmtub3djZWwuY2hhdC52MS5DcmVhdGVDb252ZXJzYXRpb25SZXNwb25zZRJkCg9HZXRDb252ZXJzYXRpb24SJy5rbm93Y2VsLmNoYXQudjEuR2V0Q29udmVyc2F0aW9uUmVxdWVzdBooLmtub3djZWwuY2hhdC52MS5HZXRDb252ZXJzYXRpb25SZXNwb25zZRJqChFMaXN0Q29udmVyc2F0aW9ucxIpLmtub3djZWwuY2hhdC52MS5MaXN0Q29udmVyc2F0aW9uc1JlcXVlc3QaKi5rbm93Y2VsLmNoYXQudjEuTGlzdENvbnZlcnNhdGlvbnNSZXNwb25zZRJtChJEZWxldGVDb252ZXJzYXRpb24SKi5rbm93Y2VsLmNoYXQudjEuRGVsZXRlQ29udmVyc2F0aW9uUmVxdWVzdBorLmtub3djZWwuY2hhdC52MS5EZWxldGVDb252ZXJzYXRpb25SZXNwb25zZRJtChJVcGRhdGVDb252ZXJzYXRpb24SKi5rbm93Y2VsLmNoYXQudjEuVXBkYXRlQ29udmVyc2F0aW9uUmVxdWVzdBorLmtub3djZWwuY2hhdC52MS5VcGRhdGVDb252ZXJzYXRpb25SZXNwb25zZRJwChNTZWFyY2hDb252ZXJzYXRpb25zEisua25vd2NlbC5jaGF0LnYxLlNlYXJjaENvbnZlcnNhdGlvbnNSZXF1ZXN0Giwua25vd2NlbC5jaGF0LnYxLlNlYXJjaENvbnZlcnNhdGlvbnNSZXNwb25zZRJXCgpTdHJlYW1DaGF0EiIua25vd2NlbC5jaGF0LnYxLlN0cmVhbUNoYXRSZXF1ZXN0GiMua25vd2NlbC5jaGF0LnYxLlN0cmVhbUNoYXRSZXNwb25zZTABQkVaQ2dpdGh1Yi5jb20vQ2hyaXN0b3BoQmUva25vd2NlbGl1bS9tb2R1bGVzL2NoYXQvYXBpL2dvL2NoYXR2MTtjaGF0djFiBnByb3RvMw", [file_google_protobuf_timestamp, file_knowcel_common_v1_common]);
 
 /**
  * A source an answer is grounded in: a chunk of a document, or a section of the
@@ -166,6 +166,16 @@ export type Conversation = Message<"knowcel.chat.v1.Conversation"> & {
    * @generated from field: string owner_id = 8;
    */
   ownerId: string;
+
+  /**
+   * The teams answers are limited to: only documents attached to one of them
+   * are used (public documents are not). Empty means all documents the user
+   * can read. A team the user has left or that was deleted counts as not
+   * chosen; with none left the conversation uses all documents.
+   *
+   * @generated from field: repeated string team_ids = 9;
+   */
+  teamIds: string[];
 };
 
 /**
@@ -174,6 +184,26 @@ export type Conversation = Message<"knowcel.chat.v1.Conversation"> & {
  */
 export const ConversationSchema: GenMessage<Conversation> = /*@__PURE__*/
   messageDesc(file_knowcel_chat_v1_chat, 2);
+
+/**
+ * A list of team ids, wrapped like DocumentIds so that an update can tell
+ * "keep the teams" (not set) from "all documents" (set, but empty).
+ *
+ * @generated from message knowcel.chat.v1.TeamIds
+ */
+export type TeamIds = Message<"knowcel.chat.v1.TeamIds"> & {
+  /**
+   * @generated from field: repeated string ids = 1;
+   */
+  ids: string[];
+};
+
+/**
+ * Describes the message knowcel.chat.v1.TeamIds.
+ * Use `create(TeamIdsSchema)` to create a new message.
+ */
+export const TeamIdsSchema: GenMessage<TeamIds> = /*@__PURE__*/
+  messageDesc(file_knowcel_chat_v1_chat, 3);
 
 /**
  * A list of document ids, wrapped so that an update can tell "keep the scope"
@@ -193,7 +223,7 @@ export type DocumentIds = Message<"knowcel.chat.v1.DocumentIds"> & {
  * Use `create(DocumentIdsSchema)` to create a new message.
  */
 export const DocumentIdsSchema: GenMessage<DocumentIds> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 3);
+  messageDesc(file_knowcel_chat_v1_chat, 4);
 
 /**
  * @generated from message knowcel.chat.v1.CreateConversationRequest
@@ -210,6 +240,15 @@ export type CreateConversationRequest = Message<"knowcel.chat.v1.CreateConversat
    * @generated from field: repeated string document_ids = 2;
    */
   documentIds: string[];
+
+  /**
+   * The teams answers are limited to, of which the caller must be a member
+   * (PERMISSION_DENIED otherwise); empty means all documents the user can read.
+   * Together with document_ids, a document must match both.
+   *
+   * @generated from field: repeated string team_ids = 3;
+   */
+  teamIds: string[];
 };
 
 /**
@@ -217,7 +256,7 @@ export type CreateConversationRequest = Message<"knowcel.chat.v1.CreateConversat
  * Use `create(CreateConversationRequestSchema)` to create a new message.
  */
 export const CreateConversationRequestSchema: GenMessage<CreateConversationRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 4);
+  messageDesc(file_knowcel_chat_v1_chat, 5);
 
 /**
  * @generated from message knowcel.chat.v1.CreateConversationResponse
@@ -234,7 +273,7 @@ export type CreateConversationResponse = Message<"knowcel.chat.v1.CreateConversa
  * Use `create(CreateConversationResponseSchema)` to create a new message.
  */
 export const CreateConversationResponseSchema: GenMessage<CreateConversationResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 5);
+  messageDesc(file_knowcel_chat_v1_chat, 6);
 
 /**
  * @generated from message knowcel.chat.v1.GetConversationRequest
@@ -251,7 +290,7 @@ export type GetConversationRequest = Message<"knowcel.chat.v1.GetConversationReq
  * Use `create(GetConversationRequestSchema)` to create a new message.
  */
 export const GetConversationRequestSchema: GenMessage<GetConversationRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 6);
+  messageDesc(file_knowcel_chat_v1_chat, 7);
 
 /**
  * @generated from message knowcel.chat.v1.GetConversationResponse
@@ -273,7 +312,7 @@ export type GetConversationResponse = Message<"knowcel.chat.v1.GetConversationRe
  * Use `create(GetConversationResponseSchema)` to create a new message.
  */
 export const GetConversationResponseSchema: GenMessage<GetConversationResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 7);
+  messageDesc(file_knowcel_chat_v1_chat, 8);
 
 /**
  * Conversations come newest first by their latest message; a conversation
@@ -294,7 +333,7 @@ export type ListConversationsRequest = Message<"knowcel.chat.v1.ListConversation
  * Use `create(ListConversationsRequestSchema)` to create a new message.
  */
 export const ListConversationsRequestSchema: GenMessage<ListConversationsRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 8);
+  messageDesc(file_knowcel_chat_v1_chat, 9);
 
 /**
  * @generated from message knowcel.chat.v1.ListConversationsResponse
@@ -316,7 +355,7 @@ export type ListConversationsResponse = Message<"knowcel.chat.v1.ListConversatio
  * Use `create(ListConversationsResponseSchema)` to create a new message.
  */
 export const ListConversationsResponseSchema: GenMessage<ListConversationsResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 9);
+  messageDesc(file_knowcel_chat_v1_chat, 10);
 
 /**
  * @generated from message knowcel.chat.v1.DeleteConversationRequest
@@ -333,7 +372,7 @@ export type DeleteConversationRequest = Message<"knowcel.chat.v1.DeleteConversat
  * Use `create(DeleteConversationRequestSchema)` to create a new message.
  */
 export const DeleteConversationRequestSchema: GenMessage<DeleteConversationRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 10);
+  messageDesc(file_knowcel_chat_v1_chat, 11);
 
 /**
  * @generated from message knowcel.chat.v1.DeleteConversationResponse
@@ -346,7 +385,7 @@ export type DeleteConversationResponse = Message<"knowcel.chat.v1.DeleteConversa
  * Use `create(DeleteConversationResponseSchema)` to create a new message.
  */
 export const DeleteConversationResponseSchema: GenMessage<DeleteConversationResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 11);
+  messageDesc(file_knowcel_chat_v1_chat, 12);
 
 /**
  * @generated from message knowcel.chat.v1.UpdateConversationRequest
@@ -370,6 +409,14 @@ export type UpdateConversationRequest = Message<"knowcel.chat.v1.UpdateConversat
    * @generated from field: knowcel.chat.v1.DocumentIds document_ids = 3;
    */
   documentIds?: DocumentIds | undefined;
+
+  /**
+   * Replaces the teams when set, with the rules of CreateConversationRequest;
+   * empty ids mean all documents the user can read.
+   *
+   * @generated from field: knowcel.chat.v1.TeamIds team_ids = 4;
+   */
+  teamIds?: TeamIds | undefined;
 };
 
 /**
@@ -377,7 +424,7 @@ export type UpdateConversationRequest = Message<"knowcel.chat.v1.UpdateConversat
  * Use `create(UpdateConversationRequestSchema)` to create a new message.
  */
 export const UpdateConversationRequestSchema: GenMessage<UpdateConversationRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 12);
+  messageDesc(file_knowcel_chat_v1_chat, 13);
 
 /**
  * @generated from message knowcel.chat.v1.UpdateConversationResponse
@@ -394,7 +441,7 @@ export type UpdateConversationResponse = Message<"knowcel.chat.v1.UpdateConversa
  * Use `create(UpdateConversationResponseSchema)` to create a new message.
  */
 export const UpdateConversationResponseSchema: GenMessage<UpdateConversationResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 13);
+  messageDesc(file_knowcel_chat_v1_chat, 14);
 
 /**
  * Each word of the query matches words that start with it, regardless of case;
@@ -424,7 +471,7 @@ export type SearchConversationsRequest = Message<"knowcel.chat.v1.SearchConversa
  * Use `create(SearchConversationsRequestSchema)` to create a new message.
  */
 export const SearchConversationsRequestSchema: GenMessage<SearchConversationsRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 14);
+  messageDesc(file_knowcel_chat_v1_chat, 15);
 
 /**
  * Title matches come first, then message matches, each group best match first;
@@ -444,7 +491,7 @@ export type SearchConversationsResponse = Message<"knowcel.chat.v1.SearchConvers
  * Use `create(SearchConversationsResponseSchema)` to create a new message.
  */
 export const SearchConversationsResponseSchema: GenMessage<SearchConversationsResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 15);
+  messageDesc(file_knowcel_chat_v1_chat, 16);
 
 /**
  * @generated from message knowcel.chat.v1.ConversationMatch
@@ -469,7 +516,7 @@ export type ConversationMatch = Message<"knowcel.chat.v1.ConversationMatch"> & {
  * Use `create(ConversationMatchSchema)` to create a new message.
  */
 export const ConversationMatchSchema: GenMessage<ConversationMatch> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 16);
+  messageDesc(file_knowcel_chat_v1_chat, 17);
 
 /**
  * @generated from message knowcel.chat.v1.StreamChatRequest
@@ -505,7 +552,7 @@ export type StreamChatRequest = Message<"knowcel.chat.v1.StreamChatRequest"> & {
  * Use `create(StreamChatRequestSchema)` to create a new message.
  */
 export const StreamChatRequestSchema: GenMessage<StreamChatRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 17);
+  messageDesc(file_knowcel_chat_v1_chat, 18);
 
 /**
  * @generated from message knowcel.chat.v1.StreamChatResponse
@@ -555,7 +602,7 @@ export type StreamChatResponse = Message<"knowcel.chat.v1.StreamChatResponse"> &
  * Use `create(StreamChatResponseSchema)` to create a new message.
  */
 export const StreamChatResponseSchema: GenMessage<StreamChatResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 18);
+  messageDesc(file_knowcel_chat_v1_chat, 19);
 
 /**
  * @generated from message knowcel.chat.v1.ChatError
@@ -579,7 +626,7 @@ export type ChatError = Message<"knowcel.chat.v1.ChatError"> & {
  * Use `create(ChatErrorSchema)` to create a new message.
  */
 export const ChatErrorSchema: GenMessage<ChatError> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 19);
+  messageDesc(file_knowcel_chat_v1_chat, 20);
 
 /**
  * @generated from message knowcel.chat.v1.Citations
@@ -596,7 +643,7 @@ export type Citations = Message<"knowcel.chat.v1.Citations"> & {
  * Use `create(CitationsSchema)` to create a new message.
  */
 export const CitationsSchema: GenMessage<Citations> = /*@__PURE__*/
-  messageDesc(file_knowcel_chat_v1_chat, 20);
+  messageDesc(file_knowcel_chat_v1_chat, 21);
 
 /**
  * @generated from enum knowcel.chat.v1.MessageRole

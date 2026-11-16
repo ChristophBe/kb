@@ -286,6 +286,9 @@ importers:
       '@knowcel/document-api':
         specifier: workspace:*
         version: link:../../document/api/ts
+      '@knowcel/iam-api':
+        specifier: workspace:*
+        version: link:../../iam/api/ts
       '@knowcel/llm-api':
         specifier: workspace:*
         version: link:../../llm/api/ts

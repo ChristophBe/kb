@@ -9,15 +9,21 @@ import {
   useQuery,
   useQueryClient,
 } from "@knowcel/module-sdk";
-import { Button, Dialog, ErrorMessage, IconButton, Input, Spinner } from "@knowcel/ui";
-import { FileText, X } from "lucide-react";
+import { Button, Dialog, ErrorMessage, IconButton, Input, Spinner, TeamPicker } from "@knowcel/ui";
+import { FileText, Users, X } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { Link } from "react-router";
+import { useMyTeams } from "./useMyTeams.ts";
 
-/** What a scope means, for the header and announcements. */
-export function describeScope(count: number): string {
-  if (count === 0) return "all documents";
-  return count === 1 ? "1 document" : `${count} documents`;
+/**
+ * What a scope means, for the header and announcements: the number of chosen
+ * documents and the names of the chosen teams, either of which may be none.
+ */
+export function describeScope(count: number, teams: string[] = []): string {
+  const documents = count === 1 ? "1 document" : `${count} documents`;
+  const named = teams.length === 1 ? `team ${teams[0]}` : `teams ${teams.join(", ")}`;
+  if (teams.length === 0) return count === 0 ? "all documents" : documents;
+  return count === 0 ? `documents of ${named}` : `${documents} of ${named}`;
 }
 
 /** Replaces a conversation's scope; an empty list means all documents. */
@@ -32,6 +38,48 @@ export function useSetScope(conversation: Conversation) {
       return queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onError: () => toast.error("The scope couldn't be changed. Try again."),
+  });
+}
+
+/**
+ * The teams of a conversation's scope that the user is still in, by name. A
+ * team that was deleted or that they left no longer counts, as for the
+ * answer. While teams can't be looked up, the ids stand without names.
+ */
+export function useScopeTeams(conversation: Conversation): { names: string[]; known: boolean } {
+  const { teams, known } = useMyTeams();
+  if (!known) return { names: [], known };
+  const names = conversation.teamIds.flatMap((id) => teams.find((t) => t.id === id)?.name ?? []);
+  return { names, known };
+}
+
+/** Replaces a conversation's teams; an empty list means all documents. */
+export function useSetTeams(conversation: Conversation) {
+  const client = useClient(ChatService);
+  const queryClient = useQueryClient();
+  const { teams } = useMyTeams();
+  return useMutation({
+    mutationFn: (ids: string[]) =>
+      client.updateConversation({ id: conversation.id, teamIds: { ids } }),
+    onSuccess: (_, ids) => {
+      const names = ids.flatMap((id) => teams.find((t) => t.id === id)?.name ?? []);
+      toast.success(
+        `Knowledge changed to ${describeScope(conversation.documentIds.length, names)}`,
+      );
+      return queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+    onError: (err) => {
+      const code = ConnectError.from(err).code;
+      if (code === Code.PermissionDenied) {
+        toast.error(
+          "You're not a member of one of the teams. One you joined a moment ago can take up to half a minute to work here.",
+        );
+      } else if (code === Code.Unavailable) {
+        toast.error("Teams can't be looked up right now. Try again in a moment.");
+      } else {
+        toast.error("The teams couldn't be changed. Try again.");
+      }
+    },
   });
 }
 
@@ -63,6 +111,7 @@ export function ScopeChips({ conversation }: { conversation: Conversation }) {
   const ids = conversation.documentIds;
   const titles = useScopeTitles(ids);
   const setScope = useSetScope(conversation);
+  const teams = useScopeTeams(conversation);
   const label = useId();
   const chips = useRef(new Map<string, HTMLAnchorElement>());
 
@@ -83,7 +132,7 @@ export function ScopeChips({ conversation }: { conversation: Conversation }) {
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-fg-muted">
       <span id={label}>Scope:</span>
       {ids.length === 0 ? (
-        <span>all documents</span>
+        teams.names.length === 0 && <span>all documents</span>
       ) : (
         <ul aria-labelledby={label} className="flex flex-wrap gap-1">
           {ids.map((id, i) => (
@@ -114,7 +163,71 @@ export function ScopeChips({ conversation }: { conversation: Conversation }) {
           ))}
         </ul>
       )}
+      {teams.names.length > 0 && (
+        <span>
+          {ids.length === 0 ? "documents of " : "in "}
+          {teams.names.length === 1 ? "team" : "teams"}{" "}
+          <span className="text-fg">{teams.names.join(", ")}</span>
+        </span>
+      )}
     </div>
+  );
+}
+
+/** "Choose teams": a dialog to limit the answers to documents of the user's teams. */
+export function TeamScopePicker({ conversation }: { conversation: Conversation }) {
+  const { teams, known } = useMyTeams();
+  const setTeams = useSetTeams(conversation);
+  const [selected, setSelected] = useState<string[] | null>(null);
+  const opener = useRef<HTMLButtonElement>(null);
+  const current = useScopeTeams(conversation).names.length;
+
+  // Without teams (none joined, or iam down) there is nothing to choose.
+  if (!known || teams.length === 0) return null;
+  const close = () => {
+    setSelected(null);
+    opener.current?.focus();
+  };
+  return (
+    <>
+      <Button
+        ref={opener}
+        variant="ghost"
+        className="-ml-3 text-xs"
+        onClick={() =>
+          setSelected(conversation.teamIds.filter((id) => teams.some((t) => t.id === id)))
+        }
+      >
+        <Users className="size-4" aria-hidden="true" />
+        {current === 0 ? "Choose teams" : `Teams (${current})`}
+      </Button>
+      <Dialog
+        open={selected !== null}
+        onClose={close}
+        title="Choose teams for this chat"
+        footer={
+          <>
+            <Button variant="ghost" onClick={close}>
+              Cancel
+            </Button>
+            <Button
+              disabled={setTeams.isPending}
+              onClick={() => selected && setTeams.mutate(selected, { onSuccess: close })}
+            >
+              Apply
+            </Button>
+          </>
+        }
+      >
+        <TeamPicker
+          legend="Use documents of"
+          hint="Leave all unticked to use every document you can read: public ones and those of your teams. With teams ticked, only documents of those teams are used, not public ones."
+          options={teams.map((t) => ({ id: t.id, name: t.name }))}
+          selected={selected ?? []}
+          onChange={setSelected}
+        />
+      </Dialog>
+    </>
   );
 }
 

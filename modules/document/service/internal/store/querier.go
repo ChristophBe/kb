@@ -67,7 +67,8 @@ type Querier interface {
 	// the same embedding model: vectors of different models are not comparable.
 	// The HNSW index yields candidates before the visibility filter applies, so the pool
 	// sets hnsw.iterative_scan (store.ConfigurePool) to keep scanning until the
-	// limit is filled.
+	// limit is filled. only_team_ids, when not empty, further limits the search
+	// to the documents attached to one of those teams (not the public ones).
 	SearchChunks(ctx context.Context, arg SearchChunksParams) ([]SearchChunksRow, error)
 	SetChunkCount(ctx context.Context, arg SetChunkCountParams) error
 	SetDocumentAccess(ctx context.Context, arg SetDocumentAccessParams) error

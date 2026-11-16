@@ -51,7 +51,7 @@ The manual is searched alongside your documents and only when **Answer from your
 
 ## Restrict a chat to some documents
 
-By default, answers come from all your documents (**Scope: all documents** under the conversation's title). To use only some of them:
+By default, answers come from all the documents you can read: the public ones and those of your [teams](teams.md) (**Scope: all documents** under the conversation's title). To use only some of them:
 
 1. Select **Choose documents** below the question box.
 2. Tick the documents to use. Type in **Search documents…** to filter the list by title or file name.
@@ -64,6 +64,16 @@ The documents now appear as chips next to **Scope:** under the title, and the bu
 - A document that was deleted shows as **Deleted document**; remove it from the scope.
 
 **Choose documents** is hidden while **Answer from your documents** is cleared.
+
+### Choose teams
+
+If you belong to teams, **Choose teams** appears next to **Choose documents**. Select it, tick one or more of your teams and select **Apply** to use only the documents of those teams. The header then says, for example, **documents of team Platform**, and the button shows **Teams (1)**.
+
+- Public documents are not used while teams are ticked, only documents attached to one of the teams.
+- If you also chose documents, a document has to match both.
+- To use all documents again, open the dialog, clear every tick and select **Apply**.
+- If a team is deleted or you leave it, it is dropped from the choice. When no chosen team is left, the chat uses all documents again.
+- If Knowcelium says you are not a member of a team, it may be one you joined a moment ago, which can take up to half a minute to work here. Try again shortly. While teams can't be looked up, the button is hidden and chats keep using their last choice.
 
 ## Stop an answer
 

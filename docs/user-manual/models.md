@@ -18,6 +18,10 @@ The badges mean:
 
 Below the status box, the list shows the chat models of the chat provider and the embedding models of the embedding provider, each with its provider's name and marked **chat** or **embedding**. "No models installed." means the providers have none; search and chat need at least one of each.
 
+## See how many tokens were used
+
+Under the model list, **Usage** shows the last 30 days: for each day, model and part of Knowcelium (for example chat), how many answers were written (**Requests**) and how many tokens the model read (**Input**) and wrote (**Output**). The newest day comes first. Platform admins see the usage of all users; everyone else sees their own. Only chat answers are counted, and answers you stopped before they finished are not. "No usage yet." means nothing has been counted in that time.
+
 ## Pull and delete models (platform admins)
 
 Platform admins can install and remove models without access to the server. Everyone else sees only the list.

@@ -188,7 +188,7 @@ components:
     resources:
       requests: { cpu: 50m, memory: 128Mi }
       limits: { memory: 1Gi }
-  # llm-service (llm module, python, gRPC :9004, metrics :9104)
+  # llm-service (llm module, python, gRPC :9004, metrics :9104; uses postgres)
   llm-service:
     enabled: true
     replicas: 1

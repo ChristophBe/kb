@@ -84,6 +84,7 @@ flowchart TB
     ingsvc -- "schema ingestion" --> pg
     chatsvc -- "schema chat" --> pg
     iamsvc -- "schema iam" --> pg
+    llmsvc -- "schema llm" --> pg
     docsvc -- "bucket: raw files, presigning" --> s3
 ```
 
@@ -93,7 +94,7 @@ flowchart TB
 | `ingestion-service` | ingestion | schema `ingestion` (jobs), stream `INGESTION` | document | publishes `uploaded`; consumes `started`, `processed`, `failed`, and the document module's `reindex_requested` |
 | `ingestion-worker` | ingestion | — | document, llm | consumes `uploaded`; publishes `started`, `processed`, `failed` |
 | `chat-service` | chat | schema `chat` (conversations, messages) | document, llm | — |
-| `llm-service` | llm | provider registry | Ollama over HTTP, Anthropic API | — |
+| `llm-service` | llm | schema `llm` (usage of generations), provider registry | Ollama over HTTP, Anthropic API | — |
 | `iam-service` | iam | schema `iam` (users) | — | — |
 | `envoy` | — | per-method routes for the public RPCs of each manifest's `grpc_services` (not `internal`); token check, sets `x-kb-user`, `x-kb-email` and `x-kb-name` ([ADR 0009](../adr/0009-oidc-authentication-at-the-gateway.md), [ADR 0013](../adr/0013-iam-module.md)) | all services | — |
 | `web` | — | UI shell; module UIs from `apps/web/src/modules.gen.ts` | via envoy | — |

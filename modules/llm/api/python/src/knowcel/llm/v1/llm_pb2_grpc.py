@@ -66,6 +66,11 @@ class LlmServiceStub:
                 request_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.DeleteModelRequest.SerializeToString,
                 response_deserializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.DeleteModelResponse.FromString,
                 _registered_method=True)
+        self.GetUsage = channel.unary_unary(
+                '/knowcel.llm.v1.LlmService/GetUsage',
+                request_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.GetUsageRequest.SerializeToString,
+                response_deserializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.GetUsageResponse.FromString,
+                _registered_method=True)
 
 
 class LlmServiceServicer:
@@ -116,6 +121,15 @@ class LlmServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetUsage(self, request, context):
+        """GetUsage sums the tokens of recorded generations per day, model and
+        calling module. Platform admins see every user's usage, everyone else
+        their own; calls without a user are rejected with UNAUTHENTICATED.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_LlmServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -148,6 +162,11 @@ def add_LlmServiceServicer_to_server(servicer, server):
                     servicer.DeleteModel,
                     request_deserializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.DeleteModelRequest.FromString,
                     response_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.DeleteModelResponse.SerializeToString,
+            ),
+            'GetUsage': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetUsage,
+                    request_deserializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.GetUsageRequest.FromString,
+                    response_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.GetUsageResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -314,6 +333,33 @@ class LlmService:
             '/knowcel.llm.v1.LlmService/DeleteModel',
             knowcel_dot_llm_dot_v1_dot_llm__pb2.DeleteModelRequest.SerializeToString,
             knowcel_dot_llm_dot_v1_dot_llm__pb2.DeleteModelResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetUsage(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.llm.v1.LlmService/GetUsage',
+            knowcel_dot_llm_dot_v1_dot_llm__pb2.GetUsageRequest.SerializeToString,
+            knowcel_dot_llm_dot_v1_dot_llm__pb2.GetUsageResponse.FromString,
             options,
             channel_credentials,
             insecure,

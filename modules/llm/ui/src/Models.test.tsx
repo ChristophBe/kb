@@ -11,6 +11,7 @@ describe("Models", () => {
   it("shows the provider status and the models", async () => {
     const transport = createRouterTransport(({ service }) =>
       service(LlmService, {
+        getUsage: () => ({ entries: [] }),
         getProviderStatus: () => ({
           provider: "ollama",
           healthy: true,
@@ -40,6 +41,7 @@ describe("Models", () => {
   it("shows the chat and the embedding provider separately", async () => {
     const transport = createRouterTransport(({ service }) =>
       service(LlmService, {
+        getUsage: () => ({ entries: [] }),
         getProviderStatus: () => ({
           provider: "anthropic+ollama",
           healthy: false,
@@ -71,6 +73,7 @@ describe("Models", () => {
   it("shows why the provider can't be reached", async () => {
     const transport = createRouterTransport(({ service }) =>
       service(LlmService, {
+        getUsage: () => ({ entries: [] }),
         getProviderStatus: () => ({
           provider: "ollama",
           healthy: false,
@@ -87,6 +90,7 @@ describe("Models", () => {
   it("shows why the models can't be listed", async () => {
     const transport = createRouterTransport(({ service }) =>
       service(LlmService, {
+        getUsage: () => ({ entries: [] }),
         getProviderStatus: () => {
           throw new ConnectError("llm service down", Code.Unavailable);
         },
@@ -116,6 +120,7 @@ describe("Models", () => {
     it("hides pulling and deleting from everyone but platform admins", async () => {
       const transport = createRouterTransport(({ service }) =>
         service(LlmService, {
+          getUsage: () => ({ entries: [] }),
           getProviderStatus: () => status,
           listModels: () => ({
             models: [{ id: "llama3.2", provider: "ollama", kind: ModelKind.CHAT }],
@@ -134,6 +139,7 @@ describe("Models", () => {
     it("has no accessibility violations for admins", async () => {
       const transport = createRouterTransport(({ service }) =>
         service(LlmService, {
+          getUsage: () => ({ entries: [] }),
           getProviderStatus: () => status,
           listModels: () => ({
             models: [{ id: "llama3.2", provider: "ollama", kind: ModelKind.CHAT }],
@@ -155,6 +161,7 @@ describe("Models", () => {
       const requests: { provider: string; model: string }[] = [];
       const transport = createRouterTransport(({ service }) =>
         service(LlmService, {
+          getUsage: () => ({ entries: [] }),
           getProviderStatus: () => status,
           listModels: () => ({
             models: pulled ? [{ id: "phi4", provider: "ollama", kind: ModelKind.CHAT }] : [],
@@ -185,6 +192,7 @@ describe("Models", () => {
     it("asks for a model name and says why a pull failed", async () => {
       const transport = createRouterTransport(({ service }) =>
         service(LlmService, {
+          getUsage: () => ({ entries: [] }),
           getProviderStatus: () => status,
           listModels: () => ({ models: [] }),
           // biome-ignore lint/correctness/useYield: fails before the first step
@@ -208,6 +216,7 @@ describe("Models", () => {
       const requests: string[] = [];
       const transport = createRouterTransport(({ service }) =>
         service(LlmService, {
+          getUsage: () => ({ entries: [] }),
           getProviderStatus: () => ({
             ...status,
             provider: "anthropic+ollama",
@@ -234,6 +243,7 @@ describe("Models", () => {
       const deleted: { provider: string; model: string }[] = [];
       const transport = createRouterTransport(({ service }) =>
         service(LlmService, {
+          getUsage: () => ({ entries: [] }),
           getProviderStatus: () => status,
           listModels: () => ({
             models: deleted.length
@@ -257,6 +267,7 @@ describe("Models", () => {
     it("says why a delete was refused", async () => {
       const transport = createRouterTransport(({ service }) =>
         service(LlmService, {
+          getUsage: () => ({ entries: [] }),
           getProviderStatus: () => status,
           listModels: () => ({
             models: [{ id: "llama3.2", provider: "ollama", kind: ModelKind.CHAT }],

@@ -7,6 +7,7 @@ services:
     environment:
       KNOWCEL_LOG_LEVEL: ${KNOWCEL_LOG_LEVEL:-INFO}
       KNOWCEL_OTEL_ENDPOINT: ${KNOWCEL_OTEL_ENDPOINT:-}
+      KNOWCEL_DATABASE_URL: postgresql+asyncpg://kb:kb@postgres:5432/kb
       # Soft dependency: no depends_on on iam-service; while it is down, models can't be pulled or deleted.
       KNOWCEL_IAM_ADDR: iam-service:9006
       KNOWCEL_LLM_PROVIDER: ${KNOWCEL_LLM_PROVIDER:-ollama}
@@ -23,6 +24,7 @@ services:
     # gRPC and Prometheus /metrics (docs/metrics.md).
     ports: ["9004:9004", "9104:9104"]
     depends_on:
+      postgres: { condition: service_healthy }
       ollama: { condition: service_started, required: false }
       ollama-pull: { condition: service_completed_successfully, required: false }
     healthcheck:
@@ -32,6 +34,7 @@ services:
     develop:
       watch:
         - { action: sync+restart, path: ./service/src, target: /app/modules/llm/service/src }
+        - { action: sync+restart, path: ./migrations, target: /app/modules/llm/migrations }
         - { action: sync+restart, path: ../../platform/python/src, target: /app/platform/python/src }
 
   # Local model server; enable with `--profile ollama`, or point

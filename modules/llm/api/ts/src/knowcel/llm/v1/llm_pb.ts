@@ -10,7 +10,7 @@ import type { Message as Message$1 } from "@bufbuild/protobuf";
  * Describes the file knowcel/llm/v1/llm.proto.
  */
 export const file_knowcel_llm_v1_llm: GenFile = /*@__PURE__*/
-  fileDesc("Chhrbm93Y2VsL2xsbS92MS9sbG0ucHJvdG8SDmtub3djZWwubGxtLnYxIk4KBU1vZGVsEgoKAmlkGAEgASgJEhAKCHByb3ZpZGVyGAIgASgJEicKBGtpbmQYAyABKA4yGS5rbm93Y2VsLmxsbS52MS5Nb2RlbEtpbmQiPgoHTWVzc2FnZRIiCgRyb2xlGAEgASgOMhQua25vd2NlbC5sbG0udjEuUm9sZRIPCgdjb250ZW50GAIgASgJImUKEUdlbmVyYXRpb25PcHRpb25zEhgKC3RlbXBlcmF0dXJlGAEgASgCSACIAQESFwoKbWF4X3Rva2VucxgCIAEoBUgBiAEBQg4KDF90ZW1wZXJhdHVyZUINCgtfbWF4X3Rva2VucyI0CgVVc2FnZRIUCgxpbnB1dF90b2tlbnMYASABKAUSFQoNb3V0cHV0X3Rva2VucxgCIAEoBSITChFMaXN0TW9kZWxzUmVxdWVzdCI7ChJMaXN0TW9kZWxzUmVzcG9uc2USJQoGbW9kZWxzGAEgAygLMhUua25vd2NlbC5sbG0udjEuTW9kZWwiGgoYR2V0UHJvdmlkZXJTdGF0dXNSZXF1ZXN0IkMKDlByb3ZpZGVySGVhbHRoEhAKCHByb3ZpZGVyGAEgASgJEg8KB2hlYWx0aHkYAiABKAgSDgoGZGV0YWlsGAMgASgJIooCChlHZXRQcm92aWRlclN0YXR1c1Jlc3BvbnNlEhAKCHByb3ZpZGVyGAEgASgJEg8KB2hlYWx0aHkYAiABKAgSDgoGZGV0YWlsGAMgASgJEhoKEmRlZmF1bHRfY2hhdF9tb2RlbBgEIAEoCRIfChdkZWZhdWx0X2VtYmVkZGluZ19tb2RlbBgFIAEoCRIcChRlbWJlZGRpbmdfZGltZW5zaW9ucxgGIAEoBRIsCgRjaGF0GAcgASgLMh4ua25vd2NlbC5sbG0udjEuUHJvdmlkZXJIZWFsdGgSMQoJZW1iZWRkaW5nGAggASgLMh4ua25vd2NlbC5sbG0udjEuUHJvdmlkZXJIZWFsdGgifwoPR2VuZXJhdGVSZXF1ZXN0Eg0KBW1vZGVsGAEgASgJEikKCG1lc3NhZ2VzGAIgAygLMhcua25vd2NlbC5sbG0udjEuTWVzc2FnZRIyCgdvcHRpb25zGAMgASgLMiEua25vd2NlbC5sbG0udjEuR2VuZXJhdGlvbk9wdGlvbnMiZAoQR2VuZXJhdGVSZXNwb25zZRINCgVkZWx0YRgBIAEoCRIMCgRkb25lGAIgASgIEiQKBXVzYWdlGAMgASgLMhUua25vd2NlbC5sbG0udjEuVXNhZ2USDQoFbW9kZWwYBCABKAkiLQoMRW1iZWRSZXF1ZXN0Eg0KBW1vZGVsGAEgASgJEg4KBmlucHV0cxgCIAMoCSIbCglFbWJlZGRpbmcSDgoGdmFsdWVzGAEgAygCImEKDUVtYmVkUmVzcG9uc2USLQoKZW1iZWRkaW5ncxgBIAMoCzIZLmtub3djZWwubGxtLnYxLkVtYmVkZGluZxINCgVtb2RlbBgCIAEoCRISCgpkaW1lbnNpb25zGAMgASgFIjMKEFB1bGxNb2RlbFJlcXVlc3QSEAoIcHJvdmlkZXIYASABKAkSDQoFbW9kZWwYAiABKAkiUwoRUHVsbE1vZGVsUmVzcG9uc2USDgoGc3RhdHVzGAEgASgJEhEKCWNvbXBsZXRlZBgCIAEoAxINCgV0b3RhbBgDIAEoAxIMCgRkb25lGAQgASgIIjUKEkRlbGV0ZU1vZGVsUmVxdWVzdBIQCghwcm92aWRlchgBIAEoCRINCgVtb2RlbBgCIAEoCSIVChNEZWxldGVNb2RlbFJlc3BvbnNlKlAKBFJvbGUSFAoQUk9MRV9VTlNQRUNJRklFRBAAEg8KC1JPTEVfU1lTVEVNEAESDQoJUk9MRV9VU0VSEAISEgoOUk9MRV9BU1NJU1RBTlQQAypWCglNb2RlbEtpbmQSGgoWTU9ERUxfS0lORF9VTlNQRUNJRklFRBAAEhMKD01PREVMX0tJTkRfQ0hBVBABEhgKFE1PREVMX0tJTkRfRU1CRURESU5HEAIyjgQKCkxsbVNlcnZpY2USUwoKTGlzdE1vZGVscxIhLmtub3djZWwubGxtLnYxLkxpc3RNb2RlbHNSZXF1ZXN0GiIua25vd2NlbC5sbG0udjEuTGlzdE1vZGVsc1Jlc3BvbnNlEmgKEUdldFByb3ZpZGVyU3RhdHVzEigua25vd2NlbC5sbG0udjEuR2V0UHJvdmlkZXJTdGF0dXNSZXF1ZXN0Gikua25vd2NlbC5sbG0udjEuR2V0UHJvdmlkZXJTdGF0dXNSZXNwb25zZRJPCghHZW5lcmF0ZRIfLmtub3djZWwubGxtLnYxLkdlbmVyYXRlUmVxdWVzdBogLmtub3djZWwubGxtLnYxLkdlbmVyYXRlUmVzcG9uc2UwARJECgVFbWJlZBIcLmtub3djZWwubGxtLnYxLkVtYmVkUmVxdWVzdBodLmtub3djZWwubGxtLnYxLkVtYmVkUmVzcG9uc2USUgoJUHVsbE1vZGVsEiAua25vd2NlbC5sbG0udjEuUHVsbE1vZGVsUmVxdWVzdBohLmtub3djZWwubGxtLnYxLlB1bGxNb2RlbFJlc3BvbnNlMAESVgoLRGVsZXRlTW9kZWwSIi5rbm93Y2VsLmxsbS52MS5EZWxldGVNb2RlbFJlcXVlc3QaIy5rbm93Y2VsLmxsbS52MS5EZWxldGVNb2RlbFJlc3BvbnNlQkJaQGdpdGh1Yi5jb20vQ2hyaXN0b3BoQmUva25vd2NlbGl1bS9tb2R1bGVzL2xsbS9hcGkvZ28vbGxtdjE7bGxtdjFiBnByb3RvMw");
+  fileDesc("Chhrbm93Y2VsL2xsbS92MS9sbG0ucHJvdG8SDmtub3djZWwubGxtLnYxIk4KBU1vZGVsEgoKAmlkGAEgASgJEhAKCHByb3ZpZGVyGAIgASgJEicKBGtpbmQYAyABKA4yGS5rbm93Y2VsLmxsbS52MS5Nb2RlbEtpbmQiPgoHTWVzc2FnZRIiCgRyb2xlGAEgASgOMhQua25vd2NlbC5sbG0udjEuUm9sZRIPCgdjb250ZW50GAIgASgJImUKEUdlbmVyYXRpb25PcHRpb25zEhgKC3RlbXBlcmF0dXJlGAEgASgCSACIAQESFwoKbWF4X3Rva2VucxgCIAEoBUgBiAEBQg4KDF90ZW1wZXJhdHVyZUINCgtfbWF4X3Rva2VucyI0CgVVc2FnZRIUCgxpbnB1dF90b2tlbnMYASABKAUSFQoNb3V0cHV0X3Rva2VucxgCIAEoBSITChFMaXN0TW9kZWxzUmVxdWVzdCI7ChJMaXN0TW9kZWxzUmVzcG9uc2USJQoGbW9kZWxzGAEgAygLMhUua25vd2NlbC5sbG0udjEuTW9kZWwiGgoYR2V0UHJvdmlkZXJTdGF0dXNSZXF1ZXN0IkMKDlByb3ZpZGVySGVhbHRoEhAKCHByb3ZpZGVyGAEgASgJEg8KB2hlYWx0aHkYAiABKAgSDgoGZGV0YWlsGAMgASgJIooCChlHZXRQcm92aWRlclN0YXR1c1Jlc3BvbnNlEhAKCHByb3ZpZGVyGAEgASgJEg8KB2hlYWx0aHkYAiABKAgSDgoGZGV0YWlsGAMgASgJEhoKEmRlZmF1bHRfY2hhdF9tb2RlbBgEIAEoCRIfChdkZWZhdWx0X2VtYmVkZGluZ19tb2RlbBgFIAEoCRIcChRlbWJlZGRpbmdfZGltZW5zaW9ucxgGIAEoBRIsCgRjaGF0GAcgASgLMh4ua25vd2NlbC5sbG0udjEuUHJvdmlkZXJIZWFsdGgSMQoJZW1iZWRkaW5nGAggASgLMh4ua25vd2NlbC5sbG0udjEuUHJvdmlkZXJIZWFsdGgilgEKD0dlbmVyYXRlUmVxdWVzdBINCgVtb2RlbBgBIAEoCRIpCghtZXNzYWdlcxgCIAMoCzIXLmtub3djZWwubGxtLnYxLk1lc3NhZ2USMgoHb3B0aW9ucxgDIAEoCzIhLmtub3djZWwubGxtLnYxLkdlbmVyYXRpb25PcHRpb25zEhUKDWNhbGxlcl9tb2R1bGUYBCABKAkiZAoQR2VuZXJhdGVSZXNwb25zZRINCgVkZWx0YRgBIAEoCRIMCgRkb25lGAIgASgIEiQKBXVzYWdlGAMgASgLMhUua25vd2NlbC5sbG0udjEuVXNhZ2USDQoFbW9kZWwYBCABKAkiLQoMRW1iZWRSZXF1ZXN0Eg0KBW1vZGVsGAEgASgJEg4KBmlucHV0cxgCIAMoCSIbCglFbWJlZGRpbmcSDgoGdmFsdWVzGAEgAygCImEKDUVtYmVkUmVzcG9uc2USLQoKZW1iZWRkaW5ncxgBIAMoCzIZLmtub3djZWwubGxtLnYxLkVtYmVkZGluZxINCgVtb2RlbBgCIAEoCRISCgpkaW1lbnNpb25zGAMgASgFIjMKEFB1bGxNb2RlbFJlcXVlc3QSEAoIcHJvdmlkZXIYASABKAkSDQoFbW9kZWwYAiABKAkiUwoRUHVsbE1vZGVsUmVzcG9uc2USDgoGc3RhdHVzGAEgASgJEhEKCWNvbXBsZXRlZBgCIAEoAxINCgV0b3RhbBgDIAEoAxIMCgRkb25lGAQgASgIIjUKEkRlbGV0ZU1vZGVsUmVxdWVzdBIQCghwcm92aWRlchgBIAEoCRINCgVtb2RlbBgCIAEoCSIVChNEZWxldGVNb2RlbFJlc3BvbnNlIh8KD0dldFVzYWdlUmVxdWVzdBIMCgRkYXlzGAEgASgFIpEBCgpVc2FnZUVudHJ5EgwKBGRhdGUYASABKAkSEAoIcHJvdmlkZXIYAiABKAkSDQoFbW9kZWwYAyABKAkSFQoNY2FsbGVyX21vZHVsZRgEIAEoCRIQCghyZXF1ZXN0cxgFIAEoAxIUCgxpbnB1dF90b2tlbnMYBiABKAMSFQoNb3V0cHV0X3Rva2VucxgHIAEoAyI/ChBHZXRVc2FnZVJlc3BvbnNlEisKB2VudHJpZXMYASADKAsyGi5rbm93Y2VsLmxsbS52MS5Vc2FnZUVudHJ5KlAKBFJvbGUSFAoQUk9MRV9VTlNQRUNJRklFRBAAEg8KC1JPTEVfU1lTVEVNEAESDQoJUk9MRV9VU0VSEAISEgoOUk9MRV9BU1NJU1RBTlQQAypWCglNb2RlbEtpbmQSGgoWTU9ERUxfS0lORF9VTlNQRUNJRklFRBAAEhMKD01PREVMX0tJTkRfQ0hBVBABEhgKFE1PREVMX0tJTkRfRU1CRURESU5HEAIy3QQKCkxsbVNlcnZpY2USUwoKTGlzdE1vZGVscxIhLmtub3djZWwubGxtLnYxLkxpc3RNb2RlbHNSZXF1ZXN0GiIua25vd2NlbC5sbG0udjEuTGlzdE1vZGVsc1Jlc3BvbnNlEmgKEUdldFByb3ZpZGVyU3RhdHVzEigua25vd2NlbC5sbG0udjEuR2V0UHJvdmlkZXJTdGF0dXNSZXF1ZXN0Gikua25vd2NlbC5sbG0udjEuR2V0UHJvdmlkZXJTdGF0dXNSZXNwb25zZRJPCghHZW5lcmF0ZRIfLmtub3djZWwubGxtLnYxLkdlbmVyYXRlUmVxdWVzdBogLmtub3djZWwubGxtLnYxLkdlbmVyYXRlUmVzcG9uc2UwARJECgVFbWJlZBIcLmtub3djZWwubGxtLnYxLkVtYmVkUmVxdWVzdBodLmtub3djZWwubGxtLnYxLkVtYmVkUmVzcG9uc2USUgoJUHVsbE1vZGVsEiAua25vd2NlbC5sbG0udjEuUHVsbE1vZGVsUmVxdWVzdBohLmtub3djZWwubGxtLnYxLlB1bGxNb2RlbFJlc3BvbnNlMAESVgoLRGVsZXRlTW9kZWwSIi5rbm93Y2VsLmxsbS52MS5EZWxldGVNb2RlbFJlcXVlc3QaIy5rbm93Y2VsLmxsbS52MS5EZWxldGVNb2RlbFJlc3BvbnNlEk0KCEdldFVzYWdlEh8ua25vd2NlbC5sbG0udjEuR2V0VXNhZ2VSZXF1ZXN0GiAua25vd2NlbC5sbG0udjEuR2V0VXNhZ2VSZXNwb25zZUJCWkBnaXRodWIuY29tL0NocmlzdG9waEJlL2tub3djZWxpdW0vbW9kdWxlcy9sbG0vYXBpL2dvL2xsbXYxO2xsbXYxYgZwcm90bzM");
 
 /**
  * @generated from message knowcel.llm.v1.Model
@@ -265,6 +265,14 @@ export type GenerateRequest = Message$1<"knowcel.llm.v1.GenerateRequest"> & {
    * @generated from field: knowcel.llm.v1.GenerationOptions options = 3;
    */
   options?: GenerationOptions | undefined;
+
+  /**
+   * Id of the calling module (e.g. "chat"), under which the generation is
+   * recorded in the usage; empty is recorded as "unknown".
+   *
+   * @generated from field: string caller_module = 4;
+   */
+  callerModule: string;
 };
 
 /**
@@ -477,6 +485,95 @@ export const DeleteModelResponseSchema: GenMessage<DeleteModelResponse> = /*@__P
   messageDesc(file_knowcel_llm_v1_llm, 17);
 
 /**
+ * @generated from message knowcel.llm.v1.GetUsageRequest
+ */
+export type GetUsageRequest = Message$1<"knowcel.llm.v1.GetUsageRequest"> & {
+  /**
+   * How many days back to sum, today included; 0 selects 30. At most 366.
+   *
+   * @generated from field: int32 days = 1;
+   */
+  days: number;
+};
+
+/**
+ * Describes the message knowcel.llm.v1.GetUsageRequest.
+ * Use `create(GetUsageRequestSchema)` to create a new message.
+ */
+export const GetUsageRequestSchema: GenMessage<GetUsageRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_llm_v1_llm, 18);
+
+/**
+ * UsageEntry sums the generations of one day, model and calling module.
+ *
+ * @generated from message knowcel.llm.v1.UsageEntry
+ */
+export type UsageEntry = Message$1<"knowcel.llm.v1.UsageEntry"> & {
+  /**
+   * The day in UTC, as YYYY-MM-DD.
+   *
+   * @generated from field: string date = 1;
+   */
+  date: string;
+
+  /**
+   * @generated from field: string provider = 2;
+   */
+  provider: string;
+
+  /**
+   * @generated from field: string model = 3;
+   */
+  model: string;
+
+  /**
+   * @generated from field: string caller_module = 4;
+   */
+  callerModule: string;
+
+  /**
+   * @generated from field: int64 requests = 5;
+   */
+  requests: bigint;
+
+  /**
+   * @generated from field: int64 input_tokens = 6;
+   */
+  inputTokens: bigint;
+
+  /**
+   * @generated from field: int64 output_tokens = 7;
+   */
+  outputTokens: bigint;
+};
+
+/**
+ * Describes the message knowcel.llm.v1.UsageEntry.
+ * Use `create(UsageEntrySchema)` to create a new message.
+ */
+export const UsageEntrySchema: GenMessage<UsageEntry> = /*@__PURE__*/
+  messageDesc(file_knowcel_llm_v1_llm, 19);
+
+/**
+ * @generated from message knowcel.llm.v1.GetUsageResponse
+ */
+export type GetUsageResponse = Message$1<"knowcel.llm.v1.GetUsageResponse"> & {
+  /**
+   * Newest day first, then by model and calling module.
+   *
+   * @generated from field: repeated knowcel.llm.v1.UsageEntry entries = 1;
+   */
+  entries: UsageEntry[];
+};
+
+/**
+ * Describes the message knowcel.llm.v1.GetUsageResponse.
+ * Use `create(GetUsageResponseSchema)` to create a new message.
+ */
+export const GetUsageResponseSchema: GenMessage<GetUsageResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_llm_v1_llm, 20);
+
+/**
  * @generated from enum knowcel.llm.v1.Role
  */
 export enum Role {
@@ -597,6 +694,18 @@ export const LlmService: GenService<{
     methodKind: "unary";
     input: typeof DeleteModelRequestSchema;
     output: typeof DeleteModelResponseSchema;
+  },
+  /**
+   * GetUsage sums the tokens of recorded generations per day, model and
+   * calling module. Platform admins see every user's usage, everyone else
+   * their own; calls without a user are rejected with UNAUTHENTICATED.
+   *
+   * @generated from rpc knowcel.llm.v1.LlmService.GetUsage
+   */
+  getUsage: {
+    methodKind: "unary";
+    input: typeof GetUsageRequestSchema;
+    output: typeof GetUsageResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_knowcel_llm_v1_llm, 0);

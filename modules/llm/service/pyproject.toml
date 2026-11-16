@@ -4,12 +4,15 @@ version = "0.1.0"
 description = "kb llm module: gateway to LLM providers"
 requires-python = ">=3.13"
 dependencies = [
+    "alembic>=1.16",
     "anthropic>=2.3",
+    "asyncpg>=0.30",
     "httpx>=0.28",
     "knowcel-iam-api",
     "knowcel-llm-api",
     "knowcel-platform",
     "prometheus-client>=0.26",
+    "sqlalchemy[asyncio]>=2.0.40",
 ]
 
 [project.scripts]

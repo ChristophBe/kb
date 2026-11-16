@@ -484,6 +484,46 @@ func TestListDocumentsIncludesTheTeamsDocuments(t *testing.T) {
 	}
 }
 
+// Public documents are listed and found for any user, among the owner's and
+// the teams', and each is listed once.
+func TestPublicDocumentsAreVisibleToEveryone(t *testing.T) {
+	ctx := t.Context()
+	r := NewRepo(pgtest.Start(t, "document", migrations.FS))
+	team := uuid.New()
+	create := func(owner, title string, access int16) uuid.UUID {
+		t.Helper()
+		id := uuid.New()
+		if _, err := r.CreateDocument(ctx, CreateDocumentParams{
+			ID: id, OwnerID: owner, Title: title, Filename: title, ContentType: "text/plain", ObjectKey: id.String(),
+			Status: 1, Metadata: map[string]string{}, Access: access,
+		}); err != nil {
+			t.Fatal(err)
+		}
+		return id
+	}
+	public := create("bob", "public.md", 1)
+	mine := create("alice", "mine.md", 1)
+	create("bob", "team.md", 2)
+	create("alice", "private-team.md", 2)
+
+	page, err := r.ListDocuments(ctx, ListDocumentsParams{OwnerID: "alice", TeamIds: []uuid.UUID{}, MaxResults: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, d := range page {
+		got = append(got, d.Title)
+	}
+	if want := []string{"private-team.md", "mine.md", "public.md"}; !slices.Equal(got, want) {
+		t.Errorf("listed %v, want %v", got, want)
+	}
+	for _, id := range []uuid.UUID{public, mine} {
+		if _, err := r.GetVisibleDocument(ctx, GetVisibleDocumentParams{ID: id, OwnerID: "carol", TeamIds: []uuid.UUID{team}}); err != nil {
+			t.Errorf("public document %s: %v", id, err)
+		}
+	}
+}
+
 func TestListDocumentsUsesTheOwnerIndex(t *testing.T) {
 	pool := pgtest.Start(t, "document", migrations.FS)
 	tx, err := pool.Begin(t.Context())

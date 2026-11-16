@@ -11,6 +11,12 @@ from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
+class Access(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    ACCESS_UNSPECIFIED: _ClassVar[Access]
+    ACCESS_PUBLIC: _ClassVar[Access]
+    ACCESS_TEAM: _ClassVar[Access]
+
 class JobStatus(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     JOB_STATUS_UNSPECIFIED: _ClassVar[JobStatus]
@@ -27,6 +33,9 @@ class JobStage(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     JOB_STAGE_CHUNKING: _ClassVar[JobStage]
     JOB_STAGE_EMBEDDING: _ClassVar[JobStage]
     JOB_STAGE_STORING: _ClassVar[JobStage]
+ACCESS_UNSPECIFIED: Access
+ACCESS_PUBLIC: Access
+ACCESS_TEAM: Access
 JOB_STATUS_UNSPECIFIED: JobStatus
 JOB_STATUS_PENDING_UPLOAD: JobStatus
 JOB_STATUS_QUEUED: JobStatus
@@ -68,20 +77,22 @@ class Job(_message.Message):
     def __init__(self, id: _Optional[str] = ..., document_id: _Optional[str] = ..., filename: _Optional[str] = ..., content_type: _Optional[str] = ..., status: _Optional[_Union[JobStatus, str]] = ..., error: _Optional[str] = ..., chunk_count: _Optional[int] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., progress: _Optional[int] = ..., stage: _Optional[_Union[JobStage, str]] = ..., owner_id: _Optional[str] = ...) -> None: ...
 
 class CreateUploadRequest(_message.Message):
-    __slots__ = ("filename", "content_type", "size_bytes", "title", "sha256", "team_ids")
+    __slots__ = ("filename", "content_type", "size_bytes", "title", "sha256", "access", "team_ids")
     FILENAME_FIELD_NUMBER: _ClassVar[int]
     CONTENT_TYPE_FIELD_NUMBER: _ClassVar[int]
     SIZE_BYTES_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
     SHA256_FIELD_NUMBER: _ClassVar[int]
+    ACCESS_FIELD_NUMBER: _ClassVar[int]
     TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
     filename: str
     content_type: str
     size_bytes: int
     title: str
     sha256: str
+    access: Access
     team_ids: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., title: _Optional[str] = ..., sha256: _Optional[str] = ..., team_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+    def __init__(self, filename: _Optional[str] = ..., content_type: _Optional[str] = ..., size_bytes: _Optional[int] = ..., title: _Optional[str] = ..., sha256: _Optional[str] = ..., access: _Optional[_Union[Access, str]] = ..., team_ids: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class CreateUploadResponse(_message.Message):
     __slots__ = ("job", "upload_url")

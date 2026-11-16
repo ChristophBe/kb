@@ -151,7 +151,9 @@ type NewUpload struct {
 	SizeBytes   int64
 	// SHA256 is the file's checksum in hex, empty if the client sent none.
 	SHA256 string
-	// TeamIDs are the teams to share the new document with.
+	// Access is who can read the new document; unset means public.
+	Access ingestionv1.Access
+	// TeamIDs are the teams of a team document.
 	TeamIDs []uuid.UUID
 }
 

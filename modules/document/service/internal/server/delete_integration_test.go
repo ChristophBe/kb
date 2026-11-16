@@ -207,8 +207,9 @@ func TestDeleteDocumentWhoseUploadNeverArrived(t *testing.T) {
 func TestDeleteDocumentOfAnotherUserTouchesNothing(t *testing.T) {
 	h := newHarness(t)
 	doc := h.upload(t)
-	if err := h.delete(grpcserver.WithUser(t.Context(), bob), doc); status.Code(err) != codes.NotFound {
-		t.Fatalf("err = %v, want NotFound", err)
+	// The upload is public, so bob can read it, but not delete it.
+	if err := h.delete(grpcserver.WithUser(t.Context(), bob), doc); status.Code(err) != codes.PermissionDenied {
+		t.Fatalf("err = %v, want PermissionDenied", err)
 	}
 	h.assertStored(t, doc, true, true)
 }

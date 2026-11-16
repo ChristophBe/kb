@@ -14,8 +14,8 @@ type Querier interface {
 	// AddDocumentTeams and RemoveDocumentTeams are idempotent.
 	AddDocumentTeams(ctx context.Context, arg AddDocumentTeamsParams) error
 	// Queries taking an owner_id act for that user and find only their documents;
-	// those that also take team_ids find the documents shared with any of those
-	// teams too (the caller's). The others serve the internal RPCs of the ingestion pipeline, which acts on
+	// those that also take team_ids find the public documents (access 1) and those
+	// of the teams (the caller's) too. The others serve the internal RPCs of the ingestion pipeline, which acts on
 	// any document.
 	CreateDocument(ctx context.Context, arg CreateDocumentParams) (DocumentDocument, error)
 	DeleteChunks(ctx context.Context, documentID uuid.UUID) error
@@ -36,10 +36,10 @@ type Querier interface {
 	ListDocumentTeams(ctx context.Context, documentIds []uuid.UUID) ([]DocumentDocumentTeam, error)
 	// ListDocuments is keyset-paginated: a page continues after the (created_at, id) of
 	// the last row of the previous one (both after_* NULL for the first page), so
-	// rows inserted meanwhile never shift it. It lists the user's documents and
-	// those shared with their teams: each of the two sets is read in order from
-	// its index (the owner's, and the teams') and cut to a page before they are
-	// merged, which an OR of both conditions could not do.
+	// rows inserted meanwhile never shift it. It lists the public documents, the
+	// user's own and those of their teams: each of the three sets is read in order
+	// from its index and cut to a page before they are merged, which an OR of the
+	// conditions could not do.
 	ListDocuments(ctx context.Context, arg ListDocumentsParams) ([]DocumentDocument, error)
 	// ListReindexTargets returns the owner's READY documents (status 4) to
 	// reindex: those with a chunk made by a model other than embedding_model, or
@@ -61,8 +61,8 @@ type Querier interface {
 	// per document. Only chunks of the embedding's model are compared, as in
 	// SearchChunks.
 	SearchBestChunks(ctx context.Context, arg SearchBestChunksParams) ([]SearchBestChunksRow, error)
-	// SearchChunks returns the chunks of the owner's documents and of those shared
-	// with team_ids that are most similar to the embedding, among those made by
+	// SearchChunks returns the chunks of the public documents, the owner's and
+	// those of team_ids that are most similar to the embedding, among those made by
 	// the same embedding model: vectors of different models are not comparable.
 	// The HNSW index yields candidates before the visibility filter applies, so the pool
 	// sets hnsw.iterative_scan (store.ConfigurePool) to keep scanning until the

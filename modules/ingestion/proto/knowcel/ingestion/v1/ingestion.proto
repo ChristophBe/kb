@@ -40,6 +40,16 @@ service IngestionService {
   rpc ReprocessJob(ReprocessJobRequest) returns (ReprocessJobResponse);
 }
 
+// Access says who can read a document, as in the document module.
+enum Access {
+  // Treated as ACCESS_PUBLIC.
+  ACCESS_UNSPECIFIED = 0;
+  // Every signed-in user can read the document.
+  ACCESS_PUBLIC = 1;
+  // Its owner and the members of its teams can read the document.
+  ACCESS_TEAM = 2;
+}
+
 enum JobStatus {
   JOB_STATUS_UNSPECIFIED = 0;
   JOB_STATUS_PENDING_UPLOAD = 1;
@@ -93,10 +103,12 @@ message CreateUploadRequest {
   // Optional SHA-256 of the file, in hex. A file uploaded with other content
   // fails its job on CompleteUpload.
   string sha256 = 5;
-  // Teams to share the document with, which the caller must belong to; a
-  // team the caller is not in fails with NOT_FOUND (reason TEAM_NOT_FOUND).
-  // Empty keeps the document private to the caller. Changeable later with
-  // the document module's SetDocumentTeams.
+  // Who can read the document; unset means ACCESS_PUBLIC. Changeable later
+  // in the document module.
+  Access access = 7;
+  // The teams of an ACCESS_TEAM document, at least one, which the caller must
+  // belong to; a team the caller is not in fails with NOT_FOUND (reason
+  // TEAM_NOT_FOUND). A public document takes none (INVALID_ARGUMENT).
   repeated string team_ids = 6;
 }
 

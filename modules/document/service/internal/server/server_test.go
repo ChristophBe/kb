@@ -82,10 +82,10 @@ func (f *fakeRepo) ListDocumentTeams(_ context.Context, ids []uuid.UUID) ([]stor
 	return rows, nil
 }
 
-// visible reports what the queries check: the caller owns the document or a
-// team of theirs has it.
+// visible reports what the queries check: the document is public, the caller
+// owns it or a team of theirs has it.
 func (f *fakeRepo) visible(d store.DocumentDocument, user string, teams []uuid.UUID) bool {
-	if owner(d) == user {
+	if documentv1.Access(d.Access) == documentv1.Access_ACCESS_PUBLIC || owner(d) == user {
 		return true
 	}
 	for _, t := range f.shared[d.ID] {
@@ -105,7 +105,7 @@ func (f *fakeRepo) GetVisibleDocument(_ context.Context, p store.GetVisibleDocum
 
 func (f *fakeRepo) CreateDocument(_ context.Context, p store.CreateDocumentParams) (store.DocumentDocument, error) {
 	f.created = append(f.created, p)
-	return store.DocumentDocument{ID: p.ID, OwnerID: p.OwnerID, Title: p.Title, Filename: p.Filename, Status: p.Status}, nil
+	return store.DocumentDocument{ID: p.ID, OwnerID: p.OwnerID, Title: p.Title, Filename: p.Filename, Status: p.Status, Access: p.Access}, nil
 }
 
 // ListDocuments behaves like the query: the owner's documents, newest first

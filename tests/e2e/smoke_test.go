@@ -163,7 +163,8 @@ func upload(ctx context.Context, t *testing.T, c *clients, filename, title, body
 	return uploadShared(ctx, t, c, filename, title, body, nil)
 }
 
-// uploadShared is upload to the given teams.
+// uploadShared is upload as a team document of the given teams, or a public
+// one without any.
 func uploadShared(ctx context.Context, t *testing.T, c *clients, filename, title, body string, teamIDs []string) string {
 	t.Helper()
 	req := &ingestionv1.CreateUploadRequest{
@@ -173,6 +174,9 @@ func uploadShared(ctx context.Context, t *testing.T, c *clients, filename, title
 		Title:       title,
 		Sha256:      fmt.Sprintf("%x", sha256.Sum256([]byte(body))),
 		TeamIds:     teamIDs,
+	}
+	if len(teamIDs) > 0 {
+		req.Access = ingestionv1.Access_ACCESS_TEAM
 	}
 	// The document module caches the teams IAM reports for a caller for a
 	// short while, so a team created a moment ago may still be unknown to it

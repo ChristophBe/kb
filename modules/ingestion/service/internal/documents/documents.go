@@ -36,6 +36,7 @@ func (c *Client) Create(ctx context.Context, upload app.NewUpload) (app.Document
 		ContentType: upload.ContentType,
 		SizeBytes:   upload.SizeBytes,
 		Sha256:      upload.SHA256,
+		Access:      documentv1.Access(upload.Access),
 		TeamIds:     teamIDs,
 	})
 	if status.Code(err) == codes.NotFound && hasReason(err, "TEAM_NOT_FOUND") {

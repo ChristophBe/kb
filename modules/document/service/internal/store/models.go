@@ -43,6 +43,7 @@ type DocumentDocument struct {
 	PendingContentType  string
 	PendingSizeBytes    int64
 	PendingSha256       string
+	Access              int16
 }
 
 type DocumentDocumentTeam struct {

@@ -77,6 +77,7 @@ func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUpload
 		ContentType: req.GetContentType(),
 		SizeBytes:   req.GetSizeBytes(),
 		SHA256:      req.GetSha256(),
+		Access:      req.GetAccess(),
 		TeamIDs:     teamIDs,
 	})
 	if err != nil {

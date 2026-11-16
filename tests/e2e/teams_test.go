@@ -20,7 +20,7 @@ import (
 // team membership: it caches what IAM says about a caller for a short while.
 const teamCacheTimeout = 90 * time.Second
 
-// TestTeamMembersSeeSharedDocuments uploads a document to a team and checks
+// TestTeamMembersSeeSharedDocuments uploads a team document and checks
 // that a member lists it and gets passages of it in chat, and that a user
 // outside the team does neither, before joining and after leaving.
 func TestTeamMembersSeeSharedDocuments(t *testing.T) {
@@ -49,7 +49,7 @@ func TestTeamMembersSeeSharedDocuments(t *testing.T) {
 
 	// A team the caller is not in cannot be shared with.
 	_, err = bob.createUpload.CallUnary(ctx, connect.NewRequest(&ingestionv1.CreateUploadRequest{
-		Filename: "x.md", ContentType: "text/markdown", SizeBytes: 3, TeamIds: []string{teamID},
+		Filename: "x.md", ContentType: "text/markdown", SizeBytes: 3, Access: ingestionv1.Access_ACCESS_TEAM, TeamIds: []string{teamID},
 	}))
 	if connect.CodeOf(err) != connect.CodeNotFound {
 		t.Errorf("CreateUpload to a foreign team as %s: err = %v, want %s", otherUser, err, connect.CodeNotFound)

@@ -51,6 +51,17 @@ service DocumentService {
   rpc ReindexDocuments(ReindexDocumentsRequest) returns (ReindexDocumentsResponse);
 }
 
+// Access says who can read a document. An owner who wants to restrict one
+// attaches it to a team; there is no owner-only level.
+enum Access {
+  // Treated as ACCESS_PUBLIC where a request sets an access.
+  ACCESS_UNSPECIFIED = 0;
+  // Every signed-in user can read the document.
+  ACCESS_PUBLIC = 1;
+  // Its owner and the members of its teams can read the document.
+  ACCESS_TEAM = 2;
+}
+
 enum DocumentStatus {
   DOCUMENT_STATUS_UNSPECIFIED = 0;
   DOCUMENT_STATUS_PENDING_UPLOAD = 1;
@@ -87,9 +98,12 @@ message Document {
   // The new version being uploaded or processed, or the last one that failed;
   // unset when there is none.
   PendingVersion pending_version = 15;
-  // The teams the document is shared with, whose members can read it. The
-  // owner sees all of them; anyone else only those they are a member of.
+  // The teams the document is shared with, whose members can read it. Only
+  // ACCESS_TEAM documents have teams. The owner sees all of them; anyone else
+  // only those they are a member of.
   repeated string team_ids = 16;
+  // Who can read the document: never ACCESS_UNSPECIFIED.
+  Access access = 17;
 }
 
 // PendingVersion is a new file for a document, from ReplaceContent. While it
@@ -148,8 +162,11 @@ message CreateDocumentRequest {
   // Optional SHA-256 of the file, in hex. When set, SetDocumentStatus(UPLOADED)
   // checks the uploaded file against it and fails the document on a mismatch.
   string sha256 = 6;
-  // Teams to share the document with from the start. The caller must be a
-  // member of each; otherwise the call fails with NOT_FOUND.
+  // Who can read the document; unset means ACCESS_PUBLIC.
+  Access access = 8;
+  // The teams of an ACCESS_TEAM document, at least one. The caller must be a
+  // member of each; otherwise the call fails with NOT_FOUND. A public document
+  // takes none (INVALID_ARGUMENT).
   repeated string team_ids = 7;
 }
 
@@ -219,7 +236,8 @@ message UpdateDocumentResponse {
 // share with the teams they are a member of and stop sharing with any team.
 // An admin of a team the document is shared with may only stop sharing it
 // with their own team; anyone else who can read the document gets
-// PERMISSION_DENIED. A caller who can't see the document gets NOT_FOUND, and
+// PERMISSION_DENIED. A public document has no teams: the call fails with
+// FAILED_PRECONDITION. A caller who can't see the document gets NOT_FOUND, and
 // so does one who names a team they are not a member of. The set applies to
 // the teams the caller sees, so teams they don't belong to stay untouched.
 message SetDocumentTeamsRequest {

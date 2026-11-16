@@ -37,13 +37,13 @@ services:
   # Local model server; enable with `--profile ollama`, or point
   # KNOWCEL_OLLAMA_URL at an Ollama running on the host (faster on macOS).
   ollama:
-    image: ollama/ollama:0.40.11
+    image: ollama/ollama:0.40.13
     profiles: [ollama]
     volumes: [ollama:/root/.ollama]
     ports: ["11434:11434"]
 
   ollama-pull:
-    image: ollama/ollama:0.40.11
+    image: ollama/ollama:0.40.13
     profiles: [ollama]
     environment: { OLLAMA_HOST: "ollama:11434" }
     entrypoint: ["sh", "-c", "ollama pull ${KNOWCEL_CHAT_MODEL:-llama3.2} && ollama pull ${KNOWCEL_EMBEDDING_MODEL:-nomic-embed-text}"]

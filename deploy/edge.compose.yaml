@@ -1,7 +1,7 @@
 # Browser-facing entry points: the gRPC-Web gateway and the web shell.
 services:
   envoy:
-    image: envoyproxy/envoy:v1.36-latest
+    image: envoyproxy/envoy:v1.40-latest
     # entrypoint.sh fills in the OIDC settings, then starts Envoy.
     entrypoint: ["/etc/envoy/entrypoint.sh"]
     command: ["--log-level", "warn"]

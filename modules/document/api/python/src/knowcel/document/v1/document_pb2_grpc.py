@@ -5,7 +5,7 @@ import warnings
 
 from knowcel.document.v1 import document_pb2 as knowcel_dot_document_dot_v1_dot_document__pb2
 
-GRPC_GENERATED_VERSION = '1.85.0'
+GRPC_GENERATED_VERSION = '1.85.1'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 

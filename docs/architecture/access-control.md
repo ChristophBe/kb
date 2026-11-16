@@ -36,6 +36,7 @@ The `document` module owns access: `document.documents.access` is `PUBLIC` (1, t
 - **Teams on a document:** the owner sees all of them, anyone else only those they belong to.
 - **Upload:** ingestion passes `CreateUploadRequest.access` and `team_ids` to `CreateDocument` with the same rules; the UI asks for the access after the files are added and uploads only once it is confirmed. The teams are stored on the job so reprocessing and reindexing republish them. Replacing a document's file keeps its access.
 - **Chat:** chat retrieves through `SearchChunks` as the caller, so citations come only from visible documents.
+- **Chat by team:** a conversation can be limited to teams (`Conversation.team_ids`, empty means everything the caller can read). Chat checks that the caller belongs to each team (`PERMISSION_DENIED` otherwise, `UNAVAILABLE` while the caller's teams are unknown), resolving them through its own `PrincipalResolver` over IAM. At answer time the chosen teams are cut down to the caller's current ones, so a deleted team or one the caller left drops out and none left means all documents; while the teams are unknown the choice stands. `SearchChunksRequest.team_ids` then keeps only documents attached to one of those teams, on top of the visibility rule, and leaves public documents out.
 - **Internal calls** without a user, such as the ingestion worker's, are not filtered: a worker must process every document it is handed.
 
 ## Caller context
@@ -56,4 +57,4 @@ Peers treat `iam` as a soft dependency: no compose `depends_on`, and `depends_on
 - **`PullModel` and `DeleteModel`** fail closed with `PERMISSION_DENIED`; listing models still works.
 - **The UI** offers only **Public** when uploading, hides team names and the Share controls and labels team documents **Team**; the Teams and Users pages fail because they call IAM directly.
 
-`Principal.Unavailable` is set by the Go resolver (`platform/go/grpcserver`); the Python principal does not carry it yet.
+`Principal.Unavailable` (Go, `platform/go/grpcserver`) and `Principal.unavailable` (Python, `knowcel_platform.grpc`) are set by the resolvers. Chat refuses to set a team scope with `UNAVAILABLE` while it is true.

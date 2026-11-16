@@ -3,14 +3,16 @@ import logging
 
 from knowcel.chat.v1 import chat_pb2, chat_pb2_grpc
 from knowcel.document.v1 import document_pb2_grpc
+from knowcel.iam.v1 import iam_pb2_grpc
 from knowcel.llm.v1 import llm_pb2_grpc
 from knowcel_platform.config import load_settings
-from knowcel_platform.grpc import channel, serve
+from knowcel_platform.grpc import PrincipalResolver, channel, serve
 from knowcel_platform.logging import setup_logging
 from knowcel_platform.metrics import start_metrics_server
 from knowcel_platform.telemetry import setup_tracing
 from sqlalchemy.ext.asyncio import create_async_engine
 
+from .callers import resolver
 from .chat import Chat
 from .config import Settings
 from .db import SqlRepository, migrate
@@ -30,7 +32,11 @@ async def run() -> None:
 
     engine = create_async_engine(settings.database_url, pool_pre_ping=True)
     try:
-        async with channel(settings.document_addr) as doc_ch, channel(settings.llm_addr) as llm_ch:
+        async with (
+            channel(settings.document_addr) as doc_ch,
+            channel(settings.llm_addr) as llm_ch,
+            channel(settings.iam_addr) as iam_ch,
+        ):
             repo = SqlRepository(engine)
             documents = document_pb2_grpc.DocumentServiceStub(doc_ch)
             llm = llm_pb2_grpc.LlmServiceStub(llm_ch)
@@ -50,6 +56,7 @@ async def run() -> None:
                     settings.grpc_port,
                     [lambda s: chat_pb2_grpc.add_ChatServiceServicer_to_server(servicer, s)],
                     [chat_pb2.DESCRIPTOR.services_by_name["ChatService"].full_name],
+                    principals=PrincipalResolver(resolver(iam_pb2_grpc.IamServiceStub(iam_ch))),
                 )
             finally:
                 loading.cancel()

@@ -17,7 +17,14 @@ from knowcel_chat.peers import PeerGenerator, PeerRetriever
 from knowcel_chat.preview import preview
 from knowcel_chat.repository import ConversationMatch, ConversationRow, MessageRow
 from knowcel_chat.server import ChatServicer
-from knowcel_platform.grpc import USER_HEADER, UserInterceptor, field_violations
+from knowcel_platform.grpc import (
+    USER_HEADER,
+    Principal,
+    PrincipalResolver,
+    Team,
+    UserInterceptor,
+    field_violations,
+)
 from knowcel_platform.pagination import Cursor
 
 ALICE, BOB = "alice", "bob"
@@ -61,9 +68,12 @@ Connect = Callable[..., chat_pb2_grpc.ChatServiceStub]
 
 
 @contextlib.asynccontextmanager
-async def running(repo: Any, documents: Any, llm: Any) -> AsyncIterator[Connect]:
-    """Serves chat with the user interceptor of knowcel_platform.grpc.serve."""
-    server = grpc.aio.server(interceptors=[UserInterceptor()])
+async def running(
+    repo: Any, documents: Any, llm: Any, principals: PrincipalResolver | None = None
+) -> AsyncIterator[Connect]:
+    """Serves chat with the user interceptor of knowcel_platform.grpc.serve,
+    resolving callers' teams with `principals` (none: they are unknown)."""
+    server = grpc.aio.server(interceptors=[UserInterceptor(principals)])
     chat_pb2_grpc.add_ChatServiceServicer_to_server(servicer(repo, documents, llm), server)
     port = server.add_insecure_port("127.0.0.1:0")
     await server.start()
@@ -88,9 +98,15 @@ class MemoryRepo:
     def _owned(self, owner: str) -> list[ConversationRow]:
         return [c for c in self.conversations.values() if c.owner_id == owner]
 
-    async def create_conversation(self, owner: str, title: str, document_ids: list[uuid.UUID]):
+    async def create_conversation(
+        self,
+        owner: str,
+        title: str,
+        document_ids: list[uuid.UUID],
+        team_ids: list[uuid.UUID] | None = None,
+    ):
         now = datetime.now(UTC)
-        conv = ConversationRow(uuid.uuid4(), title, now, now, owner, document_ids)
+        conv = ConversationRow(uuid.uuid4(), title, now, now, owner, document_ids, team_ids or [])
         self.conversations[conv.id] = conv
         return conv
 
@@ -134,12 +150,15 @@ class MemoryRepo:
         *,
         title: str | None = None,
         document_ids: list[uuid.UUID] | None = None,
+        team_ids: list[uuid.UUID] | None = None,
     ):
         conv = await self.get_conversation(owner, id)
         if conv is not None and title is not None:
             conv.title = title
         if conv is not None and document_ids is not None:
             conv.document_ids = document_ids
+        if conv is not None and team_ids is not None:
+            conv.team_ids = team_ids
         return conv
 
     async def list_messages(self, conversation_id: uuid.UUID, limit: int | None = None):
@@ -761,3 +780,107 @@ async def test_list_conversations_rejects_invalid_page_tokens(env: Env, token: s
 
     assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
     assert [v.field for v in field_violations(err.value)] == ["page.page_token"]
+
+
+T1, T2, T3 = str(uuid.uuid4()), str(uuid.uuid4()), str(uuid.uuid4())
+
+
+async def member_of(*teams: str) -> PrincipalResolver:
+    async def resolve(user: str) -> Principal:
+        return Principal(user, teams=tuple(Team(t) for t in teams))
+
+    return PrincipalResolver(resolve)
+
+
+async def test_a_team_scoped_conversation_searches_only_its_teams() -> None:
+    repo, llm, documents = MemoryRepo(), FakeLlm(), FakeDocuments()
+    async with running(repo, documents, llm, await member_of(T1, T2)) as connect:
+        stub = connect()
+        request = chat_pb2.CreateConversationRequest(team_ids=[T1, T1, T2])
+        conv = (await stub.CreateConversation(request)).conversation
+        assert list(conv.team_ids) == [T1, T2]  # duplicates dropped, order kept
+
+        await ask(stub, conv.id)
+        assert list(documents.searches[0].team_ids) == [T1, T2]
+
+        # The scope can change, and an empty one means all documents again.
+        resp = await stub.UpdateConversation(
+            chat_pb2.UpdateConversationRequest(id=conv.id, team_ids=chat_pb2.TeamIds(ids=[T2]))
+        )
+        assert list(resp.conversation.team_ids) == [T2]
+        resp = await stub.UpdateConversation(
+            chat_pb2.UpdateConversationRequest(id=conv.id, title="Renamed")
+        )
+        assert list(resp.conversation.team_ids) == [T2]  # kept
+        await ask(stub, conv.id)
+        assert list(documents.searches[1].team_ids) == [T2]
+        resp = await stub.UpdateConversation(
+            chat_pb2.UpdateConversationRequest(id=conv.id, team_ids=chat_pb2.TeamIds())
+        )
+        assert list(resp.conversation.team_ids) == []
+        await ask(stub, conv.id)
+        assert list(documents.searches[2].team_ids) == []
+
+
+async def test_a_conversation_without_teams_searches_all_documents() -> None:
+    repo, llm, documents = MemoryRepo(), FakeLlm(), FakeDocuments()
+    async with running(repo, documents, llm, await member_of(T1)) as connect:
+        stub = connect()
+        conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+        await ask(stub, conv.id)
+    assert list(documents.searches[0].team_ids) == []
+
+
+async def test_teams_the_user_left_are_not_searched() -> None:
+    repo, llm, documents = MemoryRepo(), FakeLlm(), FakeDocuments()
+    async with running(repo, documents, llm, await member_of(T1, T2)) as connect:
+        stub = connect()
+        conv = (
+            await stub.CreateConversation(chat_pb2.CreateConversationRequest(team_ids=[T1, T2]))
+        ).conversation
+    # The user is in T2 only now; T1 was deleted or left.
+    async with running(repo, documents, llm, await member_of(T2)) as connect:
+        await ask(connect(), conv.id)
+    assert list(documents.searches[0].team_ids) == [T2]
+    # With no team of the conversation left, all documents are searched.
+    async with running(repo, documents, llm, await member_of(T3)) as connect:
+        await ask(connect(), conv.id)
+    assert list(documents.searches[1].team_ids) == []
+
+
+async def test_a_team_the_user_is_not_in_is_permission_denied() -> None:
+    repo, llm, documents = MemoryRepo(), FakeLlm(), FakeDocuments()
+    async with running(repo, documents, llm, await member_of(T1)) as connect:
+        stub = connect()
+        with pytest.raises(grpc.aio.AioRpcError) as created:
+            await stub.CreateConversation(chat_pb2.CreateConversationRequest(team_ids=[T1, T2]))
+        assert created.value.code() == grpc.StatusCode.PERMISSION_DENIED
+        conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+        with pytest.raises(grpc.aio.AioRpcError) as updated:
+            await stub.UpdateConversation(
+                chat_pb2.UpdateConversationRequest(id=conv.id, team_ids=chat_pb2.TeamIds(ids=[T2]))
+            )
+        assert updated.value.code() == grpc.StatusCode.PERMISSION_DENIED
+        with pytest.raises(grpc.aio.AioRpcError) as invalid:
+            await stub.CreateConversation(chat_pb2.CreateConversationRequest(team_ids=["nope"]))
+        assert invalid.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    assert len(repo.conversations) == 1
+
+
+async def test_teams_are_unavailable_while_iam_is_down() -> None:
+    async def down(user: str) -> Principal:
+        raise ConnectionError("iam is down")
+
+    repo, llm, documents = MemoryRepo(), FakeLlm(), FakeDocuments()
+    async with running(repo, documents, llm, PrincipalResolver(down)) as connect:
+        stub = connect()
+        with pytest.raises(grpc.aio.AioRpcError) as created:
+            await stub.CreateConversation(chat_pb2.CreateConversationRequest(team_ids=[T1]))
+        assert created.value.code() == grpc.StatusCode.UNAVAILABLE
+        # All documents still work, and so does asking in a conversation that has teams.
+        conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+        await ask(stub, conv.id)
+        repo.conversations[uuid.UUID(conv.id)].team_ids = [uuid.UUID(T1)]
+        await ask(stub, conv.id)
+    assert list(documents.searches[0].team_ids) == []
+    assert list(documents.searches[1].team_ids) == [T1]

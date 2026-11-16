@@ -8,16 +8,17 @@ import { polyfillDialog } from "@knowcel/ui/testing/dialog";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { DocumentPicker, describeScope, ScopeChips } from "./scope.tsx";
+import { DocumentPicker, describeScope, ScopeChips, TeamScopePicker } from "./scope.tsx";
 
 const updateConversation = vi.fn();
 const getDocument = vi.fn();
 const listDocuments = vi.fn();
+const listMyTeams = vi.fn();
 
 // The real runtime, except that the chat and document clients are one fake.
 vi.mock("@knowcel/module-sdk", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@knowcel/module-sdk")>()),
-  useClient: () => ({ updateConversation, getDocument, listDocuments }),
+  useClient: () => ({ updateConversation, getDocument, listDocuments, listMyTeams }),
 }));
 
 const DOCS = [
@@ -46,14 +47,20 @@ function FreshCache() {
 let clearCache = () => {};
 afterEach(() => clearCache());
 
-function renderScope(documentIds: string[]) {
-  const conversation = create(ConversationSchema, { id: "c1", title: "Q3", documentIds });
+function renderScope(documentIds: string[], teamIds: string[] = []) {
+  const conversation = create(ConversationSchema, {
+    id: "c1",
+    title: "Q3",
+    documentIds,
+    teamIds,
+  });
   return render(
     <KbRuntimeProvider config={{ apiBaseUrl: "http://test" }}>
       <FreshCache />
       <MemoryRouter>
         <ScopeChips conversation={conversation} />
         <DocumentPicker conversation={conversation} />
+        <TeamScopePicker conversation={conversation} />
         <Toasts />
       </MemoryRouter>
     </KbRuntimeProvider>,
@@ -64,7 +71,17 @@ const dialog = () => within(screen.getByRole("dialog", { hidden: true }));
 
 describe("describeScope", () => {
   it("names the scope", () => {
-    expect([0, 1, 2].map(describeScope)).toEqual(["all documents", "1 document", "2 documents"]);
+    expect([0, 1, 2].map((n) => describeScope(n))).toEqual([
+      "all documents",
+      "1 document",
+      "2 documents",
+    ]);
+  });
+
+  it("names the teams of the scope", () => {
+    expect(describeScope(0, ["Platform"])).toBe("documents of team Platform");
+    expect(describeScope(0, ["Platform", "Support"])).toBe("documents of teams Platform, Support");
+    expect(describeScope(2, ["Platform"])).toBe("2 documents of team Platform");
   });
 });
 
@@ -185,5 +202,93 @@ describe("DocumentPicker", () => {
     expect((await dialog().findByRole("alert")).textContent).toBe(
       "The Documents service isn't available. Try again later.",
     );
+  });
+});
+
+const teamDialog = () =>
+  within(screen.getByRole("dialog", { name: "Choose teams for this chat", hidden: true }));
+
+describe("TeamScopePicker", () => {
+  beforeAll(polyfillDialog);
+  beforeEach(() => {
+    updateConversation.mockReset();
+    getDocument.mockReset();
+    listDocuments.mockReset();
+    listMyTeams.mockReset();
+    listMyTeams.mockResolvedValue({
+      teams: [
+        { id: "t1", name: "Platform" },
+        { id: "t2", name: "Support" },
+      ],
+    });
+  });
+
+  it("uses all documents by default, with the teams to choose from", async () => {
+    renderScope([]);
+    expect(screen.getByText("all documents")).toBeTruthy();
+    fireEvent.click(await screen.findByRole("button", { name: "Choose teams" }));
+    const group = within(await teamDialog().findByRole("group", { name: "Use documents of" }));
+    expect(group.getAllByRole("checkbox").map((c) => (c as HTMLInputElement).checked)).toEqual([
+      false,
+      false,
+    ]);
+  });
+
+  it("limits the answers to the chosen teams, and names them", async () => {
+    updateConversation.mockResolvedValue({});
+    renderScope([]);
+    fireEvent.click(await screen.findByRole("button", { name: "Choose teams" }));
+    const group = within(await teamDialog().findByRole("group", { name: "Use documents of" }));
+    fireEvent.click(group.getByRole("checkbox", { name: "Platform" }));
+    fireEvent.click(group.getByRole("checkbox", { name: "Support" }));
+    await act(async () => {
+      fireEvent.click(teamDialog().getByRole("button", { name: "Apply" }));
+    });
+    expect(updateConversation).toHaveBeenCalledWith({ id: "c1", teamIds: { ids: ["t1", "t2"] } });
+    expect(
+      screen.getByText("Knowledge changed to documents of teams Platform, Support"),
+    ).toBeTruthy();
+  });
+
+  it("shows the teams of the conversation in the header and lets them be cleared", async () => {
+    updateConversation.mockResolvedValue({});
+    renderScope([], ["t2"]);
+    expect(await screen.findByText("Support")).toBeTruthy();
+    expect(screen.queryByText("all documents")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Teams (1)" }));
+    const group = within(await teamDialog().findByRole("group", { name: "Use documents of" }));
+    expect((group.getByRole("checkbox", { name: "Support" }) as HTMLInputElement).checked).toBe(
+      true,
+    );
+    fireEvent.click(group.getByRole("checkbox", { name: "Support" }));
+    await act(async () => {
+      fireEvent.click(teamDialog().getByRole("button", { name: "Apply" }));
+    });
+    expect(updateConversation).toHaveBeenCalledWith({ id: "c1", teamIds: { ids: [] } });
+  });
+
+  it("falls back to all documents when the teams are gone", async () => {
+    renderScope([], ["deleted-team"]);
+    await screen.findByRole("button", { name: "Choose teams" });
+    expect(screen.getByText("all documents")).toBeTruthy();
+  });
+
+  it("explains a team the server doesn't accept", async () => {
+    updateConversation.mockRejectedValue(new ConnectError("no", Code.PermissionDenied));
+    renderScope([]);
+    fireEvent.click(await screen.findByRole("button", { name: "Choose teams" }));
+    const group = within(await teamDialog().findByRole("group", { name: "Use documents of" }));
+    fireEvent.click(group.getByRole("checkbox", { name: "Platform" }));
+    await act(async () => {
+      fireEvent.click(teamDialog().getByRole("button", { name: "Apply" }));
+    });
+    expect(await screen.findByText(/You're not a member of one of the teams/)).toBeTruthy();
+  });
+
+  it("offers no team choice without teams", async () => {
+    listMyTeams.mockResolvedValue({ teams: [] });
+    renderScope([]);
+    await screen.findByText("all documents");
+    expect(screen.queryByRole("button", { name: /teams/i })).toBeNull();
   });
 });

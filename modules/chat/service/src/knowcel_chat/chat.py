@@ -66,10 +66,15 @@ class PromptMessage:
 
 class Retriever(Protocol):
     """Finds the passages most relevant to a question, only in `document_ids`
-    unless it is empty. Failures are raised as PeerError."""
+    and only in documents of `team_ids`, each unless empty. Failures are raised
+    as PeerError."""
 
     async def retrieve(
-        self, query: str, limit: int, document_ids: Sequence[uuid.UUID]
+        self,
+        query: str,
+        limit: int,
+        document_ids: Sequence[uuid.UUID],
+        team_ids: Sequence[uuid.UUID] = (),
     ) -> list[chat_pb2.Citation]: ...
 
 
@@ -110,6 +115,18 @@ _PROMPT_ROLES = {
 }
 
 
+def _current_teams(
+    chosen: Sequence[uuid.UUID], member: Sequence[uuid.UUID] | None
+) -> list[uuid.UUID]:
+    """The chosen teams that still count: a team that was deleted or that the
+    user has left is dropped, and none left means all documents. While the
+    user's teams are not known, the choice stands; the document module still
+    shows only what the user may read."""
+    if member is None:
+        return list(chosen)
+    return [t for t in chosen if t in member]
+
+
 class Chat:
     def __init__(
         self,
@@ -132,13 +149,16 @@ class Chat:
         content: str,
         model: str,
         use_knowledge_base: bool,
+        member_team_ids: Sequence[uuid.UUID] | None = None,
     ) -> AsyncGenerator[AnswerEvent]:
         """Answers a question in a conversation. The question is saved first, so
         it stays in the conversation even when no answer can be generated. When a
         peer fails, the answer so far is saved as failed after an AnswerFailed.
         When the caller goes away (the task is cancelled or the stream closed),
         generation stops and the answer so far is saved as stopped. Another
-        owner's conversation is not found."""
+        owner's conversation is not found. `member_team_ids` are the teams the
+        owner belongs to now (None if that is not known): the conversation's
+        teams are cut down to them, and with none left it uses all documents."""
         conv = await self._repo.get_conversation(owner, conversation_id)
         if conv is None:
             raise ConversationNotFoundError(str(conversation_id))
@@ -157,7 +177,10 @@ class Chat:
             retrieved: list[chat_pb2.Citation] = []
             if use_knowledge_base:
                 retrieved = await self._retriever.retrieve(
-                    content, self._settings.rag_top_k, conv.document_ids
+                    content,
+                    self._settings.rag_top_k,
+                    conv.document_ids,
+                    _current_teams(conv.team_ids, member_team_ids),
                 )
             budget = self._settings.context_tokens - self._settings.answer_reserve_tokens
             system_prompt = functools.partial(_system_prompt, use_knowledge_base)

@@ -76,11 +76,17 @@ class FakeRetriever:
         self.error = error
         self.results = results
         self.calls: list[tuple[str, int, list[uuid.UUID]]] = []
+        self.team_calls: list[list[uuid.UUID]] = []
 
     async def retrieve(
-        self, query: str, limit: int, document_ids: Sequence[uuid.UUID]
+        self,
+        query: str,
+        limit: int,
+        document_ids: Sequence[uuid.UUID],
+        team_ids: Sequence[uuid.UUID] = (),
     ) -> list[chat_pb2.Citation]:
         self.calls.append((query, limit, list(document_ids)))
+        self.team_calls.append(list(team_ids))
         if self.error:
             raise self.error
         if self.results is not None:
@@ -177,6 +183,39 @@ async def test_retrieval_is_limited_to_the_conversation_scope() -> None:
     assert retriever.calls == [("Capital?", 3, scope)]
 
 
+async def test_retrieval_is_limited_to_the_conversations_teams_the_user_still_belongs_to() -> None:
+    kept, left, deleted = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+    repo = FakeRepo()
+    repo.conv.team_ids = [kept, left, deleted]
+    chat, repo, retriever, _ = make(repo)
+    # The user belongs to `kept`; they left one team and another was deleted.
+    _ = [e async for e in chat.answer(OWNER, repo.conv.id, "Capital?", "m1", True, [kept])]
+    assert retriever.team_calls == [[kept]]
+
+
+async def test_a_conversation_without_teams_uses_all_documents() -> None:
+    chat, repo, retriever, _ = make()
+    _ = [e async for e in chat.answer(OWNER, repo.conv.id, "Capital?", "m1", True, [uuid.uuid4()])]
+    assert retriever.team_calls == [[]]
+
+
+async def test_when_no_team_of_the_conversation_remains_all_documents_are_used() -> None:
+    repo = FakeRepo()
+    repo.conv.team_ids = [uuid.uuid4()]
+    chat, repo, retriever, _ = make(repo)
+    _ = [e async for e in chat.answer(OWNER, repo.conv.id, "Capital?", "m1", True, [])]
+    assert retriever.team_calls == [[]]
+
+
+async def test_while_the_users_teams_are_unknown_the_chosen_teams_stand() -> None:
+    chosen = uuid.uuid4()
+    repo = FakeRepo()
+    repo.conv.team_ids = [chosen]
+    chat, repo, retriever, _ = make(repo)
+    _ = [e async for e in chat.answer(OWNER, repo.conv.id, "Capital?", "m1", True, None)]
+    assert retriever.team_calls == [[chosen]]
+
+
 async def test_without_the_knowledge_base_nothing_is_retrieved() -> None:
     chat, repo, retriever, generator = make()
     events = await collect(chat, repo, use_kb=False)
@@ -218,7 +257,11 @@ async def test_prompt_numbers_sources_and_keeps_the_history_in_order() -> None:
 async def test_manual_sources_are_named_as_such_and_saved_with_their_section() -> None:
     class ManualRetriever(FakeRetriever):
         async def retrieve(
-            self, query: str, limit: int, document_ids: Sequence[uuid.UUID]
+            self,
+            query: str,
+            limit: int,
+            document_ids: Sequence[uuid.UUID],
+            team_ids: Sequence[uuid.UUID] = (),
         ) -> list[chat_pb2.Citation]:
             return [
                 chat_pb2.Citation(
@@ -456,7 +499,11 @@ class WordCounter:
 async def test_only_the_sources_that_fit_are_cited() -> None:
     class TwoSources(FakeRetriever):
         async def retrieve(
-            self, query: str, limit: int, document_ids: Sequence[uuid.UUID]
+            self,
+            query: str,
+            limit: int,
+            document_ids: Sequence[uuid.UUID],
+            team_ids: Sequence[uuid.UUID] = (),
         ) -> list[chat_pb2.Citation]:
             return [
                 chat_pb2.Citation(document_id="best", snippet="best " * 5, score=0.9),

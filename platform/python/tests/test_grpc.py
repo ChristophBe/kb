@@ -254,7 +254,7 @@ async def test_resolver_without_iam_has_no_teams() -> None:
 
     clock = _Clock()
     resolver = PrincipalResolver(resolve, ttl=60, clock=clock)
-    assert await resolver.resolve("ann") == Principal("ann")
+    assert await resolver.resolve("ann") == Principal("ann", unavailable=True)
     await resolver.resolve("ann")
     assert calls == 1  # the failure is reused briefly
     failing = False
@@ -262,6 +262,7 @@ async def test_resolver_without_iam_has_no_teams() -> None:
     recovered = await resolver.resolve("ann")
     assert recovered.platform_admin
     assert recovered.team_ids == ["t1"]
+    assert not recovered.unavailable
 
 
 async def test_interceptor_exposes_the_callers_principal() -> None:

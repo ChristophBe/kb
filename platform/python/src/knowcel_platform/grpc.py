@@ -67,6 +67,11 @@ class Principal:
     user_id: str
     platform_admin: bool = False
     teams: tuple[Team, ...] = ()
+    unavailable: bool = False
+    """Set when the principal could not be resolved, for instance because IAM
+    is down: `teams` and `platform_admin` are then empty without being known to
+    be. Calls that depend on teams should fail with UNAVAILABLE rather than
+    treat the caller as having none."""
 
     @property
     def team_ids(self) -> list[str]:
@@ -121,7 +126,8 @@ _CACHE_LIMIT = 10_000
 class PrincipalResolver:
     """Resolves principals through a `ResolveFunc` and caches the results.
     When the lookup fails, for instance because IAM is down, the principal has
-    no teams and no admin rights: owner-only access keeps working."""
+    no teams and no admin rights and is marked `unavailable`: access that needs
+    no team keeps working."""
 
     def __init__(
         self,
@@ -145,7 +151,7 @@ class PrincipalResolver:
             principal = dataclasses.replace(resolved, user_id=user)
         except Exception as err:
             log.warning("resolve caller failed; continuing without teams: %s", err)
-            principal, ttl = Principal(user_id=user), min(_FAILURE_TTL, self._ttl)
+            principal, ttl = Principal(user_id=user, unavailable=True), min(_FAILURE_TTL, self._ttl)
         if len(self._cache) > _CACHE_LIMIT:  # bounded: drop everything rather than track ages
             self._cache.clear()
         self._cache[user] = (principal, self._clock() + ttl)

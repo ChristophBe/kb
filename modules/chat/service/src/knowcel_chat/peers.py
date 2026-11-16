@@ -62,7 +62,11 @@ class PeerRetriever:
         self._min_score = min_score
 
     async def retrieve(
-        self, query: str, limit: int, document_ids: Sequence[uuid.UUID]
+        self,
+        query: str,
+        limit: int,
+        document_ids: Sequence[uuid.UUID],
+        team_ids: Sequence[uuid.UUID] = (),
     ) -> list[chat_pb2.Citation]:
         (embedding,) = await self._embedder.embed([query])
         with _peer_errors(Peer.DOCUMENT):
@@ -71,6 +75,7 @@ class PeerRetriever:
                     embedding=embedding,
                     limit=limit,
                     document_ids=[str(i) for i in document_ids],
+                    team_ids=[str(i) for i in team_ids],
                 )
             )
         documents = [

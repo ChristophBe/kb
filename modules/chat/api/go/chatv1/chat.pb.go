@@ -375,7 +375,12 @@ type Conversation struct {
 	LastMessagePreview string `protobuf:"bytes,7,opt,name=last_message_preview,json=lastMessagePreview,proto3" json:"last_message_preview,omitempty"`
 	// The id of the user who created it (the subject of their token). Output
 	// only: a user sees only their own conversations.
-	OwnerId       string `protobuf:"bytes,8,opt,name=owner_id,json=ownerId,proto3" json:"owner_id,omitempty"`
+	OwnerId string `protobuf:"bytes,8,opt,name=owner_id,json=ownerId,proto3" json:"owner_id,omitempty"`
+	// The teams answers are limited to: only documents attached to one of them
+	// are used (public documents are not). Empty means all documents the user
+	// can read. A team the user has left or that was deleted counts as not
+	// chosen; with none left the conversation uses all documents.
+	TeamIds       []string `protobuf:"bytes,9,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -466,6 +471,59 @@ func (x *Conversation) GetOwnerId() string {
 	return ""
 }
 
+func (x *Conversation) GetTeamIds() []string {
+	if x != nil {
+		return x.TeamIds
+	}
+	return nil
+}
+
+// A list of team ids, wrapped like DocumentIds so that an update can tell
+// "keep the teams" (not set) from "all documents" (set, but empty).
+type TeamIds struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Ids           []string               `protobuf:"bytes,1,rep,name=ids,proto3" json:"ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TeamIds) Reset() {
+	*x = TeamIds{}
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TeamIds) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TeamIds) ProtoMessage() {}
+
+func (x *TeamIds) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TeamIds.ProtoReflect.Descriptor instead.
+func (*TeamIds) Descriptor() ([]byte, []int) {
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *TeamIds) GetIds() []string {
+	if x != nil {
+		return x.Ids
+	}
+	return nil
+}
+
 // A list of document ids, wrapped so that an update can tell "keep the scope"
 // (not set) from "all documents" (set, but empty).
 type DocumentIds struct {
@@ -477,7 +535,7 @@ type DocumentIds struct {
 
 func (x *DocumentIds) Reset() {
 	*x = DocumentIds{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[3]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -489,7 +547,7 @@ func (x *DocumentIds) String() string {
 func (*DocumentIds) ProtoMessage() {}
 
 func (x *DocumentIds) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[3]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -502,7 +560,7 @@ func (x *DocumentIds) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DocumentIds.ProtoReflect.Descriptor instead.
 func (*DocumentIds) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{3}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *DocumentIds) GetIds() []string {
@@ -516,14 +574,18 @@ type CreateConversationRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Title string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	// The documents answers are grounded in; empty means all documents.
-	DocumentIds   []string `protobuf:"bytes,2,rep,name=document_ids,json=documentIds,proto3" json:"document_ids,omitempty"`
+	DocumentIds []string `protobuf:"bytes,2,rep,name=document_ids,json=documentIds,proto3" json:"document_ids,omitempty"`
+	// The teams answers are limited to, of which the caller must be a member
+	// (PERMISSION_DENIED otherwise); empty means all documents the user can read.
+	// Together with document_ids, a document must match both.
+	TeamIds       []string `protobuf:"bytes,3,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateConversationRequest) Reset() {
 	*x = CreateConversationRequest{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[4]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -535,7 +597,7 @@ func (x *CreateConversationRequest) String() string {
 func (*CreateConversationRequest) ProtoMessage() {}
 
 func (x *CreateConversationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[4]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -548,7 +610,7 @@ func (x *CreateConversationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateConversationRequest.ProtoReflect.Descriptor instead.
 func (*CreateConversationRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{4}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CreateConversationRequest) GetTitle() string {
@@ -565,6 +627,13 @@ func (x *CreateConversationRequest) GetDocumentIds() []string {
 	return nil
 }
 
+func (x *CreateConversationRequest) GetTeamIds() []string {
+	if x != nil {
+		return x.TeamIds
+	}
+	return nil
+}
+
 type CreateConversationResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Conversation  *Conversation          `protobuf:"bytes,1,opt,name=conversation,proto3" json:"conversation,omitempty"`
@@ -574,7 +643,7 @@ type CreateConversationResponse struct {
 
 func (x *CreateConversationResponse) Reset() {
 	*x = CreateConversationResponse{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[5]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -586,7 +655,7 @@ func (x *CreateConversationResponse) String() string {
 func (*CreateConversationResponse) ProtoMessage() {}
 
 func (x *CreateConversationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[5]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -599,7 +668,7 @@ func (x *CreateConversationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateConversationResponse.ProtoReflect.Descriptor instead.
 func (*CreateConversationResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{5}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *CreateConversationResponse) GetConversation() *Conversation {
@@ -618,7 +687,7 @@ type GetConversationRequest struct {
 
 func (x *GetConversationRequest) Reset() {
 	*x = GetConversationRequest{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[6]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -630,7 +699,7 @@ func (x *GetConversationRequest) String() string {
 func (*GetConversationRequest) ProtoMessage() {}
 
 func (x *GetConversationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[6]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -643,7 +712,7 @@ func (x *GetConversationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetConversationRequest.ProtoReflect.Descriptor instead.
 func (*GetConversationRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{6}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetConversationRequest) GetId() string {
@@ -663,7 +732,7 @@ type GetConversationResponse struct {
 
 func (x *GetConversationResponse) Reset() {
 	*x = GetConversationResponse{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[7]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -675,7 +744,7 @@ func (x *GetConversationResponse) String() string {
 func (*GetConversationResponse) ProtoMessage() {}
 
 func (x *GetConversationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[7]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -688,7 +757,7 @@ func (x *GetConversationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetConversationResponse.ProtoReflect.Descriptor instead.
 func (*GetConversationResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{7}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetConversationResponse) GetConversation() *Conversation {
@@ -717,7 +786,7 @@ type ListConversationsRequest struct {
 
 func (x *ListConversationsRequest) Reset() {
 	*x = ListConversationsRequest{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[8]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -729,7 +798,7 @@ func (x *ListConversationsRequest) String() string {
 func (*ListConversationsRequest) ProtoMessage() {}
 
 func (x *ListConversationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[8]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -742,7 +811,7 @@ func (x *ListConversationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListConversationsRequest.ProtoReflect.Descriptor instead.
 func (*ListConversationsRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{8}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ListConversationsRequest) GetPage() *commonv1.PageRequest {
@@ -762,7 +831,7 @@ type ListConversationsResponse struct {
 
 func (x *ListConversationsResponse) Reset() {
 	*x = ListConversationsResponse{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[9]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -774,7 +843,7 @@ func (x *ListConversationsResponse) String() string {
 func (*ListConversationsResponse) ProtoMessage() {}
 
 func (x *ListConversationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[9]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -787,7 +856,7 @@ func (x *ListConversationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListConversationsResponse.ProtoReflect.Descriptor instead.
 func (*ListConversationsResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{9}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ListConversationsResponse) GetConversations() []*Conversation {
@@ -813,7 +882,7 @@ type DeleteConversationRequest struct {
 
 func (x *DeleteConversationRequest) Reset() {
 	*x = DeleteConversationRequest{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[10]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -825,7 +894,7 @@ func (x *DeleteConversationRequest) String() string {
 func (*DeleteConversationRequest) ProtoMessage() {}
 
 func (x *DeleteConversationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[10]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -838,7 +907,7 @@ func (x *DeleteConversationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteConversationRequest.ProtoReflect.Descriptor instead.
 func (*DeleteConversationRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{10}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *DeleteConversationRequest) GetId() string {
@@ -856,7 +925,7 @@ type DeleteConversationResponse struct {
 
 func (x *DeleteConversationResponse) Reset() {
 	*x = DeleteConversationResponse{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[11]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -868,7 +937,7 @@ func (x *DeleteConversationResponse) String() string {
 func (*DeleteConversationResponse) ProtoMessage() {}
 
 func (x *DeleteConversationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[11]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -881,7 +950,7 @@ func (x *DeleteConversationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteConversationResponse.ProtoReflect.Descriptor instead.
 func (*DeleteConversationResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{11}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{12}
 }
 
 type UpdateConversationRequest struct {
@@ -890,14 +959,17 @@ type UpdateConversationRequest struct {
 	// Must not be empty or blank when set.
 	Title *string `protobuf:"bytes,2,opt,name=title,proto3,oneof" json:"title,omitempty"`
 	// Replaces the scope when set; empty ids mean all documents.
-	DocumentIds   *DocumentIds `protobuf:"bytes,3,opt,name=document_ids,json=documentIds,proto3" json:"document_ids,omitempty"`
+	DocumentIds *DocumentIds `protobuf:"bytes,3,opt,name=document_ids,json=documentIds,proto3" json:"document_ids,omitempty"`
+	// Replaces the teams when set, with the rules of CreateConversationRequest;
+	// empty ids mean all documents the user can read.
+	TeamIds       *TeamIds `protobuf:"bytes,4,opt,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UpdateConversationRequest) Reset() {
 	*x = UpdateConversationRequest{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[12]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -909,7 +981,7 @@ func (x *UpdateConversationRequest) String() string {
 func (*UpdateConversationRequest) ProtoMessage() {}
 
 func (x *UpdateConversationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[12]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -922,7 +994,7 @@ func (x *UpdateConversationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateConversationRequest.ProtoReflect.Descriptor instead.
 func (*UpdateConversationRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{12}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *UpdateConversationRequest) GetId() string {
@@ -946,6 +1018,13 @@ func (x *UpdateConversationRequest) GetDocumentIds() *DocumentIds {
 	return nil
 }
 
+func (x *UpdateConversationRequest) GetTeamIds() *TeamIds {
+	if x != nil {
+		return x.TeamIds
+	}
+	return nil
+}
+
 type UpdateConversationResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Conversation  *Conversation          `protobuf:"bytes,1,opt,name=conversation,proto3" json:"conversation,omitempty"`
@@ -955,7 +1034,7 @@ type UpdateConversationResponse struct {
 
 func (x *UpdateConversationResponse) Reset() {
 	*x = UpdateConversationResponse{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[13]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -967,7 +1046,7 @@ func (x *UpdateConversationResponse) String() string {
 func (*UpdateConversationResponse) ProtoMessage() {}
 
 func (x *UpdateConversationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[13]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -980,7 +1059,7 @@ func (x *UpdateConversationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateConversationResponse.ProtoReflect.Descriptor instead.
 func (*UpdateConversationResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{13}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *UpdateConversationResponse) GetConversation() *Conversation {
@@ -1005,7 +1084,7 @@ type SearchConversationsRequest struct {
 
 func (x *SearchConversationsRequest) Reset() {
 	*x = SearchConversationsRequest{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[14]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1017,7 +1096,7 @@ func (x *SearchConversationsRequest) String() string {
 func (*SearchConversationsRequest) ProtoMessage() {}
 
 func (x *SearchConversationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[14]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1030,7 +1109,7 @@ func (x *SearchConversationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchConversationsRequest.ProtoReflect.Descriptor instead.
 func (*SearchConversationsRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{14}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *SearchConversationsRequest) GetQuery() string {
@@ -1058,7 +1137,7 @@ type SearchConversationsResponse struct {
 
 func (x *SearchConversationsResponse) Reset() {
 	*x = SearchConversationsResponse{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[15]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1070,7 +1149,7 @@ func (x *SearchConversationsResponse) String() string {
 func (*SearchConversationsResponse) ProtoMessage() {}
 
 func (x *SearchConversationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[15]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1083,7 +1162,7 @@ func (x *SearchConversationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchConversationsResponse.ProtoReflect.Descriptor instead.
 func (*SearchConversationsResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{15}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *SearchConversationsResponse) GetResults() []*ConversationMatch {
@@ -1105,7 +1184,7 @@ type ConversationMatch struct {
 
 func (x *ConversationMatch) Reset() {
 	*x = ConversationMatch{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[16]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1117,7 +1196,7 @@ func (x *ConversationMatch) String() string {
 func (*ConversationMatch) ProtoMessage() {}
 
 func (x *ConversationMatch) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[16]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1130,7 +1209,7 @@ func (x *ConversationMatch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConversationMatch.ProtoReflect.Descriptor instead.
 func (*ConversationMatch) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{16}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ConversationMatch) GetConversation() *Conversation {
@@ -1161,7 +1240,7 @@ type StreamChatRequest struct {
 
 func (x *StreamChatRequest) Reset() {
 	*x = StreamChatRequest{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[17]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1173,7 +1252,7 @@ func (x *StreamChatRequest) String() string {
 func (*StreamChatRequest) ProtoMessage() {}
 
 func (x *StreamChatRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[17]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1186,7 +1265,7 @@ func (x *StreamChatRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamChatRequest.ProtoReflect.Descriptor instead.
 func (*StreamChatRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{17}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *StreamChatRequest) GetConversationId() string {
@@ -1232,7 +1311,7 @@ type StreamChatResponse struct {
 
 func (x *StreamChatResponse) Reset() {
 	*x = StreamChatResponse{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[18]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1244,7 +1323,7 @@ func (x *StreamChatResponse) String() string {
 func (*StreamChatResponse) ProtoMessage() {}
 
 func (x *StreamChatResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[18]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1257,7 +1336,7 @@ func (x *StreamChatResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamChatResponse.ProtoReflect.Descriptor instead.
 func (*StreamChatResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{18}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *StreamChatResponse) GetEvent() isStreamChatResponse_Event {
@@ -1347,7 +1426,7 @@ type ChatError struct {
 
 func (x *ChatError) Reset() {
 	*x = ChatError{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[19]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1359,7 +1438,7 @@ func (x *ChatError) String() string {
 func (*ChatError) ProtoMessage() {}
 
 func (x *ChatError) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[19]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1372,7 +1451,7 @@ func (x *ChatError) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChatError.ProtoReflect.Descriptor instead.
 func (*ChatError) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{19}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ChatError) GetCode() ChatErrorCode {
@@ -1398,7 +1477,7 @@ type Citations struct {
 
 func (x *Citations) Reset() {
 	*x = Citations{}
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[20]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1410,7 +1489,7 @@ func (x *Citations) String() string {
 func (*Citations) ProtoMessage() {}
 
 func (x *Citations) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[20]
+	mi := &file_knowcel_chat_v1_chat_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1423,7 +1502,7 @@ func (x *Citations) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Citations.ProtoReflect.Descriptor instead.
 func (*Citations) Descriptor() ([]byte, []int) {
-	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{20}
+	return file_knowcel_chat_v1_chat_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *Citations) GetItems() []*Citation {
@@ -1456,7 +1535,7 @@ const file_knowcel_chat_v1_chat_proto_rawDesc = "" +
 	"\tcitations\x18\x04 \x03(\v2\x19.knowcel.chat.v1.CitationR\tcitations\x12;\n" +
 	"\vcreate_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"createTime\x126\n" +
-	"\x06status\x18\x06 \x01(\x0e2\x1e.knowcel.chat.v1.MessageStatusR\x06status\"\xe6\x02\n" +
+	"\x06status\x18\x06 \x01(\x0e2\x1e.knowcel.chat.v1.MessageStatusR\x06status\"\x81\x03\n" +
 	"\fConversation\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12;\n" +
@@ -1467,12 +1546,16 @@ const file_knowcel_chat_v1_chat_proto_rawDesc = "" +
 	"\fdocument_ids\x18\x05 \x03(\tR\vdocumentIds\x12F\n" +
 	"\x11last_message_time\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x0flastMessageTime\x120\n" +
 	"\x14last_message_preview\x18\a \x01(\tR\x12lastMessagePreview\x12\x19\n" +
-	"\bowner_id\x18\b \x01(\tR\aownerId\"\x1f\n" +
+	"\bowner_id\x18\b \x01(\tR\aownerId\x12\x19\n" +
+	"\bteam_ids\x18\t \x03(\tR\ateamIds\"\x1b\n" +
+	"\aTeamIds\x12\x10\n" +
+	"\x03ids\x18\x01 \x03(\tR\x03ids\"\x1f\n" +
 	"\vDocumentIds\x12\x10\n" +
-	"\x03ids\x18\x01 \x03(\tR\x03ids\"T\n" +
+	"\x03ids\x18\x01 \x03(\tR\x03ids\"o\n" +
 	"\x19CreateConversationRequest\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12!\n" +
-	"\fdocument_ids\x18\x02 \x03(\tR\vdocumentIds\"_\n" +
+	"\fdocument_ids\x18\x02 \x03(\tR\vdocumentIds\x12\x19\n" +
+	"\bteam_ids\x18\x03 \x03(\tR\ateamIds\"_\n" +
 	"\x1aCreateConversationResponse\x12A\n" +
 	"\fconversation\x18\x01 \x01(\v2\x1d.knowcel.chat.v1.ConversationR\fconversation\"(\n" +
 	"\x16GetConversationRequest\x12\x0e\n" +
@@ -1487,11 +1570,12 @@ const file_knowcel_chat_v1_chat_proto_rawDesc = "" +
 	"\x04page\x18\x02 \x01(\v2\x1f.knowcel.common.v1.PageResponseR\x04page\"+\n" +
 	"\x19DeleteConversationRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x1c\n" +
-	"\x1aDeleteConversationResponse\"\x91\x01\n" +
+	"\x1aDeleteConversationResponse\"\xc6\x01\n" +
 	"\x19UpdateConversationRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
 	"\x05title\x18\x02 \x01(\tH\x00R\x05title\x88\x01\x01\x12?\n" +
-	"\fdocument_ids\x18\x03 \x01(\v2\x1c.knowcel.chat.v1.DocumentIdsR\vdocumentIdsB\b\n" +
+	"\fdocument_ids\x18\x03 \x01(\v2\x1c.knowcel.chat.v1.DocumentIdsR\vdocumentIds\x123\n" +
+	"\bteam_ids\x18\x04 \x01(\v2\x18.knowcel.chat.v1.TeamIdsR\ateamIdsB\b\n" +
 	"\x06_title\"_\n" +
 	"\x1aUpdateConversationResponse\x12A\n" +
 	"\fconversation\x18\x01 \x01(\v2\x1d.knowcel.chat.v1.ConversationR\fconversation\"H\n" +
@@ -1555,7 +1639,7 @@ func file_knowcel_chat_v1_chat_proto_rawDescGZIP() []byte {
 }
 
 var file_knowcel_chat_v1_chat_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_knowcel_chat_v1_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_knowcel_chat_v1_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_knowcel_chat_v1_chat_proto_goTypes = []any{
 	(MessageRole)(0),                    // 0: knowcel.chat.v1.MessageRole
 	(MessageStatus)(0),                  // 1: knowcel.chat.v1.MessageStatus
@@ -1563,70 +1647,72 @@ var file_knowcel_chat_v1_chat_proto_goTypes = []any{
 	(*Citation)(nil),                    // 3: knowcel.chat.v1.Citation
 	(*ChatMessage)(nil),                 // 4: knowcel.chat.v1.ChatMessage
 	(*Conversation)(nil),                // 5: knowcel.chat.v1.Conversation
-	(*DocumentIds)(nil),                 // 6: knowcel.chat.v1.DocumentIds
-	(*CreateConversationRequest)(nil),   // 7: knowcel.chat.v1.CreateConversationRequest
-	(*CreateConversationResponse)(nil),  // 8: knowcel.chat.v1.CreateConversationResponse
-	(*GetConversationRequest)(nil),      // 9: knowcel.chat.v1.GetConversationRequest
-	(*GetConversationResponse)(nil),     // 10: knowcel.chat.v1.GetConversationResponse
-	(*ListConversationsRequest)(nil),    // 11: knowcel.chat.v1.ListConversationsRequest
-	(*ListConversationsResponse)(nil),   // 12: knowcel.chat.v1.ListConversationsResponse
-	(*DeleteConversationRequest)(nil),   // 13: knowcel.chat.v1.DeleteConversationRequest
-	(*DeleteConversationResponse)(nil),  // 14: knowcel.chat.v1.DeleteConversationResponse
-	(*UpdateConversationRequest)(nil),   // 15: knowcel.chat.v1.UpdateConversationRequest
-	(*UpdateConversationResponse)(nil),  // 16: knowcel.chat.v1.UpdateConversationResponse
-	(*SearchConversationsRequest)(nil),  // 17: knowcel.chat.v1.SearchConversationsRequest
-	(*SearchConversationsResponse)(nil), // 18: knowcel.chat.v1.SearchConversationsResponse
-	(*ConversationMatch)(nil),           // 19: knowcel.chat.v1.ConversationMatch
-	(*StreamChatRequest)(nil),           // 20: knowcel.chat.v1.StreamChatRequest
-	(*StreamChatResponse)(nil),          // 21: knowcel.chat.v1.StreamChatResponse
-	(*ChatError)(nil),                   // 22: knowcel.chat.v1.ChatError
-	(*Citations)(nil),                   // 23: knowcel.chat.v1.Citations
-	(*timestamppb.Timestamp)(nil),       // 24: google.protobuf.Timestamp
-	(*commonv1.PageRequest)(nil),        // 25: knowcel.common.v1.PageRequest
-	(*commonv1.PageResponse)(nil),       // 26: knowcel.common.v1.PageResponse
+	(*TeamIds)(nil),                     // 6: knowcel.chat.v1.TeamIds
+	(*DocumentIds)(nil),                 // 7: knowcel.chat.v1.DocumentIds
+	(*CreateConversationRequest)(nil),   // 8: knowcel.chat.v1.CreateConversationRequest
+	(*CreateConversationResponse)(nil),  // 9: knowcel.chat.v1.CreateConversationResponse
+	(*GetConversationRequest)(nil),      // 10: knowcel.chat.v1.GetConversationRequest
+	(*GetConversationResponse)(nil),     // 11: knowcel.chat.v1.GetConversationResponse
+	(*ListConversationsRequest)(nil),    // 12: knowcel.chat.v1.ListConversationsRequest
+	(*ListConversationsResponse)(nil),   // 13: knowcel.chat.v1.ListConversationsResponse
+	(*DeleteConversationRequest)(nil),   // 14: knowcel.chat.v1.DeleteConversationRequest
+	(*DeleteConversationResponse)(nil),  // 15: knowcel.chat.v1.DeleteConversationResponse
+	(*UpdateConversationRequest)(nil),   // 16: knowcel.chat.v1.UpdateConversationRequest
+	(*UpdateConversationResponse)(nil),  // 17: knowcel.chat.v1.UpdateConversationResponse
+	(*SearchConversationsRequest)(nil),  // 18: knowcel.chat.v1.SearchConversationsRequest
+	(*SearchConversationsResponse)(nil), // 19: knowcel.chat.v1.SearchConversationsResponse
+	(*ConversationMatch)(nil),           // 20: knowcel.chat.v1.ConversationMatch
+	(*StreamChatRequest)(nil),           // 21: knowcel.chat.v1.StreamChatRequest
+	(*StreamChatResponse)(nil),          // 22: knowcel.chat.v1.StreamChatResponse
+	(*ChatError)(nil),                   // 23: knowcel.chat.v1.ChatError
+	(*Citations)(nil),                   // 24: knowcel.chat.v1.Citations
+	(*timestamppb.Timestamp)(nil),       // 25: google.protobuf.Timestamp
+	(*commonv1.PageRequest)(nil),        // 26: knowcel.common.v1.PageRequest
+	(*commonv1.PageResponse)(nil),       // 27: knowcel.common.v1.PageResponse
 }
 var file_knowcel_chat_v1_chat_proto_depIdxs = []int32{
 	0,  // 0: knowcel.chat.v1.ChatMessage.role:type_name -> knowcel.chat.v1.MessageRole
 	3,  // 1: knowcel.chat.v1.ChatMessage.citations:type_name -> knowcel.chat.v1.Citation
-	24, // 2: knowcel.chat.v1.ChatMessage.create_time:type_name -> google.protobuf.Timestamp
+	25, // 2: knowcel.chat.v1.ChatMessage.create_time:type_name -> google.protobuf.Timestamp
 	1,  // 3: knowcel.chat.v1.ChatMessage.status:type_name -> knowcel.chat.v1.MessageStatus
-	24, // 4: knowcel.chat.v1.Conversation.create_time:type_name -> google.protobuf.Timestamp
-	24, // 5: knowcel.chat.v1.Conversation.update_time:type_name -> google.protobuf.Timestamp
-	24, // 6: knowcel.chat.v1.Conversation.last_message_time:type_name -> google.protobuf.Timestamp
+	25, // 4: knowcel.chat.v1.Conversation.create_time:type_name -> google.protobuf.Timestamp
+	25, // 5: knowcel.chat.v1.Conversation.update_time:type_name -> google.protobuf.Timestamp
+	25, // 6: knowcel.chat.v1.Conversation.last_message_time:type_name -> google.protobuf.Timestamp
 	5,  // 7: knowcel.chat.v1.CreateConversationResponse.conversation:type_name -> knowcel.chat.v1.Conversation
 	5,  // 8: knowcel.chat.v1.GetConversationResponse.conversation:type_name -> knowcel.chat.v1.Conversation
 	4,  // 9: knowcel.chat.v1.GetConversationResponse.messages:type_name -> knowcel.chat.v1.ChatMessage
-	25, // 10: knowcel.chat.v1.ListConversationsRequest.page:type_name -> knowcel.common.v1.PageRequest
+	26, // 10: knowcel.chat.v1.ListConversationsRequest.page:type_name -> knowcel.common.v1.PageRequest
 	5,  // 11: knowcel.chat.v1.ListConversationsResponse.conversations:type_name -> knowcel.chat.v1.Conversation
-	26, // 12: knowcel.chat.v1.ListConversationsResponse.page:type_name -> knowcel.common.v1.PageResponse
-	6,  // 13: knowcel.chat.v1.UpdateConversationRequest.document_ids:type_name -> knowcel.chat.v1.DocumentIds
-	5,  // 14: knowcel.chat.v1.UpdateConversationResponse.conversation:type_name -> knowcel.chat.v1.Conversation
-	19, // 15: knowcel.chat.v1.SearchConversationsResponse.results:type_name -> knowcel.chat.v1.ConversationMatch
-	5,  // 16: knowcel.chat.v1.ConversationMatch.conversation:type_name -> knowcel.chat.v1.Conversation
-	23, // 17: knowcel.chat.v1.StreamChatResponse.citations:type_name -> knowcel.chat.v1.Citations
-	4,  // 18: knowcel.chat.v1.StreamChatResponse.message:type_name -> knowcel.chat.v1.ChatMessage
-	22, // 19: knowcel.chat.v1.StreamChatResponse.error:type_name -> knowcel.chat.v1.ChatError
-	2,  // 20: knowcel.chat.v1.ChatError.code:type_name -> knowcel.chat.v1.ChatErrorCode
-	3,  // 21: knowcel.chat.v1.Citations.items:type_name -> knowcel.chat.v1.Citation
-	7,  // 22: knowcel.chat.v1.ChatService.CreateConversation:input_type -> knowcel.chat.v1.CreateConversationRequest
-	9,  // 23: knowcel.chat.v1.ChatService.GetConversation:input_type -> knowcel.chat.v1.GetConversationRequest
-	11, // 24: knowcel.chat.v1.ChatService.ListConversations:input_type -> knowcel.chat.v1.ListConversationsRequest
-	13, // 25: knowcel.chat.v1.ChatService.DeleteConversation:input_type -> knowcel.chat.v1.DeleteConversationRequest
-	15, // 26: knowcel.chat.v1.ChatService.UpdateConversation:input_type -> knowcel.chat.v1.UpdateConversationRequest
-	17, // 27: knowcel.chat.v1.ChatService.SearchConversations:input_type -> knowcel.chat.v1.SearchConversationsRequest
-	20, // 28: knowcel.chat.v1.ChatService.StreamChat:input_type -> knowcel.chat.v1.StreamChatRequest
-	8,  // 29: knowcel.chat.v1.ChatService.CreateConversation:output_type -> knowcel.chat.v1.CreateConversationResponse
-	10, // 30: knowcel.chat.v1.ChatService.GetConversation:output_type -> knowcel.chat.v1.GetConversationResponse
-	12, // 31: knowcel.chat.v1.ChatService.ListConversations:output_type -> knowcel.chat.v1.ListConversationsResponse
-	14, // 32: knowcel.chat.v1.ChatService.DeleteConversation:output_type -> knowcel.chat.v1.DeleteConversationResponse
-	16, // 33: knowcel.chat.v1.ChatService.UpdateConversation:output_type -> knowcel.chat.v1.UpdateConversationResponse
-	18, // 34: knowcel.chat.v1.ChatService.SearchConversations:output_type -> knowcel.chat.v1.SearchConversationsResponse
-	21, // 35: knowcel.chat.v1.ChatService.StreamChat:output_type -> knowcel.chat.v1.StreamChatResponse
-	29, // [29:36] is the sub-list for method output_type
-	22, // [22:29] is the sub-list for method input_type
-	22, // [22:22] is the sub-list for extension type_name
-	22, // [22:22] is the sub-list for extension extendee
-	0,  // [0:22] is the sub-list for field type_name
+	27, // 12: knowcel.chat.v1.ListConversationsResponse.page:type_name -> knowcel.common.v1.PageResponse
+	7,  // 13: knowcel.chat.v1.UpdateConversationRequest.document_ids:type_name -> knowcel.chat.v1.DocumentIds
+	6,  // 14: knowcel.chat.v1.UpdateConversationRequest.team_ids:type_name -> knowcel.chat.v1.TeamIds
+	5,  // 15: knowcel.chat.v1.UpdateConversationResponse.conversation:type_name -> knowcel.chat.v1.Conversation
+	20, // 16: knowcel.chat.v1.SearchConversationsResponse.results:type_name -> knowcel.chat.v1.ConversationMatch
+	5,  // 17: knowcel.chat.v1.ConversationMatch.conversation:type_name -> knowcel.chat.v1.Conversation
+	24, // 18: knowcel.chat.v1.StreamChatResponse.citations:type_name -> knowcel.chat.v1.Citations
+	4,  // 19: knowcel.chat.v1.StreamChatResponse.message:type_name -> knowcel.chat.v1.ChatMessage
+	23, // 20: knowcel.chat.v1.StreamChatResponse.error:type_name -> knowcel.chat.v1.ChatError
+	2,  // 21: knowcel.chat.v1.ChatError.code:type_name -> knowcel.chat.v1.ChatErrorCode
+	3,  // 22: knowcel.chat.v1.Citations.items:type_name -> knowcel.chat.v1.Citation
+	8,  // 23: knowcel.chat.v1.ChatService.CreateConversation:input_type -> knowcel.chat.v1.CreateConversationRequest
+	10, // 24: knowcel.chat.v1.ChatService.GetConversation:input_type -> knowcel.chat.v1.GetConversationRequest
+	12, // 25: knowcel.chat.v1.ChatService.ListConversations:input_type -> knowcel.chat.v1.ListConversationsRequest
+	14, // 26: knowcel.chat.v1.ChatService.DeleteConversation:input_type -> knowcel.chat.v1.DeleteConversationRequest
+	16, // 27: knowcel.chat.v1.ChatService.UpdateConversation:input_type -> knowcel.chat.v1.UpdateConversationRequest
+	18, // 28: knowcel.chat.v1.ChatService.SearchConversations:input_type -> knowcel.chat.v1.SearchConversationsRequest
+	21, // 29: knowcel.chat.v1.ChatService.StreamChat:input_type -> knowcel.chat.v1.StreamChatRequest
+	9,  // 30: knowcel.chat.v1.ChatService.CreateConversation:output_type -> knowcel.chat.v1.CreateConversationResponse
+	11, // 31: knowcel.chat.v1.ChatService.GetConversation:output_type -> knowcel.chat.v1.GetConversationResponse
+	13, // 32: knowcel.chat.v1.ChatService.ListConversations:output_type -> knowcel.chat.v1.ListConversationsResponse
+	15, // 33: knowcel.chat.v1.ChatService.DeleteConversation:output_type -> knowcel.chat.v1.DeleteConversationResponse
+	17, // 34: knowcel.chat.v1.ChatService.UpdateConversation:output_type -> knowcel.chat.v1.UpdateConversationResponse
+	19, // 35: knowcel.chat.v1.ChatService.SearchConversations:output_type -> knowcel.chat.v1.SearchConversationsResponse
+	22, // 36: knowcel.chat.v1.ChatService.StreamChat:output_type -> knowcel.chat.v1.StreamChatResponse
+	30, // [30:37] is the sub-list for method output_type
+	23, // [23:30] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_knowcel_chat_v1_chat_proto_init() }
@@ -1634,8 +1720,8 @@ func file_knowcel_chat_v1_chat_proto_init() {
 	if File_knowcel_chat_v1_chat_proto != nil {
 		return
 	}
-	file_knowcel_chat_v1_chat_proto_msgTypes[12].OneofWrappers = []any{}
-	file_knowcel_chat_v1_chat_proto_msgTypes[18].OneofWrappers = []any{
+	file_knowcel_chat_v1_chat_proto_msgTypes[13].OneofWrappers = []any{}
+	file_knowcel_chat_v1_chat_proto_msgTypes[19].OneofWrappers = []any{
 		(*StreamChatResponse_Citations)(nil),
 		(*StreamChatResponse_Delta)(nil),
 		(*StreamChatResponse_Message)(nil),
@@ -1647,7 +1733,7 @@ func file_knowcel_chat_v1_chat_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_knowcel_chat_v1_chat_proto_rawDesc), len(file_knowcel_chat_v1_chat_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   21,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

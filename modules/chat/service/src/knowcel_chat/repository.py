@@ -19,6 +19,8 @@ class ConversationRow:
     owner_id: str
     # The documents answers are grounded in; empty means all documents.
     document_ids: list[uuid.UUID] = field(default_factory=list)
+    # The teams answers are limited to; empty means all readable documents.
+    team_ids: list[uuid.UUID] = field(default_factory=list)
     # None while the conversation has no messages.
     last_message_time: datetime | None = None
     last_message_preview: str = ""
@@ -56,7 +58,11 @@ class Repository(Protocol):
     looked up for its owner."""
 
     async def create_conversation(
-        self, owner: str, title: str, document_ids: list[uuid.UUID]
+        self,
+        owner: str,
+        title: str,
+        document_ids: list[uuid.UUID],
+        team_ids: list[uuid.UUID] | None = None,
     ) -> ConversationRow: ...
     async def get_conversation(self, owner: str, id: uuid.UUID) -> ConversationRow | None: ...
     async def list_conversations(
@@ -84,6 +90,7 @@ class Repository(Protocol):
         *,
         title: str | None = None,
         document_ids: list[uuid.UUID] | None = None,
+        team_ids: list[uuid.UUID] | None = None,
     ) -> ConversationRow | None:
         """Changes the fields that are not None and keeps the others."""
         ...

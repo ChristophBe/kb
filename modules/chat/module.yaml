@@ -10,5 +10,7 @@ services:
     infra: [postgres]
     grpc_services: [knowcel.chat.v1.ChatService]
 ui: "@knowcel/module-chat"
-# Retrieval (SearchChunks) and generation/embeddings.
-depends_on: [document, llm]
+# Retrieval (SearchChunks) and generation/embeddings. iam tells the caller's
+# teams, which a conversation can be limited to; while it is down, only
+# "all documents" works.
+depends_on: [document, llm, iam]

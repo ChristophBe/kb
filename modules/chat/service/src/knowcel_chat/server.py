@@ -10,7 +10,12 @@ import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
 from knowcel.chat.v1 import chat_pb2, chat_pb2_grpc
 from knowcel.common.v1 import common_pb2
-from knowcel_platform.grpc import abort_invalid_argument, current_user, violation
+from knowcel_platform.grpc import (
+    abort_invalid_argument,
+    current_principal,
+    current_user,
+    violation,
+)
 from knowcel_platform.pagination import InvalidCursorError, decode_cursor
 
 from .chat import (
@@ -35,6 +40,7 @@ DEFAULT_PAGE_SIZE = 50
 MAX_PAGE_SIZE = 200
 MAX_TITLE_LENGTH = 200
 MAX_SCOPE_DOCUMENTS = 100
+MAX_SCOPE_TEAMS = 50
 DEFAULT_SEARCH_LIMIT = 20
 MAX_SEARCH_LIMIT = 50
 
@@ -55,7 +61,8 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
     ) -> chat_pb2.CreateConversationResponse:
         owner = await _owner(context)
         document_ids = await _scope(request.document_ids, context)
-        conv = await self._repo.create_conversation(owner, request.title, document_ids)
+        team_ids = await _teams(request.team_ids, context)
+        conv = await self._repo.create_conversation(owner, request.title, document_ids, team_ids)
         return chat_pb2.CreateConversationResponse(conversation=_conversation(conv))
 
     async def GetConversation(
@@ -115,9 +122,12 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         document_ids: list[uuid.UUID] | None = None
         if request.HasField("document_ids"):
             document_ids = await _scope(request.document_ids.ids, context, "document_ids.ids")
-        if title is not None or document_ids is not None:
+        team_ids: list[uuid.UUID] | None = None
+        if request.HasField("team_ids"):
+            team_ids = await _teams(request.team_ids.ids, context, "team_ids.ids")
+        if title is not None or document_ids is not None or team_ids is not None:
             updated = await self._repo.update_conversation(
-                conv.owner_id, conv.id, title=title, document_ids=document_ids
+                conv.owner_id, conv.id, title=title, document_ids=document_ids, team_ids=team_ids
             )
             if updated is None:
                 await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
@@ -162,6 +172,7 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
             content,
             request.model,
             request.use_knowledge_base,
+            _member_teams(),
         )
         # The document and llm modules are soft dependencies: when one fails, the
         # stream ends with an error event and the answer so far, not a gRPC error.
@@ -233,6 +244,52 @@ async def _scope(
     return ids
 
 
+async def _teams(raw: Sequence[str], context: _Context, field: str = "team_ids") -> list[uuid.UUID]:
+    """Parses a team scope, the request field named `field`: duplicates are
+    dropped, the order is kept, and the caller must belong to each team
+    (PERMISSION_DENIED otherwise). While the caller's teams are unknown, a
+    scope can't be checked and is refused with UNAVAILABLE."""
+    ids: list[uuid.UUID] = []
+    for i, value in enumerate(raw):
+        try:
+            parsed = uuid.UUID(value)
+        except ValueError:
+            await abort_invalid_argument(
+                context, violation(f"{field}[{i}]", f"Invalid team id {value!r}")
+            )
+        if parsed not in ids:
+            ids.append(parsed)
+    if len(ids) > MAX_SCOPE_TEAMS:
+        await abort_invalid_argument(
+            context,
+            violation(field, f"A conversation can be limited to at most {MAX_SCOPE_TEAMS} teams"),
+        )
+    if not ids:
+        return ids
+    member = _member_teams()
+    if member is None:
+        await context.abort(grpc.StatusCode.UNAVAILABLE, "your teams are unavailable right now")
+    assert member is not None
+    if any(t not in member for t in ids):
+        await context.abort(
+            grpc.StatusCode.PERMISSION_DENIED, "you are not a member of one of the teams"
+        )
+    return ids
+
+
+def _member_teams() -> list[uuid.UUID] | None:
+    """The teams the calling user belongs to; None while they are not known
+    (iam is down, or the server has no resolver)."""
+    principal = current_principal()
+    if principal is None or principal.unavailable:
+        return None
+    member: list[uuid.UUID] = []
+    for team_id in principal.team_ids:
+        with contextlib.suppress(ValueError):
+            member.append(uuid.UUID(team_id))
+    return member
+
+
 def _ts(value: datetime) -> Timestamp:
     ts = Timestamp()
     ts.FromDatetime(value)
@@ -246,6 +303,7 @@ def _conversation(c: ConversationRow) -> chat_pb2.Conversation:
         create_time=_ts(c.created_at),
         update_time=_ts(c.updated_at),
         document_ids=[str(i) for i in c.document_ids],
+        team_ids=[str(i) for i in c.team_ids],
         last_message_time=_ts(c.last_message_time) if c.last_message_time else None,
         last_message_preview=c.last_message_preview,
         owner_id=c.owner_id,

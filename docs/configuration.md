@@ -49,6 +49,7 @@ From `Settings` in [modules/chat/service/src/knowcel_chat/config.py](../modules/
 | `KNOWCEL_DATABASE_URL` | `postgresql+asyncpg://kb:kb@localhost:5432/kb` | The Postgres database holding the chat schema, as an SQLAlchemy URL. |
 | `KNOWCEL_DOCUMENT_ADDR` | `localhost:9001` | The document module (host:port), which retrieves the passages. |
 | `KNOWCEL_LLM_ADDR` | `localhost:9004` | The llm module (host:port), which embeds questions and generates answers. |
+| `KNOWCEL_IAM_ADDR` | `localhost:9006` | The iam module (host:port), which tells the teams of a caller. While it is down, conversations can't be limited to teams; everything else works. |
 | `KNOWCEL_RAG_TOP_K` | `5` | Number of chunks retrieved for grounding an answer. |
 | `KNOWCEL_RAG_MIN_SCORE` | `0.5` | Cosine similarity (-1 to 1) a chunk needs to count as related to the question. Measured with nomic-embed-text: the passage answering a question scores about 0.67-0.84, the best chunk for an unrelated question at most 0.44. Tune it together with the embedding model. |
 | `KNOWCEL_HISTORY_LIMIT` | `20` | Previous messages loaded as context; the token budget below may drop the oldest. |

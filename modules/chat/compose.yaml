@@ -10,6 +10,8 @@ services:
       KNOWCEL_DATABASE_URL: postgresql+asyncpg://kb:kb@postgres:5432/kb
       KNOWCEL_DOCUMENT_ADDR: document-service:9001
       KNOWCEL_LLM_ADDR: llm-service:9004
+      # Soft dependency: no depends_on on iam-service; while it is down, conversations can't be limited to teams.
+      KNOWCEL_IAM_ADDR: iam-service:9006
       KNOWCEL_RAG_MIN_SCORE: ${KNOWCEL_RAG_MIN_SCORE:-0.5}
     # gRPC and Prometheus /metrics (docs/metrics.md).
     ports: ["9003:9003", "9103:9103"]

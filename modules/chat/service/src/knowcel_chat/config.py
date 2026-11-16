@@ -15,6 +15,9 @@ class Settings(PlatformSettings):
     document_addr: str = "localhost:9001"
     # The llm module (host:port), which embeds questions and generates answers.
     llm_addr: str = "localhost:9004"
+    # The iam module (host:port), which tells the teams of a caller. While it is
+    # down, conversations can't be limited to teams; everything else works.
+    iam_addr: str = "localhost:9006"
     # Number of chunks retrieved for grounding an answer.
     rag_top_k: int = 5
     # Cosine similarity (-1 to 1) a chunk needs to count as related to the
@@ -44,6 +47,7 @@ class Settings(PlatformSettings):
         problems.url("database_url", self.database_url, ["postgresql+asyncpg"])
         problems.addr("document_addr", self.document_addr)
         problems.addr("llm_addr", self.llm_addr)
+        problems.addr("iam_addr", self.iam_addr)
         problems.at_least("rag_top_k", self.rag_top_k, 1)
         problems.between("rag_min_score", self.rag_min_score, -1, 1)
         problems.at_least("history_limit", self.history_limit, 0)

@@ -179,6 +179,44 @@ func TestTeamsCanChangeAndTakeEffectImmediately(t *testing.T) {
 	}
 }
 
+func TestSearchChunksCanBeLimitedToTeams(t *testing.T) {
+	h := newTeamHarness(t)
+	inA := h.upload(t, teamA)
+	inB := h.upload(t, teamB)
+	public := h.upload(t)
+	member := asUser(t, bob, []uuid.UUID{teamA, teamB})
+	search := func(teams ...uuid.UUID) map[string]bool {
+		t.Helper()
+		resp, err := h.server.SearchChunks(member, &documentv1.SearchChunksRequest{Embedding: oneHot(0), EmbeddingModel: "test-model", TeamIds: ids(teams)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		found := map[string]bool{}
+		for _, r := range resp.GetResults() {
+			found[r.GetChunk().GetDocumentId()] = true
+		}
+		return found
+	}
+	if got := search(); !got[inA] || !got[inB] || !got[public] {
+		t.Errorf("without teams found %v, want all three", got)
+	}
+	if got := search(teamA); len(got) != 1 || !got[inA] {
+		t.Errorf("limited to A found %v, want only the document of A (not the public one)", got)
+	}
+	if got := search(teamA, teamB); len(got) != 2 || got[public] {
+		t.Errorf("limited to A and B found %v, want both team documents", got)
+	}
+	// A team the caller is not in matches nothing they can read.
+	if got := search(uuid.New()); len(got) != 0 {
+		t.Errorf("limited to a foreign team found %v, want nothing", got)
+	}
+	// Someone outside team B never sees its documents, whatever they ask for.
+	outsider, err := h.server.SearchChunks(asUser(t, carol, []uuid.UUID{teamA}), &documentv1.SearchChunksRequest{Embedding: oneHot(0), EmbeddingModel: "test-model", TeamIds: ids([]uuid.UUID{teamB})})
+	if err != nil || len(outsider.GetResults()) != 0 {
+		t.Errorf("outsider found %v, %v; want nothing", outsider.GetResults(), err)
+	}
+}
+
 func TestAccessChangesTakeEffectImmediately(t *testing.T) {
 	h := newTeamHarness(t)
 	id := h.upload(t, teamA)

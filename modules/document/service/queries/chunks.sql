@@ -10,7 +10,8 @@ VALUES ($1, $2, $3, $4, $5, $6);
 -- the same embedding model: vectors of different models are not comparable.
 -- The HNSW index yields candidates before the visibility filter applies, so the pool
 -- sets hnsw.iterative_scan (store.ConfigurePool) to keep scanning until the
--- limit is filled.
+-- limit is filled. only_team_ids, when not empty, further limits the search
+-- to the documents attached to one of those teams (not the public ones).
 -- name: SearchChunks :many
 SELECT c.document_id, c.idx, c.text, c.metadata, d.title AS document_title,
        (1 - (c.embedding <=> sqlc.arg('embedding')::vector))::real AS score
@@ -23,6 +24,9 @@ WHERE (d.access = 1
   AND c.embedding_model = sqlc.arg('embedding_model')
   AND (cardinality(sqlc.arg('document_ids')::uuid[]) = 0
        OR c.document_id = ANY(sqlc.arg('document_ids')::uuid[]))
+  AND (coalesce(cardinality(sqlc.arg('only_team_ids')::uuid[]), 0) = 0
+       OR EXISTS (SELECT 1 FROM document.document_teams o
+                  WHERE o.document_id = d.id AND o.team_id = ANY(sqlc.arg('only_team_ids')::uuid[])))
 ORDER BY c.embedding <=> sqlc.arg('embedding')::vector
 LIMIT sqlc.arg('max_results');
 
@@ -46,6 +50,9 @@ FROM (
       AND c.embedding_model = sqlc.arg('embedding_model')
       AND (cardinality(sqlc.arg('document_ids')::uuid[]) = 0
            OR c.document_id = ANY(sqlc.arg('document_ids')::uuid[]))
+      AND (coalesce(cardinality(sqlc.arg('only_team_ids')::uuid[]), 0) = 0
+           OR EXISTS (SELECT 1 FROM document.document_teams o
+                      WHERE o.document_id = d.id AND o.team_id = ANY(sqlc.arg('only_team_ids')::uuid[])))
     ORDER BY c.document_id, c.embedding <=> sqlc.arg('embedding')::vector, c.idx
 ) best
 ORDER BY score DESC, document_id

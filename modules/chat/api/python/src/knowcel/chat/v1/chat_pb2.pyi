@@ -75,7 +75,7 @@ class ChatMessage(_message.Message):
     def __init__(self, id: _Optional[str] = ..., role: _Optional[_Union[MessageRole, str]] = ..., content: _Optional[str] = ..., citations: _Optional[_Iterable[_Union[Citation, _Mapping]]] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., status: _Optional[_Union[MessageStatus, str]] = ...) -> None: ...
 
 class Conversation(_message.Message):
-    __slots__ = ("id", "title", "create_time", "update_time", "document_ids", "last_message_time", "last_message_preview", "owner_id")
+    __slots__ = ("id", "title", "create_time", "update_time", "document_ids", "last_message_time", "last_message_preview", "owner_id", "team_ids")
     ID_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
     CREATE_TIME_FIELD_NUMBER: _ClassVar[int]
@@ -84,6 +84,7 @@ class Conversation(_message.Message):
     LAST_MESSAGE_TIME_FIELD_NUMBER: _ClassVar[int]
     LAST_MESSAGE_PREVIEW_FIELD_NUMBER: _ClassVar[int]
     OWNER_ID_FIELD_NUMBER: _ClassVar[int]
+    TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
     id: str
     title: str
     create_time: _timestamp_pb2.Timestamp
@@ -92,7 +93,14 @@ class Conversation(_message.Message):
     last_message_time: _timestamp_pb2.Timestamp
     last_message_preview: str
     owner_id: str
-    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., document_ids: _Optional[_Iterable[str]] = ..., last_message_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., last_message_preview: _Optional[str] = ..., owner_id: _Optional[str] = ...) -> None: ...
+    team_ids: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., document_ids: _Optional[_Iterable[str]] = ..., last_message_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., last_message_preview: _Optional[str] = ..., owner_id: _Optional[str] = ..., team_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class TeamIds(_message.Message):
+    __slots__ = ("ids",)
+    IDS_FIELD_NUMBER: _ClassVar[int]
+    ids: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, ids: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class DocumentIds(_message.Message):
     __slots__ = ("ids",)
@@ -101,12 +109,14 @@ class DocumentIds(_message.Message):
     def __init__(self, ids: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class CreateConversationRequest(_message.Message):
-    __slots__ = ("title", "document_ids")
+    __slots__ = ("title", "document_ids", "team_ids")
     TITLE_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_IDS_FIELD_NUMBER: _ClassVar[int]
+    TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
     title: str
     document_ids: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, title: _Optional[str] = ..., document_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+    team_ids: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, title: _Optional[str] = ..., document_ids: _Optional[_Iterable[str]] = ..., team_ids: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class CreateConversationResponse(_message.Message):
     __slots__ = ("conversation",)
@@ -153,14 +163,16 @@ class DeleteConversationResponse(_message.Message):
     def __init__(self) -> None: ...
 
 class UpdateConversationRequest(_message.Message):
-    __slots__ = ("id", "title", "document_ids")
+    __slots__ = ("id", "title", "document_ids", "team_ids")
     ID_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_IDS_FIELD_NUMBER: _ClassVar[int]
+    TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
     id: str
     title: str
     document_ids: DocumentIds
-    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., document_ids: _Optional[_Union[DocumentIds, _Mapping]] = ...) -> None: ...
+    team_ids: TeamIds
+    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., document_ids: _Optional[_Union[DocumentIds, _Mapping]] = ..., team_ids: _Optional[_Union[TeamIds, _Mapping]] = ...) -> None: ...
 
 class UpdateConversationResponse(_message.Message):
     __slots__ = ("conversation",)

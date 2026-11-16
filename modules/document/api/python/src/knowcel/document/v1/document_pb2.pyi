@@ -379,16 +379,18 @@ class ListChunksResponse(_message.Message):
     def __init__(self, chunks: _Optional[_Iterable[_Union[Chunk, _Mapping]]] = ..., page: _Optional[_Union[_common_pb2.PageResponse, _Mapping]] = ...) -> None: ...
 
 class SearchChunksRequest(_message.Message):
-    __slots__ = ("embedding", "limit", "document_ids", "embedding_model")
+    __slots__ = ("embedding", "limit", "document_ids", "embedding_model", "team_ids")
     EMBEDDING_FIELD_NUMBER: _ClassVar[int]
     LIMIT_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_IDS_FIELD_NUMBER: _ClassVar[int]
     EMBEDDING_MODEL_FIELD_NUMBER: _ClassVar[int]
+    TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
     embedding: _containers.RepeatedScalarFieldContainer[float]
     limit: int
     document_ids: _containers.RepeatedScalarFieldContainer[str]
     embedding_model: str
-    def __init__(self, embedding: _Optional[_Iterable[float]] = ..., limit: _Optional[int] = ..., document_ids: _Optional[_Iterable[str]] = ..., embedding_model: _Optional[str] = ...) -> None: ...
+    team_ids: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, embedding: _Optional[_Iterable[float]] = ..., limit: _Optional[int] = ..., document_ids: _Optional[_Iterable[str]] = ..., embedding_model: _Optional[str] = ..., team_ids: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class SearchChunksResponse(_message.Message):
     __slots__ = ("results",)

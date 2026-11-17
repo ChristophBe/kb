@@ -1,4 +1,5 @@
 import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
+import { Access, DocumentService } from "@knowcel/document-api/knowcel/document/v1/document_pb";
 import { IamService, TeamRole } from "@knowcel/iam-api/knowcel/iam/v1/iam_pb";
 import {
   IngestionService,
@@ -6,12 +7,22 @@ import {
   JobStatus,
 } from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 import { renderModule } from "@knowcel/module-sdk/testing";
-import { fireEvent, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { polyfillDialog } from "@knowcel/ui/testing/dialog";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import ingestion from "./index.tsx";
+import { putWithProgress } from "./put.ts";
+
+vi.mock("./put.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./put.ts")>()),
+  putWithProgress: vi.fn(),
+}));
+const put = vi.mocked(putWithProgress);
 
 // Uploading itself is covered by useUploads.test.ts; these render the page.
 describe("Upload", () => {
+  beforeAll(polyfillDialog);
+
   it("lists the jobs with their status", async () => {
     const transport = createRouterTransport(({ service }) =>
       service(IngestionService, {
@@ -132,6 +143,145 @@ describe("Upload", () => {
     renderModule(ingestion, transport);
     const error = await screen.findByText("[unavailable] ingestion service down");
     expect(error.getAttribute("role")).toBe("alert");
+  });
+
+  describe("finished jobs", () => {
+    const jobs = [
+      { id: "j1", documentId: "d1", filename: "report.pdf", status: JobStatus.DONE },
+      { id: "j2", documentId: "d2", filename: "page.html", status: JobStatus.DONE },
+      {
+        id: "j3",
+        documentId: "d3",
+        filename: "scan.pdf",
+        status: JobStatus.FAILED,
+        error: "no text",
+      },
+      { id: "j4", documentId: "d4", filename: "new.pdf", status: JobStatus.PENDING_UPLOAD },
+    ];
+    const transport = () =>
+      createRouterTransport(({ service }) => {
+        service(IngestionService, { listJobs: () => ({ jobs }) });
+        service(IamService, {
+          listMyTeams: () => ({
+            teams: [{ id: "t1", name: "Platform", myRole: TeamRole.ADMIN, members: [] }],
+          }),
+        });
+        service(DocumentService, {
+          getDocument: (req) => ({
+            document:
+              req.id === "d2"
+                ? { id: "d2", access: Access.TEAM, teamIds: ["t1"] }
+                : { id: req.id, access: Access.PUBLIC },
+          }),
+        });
+      });
+
+    it("link to their document and show who can read it", async () => {
+      renderModule(ingestion, transport());
+      const done = within((await screen.findByText("report.pdf")).closest("li") as HTMLElement);
+      expect(done.getByRole("link", { name: "report.pdf" }).getAttribute("href")).toBe(
+        "/m/document/d1",
+      );
+      expect(await done.findByText("Public")).toBeTruthy();
+      const page = within(screen.getByText("page.html").closest("li") as HTMLElement);
+      expect(page.getByRole("link", { name: "page.html" })).toBeTruthy();
+      expect(await page.findByText("Team: Platform")).toBeTruthy();
+      // A failed job still has its document; one not uploaded yet has nothing to open.
+      expect(screen.getByRole("link", { name: "scan.pdf" })).toBeTruthy();
+      expect(screen.queryByRole("link", { name: "new.pdf" })).toBeNull();
+    });
+
+    it("mark and focus the job of the document the user came from", async () => {
+      renderModule(ingestion, transport(), "/?document=d3");
+      const row = (await screen.findByText("scan.pdf")).closest("li") as HTMLElement;
+      await waitFor(() => expect(row.getAttribute("aria-current")).toBe("true"));
+      expect(within(row).getByRole("button", { name: "Retry processing" })).toBeTruthy();
+      await waitFor(() => expect(row.contains(document.activeElement)).toBe(true));
+    });
+
+    it("say so when no recent job belongs to that document", async () => {
+      renderModule(ingestion, transport(), "/?document=gone");
+      expect(await screen.findByText(/No recent upload belongs to that document/)).toBeTruthy();
+    });
+  });
+
+  describe("leaving the page", () => {
+    const start = async () => {
+      let finish = () => {};
+      put.mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            finish = resolve;
+          }),
+      );
+      const transport = createRouterTransport(({ service }) =>
+        service(IngestionService, {
+          listJobs: () => ({ jobs: [] }),
+          createUpload: () => ({
+            job: { id: "j1", filename: "a.md" },
+            uploadUrl: "http://upload",
+          }),
+          completeUpload: () => ({ job: { id: "j1", filename: "a.md", status: JobStatus.QUEUED } }),
+          watchJob: async function* () {},
+        }),
+      );
+      const view = renderModule(ingestion, transport);
+      await screen.findByText("No uploads yet. Drop files above to add documents.");
+      const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+      fireEvent.change(input as HTMLInputElement, {
+        target: { files: [new File(["x"], "a.md", { type: "text/markdown" })] },
+      });
+      fireEvent.click(await screen.findByRole("button", { name: "Upload" }));
+      await waitFor(() => expect(put).toHaveBeenCalled());
+      return { ...view, finish: () => act(async () => finish()) };
+    };
+
+    it("asks before leaving during an upload, and stays on Cancel", async () => {
+      const { router } = await start();
+      const unload = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(unload);
+      expect(unload.defaultPrevented).toBe(true);
+      await act(async () => {
+        void router.navigate("/replace/d1");
+      });
+      const dialog = within(await screen.findByRole("dialog", { name: "Leave while uploading?" }));
+      fireEvent.click(dialog.getByRole("button", { name: "Cancel" }));
+      expect(router.state.location.pathname).toBe("/");
+    });
+
+    it("leaves on confirmation", async () => {
+      const { router } = await start();
+      await act(async () => {
+        void router.navigate("/replace/d1");
+      });
+      const dialog = within(await screen.findByRole("dialog", { name: "Leave while uploading?" }));
+      fireEvent.click(dialog.getByRole("button", { name: "Leave page" }));
+      await waitFor(() => expect(router.state.location.pathname).toBe("/replace/d1"));
+    });
+
+    it("never asks once the upload is finished or when nothing was started", async () => {
+      const { router, finish } = await start();
+      await finish();
+      await waitFor(() => expect(screen.queryByRole("progressbar")).toBeNull());
+      const unload = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(unload);
+      expect(unload.defaultPrevented).toBe(false);
+      await act(() => router.navigate("/replace/d1"));
+      expect(router.state.location.pathname).toBe("/replace/d1");
+    });
+
+    it("lets an idle page go", async () => {
+      const transport = createRouterTransport(({ service }) =>
+        service(IngestionService, { listJobs: () => ({ jobs: [] }) }),
+      );
+      const { router } = renderModule(ingestion, transport);
+      await screen.findByText("No uploads yet. Drop files above to add documents.");
+      const unload = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(unload);
+      expect(unload.defaultPrevented).toBe(false);
+      await act(() => router.navigate("/replace/d1"));
+      expect(router.state.location.pathname).toBe("/replace/d1");
+    });
   });
 
   describe("sharing", () => {

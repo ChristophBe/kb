@@ -33,7 +33,7 @@ import { SharedWith } from "./SharedWith.tsx";
 import { ShareEditor } from "./ShareEditor.tsx";
 import { statusLabel } from "./status.ts";
 import { TitleEditor } from "./TitleEditor.tsx";
-import { inProgress, UploadVersionLink, VersionInfo } from "./VersionInfo.tsx";
+import { FailureNotice, inProgress, UploadVersionLink, VersionInfo } from "./VersionInfo.tsx";
 
 /** How often the page refreshes while the document or a new version is processed. */
 const PROCESSING_REFRESH_MS = 3000;
@@ -156,6 +156,7 @@ export function DocumentDetail() {
           </Button>
         )}
       </div>
+      <FailureNotice document={d} />
       <Card className="max-w-2xl">
         <dl className="divide-y divide-dotted divide-border text-sm">
           {rows.map(([k, v]) => (

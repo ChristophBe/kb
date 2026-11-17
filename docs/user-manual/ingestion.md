@@ -15,7 +15,7 @@ If a row says **Upload failed** because a chosen team isn't available, it may be
 
 Knowcelium accepts PDF, Word (.docx), HTML, Markdown and plain text files, including CSV, JSON, YAML and reStructuredText, of up to 50 MiB each (your administrator may have set another limit or allowed fewer types). From an HTML page Knowcelium reads the title and the main article, without menus and footers. Scanned PDFs without a text layer have no text to read and end up with no passages, unless your administrator has turned on text recognition (OCR); then Knowcelium reads those pages from their image, which makes processing slower and may misread poor scans.
 
-Keep the page open until every file shows a processing status. Closing the tab, or leaving the page before a file has started uploading, can stop that file's upload.
+Keep the page open until every file shows a processing status. Closing the tab, or leaving the page before a file has started uploading, can stop that file's upload. While a file is still waiting or uploading, Knowcelium asks before you leave: in the app, a dialog **Leave while uploading?** with **Cancel** to stay and **Leave page** to go; when you close or reload the tab, your browser asks. Once every file is on its way, or when nothing is uploading, it never asks.
 
 ## Add a web page
 
@@ -45,6 +45,8 @@ After the upload, each file goes through these statuses under **Uploads**:
 - **Failed**: processing stopped. The row shows the reason. See [Retry processing](#retry-processing).
 
 Several files can be processed at the same time, so more than one row may show **Processing** while others wait as **Queued**.
+
+Under **Uploads**, the name of a file or web page whose processing has started links to its document, and the row shows who can read it (**Public**, or **Team:** and the team names). The link stays after you reload the page.
 
 When a file is done, a notification says "*file* added"; when it fails, it says "Couldn't process *file*". The document also appears under [Documents](documents.md), where its status follows the same steps.
 
@@ -87,5 +89,7 @@ A file whose processing failed shows the reason and a **Retry processing** butto
 
 1. Select **Retry processing**.
 2. The status changes to **Queued** and the file is processed again from the uploaded copy; you don't need to upload it again.
+
+You can also get here from the document: when processing of a document, or of its new version, failed, its page shows the reason with **View job and retry processing**. That opens **Upload** with the document's row highlighted, where **Retry processing** is. If the row isn't there, because many uploads came after it, the page says so; open the document again from [Documents](documents.md).
 
 If it fails again with the same reason, the file itself is probably the problem, for example a damaged PDF. If the reason says a service isn't available, check [Models](models.md) and try again later.

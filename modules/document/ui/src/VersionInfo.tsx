@@ -3,7 +3,7 @@ import {
   DocumentStatus,
 } from "@knowcel/document-api/knowcel/document/v1/document_pb";
 import { Badge, buttonClass } from "@knowcel/ui";
-import { Upload } from "lucide-react";
+import { AlertTriangle, Upload } from "lucide-react";
 import { Link } from "react-router";
 import { statusLabel } from "./status.ts";
 
@@ -79,5 +79,43 @@ export function UploadVersionLink({ document: d }: { document: Document }) {
     >
       <Upload className="size-4" aria-hidden="true" /> Upload new version
     </Link>
+  );
+}
+
+/**
+ * What went wrong when the document, or the new version on its way, failed to process, and the
+ * way to try again: the job lives in ingestion, which lists it with "Retry processing".
+ * Nothing while neither failed.
+ */
+export function FailureNotice({ document: d }: { document: Document }) {
+  const failed = d.status === DocumentStatus.FAILED;
+  const pending = d.pendingVersion;
+  const pendingFailed = pending?.status === DocumentStatus.FAILED;
+  if (!failed && !pendingFailed) return null;
+  return (
+    <div
+      role="alert"
+      className="mb-6 flex max-w-2xl flex-wrap items-center gap-x-4 gap-y-2 rounded-control bg-danger-subtle px-3 py-2 text-sm text-danger"
+    >
+      <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
+      <div className="min-w-0 flex-1">
+        {failed && (
+          <p>
+            Processing failed{d.statusDetail ? `: ${d.statusDetail}` : ""}. The document can't be
+            searched until it is processed again.
+          </p>
+        )}
+        {pendingFailed && (
+          <p>
+            Version {pending.version} ({pending.filename}) failed
+            {pending.statusDetail ? `: ${pending.statusDetail}` : ""}. The document keeps its
+            current version.
+          </p>
+        )}
+      </div>
+      <Link to={`/m/ingestion?document=${d.id}`} className={buttonClass("secondary")}>
+        View job and retry processing
+      </Link>
+    </div>
   );
 }

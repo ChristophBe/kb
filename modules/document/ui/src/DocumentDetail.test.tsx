@@ -153,6 +153,31 @@ describe("DocumentDetail", () => {
     expect(screen.getByText("Ready")).toBeTruthy();
   });
 
+  it("links a failed document to its job to retry", async () => {
+    renderDocument({ status: DocumentStatus.FAILED, statusDetail: "no text found" });
+    const notice = within(await screen.findByRole("alert"));
+    expect(notice.getByText(/Processing failed: no text found\. /)).toBeTruthy();
+    expect(
+      notice.getByRole("link", { name: "View job and retry processing" }).getAttribute("href"),
+    ).toBe("/m/ingestion?document=d1");
+  });
+
+  it("links a failed new version to its job, keeping the current version", async () => {
+    renderDocument({
+      version: 1,
+      pendingVersion: { version: 2, filename: "v2.md", status: DocumentStatus.FAILED },
+    });
+    const notice = within(await screen.findByRole("alert"));
+    expect(notice.getByText(/Version 2 \(v2.md\) failed/)).toBeTruthy();
+    expect(notice.getByRole("link", { name: "View job and retry processing" })).toBeTruthy();
+  });
+
+  it("shows no failure notice for a healthy document", async () => {
+    renderDocument({});
+    await versionRow();
+    expect(screen.queryByRole("link", { name: "View job and retry processing" })).toBeNull();
+  });
+
   it("offers no new version while the first upload is processed", async () => {
     renderDocument({ version: 1, status: DocumentStatus.PROCESSING });
     await versionRow();

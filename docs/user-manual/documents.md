@@ -28,7 +28,7 @@ A document is either **public**, so that every signed-in user can see it, or a *
 - **Uploaded**: the file has arrived and waits to be processed.
 - **Processing**: Knowcelium is reading the text and preparing the passages.
 - **Ready**: the document can be searched and used in chat.
-- **Failed**: processing stopped. Open the document to see the reason under **Detail**, then see [Retry processing](ingestion.md#retry-processing).
+- **Failed**: processing stopped. Open the document to see the reason under **Detail**, then see [Retry processing](ingestion.md#retry-processing). A notice above the details repeats the reason and links to the job with **View job and retry processing**.
 
 Only **Ready** documents show up in search results and chat answers.
 
@@ -84,7 +84,7 @@ When a file changes, upload its new version into the same document instead of ad
 
 While the new version is processed, the document stays as it was: search, chat and **Download** use the current version. Once the new version is ready, its passages, file name and size replace the old ones and **Version** goes up by one; the old file is removed.
 
-If the new version can't be processed, it shows as **Failed** with the reason, and the document keeps its current version. Select **Upload new version** to try another file, or retry processing in [Upload](ingestion.md#retry-processing).
+If the new version can't be processed, it shows as **Failed** with the reason, and the document keeps its current version. Select **Upload new version** to try another file, or retry processing in [Upload](ingestion.md#retry-processing); the notice on the document's page has a link there.
 
 **Upload new version** isn't offered while the document or a new version of it is still being uploaded or processed. If a file is too large or of a type Knowcelium doesn't read, the upload page says so; choose another file. Select **← Back to the document** to leave without uploading.
 

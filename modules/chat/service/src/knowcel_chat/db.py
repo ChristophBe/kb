@@ -12,6 +12,7 @@ from alembic.config import Config
 from knowcel.chat.v1 import chat_pb2
 from knowcel_platform.pagination import Cursor
 from sqlalchemy import (
+    Boolean,
     Column,
     DateTime,
     ForeignKey,
@@ -52,6 +53,7 @@ conversations = Table(
     Column("document_ids", ARRAY(Uuid), nullable=False, server_default="{}"),
     Column("team_ids", ARRAY(Uuid), nullable=False, server_default="{}"),
     Column("owner_id", Text, nullable=False),
+    Column("completed_unseen", Boolean, nullable=False, server_default="false"),
 )
 
 messages = Table(
@@ -238,6 +240,14 @@ class SqlRepository:
         async with self._engine.begin() as conn:
             result = await conn.execute(delete(conversations).where(_owned(owner, id)))
         return result.rowcount > 0
+
+    async def set_completed_unseen(self, id: uuid.UUID, unseen: bool) -> None:
+        async with self._engine.begin() as conn:
+            await conn.execute(
+                update(conversations)
+                .where(conversations.c.id == id)
+                .values(completed_unseen=unseen)
+            )
 
     async def set_title(self, id: uuid.UUID, title: str) -> None:
         async with self._engine.begin() as conn:

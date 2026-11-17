@@ -24,6 +24,9 @@ class ConversationRow:
     # None while the conversation has no messages.
     last_message_time: datetime | None = None
     last_message_preview: str = ""
+    # An answer ended while nobody was following it and the conversation has not
+    # been opened since.
+    completed_unseen: bool = False
 
     @property
     def cursor(self) -> Cursor:
@@ -83,6 +86,7 @@ class Repository(Protocol):
 
     async def delete_conversation(self, owner: str, id: uuid.UUID) -> bool: ...
     async def set_title(self, id: uuid.UUID, title: str) -> None: ...
+    async def set_completed_unseen(self, id: uuid.UUID, unseen: bool) -> None: ...
     async def update_conversation(
         self,
         owner: str,

@@ -18,6 +18,12 @@ export interface NavItem {
    * ordered entries, in module order.
    */
   order?: number;
+  /**
+   * A React hook the sidebar calls (so it runs on every page, even before the
+   * module's code loads) for a badge on the entry: the number of things that
+   * wait for the user, 0 for none. It is part of the manifest, so keep it small.
+   */
+  useBadge?: () => number;
 }
 
 /** One result of a global search. */

@@ -21,6 +21,10 @@ service ChatService {
   rpc SearchConversations(SearchConversationsRequest) returns (SearchConversationsResponse);
   // StreamChat appends a user message and streams the assistant's answer.
   rpc StreamChat(StreamChatRequest) returns (stream StreamChatResponse);
+  // StopChat stops the answer being written in a conversation; the text so far
+  // is kept with the status stopped. Disconnecting from StreamChat does not
+  // stop the answer, it keeps being written in the background.
+  rpc StopChat(StopChatRequest) returns (StopChatResponse);
 }
 
 enum MessageRole {
@@ -92,6 +96,11 @@ message Conversation {
   // can read. A team the user has left or that was deleted counts as not
   // chosen; with none left the conversation uses all documents.
   repeated string team_ids = 9;
+  // An answer is being written. Output only.
+  bool generating = 10;
+  // An answer was completed (or failed) while nobody was following it. Cleared
+  // when the conversation is fetched with GetConversation. Output only.
+  bool completed_unseen = 11;
 }
 
 // A list of team ids, wrapped like DocumentIds so that an update can tell
@@ -193,6 +202,13 @@ message StreamChatRequest {
   // Model id; empty uses the llm module's default.
   string model = 4;
 }
+
+message StopChatRequest {
+  string conversation_id = 1;
+}
+
+// Sent also when no answer was being written.
+message StopChatResponse {}
 
 message StreamChatResponse {
   oneof event {

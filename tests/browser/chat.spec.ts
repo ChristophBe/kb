@@ -5,7 +5,8 @@ import { expect, test } from "@playwright/test";
 // led to /m/chat/<open id>/<picked id>, a page that doesn't exist.
 test("picking a conversation in the list opens it", async ({ page }) => {
   await page.goto("/m/chat");
-  const newChat = page.getByRole("button", { name: "New chat" });
+  // On a fresh stack the empty state offers a second "New chat" next to the list's: use the list's.
+  const newChat = page.getByRole("button", { name: "New chat" }).first();
   const open = /\/m\/chat\/[^/]+$/;
 
   await newChat.click();

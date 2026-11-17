@@ -21,6 +21,8 @@ export interface NavEntry {
    * covers the module's subpages, e.g. /m/chat/new.
    */
   end: boolean;
+  /** The item's badge hook, see `NavItem.useBadge`. */
+  useBadge?: NavItem["useBadge"];
 }
 
 /**
@@ -42,6 +44,7 @@ export function navEntries(modules: ModuleManifest[], isPlatformAdmin = false): 
             label: item.label,
             icon: item.icon ?? m.icon,
             end: !item.path && items.length > 1,
+            useBadge: item.useBadge,
           },
         }));
     })

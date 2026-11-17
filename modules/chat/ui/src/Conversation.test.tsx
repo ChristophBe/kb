@@ -14,17 +14,18 @@ import {
   StreamChatResponseSchema,
 } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
 import { ModelKind } from "@knowcel/llm-api/knowcel/llm/v1/llm_pb";
-import { KbRuntimeProvider } from "@knowcel/module-sdk";
+import { dismissToast, KbRuntimeProvider, useToasts } from "@knowcel/module-sdk";
 import { polyfillDialog } from "@knowcel/ui/testing/dialog";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { Conversation } from "./Conversation.tsx";
 
 const getConversation = vi.fn();
 const streamChat = vi.fn();
 const updateConversation = vi.fn(async () => ({}));
 const listDocuments = vi.fn(async () => ({ documents: [] }));
+const stopChat = vi.fn(async () => ({}));
 // The llm module's chat models for the model picker.
 const listModels = vi.fn(async () => ({
   models: [
@@ -40,6 +41,7 @@ vi.mock("@knowcel/module-sdk", async (importOriginal) => ({
   useClient: () => ({
     getConversation,
     streamChat,
+    stopChat,
     updateConversation,
     listDocuments,
     listModels,
@@ -97,6 +99,17 @@ function stoppableStream(deltas: string[]) {
   };
 }
 
+/** Stands in for the shell's toast host: shows the actions of the toasts. */
+function ToastProbe() {
+  return useToasts().map((t) =>
+    t.action ? (
+      <button key={t.id} type="button" onClick={t.action.onSelect}>
+        {t.action.label}
+      </button>
+    ) : null,
+  );
+}
+
 let conversationId = 0;
 
 /** Renders a conversation; each test gets its own id, as the query cache is shared. */
@@ -108,6 +121,7 @@ async function renderConversation() {
         <Routes>
           <Route path=":id" element={<Conversation />} />
         </Routes>
+        <ToastProbe />
       </MemoryRouter>
     </KbRuntimeProvider>,
   );
@@ -128,6 +142,9 @@ describe("Conversation", () => {
     saved = [];
     getConversation.mockReset();
     streamChat.mockReset();
+    stopChat.mockClear();
+    localStorage.clear();
+    for (let i = 0; i < 100; i++) dismissToast(i);
     getConversation.mockImplementation(async ({ id }: { id: string }) =>
       create(GetConversationResponseSchema, {
         conversation: create(ConversationSchema, { id, title: "Q3" }),
@@ -195,6 +212,7 @@ describe("Conversation", () => {
     });
 
     expect(signal.aborted).toBe(true);
+    expect(stopChat).toHaveBeenCalledWith({ conversationId: expect.stringMatching(/^c\d+$/) });
     expect(await screen.findByText("Stopped")).toBeTruthy();
     expect(screen.getByText("Revenue grew")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Stop" })).toBeNull();
@@ -219,7 +237,7 @@ describe("Conversation", () => {
     expect(await screen.findByText("Stopped")).toBeTruthy();
   });
 
-  it("stops the answer when the conversation is left", async () => {
+  it("only stops following the answer when the conversation is left", async () => {
     streamChat.mockImplementation(stoppableStream(["Half"]));
     await renderConversation();
     await ask("Question?");
@@ -227,8 +245,88 @@ describe("Conversation", () => {
     const signal = streamChat.mock.calls[0]?.[1]?.signal as AbortSignal;
 
     cleanup();
+    await act(async () => {});
 
+    // The stream is closed, but the server isn't told to stop the answer.
     expect(signal.aborted).toBe(true);
+    expect(stopChat).not.toHaveBeenCalled();
+  });
+
+  it("shows an answer that is still being written after the page is reopened", async () => {
+    getConversation.mockImplementation(async ({ id }: { id: string }) =>
+      create(GetConversationResponseSchema, {
+        conversation: create(ConversationSchema, { id, title: "Q3", generating: true }),
+        messages: [...saved],
+      }),
+    );
+    saved = [message(MessageRole.USER, "Question?")];
+    await renderConversation();
+
+    expect(await screen.findByText("Writing the answer…")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Ask" }).hasAttribute("disabled")).toBe(true);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Stop" }));
+    });
+    expect(stopChat).toHaveBeenCalledOnce();
+  });
+
+  describe("notifications", () => {
+    afterEach(() => vi.unstubAllGlobals());
+
+    function stubNotification(permission: NotificationPermission) {
+      const shown: string[] = [];
+      const request = vi.fn(async () => "granted");
+      class Fake {
+        static permission = permission;
+        static requestPermission = request;
+        onclick: (() => void) | null = null;
+        constructor(title: string) {
+          shown.push(title);
+        }
+        close() {}
+      }
+      vi.stubGlobal("Notification", Fake);
+      return { shown, request };
+    }
+
+    it("offers browser notifications once, on the first question", async () => {
+      const { request } = stubNotification("default");
+      streamChat.mockImplementation(completeStream("Fine."));
+      await renderConversation();
+      await ask("First?");
+
+      const enable = await screen.findByRole("button", { name: "Enable notifications" });
+      // Permission is asked for from the button, not on its own.
+      expect(request).not.toHaveBeenCalled();
+      fireEvent.click(enable);
+      expect(request).toHaveBeenCalledOnce();
+    });
+
+    it("does not offer them again, or when they are decided or unsupported", async () => {
+      stubNotification("denied");
+      streamChat.mockImplementation(completeStream("Fine."));
+      await renderConversation();
+      await ask("First?");
+      expect(screen.queryByRole("button", { name: "Enable notifications" })).toBeNull();
+
+      vi.unstubAllGlobals();
+      vi.stubGlobal("Notification", undefined);
+      await ask("Second?");
+      expect(screen.queryByRole("button", { name: "Enable notifications" })).toBeNull();
+    });
+
+    it("notifies about an answer that finishes while the tab is hidden", async () => {
+      const { shown } = stubNotification("granted");
+      vi.spyOn(document, "hidden", "get").mockReturnValue(true);
+      streamChat.mockImplementation(completeStream("Fine."));
+      await renderConversation();
+      await ask("Question?");
+
+      expect(await screen.findByText("Fine.")).toBeTruthy();
+      expect(shown).toEqual(["Q3"]);
+      vi.restoreAllMocks();
+    });
   });
 
   it("shows a reloaded stopped answer with its label and a Retry that asks the question again", async () => {

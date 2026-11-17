@@ -24,13 +24,13 @@ from .chat import (
     AnswerFailed,
     AnswerSaved,
     Chat,
-    ConversationNotFoundError,
     Peer,
     PeerError,
     PeerUnavailableError,
     SourcesFound,
 )
 from .repository import ConversationRow, MessageRow, Repository
+from .runner import AlreadyRunningError, AnswerRunner
 
 log = logging.getLogger("knowcel_chat")
 
@@ -54,7 +54,7 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
 
     def __init__(self, repo: Repository, chat: Chat) -> None:
         self._repo = repo
-        self._chat = chat
+        self.runner = AnswerRunner(chat, repo)
 
     async def CreateConversation(
         self, request: chat_pb2.CreateConversationRequest, context: _Context
@@ -63,15 +63,19 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         document_ids = await _scope(request.document_ids, context)
         team_ids = await _teams(request.team_ids, context)
         conv = await self._repo.create_conversation(owner, request.title, document_ids, team_ids)
-        return chat_pb2.CreateConversationResponse(conversation=_conversation(conv))
+        return chat_pb2.CreateConversationResponse(conversation=self._pb(conv))
 
     async def GetConversation(
         self, request: chat_pb2.GetConversationRequest, context: _Context
     ) -> chat_pb2.GetConversationResponse:
         conv = await self._get(request.id, context)
         msgs = await self._repo.list_messages(conv.id)
+        if conv.completed_unseen:
+            # Opening the conversation is seeing the answer.
+            await self._repo.set_completed_unseen(conv.id, False)
+            conv.completed_unseen = False
         return chat_pb2.GetConversationResponse(
-            conversation=_conversation(conv), messages=[_message(m) for m in msgs]
+            conversation=self._pb(conv), messages=[_message(m) for m in msgs]
         )
 
     async def ListConversations(
@@ -91,15 +95,17 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         page = rows[:limit]
         token = page[-1].cursor.encode() if len(rows) > limit else ""
         return chat_pb2.ListConversationsResponse(
-            conversations=[_conversation(c) for c in page],
+            conversations=[self._pb(c) for c in page],
             page=common_pb2.PageResponse(next_page_token=token),
         )
 
     async def DeleteConversation(
         self, request: chat_pb2.DeleteConversationRequest, context: _Context
     ) -> chat_pb2.DeleteConversationResponse:
-        owner = await _owner(context)
-        if not await self._repo.delete_conversation(owner, _parse_id(request.id)):
+        conv = await self._get(request.id, context)
+        # An answer would otherwise try to save into the deleted conversation.
+        await self.runner.stop(conv.id)
+        if not await self._repo.delete_conversation(conv.owner_id, conv.id):
             await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
         return chat_pb2.DeleteConversationResponse()
 
@@ -133,7 +139,7 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
                 await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
             assert updated is not None
             conv = updated
-        return chat_pb2.UpdateConversationResponse(conversation=_conversation(conv))
+        return chat_pb2.UpdateConversationResponse(conversation=self._pb(conv))
 
     async def SearchConversations(
         self, request: chat_pb2.SearchConversationsRequest, context: _Context
@@ -150,9 +156,7 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         matches = await self._repo.search_conversations(owner, query, limit)
         return chat_pb2.SearchConversationsResponse(
             results=[
-                chat_pb2.ConversationMatch(
-                    conversation=_conversation(m.conversation), snippet=m.snippet
-                )
+                chat_pb2.ConversationMatch(conversation=self._pb(m.conversation), snippet=m.snippet)
                 for m in matches
             ]
         )
@@ -166,30 +170,48 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
             await abort_invalid_argument(
                 context, violation("content", "The message must not be empty")
             )
-        events = self._chat.answer(
-            owner,
-            _parse_id(request.conversation_id),
-            content,
-            request.model,
-            request.use_knowledge_base,
-            _member_teams(),
-        )
+        conv = await self._get(request.conversation_id, context)
         # The document and llm modules are soft dependencies: when one fails, the
         # stream ends with an error event and the answer so far, not a gRPC error.
-        # When the client cancels (Stop, a closed tab), gRPC cancels this task or
-        # closes this generator; closing `events` stops the generation and saves
-        # the answer so far as stopped.
-        async with contextlib.aclosing(events):
+        # The answer is written in the background: when the client goes away
+        # (a closed tab, leaving the page), only following it ends. StopChat
+        # stops it.
+        try:
+            run = self.runner.start(
+                owner,
+                conv.id,
+                content,
+                request.model,
+                request.use_knowledge_base,
+                _member_teams(),
+            )
+        except AlreadyRunningError:
+            await context.abort(
+                grpc.StatusCode.FAILED_PRECONDITION,
+                "an answer is already being written in this conversation",
+            )
+        queue = run.follow()
+        async with contextlib.aclosing(run.events(queue)) as events:
             try:
                 async for event in events:
                     yield _response(event)
-            except ConversationNotFoundError:
-                await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
             except (asyncio.CancelledError, GeneratorExit):
-                log.info(
-                    "StreamChat cancelled by the client in conversation %s", request.conversation_id
-                )
+                log.info("client stopped following the answer in conversation %s", conv.id)
                 raise
+
+    async def StopChat(
+        self, request: chat_pb2.StopChatRequest, context: _Context
+    ) -> chat_pb2.StopChatResponse:
+        conv = await self._get(request.conversation_id, context)
+        await self.runner.stop(conv.id)
+        return chat_pb2.StopChatResponse()
+
+    async def shutdown(self) -> None:
+        """Stops the answers being written, saving what they have."""
+        await self.runner.shutdown()
+
+    def _pb(self, c: ConversationRow) -> chat_pb2.Conversation:
+        return _conversation(c, generating=self.runner.is_running(c.id))
 
     async def _get(self, raw_id: str, context: _Context) -> ConversationRow:
         owner = await _owner(context)
@@ -296,7 +318,7 @@ def _ts(value: datetime) -> Timestamp:
     return ts
 
 
-def _conversation(c: ConversationRow) -> chat_pb2.Conversation:
+def _conversation(c: ConversationRow, generating: bool = False) -> chat_pb2.Conversation:
     return chat_pb2.Conversation(
         id=str(c.id),
         title=c.title,
@@ -307,6 +329,8 @@ def _conversation(c: ConversationRow) -> chat_pb2.Conversation:
         last_message_time=_ts(c.last_message_time) if c.last_message_time else None,
         last_message_preview=c.last_message_preview,
         owner_id=c.owner_id,
+        generating=generating,
+        completed_unseen=c.completed_unseen,
     )
 
 

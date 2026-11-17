@@ -26,6 +26,7 @@ const (
 	ChatService_UpdateConversation_FullMethodName  = "/knowcel.chat.v1.ChatService/UpdateConversation"
 	ChatService_SearchConversations_FullMethodName = "/knowcel.chat.v1.ChatService/SearchConversations"
 	ChatService_StreamChat_FullMethodName          = "/knowcel.chat.v1.ChatService/StreamChat"
+	ChatService_StopChat_FullMethodName            = "/knowcel.chat.v1.ChatService/StopChat"
 )
 
 // ChatServiceClient is the client API for ChatService service.
@@ -46,6 +47,10 @@ type ChatServiceClient interface {
 	SearchConversations(ctx context.Context, in *SearchConversationsRequest, opts ...grpc.CallOption) (*SearchConversationsResponse, error)
 	// StreamChat appends a user message and streams the assistant's answer.
 	StreamChat(ctx context.Context, in *StreamChatRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamChatResponse], error)
+	// StopChat stops the answer being written in a conversation; the text so far
+	// is kept with the status stopped. Disconnecting from StreamChat does not
+	// stop the answer, it keeps being written in the background.
+	StopChat(ctx context.Context, in *StopChatRequest, opts ...grpc.CallOption) (*StopChatResponse, error)
 }
 
 type chatServiceClient struct {
@@ -135,6 +140,16 @@ func (c *chatServiceClient) StreamChat(ctx context.Context, in *StreamChatReques
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type ChatService_StreamChatClient = grpc.ServerStreamingClient[StreamChatResponse]
 
+func (c *chatServiceClient) StopChat(ctx context.Context, in *StopChatRequest, opts ...grpc.CallOption) (*StopChatResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StopChatResponse)
+	err := c.cc.Invoke(ctx, ChatService_StopChat_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChatServiceServer is the server API for ChatService service.
 // All implementations must embed UnimplementedChatServiceServer
 // for forward compatibility.
@@ -153,6 +168,10 @@ type ChatServiceServer interface {
 	SearchConversations(context.Context, *SearchConversationsRequest) (*SearchConversationsResponse, error)
 	// StreamChat appends a user message and streams the assistant's answer.
 	StreamChat(*StreamChatRequest, grpc.ServerStreamingServer[StreamChatResponse]) error
+	// StopChat stops the answer being written in a conversation; the text so far
+	// is kept with the status stopped. Disconnecting from StreamChat does not
+	// stop the answer, it keeps being written in the background.
+	StopChat(context.Context, *StopChatRequest) (*StopChatResponse, error)
 	mustEmbedUnimplementedChatServiceServer()
 }
 
@@ -183,6 +202,9 @@ func (UnimplementedChatServiceServer) SearchConversations(context.Context, *Sear
 }
 func (UnimplementedChatServiceServer) StreamChat(*StreamChatRequest, grpc.ServerStreamingServer[StreamChatResponse]) error {
 	return status.Error(codes.Unimplemented, "method StreamChat not implemented")
+}
+func (UnimplementedChatServiceServer) StopChat(context.Context, *StopChatRequest) (*StopChatResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method StopChat not implemented")
 }
 func (UnimplementedChatServiceServer) mustEmbedUnimplementedChatServiceServer() {}
 func (UnimplementedChatServiceServer) testEmbeddedByValue()                     {}
@@ -324,6 +346,24 @@ func _ChatService_StreamChat_Handler(srv interface{}, stream grpc.ServerStream) 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type ChatService_StreamChatServer = grpc.ServerStreamingServer[StreamChatResponse]
 
+func _ChatService_StopChat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StopChatRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).StopChat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_StopChat_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).StopChat(ctx, req.(*StopChatRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ChatService_ServiceDesc is the grpc.ServiceDesc for ChatService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -354,6 +394,10 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SearchConversations",
 			Handler:    _ChatService_SearchConversations_Handler,
+		},
+		{
+			MethodName: "StopChat",
+			Handler:    _ChatService_StopChat_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

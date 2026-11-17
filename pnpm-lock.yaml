@@ -466,6 +466,9 @@ importers:
 
   modules/ingestion/ui:
     dependencies:
+      '@knowcel/document-api':
+        specifier: workspace:*
+        version: link:../../document/api/ts
       '@knowcel/iam-api':
         specifier: workspace:*
         version: link:../../iam/api/ts

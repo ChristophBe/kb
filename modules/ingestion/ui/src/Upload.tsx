@@ -23,7 +23,10 @@ import {
 } from "@knowcel/ui";
 import { AlertTriangle, FileUp, Upload as UploadIcon, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router";
+import { accessText, JobAccess } from "./access.tsx";
 import { SUPPORTED_FORMATS } from "./files.ts";
+import { useLeaveGuard } from "./leaveGuard.tsx";
 import { active, ProgressBar, stageLabel } from "./progress.tsx";
 import { putWithProgress } from "./put.ts";
 import { UrlImport } from "./UrlImport.tsx";
@@ -166,7 +169,21 @@ export function Upload() {
     setFocusAfter(next ? `upload-${next.key}` : "choose");
   };
 
+  const leaveDialog = useLeaveGuard(
+    uploads.some((u) => u.status === "uploading" || u.status === "waiting"),
+  );
+
   const shownJobs = jobs.data?.jobs.filter((j) => !abandonedJobs.has(j.id)) ?? [];
+  // A document page sends users here with ?document=<id> to find the job of a failed document.
+  const forDocument = useSearchParams()[0].get("document");
+  const highlighted = forDocument ? shownJobs.find((j) => j.documentId === forDocument) : undefined;
+  const highlightedId = highlighted?.id;
+  const focusedHighlight = useRef<string | null>(null);
+  useEffect(() => {
+    if (!highlightedId || focusedHighlight.current === highlightedId) return;
+    focusedHighlight.current = highlightedId;
+    setFocusAfter(`job-${highlightedId}`);
+  }, [highlightedId]);
   const empty = uploads.length === 0 && shownJobs.length === 0;
 
   return (
@@ -266,8 +283,14 @@ export function Upload() {
         </form>
       )}
       {regions}
+      {leaveDialog}
       <h2 className="mb-2 font-medium">Uploads</h2>
       <ErrorMessage error={jobs.error} />
+      {forDocument && jobs.isSuccess && !highlighted && (
+        <p className="mb-2 text-sm text-fg-muted">
+          No recent upload belongs to that document. Open the document to see its status.
+        </p>
+      )}
       <Card>
         {jobs.isPending && uploads.length === 0 ? (
           <DelayedLoading>
@@ -281,14 +304,7 @@ export function Upload() {
               <UploadItem
                 key={u.key}
                 upload={u}
-                access={
-                  u.teamIds.length === 0
-                    ? "Public"
-                    : `Team: ${u.teamIds
-                        .map((id) => teams.find((t) => t.id === id)?.name)
-                        .filter(Boolean)
-                        .join(", ")}`
-                }
+                access={accessText(u.teamIds, teams)}
                 onRetry={() => {
                   retry(u.key);
                   setFocusAfter(`upload-${u.key}`);
@@ -299,15 +315,31 @@ export function Upload() {
             {shownJobs.map((job) => {
               const [label, tone] = statusLabel[job.status];
               return (
-                <li key={job.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2">
+                <li
+                  key={job.id}
+                  aria-current={job.id === highlightedId ? "true" : undefined}
+                  className={`flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 ${job.id === highlightedId ? "rounded-control bg-accent-subtle" : ""}`}
+                >
                   {/* Focus lands here once "Retry processing" has been replaced by the status. */}
                   <span
                     tabIndex={-1}
                     data-focus={`job-${job.id}`}
                     className="min-w-0 flex-1 truncate font-medium"
                   >
-                    {job.filename}
+                    {job.documentId && job.status !== JobStatus.PENDING_UPLOAD ? (
+                      <Link
+                        to={`/m/document/${job.documentId}`}
+                        className="underline-offset-2 hover:underline"
+                      >
+                        {job.filename}
+                      </Link>
+                    ) : (
+                      job.filename
+                    )}
                   </span>
+                  {job.documentId && job.status !== JobStatus.PENDING_UPLOAD && (
+                    <JobAccess documentId={job.documentId} teams={teams} />
+                  )}
                   {job.status === JobStatus.PROCESSING && (
                     <>
                       <span className="text-fg-muted">{stageLabel[job.stage]}</span>

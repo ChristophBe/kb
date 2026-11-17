@@ -21,6 +21,7 @@ from .base import (
     PullProgress,
     Status,
 )
+from .rerank import rerank_with_chat
 
 # Statuses that mean "overloaded or restarting" rather than a bad request.
 _RETRYABLE_STATUS = {502, 503, 504}
@@ -131,6 +132,9 @@ class OpenAICompatProvider:
             )
             for m in resp.json().get("data", [])
         ]
+
+    async def rerank(self, model: str, query: str, documents: list[str]) -> list[float]:
+        return await rerank_with_chat(self, model, query, documents)
 
     async def pull_model(self, model: str) -> AsyncGenerator[PullProgress]:
         raise NotSupportedError("openai-compatible models are hosted by the server, not pulled")

@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import math
+import re
 from collections.abc import AsyncGenerator
 
 from .base import (
@@ -13,6 +14,10 @@ from .base import (
     PullProgress,
     Status,
 )
+
+
+def _words(text: str) -> set[str]:
+    return set(re.findall(r"\w+", text.lower()))
 
 
 class FakeProvider:
@@ -61,6 +66,14 @@ class FakeProvider:
         values = values[: self._dimensions]
         norm = math.sqrt(sum(v * v for v in values)) or 1.0
         return [v / norm for v in values]
+
+    async def rerank(self, model: str, query: str, documents: list[str]) -> list[float]:
+        # Share of the query's words found in the document: lexical, but
+        # deterministic, so tests can tell a reordering from the input order.
+        words = _words(query)
+        if not words:
+            return [0.0] * len(documents)
+        return [len(words & _words(d)) / len(words) for d in documents]
 
     async def pull_model(self, model: str) -> AsyncGenerator[PullProgress]:
         raise NotSupportedError("the fake provider has no models to pull")

@@ -25,6 +25,15 @@ class Settings(PlatformSettings):
     # scores about 0.67-0.84, the best chunk for an unrelated question at most
     # 0.44. Tune it together with the embedding model.
     rag_min_score: float = 0.5
+    # Rerank the retrieved chunks with the llm module's chat model: more
+    # candidates are fetched, rated against the question, and the best
+    # KNOWCEL_RAG_TOP_K are kept. Costs one extra model call per question; if
+    # it fails, the answer uses the similarity order.
+    rerank_enabled: bool = True
+    # Chunks fetched as candidates for reranking; at least KNOWCEL_RAG_TOP_K.
+    rerank_candidates: int = 15
+    # Model that rates the candidates; empty selects the llm module's default chat model.
+    rerank_model: str = ""
     # Previous messages loaded as context; the token budget below may drop the oldest.
     history_limit: int = 20
     # Context window of the chat model in tokens. 4096 is Ollama's default
@@ -49,6 +58,7 @@ class Settings(PlatformSettings):
         problems.addr("llm_addr", self.llm_addr)
         problems.addr("iam_addr", self.iam_addr)
         problems.at_least("rag_top_k", self.rag_top_k, 1)
+        problems.at_least("rerank_candidates", self.rerank_candidates, self.rag_top_k)
         problems.between("rag_min_score", self.rag_min_score, -1, 1)
         problems.at_least("history_limit", self.history_limit, 0)
         problems.at_least("answer_reserve_tokens", self.answer_reserve_tokens, 1)

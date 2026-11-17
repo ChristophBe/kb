@@ -22,6 +22,7 @@ from .base import (
     Role,
     Status,
 )
+from .rerank import rerank_with_chat
 
 log = logging.getLogger("knowcel_llm")
 
@@ -124,6 +125,9 @@ class AnthropicProvider:
         raise NotSupportedError(
             "the anthropic provider has no embedding models; use another provider for embeddings"
         )
+
+    async def rerank(self, model: str, query: str, documents: list[str]) -> list[float]:
+        return await rerank_with_chat(self, model, query, documents)
 
     async def pull_model(self, model: str) -> AsyncGenerator[PullProgress]:
         raise NotSupportedError("anthropic models are hosted by Anthropic and can't be pulled")

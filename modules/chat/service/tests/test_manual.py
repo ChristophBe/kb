@@ -182,6 +182,14 @@ def test_merged_sources_are_ranked_by_score() -> None:
     assert [c.document_id or c.manual_section for c in merged] == ["d0", "a", "d1"]
 
 
+def test_merged_sources_keep_the_order_of_reranked_passages() -> None:
+    reranked = [doc("d1", 0.6), doc("d0", 0.8)]
+
+    merged = merge_sources(reranked, [manual_hit("a", 0.7)])
+
+    assert [c.document_id or c.manual_section for c in merged] == ["a", "d1", "d0"]
+
+
 class FakeLlm:
     def __init__(self) -> None:
         self.inputs: list[list[str]] = []

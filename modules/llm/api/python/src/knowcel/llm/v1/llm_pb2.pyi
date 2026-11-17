@@ -153,6 +153,24 @@ class EmbedResponse(_message.Message):
     dimensions: int
     def __init__(self, embeddings: _Optional[_Iterable[_Union[Embedding, _Mapping]]] = ..., model: _Optional[str] = ..., dimensions: _Optional[int] = ...) -> None: ...
 
+class RerankRequest(_message.Message):
+    __slots__ = ("model", "query", "documents")
+    MODEL_FIELD_NUMBER: _ClassVar[int]
+    QUERY_FIELD_NUMBER: _ClassVar[int]
+    DOCUMENTS_FIELD_NUMBER: _ClassVar[int]
+    model: str
+    query: str
+    documents: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, model: _Optional[str] = ..., query: _Optional[str] = ..., documents: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class RerankResponse(_message.Message):
+    __slots__ = ("scores", "model")
+    SCORES_FIELD_NUMBER: _ClassVar[int]
+    MODEL_FIELD_NUMBER: _ClassVar[int]
+    scores: _containers.RepeatedScalarFieldContainer[float]
+    model: str
+    def __init__(self, scores: _Optional[_Iterable[float]] = ..., model: _Optional[str] = ...) -> None: ...
+
 class PullModelRequest(_message.Message):
     __slots__ = ("provider", "model")
     PROVIDER_FIELD_NUMBER: _ClassVar[int]

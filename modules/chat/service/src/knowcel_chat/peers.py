@@ -2,6 +2,7 @@
 gRPC statuses end here: callers only see PeerError."""
 
 import contextlib
+import logging
 import uuid
 from collections.abc import AsyncGenerator, Iterator, Sequence
 
@@ -12,6 +13,8 @@ from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
 
 from .chat import Peer, PeerError, PeerUnavailableError, PromptMessage, PromptRole
 from .manual import Manual, merge_sources
+
+log = logging.getLogger("knowcel_chat")
 
 # Peer statuses that mean "try again later" rather than a bug.
 _PEER_UNAVAILABLE = {grpc.StatusCode.UNAVAILABLE, grpc.StatusCode.DEADLINE_EXCEEDED}
@@ -44,10 +47,29 @@ class PeerEmbedder:
         return [list(e.values) for e in embedded.embeddings]
 
 
+class PeerReranker:
+    """Rates passages against a question with the llm module's chat model."""
+
+    def __init__(self, llm: llm_pb2_grpc.LlmServiceStub, model: str = "") -> None:
+        self._llm = llm
+        self._model = model
+
+    async def rerank(self, query: str, texts: Sequence[str]) -> list[float]:
+        with _peer_errors(Peer.LLM):
+            ranked = await self._llm.Rerank(
+                llm_pb2.RerankRequest(model=self._model, query=query, documents=list(texts))
+            )
+        if len(ranked.scores) != len(texts):
+            raise PeerError(Peer.LLM, f"rerank returned {len(ranked.scores)} scores")
+        return list(ranked.scores)
+
+
 class PeerRetriever:
     """Finds document passages and, with a manual, the manual sections that
     match the question; the question is embedded once for both. Passages
-    scoring below `min_score` are unrelated to the question and left out."""
+    scoring below `min_score` are unrelated to the question and left out. With
+    a `reranker`, `candidates` passages are fetched and the `limit` best by the
+    reranker's rating are kept; if it fails, the best by similarity are."""
 
     def __init__(
         self,
@@ -55,11 +77,15 @@ class PeerRetriever:
         llm: llm_pb2_grpc.LlmServiceStub,
         manual: Manual | None = None,
         min_score: float = 0.0,
+        reranker: PeerReranker | None = None,
+        candidates: int = 0,
     ) -> None:
         self._documents = documents
         self._embedder = PeerEmbedder(llm)
         self._manual = manual
         self._min_score = min_score
+        self._reranker = reranker
+        self._candidates = candidates
 
     async def retrieve(
         self,
@@ -73,7 +99,9 @@ class PeerRetriever:
             result = await self._documents.SearchChunks(
                 document_pb2.SearchChunksRequest(
                     embedding=embedding,
-                    limit=limit,
+                    # Visibility is filtered by the document module, so only
+                    # passages the caller may read reach the reranker.
+                    limit=max(limit, self._candidates) if self._reranker else limit,
                     document_ids=[str(i) for i in document_ids],
                     team_ids=[str(i) for i in team_ids],
                 )
@@ -89,8 +117,25 @@ class PeerRetriever:
             for r in result.results
             if r.score >= self._min_score
         ]
+        if self._reranker:
+            documents = await self._rerank(query, documents)
+        documents = documents[:limit]
         manual = self._manual.search(embedding) if self._manual else []
         return merge_sources(documents, manual)
+
+    async def _rerank(
+        self, query: str, passages: list[chat_pb2.Citation]
+    ) -> list[chat_pb2.Citation]:
+        if len(passages) < 2 or self._reranker is None:
+            return passages
+        try:
+            scores = await self._reranker.rerank(query, [c.snippet for c in passages])
+        except PeerError as err:
+            # Reranking only refines the order; the similarity order is still a good answer.
+            log.warning("rerank failed, keeping the similarity order: %s", err)
+            return passages
+        order = sorted(range(len(passages)), key=lambda i: scores[i], reverse=True)
+        return [passages[i] for i in order]
 
 
 class PeerGenerator:

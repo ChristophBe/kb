@@ -26,6 +26,10 @@ def test_default_settings_are_valid() -> None:
         ({"document_addr": "document"}, "KNOWCEL_DOCUMENT_ADDR: must be host:port, got 'document'"),
         ({"llm_addr": ":9004"}, "KNOWCEL_LLM_ADDR: must be host:port, got ':9004'"),
         ({"rag_top_k": 0}, "KNOWCEL_RAG_TOP_K: must be at least 1, got 0"),
+        (
+            {"rag_top_k": 5, "rerank_candidates": 3},
+            "KNOWCEL_RERANK_CANDIDATES: must be at least 5, got 3",
+        ),
         ({"rag_min_score": 2}, "KNOWCEL_RAG_MIN_SCORE: must be between -1 and 1, got 2.0"),
         ({"history_limit": -1}, "KNOWCEL_HISTORY_LIMIT: must be at least 0, got -1"),
         (

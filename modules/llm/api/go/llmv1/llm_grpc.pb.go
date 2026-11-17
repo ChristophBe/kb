@@ -23,6 +23,7 @@ const (
 	LlmService_GetProviderStatus_FullMethodName = "/knowcel.llm.v1.LlmService/GetProviderStatus"
 	LlmService_Generate_FullMethodName          = "/knowcel.llm.v1.LlmService/Generate"
 	LlmService_Embed_FullMethodName             = "/knowcel.llm.v1.LlmService/Embed"
+	LlmService_Rerank_FullMethodName            = "/knowcel.llm.v1.LlmService/Rerank"
 	LlmService_PullModel_FullMethodName         = "/knowcel.llm.v1.LlmService/PullModel"
 	LlmService_DeleteModel_FullMethodName       = "/knowcel.llm.v1.LlmService/DeleteModel"
 	LlmService_GetUsage_FullMethodName          = "/knowcel.llm.v1.LlmService/GetUsage"
@@ -41,6 +42,10 @@ type LlmServiceClient interface {
 	// message carrying usage information.
 	Generate(ctx context.Context, in *GenerateRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GenerateResponse], error)
 	Embed(ctx context.Context, in *EmbedRequest, opts ...grpc.CallOption) (*EmbedResponse, error)
+	// Rerank scores how well each document answers a query, so a caller can
+	// reorder candidates found by vector similarity. Served by the chat
+	// provider; a provider that can't rerank returns UNIMPLEMENTED.
+	Rerank(ctx context.Context, in *RerankRequest, opts ...grpc.CallOption) (*RerankResponse, error)
 	// PullModel downloads a model to a provider and streams the progress, ending
 	// with a message with done set. Platform admins only; providers that can't
 	// manage models return UNIMPLEMENTED.
@@ -111,6 +116,16 @@ func (c *llmServiceClient) Embed(ctx context.Context, in *EmbedRequest, opts ...
 	return out, nil
 }
 
+func (c *llmServiceClient) Rerank(ctx context.Context, in *RerankRequest, opts ...grpc.CallOption) (*RerankResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RerankResponse)
+	err := c.cc.Invoke(ctx, LlmService_Rerank_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *llmServiceClient) PullModel(ctx context.Context, in *PullModelRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[PullModelResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &LlmService_ServiceDesc.Streams[1], LlmService_PullModel_FullMethodName, cOpts...)
@@ -163,6 +178,10 @@ type LlmServiceServer interface {
 	// message carrying usage information.
 	Generate(*GenerateRequest, grpc.ServerStreamingServer[GenerateResponse]) error
 	Embed(context.Context, *EmbedRequest) (*EmbedResponse, error)
+	// Rerank scores how well each document answers a query, so a caller can
+	// reorder candidates found by vector similarity. Served by the chat
+	// provider; a provider that can't rerank returns UNIMPLEMENTED.
+	Rerank(context.Context, *RerankRequest) (*RerankResponse, error)
 	// PullModel downloads a model to a provider and streams the progress, ending
 	// with a message with done set. Platform admins only; providers that can't
 	// manage models return UNIMPLEMENTED.
@@ -195,6 +214,9 @@ func (UnimplementedLlmServiceServer) Generate(*GenerateRequest, grpc.ServerStrea
 }
 func (UnimplementedLlmServiceServer) Embed(context.Context, *EmbedRequest) (*EmbedResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Embed not implemented")
+}
+func (UnimplementedLlmServiceServer) Rerank(context.Context, *RerankRequest) (*RerankResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Rerank not implemented")
 }
 func (UnimplementedLlmServiceServer) PullModel(*PullModelRequest, grpc.ServerStreamingServer[PullModelResponse]) error {
 	return status.Error(codes.Unimplemented, "method PullModel not implemented")
@@ -291,6 +313,24 @@ func _LlmService_Embed_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LlmService_Rerank_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RerankRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LlmServiceServer).Rerank(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LlmService_Rerank_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LlmServiceServer).Rerank(ctx, req.(*RerankRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _LlmService_PullModel_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(PullModelRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -356,6 +396,10 @@ var LlmService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Embed",
 			Handler:    _LlmService_Embed_Handler,
+		},
+		{
+			MethodName: "Rerank",
+			Handler:    _LlmService_Rerank_Handler,
 		},
 		{
 			MethodName: "DeleteModel",

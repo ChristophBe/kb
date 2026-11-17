@@ -52,6 +52,9 @@ From `Settings` in [modules/chat/service/src/knowcel_chat/config.py](../modules/
 | `KNOWCEL_IAM_ADDR` | `localhost:9006` | The iam module (host:port), which tells the teams of a caller. While it is down, conversations can't be limited to teams; everything else works. |
 | `KNOWCEL_RAG_TOP_K` | `5` | Number of chunks retrieved for grounding an answer. |
 | `KNOWCEL_RAG_MIN_SCORE` | `0.5` | Cosine similarity (-1 to 1) a chunk needs to count as related to the question. Measured with nomic-embed-text: the passage answering a question scores about 0.67-0.84, the best chunk for an unrelated question at most 0.44. Tune it together with the embedding model. |
+| `KNOWCEL_RERANK_ENABLED` | `true` | Rerank the retrieved chunks with the llm module's chat model: more candidates are fetched, rated against the question, and the best KNOWCEL_RAG_TOP_K are kept. Costs one extra model call per question; if it fails, the answer uses the similarity order. |
+| `KNOWCEL_RERANK_CANDIDATES` | `15` | Chunks fetched as candidates for reranking; at least KNOWCEL_RAG_TOP_K. |
+| `KNOWCEL_RERANK_MODEL` | empty | Model that rates the candidates; empty selects the llm module's default chat model. |
 | `KNOWCEL_HISTORY_LIMIT` | `20` | Previous messages loaded as context; the token budget below may drop the oldest. |
 | `KNOWCEL_CONTEXT_TOKENS` | `4096` | Context window of the chat model in tokens. 4096 is Ollama's default window; raise it together with the model's num_ctx. |
 | `KNOWCEL_ANSWER_RESERVE_TOKENS` | `1024` | Tokens of the context window kept free for the answer. The prompt (instructions, sources, history, question) gets the rest. |

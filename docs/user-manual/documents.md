@@ -4,7 +4,9 @@ Documents lists your documents and those that teams you belong to [share with yo
 
 ## Browse your documents
 
-Open **Documents**. The table shows each document's **Title**, **Status**, **Chunks** (how many passages it was split into), **Size** and when it was **Added**. The list updates by itself while documents are being processed.
+Open **Documents**. The table shows each document's **Title**, **Status**, **Chunks** (how many passages it was split into), **Size** and when it was **Added**. The list updates by itself while a document is waiting for its upload, uploaded or being processed, and stops refreshing once all are done.
+
+The list shows the first 100 documents. When there are more, **Load more** below the table adds the next 100, and the count next to it says how many are loaded. Keep selecting it until it disappears to reach every document.
 
 Select **Upload documents** at the top to add more in [Upload](ingestion.md#upload-documents). With no documents yet, the page says so and offers an **Upload documents** link there too.
 
@@ -13,6 +15,8 @@ Select **Upload documents** at the top to add more in [Upload](ingestion.md#uplo
 - **Sort by** orders the list by **Newest first** (the default), **Oldest first**, **Title A–Z** or **Title Z–A**.
 - **Filter by title** narrows the list to documents whose title contains what you type, ignoring case. To search the text inside documents, use [Search](search.md).
 - **Shared with me** shows only documents others have shared with you.
+
+Sorting and filtering work on the documents loaded so far. If a document you expect is missing and **Load more** is still there, select it and look again; the page says "No loaded documents match" while more remain.
 
 ## Who can see your documents
 

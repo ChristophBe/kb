@@ -15,13 +15,16 @@ import {
 } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
 import { ModelKind } from "@knowcel/llm-api/knowcel/llm/v1/llm_pb";
 import { KbRuntimeProvider } from "@knowcel/module-sdk";
+import { polyfillDialog } from "@knowcel/ui/testing/dialog";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { Conversation } from "./Conversation.tsx";
 
 const getConversation = vi.fn();
 const streamChat = vi.fn();
+const updateConversation = vi.fn(async () => ({}));
+const listDocuments = vi.fn(async () => ({ documents: [] }));
 // The llm module's chat models for the model picker.
 const listModels = vi.fn(async () => ({
   models: [
@@ -34,7 +37,14 @@ const getProviderStatus = vi.fn(async () => ({ defaultChatModel: "llama3.2" }));
 // The real runtime, except that the chat and llm clients are fakes.
 vi.mock("@knowcel/module-sdk", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@knowcel/module-sdk")>()),
-  useClient: () => ({ getConversation, streamChat, listModels, getProviderStatus }),
+  useClient: () => ({
+    getConversation,
+    streamChat,
+    updateConversation,
+    listDocuments,
+    listModels,
+    getProviderStatus,
+  }),
 }));
 
 // jsdom doesn't lay out, so it has no scrollIntoView.
@@ -113,6 +123,7 @@ async function ask(question: string) {
 }
 
 describe("Conversation", () => {
+  beforeAll(polyfillDialog);
   beforeEach(() => {
     saved = [];
     getConversation.mockReset();
@@ -258,19 +269,23 @@ describe("Conversation", () => {
     expect(writeText).toHaveBeenCalledWith("new **answer**");
   });
 
-  it("offers Sources and the scope only when answering from your documents", async () => {
+  it("keeps Sources and shows the scope, or model only once platform knowledge is off", async () => {
+    streamChat.mockImplementation(completeStream("Hello."));
     await renderConversation();
     expect(screen.getByText("all documents")).toBeTruthy();
+    expect(screen.queryByRole("checkbox", { name: /platform knowledge/ })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sources" }));
+    fireEvent.click(await screen.findByRole("checkbox", { name: "Use platform knowledge" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    });
+    expect(screen.getByText("No platform knowledge – model only")).toBeTruthy();
+    expect(screen.queryByText("all documents")).toBeNull();
     expect(screen.getByRole("button", { name: "Sources" })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("checkbox", { name: "Answer from your documents" }));
-    expect(screen.queryByRole("button", { name: "Sources" })).toBeNull();
-    expect(screen.queryByText("all documents")).toBeNull();
-  });
-
-  it("hints at the scope of a new conversation only", async () => {
-    await renderConversation();
-    expect(screen.getByText(/Answers use all documents you can read/)).toBeTruthy();
+    await ask("Hi");
+    expect(streamChat.mock.calls[0]?.[0]).toMatchObject({ useKnowledgeBase: false });
   });
 
   it("answers with the model picked for the conversation", async () => {

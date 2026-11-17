@@ -292,32 +292,21 @@ export function Conversation() {
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pb-1">
-              <label className="flex items-center gap-2 text-xs text-fg-muted">
-                <input
-                  type="checkbox"
-                  checked={useKnowledgeBase}
-                  onChange={(e) => setUseKnowledgeBase(e.target.checked)}
+              {conversation.data?.conversation && (
+                <SourcesControl
+                  conversation={conversation.data.conversation}
+                  useKnowledgeBase={useKnowledgeBase}
+                  onUseKnowledgeBaseChange={setUseKnowledgeBase}
                 />
-                Answer from your documents
-              </label>
-              {conversation.data?.conversation && useKnowledgeBase && (
-                <SourcesControl conversation={conversation.data.conversation} />
               )}
               {modelChoice && <ModelPicker choice={modelChoice} disabled={pending !== null} />}
+              {conversation.data?.conversation && (
+                <ScopeChips
+                  conversation={conversation.data.conversation}
+                  useKnowledgeBase={useKnowledgeBase}
+                />
+              )}
             </div>
-            {conversation.data?.conversation && useKnowledgeBase && (
-              <div className="flex flex-col gap-1 pb-1">
-                <ScopeChips conversation={conversation.data.conversation} />
-                {messages.length === 0 && !pending && (
-                  <p className="text-xs text-fg-muted">
-                    {conversation.data.conversation.documentIds.length === 0 &&
-                    conversation.data.conversation.teamIds.length === 0
-                      ? "Answers use all documents you can read. Select Sources to limit them to some documents or teams."
-                      : "Answers use the sources chosen here. Select Sources to change them."}
-                  </p>
-                )}
-              </div>
-            )}
           </div>
         </form>
       </div>

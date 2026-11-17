@@ -1,11 +1,12 @@
 import { create } from "@bufbuild/protobuf";
 import { Code, ConnectError } from "@connectrpc/connect";
-import { ConversationSchema } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { type Conversation, ConversationSchema } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
 import { DocumentSchema } from "@knowcel/document-api/knowcel/document/v1/document_pb";
 import { KbRuntimeProvider, useQueryClient, useToasts } from "@knowcel/module-sdk";
 import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { polyfillDialog } from "@knowcel/ui/testing/dialog";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { useState } from "react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { describeScope, ScopeChips, SourcesControl } from "./scope.tsx";
@@ -47,6 +48,26 @@ function FreshCache() {
 let clearCache = () => {};
 afterEach(() => clearCache());
 
+const onKnowledge = vi.fn();
+
+/** Holds the platform-knowledge choice like Conversation does. */
+function Sources({ conversation }: { conversation: Conversation }) {
+  const [on, setOn] = useState(true);
+  return (
+    <>
+      <ScopeChips conversation={conversation} useKnowledgeBase={on} />
+      <SourcesControl
+        conversation={conversation}
+        useKnowledgeBase={on}
+        onUseKnowledgeBaseChange={(v) => {
+          onKnowledge(v);
+          setOn(v);
+        }}
+      />
+    </>
+  );
+}
+
 function renderScope(documentIds: string[], teamIds: string[] = []) {
   const conversation = create(ConversationSchema, {
     id: "c1",
@@ -58,8 +79,7 @@ function renderScope(documentIds: string[], teamIds: string[] = []) {
     <KbRuntimeProvider config={{ apiBaseUrl: "http://test" }}>
       <FreshCache />
       <MemoryRouter>
-        <ScopeChips conversation={conversation} />
-        <SourcesControl conversation={conversation} />
+        <Sources conversation={conversation} />
         <Toasts />
       </MemoryRouter>
     </KbRuntimeProvider>,
@@ -88,6 +108,7 @@ describe("ScopeChips", () => {
   beforeAll(polyfillDialog);
   beforeEach(() => {
     updateConversation.mockReset();
+    onKnowledge.mockReset();
     getDocument.mockReset();
     listDocuments.mockReset();
     getDocument.mockImplementation(async ({ id }: { id: string }) => {
@@ -133,6 +154,7 @@ describe("SourcesControl documents", () => {
   beforeAll(polyfillDialog);
   beforeEach(() => {
     updateConversation.mockReset();
+    onKnowledge.mockReset();
     getDocument.mockReset();
     listDocuments.mockReset();
     getDocument.mockImplementation(async ({ id }: { id: string }) => ({
@@ -189,6 +211,42 @@ describe("SourcesControl documents", () => {
     expect(screen.getByText("Sources changed to all documents")).toBeTruthy();
   });
 
+  it("turns platform knowledge off, disabling the lists, and on again", async () => {
+    updateConversation.mockResolvedValue({});
+    renderScope(["d1"]);
+    const group = within(await openPicker("Sources"));
+    const toggle = dialog().getByRole("checkbox", { name: "Use platform knowledge" });
+    expect((toggle as HTMLInputElement).checked).toBe(true);
+    expect(
+      dialog().getByText(
+        "Answers are based on the documents and teams you can access in Knowcelium.",
+      ),
+    ).toBeTruthy();
+
+    fireEvent.click(toggle);
+    expect(group.getByRole("checkbox", { name: "Board minutes.md" }).matches(":disabled")).toBe(
+      true,
+    );
+    expect(
+      (dialog().getByRole("searchbox", { name: "Search documents" }) as HTMLInputElement).disabled,
+    ).toBe(true);
+    await act(async () => {
+      fireEvent.click(dialog().getByRole("button", { name: "Apply" }));
+    });
+    expect(onKnowledge).toHaveBeenLastCalledWith(false);
+    expect(updateConversation).not.toHaveBeenCalled();
+    expect(screen.getByText("No platform knowledge – model only")).toBeTruthy();
+    expect(screen.queryByRole("list", { name: "Scope:" })).toBeNull();
+
+    await openPicker("Sources");
+    fireEvent.click(dialog().getByRole("checkbox", { name: "Use platform knowledge" }));
+    await act(async () => {
+      fireEvent.click(dialog().getByRole("button", { name: "Apply" }));
+    });
+    expect(onKnowledge).toHaveBeenLastCalledWith(true);
+    expect(screen.queryByText("No platform knowledge – model only")).toBeNull();
+  });
+
   it("cancels without changing the scope", async () => {
     renderScope([]);
     const group = within(await openPicker("Sources"));
@@ -216,6 +274,7 @@ describe("SourcesControl teams", () => {
   beforeAll(polyfillDialog);
   beforeEach(() => {
     updateConversation.mockReset();
+    onKnowledge.mockReset();
     getDocument.mockReset();
     listDocuments.mockReset();
     listMyTeams.mockReset();

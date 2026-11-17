@@ -39,9 +39,9 @@ Answers from your documents contain numbers like [1] and [2]. Each number points
 
 The sources are the passages that matched your question best; the answer doesn't have to use all of them. Passages that aren't related to your question are left out, so an answer can have fewer sources, or none. An answer without sources comes from the language model's general knowledge, and is meant to say first that nothing in your documents relates to the question. When the sources don't contain the answer, the answer is meant to say so, but check the sources before relying on it.
 
-## Answer without your documents
+## Answer without platform knowledge
 
-Clear **Answer from your documents** below the question box to get answers from the language model alone, without searching your documents. These answers have no sources. Select it again to go back. The setting applies to the questions you send next while the conversation is open.
+By default, answers are based on the platform's knowledge: the documents and teams you can access in Knowcelium. To get answers from the language model alone, select **Sources** below the question box, clear **Use platform knowledge** and select **Apply**. These answers have no sources, and below the question box it says **No platform knowledge – model only**. Tick it again to go back. The setting applies to the questions you send next while the conversation is open.
 
 ## Choose the model that answers
 
@@ -53,13 +53,13 @@ The choice is remembered for each conversation in this browser, also after a rel
 
 Chat also knows this manual. Ask how to do something, for example "How do I restrict a chat to some documents?", and the answer explains it, citing the sections of the manual it used. These sources are marked **user manual**; select one to open that section of the help page.
 
-The manual is searched alongside your documents and only when **Answer from your documents** is ticked. Its sections never replace passages from your documents, and they are only cited when they match your question closely. When Knowcelium has just started, it can take a moment before chat knows the manual.
+The manual is searched alongside your documents and only when **Use platform knowledge** is ticked. Its sections never replace passages from your documents, and they are only cited when they match your question closely. When Knowcelium has just started, it can take a moment before chat knows the manual.
 
 ## Restrict a chat to some documents
 
-By default, answers come from all the documents you can read: the public ones and those of your [teams](teams.md). A new conversation says so in a short hint above the question box. To use only some of them:
+By default, answers come from all the documents you can read: the public ones and those of your [teams](teams.md). To use only some of them:
 
-1. Select **Sources** below the question box.
+1. Select **Sources** below the question box. It sits in one row with the model and the scope.
 2. Tick the documents to use. Type in **Search documents…** to filter the list by title or file name.
 3. If you belong to teams, tick one or more of them under **Use documents of** to use only the documents of those teams, not public ones.
 4. Select **Apply**.
@@ -70,7 +70,7 @@ The choice appears next to **Scope:** below the question box, for example **docu
 - To use all documents again, open the dialog, clear every tick and select **Apply**.
 - A document that was deleted shows as **Deleted document**; remove it from the scope.
 
-**Sources** and the scope are hidden while **Answer from your documents** is cleared.
+While **Use platform knowledge** is cleared in the dialog, the document search and the lists of documents and teams are disabled, and the scope is replaced by **No platform knowledge – model only**.
 
 When teams are ticked:
 

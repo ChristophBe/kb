@@ -109,7 +109,14 @@ function useScopeTitles(ids: string[]) {
 }
 
 /** The scope as chips that link to their documents, each with a remove button. */
-export function ScopeChips({ conversation }: { conversation: Conversation }) {
+export function ScopeChips({
+  conversation,
+  useKnowledgeBase = true,
+}: {
+  conversation: Conversation;
+  /** Whether the next questions use platform knowledge; when off, no scope applies. */
+  useKnowledgeBase?: boolean;
+}) {
   const ids = conversation.documentIds;
   const titles = useScopeTitles(ids);
   const setScope = useSetScope(conversation);
@@ -130,6 +137,9 @@ export function ScopeChips({ conversation }: { conversation: Conversation }) {
 
   const name = (id: string) =>
     titles.data?.get(id) ?? (titles.isPending ? "Loading…" : "Deleted document");
+  if (!useKnowledgeBase) {
+    return <p className="text-xs text-fg-muted">No platform knowledge – model only</p>;
+  }
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-fg-muted">
       <span id={label}>Scope:</span>
@@ -181,16 +191,28 @@ export function ScopeChips({ conversation }: { conversation: Conversation }) {
  * from. A searchable checklist of documents, and the user's teams when they
  * have any; one Apply saves both.
  */
-export function SourcesControl({ conversation }: { conversation: Conversation }) {
+export function SourcesControl({
+  conversation,
+  useKnowledgeBase,
+  onUseKnowledgeBaseChange,
+}: {
+  conversation: Conversation;
+  /** Whether questions use platform knowledge; applied with the sources. */
+  useKnowledgeBase: boolean;
+  onUseKnowledgeBaseChange: (on: boolean) => void;
+}) {
   const documents = useClient(DocumentService);
   const { teams, known } = useMyTeams();
   const setSources = useSetSources(conversation);
-  const [selected, setSelected] = useState<{ documentIds: string[]; teamIds: string[] } | null>(
-    null,
-  );
+  const [selected, setSelected] = useState<{
+    documentIds: string[];
+    teamIds: string[];
+    useKnowledgeBase: boolean;
+  } | null>(null);
   const [search, setSearch] = useState("");
   const opener = useRef<HTMLButtonElement>(null);
   const hint = useId();
+  const knowledgeHint = useId();
   const open = selected !== null;
   const list = useQuery({
     queryKey: ["chat", "documents"],
@@ -203,7 +225,20 @@ export function SourcesControl({ conversation }: { conversation: Conversation })
     opener.current?.focus();
   };
   const apply = () => {
-    if (selected) setSources.mutate(selected, { onSuccess: close });
+    if (!selected) return;
+    const { useKnowledgeBase: on, ...sources } = selected;
+    // Switching platform knowledge off keeps the saved sources as they were.
+    if (!on) {
+      onUseKnowledgeBaseChange(false);
+      close();
+      return;
+    }
+    setSources.mutate(sources, {
+      onSuccess: () => {
+        onUseKnowledgeBaseChange(true);
+        close();
+      },
+    });
   };
   const toggle = (id: string, on: boolean) =>
     setSelected((s) =>
@@ -226,9 +261,11 @@ export function SourcesControl({ conversation }: { conversation: Conversation })
         ref={opener}
         variant="ghost"
         className="-ml-3 text-xs"
+        title="Choose where answers come from"
         onClick={() => {
           setSearch("");
           setSelected({
+            useKnowledgeBase,
             documentIds: [...conversation.documentIds],
             // A team the user left or that was deleted no longer counts.
             teamIds: conversation.teamIds.filter((id) => teams.some((t) => t.id === id)),
@@ -257,10 +294,29 @@ export function SourcesControl({ conversation }: { conversation: Conversation })
         }
       >
         <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="flex items-center gap-2 font-medium">
+              <input
+                type="checkbox"
+                checked={selected?.useKnowledgeBase ?? true}
+                aria-describedby={knowledgeHint}
+                onChange={(e) =>
+                  setSelected((s) =>
+                    s === null ? s : { ...s, useKnowledgeBase: e.target.checked },
+                  )
+                }
+              />
+              Use platform knowledge
+            </label>
+            <p id={knowledgeHint} className="pl-6 text-xs text-fg-muted">
+              Answers are based on the documents and teams you can access in Knowcelium.
+            </p>
+          </div>
           <div className="flex flex-col gap-3">
             <Input
               type="search"
               aria-label="Search documents"
+              disabled={!selected?.useKnowledgeBase}
               placeholder="Search documents…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -270,7 +326,7 @@ export function SourcesControl({ conversation }: { conversation: Conversation })
               error={list.error ? "The Documents service isn't available. Try again later." : null}
             />
             {list.data && (
-              <fieldset aria-describedby={hint}>
+              <fieldset aria-describedby={hint} disabled={!selected?.useKnowledgeBase}>
                 <legend className="sr-only">Documents</legend>
                 {shown.length === 0 ? (
                   <p className="text-fg-muted">
@@ -299,7 +355,11 @@ export function SourcesControl({ conversation }: { conversation: Conversation })
             <TeamPicker
               legend="Use documents of"
               hint="With teams ticked, only documents of those teams are used, not public ones."
-              options={teams.map((t) => ({ id: t.id, name: t.name }))}
+              options={teams.map((t) => ({
+                id: t.id,
+                name: t.name,
+                disabled: !selected?.useKnowledgeBase,
+              }))}
               selected={selected?.teamIds ?? []}
               onChange={(teamIds) => setSelected((s) => (s === null ? s : { ...s, teamIds }))}
             />

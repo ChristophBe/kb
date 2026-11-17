@@ -28,8 +28,8 @@ class ApproximateTokenCounter:
         return math.ceil(len(text) / 4)
 
 
-# Builds the system message for the given sources.
-SystemPrompt = Callable[[Sequence[chat_pb2.Citation]], str]
+# Builds the system message for the given sources and history.
+SystemPrompt = Callable[[Sequence[chat_pb2.Citation], Sequence[MessageRow]], str]
 
 
 @dataclass(frozen=True)
@@ -47,15 +47,19 @@ def fit(
     sources: Sequence[chat_pb2.Citation],
     history: Sequence[MessageRow],
     question: str,
+    history_in_prompt: bool = False,
 ) -> Context:
     """Drops the oldest history first, then the lowest-scoring sources, until the
     prompt fits in `budget` tokens. The question and the best source always stay,
-    even when they alone exceed the budget."""
+    even when they alone exceed the budget. When the system prompt shows the history
+    itself (`history_in_prompt`), it is not counted a second time."""
     kept_sources = sorted(sources, key=lambda c: c.score, reverse=True)
     kept_history = list(history)
 
     def size() -> int:
-        messages = [system_prompt(kept_sources), *(m.content for m in kept_history), question]
+        messages = [system_prompt(kept_sources, kept_history), question]
+        if not history_in_prompt:
+            messages += [m.content for m in kept_history]
         return sum(counter.count(text) + MESSAGE_OVERHEAD_TOKENS for text in messages)
 
     while size() > budget:

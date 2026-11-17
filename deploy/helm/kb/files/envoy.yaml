@@ -51,6 +51,10 @@ static_resources:
                           route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.chat.v1.ChatService/StopChat" }
                           route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.chat.v1.ChatService/GetPromptTemplates" }
+                          route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.chat.v1.ChatService/UpdatePromptTemplates" }
+                          route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.document.v1.DocumentService/GetDocument" }
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.document.v1.DocumentService/ListDocuments" }

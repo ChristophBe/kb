@@ -114,6 +114,26 @@ Select an entry to open the conversation. When you delete the open conversation,
 
 To find a conversation by what was said in it, type a word from its title or from any of its questions and answers in the search box at the top of the sidebar; see [Search from any page](search.md#search-from-any-page). Matching conversations appear under **Conversations**, those whose title matches first, with the part of a matching message, if one matches. Every word you type has to appear, and words that start with what you typed count too, so "budg" finds "budget". Select one to open it.
 
+## Change the prompt of a conversation
+
+The system prompt tells the language model how to answer, for example in which tone or language. To change it for one conversation:
+
+1. Open the conversation and select **Prompt** in its header.
+2. Edit the **System prompt** and select **Save**.
+
+The new prompt applies to the questions you ask next; earlier answers stay as they are. Select **Reset to default** to put the default prompt back; the conversation then follows the default again.
+
+The prompt is a template. Besides plain text it can use these variables:
+
+- `{sources}`: the numbered passages the answer is based on.
+- `{history}`: the earlier messages of the conversation. A prompt that uses `{history}` shows the history itself.
+
+Write `{{` and `}}` where you want a literal brace. When the prompt doesn't use `{sources}`, the sources are added after it. If the prompt is not valid, for example because it names an unknown variable or has unmatched braces, it is not saved and the reason is shown under the field.
+
+### Change the defaults for everyone
+
+Platform admins also see **Defaults for all conversations** in the same window. They can change the **Default system prompt**, the **Sources template** (added when sources were found; it must contain `{sources}`) and the **No-sources template** (added when nothing in the documents relates to the question). These apply to every conversation without its own prompt. Other people don't see these fields and can't change them. **Reset to default** next to each field returns it to the text Knowcelium comes with.
+
 ## Rename a conversation
 
 1. Open the conversation and select **Rename** next to its title.

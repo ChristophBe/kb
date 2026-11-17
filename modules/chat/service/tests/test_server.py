@@ -94,6 +94,17 @@ class MemoryRepo:
         self.conversations: dict[uuid.UUID, ConversationRow] = {}
         self.messages: list[MessageRow] = []
         self.searches: list[tuple[str, int]] = []
+        self.templates: dict[str, str] = {}
+
+    async def get_prompt_templates(self):
+        return dict(self.templates)
+
+    async def set_prompt_templates(self, changes: dict[str, str]):
+        for name, content in changes.items():
+            if content:
+                self.templates[name] = content
+            else:
+                self.templates.pop(name, None)
 
     def _owned(self, owner: str) -> list[ConversationRow]:
         return [c for c in self.conversations.values() if c.owner_id == owner]
@@ -154,6 +165,7 @@ class MemoryRepo:
         title: str | None = None,
         document_ids: list[uuid.UUID] | None = None,
         team_ids: list[uuid.UUID] | None = None,
+        system_prompt: str | None = None,
     ):
         conv = await self.get_conversation(owner, id)
         if conv is not None and title is not None:
@@ -162,6 +174,8 @@ class MemoryRepo:
             conv.document_ids = document_ids
         if conv is not None and team_ids is not None:
             conv.team_ids = team_ids
+        if conv is not None and system_prompt is not None:
+            conv.system_prompt = system_prompt
         return conv
 
     async def list_messages(self, conversation_id: uuid.UUID, limit: int | None = None):
@@ -995,3 +1009,108 @@ async def test_teams_are_unavailable_while_iam_is_down() -> None:
         await ask(stub, conv.id)
     assert list(documents.searches[0].team_ids) == []
     assert list(documents.searches[1].team_ids) == [T1]
+
+
+async def admin_resolver(admin: bool) -> PrincipalResolver:
+    async def resolve(user: str) -> Principal:
+        return Principal(user, platform_admin=admin)
+
+    return PrincipalResolver(resolve)
+
+
+async def test_the_owner_sets_the_system_prompt_of_a_conversation() -> None:
+    repo, llm, documents = MemoryRepo(), FakeLlm(), FakeDocuments()
+    async with running(repo, documents, llm, await admin_resolver(False)) as connect:
+        stub = connect()
+        conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+        resp = await stub.UpdateConversation(
+            chat_pb2.UpdateConversationRequest(id=conv.id, system_prompt="  Be a pirate.  ")
+        )
+        assert resp.conversation.system_prompt == "Be a pirate."
+        await ask(stub, conv.id)
+        assert "Be a pirate." in llm.prompts[-1][0].content
+        # Empty resets to the default; leaving it out keeps it.
+        kept = await stub.UpdateConversation(
+            chat_pb2.UpdateConversationRequest(id=conv.id, title="x")
+        )
+        assert kept.conversation.system_prompt == "Be a pirate."
+        reset = await stub.UpdateConversation(
+            chat_pb2.UpdateConversationRequest(id=conv.id, system_prompt="")
+        )
+        assert reset.conversation.system_prompt == ""
+
+
+@pytest.mark.parametrize(
+    "prompt", ["Hello {nope}", "Unclosed {", "Stray }", "{sources!r}", "{history:>5}"]
+)
+async def test_an_invalid_system_prompt_is_rejected_with_the_reason(prompt: str) -> None:
+    async with running(MemoryRepo(), FakeDocuments(), FakeLlm()) as connect:
+        stub = connect()
+        conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+        with pytest.raises(grpc.aio.AioRpcError) as err:
+            await stub.UpdateConversation(
+                chat_pb2.UpdateConversationRequest(id=conv.id, system_prompt=prompt)
+            )
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    violations = field_violations(err.value)
+    assert [v.field for v in violations] == ["system_prompt"]
+    assert violations[0].description
+
+
+async def test_only_admins_change_the_default_prompts() -> None:
+    repo = MemoryRepo()
+    async with running(repo, FakeDocuments(), FakeLlm(), await admin_resolver(False)) as connect:
+        stub = connect()
+        shown = (await stub.GetPromptTemplates(chat_pb2.GetPromptTemplatesRequest())).templates
+        assert shown.system_prompt.is_default
+        assert list(shown.variables) == ["sources", "history"]
+        with pytest.raises(grpc.aio.AioRpcError) as err:
+            await stub.UpdatePromptTemplates(
+                chat_pb2.UpdatePromptTemplatesRequest(system_prompt="Mine")
+            )
+        assert err.value.code() == grpc.StatusCode.PERMISSION_DENIED
+    assert repo.templates == {}
+
+    # Without a principal resolver nobody is an admin.
+    async with running(repo, FakeDocuments(), FakeLlm()) as connect:
+        with pytest.raises(grpc.aio.AioRpcError) as err:
+            await connect().UpdatePromptTemplates(chat_pb2.UpdatePromptTemplatesRequest())
+        assert err.value.code() == grpc.StatusCode.PERMISSION_DENIED
+
+
+async def test_an_admin_changes_and_resets_the_default_prompts() -> None:
+    repo = MemoryRepo()
+    async with running(repo, FakeDocuments(), FakeLlm(), await admin_resolver(True)) as connect:
+        stub = connect()
+        resp = await stub.UpdatePromptTemplates(
+            chat_pb2.UpdatePromptTemplatesRequest(system_prompt="Be formal.")
+        )
+        assert resp.templates.system_prompt.content == "Be formal."
+        assert not resp.templates.system_prompt.is_default
+        assert resp.templates.sources_template.is_default
+        assert resp.templates.system_prompt.default_content.startswith("You are")
+
+        resp = await stub.UpdatePromptTemplates(
+            chat_pb2.UpdatePromptTemplatesRequest(system_prompt="")
+        )
+        assert resp.templates.system_prompt.is_default
+    assert repo.templates == {}
+
+
+async def test_default_templates_are_validated() -> None:
+    async with running(MemoryRepo(), FakeDocuments(), FakeLlm(), await admin_resolver(True)) as c:
+        stub = c()
+        for request, field in (
+            (
+                chat_pb2.UpdatePromptTemplatesRequest(sources_template="No variable here"),
+                "sources_template",
+            ),
+            (
+                chat_pb2.UpdatePromptTemplatesRequest(no_sources_template="{bad}"),
+                "no_sources_template",
+            ),
+        ):
+            with pytest.raises(grpc.aio.AioRpcError) as err:
+                await stub.UpdatePromptTemplates(request)
+            assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+            assert [v.field for v in field_violations(err.value)] == [field]

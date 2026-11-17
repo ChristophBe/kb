@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file knowcel/chat/v1/chat.proto.
  */
 export const file_knowcel_chat_v1_chat: GenFile = /*@__PURE__*/
-  fileDesc("Chprbm93Y2VsL2NoYXQvdjEvY2hhdC5wcm90bxIPa25vd2NlbC5jaGF0LnYxIpkBCghDaXRhdGlvbhITCgtkb2N1bWVudF9pZBgBIAEoCRIWCg5kb2N1bWVudF90aXRsZRgCIAEoCRITCgtjaHVua19pbmRleBgDIAEoBRIPCgdzbmlwcGV0GAQgASgJEg0KBXNjb3JlGAUgASgCEhMKC21hbnVhbF9wYWdlGAYgASgJEhYKDm1hbnVhbF9zZWN0aW9uGAcgASgJIuUBCgtDaGF0TWVzc2FnZRIKCgJpZBgBIAEoCRIqCgRyb2xlGAIgASgOMhwua25vd2NlbC5jaGF0LnYxLk1lc3NhZ2VSb2xlEg8KB2NvbnRlbnQYAyABKAkSLAoJY2l0YXRpb25zGAQgAygLMhkua25vd2NlbC5jaGF0LnYxLkNpdGF0aW9uEi8KC2NyZWF0ZV90aW1lGAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgZzdGF0dXMYBiABKA4yHi5rbm93Y2VsLmNoYXQudjEuTWVzc2FnZVN0YXR1cyLIAgoMQ29udmVyc2F0aW9uEgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEi8KC2NyZWF0ZV90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIvCgt1cGRhdGVfdGltZRgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASFAoMZG9jdW1lbnRfaWRzGAUgAygJEjUKEWxhc3RfbWVzc2FnZV90aW1lGAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIcChRsYXN0X21lc3NhZ2VfcHJldmlldxgHIAEoCRIQCghvd25lcl9pZBgIIAEoCRIQCgh0ZWFtX2lkcxgJIAMoCRISCgpnZW5lcmF0aW5nGAogASgIEhgKEGNvbXBsZXRlZF91bnNlZW4YCyABKAgiFgoHVGVhbUlkcxILCgNpZHMYASADKAkiGgoLRG9jdW1lbnRJZHMSCwoDaWRzGAEgAygJIlIKGUNyZWF0ZUNvbnZlcnNhdGlvblJlcXVlc3QSDQoFdGl0bGUYASABKAkSFAoMZG9jdW1lbnRfaWRzGAIgAygJEhAKCHRlYW1faWRzGAMgAygJIlEKGkNyZWF0ZUNvbnZlcnNhdGlvblJlc3BvbnNlEjMKDGNvbnZlcnNhdGlvbhgBIAEoCzIdLmtub3djZWwuY2hhdC52MS5Db252ZXJzYXRpb24iJAoWR2V0Q29udmVyc2F0aW9uUmVxdWVzdBIKCgJpZBgBIAEoCSJ+ChdHZXRDb252ZXJzYXRpb25SZXNwb25zZRIzCgxjb252ZXJzYXRpb24YASABKAsyHS5rbm93Y2VsLmNoYXQudjEuQ29udmVyc2F0aW9uEi4KCG1lc3NhZ2VzGAIgAygLMhwua25vd2NlbC5jaGF0LnYxLkNoYXRNZXNzYWdlIkgKGExpc3RDb252ZXJzYXRpb25zUmVxdWVzdBIsCgRwYWdlGAEgASgLMh4ua25vd2NlbC5jb21tb24udjEuUGFnZVJlcXVlc3QigAEKGUxpc3RDb252ZXJzYXRpb25zUmVzcG9uc2USNAoNY29udmVyc2F0aW9ucxgBIAMoCzIdLmtub3djZWwuY2hhdC52MS5Db252ZXJzYXRpb24SLQoEcGFnZRgCIAEoCzIfLmtub3djZWwuY29tbW9uLnYxLlBhZ2VSZXNwb25zZSInChlEZWxldGVDb252ZXJzYXRpb25SZXF1ZXN0EgoKAmlkGAEgASgJIhwKGkRlbGV0ZUNvbnZlcnNhdGlvblJlc3BvbnNlIqUBChlVcGRhdGVDb252ZXJzYXRpb25SZXF1ZXN0EgoKAmlkGAEgASgJEhIKBXRpdGxlGAIgASgJSACIAQESMgoMZG9jdW1lbnRfaWRzGAMgASgLMhwua25vd2NlbC5jaGF0LnYxLkRvY3VtZW50SWRzEioKCHRlYW1faWRzGAQgASgLMhgua25vd2NlbC5jaGF0LnYxLlRlYW1JZHNCCAoGX3RpdGxlIlEKGlVwZGF0ZUNvbnZlcnNhdGlvblJlc3BvbnNlEjMKDGNvbnZlcnNhdGlvbhgBIAEoCzIdLmtub3djZWwuY2hhdC52MS5Db252ZXJzYXRpb24iOgoaU2VhcmNoQ29udmVyc2F0aW9uc1JlcXVlc3QSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKAUiUgobU2VhcmNoQ29udmVyc2F0aW9uc1Jlc3BvbnNlEjMKB3Jlc3VsdHMYASADKAsyIi5rbm93Y2VsLmNoYXQudjEuQ29udmVyc2F0aW9uTWF0Y2giWQoRQ29udmVyc2F0aW9uTWF0Y2gSMwoMY29udmVyc2F0aW9uGAEgASgLMh0ua25vd2NlbC5jaGF0LnYxLkNvbnZlcnNhdGlvbhIPCgdzbmlwcGV0GAIgASgJImgKEVN0cmVhbUNoYXRSZXF1ZXN0EhcKD2NvbnZlcnNhdGlvbl9pZBgBIAEoCRIPCgdjb250ZW50GAIgASgJEhoKEnVzZV9rbm93bGVkZ2VfYmFzZRgDIAEoCBINCgVtb2RlbBgEIAEoCSIqCg9TdG9wQ2hhdFJlcXVlc3QSFwoPY29udmVyc2F0aW9uX2lkGAEgASgJIhIKEFN0b3BDaGF0UmVzcG9uc2UivQEKElN0cmVhbUNoYXRSZXNwb25zZRIvCgljaXRhdGlvbnMYASABKAsyGi5rbm93Y2VsLmNoYXQudjEuQ2l0YXRpb25zSAASDwoFZGVsdGEYAiABKAlIABIvCgdtZXNzYWdlGAMgASgLMhwua25vd2NlbC5jaGF0LnYxLkNoYXRNZXNzYWdlSAASKwoFZXJyb3IYBCABKAsyGi5rbm93Y2VsLmNoYXQudjEuQ2hhdEVycm9ySABCBwoFZXZlbnQiSgoJQ2hhdEVycm9yEiwKBGNvZGUYASABKA4yHi5rbm93Y2VsLmNoYXQudjEuQ2hhdEVycm9yQ29kZRIPCgdtZXNzYWdlGAIgASgJIjUKCUNpdGF0aW9ucxIoCgVpdGVtcxgBIAMoCzIZLmtub3djZWwuY2hhdC52MS5DaXRhdGlvbipeCgtNZXNzYWdlUm9sZRIcChhNRVNTQUdFX1JPTEVfVU5TUEVDSUZJRUQQABIVChFNRVNTQUdFX1JPTEVfVVNFUhABEhoKFk1FU1NBR0VfUk9MRV9BU1NJU1RBTlQQAiqDAQoNTWVzc2FnZVN0YXR1cxIeChpNRVNTQUdFX1NUQVRVU19VTlNQRUNJRklFRBAAEhsKF01FU1NBR0VfU1RBVFVTX0NPTVBMRVRFEAESGgoWTUVTU0FHRV9TVEFUVVNfU1RPUFBFRBACEhkKFU1FU1NBR0VfU1RBVFVTX0ZBSUxFRBADKm8KDUNoYXRFcnJvckNvZGUSHwobQ0hBVF9FUlJPUl9DT0RFX1VOU1BFQ0lGSUVEEAASHwobQ0hBVF9FUlJPUl9DT0RFX1VOQVZBSUxBQkxFEAESHAoYQ0hBVF9FUlJPUl9DT0RFX0lOVEVSTkFMEAIyyAYKC0NoYXRTZXJ2aWNlEm0KEkNyZWF0ZUNvbnZlcnNhdGlvbhIqLmtub3djZWwuY2hhdC52MS5DcmVhdGVDb252ZXJzYXRpb25SZXF1ZXN0Gisua25vd2NlbC5jaGF0LnYxLkNyZWF0ZUNvbnZlcnNhdGlvblJlc3BvbnNlEmQKD0dldENvbnZlcnNhdGlvbhInLmtub3djZWwuY2hhdC52MS5HZXRDb252ZXJzYXRpb25SZXF1ZXN0Gigua25vd2NlbC5jaGF0LnYxLkdldENvbnZlcnNhdGlvblJlc3BvbnNlEmoKEUxpc3RDb252ZXJzYXRpb25zEikua25vd2NlbC5jaGF0LnYxLkxpc3RDb252ZXJzYXRpb25zUmVxdWVzdBoqLmtub3djZWwuY2hhdC52MS5MaXN0Q29udmVyc2F0aW9uc1Jlc3BvbnNlEm0KEkRlbGV0ZUNvbnZlcnNhdGlvbhIqLmtub3djZWwuY2hhdC52MS5EZWxldGVDb252ZXJzYXRpb25SZXF1ZXN0Gisua25vd2NlbC5jaGF0LnYxLkRlbGV0ZUNvbnZlcnNhdGlvblJlc3BvbnNlEm0KElVwZGF0ZUNvbnZlcnNhdGlvbhIqLmtub3djZWwuY2hhdC52MS5VcGRhdGVDb252ZXJzYXRpb25SZXF1ZXN0Gisua25vd2NlbC5jaGF0LnYxLlVwZGF0ZUNvbnZlcnNhdGlvblJlc3BvbnNlEnAKE1NlYXJjaENvbnZlcnNhdGlvbnMSKy5rbm93Y2VsLmNoYXQudjEuU2VhcmNoQ29udmVyc2F0aW9uc1JlcXVlc3QaLC5rbm93Y2VsLmNoYXQudjEuU2VhcmNoQ29udmVyc2F0aW9uc1Jlc3BvbnNlElcKClN0cmVhbUNoYXQSIi5rbm93Y2VsLmNoYXQudjEuU3RyZWFtQ2hhdFJlcXVlc3QaIy5rbm93Y2VsLmNoYXQudjEuU3RyZWFtQ2hhdFJlc3BvbnNlMAESTwoIU3RvcENoYXQSIC5rbm93Y2VsLmNoYXQudjEuU3RvcENoYXRSZXF1ZXN0GiEua25vd2NlbC5jaGF0LnYxLlN0b3BDaGF0UmVzcG9uc2VCRVpDZ2l0aHViLmNvbS9DaHJpc3RvcGhCZS9rbm93Y2VsaXVtL21vZHVsZXMvY2hhdC9hcGkvZ28vY2hhdHYxO2NoYXR2MWIGcHJvdG8z", [file_google_protobuf_timestamp, file_knowcel_common_v1_common]);
+  fileDesc("Chprbm93Y2VsL2NoYXQvdjEvY2hhdC5wcm90bxIPa25vd2NlbC5jaGF0LnYxIpkBCghDaXRhdGlvbhITCgtkb2N1bWVudF9pZBgBIAEoCRIWCg5kb2N1bWVudF90aXRsZRgCIAEoCRITCgtjaHVua19pbmRleBgDIAEoBRIPCgdzbmlwcGV0GAQgASgJEg0KBXNjb3JlGAUgASgCEhMKC21hbnVhbF9wYWdlGAYgASgJEhYKDm1hbnVhbF9zZWN0aW9uGAcgASgJIuUBCgtDaGF0TWVzc2FnZRIKCgJpZBgBIAEoCRIqCgRyb2xlGAIgASgOMhwua25vd2NlbC5jaGF0LnYxLk1lc3NhZ2VSb2xlEg8KB2NvbnRlbnQYAyABKAkSLAoJY2l0YXRpb25zGAQgAygLMhkua25vd2NlbC5jaGF0LnYxLkNpdGF0aW9uEi8KC2NyZWF0ZV90aW1lGAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgZzdGF0dXMYBiABKA4yHi5rbm93Y2VsLmNoYXQudjEuTWVzc2FnZVN0YXR1cyLfAgoMQ29udmVyc2F0aW9uEgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEi8KC2NyZWF0ZV90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIvCgt1cGRhdGVfdGltZRgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASFAoMZG9jdW1lbnRfaWRzGAUgAygJEjUKEWxhc3RfbWVzc2FnZV90aW1lGAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIcChRsYXN0X21lc3NhZ2VfcHJldmlldxgHIAEoCRIQCghvd25lcl9pZBgIIAEoCRIQCgh0ZWFtX2lkcxgJIAMoCRISCgpnZW5lcmF0aW5nGAogASgIEhgKEGNvbXBsZXRlZF91bnNlZW4YCyABKAgSFQoNc3lzdGVtX3Byb21wdBgMIAEoCSIWCgdUZWFtSWRzEgsKA2lkcxgBIAMoCSIaCgtEb2N1bWVudElkcxILCgNpZHMYASADKAkiUgoZQ3JlYXRlQ29udmVyc2F0aW9uUmVxdWVzdBINCgV0aXRsZRgBIAEoCRIUCgxkb2N1bWVudF9pZHMYAiADKAkSEAoIdGVhbV9pZHMYAyADKAkiUQoaQ3JlYXRlQ29udmVyc2F0aW9uUmVzcG9uc2USMwoMY29udmVyc2F0aW9uGAEgASgLMh0ua25vd2NlbC5jaGF0LnYxLkNvbnZlcnNhdGlvbiIkChZHZXRDb252ZXJzYXRpb25SZXF1ZXN0EgoKAmlkGAEgASgJIn4KF0dldENvbnZlcnNhdGlvblJlc3BvbnNlEjMKDGNvbnZlcnNhdGlvbhgBIAEoCzIdLmtub3djZWwuY2hhdC52MS5Db252ZXJzYXRpb24SLgoIbWVzc2FnZXMYAiADKAsyHC5rbm93Y2VsLmNoYXQudjEuQ2hhdE1lc3NhZ2UiSAoYTGlzdENvbnZlcnNhdGlvbnNSZXF1ZXN0EiwKBHBhZ2UYASABKAsyHi5rbm93Y2VsLmNvbW1vbi52MS5QYWdlUmVxdWVzdCKAAQoZTGlzdENvbnZlcnNhdGlvbnNSZXNwb25zZRI0Cg1jb252ZXJzYXRpb25zGAEgAygLMh0ua25vd2NlbC5jaGF0LnYxLkNvbnZlcnNhdGlvbhItCgRwYWdlGAIgASgLMh8ua25vd2NlbC5jb21tb24udjEuUGFnZVJlc3BvbnNlIicKGURlbGV0ZUNvbnZlcnNhdGlvblJlcXVlc3QSCgoCaWQYASABKAkiHAoaRGVsZXRlQ29udmVyc2F0aW9uUmVzcG9uc2Ui0wEKGVVwZGF0ZUNvbnZlcnNhdGlvblJlcXVlc3QSCgoCaWQYASABKAkSEgoFdGl0bGUYAiABKAlIAIgBARIyCgxkb2N1bWVudF9pZHMYAyABKAsyHC5rbm93Y2VsLmNoYXQudjEuRG9jdW1lbnRJZHMSKgoIdGVhbV9pZHMYBCABKAsyGC5rbm93Y2VsLmNoYXQudjEuVGVhbUlkcxIaCg1zeXN0ZW1fcHJvbXB0GAUgASgJSAGIAQFCCAoGX3RpdGxlQhAKDl9zeXN0ZW1fcHJvbXB0IlEKGlVwZGF0ZUNvbnZlcnNhdGlvblJlc3BvbnNlEjMKDGNvbnZlcnNhdGlvbhgBIAEoCzIdLmtub3djZWwuY2hhdC52MS5Db252ZXJzYXRpb24iOgoaU2VhcmNoQ29udmVyc2F0aW9uc1JlcXVlc3QSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKAUiUgobU2VhcmNoQ29udmVyc2F0aW9uc1Jlc3BvbnNlEjMKB3Jlc3VsdHMYASADKAsyIi5rbm93Y2VsLmNoYXQudjEuQ29udmVyc2F0aW9uTWF0Y2giWQoRQ29udmVyc2F0aW9uTWF0Y2gSMwoMY29udmVyc2F0aW9uGAEgASgLMh0ua25vd2NlbC5jaGF0LnYxLkNvbnZlcnNhdGlvbhIPCgdzbmlwcGV0GAIgASgJImgKEVN0cmVhbUNoYXRSZXF1ZXN0EhcKD2NvbnZlcnNhdGlvbl9pZBgBIAEoCRIPCgdjb250ZW50GAIgASgJEhoKEnVzZV9rbm93bGVkZ2VfYmFzZRgDIAEoCBINCgVtb2RlbBgEIAEoCSIqCg9TdG9wQ2hhdFJlcXVlc3QSFwoPY29udmVyc2F0aW9uX2lkGAEgASgJIhIKEFN0b3BDaGF0UmVzcG9uc2UivQEKElN0cmVhbUNoYXRSZXNwb25zZRIvCgljaXRhdGlvbnMYASABKAsyGi5rbm93Y2VsLmNoYXQudjEuQ2l0YXRpb25zSAASDwoFZGVsdGEYAiABKAlIABIvCgdtZXNzYWdlGAMgASgLMhwua25vd2NlbC5jaGF0LnYxLkNoYXRNZXNzYWdlSAASKwoFZXJyb3IYBCABKAsyGi5rbm93Y2VsLmNoYXQudjEuQ2hhdEVycm9ySABCBwoFZXZlbnQiSgoJQ2hhdEVycm9yEiwKBGNvZGUYASABKA4yHi5rbm93Y2VsLmNoYXQudjEuQ2hhdEVycm9yQ29kZRIPCgdtZXNzYWdlGAIgASgJIjUKCUNpdGF0aW9ucxIoCgVpdGVtcxgBIAMoCzIZLmtub3djZWwuY2hhdC52MS5DaXRhdGlvbiLVAQoPUHJvbXB0VGVtcGxhdGVzEjYKDXN5c3RlbV9wcm9tcHQYASABKAsyHy5rbm93Y2VsLmNoYXQudjEuUHJvbXB0VGVtcGxhdGUSOQoQc291cmNlc190ZW1wbGF0ZRgCIAEoCzIfLmtub3djZWwuY2hhdC52MS5Qcm9tcHRUZW1wbGF0ZRI8ChNub19zb3VyY2VzX3RlbXBsYXRlGAMgASgLMh8ua25vd2NlbC5jaGF0LnYxLlByb21wdFRlbXBsYXRlEhEKCXZhcmlhYmxlcxgEIAMoCSJOCg5Qcm9tcHRUZW1wbGF0ZRIPCgdjb250ZW50GAEgASgJEhcKD2RlZmF1bHRfY29udGVudBgCIAEoCRISCgppc19kZWZhdWx0GAMgASgIIhsKGUdldFByb21wdFRlbXBsYXRlc1JlcXVlc3QiUQoaR2V0UHJvbXB0VGVtcGxhdGVzUmVzcG9uc2USMwoJdGVtcGxhdGVzGAEgASgLMiAua25vd2NlbC5jaGF0LnYxLlByb21wdFRlbXBsYXRlcyK6AQocVXBkYXRlUHJvbXB0VGVtcGxhdGVzUmVxdWVzdBIaCg1zeXN0ZW1fcHJvbXB0GAEgASgJSACIAQESHQoQc291cmNlc190ZW1wbGF0ZRgCIAEoCUgBiAEBEiAKE25vX3NvdXJjZXNfdGVtcGxhdGUYAyABKAlIAogBAUIQCg5fc3lzdGVtX3Byb21wdEITChFfc291cmNlc190ZW1wbGF0ZUIWChRfbm9fc291cmNlc190ZW1wbGF0ZSJUCh1VcGRhdGVQcm9tcHRUZW1wbGF0ZXNSZXNwb25zZRIzCgl0ZW1wbGF0ZXMYASABKAsyIC5rbm93Y2VsLmNoYXQudjEuUHJvbXB0VGVtcGxhdGVzKl4KC01lc3NhZ2VSb2xlEhwKGE1FU1NBR0VfUk9MRV9VTlNQRUNJRklFRBAAEhUKEU1FU1NBR0VfUk9MRV9VU0VSEAESGgoWTUVTU0FHRV9ST0xFX0FTU0lTVEFOVBACKoMBCg1NZXNzYWdlU3RhdHVzEh4KGk1FU1NBR0VfU1RBVFVTX1VOU1BFQ0lGSUVEEAASGwoXTUVTU0FHRV9TVEFUVVNfQ09NUExFVEUQARIaChZNRVNTQUdFX1NUQVRVU19TVE9QUEVEEAISGQoVTUVTU0FHRV9TVEFUVVNfRkFJTEVEEAMqbwoNQ2hhdEVycm9yQ29kZRIfChtDSEFUX0VSUk9SX0NPREVfVU5TUEVDSUZJRUQQABIfChtDSEFUX0VSUk9SX0NPREVfVU5BVkFJTEFCTEUQARIcChhDSEFUX0VSUk9SX0NPREVfSU5URVJOQUwQAjKvCAoLQ2hhdFNlcnZpY2USbQoSQ3JlYXRlQ29udmVyc2F0aW9uEioua25vd2NlbC5jaGF0LnYxLkNyZWF0ZUNvbnZlcnNhdGlvblJlcXVlc3QaKy5rbm93Y2VsLmNoYXQudjEuQ3JlYXRlQ29udmVyc2F0aW9uUmVzcG9uc2USZAoPR2V0Q29udmVyc2F0aW9uEicua25vd2NlbC5jaGF0LnYxLkdldENvbnZlcnNhdGlvblJlcXVlc3QaKC5rbm93Y2VsLmNoYXQudjEuR2V0Q29udmVyc2F0aW9uUmVzcG9uc2USagoRTGlzdENvbnZlcnNhdGlvbnMSKS5rbm93Y2VsLmNoYXQudjEuTGlzdENvbnZlcnNhdGlvbnNSZXF1ZXN0Gioua25vd2NlbC5jaGF0LnYxLkxpc3RDb252ZXJzYXRpb25zUmVzcG9uc2USbQoSRGVsZXRlQ29udmVyc2F0aW9uEioua25vd2NlbC5jaGF0LnYxLkRlbGV0ZUNvbnZlcnNhdGlvblJlcXVlc3QaKy5rbm93Y2VsLmNoYXQudjEuRGVsZXRlQ29udmVyc2F0aW9uUmVzcG9uc2USbQoSVXBkYXRlQ29udmVyc2F0aW9uEioua25vd2NlbC5jaGF0LnYxLlVwZGF0ZUNvbnZlcnNhdGlvblJlcXVlc3QaKy5rbm93Y2VsLmNoYXQudjEuVXBkYXRlQ29udmVyc2F0aW9uUmVzcG9uc2UScAoTU2VhcmNoQ29udmVyc2F0aW9ucxIrLmtub3djZWwuY2hhdC52MS5TZWFyY2hDb252ZXJzYXRpb25zUmVxdWVzdBosLmtub3djZWwuY2hhdC52MS5TZWFyY2hDb252ZXJzYXRpb25zUmVzcG9uc2USVwoKU3RyZWFtQ2hhdBIiLmtub3djZWwuY2hhdC52MS5TdHJlYW1DaGF0UmVxdWVzdBojLmtub3djZWwuY2hhdC52MS5TdHJlYW1DaGF0UmVzcG9uc2UwARJPCghTdG9wQ2hhdBIgLmtub3djZWwuY2hhdC52MS5TdG9wQ2hhdFJlcXVlc3QaIS5rbm93Y2VsLmNoYXQudjEuU3RvcENoYXRSZXNwb25zZRJtChJHZXRQcm9tcHRUZW1wbGF0ZXMSKi5rbm93Y2VsLmNoYXQudjEuR2V0UHJvbXB0VGVtcGxhdGVzUmVxdWVzdBorLmtub3djZWwuY2hhdC52MS5HZXRQcm9tcHRUZW1wbGF0ZXNSZXNwb25zZRJ2ChVVcGRhdGVQcm9tcHRUZW1wbGF0ZXMSLS5rbm93Y2VsLmNoYXQudjEuVXBkYXRlUHJvbXB0VGVtcGxhdGVzUmVxdWVzdBouLmtub3djZWwuY2hhdC52MS5VcGRhdGVQcm9tcHRUZW1wbGF0ZXNSZXNwb25zZUJFWkNnaXRodWIuY29tL0NocmlzdG9waEJlL2tub3djZWxpdW0vbW9kdWxlcy9jaGF0L2FwaS9nby9jaGF0djE7Y2hhdHYxYgZwcm90bzM", [file_google_protobuf_timestamp, file_knowcel_common_v1_common]);
 
 /**
  * A source an answer is grounded in: a chunk of a document, or a section of the
@@ -191,6 +191,14 @@ export type Conversation = Message<"knowcel.chat.v1.Conversation"> & {
    * @generated from field: bool completed_unseen = 11;
    */
   completedUnseen: boolean;
+
+  /**
+   * The system prompt of this conversation, a template (see PromptTemplates);
+   * empty means the default system prompt.
+   *
+   * @generated from field: string system_prompt = 12;
+   */
+  systemPrompt: string;
 };
 
 /**
@@ -432,6 +440,15 @@ export type UpdateConversationRequest = Message<"knowcel.chat.v1.UpdateConversat
    * @generated from field: knowcel.chat.v1.TeamIds team_ids = 4;
    */
   teamIds?: TeamIds | undefined;
+
+  /**
+   * Replaces the system prompt of the conversation when set; empty resets it
+   * to the default. Must be a valid template (INVALID_ARGUMENT otherwise, with
+   * the reason in the violation of `system_prompt`). The owner may always set it.
+   *
+   * @generated from field: optional string system_prompt = 5;
+   */
+  systemPrompt?: string | undefined;
 };
 
 /**
@@ -693,6 +710,167 @@ export const CitationsSchema: GenMessage<Citations> = /*@__PURE__*/
   messageDesc(file_knowcel_chat_v1_chat, 23);
 
 /**
+ * The prompts that build the system message of an answer. Templates are text
+ * with variables in braces: {sources} (the numbered passages) and {history}
+ * (the earlier messages). Write {{ and }} for literal braces. A template that
+ * uses {history} shows the history itself, and it is then not sent again as
+ * separate messages.
+ *
+ * @generated from message knowcel.chat.v1.PromptTemplates
+ */
+export type PromptTemplates = Message<"knowcel.chat.v1.PromptTemplates"> & {
+  /**
+   * Instructions to the model, used by conversations without their own system
+   * prompt. When it does not use {sources}, the sources are added with
+   * sources_template.
+   *
+   * @generated from field: knowcel.chat.v1.PromptTemplate system_prompt = 1;
+   */
+  systemPrompt?: PromptTemplate | undefined;
+
+  /**
+   * Added after the system prompt when sources were found; must contain
+   * {sources}.
+   *
+   * @generated from field: knowcel.chat.v1.PromptTemplate sources_template = 2;
+   */
+  sourcesTemplate?: PromptTemplate | undefined;
+
+  /**
+   * Added after the system prompt when the knowledge base is used but no source
+   * was found.
+   *
+   * @generated from field: knowcel.chat.v1.PromptTemplate no_sources_template = 3;
+   */
+  noSourcesTemplate?: PromptTemplate | undefined;
+
+  /**
+   * The variables templates can use.
+   *
+   * @generated from field: repeated string variables = 4;
+   */
+  variables: string[];
+};
+
+/**
+ * Describes the message knowcel.chat.v1.PromptTemplates.
+ * Use `create(PromptTemplatesSchema)` to create a new message.
+ */
+export const PromptTemplatesSchema: GenMessage<PromptTemplates> = /*@__PURE__*/
+  messageDesc(file_knowcel_chat_v1_chat, 24);
+
+/**
+ * @generated from message knowcel.chat.v1.PromptTemplate
+ */
+export type PromptTemplate = Message<"knowcel.chat.v1.PromptTemplate"> & {
+  /**
+   * The text in use.
+   *
+   * @generated from field: string content = 1;
+   */
+  content: string;
+
+  /**
+   * The built-in text, which "reset" returns to.
+   *
+   * @generated from field: string default_content = 2;
+   */
+  defaultContent: string;
+
+  /**
+   * Whether content is the built-in text, i.e. no admin has changed it.
+   *
+   * @generated from field: bool is_default = 3;
+   */
+  isDefault: boolean;
+};
+
+/**
+ * Describes the message knowcel.chat.v1.PromptTemplate.
+ * Use `create(PromptTemplateSchema)` to create a new message.
+ */
+export const PromptTemplateSchema: GenMessage<PromptTemplate> = /*@__PURE__*/
+  messageDesc(file_knowcel_chat_v1_chat, 25);
+
+/**
+ * @generated from message knowcel.chat.v1.GetPromptTemplatesRequest
+ */
+export type GetPromptTemplatesRequest = Message<"knowcel.chat.v1.GetPromptTemplatesRequest"> & {
+};
+
+/**
+ * Describes the message knowcel.chat.v1.GetPromptTemplatesRequest.
+ * Use `create(GetPromptTemplatesRequestSchema)` to create a new message.
+ */
+export const GetPromptTemplatesRequestSchema: GenMessage<GetPromptTemplatesRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_chat_v1_chat, 26);
+
+/**
+ * @generated from message knowcel.chat.v1.GetPromptTemplatesResponse
+ */
+export type GetPromptTemplatesResponse = Message<"knowcel.chat.v1.GetPromptTemplatesResponse"> & {
+  /**
+   * @generated from field: knowcel.chat.v1.PromptTemplates templates = 1;
+   */
+  templates?: PromptTemplates | undefined;
+};
+
+/**
+ * Describes the message knowcel.chat.v1.GetPromptTemplatesResponse.
+ * Use `create(GetPromptTemplatesResponseSchema)` to create a new message.
+ */
+export const GetPromptTemplatesResponseSchema: GenMessage<GetPromptTemplatesResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_chat_v1_chat, 27);
+
+/**
+ * @generated from message knowcel.chat.v1.UpdatePromptTemplatesRequest
+ */
+export type UpdatePromptTemplatesRequest = Message<"knowcel.chat.v1.UpdatePromptTemplatesRequest"> & {
+  /**
+   * Each template is replaced when set; an empty text resets it to the built-in
+   * one. Invalid templates are rejected with INVALID_ARGUMENT (violation field
+   * names the template).
+   *
+   * @generated from field: optional string system_prompt = 1;
+   */
+  systemPrompt?: string | undefined;
+
+  /**
+   * @generated from field: optional string sources_template = 2;
+   */
+  sourcesTemplate?: string | undefined;
+
+  /**
+   * @generated from field: optional string no_sources_template = 3;
+   */
+  noSourcesTemplate?: string | undefined;
+};
+
+/**
+ * Describes the message knowcel.chat.v1.UpdatePromptTemplatesRequest.
+ * Use `create(UpdatePromptTemplatesRequestSchema)` to create a new message.
+ */
+export const UpdatePromptTemplatesRequestSchema: GenMessage<UpdatePromptTemplatesRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_chat_v1_chat, 28);
+
+/**
+ * @generated from message knowcel.chat.v1.UpdatePromptTemplatesResponse
+ */
+export type UpdatePromptTemplatesResponse = Message<"knowcel.chat.v1.UpdatePromptTemplatesResponse"> & {
+  /**
+   * @generated from field: knowcel.chat.v1.PromptTemplates templates = 1;
+   */
+  templates?: PromptTemplates | undefined;
+};
+
+/**
+ * Describes the message knowcel.chat.v1.UpdatePromptTemplatesResponse.
+ * Use `create(UpdatePromptTemplatesResponseSchema)` to create a new message.
+ */
+export const UpdatePromptTemplatesResponseSchema: GenMessage<UpdatePromptTemplatesResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_chat_v1_chat, 29);
+
+/**
  * @generated from enum knowcel.chat.v1.MessageRole
  */
 export enum MessageRole {
@@ -868,6 +1046,27 @@ export const ChatService: GenService<{
     methodKind: "unary";
     input: typeof StopChatRequestSchema;
     output: typeof StopChatResponseSchema;
+  },
+  /**
+   * GetPromptTemplates returns the prompts used for answers by default.
+   *
+   * @generated from rpc knowcel.chat.v1.ChatService.GetPromptTemplates
+   */
+  getPromptTemplates: {
+    methodKind: "unary";
+    input: typeof GetPromptTemplatesRequestSchema;
+    output: typeof GetPromptTemplatesResponseSchema;
+  },
+  /**
+   * UpdatePromptTemplates changes the default prompts for all conversations.
+   * Only platform admins may call it (PERMISSION_DENIED otherwise).
+   *
+   * @generated from rpc knowcel.chat.v1.ChatService.UpdatePromptTemplates
+   */
+  updatePromptTemplates: {
+    methodKind: "unary";
+    input: typeof UpdatePromptTemplatesRequestSchema;
+    output: typeof UpdatePromptTemplatesResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_knowcel_chat_v1_chat, 0);

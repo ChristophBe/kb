@@ -4,6 +4,7 @@ import {
   ConnectError,
   useClient,
   useCurrentUser,
+  useModuleEnabled,
   useQuery,
   useQueryClient,
 } from "@knowcel/module-sdk";
@@ -20,7 +21,7 @@ import {
   Skeleton,
   SkeletonRows,
 } from "@knowcel/ui";
-import { Download, Trash2 } from "lucide-react";
+import { Download, MessageSquare, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { AccessEditor } from "./AccessEditor.tsx";
@@ -62,6 +63,7 @@ export function DocumentDetail() {
   const user = useCurrentUser();
   const navigate = useNavigate();
   const download = useDownloadDocument();
+  const chatEnabled = useModuleEnabled("chat");
   const [deleting, setDeleting] = useState(false);
   const doc = useQuery({
     queryKey: ["documents", id],
@@ -139,6 +141,14 @@ export function DocumentDetail() {
           <Download className="size-4" aria-hidden="true" /> Download
         </Button>
         <UploadVersionLink document={d} />
+        {chatEnabled && (
+          <Link
+            to={`/m/chat/new?document=${encodeURIComponent(d.id)}`}
+            className={buttonClass("secondary")}
+          >
+            <MessageSquare className="size-4" aria-hidden="true" /> Ask about this document
+          </Link>
+        )}
         {isOwner && <AccessEditor document={d} />}
         {isOwner && (
           <Button variant="danger" onClick={() => setDeleting(true)}>

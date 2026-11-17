@@ -15,6 +15,7 @@ import {
   KbRuntimeProvider,
   type RuntimeAuth,
   useClient,
+  useModuleEnabled,
   useRuntimeConfig,
 } from "./runtime.tsx";
 
@@ -64,6 +65,20 @@ describe("KbRuntimeProvider", () => {
     );
     const { result } = renderHook(() => useRuntimeConfig(), { wrapper });
     expect(result.current).toBe(config);
+  });
+
+  it("tells which modules are enabled, all of them when the config doesn't say", () => {
+    const wrap =
+      (cfg: typeof config | { apiBaseUrl: string }) =>
+      ({ children }: { children: ReactNode }) => (
+        <KbRuntimeProvider config={cfg}>{children}</KbRuntimeProvider>
+      );
+    const listed = renderHook(() => [useModuleEnabled("chat"), useModuleEnabled("llm")], {
+      wrapper: wrap(config),
+    });
+    expect(listed.result.current).toEqual([true, false]);
+    const open = renderHook(() => useModuleEnabled("llm"), { wrapper: wrap({ apiBaseUrl: "x" }) });
+    expect(open.result.current).toBe(true);
   });
 
   it("gives clients that call through the transport", async () => {

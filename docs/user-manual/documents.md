@@ -36,7 +36,7 @@ Only **Ready** documents show up in search results and chat answers.
 
 Select a document's title. The page shows its **Status**, **Detail** (the reason when processing failed), its **Version** (1 for the first upload, one more for every [new version](#replace-a-document-with-a-new-version)), **Filename**, **Content type**, **Size**, **Chunks**, when it was **Created** and **Updated**, its **Metadata** and its **ID**.
 
-Under the title, a row of buttons offers what you can do with the document: **Download**, **Upload new version** (not while the document or a new version is being processed), and, if you own it, **Change access** and **Delete**. **Owner** says who uploaded the document; for someone else's document it shows their name when they share a team with you, otherwise "Another user". Documents of others have no **Delete**.
+Under the title, a row of buttons offers what you can do with the document: **Download**, **Upload new version** (not while the document or a new version is being processed), **Ask about this document** (only when Chat is available; see [Ask about one document](chat.md#ask-about-one-document)), and, if you own it, **Change access** and **Delete**. **Owner** says who uploaded the document; for someone else's document it shows their name when they share a team with you, otherwise "Another user". Documents of others have no **Delete**.
 
 While the document loads, the page shows placeholders. If it doesn't exist, was deleted or you can't read it, the page says so and offers **Back to Documents**; **← Documents** goes back to the list at any time.
 

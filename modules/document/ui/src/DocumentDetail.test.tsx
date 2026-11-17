@@ -61,6 +61,25 @@ describe("DocumentDetail", () => {
     expect(deleteDocument).toHaveBeenCalledOnce();
   });
 
+  it("offers to ask about the document in chat, only when chat is enabled", async () => {
+    const make = () =>
+      createRouterTransport(({ service }) =>
+        service(DocumentService, {
+          getDocument: () => ({
+            document: { id: "d 1", title: "Notes", status: DocumentStatus.READY },
+          }),
+          listChunks: () => ({ chunks: [] }),
+        }),
+      );
+    const { unmount } = renderModule(documents, make(), "/d1");
+    const link = await screen.findByRole("link", { name: "Ask about this document" });
+    expect(link.getAttribute("href")).toBe("/m/chat/new?document=d%201");
+    unmount();
+    renderModule(documents, make(), "/d1", null, undefined, ["document", "ingestion"]);
+    await screen.findByRole("toolbar", { name: "Document actions" });
+    expect(screen.queryByRole("link", { name: "Ask about this document" })).toBeNull();
+  });
+
   it("shows who owns a document to someone else, without Delete", async () => {
     renderDocument({ ownerId: "carol" });
     const bar = within(await screen.findByRole("toolbar", { name: "Document actions" }));

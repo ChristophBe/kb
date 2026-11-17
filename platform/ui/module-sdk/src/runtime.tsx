@@ -119,6 +119,15 @@ export function useRuntimeConfig(): RuntimeConfig {
   return useRuntime().config;
 }
 
+/**
+ * Whether module `id` is enabled in this deployment. A module that offers a
+ * link into another module's route shows it only then.
+ */
+export function useModuleEnabled(id: string): boolean {
+  const { enabledModules } = useRuntimeConfig();
+  return !enabledModules || enabledModules.includes(id);
+}
+
 /** Returns a typed client for a generated service descriptor. */
 export function useClient<T extends DescService>(service: T): Client<T> {
   const { transport } = useRuntime();

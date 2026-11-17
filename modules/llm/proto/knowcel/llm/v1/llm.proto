@@ -13,6 +13,10 @@ service LlmService {
   // message carrying usage information.
   rpc Generate(GenerateRequest) returns (stream GenerateResponse);
   rpc Embed(EmbedRequest) returns (EmbedResponse);
+  // Rerank scores how well each document answers a query, so a caller can
+  // reorder candidates found by vector similarity. Served by the chat
+  // provider; a provider that can't rerank returns UNIMPLEMENTED.
+  rpc Rerank(RerankRequest) returns (RerankResponse);
   // PullModel downloads a model to a provider and streams the progress, ending
   // with a message with done set. Platform admins only; providers that can't
   // manage models return UNIMPLEMENTED.
@@ -127,6 +131,21 @@ message EmbedResponse {
   repeated Embedding embeddings = 1;
   string model = 2;
   int32 dimensions = 3;
+}
+
+message RerankRequest {
+  // Model id; empty selects the chat provider's default chat model.
+  string model = 1;
+  string query = 2;
+  // The candidates, at most 50. The caller only sends documents it may show.
+  repeated string documents = 3;
+}
+
+message RerankResponse {
+  // One relevance score from 0 (unrelated) to 1 (answers the query) per
+  // document, in the order of the request.
+  repeated float scores = 1;
+  string model = 2;
 }
 
 message PullModelRequest {

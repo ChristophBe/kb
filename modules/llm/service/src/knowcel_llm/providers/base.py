@@ -102,6 +102,10 @@ class Provider(Protocol):
 
     async def embed(self, model: str, inputs: list[str]) -> list[list[float]]: ...
 
+    # Scores in [0, 1], one per document, higher is more relevant. Providers
+    # without a chat model raise NotSupportedError.
+    async def rerank(self, model: str, query: str, documents: list[str]) -> list[float]: ...
+
     async def list_models(self) -> list[ModelInfo]: ...
 
     # Providers that can't manage their models raise NotSupportedError.

@@ -75,6 +75,7 @@ EMBEDDING_INPUTS = Counter(
 # slow database can't hold back the end of an answer.
 _RECORD_TIMEOUT = 2
 _UNKNOWN_CALLER = "unknown"
+_MAX_RERANK_DOCUMENTS = 50
 _DEFAULT_USAGE_DAYS = 30
 _MAX_USAGE_DAYS = 366
 
@@ -316,6 +317,23 @@ class LlmServicer(llm_pb2_grpc.LlmServiceServicer):
             dimensions=dims,
             embeddings=[llm_pb2.Embedding(values=v) for v in vectors],
         )
+
+    async def Rerank(
+        self, request: llm_pb2.RerankRequest, context: _Context
+    ) -> llm_pb2.RerankResponse:
+        model = request.model or self._chat.default_chat_model
+        if not request.query.strip():
+            await abort_invalid_argument(context, violation("query", "A query is required"))
+        if len(request.documents) > _MAX_RERANK_DOCUMENTS:
+            await abort_invalid_argument(
+                context,
+                violation("documents", f"At most {_MAX_RERANK_DOCUMENTS} documents can be ranked"),
+            )
+        if not request.documents:
+            return llm_pb2.RerankResponse(model=model)
+        async with _slot(self._chat_slots, context), _provider_errors(context):
+            scores = await self._chat.rerank(model, request.query, list(request.documents))
+        return llm_pb2.RerankResponse(model=model, scores=scores)
 
 
 @contextlib.asynccontextmanager

@@ -18,6 +18,7 @@ from .base import (
     PullProgress,
     Status,
 )
+from .rerank import rerank_with_chat
 
 # Statuses that mean "overloaded or restarting" rather than a bad request.
 _RETRYABLE_STATUS = {429, 502, 503, 504}
@@ -120,6 +121,9 @@ class OllamaProvider:
                 ModelInfo(id=name, kind=ModelKind.EMBEDDING if is_embedding else ModelKind.CHAT)
             )
         return models
+
+    async def rerank(self, model: str, query: str, documents: list[str]) -> list[float]:
+        return await rerank_with_chat(self, model, query, documents)
 
     async def pull_model(self, model: str) -> AsyncGenerator[PullProgress]:
         # No overall deadline: a big model takes as long as the network needs.

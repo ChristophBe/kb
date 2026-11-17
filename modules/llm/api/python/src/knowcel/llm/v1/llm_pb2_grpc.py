@@ -56,6 +56,11 @@ class LlmServiceStub:
                 request_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.EmbedRequest.SerializeToString,
                 response_deserializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.EmbedResponse.FromString,
                 _registered_method=True)
+        self.Rerank = channel.unary_unary(
+                '/knowcel.llm.v1.LlmService/Rerank',
+                request_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.RerankRequest.SerializeToString,
+                response_deserializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.RerankResponse.FromString,
+                _registered_method=True)
         self.PullModel = channel.unary_stream(
                 '/knowcel.llm.v1.LlmService/PullModel',
                 request_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.PullModelRequest.SerializeToString,
@@ -100,6 +105,15 @@ class LlmServiceServicer:
 
     def Embed(self, request, context):
         """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Rerank(self, request, context):
+        """Rerank scores how well each document answers a query, so a caller can
+        reorder candidates found by vector similarity. Served by the chat
+        provider; a provider that can't rerank returns UNIMPLEMENTED.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -152,6 +166,11 @@ def add_LlmServiceServicer_to_server(servicer, server):
                     servicer.Embed,
                     request_deserializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.EmbedRequest.FromString,
                     response_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.EmbedResponse.SerializeToString,
+            ),
+            'Rerank': grpc.unary_unary_rpc_method_handler(
+                    servicer.Rerank,
+                    request_deserializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.RerankRequest.FromString,
+                    response_serializer=knowcel_dot_llm_dot_v1_dot_llm__pb2.RerankResponse.SerializeToString,
             ),
             'PullModel': grpc.unary_stream_rpc_method_handler(
                     servicer.PullModel,
@@ -279,6 +298,33 @@ class LlmService:
             '/knowcel.llm.v1.LlmService/Embed',
             knowcel_dot_llm_dot_v1_dot_llm__pb2.EmbedRequest.SerializeToString,
             knowcel_dot_llm_dot_v1_dot_llm__pb2.EmbedResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Rerank(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.llm.v1.LlmService/Rerank',
+            knowcel_dot_llm_dot_v1_dot_llm__pb2.RerankRequest.SerializeToString,
+            knowcel_dot_llm_dot_v1_dot_llm__pb2.RerankResponse.FromString,
             options,
             channel_credentials,
             insecure,

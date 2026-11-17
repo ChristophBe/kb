@@ -10,7 +10,7 @@ import type { Message as Message$1 } from "@bufbuild/protobuf";
  * Describes the file knowcel/llm/v1/llm.proto.
  */
 export const file_knowcel_llm_v1_llm: GenFile = /*@__PURE__*/
-  fileDesc("Chhrbm93Y2VsL2xsbS92MS9sbG0ucHJvdG8SDmtub3djZWwubGxtLnYxIk4KBU1vZGVsEgoKAmlkGAEgASgJEhAKCHByb3ZpZGVyGAIgASgJEicKBGtpbmQYAyABKA4yGS5rbm93Y2VsLmxsbS52MS5Nb2RlbEtpbmQiPgoHTWVzc2FnZRIiCgRyb2xlGAEgASgOMhQua25vd2NlbC5sbG0udjEuUm9sZRIPCgdjb250ZW50GAIgASgJImUKEUdlbmVyYXRpb25PcHRpb25zEhgKC3RlbXBlcmF0dXJlGAEgASgCSACIAQESFwoKbWF4X3Rva2VucxgCIAEoBUgBiAEBQg4KDF90ZW1wZXJhdHVyZUINCgtfbWF4X3Rva2VucyI0CgVVc2FnZRIUCgxpbnB1dF90b2tlbnMYASABKAUSFQoNb3V0cHV0X3Rva2VucxgCIAEoBSITChFMaXN0TW9kZWxzUmVxdWVzdCI7ChJMaXN0TW9kZWxzUmVzcG9uc2USJQoGbW9kZWxzGAEgAygLMhUua25vd2NlbC5sbG0udjEuTW9kZWwiGgoYR2V0UHJvdmlkZXJTdGF0dXNSZXF1ZXN0IkMKDlByb3ZpZGVySGVhbHRoEhAKCHByb3ZpZGVyGAEgASgJEg8KB2hlYWx0aHkYAiABKAgSDgoGZGV0YWlsGAMgASgJIooCChlHZXRQcm92aWRlclN0YXR1c1Jlc3BvbnNlEhAKCHByb3ZpZGVyGAEgASgJEg8KB2hlYWx0aHkYAiABKAgSDgoGZGV0YWlsGAMgASgJEhoKEmRlZmF1bHRfY2hhdF9tb2RlbBgEIAEoCRIfChdkZWZhdWx0X2VtYmVkZGluZ19tb2RlbBgFIAEoCRIcChRlbWJlZGRpbmdfZGltZW5zaW9ucxgGIAEoBRIsCgRjaGF0GAcgASgLMh4ua25vd2NlbC5sbG0udjEuUHJvdmlkZXJIZWFsdGgSMQoJZW1iZWRkaW5nGAggASgLMh4ua25vd2NlbC5sbG0udjEuUHJvdmlkZXJIZWFsdGgilgEKD0dlbmVyYXRlUmVxdWVzdBINCgVtb2RlbBgBIAEoCRIpCghtZXNzYWdlcxgCIAMoCzIXLmtub3djZWwubGxtLnYxLk1lc3NhZ2USMgoHb3B0aW9ucxgDIAEoCzIhLmtub3djZWwubGxtLnYxLkdlbmVyYXRpb25PcHRpb25zEhUKDWNhbGxlcl9tb2R1bGUYBCABKAkiZAoQR2VuZXJhdGVSZXNwb25zZRINCgVkZWx0YRgBIAEoCRIMCgRkb25lGAIgASgIEiQKBXVzYWdlGAMgASgLMhUua25vd2NlbC5sbG0udjEuVXNhZ2USDQoFbW9kZWwYBCABKAkiLQoMRW1iZWRSZXF1ZXN0Eg0KBW1vZGVsGAEgASgJEg4KBmlucHV0cxgCIAMoCSIbCglFbWJlZGRpbmcSDgoGdmFsdWVzGAEgAygCImEKDUVtYmVkUmVzcG9uc2USLQoKZW1iZWRkaW5ncxgBIAMoCzIZLmtub3djZWwubGxtLnYxLkVtYmVkZGluZxINCgVtb2RlbBgCIAEoCRISCgpkaW1lbnNpb25zGAMgASgFIjMKEFB1bGxNb2RlbFJlcXVlc3QSEAoIcHJvdmlkZXIYASABKAkSDQoFbW9kZWwYAiABKAkiUwoRUHVsbE1vZGVsUmVzcG9uc2USDgoGc3RhdHVzGAEgASgJEhEKCWNvbXBsZXRlZBgCIAEoAxINCgV0b3RhbBgDIAEoAxIMCgRkb25lGAQgASgIIjUKEkRlbGV0ZU1vZGVsUmVxdWVzdBIQCghwcm92aWRlchgBIAEoCRINCgVtb2RlbBgCIAEoCSIVChNEZWxldGVNb2RlbFJlc3BvbnNlIh8KD0dldFVzYWdlUmVxdWVzdBIMCgRkYXlzGAEgASgFIpEBCgpVc2FnZUVudHJ5EgwKBGRhdGUYASABKAkSEAoIcHJvdmlkZXIYAiABKAkSDQoFbW9kZWwYAyABKAkSFQoNY2FsbGVyX21vZHVsZRgEIAEoCRIQCghyZXF1ZXN0cxgFIAEoAxIUCgxpbnB1dF90b2tlbnMYBiABKAMSFQoNb3V0cHV0X3Rva2VucxgHIAEoAyI/ChBHZXRVc2FnZVJlc3BvbnNlEisKB2VudHJpZXMYASADKAsyGi5rbm93Y2VsLmxsbS52MS5Vc2FnZUVudHJ5KlAKBFJvbGUSFAoQUk9MRV9VTlNQRUNJRklFRBAAEg8KC1JPTEVfU1lTVEVNEAESDQoJUk9MRV9VU0VSEAISEgoOUk9MRV9BU1NJU1RBTlQQAypWCglNb2RlbEtpbmQSGgoWTU9ERUxfS0lORF9VTlNQRUNJRklFRBAAEhMKD01PREVMX0tJTkRfQ0hBVBABEhgKFE1PREVMX0tJTkRfRU1CRURESU5HEAIy3QQKCkxsbVNlcnZpY2USUwoKTGlzdE1vZGVscxIhLmtub3djZWwubGxtLnYxLkxpc3RNb2RlbHNSZXF1ZXN0GiIua25vd2NlbC5sbG0udjEuTGlzdE1vZGVsc1Jlc3BvbnNlEmgKEUdldFByb3ZpZGVyU3RhdHVzEigua25vd2NlbC5sbG0udjEuR2V0UHJvdmlkZXJTdGF0dXNSZXF1ZXN0Gikua25vd2NlbC5sbG0udjEuR2V0UHJvdmlkZXJTdGF0dXNSZXNwb25zZRJPCghHZW5lcmF0ZRIfLmtub3djZWwubGxtLnYxLkdlbmVyYXRlUmVxdWVzdBogLmtub3djZWwubGxtLnYxLkdlbmVyYXRlUmVzcG9uc2UwARJECgVFbWJlZBIcLmtub3djZWwubGxtLnYxLkVtYmVkUmVxdWVzdBodLmtub3djZWwubGxtLnYxLkVtYmVkUmVzcG9uc2USUgoJUHVsbE1vZGVsEiAua25vd2NlbC5sbG0udjEuUHVsbE1vZGVsUmVxdWVzdBohLmtub3djZWwubGxtLnYxLlB1bGxNb2RlbFJlc3BvbnNlMAESVgoLRGVsZXRlTW9kZWwSIi5rbm93Y2VsLmxsbS52MS5EZWxldGVNb2RlbFJlcXVlc3QaIy5rbm93Y2VsLmxsbS52MS5EZWxldGVNb2RlbFJlc3BvbnNlEk0KCEdldFVzYWdlEh8ua25vd2NlbC5sbG0udjEuR2V0VXNhZ2VSZXF1ZXN0GiAua25vd2NlbC5sbG0udjEuR2V0VXNhZ2VSZXNwb25zZUJCWkBnaXRodWIuY29tL0NocmlzdG9waEJlL2tub3djZWxpdW0vbW9kdWxlcy9sbG0vYXBpL2dvL2xsbXYxO2xsbXYxYgZwcm90bzM");
+  fileDesc("Chhrbm93Y2VsL2xsbS92MS9sbG0ucHJvdG8SDmtub3djZWwubGxtLnYxIk4KBU1vZGVsEgoKAmlkGAEgASgJEhAKCHByb3ZpZGVyGAIgASgJEicKBGtpbmQYAyABKA4yGS5rbm93Y2VsLmxsbS52MS5Nb2RlbEtpbmQiPgoHTWVzc2FnZRIiCgRyb2xlGAEgASgOMhQua25vd2NlbC5sbG0udjEuUm9sZRIPCgdjb250ZW50GAIgASgJImUKEUdlbmVyYXRpb25PcHRpb25zEhgKC3RlbXBlcmF0dXJlGAEgASgCSACIAQESFwoKbWF4X3Rva2VucxgCIAEoBUgBiAEBQg4KDF90ZW1wZXJhdHVyZUINCgtfbWF4X3Rva2VucyI0CgVVc2FnZRIUCgxpbnB1dF90b2tlbnMYASABKAUSFQoNb3V0cHV0X3Rva2VucxgCIAEoBSITChFMaXN0TW9kZWxzUmVxdWVzdCI7ChJMaXN0TW9kZWxzUmVzcG9uc2USJQoGbW9kZWxzGAEgAygLMhUua25vd2NlbC5sbG0udjEuTW9kZWwiGgoYR2V0UHJvdmlkZXJTdGF0dXNSZXF1ZXN0IkMKDlByb3ZpZGVySGVhbHRoEhAKCHByb3ZpZGVyGAEgASgJEg8KB2hlYWx0aHkYAiABKAgSDgoGZGV0YWlsGAMgASgJIooCChlHZXRQcm92aWRlclN0YXR1c1Jlc3BvbnNlEhAKCHByb3ZpZGVyGAEgASgJEg8KB2hlYWx0aHkYAiABKAgSDgoGZGV0YWlsGAMgASgJEhoKEmRlZmF1bHRfY2hhdF9tb2RlbBgEIAEoCRIfChdkZWZhdWx0X2VtYmVkZGluZ19tb2RlbBgFIAEoCRIcChRlbWJlZGRpbmdfZGltZW5zaW9ucxgGIAEoBRIsCgRjaGF0GAcgASgLMh4ua25vd2NlbC5sbG0udjEuUHJvdmlkZXJIZWFsdGgSMQoJZW1iZWRkaW5nGAggASgLMh4ua25vd2NlbC5sbG0udjEuUHJvdmlkZXJIZWFsdGgilgEKD0dlbmVyYXRlUmVxdWVzdBINCgVtb2RlbBgBIAEoCRIpCghtZXNzYWdlcxgCIAMoCzIXLmtub3djZWwubGxtLnYxLk1lc3NhZ2USMgoHb3B0aW9ucxgDIAEoCzIhLmtub3djZWwubGxtLnYxLkdlbmVyYXRpb25PcHRpb25zEhUKDWNhbGxlcl9tb2R1bGUYBCABKAkiZAoQR2VuZXJhdGVSZXNwb25zZRINCgVkZWx0YRgBIAEoCRIMCgRkb25lGAIgASgIEiQKBXVzYWdlGAMgASgLMhUua25vd2NlbC5sbG0udjEuVXNhZ2USDQoFbW9kZWwYBCABKAkiLQoMRW1iZWRSZXF1ZXN0Eg0KBW1vZGVsGAEgASgJEg4KBmlucHV0cxgCIAMoCSIbCglFbWJlZGRpbmcSDgoGdmFsdWVzGAEgAygCImEKDUVtYmVkUmVzcG9uc2USLQoKZW1iZWRkaW5ncxgBIAMoCzIZLmtub3djZWwubGxtLnYxLkVtYmVkZGluZxINCgVtb2RlbBgCIAEoCRISCgpkaW1lbnNpb25zGAMgASgFIkAKDVJlcmFua1JlcXVlc3QSDQoFbW9kZWwYASABKAkSDQoFcXVlcnkYAiABKAkSEQoJZG9jdW1lbnRzGAMgAygJIi8KDlJlcmFua1Jlc3BvbnNlEg4KBnNjb3JlcxgBIAMoAhINCgVtb2RlbBgCIAEoCSIzChBQdWxsTW9kZWxSZXF1ZXN0EhAKCHByb3ZpZGVyGAEgASgJEg0KBW1vZGVsGAIgASgJIlMKEVB1bGxNb2RlbFJlc3BvbnNlEg4KBnN0YXR1cxgBIAEoCRIRCgljb21wbGV0ZWQYAiABKAMSDQoFdG90YWwYAyABKAMSDAoEZG9uZRgEIAEoCCI1ChJEZWxldGVNb2RlbFJlcXVlc3QSEAoIcHJvdmlkZXIYASABKAkSDQoFbW9kZWwYAiABKAkiFQoTRGVsZXRlTW9kZWxSZXNwb25zZSIfCg9HZXRVc2FnZVJlcXVlc3QSDAoEZGF5cxgBIAEoBSKRAQoKVXNhZ2VFbnRyeRIMCgRkYXRlGAEgASgJEhAKCHByb3ZpZGVyGAIgASgJEg0KBW1vZGVsGAMgASgJEhUKDWNhbGxlcl9tb2R1bGUYBCABKAkSEAoIcmVxdWVzdHMYBSABKAMSFAoMaW5wdXRfdG9rZW5zGAYgASgDEhUKDW91dHB1dF90b2tlbnMYByABKAMiPwoQR2V0VXNhZ2VSZXNwb25zZRIrCgdlbnRyaWVzGAEgAygLMhoua25vd2NlbC5sbG0udjEuVXNhZ2VFbnRyeSpQCgRSb2xlEhQKEFJPTEVfVU5TUEVDSUZJRUQQABIPCgtST0xFX1NZU1RFTRABEg0KCVJPTEVfVVNFUhACEhIKDlJPTEVfQVNTSVNUQU5UEAMqVgoJTW9kZWxLaW5kEhoKFk1PREVMX0tJTkRfVU5TUEVDSUZJRUQQABITCg9NT0RFTF9LSU5EX0NIQVQQARIYChRNT0RFTF9LSU5EX0VNQkVERElORxACMqYFCgpMbG1TZXJ2aWNlElMKCkxpc3RNb2RlbHMSIS5rbm93Y2VsLmxsbS52MS5MaXN0TW9kZWxzUmVxdWVzdBoiLmtub3djZWwubGxtLnYxLkxpc3RNb2RlbHNSZXNwb25zZRJoChFHZXRQcm92aWRlclN0YXR1cxIoLmtub3djZWwubGxtLnYxLkdldFByb3ZpZGVyU3RhdHVzUmVxdWVzdBopLmtub3djZWwubGxtLnYxLkdldFByb3ZpZGVyU3RhdHVzUmVzcG9uc2USTwoIR2VuZXJhdGUSHy5rbm93Y2VsLmxsbS52MS5HZW5lcmF0ZVJlcXVlc3QaIC5rbm93Y2VsLmxsbS52MS5HZW5lcmF0ZVJlc3BvbnNlMAESRAoFRW1iZWQSHC5rbm93Y2VsLmxsbS52MS5FbWJlZFJlcXVlc3QaHS5rbm93Y2VsLmxsbS52MS5FbWJlZFJlc3BvbnNlEkcKBlJlcmFuaxIdLmtub3djZWwubGxtLnYxLlJlcmFua1JlcXVlc3QaHi5rbm93Y2VsLmxsbS52MS5SZXJhbmtSZXNwb25zZRJSCglQdWxsTW9kZWwSIC5rbm93Y2VsLmxsbS52MS5QdWxsTW9kZWxSZXF1ZXN0GiEua25vd2NlbC5sbG0udjEuUHVsbE1vZGVsUmVzcG9uc2UwARJWCgtEZWxldGVNb2RlbBIiLmtub3djZWwubGxtLnYxLkRlbGV0ZU1vZGVsUmVxdWVzdBojLmtub3djZWwubGxtLnYxLkRlbGV0ZU1vZGVsUmVzcG9uc2USTQoIR2V0VXNhZ2USHy5rbm93Y2VsLmxsbS52MS5HZXRVc2FnZVJlcXVlc3QaIC5rbm93Y2VsLmxsbS52MS5HZXRVc2FnZVJlc3BvbnNlQkJaQGdpdGh1Yi5jb20vQ2hyaXN0b3BoQmUva25vd2NlbGl1bS9tb2R1bGVzL2xsbS9hcGkvZ28vbGxtdjE7bGxtdjFiBnByb3RvMw");
 
 /**
  * @generated from message knowcel.llm.v1.Model
@@ -385,6 +385,62 @@ export const EmbedResponseSchema: GenMessage<EmbedResponse> = /*@__PURE__*/
   messageDesc(file_knowcel_llm_v1_llm, 13);
 
 /**
+ * @generated from message knowcel.llm.v1.RerankRequest
+ */
+export type RerankRequest = Message$1<"knowcel.llm.v1.RerankRequest"> & {
+  /**
+   * Model id; empty selects the chat provider's default chat model.
+   *
+   * @generated from field: string model = 1;
+   */
+  model: string;
+
+  /**
+   * @generated from field: string query = 2;
+   */
+  query: string;
+
+  /**
+   * The candidates, at most 50. The caller only sends documents it may show.
+   *
+   * @generated from field: repeated string documents = 3;
+   */
+  documents: string[];
+};
+
+/**
+ * Describes the message knowcel.llm.v1.RerankRequest.
+ * Use `create(RerankRequestSchema)` to create a new message.
+ */
+export const RerankRequestSchema: GenMessage<RerankRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_llm_v1_llm, 14);
+
+/**
+ * @generated from message knowcel.llm.v1.RerankResponse
+ */
+export type RerankResponse = Message$1<"knowcel.llm.v1.RerankResponse"> & {
+  /**
+   * One relevance score from 0 (unrelated) to 1 (answers the query) per
+   * document, in the order of the request.
+   *
+   * @generated from field: repeated float scores = 1;
+   */
+  scores: number[];
+
+  /**
+   * @generated from field: string model = 2;
+   */
+  model: string;
+};
+
+/**
+ * Describes the message knowcel.llm.v1.RerankResponse.
+ * Use `create(RerankResponseSchema)` to create a new message.
+ */
+export const RerankResponseSchema: GenMessage<RerankResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_llm_v1_llm, 15);
+
+/**
  * @generated from message knowcel.llm.v1.PullModelRequest
  */
 export type PullModelRequest = Message$1<"knowcel.llm.v1.PullModelRequest"> & {
@@ -407,7 +463,7 @@ export type PullModelRequest = Message$1<"knowcel.llm.v1.PullModelRequest"> & {
  * Use `create(PullModelRequestSchema)` to create a new message.
  */
 export const PullModelRequestSchema: GenMessage<PullModelRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_llm_v1_llm, 14);
+  messageDesc(file_knowcel_llm_v1_llm, 16);
 
 /**
  * @generated from message knowcel.llm.v1.PullModelResponse
@@ -445,7 +501,7 @@ export type PullModelResponse = Message$1<"knowcel.llm.v1.PullModelResponse"> & 
  * Use `create(PullModelResponseSchema)` to create a new message.
  */
 export const PullModelResponseSchema: GenMessage<PullModelResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_llm_v1_llm, 15);
+  messageDesc(file_knowcel_llm_v1_llm, 17);
 
 /**
  * @generated from message knowcel.llm.v1.DeleteModelRequest
@@ -469,7 +525,7 @@ export type DeleteModelRequest = Message$1<"knowcel.llm.v1.DeleteModelRequest"> 
  * Use `create(DeleteModelRequestSchema)` to create a new message.
  */
 export const DeleteModelRequestSchema: GenMessage<DeleteModelRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_llm_v1_llm, 16);
+  messageDesc(file_knowcel_llm_v1_llm, 18);
 
 /**
  * @generated from message knowcel.llm.v1.DeleteModelResponse
@@ -482,7 +538,7 @@ export type DeleteModelResponse = Message$1<"knowcel.llm.v1.DeleteModelResponse"
  * Use `create(DeleteModelResponseSchema)` to create a new message.
  */
 export const DeleteModelResponseSchema: GenMessage<DeleteModelResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_llm_v1_llm, 17);
+  messageDesc(file_knowcel_llm_v1_llm, 19);
 
 /**
  * @generated from message knowcel.llm.v1.GetUsageRequest
@@ -501,7 +557,7 @@ export type GetUsageRequest = Message$1<"knowcel.llm.v1.GetUsageRequest"> & {
  * Use `create(GetUsageRequestSchema)` to create a new message.
  */
 export const GetUsageRequestSchema: GenMessage<GetUsageRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_llm_v1_llm, 18);
+  messageDesc(file_knowcel_llm_v1_llm, 20);
 
 /**
  * UsageEntry sums the generations of one day, model and calling module.
@@ -552,7 +608,7 @@ export type UsageEntry = Message$1<"knowcel.llm.v1.UsageEntry"> & {
  * Use `create(UsageEntrySchema)` to create a new message.
  */
 export const UsageEntrySchema: GenMessage<UsageEntry> = /*@__PURE__*/
-  messageDesc(file_knowcel_llm_v1_llm, 19);
+  messageDesc(file_knowcel_llm_v1_llm, 21);
 
 /**
  * @generated from message knowcel.llm.v1.GetUsageResponse
@@ -571,7 +627,7 @@ export type GetUsageResponse = Message$1<"knowcel.llm.v1.GetUsageResponse"> & {
  * Use `create(GetUsageResponseSchema)` to create a new message.
  */
 export const GetUsageResponseSchema: GenMessage<GetUsageResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_llm_v1_llm, 20);
+  messageDesc(file_knowcel_llm_v1_llm, 22);
 
 /**
  * @generated from enum knowcel.llm.v1.Role
@@ -671,6 +727,18 @@ export const LlmService: GenService<{
     methodKind: "unary";
     input: typeof EmbedRequestSchema;
     output: typeof EmbedResponseSchema;
+  },
+  /**
+   * Rerank scores how well each document answers a query, so a caller can
+   * reorder candidates found by vector similarity. Served by the chat
+   * provider; a provider that can't rerank returns UNIMPLEMENTED.
+   *
+   * @generated from rpc knowcel.llm.v1.LlmService.Rerank
+   */
+  rerank: {
+    methodKind: "unary";
+    input: typeof RerankRequestSchema;
+    output: typeof RerankResponseSchema;
   },
   /**
    * PullModel downloads a model to a provider and streams the progress, ending

@@ -17,7 +17,7 @@ from .chat import Chat
 from .config import Settings
 from .db import SqlRepository, migrate
 from .manual import Manual, load_sections
-from .peers import PeerEmbedder, PeerGenerator, PeerRetriever
+from .peers import PeerEmbedder, PeerGenerator, PeerReranker, PeerRetriever
 from .server import ChatServicer
 
 log = logging.getLogger("knowcel_chat")
@@ -48,7 +48,15 @@ async def run() -> None:
             # In the background: chat answers without the manual until the llm
             # module has embedded it.
             loading = asyncio.create_task(manual.load(PeerEmbedder(llm)))
-            retriever = PeerRetriever(documents, llm, manual, settings.rag_min_score)
+            reranker = PeerReranker(llm, settings.rerank_model) if settings.rerank_enabled else None
+            retriever = PeerRetriever(
+                documents,
+                llm,
+                manual,
+                settings.rag_min_score,
+                reranker,
+                settings.rerank_candidates,
+            )
             chat = Chat(settings, repo, retriever, PeerGenerator(llm))
             servicer = ChatServicer(repo, chat)
             try:

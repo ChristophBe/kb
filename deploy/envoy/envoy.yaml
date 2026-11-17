@@ -111,6 +111,8 @@ static_resources:
                           route: { cluster: llm-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.llm.v1.LlmService/GetProviderStatus" }
                           route: { cluster: llm-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.llm.v1.LlmService/Rerank" }
+                          route: { cluster: llm-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.llm.v1.LlmService/PullModel" }
                           route: { cluster: llm-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.llm.v1.LlmService/DeleteModel" }

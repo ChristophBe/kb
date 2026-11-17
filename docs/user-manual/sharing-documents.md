@@ -26,14 +26,14 @@ If the teams can't be looked up for a moment, a team document shows a single **T
 Only the owner can do this, also for documents that were public from the start.
 
 1. Open the document. **Access** shows **Public**, or the teams of a team document.
-2. Select **Change access** under the title.
-3. Choose **Public**, or **Team** and tick the teams whose members should be able to read the document. You can choose among the teams you belong to; a team document needs at least one.
-4. Select **Save**.
+2. Select **Change access** in the row of buttons under the title.
+3. Under **Who can read this?**, choose **Public**, or **Team** and tick the teams whose members should be able to read the document. You can choose among the teams you belong to; a team document needs at least one.
+4. Select **Save access**. If the document is a team document and you chose **Public**, Knowcelium asks "Make this document public?"; select **Make public** to confirm, or change your choice to keep it with its teams.
 
 The change applies at once: people who can no longer read the document stop finding it in the list, in search and in chat answers, and people who now can, find it. You can change it again at any time. Changing a document to **Public** removes its teams.
 
-If Knowcelium says that one of the teams isn't available, it may be a team you created or joined a moment ago, which can take up to half a minute to work here. Select **Save** again a little later. The same message appears if the teams can't be looked up at all for a moment; try again shortly. Making a document public needs no team and works regardless.
+If Knowcelium says that one of the teams isn't available, it may be a team you created or joined a moment ago, which can take up to half a minute to work here. Select **Save access** again a little later. The same message appears if the teams can't be looked up at all for a moment; try again shortly. Making a document public needs no team and works regardless.
 
 ## Stop sharing a document with your team
 
-If you are an admin of a team that a document of someone else is shared with, select **Stop sharing** on the document's page, untick your team and select **Save**. This only removes your team; the owner and other teams keep access. Once your team is removed, you no longer see the document. Members who are not admins of the team can read the document but can't change who it is shared with.
+If you are an admin of a team that a document of someone else is shared with, select **Stop sharing** on the document's page, untick your team and select **Stop sharing** in the dialog. A notification says "Stopped sharing". This only removes your team; the owner and other teams keep access. Once your team is removed, you no longer see the document. Members who are not admins of the team can read the document but can't change who it is shared with.

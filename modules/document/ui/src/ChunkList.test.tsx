@@ -61,7 +61,7 @@ describe("ChunkList", () => {
       page: { nextPageToken: "" },
     });
     renderList(1);
-    expect(await screen.findByRole("heading", { name: "Chunk 1" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Passage 1" })).toBeTruthy();
     expect(screen.getByText("Revenue grew.")).toBeTruthy();
     expect(screen.getByText("page 3 · Results · source: scan · 13 characters")).toBeTruthy();
     expect(screen.getByRole("status").textContent).toBe("Showing 1–1 of 1");
@@ -80,7 +80,7 @@ describe("ChunkList", () => {
       ),
     );
     renderList(total);
-    await screen.findByRole("heading", { name: "Chunk 1" });
+    await screen.findByRole("heading", { name: "Passage 1" });
     expect((screen.getByRole("button", { name: "Previous" }) as HTMLButtonElement).disabled).toBe(
       true,
     );
@@ -89,7 +89,7 @@ describe("ChunkList", () => {
       fireEvent.click(screen.getByRole("button", { name: "Next" }));
     });
     const firstOfPage2 = await screen.findByRole("heading", {
-      name: `Chunk ${CHUNK_PAGE_SIZE + 1}`,
+      name: `Passage ${CHUNK_PAGE_SIZE + 1}`,
     });
     expect(screen.getByRole("status").textContent).toBe(
       `Showing ${CHUNK_PAGE_SIZE + 1}–${total} of ${total}`,
@@ -100,7 +100,7 @@ describe("ChunkList", () => {
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Previous" }));
     });
-    expect(await screen.findByRole("heading", { name: "Chunk 1" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Passage 1" })).toBeTruthy();
     expect(screen.getByRole("status").textContent).toBe(`Showing 1–${CHUNK_PAGE_SIZE} of ${total}`);
   });
 
@@ -112,7 +112,7 @@ describe("ChunkList", () => {
       ),
     );
     renderList(total, DocumentStatus.READY, "", CHUNK_PAGE_SIZE + 1);
-    const heading = await screen.findByRole("heading", { name: `Chunk ${CHUNK_PAGE_SIZE + 2}` });
+    const heading = await screen.findByRole("heading", { name: `Passage ${CHUNK_PAGE_SIZE + 2}` });
     await waitFor(() => expect(document.activeElement).toBe(heading));
     expect(heading.closest("article")?.getAttribute("data-highlighted")).toBe("true");
     expect(screen.getByRole("status").textContent).toBe(
@@ -124,13 +124,13 @@ describe("ChunkList", () => {
     );
   });
 
-  it("collapses long chunks behind Show full chunk", async () => {
+  it("collapses long passages behind Show full passage", async () => {
     listChunks.mockResolvedValue({
       chunks: [chunk(0, "x".repeat(500))],
       page: { nextPageToken: "" },
     });
     renderList(1);
-    const toggle = await screen.findByRole("button", { name: "Show full chunk" });
+    const toggle = await screen.findByRole("button", { name: "Show full passage" });
     expect(toggle.getAttribute("aria-expanded")).toBe("false");
     fireEvent.click(toggle);
     expect(screen.getByRole("button", { name: "Show less" }).getAttribute("aria-expanded")).toBe(
@@ -141,7 +141,7 @@ describe("ChunkList", () => {
   it("explains an empty list", async () => {
     listChunks.mockResolvedValue({ chunks: [], page: { nextPageToken: "" } });
     renderList(0, DocumentStatus.PROCESSING);
-    expect(await screen.findByText(/no chunks yet/)).toBeTruthy();
+    expect(await screen.findByText(/no passages yet/)).toBeTruthy();
   });
 
   it("shows why processing failed", async () => {
@@ -161,6 +161,6 @@ describe("ChunkList", () => {
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Try again" }));
     });
-    expect(await screen.findByRole("heading", { name: "Chunk 1" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Passage 1" })).toBeTruthy();
   });
 });

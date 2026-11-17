@@ -39,17 +39,17 @@ describe("ShareEditor", () => {
     const { container } = renderModule(documents, transport, "/d1", alice);
     await sharedWithRow();
     fireEvent.click(await screen.findByRole("button", { name: "Change access" }));
-    const dialog = within(
-      await screen.findByRole("dialog", { name: "Who can read this document?" }),
-    );
+    const dialog = within(await screen.findByRole("dialog", { name: "Change access" }));
     await expectNoAxeViolations(container);
     expect((dialog.getByRole("radio", { name: /Public/ }) as HTMLInputElement).checked).toBe(true);
     fireEvent.click(dialog.getByRole("radio", { name: /Team/ }));
     // A team document needs a team.
-    expect((dialog.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(
+      (dialog.getByRole("button", { name: "Save access" }) as HTMLButtonElement).disabled,
+    ).toBe(true);
     fireEvent.click(dialog.getByRole("checkbox", { name: "Platform" }));
     fireEvent.click(dialog.getByRole("checkbox", { name: "Support" }));
-    fireEvent.click(dialog.getByRole("button", { name: "Save" }));
+    fireEvent.click(dialog.getByRole("button", { name: "Save access" }));
     await waitFor(() => expect(setDocumentAccess).toHaveBeenCalledTimes(1));
     expect(setDocumentAccess.mock.calls[0]?.[0]).toMatchObject({
       id: "d1",
@@ -61,14 +61,16 @@ describe("ShareEditor", () => {
     expect(row.getByText("Support")).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "Change access" }));
-    const again = within(
-      await screen.findByRole("dialog", { name: "Who can read this document?" }),
-    );
+    const again = within(await screen.findByRole("dialog", { name: "Change access" }));
     expect((again.getByRole("checkbox", { name: "Platform" }) as HTMLInputElement).checked).toBe(
       true,
     );
     fireEvent.click(again.getByRole("radio", { name: /Public/ }));
-    fireEvent.click(again.getByRole("button", { name: "Save" }));
+    // Widening a team document to everyone asks first.
+    fireEvent.click(again.getByRole("button", { name: "Save access" }));
+    expect((await again.findByRole("alert")).textContent).toMatch(/Make this document public\?/);
+    expect(setDocumentAccess).toHaveBeenCalledTimes(1);
+    fireEvent.click(again.getByRole("button", { name: "Make public" }));
     await waitFor(() => expect(setDocumentAccess).toHaveBeenCalledTimes(2));
     expect(setDocumentAccess.mock.calls[1]?.[0]).toMatchObject({
       access: Access.PUBLIC,
@@ -86,14 +88,12 @@ describe("ShareEditor", () => {
     renderModule(documents, transport, "/d1", alice);
     await sharedWithRow();
     fireEvent.click(await screen.findByRole("button", { name: "Change access" }));
-    const dialog = within(
-      await screen.findByRole("dialog", { name: "Who can read this document?" }),
-    );
+    const dialog = within(await screen.findByRole("dialog", { name: "Change access" }));
     fireEvent.click(dialog.getByRole("radio", { name: /Team/ }));
     fireEvent.click(dialog.getByRole("checkbox", { name: "Platform" }));
-    fireEvent.click(dialog.getByRole("button", { name: "Save" }));
+    fireEvent.click(dialog.getByRole("button", { name: "Save access" }));
     expect((await dialog.findByRole("alert")).textContent).toMatch(/half a minute/);
-    fireEvent.click(dialog.getByRole("button", { name: "Save" }));
+    fireEvent.click(dialog.getByRole("button", { name: "Save access" }));
     await waitFor(() => expect(setDocumentAccess).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
@@ -125,7 +125,7 @@ describe("ShareEditor", () => {
       true,
     );
     fireEvent.click(dialog.getByRole("checkbox", { name: "Platform" }));
-    fireEvent.click(dialog.getByRole("button", { name: "Save" }));
+    fireEvent.click(dialog.getByRole("button", { name: "Stop sharing" }));
     await waitFor(() => expect(setDocumentTeams).toHaveBeenCalledTimes(1));
     expect(setDocumentTeams.mock.calls[0]?.[0]).toMatchObject({ teamIds: ["t2"] });
   });
@@ -139,7 +139,7 @@ describe("ShareEditor", () => {
     fireEvent.click(await (await sharedWithRow()).findByRole("button", { name: "Stop sharing" }));
     const dialog = within(await screen.findByRole("dialog"));
     fireEvent.click(dialog.getByRole("checkbox", { name: "Platform" }));
-    fireEvent.click(dialog.getByRole("button", { name: "Save" }));
+    fireEvent.click(dialog.getByRole("button", { name: "Stop sharing" }));
     expect(await screen.findByRole("table", { name: "Documents" })).toBeTruthy();
   });
 
@@ -165,9 +165,7 @@ describe("ShareEditor", () => {
     expect(row.getByText("Team")).toBeTruthy();
     expect(screen.queryByRole("alert")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Change access" }));
-    const dialog = within(
-      await screen.findByRole("dialog", { name: "Who can read this document?" }),
-    );
+    const dialog = within(await screen.findByRole("dialog", { name: "Change access" }));
     // The teams can't be looked up, but the document's own team is kept.
     expect((dialog.getByRole("radio", { name: /Public/ }) as HTMLInputElement).checked).toBe(false);
   });

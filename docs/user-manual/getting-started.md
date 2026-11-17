@@ -36,7 +36,7 @@ If you type an address that doesn't exist, you see **Page not found** with a lin
 
 1. Open **Upload**.
 2. Drop files onto the upload area, or select **Choose files**. PDF, Markdown and plain text files work.
-3. Wait until each file shows **Done** under **Uploads**.
+3. Wait until each file shows **Ready** under **Uploads**.
 
 The files then appear under **Documents** with the status **Ready**. More in [Upload documents](ingestion.md#upload-documents).
 

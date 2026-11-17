@@ -4,7 +4,7 @@ Documents lists your documents and those that teams you belong to [share with yo
 
 ## Browse your documents
 
-Open **Documents**. The table shows each document's **Title**, **Status**, **Chunks** (how many passages it was split into), **Size** and when it was **Added**. The list updates by itself while a document is waiting for its upload, uploaded or being processed, and stops refreshing once all are done.
+Open **Documents**. The table shows each document's **Title**, **Status**, **Passages** (how many passages it was split into), **Size** and when it was **Added**. The list updates by itself while a document is waiting for its upload, uploaded or being processed, and stops refreshing once all are done.
 
 The list shows the first 100 documents. When there are more, **Load more** below the table adds the next 100, and the count next to it says how many are loaded. Keep selecting it until it disappears to reach every document.
 
@@ -34,7 +34,7 @@ Only **Ready** documents show up in search results and chat answers.
 
 ## Open a document
 
-Select a document's title. The page shows its **Status**, **Detail** (the reason when processing failed), its **Version** (1 for the first upload, one more for every [new version](#replace-a-document-with-a-new-version)), **Filename**, **Content type**, **Size**, **Chunks**, when it was **Created** and **Updated**, its **Metadata** and its **ID**.
+Select a document's title. The page shows its **Status**, **Detail** (the reason when processing failed), its **Version** (1 for the first upload, one more for every [new version](#replace-a-document-with-a-new-version)), **Filename**, **Content type**, **Size**, **Passages**, when it was **Created** and **Updated**, its **Metadata** and its **ID**. A value that is empty shows as "—".
 
 Under the title, a row of buttons offers what you can do with the document: **Download**, **Upload new version** (not while the document or a new version is being processed), **Ask about this document** (only when Chat is available; see [Ask about one document](chat.md#ask-about-one-document)), and, if you own it, **Change access** and **Delete**. **Owner** says who uploaded the document; for someone else's document it shows their name when they share a team with you, otherwise "Another user". Documents of others have no **Delete**.
 
@@ -42,9 +42,9 @@ While the document loads, the page shows placeholders. If it doesn't exist, was 
 
 ## Read the passages of a document
 
-Below the details, **Chunks** lists the passages Knowcelium split the document into, in order. Each passage shows its number, the page it comes from (for PDFs), a heading if it has one, and its length.
+Below the details, **Passages** lists the passages Knowcelium split the document into, in order. Each passage shows its number, the page it comes from (for PDFs), a heading if it has one, and its length.
 
-- Long passages are cut off; select **Show full chunk** to read all of it and **Show less** to collapse it again.
+- Long passages are cut off; select **Show full passage** to read all of it and **Show less** to collapse it again.
 - The list shows 20 passages at a time. Use **Previous** and **Next** to move through them; "Showing 1–20 of …" tells you where you are.
 
 When you open a passage from [search results](search.md#open-a-passage-in-its-document), the document opens at that passage and highlights it briefly.

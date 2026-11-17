@@ -52,7 +52,7 @@ test("a document is shared with a team, and its member sees it", async ({ page, 
   await expect(async () => {
     const retry = job.getByRole("button", { name: "Retry upload" });
     if (await retry.isVisible()) await retry.click();
-    await expect(job.getByText("Done")).toBeVisible({ timeout: 3_000 });
+    await expect(job.getByText("Ready")).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: LEARNING_TIME, intervals: [1_000] });
 
   // alice's list names the team on the document.
@@ -81,10 +81,11 @@ test("a document is shared with a team, and its member sees it", async ({ page, 
   const shared = page.locator("dt:text-is('Access') + dd");
   const actions = page.getByRole("toolbar", { name: "Document actions" });
   await actions.getByRole("button", { name: "Change access" }).click();
-  const dialog = page.getByRole("dialog", { name: "Who can read this document?" });
+  const dialog = page.getByRole("dialog", { name: "Change access" });
   await expect(dialog.getByRole("checkbox", { name: team })).toBeChecked();
   await dialog.getByRole("radio", { name: /Public/ }).check();
-  await dialog.getByRole("button", { name: "Save" }).click();
+  await dialog.getByRole("button", { name: "Save access" }).click();
+  await dialog.getByRole("button", { name: "Make public" }).click();
   await expect(shared.getByText("Public")).toBeVisible();
   await bob.goto("/m/document");
   await expect(
@@ -95,7 +96,7 @@ test("a document is shared with a team, and its member sees it", async ({ page, 
   await actions.getByRole("button", { name: "Change access" }).click();
   await dialog.getByRole("radio", { name: /Team/ }).check();
   await dialog.getByRole("checkbox", { name: team }).check();
-  await dialog.getByRole("button", { name: "Save" }).click();
+  await dialog.getByRole("button", { name: "Save access" }).click();
   await expect(shared.getByText(team)).toBeVisible();
   await bob.goto("/m/document");
   await bob.getByRole("checkbox", { name: "Shared with me" }).check();

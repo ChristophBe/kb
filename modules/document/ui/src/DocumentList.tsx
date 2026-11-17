@@ -155,7 +155,7 @@ export function DocumentList() {
                 <tr>
                   <th className="px-4 py-2 font-medium">Title</th>
                   <th className="px-4 py-2 font-medium">Status</th>
-                  <th className="px-4 py-2 font-medium">Chunks</th>
+                  <th className="px-4 py-2 font-medium">Passages</th>
                   <th className="px-4 py-2 font-medium">Size</th>
                   <th className="px-4 py-2 font-medium">Added</th>
                   <th />

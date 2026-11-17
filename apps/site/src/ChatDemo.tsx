@@ -24,13 +24,13 @@ const ANSWER: (string | number)[] = [
 const SOURCES: Source[] = [
   {
     title: "Remote work policy 2026",
-    detail: "chunk 4",
+    detail: "passage 4",
     snippet:
       "Employees may work from a country other than their country of employment for a maximum of 30 working days per calendar year…",
   },
   {
     title: "Travel & approvals handbook",
-    detail: "chunk 12",
+    detail: "passage 12",
     snippet:
       "Requests are approved by the team lead no later than 14 days before departure. Stays over 10 days are additionally reviewed by HR…",
   },

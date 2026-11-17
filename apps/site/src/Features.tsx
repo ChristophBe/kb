@@ -201,7 +201,7 @@ function SearchHit({ title, chunk, score }: { title: string; chunk: number; scor
   return (
     <li className="flex items-baseline gap-2">
       <span className="min-w-0 flex-1 truncate font-medium">{title}</span>
-      <span className="font-mono text-fg-muted">chunk {chunk}</span>
+      <span className="font-mono text-fg-muted">passage {chunk}</span>
       <span className="font-mono text-accent tabular-nums">{score.toFixed(2)}</span>
     </li>
   );

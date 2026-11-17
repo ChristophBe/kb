@@ -296,8 +296,8 @@ export function SourceNote({
 const MAX_TICKS = 48;
 
 /**
- * A document as a barcode: one tick per chunk, so length shows at a glance,
- * with `marked` chunks (zero-based positions, e.g. cited ones) taller and in
+ * A document as a barcode: one tick per passage, so length shows at a glance,
+ * with `marked` passages (zero-based positions, e.g. cited ones) taller and in
  * the accent. The text next to it carries the same information for screen readers.
  */
 export function ChunkStrip({
@@ -326,7 +326,7 @@ export function ChunkStrip({
         </span>
       )}
       <span className="font-mono text-xs text-fg-muted tabular-nums">
-        {count} {count === 1 ? "chunk" : "chunks"}
+        {count} {count === 1 ? "passage" : "passages"}
         {cited > 0 && `, ${cited} cited`}
       </span>
     </span>

@@ -26,6 +26,8 @@ export function AccessEditor({ document: d }: { document: Document }) {
   const queryClient = useQueryClient();
   const { teams } = useMyTeams();
   const [choice, setChoice] = useState<AccessChoice | null>(null);
+  // Widening a team document to everyone needs a second, explicit click.
+  const [confirmingPublic, setConfirmingPublic] = useState(false);
   const changeButton = useRef<HTMLButtonElement>(null);
 
   // The user's teams, and those the document has that they are no longer in,
@@ -39,8 +41,10 @@ export function AccessEditor({ document: d }: { document: Document }) {
 
   const close = () => {
     setChoice(null);
+    setConfirmingPublic(false);
     changeButton.current?.focus();
   };
+  const widens = d.access === Access.TEAM && choice !== null && !choice.team;
   const save = useMutation({
     mutationFn: (c: AccessChoice) =>
       client.setDocumentAccess({
@@ -51,6 +55,7 @@ export function AccessEditor({ document: d }: { document: Document }) {
     onSuccess: async () => {
       toast.success("Access saved");
       setChoice(null);
+      setConfirmingPublic(false);
       await queryClient.invalidateQueries({ queryKey: ["documents"] });
       changeButton.current?.focus();
     },
@@ -63,6 +68,7 @@ export function AccessEditor({ document: d }: { document: Document }) {
         variant="secondary"
         onClick={() => {
           save.reset();
+          setConfirmingPublic(false);
           setChoice({ team: d.access === Access.TEAM, teamIds: d.teamIds });
         }}
       >
@@ -71,28 +77,41 @@ export function AccessEditor({ document: d }: { document: Document }) {
       <Dialog
         open={choice !== null}
         onClose={close}
-        title="Who can read this document?"
+        title="Change access"
         footer={
           <>
             <Button variant="ghost" onClick={close}>
               Cancel
             </Button>
             <Button
-              onClick={() => choice && save.mutate(choice)}
+              onClick={() => {
+                if (!choice) return;
+                if (widens && !confirmingPublic) setConfirmingPublic(true);
+                else save.mutate(choice);
+              }}
               disabled={save.isPending || !choice || !isValidAccess(choice)}
             >
-              Save
+              {widens && confirmingPublic ? "Make public" : "Save access"}
             </Button>
           </>
         }
       >
         <div className="space-y-3">
           <AccessPicker
-            legend="Access"
+            legend="Who can read this?"
             teams={options}
             value={choice ?? { team: false, teamIds: [] }}
-            onChange={setChoice}
+            onChange={(c) => {
+              setConfirmingPublic(false);
+              setChoice(c);
+            }}
           />
+          {widens && confirmingPublic && (
+            <p role="alert" className="text-sm">
+              Make this document public? Every signed-in user will be able to read it, not just your
+              teams.
+            </p>
+          )}
           {choice?.team && choice.teamIds.length === 0 && (
             <p className="text-xs text-fg-muted">Choose at least one team.</p>
           )}

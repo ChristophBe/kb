@@ -43,7 +43,7 @@ export function ShareEditor({ document: d }: { document: Document }) {
   const save = useMutation({
     mutationFn: (teamIds: string[]) => client.setDocumentTeams({ id: d.id, teamIds }),
     onSuccess: async ({ document: updated }) => {
-      toast.success("Sharing saved");
+      toast.success("Stopped sharing");
       setSelected(null);
       // An admin who stopped sharing with their team can no longer see the document.
       if (updated?.teamIds.length === 0) {
@@ -83,7 +83,7 @@ export function ShareEditor({ document: d }: { document: Document }) {
               Cancel
             </Button>
             <Button onClick={() => selected && save.mutate(selected)} disabled={save.isPending}>
-              Save
+              Stop sharing
             </Button>
           </>
         }

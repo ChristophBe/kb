@@ -95,7 +95,7 @@ export function MetadataEditor({ id, metadata }: { id: string; metadata: Record<
           ))}
         </dl>
       ) : (
-        <span className="text-fg-muted">None</span>
+        <span className="text-fg-muted">—</span>
       )}
       <Button ref={editButton} variant="ghost" className="mt-1 -ml-3" onClick={open}>
         Edit metadata

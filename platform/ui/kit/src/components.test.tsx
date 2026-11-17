@@ -147,7 +147,7 @@ describe("kit components have no axe violations", () => {
         <SourceNote
           n={1}
           title="Quarterly report"
-          detail="chunk 3"
+          detail="passage 3"
           snippet="Revenue grew."
           active
         />
@@ -270,16 +270,16 @@ describe("IconButton", () => {
 });
 
 describe("ChunkStrip", () => {
-  it("states the chunk and citation counts as text", () => {
+  it("states the passage and citation counts as text", () => {
     const { container } = render(<ChunkStrip count={8} marked={[1, 1, 4]} />);
-    expect(container.textContent).toBe("8 chunks, 2 cited");
+    expect(container.textContent).toBe("8 passages, 2 cited");
     expect(container.querySelectorAll("[data-marked]")).toHaveLength(2);
   });
 
-  it("uses the singular and draws no ticks without chunks", () => {
-    expect(render(<ChunkStrip count={1} />).container.textContent).toBe("1 chunk");
+  it("uses the singular and draws no ticks without passages", () => {
+    expect(render(<ChunkStrip count={1} />).container.textContent).toBe("1 passage");
     const empty = render(<ChunkStrip count={0} />).container;
-    expect(empty.textContent).toBe("0 chunks");
+    expect(empty.textContent).toBe("0 passages");
     expect(empty.querySelector("[aria-hidden]")).toBeNull();
   });
 

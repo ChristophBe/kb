@@ -120,7 +120,7 @@ export function DocumentDetail() {
     ["Filename", d.filename],
     ["Content type", d.contentType],
     ["Size", formatBytes(d.sizeBytes)],
-    ["Chunks", <ChunkStrip count={d.chunkCount} />],
+    ["Passages", <ChunkStrip count={d.chunkCount} />],
     ["Owner", isOwner ? "You" : <OwnerName ownerId={d.ownerId} teamIds={d.teamIds} />],
     [
       "Access",

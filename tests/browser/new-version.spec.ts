@@ -16,7 +16,7 @@ test("a new version replaces the file and passages of a document", async ({ page
   });
   await page.getByRole("button", { name: "Upload", exact: true }).click(); // public
   await expect(
-    page.getByRole("listitem").filter({ hasText: filename }).getByText("Done"),
+    page.getByRole("listitem").filter({ hasText: filename }).getByText("Ready"),
   ).toBeVisible({ timeout: 60_000 });
 
   await page.getByRole("link", { name: "Documents", exact: true }).click();

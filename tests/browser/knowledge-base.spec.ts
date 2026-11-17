@@ -29,7 +29,7 @@ test("an uploaded document becomes ready", async ({ page }) => {
   });
   await page.getByRole("button", { name: "Upload", exact: true }).click(); // public
   const job = page.getByRole("listitem").filter({ hasText: filename });
-  await expect(job.getByText("Done")).toBeVisible({ timeout: 60_000 });
+  await expect(job.getByText("Ready")).toBeVisible({ timeout: 60_000 });
 
   await page.getByRole("link", { name: "Documents", exact: true }).click();
   const row = page.getByRole("row").filter({ hasText: title });
@@ -71,10 +71,10 @@ test("a chat answer cites the document and opens the passage", async ({ page }) 
   await page.getByRole("button", { name: "Ask", exact: true }).click();
 
   const sources = page.getByRole("list", { name: "Sources" });
-  await sources.getByRole("link", { name: `${title}, chunk 1` }).click();
+  await sources.getByRole("link", { name: `${title}, passage 1` }).click();
   await expect(page).toHaveURL(/\/m\/document\/[^/#]+#chunk-0$/);
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
-  const chunk = page.getByRole("heading", { name: "Chunk 1", exact: true });
+  const chunk = page.getByRole("heading", { name: "Passage 1", exact: true });
   await expect(chunk).toBeFocused();
   await expect(page.getByRole("article").filter({ has: chunk })).toContainText("charged particles");
   documentPath = new URL(page.url()).pathname;

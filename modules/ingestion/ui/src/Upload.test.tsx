@@ -36,8 +36,8 @@ describe("Upload", () => {
     );
     renderModule(ingestion, transport);
     const done = within((await screen.findByText("report.pdf")).closest("li") as HTMLElement);
-    expect(done.getByText("12 chunks")).toBeTruthy();
-    expect(done.getByText("Done")).toBeTruthy();
+    expect(done.getByText("12 passages")).toBeTruthy();
+    expect(done.getByText("Ready")).toBeTruthy();
     const failed = within(screen.getByText("scan.pdf").closest("li") as HTMLElement);
     expect(failed.getByText("no text found")).toBeTruthy();
     expect(failed.getByText("Failed")).toBeTruthy();
@@ -104,7 +104,7 @@ describe("Upload", () => {
     }
   });
 
-  it("counts a single chunk in the singular", async () => {
+  it("counts a single passage in the singular", async () => {
     const transport = createRouterTransport(({ service }) =>
       service(IngestionService, {
         listJobs: () => ({
@@ -117,9 +117,9 @@ describe("Upload", () => {
     );
     renderModule(ingestion, transport);
     const one = within((await screen.findByText("note.txt")).closest("li") as HTMLElement);
-    expect(one.getByText("1 chunk")).toBeTruthy();
+    expect(one.getByText("1 passage")).toBeTruthy();
     const two = within(screen.getByText("memo.txt").closest("li") as HTMLElement);
-    expect(two.getByText("2 chunks")).toBeTruthy();
+    expect(two.getByText("2 passages")).toBeTruthy();
   });
 
   it("invites the first upload", async () => {

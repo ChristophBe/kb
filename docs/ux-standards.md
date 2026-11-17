@@ -29,7 +29,7 @@ Follow the [WAI-ARIA Authoring Practices (APG)](https://www.w3.org/WAI/ARIA/apg/
 |---|---|---|
 | [Dialog (modal)](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/) | Confirmations, metadata editing | Native `<dialog>` with `showModal()`. Focus moves to the first field (or the least destructive button); `Tab` cycles inside; `Esc` closes; focus returns to the trigger. Title via `aria-labelledby`. |
 | [Menu button](https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/) | Per-item actions (rename, delete) | Trigger has `aria-haspopup="menu"` and `aria-expanded`; arrows move, `Enter`/`Space` activate, `Esc` closes and refocuses the trigger. Simple lists of links are not menus; use a list. |
-| [Tabs](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/) | Switching views in one page (e.g. document details / chunks) | `role="tablist"`/`tab`/`tabpanel`, arrows between tabs, one tab in the tab order (roving `tabindex`). If each view has its own URL, use links instead. |
+| [Tabs](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/) | Switching views in one page (e.g. document details / passages) | `role="tablist"`/`tab`/`tabpanel`, arrows between tabs, one tab in the tab order (roving `tabindex`). If each view has its own URL, use links instead. |
 | [Combobox](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/) | Global search (⌘K), command palette, document pickers | Input with `role="combobox"`, `aria-expanded`, `aria-controls` → `listbox`, `aria-activedescendant` for the highlighted option; arrows move, `Enter` selects, `Esc` closes. Announce result counts in a polite live region. |
 | Toasts / live regions ([alert](https://www.w3.org/WAI/ARIA/apg/patterns/alert/)) | Confirmation of background actions ("Document deleted") | One shell-level region: `role="status"` (polite) for success/info, `role="alert"` only for errors. Toasts don't take focus, stay at least 5 s, pause on hover/focus and can be dismissed. Never put the only copy of important information or the only route to an action in a toast. |
 | Streaming chat output | Chat answers arriving token by token | Don't make the growing message a live region (it would announce every token). The message list is a `role="log"` with `aria-live="off"` while streaming; when the answer completes, announce "Answer ready" (or the error) once through the polite status region. `aria-busy="true"` on the message while it streams. The stop button stays focusable during streaming, and focus stays in the composer. |
@@ -79,7 +79,7 @@ Two components carry kb's own identity. Use them wherever their content appears,
 | Component | Use |
 |---|---|
 | `SourceNote` | Citations are margin notes, in a `<ul aria-label="Sources">` beside the text they support, never chips under it. Lay them out with a container query (`@container`, `@xl:grid-cols-[minmax(0,1fr)_13rem]`) so they drop below the text in narrow panes. Hovering or focusing a marker sets `active` on its note. |
-| `ChunkStrip` | A document as a barcode wherever its chunk count appears: one tick per chunk (long documents share ticks, up to 48), cited chunks taller and in the accent. The counts are always shown as text too. |
+| `ChunkStrip` | A document as a barcode wherever its passage count appears: one tick per passage (long documents share ticks, up to 48), cited passages taller and in the accent. The counts are always shown as text too. |
 
 A new token needs an entry in both tables and a pair for every combination it's used in, added to `platform/ui/kit/src/theme.test.ts` (light and dark are checked automatically).
 
@@ -104,13 +104,13 @@ Every view that loads data shows exactly one of these states:
 
 ### Destructive actions
 
-- Deleting a document or conversation asks for confirmation in a dialog that names the item ("Delete 'report.pdf'? Its chunks and citations will be removed."). The confirm button says what it does ("Delete document") and uses the `danger` variant; focus starts on "Cancel".
+- Deleting a document or conversation asks for confirmation in a dialog that names the item ("Delete 'report.pdf'? Its passages and citations will be removed."). The confirm button says what it does ("Delete document") and uses the `danger` variant; focus starts on "Cancel".
 - Where undo is cheap, prefer an "Undo" toast over a confirmation dialog.
 - After deletion, move focus to a sensible place (the next item, or the list heading), never to `<body>`.
 
 ### Terminology and microcopy
 
-- Use the same words everywhere: **document** (not file once uploaded), **upload**, **chunk**, **conversation** (a chat thread), **message**, **answer**, **citation**, **model**.
+- Use the same words everywhere: **document** (not file once uploaded), **upload**, **passage** (never "chunk" in the UI), **conversation** (a chat thread), **message**, **answer**, **citation**, **model**.
 - Sentence case for everything ("Upload documents", not "Upload Documents"). Buttons start with a verb. No "Please", no exclamation marks, no blame ("Couldn't load documents", not "You caused an error").
 - Times are relative when recent ("2 min ago") with the absolute time in a `title`/`<time dateTime>`; sizes via `formatBytes`.
 

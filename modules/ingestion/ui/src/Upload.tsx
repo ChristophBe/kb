@@ -37,7 +37,7 @@ const statusLabel: Record<JobStatus, [string, Tone]> = {
   [JobStatus.PENDING_UPLOAD]: ["Uploading", "neutral"],
   [JobStatus.QUEUED]: ["Queued", "info"],
   [JobStatus.PROCESSING]: ["Processing", "warning"],
-  [JobStatus.DONE]: ["Done", "success"],
+  [JobStatus.DONE]: ["Ready", "success"],
   [JobStatus.FAILED]: ["Failed", "danger"],
 };
 
@@ -341,7 +341,7 @@ export function Upload() {
                   )}
                   {job.status === JobStatus.DONE && (
                     <span className="text-fg-muted">
-                      {job.chunkCount} {job.chunkCount === 1 ? "chunk" : "chunks"}
+                      {job.chunkCount} {job.chunkCount === 1 ? "passage" : "passages"}
                     </span>
                   )}
                   {job.error && <span className="truncate text-danger">{job.error}</span>}

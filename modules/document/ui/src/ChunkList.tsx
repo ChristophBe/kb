@@ -9,7 +9,7 @@ import { Layers } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export const CHUNK_PAGE_SIZE = 20;
-/** Chunks longer than this start collapsed. */
+/** Passages longer than this start collapsed. */
 const PREVIEW_CHARS = 400;
 
 /** How long a chunk opened by a deep link stays highlighted. */
@@ -110,7 +110,7 @@ export function ChunkList({
   if (chunks.isPending) {
     body = (
       <DelayedLoading>
-        <SkeletonRows label="Loading chunks" />
+        <SkeletonRows label="Loading passages" />
       </DelayedLoading>
     );
   } else if (chunks.error) {
@@ -127,7 +127,7 @@ export function ChunkList({
       <EmptyState icon={Layers}>
         {status === DocumentStatus.FAILED
           ? `Processing failed${statusDetail ? `: ${statusDetail}` : "."}`
-          : "This document has no chunks yet. They appear once processing has finished."}
+          : "This document has no passages yet. They appear once processing has finished."}
       </EmptyState>
     );
   } else {
@@ -146,9 +146,10 @@ export function ChunkList({
   }
 
   return (
-    <section aria-labelledby="chunks-heading" className="mt-8 max-w-2xl">
-      <h2 id="chunks-heading" className="mb-3 text-lg font-medium">
-        Chunks <span className="font-mono text-sm text-fg-muted tabular-nums">({chunkCount})</span>
+    <section aria-labelledby="passages-heading" className="mt-8 max-w-2xl">
+      <h2 id="passages-heading" className="mb-3 text-lg font-medium">
+        Passages{" "}
+        <span className="font-mono text-sm text-fg-muted tabular-nums">({chunkCount})</span>
       </h2>
       <Card aria-busy={chunks.isFetching || undefined}>{body}</Card>
       {items.length > 0 && (
@@ -207,7 +208,7 @@ function ChunkItem({
     >
       <h3 ref={headingRef} tabIndex={-1} className="font-mono text-sm text-fg-muted tabular-nums">
         <span aria-hidden="true">#{chunk.index + 1}</span>
-        <span className="sr-only">Chunk {chunk.index + 1}</span>
+        <span className="sr-only">Passage {chunk.index + 1}</span>
       </h3>
       <div className="min-w-0">
         <p className="font-mono text-xs wrap-anywhere text-fg-muted">{details.join(" · ")}</p>
@@ -225,7 +226,7 @@ function ChunkItem({
             aria-controls={textId}
             onClick={() => setExpanded(!expanded)}
           >
-            {expanded ? "Show less" : "Show full chunk"}
+            {expanded ? "Show less" : "Show full passage"}
           </Button>
         )}
       </div>

@@ -27,7 +27,7 @@ const MODULES = [
   {
     id: "ingestion",
     lang: "Go + Python",
-    text: "Uploads and the extract → chunk → embed pipeline",
+    text: "Uploads and the extract → split → embed pipeline",
   },
   { id: "chat", lang: "Python", text: "Conversations and cited, streamed answers" },
   { id: "llm", lang: "Python", text: "The one gateway to language models" },

@@ -57,9 +57,9 @@ function sourcePath(c: Citation) {
   return `/m/document/${c.documentId}#chunk-${c.chunkIndex}`;
 }
 
-/** What the source is within its title: "user manual" or the chunk, numbered from 1 as in search. */
+/** What the source is within its title: "user manual" or the passage, numbered from 1 as in search. */
 function sourceDetail(c: Citation) {
-  return c.manualPage ? "user manual" : `chunk ${c.chunkIndex + 1}`;
+  return c.manualPage ? "user manual" : `passage ${c.chunkIndex + 1}`;
 }
 
 function citationName(n: number, c: Citation) {

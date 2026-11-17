@@ -67,7 +67,8 @@ class PeerReranker:
 class PeerRetriever:
     """Finds document passages and, with a manual, the manual sections that
     match the question; the question is embedded once for both. Passages
-    scoring below `min_score` are unrelated to the question and left out. With
+    scoring below `min_score` are unrelated to the question and left out, unless
+    they contain its words. With
     a `reranker`, `candidates` passages are fetched and the `limit` best by the
     reranker's rating are kept; if it fails, the best by similarity are."""
 
@@ -99,6 +100,10 @@ class PeerRetriever:
             result = await self._documents.SearchChunks(
                 document_pb2.SearchChunksRequest(
                     embedding=embedding,
+                    # With the words too, passages with an exact term (a name,
+                    # an id) are found even when they are far from the question
+                    # in meaning.
+                    query=query,
                     # Visibility is filtered by the document module, so only
                     # passages the caller may read reach the reranker.
                     limit=max(limit, self._candidates) if self._reranker else limit,
@@ -106,30 +111,34 @@ class PeerRetriever:
                     team_ids=[str(i) for i in team_ids],
                 )
             )
+        # `min_score` is the similarity; a passage that has the question's words
+        # stays even when it is semantically far, as exact terms are.
+        found = [r for r in result.results if r.keyword_match or r.score >= self._min_score]
         documents = [
             chat_pb2.Citation(
                 document_id=r.chunk.document_id,
                 document_title=r.document_title,
                 chunk_index=r.chunk.index,
-                snippet=r.chunk.text,
+                # The passage that matched, not the whole chunk, when words found it.
+                snippet=r.excerpt or r.chunk.text,
                 score=r.score,
             )
-            for r in result.results
-            if r.score >= self._min_score
+            for r in found
         ]
         if self._reranker:
-            documents = await self._rerank(query, documents)
+            # Rated on the whole chunk, whatever fragment is shown.
+            documents = await self._rerank(query, documents, [r.chunk.text for r in found])
         documents = documents[:limit]
         manual = self._manual.search(embedding) if self._manual else []
         return merge_sources(documents, manual)
 
     async def _rerank(
-        self, query: str, passages: list[chat_pb2.Citation]
+        self, query: str, passages: list[chat_pb2.Citation], texts: list[str]
     ) -> list[chat_pb2.Citation]:
         if len(passages) < 2 or self._reranker is None:
             return passages
         try:
-            scores = await self._reranker.rerank(query, [c.snippet for c in passages])
+            scores = await self._reranker.rerank(query, texts)
         except PeerError as err:
             # Reranking only refines the order; the similarity order is still a good answer.
             log.warning("rerank failed, keeping the similarity order: %s", err)

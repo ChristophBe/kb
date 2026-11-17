@@ -13,15 +13,24 @@ TEAM = uuid.uuid4()
 class FakeDocuments:
     """Returns four passages in similarity order and keeps the requests."""
 
-    def __init__(self) -> None:
+    def __init__(self, found: dict[int, tuple[str, bool]] | None = None) -> None:
         self.requests: list[Any] = []
+        # index -> (excerpt, keyword_match)
+        self.found = found or {}
 
     async def SearchChunks(self, request: Any) -> Any:
         self.requests.append(request)
 
         def result(index: int, score: float) -> Any:
             chunk = SimpleNamespace(document_id="d", index=index, text=f"passage {index}")
-            return SimpleNamespace(chunk=chunk, document_title="Doc", score=score)
+            excerpt, keyword = self.found.get(index, ("", False))
+            return SimpleNamespace(
+                chunk=chunk,
+                document_title="Doc",
+                score=score,
+                excerpt=excerpt,
+                keyword_match=keyword,
+            )
 
         return SimpleNamespace(results=[result(i, 0.9 - i / 10) for i in range(4)])
 
@@ -107,3 +116,32 @@ async def test_the_reranker_maps_an_unavailable_llm_to_a_peer_error() -> None:
     with pytest.raises(PeerUnavailableError) as raised:
         await PeerReranker(FakeLlm(fail=True)).rerank("q", ["a"])  # type: ignore[arg-type]
     assert raised.value.peer is Peer.LLM
+
+
+async def test_the_question_is_sent_so_words_find_passages_too() -> None:
+    documents = FakeDocuments()
+
+    await retriever(documents, FakeLlm([0.5] * 4)).retrieve("find ID-42", 3, [])
+
+    assert documents.requests[0].query == "find ID-42"
+
+
+async def test_the_citation_shows_the_matched_fragment_or_else_the_chunk() -> None:
+    documents = FakeDocuments({1: ("...ID-42...", True)})
+    llm = FakeLlm([0.5] * 4)
+
+    found = await retriever(documents, llm).retrieve("q", 3, [])
+
+    assert [c.snippet for c in found] == ["passage 0", "...ID-42...", "passage 2"]
+    # The reranker rates the whole chunks.
+    assert list(llm.requests[0].documents) == [f"passage {i}" for i in range(4)]
+
+
+async def test_a_keyword_match_is_kept_below_the_minimum_score() -> None:
+    documents = FakeDocuments({3: ("ID-42", True), 2: ("not a match", False)})
+    r = PeerRetriever(documents, FakeLlm(), min_score=0.75)  # type: ignore[arg-type]
+
+    found = await r.retrieve("q", 4, [])
+
+    # Scores 0.9, 0.8, 0.7, 0.6: the word match at 0.6 stays, the plain 0.7 goes.
+    assert [c.chunk_index for c in found] == [0, 1, 3]

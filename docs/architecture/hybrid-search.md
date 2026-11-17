@@ -9,7 +9,7 @@ The document module searches chunks by meaning (pgvector, cosine similarity) and
 - **Same visibility on both paths.** Each query repeats the visibility predicate (public, owned, or shared with one of the caller's teams, plus the optional `only_team_ids`) and the embedding-model filter, so a chunk the caller can't read is never returned by either path. Both paths take their candidates from the same set of documents; the tests check this per team.
 - **Reciprocal rank fusion.** Each path contributes `3 x limit` candidates; an item at rank `r` earns `1/(60+r)` per list and the sums order the results (`fuse` in `fusion.go`). A chunk (or document) both paths know rises above one that only one knows.
 - **Scores.** `ScoredChunk.score` stays the cosine similarity, also for chunks only the words found, so a consumer's similarity threshold keeps its meaning; the order follows the fusion. `keyword_match` marks chunks the words found, and `excerpt` is the fragment around the matched words (`ts_headline`, no markup). For a document found by words, `best_chunk` is the chunk that contains them.
-- **Callers.** `SearchDocuments` always has the query text. `SearchChunks` (used by chat) takes an optional `query` next to the embedding; without it the search is vector-only, as before.
+- **Callers.** `SearchDocuments` always has the query text. `SearchChunks` takes an optional `query` next to the embedding; without it the search is vector-only, as before. Chat passes the question, cites `excerpt` when there is one, keeps `keyword_match` results below its minimum score and reranks on the whole chunk text.
 
 ## Evaluation
 

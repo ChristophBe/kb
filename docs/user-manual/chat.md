@@ -32,12 +32,12 @@ Follow-up questions in the same conversation can refer to earlier questions and 
 
 ## Check the sources of an answer
 
-Answers from your documents contain numbers like [1] and [2]. Each number points to a passage listed under the answer's sources, with the document's title, the passage number and a short excerpt. Passage numbers are the same as in search and on the document's page.
+Answers from your documents contain numbers like [1] and [2]. Each number points to a passage listed under the answer's sources, with the document's title, the passage number and a short excerpt. When your question contains words that a passage has, such as a name or an identifier, the excerpt shows the part of the passage around those words. Passage numbers are the same as in search and on the document's page.
 
 - Point at or focus a number to highlight its source, and the other way round.
 - Select a number or a source's title to open the document at that passage. The passage is scrolled into view and briefly highlighted.
 
-The sources are the passages that matched your question best; the answer doesn't have to use all of them. Knowcelium first finds more passages than it needs, has the language model rate how well each answers your question and keeps the best rated ones, so the first sources are the most helpful, not just the most similar. If the rating fails, the most similar passages are used instead. An administrator can turn the rating off. Passages that aren't related to your question are left out, so an answer can have fewer sources, or none. An answer without sources comes from the language model's general knowledge, and is meant to say first that nothing in your documents relates to the question. When the sources don't contain the answer, the answer is meant to say so, but check the sources before relying on it.
+The sources are the passages that matched your question best; the answer doesn't have to use all of them. Knowcelium first finds more passages than it needs, has the language model rate how well each answers your question and keeps the best rated ones, so the first sources are the most helpful, not just the most similar. If the rating fails, the most similar passages are used instead. An administrator can turn the rating off. Passages that aren't related to your question are left out unless they contain words of it, so an answer can have fewer sources, or none. An answer without sources comes from the language model's general knowledge, and is meant to say first that nothing in your documents relates to the question. When the sources don't contain the answer, the answer is meant to say so, but check the sources before relying on it.
 
 ## Answer without platform knowledge
 

@@ -203,7 +203,11 @@ class FakeDocuments:
     async def SearchChunks(self, request: Any) -> Any:
         chunk = SimpleNamespace(document_id="d1", index=3, text="passage")
         return SimpleNamespace(
-            results=[SimpleNamespace(chunk=chunk, document_title="Report", score=0.4)]
+            results=[
+                SimpleNamespace(
+                    chunk=chunk, document_title="Report", score=0.4, excerpt="", keyword_match=False
+                )
+            ]
         )
 
 
@@ -233,7 +237,9 @@ class ScoredDocuments:
     async def SearchChunks(self, request: Any) -> Any:
         def result(index: int, score: float) -> Any:
             chunk = SimpleNamespace(document_id="d1", index=index, text="passage")
-            return SimpleNamespace(chunk=chunk, document_title="Report", score=score)
+            return SimpleNamespace(
+                chunk=chunk, document_title="Report", score=score, excerpt="", keyword_match=False
+            )
 
         return SimpleNamespace(results=[result(0, 0.7), result(1, 0.5), result(2, 0.49)])
 

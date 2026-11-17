@@ -15,6 +15,10 @@ Opening **Chat** shows the conversation with the most recent message, so you can
 
 The new conversation is called **New conversation** until you ask your first question; it is then named after the start of that question. You can [rename it](#rename-a-conversation) at any time.
 
+## Ask about one document
+
+Open a document and select **Ask about this document** to start a new conversation that uses only that document. The conversation opens with the document already ticked under **Sources**, shown as a chip next to **Scope:**; you can [change the scope](#restrict-a-chat-to-some-documents) at any time. The button is not shown when Chat is not available in your Knowcelium.
+
 ## Ask a question
 
 1. Type your question in the box at the bottom (**Ask something…**).

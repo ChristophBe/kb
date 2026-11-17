@@ -14,7 +14,7 @@ beforeAll(() => {
 const created = create(ConversationSchema, { id: "c9", title: "" });
 
 function chatService({ failCreate = false } = {}) {
-  const createConversation = vi.fn(() => {
+  const createConversation = vi.fn((_req: { documentIds?: string[] }) => {
     if (failCreate) throw new ConnectError("down", Code.Unavailable);
     return { conversation: created };
   });
@@ -49,6 +49,13 @@ describe("StartChat", () => {
     const nav = within(screen.getByRole("navigation"));
     const link = await nav.findByRole("link", { name: "New conversation" });
     expect(link.getAttribute("aria-current")).toBe("page");
+  });
+
+  it("scopes the new conversation to the document in the URL", async () => {
+    const { transport, createConversation } = chatService();
+    renderModule(chat, transport, "/new?document=d1");
+    await waitFor(() => expect(createConversation).toHaveBeenCalledTimes(1));
+    expect(createConversation.mock.calls[0]?.[0]).toMatchObject({ documentIds: ["d1"] });
   });
 
   it("opens an empty conversation without a question", async () => {

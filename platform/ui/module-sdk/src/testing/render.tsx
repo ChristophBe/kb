@@ -11,7 +11,7 @@ import { type CurrentUser, CurrentUserProvider, type CurrentUserStatus } from ".
  * Renders a module's routes, at `path` relative to the module root, against
  * `transport`: usually `createRouterTransport` from `@connectrpc/connect`,
  * answering the module's RPCs in memory. Every call gets a fresh query cache.
- * `user` is what `useCurrentUser` returns, `status` what `useCurrentUserStatus` does. Returns the render result and the
+ * `user` is what `useCurrentUser` returns, `status` what `useCurrentUserStatus` does, `enabledModules` the deployment's modules (all when omitted). Returns the render result and the
  * router, to check navigation.
  */
 export function renderModule(
@@ -20,11 +20,16 @@ export function renderModule(
   path = "/",
   user: CurrentUser | null = null,
   status?: CurrentUserStatus,
+  enabledModules?: string[],
 ) {
   const router = createMemoryRouter(module.routes, { initialEntries: [path] });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const result = render(
-    <KbRuntimeProvider config={{ apiBaseUrl: "http://test" }} transport={transport} client={client}>
+    <KbRuntimeProvider
+      config={{ apiBaseUrl: "http://test", enabledModules }}
+      transport={transport}
+      client={client}
+    >
       <CurrentUserProvider user={user} status={status}>
         <RouterProvider router={router} />
       </CurrentUserProvider>

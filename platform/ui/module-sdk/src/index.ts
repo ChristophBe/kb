@@ -7,6 +7,7 @@ export {
   type RuntimeAuth,
   type RuntimeConfig,
   useClient,
+  useModuleEnabled,
   useRuntimeConfig,
   useSearchContext,
 } from "./runtime.tsx";

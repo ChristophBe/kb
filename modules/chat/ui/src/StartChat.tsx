@@ -10,7 +10,8 @@ export interface StartState {
 }
 
 /**
- * `/m/chat/new?q=…`: creates a conversation and opens it, asking `q` there.
+ * `/m/chat/new?q=…&document=<id>`: creates a conversation, scoped to the document
+ * when one is given, and opens it, asking `q` there.
  * The URL is replaced, so going back
  * doesn't create another conversation.
  */
@@ -27,7 +28,8 @@ export function StartChat() {
     if (started.current) return;
     started.current = true;
     const question = params.get("q")?.trim() ?? "";
-    client.createConversation({}).then(
+    const documentId = params.get("document")?.trim();
+    client.createConversation({ documentIds: documentId ? [documentId] : [] }).then(
       ({ conversation }) => {
         queryClient.invalidateQueries({ queryKey: ["conversations"] });
         if (!conversation) return setFailed(true);

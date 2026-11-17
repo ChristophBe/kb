@@ -89,7 +89,7 @@ export function DocumentList() {
           type="search"
           aria-label="Filter by title"
           placeholder="Filter by title…"
-          className="w-64"
+          className="w-full sm:w-64"
           value={titleFilter}
           onChange={(e) => setTitleFilter(e.target.value)}
         />
@@ -125,55 +125,59 @@ export function DocumentList() {
             <SkeletonRows label="Loading documents" />
           </DelayedLoading>
         ) : shown.length ? (
-          <table ref={table} tabIndex={-1} aria-label="Documents" className="w-full text-sm">
-            <thead className="border-b border-border text-left text-xs text-fg-muted uppercase">
-              <tr>
-                <th className="px-4 py-2 font-medium">Title</th>
-                <th className="px-4 py-2 font-medium">Status</th>
-                <th className="px-4 py-2 font-medium">Chunks</th>
-                <th className="px-4 py-2 font-medium">Size</th>
-                <th className="px-4 py-2 font-medium">Added</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {shown.map((d) => {
-                const [label, tone] = statusLabel[d.status];
-                return (
-                  <tr key={d.id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-2">
-                      <Link to={d.id} className="font-medium hover:underline">
-                        {d.title}
-                      </Link>
-                      <div className="mt-1">
-                        <SharedWith access={d.access} teamIds={d.teamIds} />
-                      </div>
-                    </td>
-                    <td className="px-4 py-2">
-                      <Badge tone={tone}>{label}</Badge>
-                    </td>
-                    <td className="px-4 py-2">
-                      <ChunkStrip count={d.chunkCount} />
-                    </td>
-                    <td className="px-4 py-2 font-mono tabular-nums">{formatBytes(d.sizeBytes)}</td>
-                    <td className="px-4 py-2 font-mono text-fg-muted tabular-nums">
-                      {formatTime(d.createTime)}
-                    </td>
-                    <td className="px-2 py-1 text-right whitespace-nowrap">
-                      <IconButton label="Download" onClick={() => download(d.id)}>
-                        <Download className="size-4" />
-                      </IconButton>
-                      {user?.id === d.ownerId && (
-                        <IconButton label="Delete" tone="danger" onClick={() => setDeleting(d)}>
-                          <Trash2 className="size-4" />
+          <div className="overflow-x-auto">
+            <table ref={table} tabIndex={-1} aria-label="Documents" className="w-full text-sm">
+              <thead className="border-b border-border text-left text-xs text-fg-muted uppercase">
+                <tr>
+                  <th className="px-4 py-2 font-medium">Title</th>
+                  <th className="px-4 py-2 font-medium">Status</th>
+                  <th className="px-4 py-2 font-medium">Chunks</th>
+                  <th className="px-4 py-2 font-medium">Size</th>
+                  <th className="px-4 py-2 font-medium">Added</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {shown.map((d) => {
+                  const [label, tone] = statusLabel[d.status];
+                  return (
+                    <tr key={d.id} className="border-b border-border last:border-0">
+                      <td className="px-4 py-2">
+                        <Link to={d.id} className="font-medium hover:underline">
+                          {d.title}
+                        </Link>
+                        <div className="mt-1">
+                          <SharedWith access={d.access} teamIds={d.teamIds} />
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <Badge tone={tone}>{label}</Badge>
+                      </td>
+                      <td className="px-4 py-2">
+                        <ChunkStrip count={d.chunkCount} />
+                      </td>
+                      <td className="px-4 py-2 font-mono tabular-nums">
+                        {formatBytes(d.sizeBytes)}
+                      </td>
+                      <td className="px-4 py-2 font-mono text-fg-muted tabular-nums">
+                        {formatTime(d.createTime)}
+                      </td>
+                      <td className="px-2 py-1 text-right whitespace-nowrap">
+                        <IconButton label="Download" onClick={() => download(d.id)}>
+                          <Download className="size-4" />
                         </IconButton>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                        {user?.id === d.ownerId && (
+                          <IconButton label="Delete" tone="danger" onClick={() => setDeleting(d)}>
+                            <Trash2 className="size-4" />
+                          </IconButton>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <EmptyState
             icon={FileText}

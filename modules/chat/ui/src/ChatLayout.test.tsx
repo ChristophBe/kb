@@ -13,7 +13,7 @@ import {
 import { renderModule } from "@knowcel/module-sdk/testing";
 import { polyfillDialog } from "@knowcel/ui/testing/dialog";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import chat from "./index.tsx";
 
 // jsdom has no layout; the conversation scrolls to its newest message.
@@ -223,5 +223,31 @@ describe("ChatLayout", () => {
     );
     renderModule(chat, transport);
     expect((await screen.findByRole("alert")).textContent).toBe("[unavailable] chat service down");
+  });
+
+  describe("at a narrow width", () => {
+    beforeAll(() => {
+      vi.stubGlobal("matchMedia", (query: string) => ({
+        matches: true,
+        media: query,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }));
+    });
+    afterAll(() => vi.unstubAllGlobals());
+
+    it("shows the conversation list as the index instead of opening one", async () => {
+      const { transport } = chatService([conversation("c1", "Q3 revenue")]);
+      const { router } = renderModule(chat, transport);
+      await screen.findByRole("link", { name: "Q3 revenue" });
+      expect(router.state.location.pathname).toBe("/");
+    });
+
+    it("leads from an open conversation back to the list", async () => {
+      const { transport } = chatService([conversation("c1", "Q3 revenue")]);
+      const { router } = renderModule(chat, transport, "/c1");
+      fireEvent.click(await screen.findByRole("link", { name: "All conversations" }));
+      await waitFor(() => expect(router.state.location.pathname).toBe("/"));
+    });
   });
 });

@@ -199,7 +199,7 @@ export function Conversation() {
   return (
     <>
       {/* The header and composer float over the messages (frosted); scroll padding keeps focus clear of both (WCAG 2.4.11). */}
-      <div className="flex flex-1 scroll-pt-24 scroll-pb-48 flex-col overflow-y-auto px-8">
+      <div className="flex flex-1 scroll-pt-24 scroll-pb-48 flex-col overflow-y-auto px-4 md:px-8">
         {conversation.data?.conversation && (
           <ConversationHeader conversation={conversation.data.conversation} />
         )}

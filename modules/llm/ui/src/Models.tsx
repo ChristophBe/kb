@@ -143,7 +143,7 @@ export function Models() {
       <ErrorMessage error={status.error ?? models.error} />
       <ErrorMessage error={modelError(remove.error)} />
       {status.data && (
-        <Card className="mb-6 grid max-w-2xl grid-cols-2 gap-y-2 p-4 text-sm">
+        <Card className="mb-6 grid max-w-2xl grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 p-4 text-sm">
           <span className="text-fg-muted">Chat provider</span>
           {/* A server older than split providers sends no chat/embedding. */}
           <Provider health={status.data.chat ?? status.data} />
@@ -156,7 +156,7 @@ export function Models() {
             {status.data.defaultEmbeddingModel} ({status.data.embeddingDimensions} dims)
           </span>
           <span className="text-fg-muted">Detail</span>
-          <span>{status.data.detail}</span>
+          <span className="break-words">{status.data.detail}</span>
         </Card>
       )}
       {!isAdmin && (
@@ -240,9 +240,9 @@ export function Models() {
             {models.data.models.map((m) => (
               <li
                 key={`${m.provider}/${m.id}`}
-                className="flex items-center justify-between px-4 py-2"
+                className="flex flex-wrap items-center justify-between gap-x-4 px-4 py-2"
               >
-                <span className="font-mono">{m.id}</span>
+                <span className="min-w-0 font-mono break-all">{m.id}</span>
                 <span className="flex items-center gap-2">
                   <span className="text-fg-muted">{m.provider}</span>
                   <Badge tone={m.kind === ModelKind.EMBEDDING ? "info" : "neutral"}>

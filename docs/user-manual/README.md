@@ -25,7 +25,7 @@ The design drafts in [`docs/ux/`](../ux/) are for contributors; this manual is f
 
 <!-- One line per page: [Title](file.md) — what it covers. -->
 
-- [Getting started](getting-started.md) — the areas of Knowcelium, your first documents and question, light and dark mode
+- [Getting started](getting-started.md) — the areas of Knowcelium, your first documents and question, light and dark mode, using it on a phone
 - [Sign in](sign-in.md) — signing in, coming back to the page you asked for, expired sessions, seeing who is signed in, signing out
 - [Upload](ingestion.md) — uploading files and adding web pages, choosing the teams to share them with, following their processing, retrying failed uploads and processing
 - [Documents](documents.md) — browsing, opening and reading documents, their status, renaming, metadata, downloading, replacing, deleting

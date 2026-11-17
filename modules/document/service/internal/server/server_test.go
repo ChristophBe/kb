@@ -56,6 +56,12 @@ type fakeRepo struct {
 	searches []store.SearchChunksParams
 	best     []store.SearchBestChunksRow
 	bestReq  []store.SearchBestChunksParams
+	// foundText and bestText answer the full-text searches; textReq and
+	// bestTextReq record them.
+	foundText   []store.SearchTextChunksRow
+	textReq     []store.SearchTextChunksParams
+	bestText    []store.SearchBestTextChunksRow
+	bestTextReq []store.SearchBestTextChunksParams
 	// shared holds the teams each document is shared with.
 	shared  map[uuid.UUID][]uuid.UUID
 	applied []appliedTeams
@@ -212,6 +218,16 @@ func (f *fakeRepo) SearchChunks(_ context.Context, p store.SearchChunksParams) (
 func (f *fakeRepo) SearchBestChunks(_ context.Context, p store.SearchBestChunksParams) ([]store.SearchBestChunksRow, error) {
 	f.bestReq = append(f.bestReq, p)
 	return f.best, nil
+}
+
+func (f *fakeRepo) SearchTextChunks(_ context.Context, p store.SearchTextChunksParams) ([]store.SearchTextChunksRow, error) {
+	f.textReq = append(f.textReq, p)
+	return f.foundText, nil
+}
+
+func (f *fakeRepo) SearchBestTextChunks(_ context.Context, p store.SearchBestTextChunksParams) ([]store.SearchBestTextChunksRow, error) {
+	f.bestTextReq = append(f.bestTextReq, p)
+	return f.bestText, nil
 }
 
 // fakeLLM answers Embed with one fixed vector per input, or fails with err.
@@ -593,7 +609,7 @@ func TestSearchDocumentsEmbedsTheQueryAndSearches(t *testing.T) {
 	if !slices.Equal(search.Embedding.Slice(), llm.vector) {
 		t.Errorf("searched with %v, want the query's embedding", search.Embedding.Slice())
 	}
-	if search.MaxResults != defaultLimit || !slices.Equal(search.DocumentIds, []uuid.UUID{docID}) {
+	if search.MaxResults != defaultLimit*poolFactor || !slices.Equal(search.DocumentIds, []uuid.UUID{docID}) {
 		t.Errorf("search params = %+v", search)
 	}
 	if len(resp.GetResults()) != 1 {
@@ -611,8 +627,12 @@ func TestSearchDocumentsCapsTheLimit(t *testing.T) {
 	if _, err := newServer(repo).SearchDocuments(asAlice(t), &documentv1.SearchDocumentsRequest{Query: "q", Limit: 1000}); err != nil {
 		t.Fatal(err)
 	}
-	if repo.searches[0].MaxResults != maxLimit || repo.bestReq[0].MaxResults != maxLimit {
-		t.Errorf("limits = %d, %d, want %d", repo.searches[0].MaxResults, repo.bestReq[0].MaxResults, maxLimit)
+	// Each path fetches a pool larger than the limit, for fusion.
+	want := int32(maxLimit * poolFactor)
+	if repo.searches[0].MaxResults != want || repo.bestReq[0].MaxResults != want ||
+		repo.textReq[0].MaxResults != want || repo.bestTextReq[0].MaxResults != want {
+		t.Errorf("pools = %d, %d, %d, %d, want %d", repo.searches[0].MaxResults, repo.bestReq[0].MaxResults,
+			repo.textReq[0].MaxResults, repo.bestTextReq[0].MaxResults, want)
 	}
 }
 
@@ -632,7 +652,7 @@ func TestSearchDocumentsReturnsEachDocumentOnceWithItsBestChunk(t *testing.T) {
 		t.Errorf("embedded %d times, want once for both searches", len(llm.calls))
 	}
 	req := repo.bestReq[0]
-	if req.MaxResults != 2 || !slices.Equal(req.Embedding.Slice(), llm.vector) {
+	if req.MaxResults != 2*poolFactor || !slices.Equal(req.Embedding.Slice(), llm.vector) {
 		t.Errorf("best-chunk search params = %+v", req)
 	}
 	docs := resp.GetDocuments()
@@ -1118,5 +1138,61 @@ func TestDeleteDocumentOfAnotherUserLeavesTheObject(t *testing.T) {
 	}
 	if len(objects.deleted) != 0 {
 		t.Errorf("objects deleted: %v", objects.deleted)
+	}
+}
+
+func TestSearchDocumentsFusesTheWordMatchesIn(t *testing.T) {
+	semantic, exact := uuid.New(), uuid.New()
+	repo := &fakeRepo{
+		found: []store.SearchChunksRow{
+			{DocumentID: semantic, Idx: 0, Text: "Failures of the payment system.", DocumentTitle: "Postmortem", Score: 0.8},
+		},
+		best: []store.SearchBestChunksRow{
+			{DocumentID: semantic, Idx: 0, Text: "Failures of the payment system.", DocumentTitle: "Postmortem", Score: 0.8},
+		},
+		foundText: []store.SearchTextChunksRow{
+			{DocumentID: exact, Idx: 2, Text: "Error ERR-4711 means the vault is sealed.", DocumentTitle: "Runbook", Score: 0.1, Excerpt: "Error ERR-4711 means"},
+		},
+		bestText: []store.SearchBestTextChunksRow{
+			{DocumentID: exact, Idx: 2, Text: "Error ERR-4711 means the vault is sealed.", DocumentTitle: "Runbook", Score: 0.1, Excerpt: "Error ERR-4711 means"},
+		},
+	}
+	srv := New(repo, fakeObjects{}, &fakeLLM{vector: []float32{1}}, testLimits, slog.New(slog.DiscardHandler))
+	resp, err := srv.SearchDocuments(asAlice(t), &documentv1.SearchDocumentsRequest{Query: `what is "ERR-4711"?`})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := repo.textReq[0].Query; got != "what or is or ERR-4711 or ?" {
+		t.Errorf("words query = %q", got)
+	}
+	docs := resp.GetDocuments()
+	if len(docs) != 2 || docs[0].GetDocumentId() != semantic.String() || docs[1].GetDocumentId() != exact.String() {
+		t.Fatalf("documents = %v, want the semantic then the exact hit", docs)
+	}
+	if got := docs[1]; !got.GetKeywordMatch() || got.GetExcerpt() != "Error ERR-4711 means" || got.GetBestChunk().GetIndex() != 2 {
+		t.Errorf("exact hit = %v, want the keyword match with its excerpt", got)
+	}
+	if docs[0].GetKeywordMatch() || docs[0].GetExcerpt() != "" {
+		t.Errorf("semantic hit = %v, want no keyword match", docs[0])
+	}
+	if len(resp.GetResults()) != 2 || !resp.GetResults()[1].GetKeywordMatch() {
+		t.Errorf("results = %v", resp.GetResults())
+	}
+}
+
+func TestSearchChunksSearchesWordsOnlyWithAQuery(t *testing.T) {
+	repo := &fakeRepo{}
+	srv := newServer(repo)
+	if _, err := srv.SearchChunks(asAlice(t), &documentv1.SearchChunksRequest{Embedding: []float32{1}}); err != nil {
+		t.Fatal(err)
+	}
+	if len(repo.textReq) != 0 || repo.searches[0].MaxResults != defaultLimit {
+		t.Errorf("without a query: %d text searches, vector pool %d", len(repo.textReq), repo.searches[0].MaxResults)
+	}
+	if _, err := srv.SearchChunks(asAlice(t), &documentv1.SearchChunksRequest{Embedding: []float32{1}, Query: "ERR-4711"}); err != nil {
+		t.Fatal(err)
+	}
+	if len(repo.textReq) != 1 || repo.textReq[0].Query != "ERR-4711" {
+		t.Errorf("with a query: text searches = %+v", repo.textReq)
 	}
 }

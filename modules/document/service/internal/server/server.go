@@ -497,7 +497,8 @@ func (s *Server) ListChunks(ctx context.Context, req *documentv1.ListChunksReque
 
 // SearchChunks searches the chunks of the documents the calling user can read
 // (public, their own and those of their teams); chat calls it on behalf of
-// the user asking.
+// the user asking. With a query it also matches the chunks by their words and
+// fuses both results (hybrid search).
 func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksRequest) (*documentv1.SearchChunksResponse, error) {
 	a, err := accessOf(ctx)
 	if err != nil {
@@ -520,7 +521,7 @@ func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksR
 			return nil, err
 		}
 	}
-	results, err := s.search(ctx, a, req.GetEmbedding(), model, req.GetLimit(), ids, onlyTeams)
+	results, err := s.search(ctx, a, req.GetEmbedding(), model, req.GetLimit(), ids, onlyTeams, req.GetQuery())
 	if err != nil {
 		return nil, err
 	}
@@ -528,8 +529,8 @@ func (s *Server) SearchChunks(ctx context.Context, req *documentv1.SearchChunksR
 }
 
 // SearchDocuments embeds the query through the llm module, then runs the same
-// vector search as SearchChunks and ranks documents by their best chunk; limit
-// counts documents. Only this RPC needs llm: while it is down, this fails with
+// hybrid search as SearchChunks and ranks documents by their best chunk, found
+// by meaning and by words, fused; limit counts documents. Only this RPC needs llm: while it is down, this fails with
 // UNAVAILABLE and every other RPC keeps working.
 func (s *Server) SearchDocuments(ctx context.Context, req *documentv1.SearchDocumentsRequest) (*documentv1.SearchDocumentsResponse, error) {
 	a, err := accessOf(ctx)
@@ -553,27 +554,13 @@ func (s *Server) SearchDocuments(ctx context.Context, req *documentv1.SearchDocu
 	}
 	embedding := embedded.GetEmbeddings()[0].GetValues()
 	model := embedded.GetModel()
-	results, err := s.search(ctx, a, embedding, model, req.GetLimit(), ids, []uuid.UUID{})
+	results, err := s.search(ctx, a, embedding, model, req.GetLimit(), ids, []uuid.UUID{}, query)
 	if err != nil {
 		return nil, err
 	}
-	rows, err := s.repo.SearchBestChunks(ctx, store.SearchBestChunksParams{
-		Embedding: pgvector.NewVector(embedding), OwnerID: a.user, TeamIds: a.teamIDs(), EmbeddingModel: model,
-		DocumentIds: ids, OnlyTeamIds: []uuid.UUID{}, MaxResults: clampLimit(req.GetLimit()),
-	})
+	documents, err := s.searchDocuments(ctx, a, embedding, model, req.GetLimit(), ids, query)
 	if err != nil {
-		return nil, s.internal("search documents", err)
-	}
-	documents := make([]*documentv1.ScoredDocument, 0, len(rows))
-	for _, r := range rows {
-		documents = append(documents, &documentv1.ScoredDocument{
-			DocumentId: r.DocumentID.String(),
-			Title:      r.DocumentTitle,
-			Score:      r.Score,
-			BestChunk: &documentv1.Chunk{
-				DocumentId: r.DocumentID.String(), Index: r.Idx, Text: r.Text, Metadata: r.Metadata,
-			},
-		})
+		return nil, err
 	}
 	return &documentv1.SearchDocumentsResponse{Results: results, Documents: documents}, nil
 }
@@ -656,25 +643,102 @@ func clampLimit(limit int32) int32 {
 
 // search finds the chunks the caller can read that are most similar to an
 // embedding that model made; chunks of other models are never compared with it.
-func (s *Server) search(ctx context.Context, a access, embedding []float32, model string, limit int32, ids, onlyTeams []uuid.UUID) ([]*documentv1.ScoredChunk, error) {
+// With a query it also finds the chunks containing the query's words, among the
+// same documents and models, and fuses both lists by reciprocal rank.
+func (s *Server) search(ctx context.Context, a access, embedding []float32, model string, limit int32, ids, onlyTeams []uuid.UUID, query string) ([]*documentv1.ScoredChunk, error) {
+	words := textQuery(query)
+	pool := clampLimit(limit)
+	if words != "" {
+		pool *= poolFactor
+	}
+	vec := pgvector.NewVector(embedding)
 	rows, err := s.repo.SearchChunks(ctx, store.SearchChunksParams{
-		Embedding: pgvector.NewVector(embedding), OwnerID: a.user, TeamIds: a.teamIDs(), EmbeddingModel: model,
-		DocumentIds: ids, OnlyTeamIds: onlyTeams, MaxResults: clampLimit(limit),
+		Embedding: vec, OwnerID: a.user, TeamIds: a.teamIDs(), EmbeddingModel: model,
+		DocumentIds: ids, OnlyTeamIds: onlyTeams, MaxResults: pool,
 	})
 	if err != nil {
 		return nil, s.internal("search chunks", err)
 	}
-	results := make([]*documentv1.ScoredChunk, 0, len(rows))
+	byVector := make([]*documentv1.ScoredChunk, 0, len(rows))
 	for _, r := range rows {
-		results = append(results, &documentv1.ScoredChunk{
-			Chunk: &documentv1.Chunk{
-				DocumentId: r.DocumentID.String(), Index: r.Idx, Text: r.Text, Metadata: r.Metadata,
-			},
-			DocumentTitle: r.DocumentTitle,
-			Score:         r.Score,
-		})
+		byVector = append(byVector, scoredChunk(r.DocumentID, r.Idx, r.Text, r.Metadata, r.DocumentTitle, r.Score, ""))
 	}
-	return results, nil
+	if words == "" {
+		return byVector, nil
+	}
+	textRows, err := s.repo.SearchTextChunks(ctx, store.SearchTextChunksParams{
+		Query: words, Embedding: vec, OwnerID: a.user, TeamIds: a.teamIDs(), EmbeddingModel: model,
+		DocumentIds: ids, OnlyTeamIds: onlyTeams, MaxResults: pool,
+	})
+	if err != nil {
+		return nil, s.internal("search chunks by words", err)
+	}
+	byText := make([]*documentv1.ScoredChunk, 0, len(textRows))
+	for _, r := range textRows {
+		c := scoredChunk(r.DocumentID, r.Idx, r.Text, r.Metadata, r.DocumentTitle, r.Score, r.Excerpt)
+		c.KeywordMatch = true
+		byText = append(byText, c)
+	}
+	return fuseChunks(byVector, byText, int(clampLimit(limit))), nil
+}
+
+func scoredChunk(doc uuid.UUID, idx int32, text string, metadata map[string]string, title string, score float32, excerpt string) *documentv1.ScoredChunk {
+	return &documentv1.ScoredChunk{
+		Chunk:         &documentv1.Chunk{DocumentId: doc.String(), Index: idx, Text: text, Metadata: metadata},
+		DocumentTitle: title,
+		Score:         score,
+		Excerpt:       excerpt,
+	}
+}
+
+// searchDocuments ranks the documents the caller can read by their best chunk:
+// the most similar by meaning, fused with those whose chunks contain the
+// query's words.
+func (s *Server) searchDocuments(ctx context.Context, a access, embedding []float32, model string, limit int32, ids []uuid.UUID, query string) ([]*documentv1.ScoredDocument, error) {
+	words := textQuery(query)
+	pool := clampLimit(limit)
+	if words != "" {
+		pool *= poolFactor
+	}
+	vec := pgvector.NewVector(embedding)
+	rows, err := s.repo.SearchBestChunks(ctx, store.SearchBestChunksParams{
+		Embedding: vec, OwnerID: a.user, TeamIds: a.teamIDs(), EmbeddingModel: model,
+		DocumentIds: ids, OnlyTeamIds: []uuid.UUID{}, MaxResults: pool,
+	})
+	if err != nil {
+		return nil, s.internal("search documents", err)
+	}
+	byVector := make([]*documentv1.ScoredDocument, 0, len(rows))
+	for _, r := range rows {
+		byVector = append(byVector, scoredDocument(r.DocumentID, r.Idx, r.Text, r.Metadata, r.DocumentTitle, r.Score, ""))
+	}
+	if words == "" {
+		return byVector[:min(len(byVector), int(clampLimit(limit)))], nil
+	}
+	textRows, err := s.repo.SearchBestTextChunks(ctx, store.SearchBestTextChunksParams{
+		Query: words, Embedding: vec, OwnerID: a.user, TeamIds: a.teamIDs(), EmbeddingModel: model,
+		DocumentIds: ids, OnlyTeamIds: []uuid.UUID{}, MaxResults: pool,
+	})
+	if err != nil {
+		return nil, s.internal("search documents by words", err)
+	}
+	byText := make([]*documentv1.ScoredDocument, 0, len(textRows))
+	for _, r := range textRows {
+		d := scoredDocument(r.DocumentID, r.Idx, r.Text, r.Metadata, r.DocumentTitle, r.Score, r.Excerpt)
+		d.KeywordMatch = true
+		byText = append(byText, d)
+	}
+	return fuseDocuments(byVector, byText, int(clampLimit(limit))), nil
+}
+
+func scoredDocument(doc uuid.UUID, idx int32, text string, metadata map[string]string, title string, score float32, excerpt string) *documentv1.ScoredDocument {
+	return &documentv1.ScoredDocument{
+		DocumentId: doc.String(),
+		Title:      title,
+		Score:      score,
+		BestChunk:  &documentv1.Chunk{DocumentId: doc.String(), Index: idx, Text: text, Metadata: metadata},
+		Excerpt:    excerpt,
+	}
 }
 
 // get returns the document with the id in the request if the calling user can

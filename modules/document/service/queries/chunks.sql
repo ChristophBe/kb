@@ -58,6 +58,70 @@ FROM (
 ORDER BY score DESC, document_id
 LIMIT sqlc.arg('max_results');
 
+-- SearchTextChunks is the full-text half of hybrid search: the chunks that
+-- contain any word of the query (websearch syntax, words joined by "or"),
+-- visible and filtered exactly as in SearchChunks, best match (ts_rank_cd)
+-- first. score is the chunk's cosine similarity to the embedding, as in
+-- SearchChunks, so both paths report one kind of score; excerpt is the
+-- fragment of the text around the matched words, without markup.
+-- name: SearchTextChunks :many
+SELECT h.document_id, h.idx, h.text, h.metadata, h.document_title, h.score,
+       ts_headline('english', h.text, websearch_to_tsquery('english', sqlc.arg('query')::text),
+                   'MaxFragments=1, MinWords=10, MaxWords=35, StartSel="", StopSel=""')::text AS excerpt
+FROM (
+    SELECT c.document_id, c.idx, c.text, c.metadata, d.title AS document_title,
+           (1 - (c.embedding <=> sqlc.arg('embedding')::vector))::real AS score,
+           ts_rank_cd(c.text_search, websearch_to_tsquery('english', sqlc.arg('query')::text)) AS rank
+    FROM document.chunks c
+    JOIN document.documents d ON d.id = c.document_id
+    WHERE (d.access = 1
+           OR d.owner_id = sqlc.arg('owner_id')
+           OR EXISTS (SELECT 1 FROM document.document_teams t
+                      WHERE t.document_id = d.id AND t.team_id = ANY(sqlc.arg('team_ids')::uuid[])))
+      AND c.embedding_model = sqlc.arg('embedding_model')
+      AND (cardinality(sqlc.arg('document_ids')::uuid[]) = 0
+           OR c.document_id = ANY(sqlc.arg('document_ids')::uuid[]))
+      AND (coalesce(cardinality(sqlc.arg('only_team_ids')::uuid[]), 0) = 0
+           OR EXISTS (SELECT 1 FROM document.document_teams o
+                      WHERE o.document_id = d.id AND o.team_id = ANY(sqlc.arg('only_team_ids')::uuid[])))
+      AND c.text_search @@ websearch_to_tsquery('english', sqlc.arg('query')::text)
+    ORDER BY rank DESC, c.document_id, c.idx
+    LIMIT sqlc.arg('max_results')
+) h
+ORDER BY h.rank DESC, h.document_id, h.idx;
+
+-- SearchBestTextChunks is SearchTextChunks with one chunk per document, the
+-- best matching one, as SearchBestChunks is to SearchChunks.
+-- name: SearchBestTextChunks :many
+SELECT h.document_id, h.idx, h.text, h.metadata, h.document_title, h.score,
+       ts_headline('english', h.text, websearch_to_tsquery('english', sqlc.arg('query')::text),
+                   'MaxFragments=1, MinWords=10, MaxWords=35, StartSel="", StopSel=""')::text AS excerpt
+FROM (
+    SELECT b.* FROM (
+        SELECT DISTINCT ON (c.document_id)
+               c.document_id, c.idx, c.text, c.metadata, d.title AS document_title,
+               (1 - (c.embedding <=> sqlc.arg('embedding')::vector))::real AS score,
+               ts_rank_cd(c.text_search, websearch_to_tsquery('english', sqlc.arg('query')::text)) AS rank
+        FROM document.chunks c
+        JOIN document.documents d ON d.id = c.document_id
+        WHERE (d.access = 1
+               OR d.owner_id = sqlc.arg('owner_id')
+               OR EXISTS (SELECT 1 FROM document.document_teams t
+                          WHERE t.document_id = d.id AND t.team_id = ANY(sqlc.arg('team_ids')::uuid[])))
+          AND c.embedding_model = sqlc.arg('embedding_model')
+          AND (cardinality(sqlc.arg('document_ids')::uuid[]) = 0
+               OR c.document_id = ANY(sqlc.arg('document_ids')::uuid[]))
+          AND (coalesce(cardinality(sqlc.arg('only_team_ids')::uuid[]), 0) = 0
+               OR EXISTS (SELECT 1 FROM document.document_teams o
+                          WHERE o.document_id = d.id AND o.team_id = ANY(sqlc.arg('only_team_ids')::uuid[])))
+          AND c.text_search @@ websearch_to_tsquery('english', sqlc.arg('query')::text)
+        ORDER BY c.document_id, rank DESC, c.idx
+    ) b
+    ORDER BY b.rank DESC, b.document_id
+    LIMIT sqlc.arg('max_results')
+) h
+ORDER BY h.rank DESC, h.document_id;
+
 -- name: ListChunks :many
 SELECT document_id, idx, text, metadata
 FROM document.chunks

@@ -106,9 +106,6 @@ From `Config` in [modules/ingestion/service/cmd/ingestion-service](../modules/in
 | `KNOWCEL_DATABASE_URL` | `postgres://kb:kb@localhost:5432/kb?sslmode=disable` | The Postgres database holding the ingestion schema. |
 | `KNOWCEL_NATS_URL` | `nats://localhost:4222` | The NATS server with JetStream that carries the knowcel.ingestion.* events (comma-separated for a cluster). |
 | `KNOWCEL_DOCUMENT_ADDR` | `localhost:9001` | The document module (host:port), where uploads are created and their status is set. |
-| `KNOWCEL_URL_MAX_BYTES` | `20971520` | The largest page accepted when ingesting from a URL. |
-| `KNOWCEL_URL_TIMEOUT` | `20s` | Bounds fetching one page. |
-| `KNOWCEL_UPLOAD_ENDPOINT` | empty | The S3 address (host:port) this service uploads fetched pages to, if the upload URLs of the document module (signed for the address browsers use) are not reachable from here. |
 
 ## ingestion-worker
 

@@ -21,3 +21,10 @@ breaking:
     - modules/ingestion/proto/kb
     - modules/llm/proto/kb
     - platform/proto/kb
+  # The URL import (CreateFromUrl) was removed from the ingestion API on purpose.
+  # Drop this once the removal is on main.
+  ignore_only:
+    RPC_NO_DELETE:
+      - modules/ingestion/proto/knowcel/ingestion/v1/ingestion.proto
+    MESSAGE_NO_DELETE:
+      - modules/ingestion/proto/knowcel/ingestion/v1/ingestion.proto

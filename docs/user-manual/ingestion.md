@@ -1,6 +1,6 @@
 # Upload
 
-The Upload page is where you add files and web pages to your documents. Knowcelium uploads each file, reads its text, splits it into passages and prepares them for search and chat.
+The Upload page is where you add files to your documents. Knowcelium uploads each file, reads its text, splits it into passages and prepares them for search and chat.
 
 ## Upload documents
 
@@ -16,24 +16,6 @@ If a row says **Upload failed** because a chosen team isn't available, it may be
 Knowcelium accepts PDF, Word (.docx), HTML, Markdown and plain text files, including CSV, JSON, YAML and reStructuredText, of up to 50 MiB each (your administrator may have set another limit or allowed fewer types). From an HTML page Knowcelium reads the title and the main article, without menus and footers. Scanned PDFs without a text layer have no text to read and end up with no passages, unless your administrator has turned on text recognition (OCR); then Knowcelium reads those pages from their image, which makes processing slower and may misread poor scans.
 
 Keep the page open until every file shows a processing status. Closing the tab, or leaving the page before a file has started uploading, can stop that file's upload. While a file is still waiting or uploading, Knowcelium asks before you leave: in the app, a dialog **Leave while uploading?** with **Cancel** to stay and **Leave page** to go; when you close or reload the tab, your browser asks. Once every file is on its way, or when nothing is uploading, it never asks.
-
-## Add a web page
-
-Instead of a file you can add a web page by its address.
-
-1. Open **Upload**.
-2. Type or paste the address under **Add a web page**, for example `https://example.com/article`.
-3. Choose who can read the page under **Who can read this page?**, as for [files](#upload-documents).
-4. Select **Add page**. Knowcelium fetches the page, which can take a few seconds, and adds it to the list under **Uploads**.
-
-The document gets the page's title as its title, and [Documents](documents.md) shows the page's text without menus and footers. The page is saved as it was when you added it; later changes to the page aren't picked up. Processing then goes through the [same statuses as a file](#follow-the-processing-of-a-file).
-
-If Knowcelium can't add the page, the message under the address says why and the address stays in the field so that you can correct it:
-
-- "Only http and https addresses are supported": the address must start with `http://` or `https://`.
-- "Addresses on private networks are not allowed": Knowcelium only fetches pages on the public internet, not addresses inside your own network or on the computer it runs on.
-- "The page could not be reached" or "The page answered with status *code*": the site is down, blocks Knowcelium, or the address doesn't exist. Check it in your browser and try again.
-- "The page is larger than the limit of 20 MiB" (or the limit set for Knowcelium), "The page is empty", or "Files of type *type* are not accepted": the address leads to something Knowcelium can't read. Pages that need you to sign in aren't supported.
 
 ## Follow the processing of a file
 

@@ -29,7 +29,6 @@ import { SUPPORTED_FORMATS } from "./files.ts";
 import { useLeaveGuard } from "./leaveGuard.tsx";
 import { active, ProgressBar, stageLabel } from "./progress.tsx";
 import { putWithProgress } from "./put.ts";
-import { UrlImport } from "./UrlImport.tsx";
 import { useMyTeams } from "./useMyTeams.ts";
 import { type Upload as UploadRow, useUploads } from "./useUploads.ts";
 
@@ -239,12 +238,6 @@ export function Upload() {
           }}
         />
       </div>
-      <UrlImport
-        client={client}
-        teams={teams.map((t) => ({ id: t.id, name: t.name }))}
-        onJob={events.onJob}
-        announce={announce}
-      />
       {staged.length > 0 && (
         <form
           className="mb-6 rounded-card border border-border p-4"

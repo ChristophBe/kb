@@ -102,24 +102,6 @@ class CreateUploadResponse(_message.Message):
     upload_url: str
     def __init__(self, job: _Optional[_Union[Job, _Mapping]] = ..., upload_url: _Optional[str] = ...) -> None: ...
 
-class CreateFromUrlRequest(_message.Message):
-    __slots__ = ("url", "title", "access", "team_ids")
-    URL_FIELD_NUMBER: _ClassVar[int]
-    TITLE_FIELD_NUMBER: _ClassVar[int]
-    ACCESS_FIELD_NUMBER: _ClassVar[int]
-    TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
-    url: str
-    title: str
-    access: Access
-    team_ids: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, url: _Optional[str] = ..., title: _Optional[str] = ..., access: _Optional[_Union[Access, str]] = ..., team_ids: _Optional[_Iterable[str]] = ...) -> None: ...
-
-class CreateFromUrlResponse(_message.Message):
-    __slots__ = ("job",)
-    JOB_FIELD_NUMBER: _ClassVar[int]
-    job: Job
-    def __init__(self, job: _Optional[_Union[Job, _Mapping]] = ...) -> None: ...
-
 class ReplaceUploadRequest(_message.Message):
     __slots__ = ("document_id", "filename", "content_type", "size_bytes", "sha256")
     DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]

@@ -30,13 +30,6 @@ service IngestionService {
   // uploaded or processed, fails with FAILED_PRECONDITION (reason
   // DOCUMENT_BUSY); another user's document is NOT_FOUND.
   rpc ReplaceUpload(ReplaceUploadRequest) returns (ReplaceUploadResponse);
-  // CreateFromUrl fetches a web page (or a file at an address) and ingests it
-  // as a new document, which takes its title from the page. The job is
-  // returned already QUEUED, so there is nothing to upload or complete. An
-  // address that cannot be used (not http or https, on a private network,
-  // unreachable, too large, of a type the document module does not take) is
-  // rejected with a violation on url; the team rules are those of CreateUpload.
-  rpc CreateFromUrl(CreateFromUrlRequest) returns (CreateFromUrlResponse);
   rpc GetJob(GetJobRequest) returns (GetJobResponse);
   rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
   // WatchJob streams the job every time it changes until it is terminal.
@@ -124,21 +117,6 @@ message CreateUploadResponse {
   // A presigned URL to PUT the file to, sending the job's content_type as
   // Content-Type and exactly size_bytes bytes; other uploads are refused.
   string upload_url = 2;
-}
-
-message CreateFromUrlRequest {
-  // An http or https address on the public internet.
-  string url = 1;
-  // Defaults to the page's title, or its address when it has none.
-  string title = 2;
-  // Who can read the document; unset means ACCESS_PUBLIC.
-  Access access = 3;
-  // The teams of an ACCESS_TEAM document, as in CreateUploadRequest.
-  repeated string team_ids = 4;
-}
-
-message CreateFromUrlResponse {
-  Job job = 1;
 }
 
 message ReplaceUploadRequest {

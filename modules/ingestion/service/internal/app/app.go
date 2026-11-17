@@ -4,10 +4,7 @@
 package app
 
 import (
-	"cmp"
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -44,8 +41,6 @@ var (
 	// ErrReindexBusy means the document's job is queued or processing, so a
 	// reindex has to wait for it to finish.
 	ErrReindexBusy = errors.New("the document is being processed")
-	// ErrURLImportDisabled means the service was started without a fetcher.
-	ErrURLImportDisabled = errors.New("importing from a URL is not available")
 	// ErrNotAdvanced is returned by Jobs.Advance when the transition does not
 	// apply: the job is unknown, terminal, in another run or already past the
 	// requested status. Jobs.Reprocess returns it when the job is unknown or
@@ -185,35 +180,6 @@ type Documents interface {
 	MarkUploaded(ctx context.Context, id uuid.UUID) error
 }
 
-// Page is a document fetched from an address.
-type Page struct {
-	Body        []byte
-	ContentType string
-	// Title is the page's own title, empty if it has none.
-	Title    string
-	Filename string
-}
-
-// FetchError means the address cannot be ingested; Reason is for the user.
-type FetchError struct {
-	Reason string
-	Err    error
-}
-
-func (e *FetchError) Error() string { return "fetch: " + e.Reason }
-func (e *FetchError) Unwrap() error { return e.Err }
-
-// Fetcher downloads the page at an address. It returns a *FetchError for
-// anything the user can fix.
-type Fetcher interface {
-	Fetch(ctx context.Context, url string) (Page, error)
-}
-
-// Uploader puts a file to the upload URL of a new document.
-type Uploader interface {
-	Put(ctx context.Context, uploadURL, contentType string, body []byte) error
-}
-
 // Publisher announces jobs to the worker, once per run.
 type Publisher interface {
 	PublishUploaded(ctx context.Context, job Job) error
@@ -224,65 +190,10 @@ type Service struct {
 	jobs      Jobs
 	documents Documents
 	publisher Publisher
-	fetcher   Fetcher
-	uploader  Uploader
 }
 
 func New(jobs Jobs, documents Documents, publisher Publisher) *Service {
 	return &Service{jobs: jobs, documents: documents, publisher: publisher}
-}
-
-// WithURLImport enables CreateFromURL.
-func (s *Service) WithURLImport(f Fetcher, u Uploader) *Service {
-	s.fetcher, s.uploader = f, u
-	return s
-}
-
-// NewURLImport describes a page to ingest.
-type NewURLImport struct {
-	URL string
-	// Title defaults to the page's title.
-	Title   string
-	Access  ingestionv1.Access
-	TeamIDs []uuid.UUID
-}
-
-// CreateFromURL fetches the page, stores it as a new document of owner and
-// queues its job, like an upload that completed at once.
-func (s *Service) CreateFromURL(ctx context.Context, owner string, in NewURLImport) (Job, error) {
-	if s.fetcher == nil {
-		return Job{}, ErrURLImportDisabled
-	}
-	page, err := s.fetcher.Fetch(ctx, in.URL)
-	if err != nil {
-		return Job{}, err
-	}
-	title := in.Title
-	if title == "" {
-		title = cmp.Or(page.Title, in.URL)
-	}
-	sum := sha256.Sum256(page.Body)
-	job, uploadURL, err := s.CreateUpload(ctx, owner, NewUpload{
-		Title:       title,
-		Filename:    page.Filename,
-		ContentType: page.ContentType,
-		SizeBytes:   int64(len(page.Body)),
-		SHA256:      hex.EncodeToString(sum[:]),
-		Access:      in.Access,
-		TeamIDs:     in.TeamIDs,
-	})
-	if err != nil {
-		return Job{}, err
-	}
-	if err := s.uploader.Put(ctx, uploadURL, page.ContentType, page.Body); err != nil {
-		// Nothing will complete this job; fail it so that it doesn't wait for good.
-		_ = s.apply(ctx, Transition{
-			ID: job.ID, Run: job.Run, Status: ingestionv1.JobStatus_JOB_STATUS_FAILED,
-			Error: "could not store the page, try again",
-		})
-		return Job{}, errors.Join(ErrDocumentsUnavailable, err)
-	}
-	return s.CompleteUpload(ctx, owner, job.ID)
 }
 
 // CreateUpload registers the document and a job of owner waiting for its

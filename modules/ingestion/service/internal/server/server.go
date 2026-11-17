@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -76,33 +75,6 @@ func (s *Server) CreateUpload(ctx context.Context, req *ingestionv1.CreateUpload
 		return nil, s.toStatus("create upload", err)
 	}
 	return &ingestionv1.CreateUploadResponse{Job: toProto(job), UploadUrl: uploadURL}, nil
-}
-
-// CreateFromUrl ingests the page at an address as a new document of the caller.
-func (s *Server) CreateFromUrl(ctx context.Context, req *ingestionv1.CreateFromUrlRequest) (*ingestionv1.CreateFromUrlResponse, error) {
-	owner, err := caller(ctx)
-	if err != nil {
-		return nil, err
-	}
-	var violations []*errdetails.BadRequest_FieldViolation
-	if strings.TrimSpace(req.GetUrl()) == "" {
-		violations = append(violations, grpcserver.Violation("url", "An address is required"))
-	}
-	teamIDs, teamViolations := parseTeamIDs(req.GetTeamIds())
-	violations = append(violations, teamViolations...)
-	if len(violations) > 0 {
-		return nil, grpcserver.InvalidArgument(violations...)
-	}
-	job, err := s.app.CreateFromURL(ctx, owner, app.NewURLImport{
-		URL:     req.GetUrl(),
-		Title:   req.GetTitle(),
-		Access:  req.GetAccess(),
-		TeamIDs: teamIDs,
-	})
-	if err != nil {
-		return nil, s.toStatus("create from url", err)
-	}
-	return &ingestionv1.CreateFromUrlResponse{Job: toProto(job)}, nil
 }
 
 // parseTeamIDs parses the team ids of a request, without duplicates, and
@@ -293,10 +265,6 @@ func parseID(field, raw string) (uuid.UUID, error) {
 }
 
 func (s *Server) toStatus(op string, err error) error {
-	var fetchFailed *app.FetchError
-	if errors.As(err, &fetchFailed) {
-		return grpcserver.InvalidArgument(grpcserver.Violation("url", fetchFailed.Reason))
-	}
 	var invalid *app.InvalidUploadError
 	if errors.As(err, &invalid) {
 		violations := make([]*errdetails.BadRequest_FieldViolation, 0, len(invalid.Violations))
@@ -306,8 +274,6 @@ func (s *Server) toStatus(op string, err error) error {
 		return grpcserver.InvalidArgument(violations...)
 	}
 	switch {
-	case errors.Is(err, app.ErrURLImportDisabled):
-		return status.Error(codes.Unimplemented, err.Error())
 	case errors.Is(err, app.ErrNotFound):
 		return status.Error(codes.NotFound, err.Error())
 	case errors.Is(err, app.ErrAlreadyCompleted):

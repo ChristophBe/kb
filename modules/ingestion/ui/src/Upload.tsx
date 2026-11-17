@@ -13,6 +13,7 @@ import {
   DelayedLoading,
   EmptyState,
   ErrorMessage,
+  formatBytes,
   formatTime,
   IconButton,
   isValidAccess,
@@ -29,6 +30,7 @@ import { SUPPORTED_FORMATS } from "./files.ts";
 import { useLeaveGuard } from "./leaveGuard.tsx";
 import { active, ProgressBar, stageLabel } from "./progress.tsx";
 import { putWithProgress } from "./put.ts";
+import { Stepper } from "./Stepper.tsx";
 import { useMyTeams } from "./useMyTeams.ts";
 import { type Upload as UploadRow, useUploads } from "./useUploads.ts";
 
@@ -40,6 +42,9 @@ const statusLabel: Record<JobStatus, [string, Tone]> = {
   [JobStatus.DONE]: ["Ready", "success"],
   [JobStatus.FAILED]: ["Failed", "danger"],
 };
+
+const STEP_FILES = "Choose files";
+const STEP_ACCESS = "Choose who can read them and upload";
 
 /** How often the list refreshes while a job is being processed, for jobs no upload of this page watches. */
 const ACTIVE_REFRESH_MS = 3000;
@@ -83,7 +88,18 @@ export function Upload() {
   const accessStep = useRef<HTMLDivElement>(null);
   const stage = (files: File[]) => {
     if (files.length === 0) return;
+    if (staged.length === 0) announce(`Step 2 of 2: ${STEP_ACCESS}`);
     setStaged((s) => [...s, ...files]);
+  };
+  const unstage = (index: number) => {
+    const last = staged.length === 1;
+    setStaged((s) => s.filter((_, i) => i !== index));
+    if (last) {
+      announce(`Step 1 of 2: ${STEP_FILES}`);
+      setFocusAfter("choose");
+    } else {
+      setFocusAfter("access");
+    }
   };
   const jobs = useQuery({
     queryKey: ["ingestion-jobs"],
@@ -121,8 +137,10 @@ export function Upload() {
     setStaged([]);
     setChoice(PUBLIC_ACCESS);
     setFocusAfter("choose");
+    announce(`Upload started. Step 1 of 2: ${STEP_FILES}`);
   };
   const cancelAccess = () => {
+    announce(`Step 1 of 2: ${STEP_FILES}`);
     setStaged([]);
     setChoice(PUBLIC_ACCESS);
     setFocusAfter("choose");
@@ -134,7 +152,9 @@ export function Upload() {
     const target =
       focusAfter === "choose"
         ? chooseButton.current
-        : list.current?.querySelector<HTMLElement>(`[data-focus="${focusAfter}"]`);
+        : focusAfter === "access"
+          ? accessStep.current?.querySelector<HTMLElement>("input")
+          : list.current?.querySelector<HTMLElement>(`[data-focus="${focusAfter}"]`);
     (target ?? chooseButton.current)?.focus();
     setFocusAfter(null);
   }, [focusAfter]);
@@ -192,6 +212,25 @@ export function Upload() {
         title="Upload"
         description="Upload documents or add web pages to the knowledge base."
       />
+      <Stepper
+        label="Upload steps"
+        steps={[
+          {
+            label: STEP_FILES,
+            hint: hasStaged
+              ? `${staged.length} ${staged.length === 1 ? "file" : "files"} chosen`
+              : "Drop files below or select Choose files.",
+            state: hasStaged ? "done" : "current",
+          },
+          {
+            label: STEP_ACCESS,
+            hint: hasStaged
+              ? "Nothing is uploaded until you select Upload."
+              : "Choose files first.",
+            state: hasStaged ? "current" : "upcoming",
+          },
+        ]}
+      />
       {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: drag and drop is a pointer shortcut; keyboard users use "Choose files". */}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: same reason. */}
       <div
@@ -211,7 +250,7 @@ export function Upload() {
           <UploadIcon className="size-6" aria-hidden="true" />
         </span>
         {dragging ? (
-          <span>Drop to upload</span>
+          <span>Drop to choose these files</span>
         ) : (
           <span className="flex items-center gap-2">
             Drop files here or
@@ -246,14 +285,25 @@ export function Upload() {
             if (isValidAccess(choice)) confirmAccess();
           }}
         >
-          <p className="mb-3 text-sm">
-            {staged.length === 1 ? (
-              <span className="font-medium">{staged[0]?.name}</span>
-            ) : (
-              <span className="font-medium">{staged.length} files</span>
-            )}{" "}
-            {staged.length === 1 ? "is" : "are"} ready to upload.
-          </p>
+          <h2 className="mb-2 font-medium">{STEP_ACCESS}</h2>
+          <ul
+            aria-label="Chosen files"
+            className="mb-3 divide-y divide-dotted divide-border text-sm"
+          >
+            {staged.map((file, i) => (
+              <li key={`${i}-${file.name}`} className="flex items-center gap-x-4 py-1">
+                <span className="min-w-0 flex-1 truncate font-medium" title={file.name}>
+                  {file.name}
+                </span>
+                <span className="font-mono text-fg-muted tabular-nums">
+                  {formatBytes(file.size)}
+                </span>
+                <IconButton label={`Remove ${file.name}`} onClick={() => unstage(i)}>
+                  <X className="size-4" />
+                </IconButton>
+              </li>
+            ))}
+          </ul>
           <div ref={accessStep}>
             <AccessPicker
               legend="Who can read this?"

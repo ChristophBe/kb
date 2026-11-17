@@ -35,8 +35,9 @@ If you type an address that doesn't exist, you see **Page not found** with a lin
 ## Add your first documents
 
 1. Open **Upload**.
-2. Drop files onto the upload area, or select **Choose files**. PDF, Markdown and plain text files work.
-3. Wait until each file shows **Ready** under **Uploads**.
+2. Step 1, **Choose files**: drop files onto the upload area, or select **Choose files**. PDF, Markdown and plain text files work.
+3. Step 2, **Choose who can read them and upload**: leave **Public** selected, or pick teams, then select **Upload**. Nothing is uploaded before that.
+4. Wait until each file shows **Ready** under **Uploads**.
 
 The files then appear under **Documents** with the status **Ready**. More in [Upload documents](ingestion.md#upload-documents).
 

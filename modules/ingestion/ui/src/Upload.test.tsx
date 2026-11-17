@@ -320,8 +320,69 @@ describe("Upload", () => {
       expect(
         (within(group).getByRole("radio", { name: /Public/ }) as HTMLInputElement).checked,
       ).toBe(true);
-      expect(screen.getByText("is ready to upload.")).toBeTruthy();
+      expect(screen.getByRole("list", { name: "Chosen files" })).toBeTruthy();
       expect(createUpload).not.toHaveBeenCalled();
+    });
+
+    const steps = () => {
+      const items = within(screen.getByRole("list", { name: "Upload steps" })).getAllByRole(
+        "listitem",
+      );
+      return items.map((li) => ({
+        text: li.textContent,
+        current: li.getAttribute("aria-current") === "step",
+      }));
+    };
+
+    it("shows step 2 as not available before files are chosen", async () => {
+      renderModule(ingestion, transport(true));
+      await screen.findByText("No uploads yet. Drop files above to add documents.");
+      const [one, two] = steps();
+      expect(one?.current).toBe(true);
+      expect(two?.current).toBe(false);
+      expect(two?.text).toContain("Choose who can read them and upload");
+      expect(two?.text).toContain("Choose files first.");
+    });
+
+    it("moves to step 2 when files are chosen, lists them and focuses the access step", async () => {
+      renderModule(ingestion, transport(true));
+      await screen.findByText("No uploads yet. Drop files above to add documents.");
+      choose("a.md", "b.md");
+      const group = await screen.findByRole("group", { name: "Who can read this?" });
+      const [one, two] = steps();
+      expect(one?.current).toBe(false);
+      expect(one?.text).toContain("(done)");
+      expect(one?.text).toContain("2 files chosen");
+      expect(two?.current).toBe(true);
+      expect(two?.text).toContain("Nothing is uploaded until you select Upload.");
+      expect(screen.getByRole("button", { name: "Remove a.md" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Remove b.md" })).toBeTruthy();
+      expect(group.contains(document.activeElement)).toBe(true);
+      // Removing one keeps step 2, removing the last returns to step 1.
+      fireEvent.click(screen.getByRole("button", { name: "Remove a.md" }));
+      expect(steps()[1]?.current).toBe(true);
+      fireEvent.click(screen.getByRole("button", { name: "Remove b.md" }));
+      expect(steps()[0]?.current).toBe(true);
+      await waitFor(() =>
+        expect(document.activeElement).toBe(screen.getByRole("button", { name: "Choose files" })),
+      );
+    });
+
+    it("returns to step 1 after Upload and starts the upload", async () => {
+      const createUpload = vi.fn(() => ({ jobId: "j1", uploadUrl: "http://x/put" }));
+      const t = createRouterTransport(({ service }) => {
+        service(IngestionService, { listJobs: () => ({ jobs: [] }), createUpload });
+        service(IamService, { listMyTeams: () => ({ teams: [] }) });
+      });
+      put.mockResolvedValue(undefined as never);
+      renderModule(ingestion, t);
+      await screen.findByText("No uploads yet. Drop files above to add documents.");
+      choose("a.md");
+      fireEvent.click(await screen.findByRole("button", { name: "Upload" }));
+      await waitFor(() => expect(createUpload).toHaveBeenCalled());
+      expect(steps()[0]?.current).toBe(true);
+      expect(steps()[1]?.text).toContain("Choose files first.");
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Choose files" }));
     });
 
     it("needs a team for team access", async () => {
@@ -342,6 +403,8 @@ describe("Upload", () => {
       choose("a.md");
       fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
       expect(screen.queryByRole("group", { name: "Who can read this?" })).toBeNull();
+      expect(steps()[0]?.current).toBe(true);
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Choose files" }));
     });
 
     it("offers only public without IAM, and no error", async () => {

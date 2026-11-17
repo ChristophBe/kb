@@ -4,10 +4,12 @@ The Upload page is where you add files to your documents. Knowcelium uploads eac
 
 ## Upload documents
 
-1. Open **Upload**.
-2. Drop one or more files onto the upload area, or select **Choose files** and pick them.
-3. Choose who can read the files under **Who can read this?**, then select **Upload**. Nothing is uploaded before you confirm; **Cancel** drops the files you added.
-4. Each file gets a row under **Uploads** with a progress bar. Files wait their turn (**Waiting**) when several are uploading.
+The page shows two steps above the upload area, and marks the one you are on:
+
+1. **Choose files**: drop one or more files onto the upload area, or select **Choose files** and pick them. Until you have chosen files, step 2 is greyed out and says **Choose files first.**
+2. **Choose who can read them and upload**: once you have chosen files, step 1 shows as done and step 2 takes over. Your files are listed with their sizes; select the **X** next to one to remove it. Choose who can read the files under **Who can read this?**, then select **Upload**. **Nothing is uploaded until you select Upload.** **Cancel** drops the files you added.
+
+After **Upload** or **Cancel** the page is back at step 1 for the next batch, and your keyboard focus goes to **Choose files**. Each uploaded file gets a row under **Uploads** with a progress bar. Files wait their turn (**Waiting**) when several are uploading. On a narrow screen the two steps are stacked.
 
 **Public** is preselected: every signed-in user can read the files. Choose **Team** to limit them to you and the members of the teams you tick; at least one team is required. If you belong to no team, or teams can't be looked up for a moment, only **Public** is available. Each file's row shows **Public**, or **Team:** and the teams it was added with. You can change who can read a document later, on [its page](sharing-documents.md#share-a-document-with-teams).
 

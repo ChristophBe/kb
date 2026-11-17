@@ -41,7 +41,7 @@ Uploads
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Drop zone:** a real `<button>Choose files</button>` opens the hidden-but-focusable file input; drag and drop is a pointer shortcut. While dragging, the zone shows "Drop to upload".
+- **Drop zone:** a real `<button>Choose files</button>` opens the hidden-but-focusable file input; drag and drop is a pointer shortcut. While dragging, the zone shows "Drop to choose these files".
 - **Rows** are a list (`<ul>`): filename, then state-specific content:
   - *Uploading:* a `<progress>` labelled "Uploading notes.md", with the value as text; `[✕]` cancels ("Cancel upload of notes.md").
   - *Rejected:* checked client-side before any request (#34); stays until dismissed.

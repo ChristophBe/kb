@@ -97,8 +97,6 @@ static_resources:
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.ingestion.v1.IngestionService/ReplaceUpload" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
-                        - match: { path: "/knowcel.ingestion.v1.IngestionService/CreateFromUrl" }
-                          route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.ingestion.v1.IngestionService/GetJob" }
                           route: { cluster: ingestion-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.ingestion.v1.IngestionService/ListJobs" }

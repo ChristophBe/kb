@@ -45,22 +45,3 @@ func TestInvalidConfigListsEveryProblem(t *testing.T) {
 		t.Errorf("problems = %q\nwant %q", cfgErr.Problems, want)
 	}
 }
-
-func TestInvalidURLImportSettingsAreReported(t *testing.T) {
-	t.Setenv("KNOWCEL_URL_MAX_BYTES", "0")
-	t.Setenv("KNOWCEL_URL_TIMEOUT", "0s")
-	t.Setenv("KNOWCEL_UPLOAD_ENDPOINT", "s3")
-	_, err := loadConfig()
-	var cfgErr *config.Error
-	if !errors.As(err, &cfgErr) {
-		t.Fatalf("err = %v, want *config.Error", err)
-	}
-	want := []string{
-		"KNOWCEL_URL_MAX_BYTES: must be at least 1, got 0",
-		"KNOWCEL_URL_TIMEOUT: must be positive, got 0s",
-		`KNOWCEL_UPLOAD_ENDPOINT: must be host:port, got "s3"`,
-	}
-	if !slices.Equal(cfgErr.Problems, want) {
-		t.Errorf("problems = %q\nwant %q", cfgErr.Problems, want)
-	}
-}

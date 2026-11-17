@@ -71,6 +71,11 @@ class ChatServiceStub:
                 request_serializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.StreamChatRequest.SerializeToString,
                 response_deserializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.StreamChatResponse.FromString,
                 _registered_method=True)
+        self.StopChat = channel.unary_unary(
+                '/knowcel.chat.v1.ChatService/StopChat',
+                request_serializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.StopChatRequest.SerializeToString,
+                response_deserializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.StopChatResponse.FromString,
+                _registered_method=True)
 
 
 class ChatServiceServicer:
@@ -124,6 +129,15 @@ class ChatServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def StopChat(self, request, context):
+        """StopChat stops the answer being written in a conversation; the text so far
+        is kept with the status stopped. Disconnecting from StreamChat does not
+        stop the answer, it keeps being written in the background.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ChatServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -161,6 +175,11 @@ def add_ChatServiceServicer_to_server(servicer, server):
                     servicer.StreamChat,
                     request_deserializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.StreamChatRequest.FromString,
                     response_serializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.StreamChatResponse.SerializeToString,
+            ),
+            'StopChat': grpc.unary_unary_rpc_method_handler(
+                    servicer.StopChat,
+                    request_deserializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.StopChatRequest.FromString,
+                    response_serializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.StopChatResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -354,6 +373,33 @@ class ChatService:
             '/knowcel.chat.v1.ChatService/StreamChat',
             knowcel_dot_chat_dot_v1_dot_chat__pb2.StreamChatRequest.SerializeToString,
             knowcel_dot_chat_dot_v1_dot_chat__pb2.StreamChatResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def StopChat(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.chat.v1.ChatService/StopChat',
+            knowcel_dot_chat_dot_v1_dot_chat__pb2.StopChatRequest.SerializeToString,
+            knowcel_dot_chat_dot_v1_dot_chat__pb2.StopChatResponse.FromString,
             options,
             channel_credentials,
             insecure,

@@ -63,6 +63,15 @@ describe("navEntries", () => {
     ]);
   });
 
+  it("passes an item's badge hook on", () => {
+    const Icon = () => null;
+    const useBadge = () => 2;
+    const modules: ModuleManifest[] = [
+      { id: "x", title: "X", icon: Icon, nav: [{ path: "", label: "Open", useBadge }] },
+    ];
+    expect(navEntries(modules)[0]?.useBadge).toBe(useBadge);
+  });
+
   it("hides items that require a platform admin until the user is one", () => {
     const Icon = () => null;
     const modules: ModuleManifest[] = [

@@ -60,6 +60,7 @@ async def run() -> None:
                 )
             finally:
                 loading.cancel()
+                await servicer.shutdown()
     finally:
         await engine.dispose()
 

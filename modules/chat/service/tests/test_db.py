@@ -53,6 +53,21 @@ async def test_conversations_sort_by_their_latest_message(repo: SqlRepository) -
     assert [c.title for c in listed] == ["first", "second", "empty"]
 
 
+async def test_completed_unseen_is_set_and_cleared(repo: SqlRepository) -> None:
+    conv = await repo.create_conversation(ALICE, "answered", [])
+    assert not conv.completed_unseen
+
+    await repo.set_completed_unseen(conv.id, True)
+    got = await repo.get_conversation(ALICE, conv.id)
+    assert got is not None
+    assert got.completed_unseen
+
+    await repo.set_completed_unseen(conv.id, False)
+    got = await repo.get_conversation(ALICE, conv.id)
+    assert got is not None
+    assert not got.completed_unseen
+
+
 async def test_the_team_scope_is_stored_and_updated(repo: SqlRepository) -> None:
     a, b = uuid.uuid4(), uuid.uuid4()
     conv = await repo.create_conversation(ALICE, "scoped", [], [a, b])

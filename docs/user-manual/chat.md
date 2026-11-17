@@ -80,11 +80,21 @@ When teams are ticked:
 - If a team is deleted or you leave it, it is dropped from the choice. When no chosen team is left, the chat uses all documents again.
 - If Knowcelium says you are not a member of a team, it may be one you joined a moment ago, which can take up to half a minute to work here. Try again shortly. While teams can't be looked up, the button is hidden and chats keep using their last choice.
 
+## Leave while an answer is written
+
+An answer keeps being written when you open another page, another conversation or close the tab. When you come back to the conversation while the answer is still being written, it shows **Writing the answer…**; you can [stop it](#stop-an-answer) or wait, the answer then appears by itself. You can't ask the next question until it is done.
+
+When an answer finishes while you are elsewhere, **Chat** in the sidebar shows a number: the conversations with an answer you haven't seen yet. The number goes away when you open the conversation.
+
+The first time you ask a question, Knowcelium offers to notify you when answers are ready; select **Enable notifications** and allow them in your browser. From then on, an answer that finishes while the tab is in the background or you are on another page shows a notification; select it to open the conversation. If you don't allow notifications, or your browser doesn't support them, the number in the sidebar still shows. Knowcelium offers notifications only once; you can change the permission in your browser's site settings.
+
+If the service restarts while an answer is being written, the answer so far is kept and marked **Stopped**.
+
 ## Stop an answer
 
 While an answer is being written, select **Stop** next to the question box, or press Escape.
 
-The text written so far is kept and marked **Stopped**. You can ask the next question right away, or select **Retry** under the newest answer to ask the same question again. Leaving the conversation or closing the tab also stops an answer that is being written.
+The text written so far is kept and marked **Stopped**. You can ask the next question right away, or select **Retry** under the newest answer to ask the same question again. Leaving the conversation or closing the tab does not stop it, see [Leave while an answer is written](#leave-while-an-answer-is-written).
 
 ## When an answer fails
 

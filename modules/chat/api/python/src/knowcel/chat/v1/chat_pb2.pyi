@@ -75,7 +75,7 @@ class ChatMessage(_message.Message):
     def __init__(self, id: _Optional[str] = ..., role: _Optional[_Union[MessageRole, str]] = ..., content: _Optional[str] = ..., citations: _Optional[_Iterable[_Union[Citation, _Mapping]]] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., status: _Optional[_Union[MessageStatus, str]] = ...) -> None: ...
 
 class Conversation(_message.Message):
-    __slots__ = ("id", "title", "create_time", "update_time", "document_ids", "last_message_time", "last_message_preview", "owner_id", "team_ids")
+    __slots__ = ("id", "title", "create_time", "update_time", "document_ids", "last_message_time", "last_message_preview", "owner_id", "team_ids", "generating", "completed_unseen")
     ID_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
     CREATE_TIME_FIELD_NUMBER: _ClassVar[int]
@@ -85,6 +85,8 @@ class Conversation(_message.Message):
     LAST_MESSAGE_PREVIEW_FIELD_NUMBER: _ClassVar[int]
     OWNER_ID_FIELD_NUMBER: _ClassVar[int]
     TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
+    GENERATING_FIELD_NUMBER: _ClassVar[int]
+    COMPLETED_UNSEEN_FIELD_NUMBER: _ClassVar[int]
     id: str
     title: str
     create_time: _timestamp_pb2.Timestamp
@@ -94,7 +96,9 @@ class Conversation(_message.Message):
     last_message_preview: str
     owner_id: str
     team_ids: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., document_ids: _Optional[_Iterable[str]] = ..., last_message_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., last_message_preview: _Optional[str] = ..., owner_id: _Optional[str] = ..., team_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+    generating: bool
+    completed_unseen: bool
+    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., document_ids: _Optional[_Iterable[str]] = ..., last_message_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., last_message_preview: _Optional[str] = ..., owner_id: _Optional[str] = ..., team_ids: _Optional[_Iterable[str]] = ..., generating: _Optional[bool] = ..., completed_unseen: _Optional[bool] = ...) -> None: ...
 
 class TeamIds(_message.Message):
     __slots__ = ("ids",)
@@ -213,6 +217,16 @@ class StreamChatRequest(_message.Message):
     use_knowledge_base: bool
     model: str
     def __init__(self, conversation_id: _Optional[str] = ..., content: _Optional[str] = ..., use_knowledge_base: _Optional[bool] = ..., model: _Optional[str] = ...) -> None: ...
+
+class StopChatRequest(_message.Message):
+    __slots__ = ("conversation_id",)
+    CONVERSATION_ID_FIELD_NUMBER: _ClassVar[int]
+    conversation_id: str
+    def __init__(self, conversation_id: _Optional[str] = ...) -> None: ...
+
+class StopChatResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
 
 class StreamChatResponse(_message.Message):
     __slots__ = ("citations", "delta", "message", "error")

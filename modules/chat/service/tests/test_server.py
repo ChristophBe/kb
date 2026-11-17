@@ -143,6 +143,9 @@ class MemoryRepo:
     async def set_title(self, id: uuid.UUID, title: str):
         self.conversations[id].title = title
 
+    async def set_completed_unseen(self, id: uuid.UUID, unseen: bool):
+        self.conversations[id].completed_unseen = unseen
+
     async def update_conversation(
         self,
         owner: str,
@@ -375,19 +378,76 @@ async def test_an_llm_failure_mid_answer_keeps_the_partial_answer() -> None:
     assert (saved.content, saved.status) == ("Paris is", chat_pb2.MESSAGE_STATUS_FAILED)
 
 
-async def test_a_cancelled_stream_stops_generation_and_keeps_the_answer_as_stopped() -> None:
-    class WatchedRepo(MemoryRepo):
-        def __init__(self) -> None:
-            super().__init__()
-            self.answered = asyncio.Event()
+class GatedLlm(FakeLlm):
+    """An llm client that writes the first word, then waits for `release`."""
 
-        async def add_message(self, *args: Any, **kwargs: Any):
-            msg = await super().add_message(*args, **kwargs)
-            if msg.role == chat_pb2.MESSAGE_ROLE_ASSISTANT:
-                self.answered.set()
-            return msg
+    def __init__(self) -> None:
+        super().__init__()
+        self.release = asyncio.Event()
 
-    repo, llm = WatchedRepo(), SlowLlm()
+    async def _gen(self):
+        yield llm_pb2.GenerateResponse(delta="Paris")
+        await self.release.wait()
+        yield llm_pb2.GenerateResponse(delta=" is")
+        yield llm_pb2.GenerateResponse(done=True)
+
+
+async def _wait_until(condition: Callable[[], Any]) -> None:
+    async with asyncio.timeout(2):
+        while not condition():  # noqa: ASYNC110
+            await asyncio.sleep(0.01)
+
+
+async def _start_answer(stub: Any, content: str = "Hi") -> tuple[Any, str]:
+    conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+    call = stub.StreamChat(
+        chat_pb2.StreamChatRequest(
+            conversation_id=conv.id, content=content, use_knowledge_base=True
+        )
+    )
+    kinds = [(await call.read()).WhichOneof("event") for _ in range(2)]
+    assert kinds == ["citations", "delta"]
+    return call, conv.id
+
+
+async def test_an_answer_keeps_being_written_after_the_client_disconnects() -> None:
+    repo, llm = MemoryRepo(), GatedLlm()
+    async with running(repo, FakeDocuments(), llm) as connect:
+        stub = connect()
+        call, conv_id = await _start_answer(stub)
+        call.cancel()  # a closed tab or leaving the page
+        await _wait_until(lambda: call.done())
+
+        listed = await stub.ListConversations(chat_pb2.ListConversationsRequest())
+        assert [(c.generating, c.completed_unseen) for c in listed.conversations] == [(True, False)]
+
+        llm.release.set()
+        await _wait_until(lambda: repo.conversations[uuid.UUID(conv_id)].completed_unseen)
+        listed = await stub.ListConversations(chat_pb2.ListConversationsRequest())
+        assert [(c.generating, c.completed_unseen) for c in listed.conversations] == [(False, True)]
+
+        got = await stub.GetConversation(chat_pb2.GetConversationRequest(id=conv_id))
+        assert [(m.content, m.status) for m in got.messages] == [
+            ("Hi", chat_pb2.MESSAGE_STATUS_COMPLETE),
+            ("Paris is", chat_pb2.MESSAGE_STATUS_COMPLETE),
+        ]
+        # Opening the conversation was seeing the answer.
+        listed = await stub.ListConversations(chat_pb2.ListConversationsRequest())
+        assert not listed.conversations[0].completed_unseen
+
+
+async def test_an_answer_that_is_followed_to_the_end_is_not_unseen() -> None:
+    repo = MemoryRepo()
+    async with running(repo, FakeDocuments(), FakeLlm()) as connect:
+        stub = connect()
+        conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+        request = chat_pb2.StreamChatRequest(conversation_id=conv.id, content="Hi")
+        _ = [e async for e in stub.StreamChat(request)]
+    assert not repo.conversations[uuid.UUID(conv.id)].completed_unseen
+
+
+async def test_stop_chat_stops_generation_and_keeps_the_answer_as_stopped() -> None:
+    repo, llm = MemoryRepo(), SlowLlm()
     async with running(repo, FakeDocuments(), llm) as connect:
         stub = connect()
         conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
@@ -398,11 +458,12 @@ async def test_a_cancelled_stream_stops_generation_and_keeps_the_answer_as_stopp
         )
         kinds = [(await call.read()).WhichOneof("event") for _ in range(3)]
         assert kinds == ["citations", "delta", "delta"]
-        call.cancel()  # what the browser's abort (Stop, a closed tab) becomes
 
-        async with asyncio.timeout(1):
-            await repo.answered.wait()
+        await stub.StopChat(chat_pb2.StopChatRequest(conversation_id=conv.id))
+
         got = await stub.GetConversation(chat_pb2.GetConversationRequest(id=conv.id))
+        assert not got.conversation.generating
+        assert [e async for e in call] == []  # the stream ended
 
     assert llm.calls[0].cancelled
     assert [(m.role, m.content, m.status) for m in got.messages] == [
@@ -410,6 +471,56 @@ async def test_a_cancelled_stream_stops_generation_and_keeps_the_answer_as_stopp
         (chat_pb2.MESSAGE_ROLE_ASSISTANT, "Paris is", chat_pb2.MESSAGE_STATUS_STOPPED),
     ]
     assert got.messages[1].citations[0].document_id == "d1"
+    # A stopped answer is not news.
+    assert not repo.conversations[uuid.UUID(conv.id)].completed_unseen
+
+
+async def test_stop_chat_without_an_answer_does_nothing(env: Env) -> None:
+    stub, *_ = env
+    conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+    await stub.StopChat(chat_pb2.StopChatRequest(conversation_id=conv.id))
+
+
+async def test_stop_chat_of_an_unknown_conversation_is_not_found(env: Env) -> None:
+    stub, *_ = env
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.StopChat(chat_pb2.StopChatRequest(conversation_id=str(uuid.uuid4())))
+    assert err.value.code() == grpc.StatusCode.NOT_FOUND
+
+
+async def test_a_second_question_while_an_answer_is_written_is_refused() -> None:
+    llm = GatedLlm()
+    async with running(MemoryRepo(), FakeDocuments(), llm) as connect:
+        stub = connect()
+        call, conv_id = await _start_answer(stub)
+        with pytest.raises(grpc.aio.AioRpcError) as err:
+            async for _ in stub.StreamChat(
+                chat_pb2.StreamChatRequest(conversation_id=conv_id, content="Again")
+            ):
+                pass
+        assert err.value.code() == grpc.StatusCode.FAILED_PRECONDITION
+        llm.release.set()
+        _ = [e async for e in call]
+
+
+async def test_deleting_a_conversation_stops_its_answer() -> None:
+    repo, llm = MemoryRepo(), SlowLlm()
+    async with running(repo, FakeDocuments(), llm) as connect:
+        stub = connect()
+        call, conv_id = await _start_answer(stub)
+        await stub.DeleteConversation(chat_pb2.DeleteConversationRequest(id=conv_id))
+        assert not [e for e in [e async for e in call] if e.WhichOneof("event") == "message"]
+    assert llm.calls[0].cancelled
+
+
+async def test_the_runner_stops_all_answers_on_shutdown() -> None:
+    repo, llm = MemoryRepo(), SlowLlm()
+    svc = servicer(repo, FakeDocuments(), llm)
+    conv = await repo.create_conversation(ALICE, "", [])
+    svc.runner.start(ALICE, conv.id, "Hi", "", False, None)
+    await _wait_until(lambda: llm.calls)
+    await svc.shutdown()
+    assert [m.status for m in repo.messages[1:]] == [chat_pb2.MESSAGE_STATUS_STOPPED]
 
 
 async def test_stream_chat_rejects_empty_content(env: Env) -> None:

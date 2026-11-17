@@ -19,8 +19,10 @@ import { ArrowUp, Copy, MessageSquare, RotateCcw, Square, TriangleAlert } from "
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { Answer } from "./Answer.tsx";
+import { ACTIVITY_KEY } from "./badge.ts";
 import { ConversationHeader } from "./ConversationHeader.tsx";
 import { ModelPicker, useModelChoice } from "./model.tsx";
+import { notifyAnswerReady, offerNotifications } from "./notify.ts";
 import type { StartState } from "./StartChat.tsx";
 import { ScopeChips, SourcesControl } from "./scope.tsx";
 
@@ -41,6 +43,7 @@ interface Stopped extends Pending {
 
 const INTERRUPTED = "The answer was interrupted.";
 const SEND_HINT = "send-hint";
+const GENERATING_POLL_MS = 2000;
 
 /** A readable reason for a call that failed outright, without the raw status. */
 function readableError(err: unknown): string {
@@ -72,26 +75,40 @@ export function Conversation() {
   const conversation = useQuery({
     queryKey: ["conversations", id],
     queryFn: () => client.getConversation({ id }),
+    // An answer written while nobody follows it (a reopened page): look again until it is done.
+    refetchInterval: (query) =>
+      query.state.data?.conversation?.generating && !abort.current ? GENERATING_POLL_MS : false,
   });
   const [input, setInput] = useState("");
   const [useKnowledgeBase, setUseKnowledgeBase] = useState(true);
   const modelChoice = useModelChoice(id);
   const [pending, setPending] = useState<Pending | null>(null);
+  // An answer is being written that this page isn't following (it was left and reopened).
+  const generating = !pending && Boolean(conversation.data?.conversation?.generating);
+  const busy = pending !== null || generating;
   const [error, setError] = useState<string | null>(null);
   // Reasons for answers that failed while this page was open, by message id.
   // Reloaded failures only have their status, so they get a generic reason.
   const [failures, setFailures] = useState<Record<string, string>>({});
   const [stopped, setStopped] = useState<Stopped | null>(null);
   const [status, setStatus] = useState("");
-  // Aborting the stream cancels the answer on the server, which saves it as stopped.
+  // Aborting the stream only stops following the answer; `stop` also tells the server.
   const abort = useRef<AbortController | null>(null);
+  // Set while the user stops the answer, to tell Stop from leaving the page.
+  const stopping = useRef(false);
   const composer = useRef<HTMLTextAreaElement>(null);
   const composerId = useId();
   const bottom = useRef<HTMLDivElement>(null);
 
-  // Leaving the conversation stops its answer, like closing the tab does.
+  // Leaving the conversation stops following its answer, which is written on in the background.
   // biome-ignore lint/correctness/useExhaustiveDependencies: runs when the conversation changes.
   useEffect(() => () => abort.current?.abort(), [id]);
+
+  // The server clears "answer finished while away" when it serves the conversation.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs once the conversation is loaded.
+  useEffect(() => {
+    if (conversation.isSuccess) queryClient.invalidateQueries({ queryKey: ACTIVITY_KEY });
+  }, [id, conversation.isSuccess]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll down whenever new messages or tokens arrive.
   useEffect(() => {
@@ -111,7 +128,7 @@ export function Conversation() {
   };
 
   const ask = async (question: string) => {
-    if (!question || pending) return;
+    if (!question || busy) return;
     setError(null);
     setStopped(null);
     setStatus("");
@@ -119,6 +136,8 @@ export function Conversation() {
     setPending(state);
     const controller = new AbortController();
     abort.current = controller;
+    stopping.current = false;
+    offerNotifications();
     const savedCount = (conversation.data?.messages.length ?? 0) + 2;
     try {
       const stream = client.streamChat(
@@ -130,6 +149,8 @@ export function Conversation() {
         },
         { signal: controller.signal },
       );
+      // The answer is now being written; the sidebar badge looks for its end.
+      queryClient.invalidateQueries({ queryKey: ACTIVITY_KEY });
       for await (const res of stream) {
         const event = res.event;
         if (event.case === "citations") state = { ...state, citations: event.value.items };
@@ -139,11 +160,18 @@ export function Conversation() {
           const [messageId, reason] = [event.value.id, state.failure];
           setFailures((f) => ({ ...f, [messageId]: reason }));
         }
+        if (event.case === "message" && document.hidden) {
+          const title = conversation.data?.conversation?.title ?? "";
+          notifyAnswerReady(title, () => window.focus());
+        }
         setPending(state);
       }
       await queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ACTIVITY_KEY });
     } catch (err) {
-      if (controller.signal.aborted) {
+      if (controller.signal.aborted && !stopping.current) {
+        // Left the page: the answer goes on without us.
+      } else if (controller.signal.aborted) {
         setStopped({ ...state, conversationId: id, savedCount });
         setStatus("Answer stopped");
         await refetchUntil(savedCount);
@@ -157,6 +185,11 @@ export function Conversation() {
   };
 
   const stop = () => {
+    stopping.current = true;
+    client
+      .stopChat({ conversationId: id })
+      .then(() => queryClient.invalidateQueries({ queryKey: ["conversations"] }))
+      .catch(() => {});
     abort.current?.abort();
     composer.current?.focus();
   };
@@ -181,7 +214,7 @@ export function Conversation() {
   const send = (e: FormEvent) => {
     e.preventDefault();
     const question = input.trim();
-    if (!question || pending) return;
+    if (!question || busy) return;
     setInput("");
     ask(question);
   };
@@ -193,7 +226,7 @@ export function Conversation() {
   const retry =
     (last?.status === MessageStatus.FAILED || last?.status === MessageStatus.STOPPED) &&
     lastQuestion?.role === MessageRole.USER &&
-    !pending
+    !busy
       ? () => ask(lastQuestion.content)
       : undefined;
   return (
@@ -215,7 +248,7 @@ export function Conversation() {
               failure={m.status === MessageStatus.FAILED ? (failures[m.id] ?? "") : undefined}
               stopped={m.status === MessageStatus.STOPPED}
               announce={m.id in failures}
-              actions={m === last && !pending && m.role === MessageRole.ASSISTANT}
+              actions={m === last && !busy && m.role === MessageRole.ASSISTANT}
               onRetry={m === last ? retry : undefined}
             />
           ))}
@@ -241,6 +274,12 @@ export function Conversation() {
               />
             </>
           )}
+          {generating && (
+            <div className="flex items-center gap-2 rounded-card border border-border bg-surface px-4 py-2 text-base text-fg-muted">
+              <Spinner />
+              Writing the answer…
+            </div>
+          )}
           <div ref={bottom} />
         </div>
         <p role="status" className="sr-only">
@@ -263,11 +302,11 @@ export function Conversation() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) send(e);
-                  if (e.key === "Escape" && pending) stop();
+                  if (e.key === "Escape" && busy) stop();
                 }}
                 className="max-h-40 min-w-0 flex-1 resize-none bg-transparent py-3 text-base field-sizing-content placeholder:text-fg-muted focus-visible:outline-none"
               />
-              {pending && (
+              {busy && (
                 <button
                   type="button"
                   title="Stop the answer (Esc)"
@@ -280,8 +319,8 @@ export function Conversation() {
               )}
               <button
                 type="submit"
-                aria-describedby={pending ? SEND_HINT : undefined}
-                disabled={!input.trim() || pending !== null}
+                aria-describedby={busy ? SEND_HINT : undefined}
+                disabled={!input.trim() || busy}
                 className={buttonClass("primary", "rounded-full px-5 py-3")}
               >
                 Ask
@@ -299,7 +338,7 @@ export function Conversation() {
                   onUseKnowledgeBaseChange={setUseKnowledgeBase}
                 />
               )}
-              {modelChoice && <ModelPicker choice={modelChoice} disabled={pending !== null} />}
+              {modelChoice && <ModelPicker choice={modelChoice} disabled={busy} />}
               {conversation.data?.conversation && (
                 <ScopeChips
                   conversation={conversation.data.conversation}

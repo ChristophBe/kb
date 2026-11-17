@@ -42,6 +42,7 @@ import { createUserManager } from "./auth/session.ts";
 import { CurrentUserLoader } from "./CurrentUserLoader.tsx";
 import { ModuleBoundary } from "./ModuleBoundary.tsx";
 import { ModuleRoutes } from "./ModuleRoutes.tsx";
+import { NavBadge } from "./NavBadge.tsx";
 import { activeModules, navEntries } from "./registry.ts";
 import { HeaderSearch } from "./search/HeaderSearch.tsx";
 import { searchProviders } from "./search/pages.ts";
@@ -168,7 +169,7 @@ function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: S
           <HeaderSearch providers={providers} />
         </div>
         <nav aria-label="Main" className="flex flex-col gap-0.5 px-3">
-          {navEntries(modules, isPlatformAdmin).map(({ to, label, icon: Icon, end }) => (
+          {navEntries(modules, isPlatformAdmin).map(({ to, label, icon: Icon, end, useBadge }) => (
             <NavLink
               key={to}
               to={to}
@@ -176,6 +177,7 @@ function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: S
               className={({ isActive }) => navItemClass(isActive)}
             >
               <Icon className="size-4" /> {label}
+              {useBadge && <NavBadge useBadge={useBadge} />}
             </NavLink>
           ))}
         </nav>

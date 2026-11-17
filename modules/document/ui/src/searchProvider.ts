@@ -23,7 +23,8 @@ export const documentSearch: SearchProvider["search"] = async (query, signal, co
     const { pathname, hash } = passagePath(d);
     return {
       title: d.title,
-      snippet: d.bestChunk?.text,
+      // The excerpt shows the words that matched; a hit by meaning shows its passage.
+      snippet: d.excerpt || d.bestChunk?.text,
       href: `/m/document/${pathname}${hash ? `#${hash}` : ""}`,
     };
   });

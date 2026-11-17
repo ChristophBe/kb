@@ -36,8 +36,9 @@ service DocumentService {
   rpc ListChunks(ListChunksRequest) returns (ListChunksResponse);
   rpc SearchChunks(SearchChunksRequest) returns (SearchChunksResponse);
   // SearchDocuments embeds a text query through the llm module and returns
-  // the most similar documents, each with its best chunk, and the most
-  // similar chunks. It fails with UNAVAILABLE and ErrorInfo reason
+  // the best matching documents, each with its best chunk, and the best
+  // matching chunks: the most similar by meaning fused with those containing
+  // the query's words (hybrid search). It fails with UNAVAILABLE and ErrorInfo reason
   // LLM_UNAVAILABLE while llm is down.
   rpc SearchDocuments(SearchDocumentsRequest) returns (SearchDocumentsResponse);
   // ReindexDocuments re-embeds the caller's documents with the llm module's
@@ -136,8 +137,15 @@ message Chunk {
 message ScoredChunk {
   Chunk chunk = 1;
   string document_title = 2;
-  // Cosine similarity in [-1, 1]; higher is more similar.
+  // Cosine similarity in [-1, 1]; higher is more similar. Results are ordered
+  // by rank fusion when the search also matched words, so the order need not
+  // follow the score.
   float score = 3;
+  // The fragment of the chunk around the words of the query that it contains,
+  // as plain text; empty when the chunk was found by meaning alone.
+  string excerpt = 4;
+  // The chunk contains words of the query (the full-text path found it).
+  bool keyword_match = 5;
 }
 
 // A document ranked by its most similar chunk.
@@ -146,7 +154,13 @@ message ScoredDocument {
   string title = 2;
   // The best chunk's cosine similarity in [-1, 1]; higher is more similar.
   float score = 3;
+  // The chunk that matched: the one with the query's words when the document
+  // has any, otherwise the most similar one.
   Chunk best_chunk = 4;
+  // The fragment of best_chunk around the query's words, as plain text; empty
+  // when best_chunk was found by meaning alone.
+  string excerpt = 5;
+  bool keyword_match = 6;
 }
 
 // CreateDocument rejects, with field violations, a file that is empty, larger
@@ -346,6 +360,12 @@ message SearchChunksRequest {
   // non-empty, on top of what the caller can read; public documents are left
   // out. A team the caller is not in matches nothing the caller can read.
   repeated string team_ids = 5;
+  // The text the embedding was made from. When not blank, the chunks that
+  // contain its words are searched too (full text) and fused with the vector
+  // results by reciprocal rank, so exact terms such as names, ids and
+  // identifiers are found even when they are semantically distant. Both paths
+  // see the same documents. Empty searches by vector alone.
+  string query = 6;
 }
 
 message SearchChunksResponse {

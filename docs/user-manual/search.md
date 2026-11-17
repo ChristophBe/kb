@@ -1,6 +1,6 @@
 # Search
 
-Search finds what you are looking for across Knowcelium: the documents that best match, with the passage in each that matches best, your conversations, pages of Knowcelium and sections of this help. Documents match by meaning, not only by exact words, so a question or a description works as well as keywords. There are two ways into the same search: the search box at the top of the sidebar, and the **Search** page, which has no sidebar entry and opens from **See all results for …**.
+Search finds what you are looking for across Knowcelium: the documents that best match, with the passage in each that matches best, your conversations, pages of Knowcelium and sections of this help. Documents match by meaning and by exact words, so a question or a description works as well as a name, an id or a code identifier. There are two ways into the same search: the search box at the top of the sidebar, and the **Search** page, which has no sidebar entry and opens from **See all results for …**.
 
 ## Search from any page
 
@@ -10,7 +10,7 @@ The search box at the top of the sidebar is on every page. Press ⌘K (on a Mac)
 2. Select a match, or move to it with the Up and Down arrow keys and press Enter, to open it.
 3. Press Escape to close the list; press it again to empty the box.
 
-**Documents** lists the documents that match by meaning, each once with the start of its best matching passage; see [Search your documents](#search-your-documents). **Conversations** lists your chats whose title or messages contain what you typed; see [Find a conversation](chat.md#find-a-conversation).
+**Documents** lists the documents that match by meaning or by the words you typed, each once with its best matching passage; see [Search your documents](#search-your-documents). **Conversations** lists your chats whose title or messages contain what you typed; see [Find a conversation](chat.md#find-a-conversation).
 
 **Help** lists the sections of this manual whose heading or text contains every word you typed, sections whose heading matches first. Each shows the name of its help page and the matching text; selecting one opens the help page at that section. For example, typing "rename" lists **Rename a conversation**.
 
@@ -33,7 +33,9 @@ The address of the page contains your search, so you can bookmark it, share it, 
 
 ## Search your documents
 
-Type what you are looking for in either search box; matching documents appear under **Documents**. You get up to 20 documents, each once, the best match first. A document ranks by its best matching passage, so a document that matches in many places doesn't push others out. Each shows the document's title and the start of its best matching passage.
+Type what you are looking for in either search box; matching documents appear under **Documents**. You get up to 20 documents, each once, the best match first. A document ranks by its best matching passage, so a document that matches in many places doesn't push others out. Each shows the document's title and its best matching passage.
+
+Documents are found in two ways, and the results of both are combined: by meaning, so a description finds a passage that uses other words, and by the words you typed, so a name, an id or a code identifier such as `ERR-4711` finds the passage that contains it even when its meaning has nothing to do with the rest of your search. When a passage matched because it contains your words, the text shown is the part of the passage around those words, so you can see why the document was found. A document found by meaning alone shows the start of its passage. Common words such as "the" or "is" are ignored when matching words, and a passage that contains any one of your words can match, so a long question may also return passages that merely share a word with it.
 
 If no document matches, **Documents** says "No matches."; try other words. Only documents with the status **Ready** are searched.
 

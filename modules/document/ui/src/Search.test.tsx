@@ -95,6 +95,30 @@ describe("Search", () => {
     });
   });
 
+  it("shows the words that matched when an exact term found the document", async () => {
+    const { transport } = searchService(() => ({
+      documents: [
+        {
+          ...other,
+          keywordMatch: true,
+          excerpt: "Error ERR-4711 means the vault is sealed",
+          bestChunk: {
+            ...other.bestChunk,
+            index: 4,
+            text: "A long passage. Error ERR-4711 means the vault is sealed",
+          },
+        },
+      ],
+    }));
+    expect(await search(transport)).toEqual([
+      {
+        title: "Board minutes",
+        snippet: "Error ERR-4711 means the vault is sealed",
+        href: "/m/document/d2#chunk-4",
+      },
+    ]);
+  });
+
   it("explains that search needs the Models service while it is down", async () => {
     const { transport } = searchService(() => {
       const err = new ConnectError("the llm service is unavailable", Code.Unavailable);

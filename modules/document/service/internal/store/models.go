@@ -18,6 +18,7 @@ type DocumentChunk struct {
 	Embedding           pgvector.Vector
 	EmbeddingModel      string
 	EmbeddingDimensions pgtype.Int4
+	TextSearch          interface{}
 }
 
 type DocumentDocument struct {

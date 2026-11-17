@@ -62,6 +62,9 @@ type Querier interface {
 	// per document. Only chunks of the embedding's model are compared, as in
 	// SearchChunks.
 	SearchBestChunks(ctx context.Context, arg SearchBestChunksParams) ([]SearchBestChunksRow, error)
+	// SearchBestTextChunks is SearchTextChunks with one chunk per document, the
+	// best matching one, as SearchBestChunks is to SearchChunks.
+	SearchBestTextChunks(ctx context.Context, arg SearchBestTextChunksParams) ([]SearchBestTextChunksRow, error)
 	// SearchChunks returns the chunks of the public documents, the owner's and
 	// those of team_ids that are most similar to the embedding, among those made by
 	// the same embedding model: vectors of different models are not comparable.
@@ -70,6 +73,13 @@ type Querier interface {
 	// limit is filled. only_team_ids, when not empty, further limits the search
 	// to the documents attached to one of those teams (not the public ones).
 	SearchChunks(ctx context.Context, arg SearchChunksParams) ([]SearchChunksRow, error)
+	// SearchTextChunks is the full-text half of hybrid search: the chunks that
+	// contain any word of the query (websearch syntax, words joined by "or"),
+	// visible and filtered exactly as in SearchChunks, best match (ts_rank_cd)
+	// first. score is the chunk's cosine similarity to the embedding, as in
+	// SearchChunks, so both paths report one kind of score; excerpt is the
+	// fragment of the text around the matched words, without markup.
+	SearchTextChunks(ctx context.Context, arg SearchTextChunksParams) ([]SearchTextChunksRow, error)
 	SetChunkCount(ctx context.Context, arg SetChunkCountParams) error
 	SetDocumentAccess(ctx context.Context, arg SetDocumentAccessParams) error
 	SetDocumentStatus(ctx context.Context, arg SetDocumentStatusParams) (DocumentDocument, error)

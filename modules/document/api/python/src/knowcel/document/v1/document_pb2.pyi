@@ -118,26 +118,34 @@ class Chunk(_message.Message):
     def __init__(self, document_id: _Optional[str] = ..., index: _Optional[int] = ..., text: _Optional[str] = ..., metadata: _Optional[_Mapping[str, str]] = ...) -> None: ...
 
 class ScoredChunk(_message.Message):
-    __slots__ = ("chunk", "document_title", "score")
+    __slots__ = ("chunk", "document_title", "score", "excerpt", "keyword_match")
     CHUNK_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_TITLE_FIELD_NUMBER: _ClassVar[int]
     SCORE_FIELD_NUMBER: _ClassVar[int]
+    EXCERPT_FIELD_NUMBER: _ClassVar[int]
+    KEYWORD_MATCH_FIELD_NUMBER: _ClassVar[int]
     chunk: Chunk
     document_title: str
     score: float
-    def __init__(self, chunk: _Optional[_Union[Chunk, _Mapping]] = ..., document_title: _Optional[str] = ..., score: _Optional[float] = ...) -> None: ...
+    excerpt: str
+    keyword_match: bool
+    def __init__(self, chunk: _Optional[_Union[Chunk, _Mapping]] = ..., document_title: _Optional[str] = ..., score: _Optional[float] = ..., excerpt: _Optional[str] = ..., keyword_match: _Optional[bool] = ...) -> None: ...
 
 class ScoredDocument(_message.Message):
-    __slots__ = ("document_id", "title", "score", "best_chunk")
+    __slots__ = ("document_id", "title", "score", "best_chunk", "excerpt", "keyword_match")
     DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
     SCORE_FIELD_NUMBER: _ClassVar[int]
     BEST_CHUNK_FIELD_NUMBER: _ClassVar[int]
+    EXCERPT_FIELD_NUMBER: _ClassVar[int]
+    KEYWORD_MATCH_FIELD_NUMBER: _ClassVar[int]
     document_id: str
     title: str
     score: float
     best_chunk: Chunk
-    def __init__(self, document_id: _Optional[str] = ..., title: _Optional[str] = ..., score: _Optional[float] = ..., best_chunk: _Optional[_Union[Chunk, _Mapping]] = ...) -> None: ...
+    excerpt: str
+    keyword_match: bool
+    def __init__(self, document_id: _Optional[str] = ..., title: _Optional[str] = ..., score: _Optional[float] = ..., best_chunk: _Optional[_Union[Chunk, _Mapping]] = ..., excerpt: _Optional[str] = ..., keyword_match: _Optional[bool] = ...) -> None: ...
 
 class CreateDocumentRequest(_message.Message):
     __slots__ = ("title", "filename", "content_type", "size_bytes", "metadata", "sha256", "access", "team_ids")
@@ -379,18 +387,20 @@ class ListChunksResponse(_message.Message):
     def __init__(self, chunks: _Optional[_Iterable[_Union[Chunk, _Mapping]]] = ..., page: _Optional[_Union[_common_pb2.PageResponse, _Mapping]] = ...) -> None: ...
 
 class SearchChunksRequest(_message.Message):
-    __slots__ = ("embedding", "limit", "document_ids", "embedding_model", "team_ids")
+    __slots__ = ("embedding", "limit", "document_ids", "embedding_model", "team_ids", "query")
     EMBEDDING_FIELD_NUMBER: _ClassVar[int]
     LIMIT_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_IDS_FIELD_NUMBER: _ClassVar[int]
     EMBEDDING_MODEL_FIELD_NUMBER: _ClassVar[int]
     TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
+    QUERY_FIELD_NUMBER: _ClassVar[int]
     embedding: _containers.RepeatedScalarFieldContainer[float]
     limit: int
     document_ids: _containers.RepeatedScalarFieldContainer[str]
     embedding_model: str
     team_ids: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, embedding: _Optional[_Iterable[float]] = ..., limit: _Optional[int] = ..., document_ids: _Optional[_Iterable[str]] = ..., embedding_model: _Optional[str] = ..., team_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+    query: str
+    def __init__(self, embedding: _Optional[_Iterable[float]] = ..., limit: _Optional[int] = ..., document_ids: _Optional[_Iterable[str]] = ..., embedding_model: _Optional[str] = ..., team_ids: _Optional[_Iterable[str]] = ..., query: _Optional[str] = ...) -> None: ...
 
 class SearchChunksResponse(_message.Message):
     __slots__ = ("results",)

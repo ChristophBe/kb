@@ -211,6 +211,97 @@ func (q *Queries) SearchBestChunks(ctx context.Context, arg SearchBestChunksPara
 	return items, nil
 }
 
+const searchBestTextChunks = `-- name: SearchBestTextChunks :many
+SELECT h.document_id, h.idx, h.text, h.metadata, h.document_title, h.score,
+       ts_headline('english', h.text, websearch_to_tsquery('english', $1::text),
+                   'MaxFragments=1, MinWords=10, MaxWords=35, StartSel="", StopSel=""')::text AS excerpt
+FROM (
+    SELECT b.document_id, b.idx, b.text, b.metadata, b.document_title, b.score, b.rank FROM (
+        SELECT DISTINCT ON (c.document_id)
+               c.document_id, c.idx, c.text, c.metadata, d.title AS document_title,
+               (1 - (c.embedding <=> $2::vector))::real AS score,
+               ts_rank_cd(c.text_search, websearch_to_tsquery('english', $1::text)) AS rank
+        FROM document.chunks c
+        JOIN document.documents d ON d.id = c.document_id
+        WHERE (d.access = 1
+               OR d.owner_id = $3
+               OR EXISTS (SELECT 1 FROM document.document_teams t
+                          WHERE t.document_id = d.id AND t.team_id = ANY($4::uuid[])))
+          AND c.embedding_model = $5
+          AND (cardinality($6::uuid[]) = 0
+               OR c.document_id = ANY($6::uuid[]))
+          AND (coalesce(cardinality($7::uuid[]), 0) = 0
+               OR EXISTS (SELECT 1 FROM document.document_teams o
+                          WHERE o.document_id = d.id AND o.team_id = ANY($7::uuid[])))
+          AND c.text_search @@ websearch_to_tsquery('english', $1::text)
+        ORDER BY c.document_id, rank DESC, c.idx
+    ) b
+    ORDER BY b.rank DESC, b.document_id
+    LIMIT $8
+) h
+ORDER BY h.rank DESC, h.document_id
+`
+
+type SearchBestTextChunksParams struct {
+	Query          string
+	Embedding      pgvector.Vector
+	OwnerID        string
+	TeamIds        []uuid.UUID
+	EmbeddingModel string
+	DocumentIds    []uuid.UUID
+	OnlyTeamIds    []uuid.UUID
+	MaxResults     int32
+}
+
+type SearchBestTextChunksRow struct {
+	DocumentID    uuid.UUID
+	Idx           int32
+	Text          string
+	Metadata      map[string]string
+	DocumentTitle string
+	Score         float32
+	Excerpt       string
+}
+
+// SearchBestTextChunks is SearchTextChunks with one chunk per document, the
+// best matching one, as SearchBestChunks is to SearchChunks.
+func (q *Queries) SearchBestTextChunks(ctx context.Context, arg SearchBestTextChunksParams) ([]SearchBestTextChunksRow, error) {
+	rows, err := q.db.Query(ctx, searchBestTextChunks,
+		arg.Query,
+		arg.Embedding,
+		arg.OwnerID,
+		arg.TeamIds,
+		arg.EmbeddingModel,
+		arg.DocumentIds,
+		arg.OnlyTeamIds,
+		arg.MaxResults,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SearchBestTextChunksRow{}
+	for rows.Next() {
+		var i SearchBestTextChunksRow
+		if err := rows.Scan(
+			&i.DocumentID,
+			&i.Idx,
+			&i.Text,
+			&i.Metadata,
+			&i.DocumentTitle,
+			&i.Score,
+			&i.Excerpt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchChunks = `-- name: SearchChunks :many
 SELECT c.document_id, c.idx, c.text, c.metadata, d.title AS document_title,
        (1 - (c.embedding <=> $1::vector))::real AS score
@@ -280,6 +371,97 @@ func (q *Queries) SearchChunks(ctx context.Context, arg SearchChunksParams) ([]S
 			&i.Metadata,
 			&i.DocumentTitle,
 			&i.Score,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchTextChunks = `-- name: SearchTextChunks :many
+SELECT h.document_id, h.idx, h.text, h.metadata, h.document_title, h.score,
+       ts_headline('english', h.text, websearch_to_tsquery('english', $1::text),
+                   'MaxFragments=1, MinWords=10, MaxWords=35, StartSel="", StopSel=""')::text AS excerpt
+FROM (
+    SELECT c.document_id, c.idx, c.text, c.metadata, d.title AS document_title,
+           (1 - (c.embedding <=> $2::vector))::real AS score,
+           ts_rank_cd(c.text_search, websearch_to_tsquery('english', $1::text)) AS rank
+    FROM document.chunks c
+    JOIN document.documents d ON d.id = c.document_id
+    WHERE (d.access = 1
+           OR d.owner_id = $3
+           OR EXISTS (SELECT 1 FROM document.document_teams t
+                      WHERE t.document_id = d.id AND t.team_id = ANY($4::uuid[])))
+      AND c.embedding_model = $5
+      AND (cardinality($6::uuid[]) = 0
+           OR c.document_id = ANY($6::uuid[]))
+      AND (coalesce(cardinality($7::uuid[]), 0) = 0
+           OR EXISTS (SELECT 1 FROM document.document_teams o
+                      WHERE o.document_id = d.id AND o.team_id = ANY($7::uuid[])))
+      AND c.text_search @@ websearch_to_tsquery('english', $1::text)
+    ORDER BY rank DESC, c.document_id, c.idx
+    LIMIT $8
+) h
+ORDER BY h.rank DESC, h.document_id, h.idx
+`
+
+type SearchTextChunksParams struct {
+	Query          string
+	Embedding      pgvector.Vector
+	OwnerID        string
+	TeamIds        []uuid.UUID
+	EmbeddingModel string
+	DocumentIds    []uuid.UUID
+	OnlyTeamIds    []uuid.UUID
+	MaxResults     int32
+}
+
+type SearchTextChunksRow struct {
+	DocumentID    uuid.UUID
+	Idx           int32
+	Text          string
+	Metadata      map[string]string
+	DocumentTitle string
+	Score         float32
+	Excerpt       string
+}
+
+// SearchTextChunks is the full-text half of hybrid search: the chunks that
+// contain any word of the query (websearch syntax, words joined by "or"),
+// visible and filtered exactly as in SearchChunks, best match (ts_rank_cd)
+// first. score is the chunk's cosine similarity to the embedding, as in
+// SearchChunks, so both paths report one kind of score; excerpt is the
+// fragment of the text around the matched words, without markup.
+func (q *Queries) SearchTextChunks(ctx context.Context, arg SearchTextChunksParams) ([]SearchTextChunksRow, error) {
+	rows, err := q.db.Query(ctx, searchTextChunks,
+		arg.Query,
+		arg.Embedding,
+		arg.OwnerID,
+		arg.TeamIds,
+		arg.EmbeddingModel,
+		arg.DocumentIds,
+		arg.OnlyTeamIds,
+		arg.MaxResults,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SearchTextChunksRow{}
+	for rows.Next() {
+		var i SearchTextChunksRow
+		if err := rows.Scan(
+			&i.DocumentID,
+			&i.Idx,
+			&i.Text,
+			&i.Metadata,
+			&i.DocumentTitle,
+			&i.Score,
+			&i.Excerpt,
 		); err != nil {
 			return nil, err
 		}

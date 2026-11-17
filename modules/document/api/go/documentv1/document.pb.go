@@ -495,8 +495,15 @@ type ScoredChunk struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Chunk         *Chunk                 `protobuf:"bytes,1,opt,name=chunk,proto3" json:"chunk,omitempty"`
 	DocumentTitle string                 `protobuf:"bytes,2,opt,name=document_title,json=documentTitle,proto3" json:"document_title,omitempty"`
-	// Cosine similarity in [-1, 1]; higher is more similar.
-	Score         float32 `protobuf:"fixed32,3,opt,name=score,proto3" json:"score,omitempty"`
+	// Cosine similarity in [-1, 1]; higher is more similar. Results are ordered
+	// by rank fusion when the search also matched words, so the order need not
+	// follow the score.
+	Score float32 `protobuf:"fixed32,3,opt,name=score,proto3" json:"score,omitempty"`
+	// The fragment of the chunk around the words of the query that it contains,
+	// as plain text; empty when the chunk was found by meaning alone.
+	Excerpt string `protobuf:"bytes,4,opt,name=excerpt,proto3" json:"excerpt,omitempty"`
+	// The chunk contains words of the query (the full-text path found it).
+	KeywordMatch  bool `protobuf:"varint,5,opt,name=keyword_match,json=keywordMatch,proto3" json:"keyword_match,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -552,14 +559,34 @@ func (x *ScoredChunk) GetScore() float32 {
 	return 0
 }
 
+func (x *ScoredChunk) GetExcerpt() string {
+	if x != nil {
+		return x.Excerpt
+	}
+	return ""
+}
+
+func (x *ScoredChunk) GetKeywordMatch() bool {
+	if x != nil {
+		return x.KeywordMatch
+	}
+	return false
+}
+
 // A document ranked by its most similar chunk.
 type ScoredDocument struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	DocumentId string                 `protobuf:"bytes,1,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
 	Title      string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	// The best chunk's cosine similarity in [-1, 1]; higher is more similar.
-	Score         float32 `protobuf:"fixed32,3,opt,name=score,proto3" json:"score,omitempty"`
-	BestChunk     *Chunk  `protobuf:"bytes,4,opt,name=best_chunk,json=bestChunk,proto3" json:"best_chunk,omitempty"`
+	Score float32 `protobuf:"fixed32,3,opt,name=score,proto3" json:"score,omitempty"`
+	// The chunk that matched: the one with the query's words when the document
+	// has any, otherwise the most similar one.
+	BestChunk *Chunk `protobuf:"bytes,4,opt,name=best_chunk,json=bestChunk,proto3" json:"best_chunk,omitempty"`
+	// The fragment of best_chunk around the query's words, as plain text; empty
+	// when best_chunk was found by meaning alone.
+	Excerpt       string `protobuf:"bytes,5,opt,name=excerpt,proto3" json:"excerpt,omitempty"`
+	KeywordMatch  bool   `protobuf:"varint,6,opt,name=keyword_match,json=keywordMatch,proto3" json:"keyword_match,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -620,6 +647,20 @@ func (x *ScoredDocument) GetBestChunk() *Chunk {
 		return x.BestChunk
 	}
 	return nil
+}
+
+func (x *ScoredDocument) GetExcerpt() string {
+	if x != nil {
+		return x.Excerpt
+	}
+	return ""
+}
+
+func (x *ScoredDocument) GetKeywordMatch() bool {
+	if x != nil {
+		return x.KeywordMatch
+	}
+	return false
 }
 
 // CreateDocument rejects, with field violations, a file that is empty, larger
@@ -2096,7 +2137,13 @@ type SearchChunksRequest struct {
 	// Restricts the search to documents attached to one of these teams when
 	// non-empty, on top of what the caller can read; public documents are left
 	// out. A team the caller is not in matches nothing the caller can read.
-	TeamIds       []string `protobuf:"bytes,5,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
+	TeamIds []string `protobuf:"bytes,5,rep,name=team_ids,json=teamIds,proto3" json:"team_ids,omitempty"`
+	// The text the embedding was made from. When not blank, the chunks that
+	// contain its words are searched too (full text) and fused with the vector
+	// results by reciprocal rank, so exact terms such as names, ids and
+	// identifiers are found even when they are semantically distant. Both paths
+	// see the same documents. Empty searches by vector alone.
+	Query         string `protobuf:"bytes,6,opt,name=query,proto3" json:"query,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2164,6 +2211,13 @@ func (x *SearchChunksRequest) GetTeamIds() []string {
 		return x.TeamIds
 	}
 	return nil
+}
+
+func (x *SearchChunksRequest) GetQuery() string {
+	if x != nil {
+		return x.Query
+	}
+	return ""
 }
 
 type SearchChunksResponse struct {
@@ -2494,18 +2548,22 @@ const file_knowcel_document_v1_document_proto_rawDesc = "" +
 	"\bmetadata\x18\x04 \x03(\v2(.knowcel.document.v1.Chunk.MetadataEntryR\bmetadata\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"|\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xbb\x01\n" +
 	"\vScoredChunk\x120\n" +
 	"\x05chunk\x18\x01 \x01(\v2\x1a.knowcel.document.v1.ChunkR\x05chunk\x12%\n" +
 	"\x0edocument_title\x18\x02 \x01(\tR\rdocumentTitle\x12\x14\n" +
-	"\x05score\x18\x03 \x01(\x02R\x05score\"\x98\x01\n" +
+	"\x05score\x18\x03 \x01(\x02R\x05score\x12\x18\n" +
+	"\aexcerpt\x18\x04 \x01(\tR\aexcerpt\x12#\n" +
+	"\rkeyword_match\x18\x05 \x01(\bR\fkeywordMatch\"\xd7\x01\n" +
 	"\x0eScoredDocument\x12\x1f\n" +
 	"\vdocument_id\x18\x01 \x01(\tR\n" +
 	"documentId\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x14\n" +
 	"\x05score\x18\x03 \x01(\x02R\x05score\x129\n" +
 	"\n" +
-	"best_chunk\x18\x04 \x01(\v2\x1a.knowcel.document.v1.ChunkR\tbestChunk\"\x86\x03\n" +
+	"best_chunk\x18\x04 \x01(\v2\x1a.knowcel.document.v1.ChunkR\tbestChunk\x12\x18\n" +
+	"\aexcerpt\x18\x05 \x01(\tR\aexcerpt\x12#\n" +
+	"\rkeyword_match\x18\x06 \x01(\bR\fkeywordMatch\"\x86\x03\n" +
 	"\x15CreateDocumentRequest\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12\x1a\n" +
 	"\bfilename\x18\x02 \x01(\tR\bfilename\x12!\n" +
@@ -2605,13 +2663,14 @@ const file_knowcel_document_v1_document_proto_rawDesc = "" +
 	"\x04page\x18\x02 \x01(\v2\x1e.knowcel.common.v1.PageRequestR\x04page\"}\n" +
 	"\x12ListChunksResponse\x122\n" +
 	"\x06chunks\x18\x01 \x03(\v2\x1a.knowcel.document.v1.ChunkR\x06chunks\x123\n" +
-	"\x04page\x18\x02 \x01(\v2\x1f.knowcel.common.v1.PageResponseR\x04page\"\xb0\x01\n" +
+	"\x04page\x18\x02 \x01(\v2\x1f.knowcel.common.v1.PageResponseR\x04page\"\xc6\x01\n" +
 	"\x13SearchChunksRequest\x12\x1c\n" +
 	"\tembedding\x18\x01 \x03(\x02R\tembedding\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12!\n" +
 	"\fdocument_ids\x18\x03 \x03(\tR\vdocumentIds\x12'\n" +
 	"\x0fembedding_model\x18\x04 \x01(\tR\x0eembeddingModel\x12\x19\n" +
-	"\bteam_ids\x18\x05 \x03(\tR\ateamIds\"R\n" +
+	"\bteam_ids\x18\x05 \x03(\tR\ateamIds\x12\x14\n" +
+	"\x05query\x18\x06 \x01(\tR\x05query\"R\n" +
 	"\x14SearchChunksResponse\x12:\n" +
 	"\aresults\x18\x01 \x03(\v2 .knowcel.document.v1.ScoredChunkR\aresults\"g\n" +
 	"\x16SearchDocumentsRequest\x12\x14\n" +

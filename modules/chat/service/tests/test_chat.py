@@ -8,9 +8,6 @@ import grpc
 import pytest
 from knowcel.chat.v1 import chat_pb2
 from knowcel_chat.chat import (
-    NO_SOURCES_PROMPT,
-    RAG_PROMPT,
-    SYSTEM_PROMPT,
     TITLE_LENGTH,
     AnswerDelta,
     AnswerEvent,
@@ -27,6 +24,7 @@ from knowcel_chat.chat import (
 )
 from knowcel_chat.config import Settings
 from knowcel_chat.peers import PeerGenerator, PeerRetriever
+from knowcel_chat.prompts import NO_SOURCES_PROMPT, RAG_PROMPT, SYSTEM_PROMPT
 from knowcel_chat.repository import ConversationRow, MessageRow
 
 USER = chat_pb2.MESSAGE_ROLE_USER
@@ -42,6 +40,10 @@ class FakeRepo:
         now = datetime.now(UTC)
         self.conv = ConversationRow(uuid.uuid4(), title, now, now, OWNER)
         self.messages: list[MessageRow] = []
+        self.templates: dict[str, str] = {}
+
+    async def get_prompt_templates(self) -> dict[str, str]:
+        return dict(self.templates)
 
     async def get_conversation(self, owner: str, id: uuid.UUID) -> ConversationRow | None:
         return self.conv if (owner, id) == (self.conv.owner_id, self.conv.id) else None
@@ -252,6 +254,63 @@ async def test_prompt_numbers_sources_and_keeps_the_history_in_order() -> None:
         PromptMessage(PromptRole.ASSISTANT, "reply"),
         PromptMessage(PromptRole.USER, "Capital?"),
     ]
+
+
+async def test_the_conversations_system_prompt_replaces_the_default() -> None:
+    repo = FakeRepo()
+    repo.templates["system"] = "Admin default."
+    chat, repo, _, generator = make(repo)
+    await collect(chat, repo)
+    assert generator.calls[0][1][0].content.startswith("Admin default.\n\n")
+
+    repo.conv.system_prompt = "Answer like a pirate."
+    await collect(chat, repo)
+    system = generator.calls[1][1][0].content
+    assert system.startswith("Answer like a pirate.\n\n")
+    assert "Admin default." not in system
+    assert RAG_PROMPT.format(sources="[1] geo.md:\nParis") in system
+
+
+async def test_global_sources_and_no_sources_templates_are_used() -> None:
+    repo = FakeRepo()
+    repo.templates["sources"] = "Use these:\n{sources}"
+    chat, repo, _, generator = make(repo)
+    await collect(chat, repo)
+    assert generator.calls[0][1][0].content == f"{SYSTEM_PROMPT}\n\nUse these:\n[1] geo.md:\nParis"
+
+    repo.templates["no_sources"] = "Nothing found."
+    chat, repo, _, generator = make(repo, retriever=FakeRetriever(results=[]))
+    await collect(chat, repo)
+    assert generator.calls[0][1][0].content == f"{SYSTEM_PROMPT}\n\nNothing found."
+
+
+async def test_a_system_prompt_with_sources_places_them_itself() -> None:
+    repo = FakeRepo()
+    repo.conv.system_prompt = "Context {{ok}}:\n{sources}\nBe brief."
+    chat, repo, _, generator = make(repo)
+    await collect(chat, repo)
+    assert generator.calls[0][1][0].content == "Context {ok}:\n[1] geo.md:\nParis\nBe brief."
+
+
+async def test_a_system_prompt_with_history_shows_it_instead_of_sending_it() -> None:
+    repo = FakeRepo()
+    await repo.add_message(repo.conv.id, USER, "earlier", [])
+    await repo.add_message(repo.conv.id, ASSISTANT, "reply", [])
+    repo.conv.system_prompt = "Talk so far:\n{history}"
+    chat, repo, _, generator = make(repo)
+    await collect(chat, repo)
+
+    system, *rest = generator.calls[0][1]
+    assert system.content.startswith("Talk so far:\nUser: earlier\n\nAssistant: reply\n\n")
+    assert rest == [PromptMessage(PromptRole.USER, "Capital?")]
+
+
+async def test_an_invalid_stored_template_falls_back_to_the_built_in_one() -> None:
+    repo = FakeRepo()
+    repo.conv.system_prompt = "Broken {nope}"
+    chat, repo, _, generator = make(repo)
+    await collect(chat, repo)
+    assert generator.calls[0][1][0].content.startswith(SYSTEM_PROMPT)
 
 
 async def test_manual_sources_are_named_as_such_and_saved_with_their_section() -> None:

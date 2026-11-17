@@ -76,6 +76,16 @@ class ChatServiceStub:
                 request_serializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.StopChatRequest.SerializeToString,
                 response_deserializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.StopChatResponse.FromString,
                 _registered_method=True)
+        self.GetPromptTemplates = channel.unary_unary(
+                '/knowcel.chat.v1.ChatService/GetPromptTemplates',
+                request_serializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.GetPromptTemplatesRequest.SerializeToString,
+                response_deserializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.GetPromptTemplatesResponse.FromString,
+                _registered_method=True)
+        self.UpdatePromptTemplates = channel.unary_unary(
+                '/knowcel.chat.v1.ChatService/UpdatePromptTemplates',
+                request_serializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.UpdatePromptTemplatesRequest.SerializeToString,
+                response_deserializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.UpdatePromptTemplatesResponse.FromString,
+                _registered_method=True)
 
 
 class ChatServiceServicer:
@@ -138,6 +148,21 @@ class ChatServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetPromptTemplates(self, request, context):
+        """GetPromptTemplates returns the prompts used for answers by default.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdatePromptTemplates(self, request, context):
+        """UpdatePromptTemplates changes the default prompts for all conversations.
+        Only platform admins may call it (PERMISSION_DENIED otherwise).
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ChatServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -180,6 +205,16 @@ def add_ChatServiceServicer_to_server(servicer, server):
                     servicer.StopChat,
                     request_deserializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.StopChatRequest.FromString,
                     response_serializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.StopChatResponse.SerializeToString,
+            ),
+            'GetPromptTemplates': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetPromptTemplates,
+                    request_deserializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.GetPromptTemplatesRequest.FromString,
+                    response_serializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.GetPromptTemplatesResponse.SerializeToString,
+            ),
+            'UpdatePromptTemplates': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdatePromptTemplates,
+                    request_deserializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.UpdatePromptTemplatesRequest.FromString,
+                    response_serializer=knowcel_dot_chat_dot_v1_dot_chat__pb2.UpdatePromptTemplatesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -400,6 +435,60 @@ class ChatService:
             '/knowcel.chat.v1.ChatService/StopChat',
             knowcel_dot_chat_dot_v1_dot_chat__pb2.StopChatRequest.SerializeToString,
             knowcel_dot_chat_dot_v1_dot_chat__pb2.StopChatResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetPromptTemplates(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.chat.v1.ChatService/GetPromptTemplates',
+            knowcel_dot_chat_dot_v1_dot_chat__pb2.GetPromptTemplatesRequest.SerializeToString,
+            knowcel_dot_chat_dot_v1_dot_chat__pb2.GetPromptTemplatesResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdatePromptTemplates(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.chat.v1.ChatService/UpdatePromptTemplates',
+            knowcel_dot_chat_dot_v1_dot_chat__pb2.UpdatePromptTemplatesRequest.SerializeToString,
+            knowcel_dot_chat_dot_v1_dot_chat__pb2.UpdatePromptTemplatesResponse.FromString,
             options,
             channel_credentials,
             insecure,

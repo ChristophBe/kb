@@ -14,7 +14,7 @@ class WordCounter:
         return len(text.split())
 
 
-def system(sources: Sequence[chat_pb2.Citation]) -> str:
+def system(sources: Sequence[chat_pb2.Citation], history: Sequence[MessageRow] = ()) -> str:
     return " ".join(["sys", *(c.snippet for c in sources)])
 
 

@@ -299,3 +299,29 @@ async def test_the_migration_gives_existing_conversations_to_alice(database_url:
             assert default.scalar_one() is None
     finally:
         await engine.dispose()
+
+
+async def test_the_system_prompt_is_stored_and_reset(repo: SqlRepository) -> None:
+    conv = await repo.create_conversation(ALICE, "c", [])
+    assert conv.system_prompt == ""
+
+    got = await repo.update_conversation(ALICE, conv.id, system_prompt="Be brief.")
+    assert got is not None
+    assert got.system_prompt == "Be brief."
+    got = await repo.update_conversation(ALICE, conv.id, title="renamed")
+    assert got is not None
+    assert got.system_prompt == "Be brief."
+    got = await repo.update_conversation(ALICE, conv.id, system_prompt="")
+    assert got is not None
+    assert got.system_prompt == ""
+
+
+async def test_global_prompt_templates_are_stored_replaced_and_removed(
+    repo: SqlRepository,
+) -> None:
+    assert await repo.get_prompt_templates() == {}
+    await repo.set_prompt_templates({"system": "One", "sources": "{sources}"})
+    await repo.set_prompt_templates({"system": "Two"})
+    assert await repo.get_prompt_templates() == {"system": "Two", "sources": "{sources}"}
+    await repo.set_prompt_templates({"system": "", "sources": ""})
+    assert await repo.get_prompt_templates() == {}

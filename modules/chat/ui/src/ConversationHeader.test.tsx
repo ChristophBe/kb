@@ -8,11 +8,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ConversationHeader } from "./ConversationHeader.tsx";
 
 const updateConversation = vi.fn();
+const getPromptTemplates = vi.fn();
 
 // The real runtime, except that the chat client is a fake.
 vi.mock("@knowcel/module-sdk", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@knowcel/module-sdk")>()),
-  useClient: () => ({ updateConversation }),
+  useClient: () => ({ updateConversation, getPromptTemplates }),
 }));
 
 function Toasts() {

@@ -4,6 +4,7 @@ import { Button, Input } from "@knowcel/ui";
 import { ChevronLeft } from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router";
+import { PromptEditor } from "./PromptEditor.tsx";
 
 /** Frosted and sticky: messages scroll under it, blurred. It spans the scroll container's padding. */
 const HEADER =
@@ -77,6 +78,7 @@ export function ConversationHeader({ conversation }: { conversation: Conversatio
           <Button ref={renameButton} variant="ghost" onClick={() => setDraft(conversation.title)}>
             Rename
           </Button>
+          <PromptEditor conversation={conversation} />
         </div>
       </header>
     );

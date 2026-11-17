@@ -25,6 +25,11 @@ service ChatService {
   // is kept with the status stopped. Disconnecting from StreamChat does not
   // stop the answer, it keeps being written in the background.
   rpc StopChat(StopChatRequest) returns (StopChatResponse);
+  // GetPromptTemplates returns the prompts used for answers by default.
+  rpc GetPromptTemplates(GetPromptTemplatesRequest) returns (GetPromptTemplatesResponse);
+  // UpdatePromptTemplates changes the default prompts for all conversations.
+  // Only platform admins may call it (PERMISSION_DENIED otherwise).
+  rpc UpdatePromptTemplates(UpdatePromptTemplatesRequest) returns (UpdatePromptTemplatesResponse);
 }
 
 enum MessageRole {
@@ -101,6 +106,9 @@ message Conversation {
   // An answer was completed (or failed) while nobody was following it. Cleared
   // when the conversation is fetched with GetConversation. Output only.
   bool completed_unseen = 11;
+  // The system prompt of this conversation, a template (see PromptTemplates);
+  // empty means the default system prompt.
+  string system_prompt = 12;
 }
 
 // A list of team ids, wrapped like DocumentIds so that an update can tell
@@ -165,6 +173,10 @@ message UpdateConversationRequest {
   // Replaces the teams when set, with the rules of CreateConversationRequest;
   // empty ids mean all documents the user can read.
   TeamIds team_ids = 4;
+  // Replaces the system prompt of the conversation when set; empty resets it
+  // to the default. Must be a valid template (INVALID_ARGUMENT otherwise, with
+  // the reason in the violation of `system_prompt`). The owner may always set it.
+  optional string system_prompt = 5;
 }
 
 message UpdateConversationResponse {
@@ -232,4 +244,52 @@ message ChatError {
 
 message Citations {
   repeated Citation items = 1;
+}
+
+// The prompts that build the system message of an answer. Templates are text
+// with variables in braces: {sources} (the numbered passages) and {history}
+// (the earlier messages). Write {{ and }} for literal braces. A template that
+// uses {history} shows the history itself, and it is then not sent again as
+// separate messages.
+message PromptTemplates {
+  // Instructions to the model, used by conversations without their own system
+  // prompt. When it does not use {sources}, the sources are added with
+  // sources_template.
+  PromptTemplate system_prompt = 1;
+  // Added after the system prompt when sources were found; must contain
+  // {sources}.
+  PromptTemplate sources_template = 2;
+  // Added after the system prompt when the knowledge base is used but no source
+  // was found.
+  PromptTemplate no_sources_template = 3;
+  // The variables templates can use.
+  repeated string variables = 4;
+}
+
+message PromptTemplate {
+  // The text in use.
+  string content = 1;
+  // The built-in text, which "reset" returns to.
+  string default_content = 2;
+  // Whether content is the built-in text, i.e. no admin has changed it.
+  bool is_default = 3;
+}
+
+message GetPromptTemplatesRequest {}
+
+message GetPromptTemplatesResponse {
+  PromptTemplates templates = 1;
+}
+
+message UpdatePromptTemplatesRequest {
+  // Each template is replaced when set; an empty text resets it to the built-in
+  // one. Invalid templates are rejected with INVALID_ARGUMENT (violation field
+  // names the template).
+  optional string system_prompt = 1;
+  optional string sources_template = 2;
+  optional string no_sources_template = 3;
+}
+
+message UpdatePromptTemplatesResponse {
+  PromptTemplates templates = 1;
 }

@@ -32,6 +32,7 @@ from sqlalchemy import (
     update,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.sql.elements import ColumnElement
 
@@ -54,6 +55,16 @@ conversations = Table(
     Column("team_ids", ARRAY(Uuid), nullable=False, server_default="{}"),
     Column("owner_id", Text, nullable=False),
     Column("completed_unseen", Boolean, nullable=False, server_default="false"),
+    Column("system_prompt", Text, nullable=False, server_default=""),
+)
+
+# The global prompt templates an admin has changed, by name.
+prompt_templates = Table(
+    "prompt_templates",
+    metadata,
+    Column("name", Text, primary_key=True),
+    Column("content", Text, nullable=False),
+    Column("updated_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
 )
 
 messages = Table(
@@ -263,6 +274,7 @@ class SqlRepository:
         title: str | None = None,
         document_ids: list[uuid.UUID] | None = None,
         team_ids: list[uuid.UUID] | None = None,
+        system_prompt: str | None = None,
     ) -> ConversationRow | None:
         values: dict[str, Any] = {"updated_at": func.now()}
         if title is not None:
@@ -271,11 +283,34 @@ class SqlRepository:
             values["document_ids"] = document_ids
         if team_ids is not None:
             values["team_ids"] = team_ids
+        if system_prompt is not None:
+            values["system_prompt"] = system_prompt
         async with self._engine.begin() as conn:
             await conn.execute(update(conversations).where(_owned(owner, id)).values(**values))
             result = await conn.execute(_conversations_with_last_message.where(_owned(owner, id)))
             row = result.mappings().first()
         return _conversation(row) if row else None
+
+    async def get_prompt_templates(self) -> dict[str, str]:
+        async with self._engine.connect() as conn:
+            rows = await conn.execute(select(prompt_templates.c.name, prompt_templates.c.content))
+        return {row.name: row.content for row in rows}
+
+    async def set_prompt_templates(self, changes: dict[str, str]) -> None:
+        async with self._engine.begin() as conn:
+            for name, content in changes.items():
+                if not content:
+                    await conn.execute(
+                        delete(prompt_templates).where(prompt_templates.c.name == name)
+                    )
+                    continue
+                stmt = pg_insert(prompt_templates).values(name=name, content=content)
+                await conn.execute(
+                    stmt.on_conflict_do_update(
+                        index_elements=[prompt_templates.c.name],
+                        set_={"content": content, "updated_at": func.now()},
+                    )
+                )
 
     async def list_messages(
         self, conversation_id: uuid.UUID, limit: int | None = None

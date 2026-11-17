@@ -27,6 +27,8 @@ class ConversationRow:
     # An answer ended while nobody was following it and the conversation has not
     # been opened since.
     completed_unseen: bool = False
+    # A prompt template (see prompts.py); empty means the default.
+    system_prompt: str = ""
 
     @property
     def cursor(self) -> Cursor:
@@ -95,6 +97,7 @@ class Repository(Protocol):
         title: str | None = None,
         document_ids: list[uuid.UUID] | None = None,
         team_ids: list[uuid.UUID] | None = None,
+        system_prompt: str | None = None,
     ) -> ConversationRow | None:
         """Changes the fields that are not None and keeps the others."""
         ...
@@ -110,3 +113,12 @@ class Repository(Protocol):
         citations: list[dict[str, Any]],
         status: chat_pb2.MessageStatus = chat_pb2.MESSAGE_STATUS_COMPLETE,
     ) -> MessageRow: ...
+
+    async def get_prompt_templates(self) -> dict[str, str]:
+        """The global templates an admin has changed, by name (prompts.TemplateName);
+        the others are missing."""
+        ...
+
+    async def set_prompt_templates(self, changes: dict[str, str]) -> None:
+        """Stores the given templates; an empty text removes the change."""
+        ...

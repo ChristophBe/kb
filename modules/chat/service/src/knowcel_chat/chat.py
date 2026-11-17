@@ -3,6 +3,7 @@
 import asyncio
 import contextlib
 import functools
+import logging
 import uuid
 from collections.abc import AsyncGenerator, Sequence
 from dataclasses import dataclass
@@ -12,21 +13,13 @@ from typing import Any, Protocol
 from knowcel.chat.v1 import chat_pb2
 
 from .config import Settings
-from .context import ApproximateTokenCounter, TokenCounter, fit
-from .repository import MessageRow, Repository
+from .context import ApproximateTokenCounter, SystemPrompt, TokenCounter, fit
+from .prompts import DEFAULTS, Template, TemplateError, TemplateName, parse
+from .repository import ConversationRow, MessageRow, Repository
+
+log = logging.getLogger("knowcel_chat")
 
 TITLE_LENGTH = 60
-
-SYSTEM_PROMPT = "You are a helpful assistant for a personal knowledge base. Answer concisely."
-RAG_PROMPT = (
-    "Answer using the numbered sources below when they are relevant and cite them like [1]. "
-    "Sources from the user manual explain how to use this knowledge base tool. "
-    "If the sources do not contain the answer, say so.\n\nSources:\n{sources}"
-)
-NO_SOURCES_PROMPT = (
-    "Nothing in the knowledge base is related to this question. Say so before "
-    "answering from general knowledge, and don't cite sources."
-)
 
 
 class ConversationNotFoundError(Exception):
@@ -183,14 +176,27 @@ class Chat:
                     _current_teams(conv.team_ids, member_team_ids),
                 )
             budget = self._settings.context_tokens - self._settings.answer_reserve_tokens
-            system_prompt = functools.partial(_system_prompt, use_knowledge_base)
-            context = fit(budget, self._counter, system_prompt, retrieved, history, content)
+            prompts = await self._prompts(conv)
+            system_prompt = prompts.system_for(use_knowledge_base)
+            context = fit(
+                budget,
+                self._counter,
+                system_prompt,
+                retrieved,
+                history,
+                content,
+                history_in_prompt=prompts.history_in_prompt,
+            )
             # Only the sources that made it into the prompt are cited, numbered as there.
             citations = context.sources
             if use_knowledge_base:
                 yield SourcesFound(citations)
 
-            prompt = _prompt(system_prompt(citations), context.history, content)
+            prompt = _prompt(
+                system_prompt(citations, context.history),
+                [] if prompts.history_in_prompt else context.history,
+                content,
+            )
             async with contextlib.aclosing(self._generator.generate(model, prompt)) as deltas:
                 async for delta in deltas:
                     answer.append(delta)
@@ -208,6 +214,20 @@ class Chat:
             raise
 
         yield AnswerSaved(await asyncio.shield(self._save(conv.id, answer, citations, status)))
+
+    async def _prompts(self, conv: ConversationRow) -> "_Prompts":
+        """The templates for an answer in `conv`: its own system prompt, else the
+        admins' default, else the built-in one."""
+        overrides = await self._repo.get_prompt_templates()
+        return _Prompts(
+            system=_template(
+                conv.system_prompt or overrides.get(TemplateName.SYSTEM, ""), TemplateName.SYSTEM
+            ),
+            sources=_template(overrides.get(TemplateName.SOURCES, ""), TemplateName.SOURCES),
+            no_sources=_template(
+                overrides.get(TemplateName.NO_SOURCES, ""), TemplateName.NO_SOURCES
+            ),
+        )
 
     async def _save(
         self,
@@ -233,14 +253,57 @@ def _prompt(system: str, history: list[MessageRow], content: str) -> list[Prompt
     ]
 
 
-def _system_prompt(use_knowledge_base: bool, citations: Sequence[chat_pb2.Citation]) -> str:
-    if not citations:
-        # Asked to use the knowledge base, but no passage was related enough.
-        return f"{SYSTEM_PROMPT}\n\n{NO_SOURCES_PROMPT}" if use_knowledge_base else SYSTEM_PROMPT
-    sources = "\n\n".join(
+def _template(text: str, name: TemplateName) -> Template:
+    """The parsed template; the built-in one when `text` is empty or, which
+    validation on save should prevent, invalid."""
+    if text:
+        try:
+            return parse(text)
+        except TemplateError as err:
+            log.error("the %s prompt template is invalid, using the built-in one: %s", name, err)
+    return parse(DEFAULTS[name])
+
+
+@dataclass(frozen=True)
+class _Prompts:
+    system: Template
+    sources: Template
+    no_sources: Template
+
+    @property
+    def history_in_prompt(self) -> bool:
+        """Whether a template shows the history, which is then not sent again as
+        messages."""
+        return any("history" in t.variables for t in (self.system, self.sources, self.no_sources))
+
+    def system_message(
+        self,
+        use_knowledge_base: bool,
+        citations: Sequence[chat_pb2.Citation],
+        history: Sequence[MessageRow],
+    ) -> str:
+        values = {"sources": _sources(citations), "history": _transcript(history)}
+        parts = [self.system.render(values)]
+        if citations and "sources" not in self.system.variables:
+            parts.append(self.sources.render(values))
+        elif not citations and use_knowledge_base:
+            # Asked to use the knowledge base, but no passage was related enough.
+            parts.append(self.no_sources.render(values))
+        return "\n\n".join(p for p in parts if p)
+
+    def system_for(self, use_knowledge_base: bool) -> SystemPrompt:
+        return functools.partial(self.system_message, use_knowledge_base)
+
+
+def _sources(citations: Sequence[chat_pb2.Citation]) -> str:
+    return "\n\n".join(
         f"[{i}] {_source_name(c)}:\n{c.snippet}" for i, c in enumerate(citations, start=1)
     )
-    return f"{SYSTEM_PROMPT}\n\n{RAG_PROMPT.format(sources=sources)}"
+
+
+def _transcript(history: Sequence[MessageRow]) -> str:
+    names = {chat_pb2.MESSAGE_ROLE_USER: "User", chat_pb2.MESSAGE_ROLE_ASSISTANT: "Assistant"}
+    return "\n\n".join(f"{names[m.role]}: {m.content}" for m in history)
 
 
 def _source_name(c: chat_pb2.Citation) -> str:

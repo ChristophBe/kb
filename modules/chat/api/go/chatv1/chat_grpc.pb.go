@@ -19,14 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ChatService_CreateConversation_FullMethodName  = "/knowcel.chat.v1.ChatService/CreateConversation"
-	ChatService_GetConversation_FullMethodName     = "/knowcel.chat.v1.ChatService/GetConversation"
-	ChatService_ListConversations_FullMethodName   = "/knowcel.chat.v1.ChatService/ListConversations"
-	ChatService_DeleteConversation_FullMethodName  = "/knowcel.chat.v1.ChatService/DeleteConversation"
-	ChatService_UpdateConversation_FullMethodName  = "/knowcel.chat.v1.ChatService/UpdateConversation"
-	ChatService_SearchConversations_FullMethodName = "/knowcel.chat.v1.ChatService/SearchConversations"
-	ChatService_StreamChat_FullMethodName          = "/knowcel.chat.v1.ChatService/StreamChat"
-	ChatService_StopChat_FullMethodName            = "/knowcel.chat.v1.ChatService/StopChat"
+	ChatService_CreateConversation_FullMethodName    = "/knowcel.chat.v1.ChatService/CreateConversation"
+	ChatService_GetConversation_FullMethodName       = "/knowcel.chat.v1.ChatService/GetConversation"
+	ChatService_ListConversations_FullMethodName     = "/knowcel.chat.v1.ChatService/ListConversations"
+	ChatService_DeleteConversation_FullMethodName    = "/knowcel.chat.v1.ChatService/DeleteConversation"
+	ChatService_UpdateConversation_FullMethodName    = "/knowcel.chat.v1.ChatService/UpdateConversation"
+	ChatService_SearchConversations_FullMethodName   = "/knowcel.chat.v1.ChatService/SearchConversations"
+	ChatService_StreamChat_FullMethodName            = "/knowcel.chat.v1.ChatService/StreamChat"
+	ChatService_StopChat_FullMethodName              = "/knowcel.chat.v1.ChatService/StopChat"
+	ChatService_GetPromptTemplates_FullMethodName    = "/knowcel.chat.v1.ChatService/GetPromptTemplates"
+	ChatService_UpdatePromptTemplates_FullMethodName = "/knowcel.chat.v1.ChatService/UpdatePromptTemplates"
 )
 
 // ChatServiceClient is the client API for ChatService service.
@@ -51,6 +53,11 @@ type ChatServiceClient interface {
 	// is kept with the status stopped. Disconnecting from StreamChat does not
 	// stop the answer, it keeps being written in the background.
 	StopChat(ctx context.Context, in *StopChatRequest, opts ...grpc.CallOption) (*StopChatResponse, error)
+	// GetPromptTemplates returns the prompts used for answers by default.
+	GetPromptTemplates(ctx context.Context, in *GetPromptTemplatesRequest, opts ...grpc.CallOption) (*GetPromptTemplatesResponse, error)
+	// UpdatePromptTemplates changes the default prompts for all conversations.
+	// Only platform admins may call it (PERMISSION_DENIED otherwise).
+	UpdatePromptTemplates(ctx context.Context, in *UpdatePromptTemplatesRequest, opts ...grpc.CallOption) (*UpdatePromptTemplatesResponse, error)
 }
 
 type chatServiceClient struct {
@@ -150,6 +157,26 @@ func (c *chatServiceClient) StopChat(ctx context.Context, in *StopChatRequest, o
 	return out, nil
 }
 
+func (c *chatServiceClient) GetPromptTemplates(ctx context.Context, in *GetPromptTemplatesRequest, opts ...grpc.CallOption) (*GetPromptTemplatesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPromptTemplatesResponse)
+	err := c.cc.Invoke(ctx, ChatService_GetPromptTemplates_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chatServiceClient) UpdatePromptTemplates(ctx context.Context, in *UpdatePromptTemplatesRequest, opts ...grpc.CallOption) (*UpdatePromptTemplatesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdatePromptTemplatesResponse)
+	err := c.cc.Invoke(ctx, ChatService_UpdatePromptTemplates_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChatServiceServer is the server API for ChatService service.
 // All implementations must embed UnimplementedChatServiceServer
 // for forward compatibility.
@@ -172,6 +199,11 @@ type ChatServiceServer interface {
 	// is kept with the status stopped. Disconnecting from StreamChat does not
 	// stop the answer, it keeps being written in the background.
 	StopChat(context.Context, *StopChatRequest) (*StopChatResponse, error)
+	// GetPromptTemplates returns the prompts used for answers by default.
+	GetPromptTemplates(context.Context, *GetPromptTemplatesRequest) (*GetPromptTemplatesResponse, error)
+	// UpdatePromptTemplates changes the default prompts for all conversations.
+	// Only platform admins may call it (PERMISSION_DENIED otherwise).
+	UpdatePromptTemplates(context.Context, *UpdatePromptTemplatesRequest) (*UpdatePromptTemplatesResponse, error)
 	mustEmbedUnimplementedChatServiceServer()
 }
 
@@ -205,6 +237,12 @@ func (UnimplementedChatServiceServer) StreamChat(*StreamChatRequest, grpc.Server
 }
 func (UnimplementedChatServiceServer) StopChat(context.Context, *StopChatRequest) (*StopChatResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method StopChat not implemented")
+}
+func (UnimplementedChatServiceServer) GetPromptTemplates(context.Context, *GetPromptTemplatesRequest) (*GetPromptTemplatesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetPromptTemplates not implemented")
+}
+func (UnimplementedChatServiceServer) UpdatePromptTemplates(context.Context, *UpdatePromptTemplatesRequest) (*UpdatePromptTemplatesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdatePromptTemplates not implemented")
 }
 func (UnimplementedChatServiceServer) mustEmbedUnimplementedChatServiceServer() {}
 func (UnimplementedChatServiceServer) testEmbeddedByValue()                     {}
@@ -364,6 +402,42 @@ func _ChatService_StopChat_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChatService_GetPromptTemplates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPromptTemplatesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).GetPromptTemplates(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_GetPromptTemplates_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).GetPromptTemplates(ctx, req.(*GetPromptTemplatesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChatService_UpdatePromptTemplates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdatePromptTemplatesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).UpdatePromptTemplates(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_UpdatePromptTemplates_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).UpdatePromptTemplates(ctx, req.(*UpdatePromptTemplatesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ChatService_ServiceDesc is the grpc.ServiceDesc for ChatService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -398,6 +472,14 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StopChat",
 			Handler:    _ChatService_StopChat_Handler,
+		},
+		{
+			MethodName: "GetPromptTemplates",
+			Handler:    _ChatService_GetPromptTemplates_Handler,
+		},
+		{
+			MethodName: "UpdatePromptTemplates",
+			Handler:    _ChatService_UpdatePromptTemplates_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

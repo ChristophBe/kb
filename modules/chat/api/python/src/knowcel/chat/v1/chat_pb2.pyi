@@ -75,7 +75,7 @@ class ChatMessage(_message.Message):
     def __init__(self, id: _Optional[str] = ..., role: _Optional[_Union[MessageRole, str]] = ..., content: _Optional[str] = ..., citations: _Optional[_Iterable[_Union[Citation, _Mapping]]] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., status: _Optional[_Union[MessageStatus, str]] = ...) -> None: ...
 
 class Conversation(_message.Message):
-    __slots__ = ("id", "title", "create_time", "update_time", "document_ids", "last_message_time", "last_message_preview", "owner_id", "team_ids", "generating", "completed_unseen")
+    __slots__ = ("id", "title", "create_time", "update_time", "document_ids", "last_message_time", "last_message_preview", "owner_id", "team_ids", "generating", "completed_unseen", "system_prompt")
     ID_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
     CREATE_TIME_FIELD_NUMBER: _ClassVar[int]
@@ -87,6 +87,7 @@ class Conversation(_message.Message):
     TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
     GENERATING_FIELD_NUMBER: _ClassVar[int]
     COMPLETED_UNSEEN_FIELD_NUMBER: _ClassVar[int]
+    SYSTEM_PROMPT_FIELD_NUMBER: _ClassVar[int]
     id: str
     title: str
     create_time: _timestamp_pb2.Timestamp
@@ -98,7 +99,8 @@ class Conversation(_message.Message):
     team_ids: _containers.RepeatedScalarFieldContainer[str]
     generating: bool
     completed_unseen: bool
-    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., document_ids: _Optional[_Iterable[str]] = ..., last_message_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., last_message_preview: _Optional[str] = ..., owner_id: _Optional[str] = ..., team_ids: _Optional[_Iterable[str]] = ..., generating: _Optional[bool] = ..., completed_unseen: _Optional[bool] = ...) -> None: ...
+    system_prompt: str
+    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., create_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., update_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., document_ids: _Optional[_Iterable[str]] = ..., last_message_time: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., last_message_preview: _Optional[str] = ..., owner_id: _Optional[str] = ..., team_ids: _Optional[_Iterable[str]] = ..., generating: _Optional[bool] = ..., completed_unseen: _Optional[bool] = ..., system_prompt: _Optional[str] = ...) -> None: ...
 
 class TeamIds(_message.Message):
     __slots__ = ("ids",)
@@ -167,16 +169,18 @@ class DeleteConversationResponse(_message.Message):
     def __init__(self) -> None: ...
 
 class UpdateConversationRequest(_message.Message):
-    __slots__ = ("id", "title", "document_ids", "team_ids")
+    __slots__ = ("id", "title", "document_ids", "team_ids", "system_prompt")
     ID_FIELD_NUMBER: _ClassVar[int]
     TITLE_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_IDS_FIELD_NUMBER: _ClassVar[int]
     TEAM_IDS_FIELD_NUMBER: _ClassVar[int]
+    SYSTEM_PROMPT_FIELD_NUMBER: _ClassVar[int]
     id: str
     title: str
     document_ids: DocumentIds
     team_ids: TeamIds
-    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., document_ids: _Optional[_Union[DocumentIds, _Mapping]] = ..., team_ids: _Optional[_Union[TeamIds, _Mapping]] = ...) -> None: ...
+    system_prompt: str
+    def __init__(self, id: _Optional[str] = ..., title: _Optional[str] = ..., document_ids: _Optional[_Union[DocumentIds, _Mapping]] = ..., team_ids: _Optional[_Union[TeamIds, _Mapping]] = ..., system_prompt: _Optional[str] = ...) -> None: ...
 
 class UpdateConversationResponse(_message.Message):
     __slots__ = ("conversation",)
@@ -253,3 +257,51 @@ class Citations(_message.Message):
     ITEMS_FIELD_NUMBER: _ClassVar[int]
     items: _containers.RepeatedCompositeFieldContainer[Citation]
     def __init__(self, items: _Optional[_Iterable[_Union[Citation, _Mapping]]] = ...) -> None: ...
+
+class PromptTemplates(_message.Message):
+    __slots__ = ("system_prompt", "sources_template", "no_sources_template", "variables")
+    SYSTEM_PROMPT_FIELD_NUMBER: _ClassVar[int]
+    SOURCES_TEMPLATE_FIELD_NUMBER: _ClassVar[int]
+    NO_SOURCES_TEMPLATE_FIELD_NUMBER: _ClassVar[int]
+    VARIABLES_FIELD_NUMBER: _ClassVar[int]
+    system_prompt: PromptTemplate
+    sources_template: PromptTemplate
+    no_sources_template: PromptTemplate
+    variables: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, system_prompt: _Optional[_Union[PromptTemplate, _Mapping]] = ..., sources_template: _Optional[_Union[PromptTemplate, _Mapping]] = ..., no_sources_template: _Optional[_Union[PromptTemplate, _Mapping]] = ..., variables: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class PromptTemplate(_message.Message):
+    __slots__ = ("content", "default_content", "is_default")
+    CONTENT_FIELD_NUMBER: _ClassVar[int]
+    DEFAULT_CONTENT_FIELD_NUMBER: _ClassVar[int]
+    IS_DEFAULT_FIELD_NUMBER: _ClassVar[int]
+    content: str
+    default_content: str
+    is_default: bool
+    def __init__(self, content: _Optional[str] = ..., default_content: _Optional[str] = ..., is_default: _Optional[bool] = ...) -> None: ...
+
+class GetPromptTemplatesRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class GetPromptTemplatesResponse(_message.Message):
+    __slots__ = ("templates",)
+    TEMPLATES_FIELD_NUMBER: _ClassVar[int]
+    templates: PromptTemplates
+    def __init__(self, templates: _Optional[_Union[PromptTemplates, _Mapping]] = ...) -> None: ...
+
+class UpdatePromptTemplatesRequest(_message.Message):
+    __slots__ = ("system_prompt", "sources_template", "no_sources_template")
+    SYSTEM_PROMPT_FIELD_NUMBER: _ClassVar[int]
+    SOURCES_TEMPLATE_FIELD_NUMBER: _ClassVar[int]
+    NO_SOURCES_TEMPLATE_FIELD_NUMBER: _ClassVar[int]
+    system_prompt: str
+    sources_template: str
+    no_sources_template: str
+    def __init__(self, system_prompt: _Optional[str] = ..., sources_template: _Optional[str] = ..., no_sources_template: _Optional[str] = ...) -> None: ...
+
+class UpdatePromptTemplatesResponse(_message.Message):
+    __slots__ = ("templates",)
+    TEMPLATES_FIELD_NUMBER: _ClassVar[int]
+    templates: PromptTemplates
+    def __init__(self, templates: _Optional[_Union[PromptTemplates, _Mapping]] = ...) -> None: ...

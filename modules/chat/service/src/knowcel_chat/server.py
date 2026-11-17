@@ -29,6 +29,7 @@ from .chat import (
     PeerUnavailableError,
     SourcesFound,
 )
+from .prompts import DEFAULTS, VARIABLES, TemplateError, TemplateName, parse
 from .repository import ConversationRow, MessageRow, Repository
 from .runner import AlreadyRunningError, AnswerRunner
 
@@ -131,9 +132,18 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         team_ids: list[uuid.UUID] | None = None
         if request.HasField("team_ids"):
             team_ids = await _teams(request.team_ids.ids, context, "team_ids.ids")
-        if title is not None or document_ids is not None or team_ids is not None:
+        system_prompt: str | None = None
+        if request.HasField("system_prompt"):
+            system_prompt = request.system_prompt.strip()
+            await _check_template(context, "system_prompt", system_prompt)
+        if any(v is not None for v in (title, document_ids, team_ids, system_prompt)):
             updated = await self._repo.update_conversation(
-                conv.owner_id, conv.id, title=title, document_ids=document_ids, team_ids=team_ids
+                conv.owner_id,
+                conv.id,
+                title=title,
+                document_ids=document_ids,
+                team_ids=team_ids,
+                system_prompt=system_prompt,
             )
             if updated is None:
                 await context.abort(grpc.StatusCode.NOT_FOUND, "conversation not found")
@@ -206,6 +216,34 @@ class ChatServicer(chat_pb2_grpc.ChatServiceServicer):
         await self.runner.stop(conv.id)
         return chat_pb2.StopChatResponse()
 
+    async def GetPromptTemplates(
+        self, request: chat_pb2.GetPromptTemplatesRequest, context: _Context
+    ) -> chat_pb2.GetPromptTemplatesResponse:
+        await _owner(context)
+        return chat_pb2.GetPromptTemplatesResponse(
+            templates=_templates(await self._repo.get_prompt_templates())
+        )
+
+    async def UpdatePromptTemplates(
+        self, request: chat_pb2.UpdatePromptTemplatesRequest, context: _Context
+    ) -> chat_pb2.UpdatePromptTemplatesResponse:
+        await _require_platform_admin(context)
+        changes: dict[str, str] = {}
+        for field, name, required in (
+            ("system_prompt", TemplateName.SYSTEM, ()),
+            ("sources_template", TemplateName.SOURCES, ("sources",)),
+            ("no_sources_template", TemplateName.NO_SOURCES, ()),
+        ):
+            if request.HasField(field):
+                text = getattr(request, field).strip()
+                await _check_template(context, field, text, required)
+                changes[name] = text
+        if changes:
+            await self._repo.set_prompt_templates(changes)
+        return chat_pb2.UpdatePromptTemplatesResponse(
+            templates=_templates(await self._repo.get_prompt_templates())
+        )
+
     async def shutdown(self) -> None:
         """Stops the answers being written, saving what they have."""
         await self.runner.shutdown()
@@ -230,6 +268,46 @@ async def _owner(context: _Context) -> str:
         await context.abort(grpc.StatusCode.UNAUTHENTICATED, "no user in the call")
     assert user is not None
     return user
+
+
+async def _require_platform_admin(context: _Context) -> None:
+    """Rejects callers who are not platform admins. Fails closed: without a
+    caller, or while iam can't say who they are, nobody is an admin."""
+    principal = current_principal()
+    if principal is None or not principal.platform_admin:
+        await context.abort(
+            grpc.StatusCode.PERMISSION_DENIED, "only platform admins can change the default prompts"
+        )
+
+
+async def _check_template(
+    context: _Context, field: str, text: str, required: tuple[str, ...] = ()
+) -> None:
+    """Rejects an invalid template with the reason in the violation of `field`;
+    empty means the default and is always valid."""
+    if not text:
+        return
+    try:
+        parse(text, required)
+    except TemplateError as err:
+        await abort_invalid_argument(context, violation(field, str(err)))
+
+
+def _templates(changed: dict[str, str]) -> chat_pb2.PromptTemplates:
+    def one(name: TemplateName) -> chat_pb2.PromptTemplate:
+        content = changed.get(name, "")
+        return chat_pb2.PromptTemplate(
+            content=content or DEFAULTS[name],
+            default_content=DEFAULTS[name],
+            is_default=not content,
+        )
+
+    return chat_pb2.PromptTemplates(
+        system_prompt=one(TemplateName.SYSTEM),
+        sources_template=one(TemplateName.SOURCES),
+        no_sources_template=one(TemplateName.NO_SOURCES),
+        variables=list(VARIABLES),
+    )
 
 
 def _parse_id(raw: str) -> uuid.UUID:
@@ -331,6 +409,7 @@ def _conversation(c: ConversationRow, generating: bool = False) -> chat_pb2.Conv
         owner_id=c.owner_id,
         generating=generating,
         completed_unseen=c.completed_unseen,
+        system_prompt=c.system_prompt,
     )
 
 

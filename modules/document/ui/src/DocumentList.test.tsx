@@ -6,7 +6,8 @@ import {
 import { renderModule } from "@knowcel/module-sdk/testing";
 import { polyfillDialog } from "@knowcel/ui/testing/dialog";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { DOCUMENT_PAGE_SIZE } from "./DocumentList.tsx";
 import documents from "./index.tsx";
 import { alice } from "./testing.ts";
 
@@ -174,5 +175,89 @@ describe("DocumentList", () => {
       target: { value: "zzz" },
     });
     expect(screen.getByText("No documents match this title.")).toBeTruthy();
+  });
+
+  describe("paging and polling", () => {
+    afterEach(() => vi.useRealTimers());
+
+    /** `total` ready documents served `DOCUMENT_PAGE_SIZE` at a time; the token is the next offset. */
+    function pagedService(total: number, status = DocumentStatus.READY) {
+      const listDocuments = vi.fn(({ page }: { page?: { pageToken: string } }) => {
+        const from = Number(page?.pageToken || 0);
+        const to = Math.min(from + DOCUMENT_PAGE_SIZE, total);
+        return {
+          documents: Array.from({ length: to - from }, (_, i) => ({
+            id: `d${from + i}`,
+            title: `Doc ${String(from + i).padStart(3, "0")}`,
+            status,
+            createTime: { seconds: BigInt(from + i), nanos: 0 },
+          })),
+          page: { nextPageToken: to < total ? String(to) : "" },
+        };
+      });
+      const transport = createRouterTransport(({ service }) =>
+        service(DocumentService, { listDocuments }),
+      );
+      return { transport, listDocuments };
+    }
+    const rows = () => screen.getAllByRole("row").length - 1;
+
+    it("loads the next page on demand until every document is reachable", async () => {
+      const { transport, listDocuments } = pagedService(150);
+      renderModule(documents, transport);
+      await screen.findByRole("link", { name: "Doc 099" });
+      expect(rows()).toBe(100);
+      expect(screen.getByRole("status").textContent).toBe("100 documents loaded");
+      fireEvent.click(screen.getByRole("button", { name: "Load more" }));
+      await waitFor(() => expect(rows()).toBe(150));
+      expect(screen.getByRole("link", { name: "Doc 000" })).toBeTruthy();
+      expect(listDocuments.mock.calls.map((c) => c[0].page?.pageToken)).toEqual(["", "100"]);
+      expect(screen.queryByRole("button", { name: /Load more/ })).toBeNull();
+      expect(document.activeElement).toBe(screen.getByRole("table", { name: "Documents" }));
+    });
+
+    it("filters and sorts across every loaded page", async () => {
+      const { transport } = pagedService(150);
+      renderModule(documents, transport);
+      await screen.findByRole("link", { name: "Doc 099" });
+      const filter = screen.getByRole("searchbox", { name: "Filter by title" });
+      fireEvent.change(filter, { target: { value: "doc 05" } });
+      expect(rows()).toBe(10);
+      fireEvent.change(filter, { target: { value: "doc 14" } });
+      fireEvent.click(screen.getByRole("button", { name: "Load more" }));
+      await waitFor(() => expect(rows()).toBe(10));
+      fireEvent.change(filter, { target: { value: "nothing" } });
+      expect(screen.getByText("No documents match this title.")).toBeTruthy();
+    });
+
+    it("says that a filter only covers the loaded documents while more remain", async () => {
+      const { transport } = pagedService(150);
+      renderModule(documents, transport);
+      await screen.findByRole("link", { name: "Doc 099" });
+      fireEvent.change(screen.getByRole("searchbox", { name: "Filter by title" }), {
+        target: { value: "Doc 120" },
+      });
+      expect(
+        screen.getByText("No loaded documents match this title. Load more to look further."),
+      ).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: "Load more" }));
+      expect(await screen.findByRole("link", { name: "Doc 120" })).toBeTruthy();
+    });
+
+    it("polls only while a document is still being processed", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const idle = pagedService(3);
+      const first = renderModule(documents, idle.transport);
+      await screen.findByRole("link", { name: "Doc 002" });
+      await vi.advanceTimersByTimeAsync(20_000);
+      expect(idle.listDocuments).toHaveBeenCalledTimes(1);
+      first.unmount();
+
+      const busy = pagedService(3, DocumentStatus.PROCESSING);
+      renderModule(documents, busy.transport);
+      await screen.findByRole("link", { name: "Doc 002" });
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(busy.listDocuments.mock.calls.length).toBeGreaterThanOrEqual(3);
+    });
   });
 });

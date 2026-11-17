@@ -14,9 +14,13 @@ The search box at the top of the sidebar is on every page. Press ⌘K (on a Mac)
 
 **Help** lists the sections of this manual whose heading or text contains every word you typed, sections whose heading matches first. Each shows the name of its help page and the matching text; selecting one opens the help page at that section. For example, typing "rename" lists **Rename a conversation**.
 
-Each group shows its first five matches. To see all of them, select **See all results for …** at the bottom of the list, or press Enter without choosing a match.
+Each group shows its first five matches. The groups come in this order: **Pages**, **Conversations**, **Documents**, **Help**. A group with no match is left out. To see all matches, select **See all results for …** at the bottom of the list, or press Enter without choosing a match.
 
-While a group is still searching it shows a spinning circle and "Searching…"; if it can't be searched, it says why in that group; see [When search does not work](#when-search-does-not-work). The other groups still show their matches.
+The list also tells you what the search is doing:
+
+- **Searching…** appears as soon as you type, before any group has answered. Once the search starts, every group that is still searching shows a spinning circle and "Searching…" next to its name, while the groups that are done already show their matches.
+- **No results** appears above **See all results for …** when every group has finished and none has a match. Try other words.
+- If a group can't be searched, it says why in that group; see [When search does not work](#when-search-does-not-work). The other groups still show their matches.
 
 ## See all results
 

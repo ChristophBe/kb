@@ -27,7 +27,7 @@ Every key is optional; what you leave out keeps the Knowcelium value.
 | `favicon` | The browser tab icon (`.svg`, `.png` or `.ico`, same rules). |
 | `colors.light`, `colors.dark` | The accent for each mode: `accent` (buttons, links, focus) and `onAccent` (text on an accent button), as `#rrggbb`. Give both of a mode. |
 
-Hover, focus and subtle accent shades are derived from `accent`; the neutral greys, status colors and typeface stay as they are.
+Hover, focus and subtle accent shades are derived from `accent`; the neutral greys, status colors and typeface stay as they are. A logo is shown at the height of the Knowcelium logo plus 40 %, so give it a transparent background and some breathing room; without a logo the product name is shown as text. The UI switches between the light and dark logo with the theme, including the user's own theme choice.
 
 ## Checks at start
 
@@ -35,7 +35,7 @@ The web container checks the file when it starts and refuses to start with one l
 
 - the file is JSON, has only the keys above, and every file it names exists;
 - every color is `#rrggbb`;
-- `onAccent` on `accent` has a contrast of at least 4.5:1 and `accent` against the page background at least 3:1, the [WCAG 2.2 AA](../ux-standards.md) limits for text and for controls.
+- `onAccent` on `accent` and `accent` against the page background (the accent colors links and the active menu entry) each have a contrast of at least 4.5:1, the [WCAG 2.2 AA](../ux-standards.md) limit for text.
 
 ```text
 branding: colors.light: text on the accent has contrast 1.09:1 (accent #1d4ed8, onAccent #2255dd), needs 4.5:1

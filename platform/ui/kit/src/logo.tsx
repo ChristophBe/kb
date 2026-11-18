@@ -1,3 +1,4 @@
+import { getBranding, productName } from "./branding.ts";
 import { cn } from "./cn.ts";
 
 /** The largest size, in px, at which the small cut is used. */
@@ -55,7 +56,7 @@ export function Mark({
       className={cn("shrink-0", className)}
       {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
     >
-      <title>{label ?? "Knowcelium"}</title>
+      <title>{label ?? productName()}</title>
       {size <= SMALL_CUT_MAX ? SMALL_CUT : FULL_CUT}
     </svg>
   );
@@ -64,9 +65,43 @@ export function Mark({
 /**
  * The lockup: the mark in the accent colour, then "knowcelium". `size` is the
  * mark's size in px; the wordmark scales with it (the mark is about 1.4 times
- * the cap height).
+ * the cap height). A deployment's branding replaces it: its logo image (the
+ * one for the current light or dark mode), else its product name as text.
  */
 export function Logo({ size = 24, className }: { size?: number; className?: string }) {
+  const { logo, name } = getBranding();
+  const either = logo?.light ?? logo?.dark;
+  if (logo && either) {
+    const height = Math.round(size * 1.4);
+    const image = (src: string, mode?: "light" | "dark") => (
+      <img
+        key={mode ?? "both"}
+        src={src}
+        alt={productName()}
+        height={height}
+        className={cn("w-auto max-w-full", mode && `brand-logo-${mode}`)}
+        style={{ height }}
+      />
+    );
+    const light = logo.light ?? either;
+    const dark = logo.dark ?? either;
+    return (
+      <span className={cn("inline-flex items-center", className)}>
+        {/* One image serves both modes; two are switched by theme.css. */}
+        {light === dark ? image(light) : [image(light, "light"), image(dark, "dark")]}
+      </span>
+    );
+  }
+  if (name) {
+    return (
+      <span
+        className={cn("inline-flex items-center font-semibold tracking-tight", className)}
+        style={{ fontSize: size }}
+      >
+        <span style={{ lineHeight: 1 }}>{name}</span>
+      </span>
+    );
+  }
   return (
     <span
       className={cn("inline-flex items-center font-semibold tracking-tight", className)}

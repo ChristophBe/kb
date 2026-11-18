@@ -10,7 +10,7 @@ errors=""
 fail() { errors="${errors}branding: $1
 "; }
 
-# The page canvas of the default theme (theme.css), which the accent must stand out against.
+# The page canvas of the default theme (theme.css), which the accent text must stand out against.
 CANVAS_LIGHT="#f4f4f0"
 CANVAS_DARK="#11120f"
 
@@ -84,7 +84,7 @@ for mode in light dark; do
   ratio=$(contrast "$accent" "$on")
   at_least "$ratio" 4.5 || fail "colors.$mode: text on the accent has contrast $ratio:1 (accent $accent, onAccent $on), needs 4.5:1"
   ratio=$(contrast "$accent" "$canvas")
-  at_least "$ratio" 3 || fail "colors.$mode.accent $accent has contrast $ratio:1 against the page background $canvas, needs 3:1"
+  at_least "$ratio" 4.5 || fail "colors.$mode.accent $accent has contrast $ratio:1 against the page background $canvas, needs 4.5:1"
 done
 
 if [ -n "$errors" ]; then

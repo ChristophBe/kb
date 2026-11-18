@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { productName } from "./branding.ts";
 import { cn } from "./cn.ts";
 import { fieldViolations } from "./errors.ts";
 import { formatRelativeTime, formatTime } from "./format.ts";
@@ -158,15 +159,12 @@ export function PageTitle({ className, children }: { className?: string; childre
   );
 }
 
-/** The product name, as shown in the browser tab. */
-export const PRODUCT_NAME = "Knowcelium";
-
-/** Titles the browser tab "<title> · Knowcelium" while the calling page is shown. */
+/** Titles the browser tab "<title> · <product name>" while the calling page is shown. */
 export function useDocumentTitle(title: string) {
   useEffect(() => {
-    document.title = `${title} · ${PRODUCT_NAME}`;
+    document.title = `${title} · ${productName()}`;
     return () => {
-      document.title = PRODUCT_NAME;
+      document.title = productName();
     };
   }, [title]);
 }

@@ -1,3 +1,4 @@
+import { applyBranding } from "@knowcel/ui";
 import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -35,6 +36,18 @@ describe("App shell", () => {
       "/",
     );
     expect(document.title).toBe("Page not found · Knowcelium");
+  });
+
+  it("shows the deployment's branding in the header and the tab title", () => {
+    applyBranding({ name: "Acme Knowledge", logo: { light: "/branding/logo.svg" } });
+    try {
+      renderAt("/nope");
+      expect(screen.getAllByAltText("Acme Knowledge").length).toBeGreaterThan(0);
+      expect(screen.queryByText("knowcelium")).toBeNull();
+      expect(document.title).toBe("Page not found · Acme Knowledge");
+    } finally {
+      applyBranding(undefined);
+    }
   });
 
   it("moves focus to the page heading after a route change", async () => {

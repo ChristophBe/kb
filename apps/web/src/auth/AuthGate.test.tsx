@@ -1,4 +1,5 @@
 import type { RuntimeAuth } from "@knowcel/module-sdk";
+import { applyBranding } from "@knowcel/ui";
 import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { StrictMode } from "react";
@@ -71,6 +72,22 @@ describe("AuthGate", () => {
     expect(manager.signinRedirect).toHaveBeenCalledOnce();
     expect(screen.getByRole("status", { name: "Signing in" })).toBeTruthy();
     expect(screen.queryByText(/Hello/)).toBeNull();
+  });
+
+  it("brands the sign-in page", async () => {
+    vi.useFakeTimers();
+    applyBranding({ name: "Acme Knowledge", logo: { light: "/branding/logo.svg" } });
+    try {
+      const { manager } = fakeManager();
+      renderGate(manager);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(300);
+      });
+      expect(screen.getByAltText("Acme Knowledge").getAttribute("src")).toBe("/branding/logo.svg");
+      expect(screen.queryByText("knowcelium")).toBeNull();
+    } finally {
+      applyBranding(undefined);
+    }
   });
 
   it("signs in again, at the same route, once the gateway rejects the token", async () => {

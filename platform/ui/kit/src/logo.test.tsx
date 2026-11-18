@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { applyBranding } from "./branding.ts";
 import { Logo, Mark } from "./logo.tsx";
 import { expectNoAxeViolations } from "./testing/axe.ts";
 
@@ -46,5 +47,47 @@ describe("Logo", () => {
     expect(screen.getByText("knowcelium")).toBeTruthy();
     expect(container.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
     await expectNoAxeViolations(container);
+  });
+});
+
+describe("Logo with branding", () => {
+  afterEach(() => applyBranding(undefined));
+
+  it("shows the logo images for light and dark mode, named after the product", () => {
+    applyBranding({
+      name: "Acme Knowledge",
+      logo: { light: "/branding/light.svg", dark: "/branding/dark.svg" },
+    });
+    render(<Logo />);
+    const images = screen.getAllByAltText("Acme Knowledge") as HTMLImageElement[];
+    expect(images.map((i) => i.getAttribute("src"))).toEqual([
+      "/branding/light.svg",
+      "/branding/dark.svg",
+    ]);
+    expect(images.map((i) => i.className)).toEqual([
+      expect.stringContaining("brand-logo-light"),
+      expect.stringContaining("brand-logo-dark"),
+    ]);
+  });
+
+  it("shows a single logo in both modes", () => {
+    applyBranding({ logo: { dark: "/branding/dark.svg" } });
+    render(<Logo />);
+    const images = screen.getAllByAltText("Knowcelium");
+    expect(images).toHaveLength(1);
+    expect(images[0]?.className).not.toContain("brand-logo-");
+  });
+
+  it("shows the product name as text without a logo", () => {
+    applyBranding({ name: "Acme Knowledge" });
+    const { container } = render(<Logo />);
+    expect(container.textContent).toBe("Acme Knowledge");
+    expect(container.querySelector("svg")).toBeNull();
+  });
+
+  it("labels the mark with the product name", () => {
+    applyBranding({ name: "Acme Knowledge" });
+    const { container } = render(<Mark />);
+    expect(container.querySelector("title")?.textContent).toBe("Acme Knowledge");
   });
 });

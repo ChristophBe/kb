@@ -4,6 +4,13 @@ export {
   isValidAccess,
   PUBLIC_ACCESS,
 } from "./access-picker.tsx";
+export {
+  applyBranding,
+  type BrandColors,
+  type Branding,
+  getBranding,
+  productName,
+} from "./branding.ts";
 export { cn } from "./cn.ts";
 export {
   Area,
@@ -19,7 +26,6 @@ export {
   navItemClass,
   PageHeader,
   PageTitle,
-  PRODUCT_NAME,
   RelativeTime,
   SourceNote,
   Spinner,

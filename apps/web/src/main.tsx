@@ -1,13 +1,19 @@
 import type { RuntimeConfig } from "@knowcel/module-sdk";
+import { applyBranding, type Branding } from "@knowcel/ui";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.tsx";
 import "./index.css";
 
+/** /config.json: the runtime config plus the deployment's branding, when it has one. */
+type ShellConfig = RuntimeConfig & { branding?: Branding };
+
 async function loadConfig(): Promise<RuntimeConfig> {
   const res = await fetch("/config.json");
   if (!res.ok) throw new Error(`failed to load /config.json: ${res.status}`);
-  return res.json();
+  const config: ShellConfig = await res.json();
+  applyBranding(config.branding);
+  return config;
 }
 
 const root = createRoot(document.getElementById("root") as HTMLElement);

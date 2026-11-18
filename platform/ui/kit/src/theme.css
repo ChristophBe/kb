@@ -278,6 +278,25 @@
     outline-offset: 2px;
   }
 
+  /* A deployment's logo has an image per mode (Logo in logo.tsx); show the one for the current mode. */
+  .brand-logo-dark {
+    display: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .brand-logo-light {
+      display: none;
+    }
+    :root:not([data-theme="light"]) .brand-logo-dark {
+      display: inline;
+    }
+  }
+  :root[data-theme="dark"] .brand-logo-light {
+    display: none;
+  }
+  :root[data-theme="dark"] .brand-logo-dark {
+    display: inline;
+  }
+
   /* biome-ignore-start lint/complexity/noImportantStyles: must override animate-* and transition utilities. */
   @media (prefers-reduced-motion: reduce) {
     *,

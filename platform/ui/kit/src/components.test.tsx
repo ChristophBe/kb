@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { applyBranding } from "./branding.ts";
 import {
   Area,
   Badge,
@@ -28,6 +29,15 @@ describe("PageHeader", () => {
     expect(document.title).toBe("Documents · Knowcelium");
     unmount();
     expect(document.title).toBe("Knowcelium");
+  });
+
+  it("uses the branded product name", () => {
+    applyBranding({ name: "Acme Knowledge" });
+    const { unmount } = render(<PageHeader title="Documents" />);
+    expect(document.title).toBe("Documents · Acme Knowledge");
+    unmount();
+    expect(document.title).toBe("Acme Knowledge");
+    applyBranding(undefined);
   });
 });
 

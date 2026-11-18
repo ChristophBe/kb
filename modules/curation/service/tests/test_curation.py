@@ -65,7 +65,7 @@ async def test_a_replaced_document_scores_lower_than_before() -> None:
     before = store.scores[older].score
     # The newer version arrives and is found to replace the older one.
     await scorer.on_processed(newer, now)
-    store.supersede(older, newer)
+    await store.add_finding("superseded", older, newer)
     await scorer.rescore(older)
     assert store.scores[older].score == pytest.approx(before * 0.5)
     assert store.scores[newer].score == pytest.approx(before)

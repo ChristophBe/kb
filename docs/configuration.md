@@ -75,6 +75,12 @@ From `Settings` in [modules/curation/service/src/knowcel_curation/config.py](../
 | `KNOWCEL_CURATION_RECENCY_WEIGHT` | `1` | Weight of a document's recency in its score. Only the ratio to the usage weight matters. |
 | `KNOWCEL_CURATION_USAGE_WEIGHT` | `0` | Weight of how often chat cites a document. 0 until chat reports its citations; a score then comes from recency and replacements alone. |
 | `KNOWCEL_CURATION_HALF_LIFE_DAYS` | `180` | Days after which the recency of a document has halved. |
+| `KNOWCEL_LLM_ADDR` | `localhost:9004` | The llm module (host:port), which embeds passages and judges whether two contradict each other. While it is down, new documents are not checked for findings until it is back. |
+| `KNOWCEL_CURATION_DUPLICATE_THRESHOLD` | `0.97` | Cosine similarity at which a passage counts as a copy of another. |
+| `KNOWCEL_CURATION_VERSION_THRESHOLD` | `0.85` | Cosine similarity at which a passage counts as part of another version of the same text. |
+| `KNOWCEL_CURATION_CONFLICT_THRESHOLD` | `0.75` | Cosine similarity from which two passages are asked about whether they contradict each other. |
+| `KNOWCEL_CURATION_SAMPLE_CHUNKS` | `5` | Passages of a new document compared with the other documents. |
+| `KNOWCEL_CURATION_CONFLICT_CHECKS` | `3` | Pairs of passages per new document the chat model is asked about; 0 turns conflict detection off. |
 | `KNOWCEL_CURATION_RESCORE_INTERVAL` | `3600` | Seconds between scoring all documents again, so that recency keeps decaying while no document is processed. |
 | `KNOWCEL_CURATION_REPLACEMENT_PENALTY` | `0.5` | Factor a score is multiplied by for each document that replaces it, between 0 and 1. |
 | `KNOWCEL_CURATION_USAGE_SATURATION` | `20` | Citations at which the usage signal is at its maximum. |

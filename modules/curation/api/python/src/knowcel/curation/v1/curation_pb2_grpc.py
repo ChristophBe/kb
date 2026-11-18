@@ -28,8 +28,8 @@ if _version_not_supported:
 class CurationServiceStub:
     """CurationService keeps the knowledge base consistent: it scores documents by
     relevance and freshness and reports documents that duplicate, replace or
-    contradict each other. Scores only cover documents the caller can see;
-    findings are restricted the same way once they are written (#82).
+    contradict each other. Scores and findings only cover documents the caller
+    can see.
     """
 
     def __init__(self, channel):
@@ -53,13 +53,18 @@ class CurationServiceStub:
                 request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListFindingsRequest.SerializeToString,
                 response_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListFindingsResponse.FromString,
                 _registered_method=True)
+        self.ResolveFinding = channel.unary_unary(
+                '/knowcel.curation.v1.CurationService/ResolveFinding',
+                request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ResolveFindingRequest.SerializeToString,
+                response_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ResolveFindingResponse.FromString,
+                _registered_method=True)
 
 
 class CurationServiceServicer:
     """CurationService keeps the knowledge base consistent: it scores documents by
     relevance and freshness and reports documents that duplicate, replace or
-    contradict each other. Scores only cover documents the caller can see;
-    findings are restricted the same way once they are written (#82).
+    contradict each other. Scores and findings only cover documents the caller
+    can see.
     """
 
     def GetDocumentScore(self, request, context):
@@ -82,7 +87,18 @@ class CurationServiceServicer:
         raise NotImplementedError('Method not implemented!')
 
     def ListFindings(self, request, context):
-        """ListFindings returns the open findings, newest first.
+        """ListFindings returns the open findings whose two documents the caller can
+        see, newest first. UNAVAILABLE while the document module is.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ResolveFinding(self, request, context):
+        """ResolveFinding closes an open finding with one of the options it lists and
+        updates the scores it affects. NOT_FOUND when the finding doesn't exist or
+        the caller can't see both documents, FAILED_PRECONDITION when it is
+        already resolved.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -106,6 +122,11 @@ def add_CurationServiceServicer_to_server(servicer, server):
                     request_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListFindingsRequest.FromString,
                     response_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListFindingsResponse.SerializeToString,
             ),
+            'ResolveFinding': grpc.unary_unary_rpc_method_handler(
+                    servicer.ResolveFinding,
+                    request_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ResolveFindingRequest.FromString,
+                    response_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ResolveFindingResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'knowcel.curation.v1.CurationService', rpc_method_handlers)
@@ -117,8 +138,8 @@ def add_CurationServiceServicer_to_server(servicer, server):
 class CurationService:
     """CurationService keeps the knowledge base consistent: it scores documents by
     relevance and freshness and reports documents that duplicate, replace or
-    contradict each other. Scores only cover documents the caller can see;
-    findings are restricted the same way once they are written (#82).
+    contradict each other. Scores and findings only cover documents the caller
+    can see.
     """
 
     @staticmethod
@@ -192,6 +213,33 @@ class CurationService:
             '/knowcel.curation.v1.CurationService/ListFindings',
             knowcel_dot_curation_dot_v1_dot_curation__pb2.ListFindingsRequest.SerializeToString,
             knowcel_dot_curation_dot_v1_dot_curation__pb2.ListFindingsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ResolveFinding(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.curation.v1.CurationService/ResolveFinding',
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.ResolveFindingRequest.SerializeToString,
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.ResolveFindingResponse.FromString,
             options,
             channel_credentials,
             insecure,

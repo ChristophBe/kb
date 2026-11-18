@@ -9,11 +9,24 @@ from collections.abc import Collection
 
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import Column, DateTime, Double, MetaData, Table, Text, Uuid, func, select
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Double,
+    MetaData,
+    Table,
+    Text,
+    Uuid,
+    and_,
+    func,
+    or_,
+    select,
+    update,
+)
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from .curation import SUPERSEDED, Finding, Score
+from .curation import REPLACE, SUPERSEDED, Finding, Score
 
 SCHEMA = "curation"
 MIGRATIONS_DIR = pathlib.Path(__file__).resolve().parents[3] / "migrations"
@@ -37,6 +50,18 @@ findings = Table(
     Column("document_id", Uuid, nullable=False),
     Column("other_document_id", Uuid, nullable=False),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    Column("resolution", Text),
+    Column("resolved_at", DateTime(timezone=True)),
+    Column("resolved_by", Text),
+)
+
+_FINDING_COLUMNS = (
+    findings.c.id,
+    findings.c.kind,
+    findings.c.document_id,
+    findings.c.other_document_id,
+    findings.c.created_at,
+    findings.c.resolution,
 )
 
 
@@ -83,13 +108,62 @@ class SqlCurationStore:
         query = (
             select(func.count())
             .select_from(findings)
-            .where(findings.c.document_id == document_id, findings.c.kind == SUPERSEDED)
+            .where(
+                findings.c.document_id == document_id,
+                # A version found is a replacement until someone decides
+                # otherwise; any other finding only when confirmed.
+                or_(
+                    and_(findings.c.kind == SUPERSEDED, findings.c.resolution.is_(None)),
+                    findings.c.resolution == REPLACE,
+                ),
+            )
         )
         async with self._engine.connect() as conn:
             return (await conn.execute(query)).scalar_one()
 
-    async def list_findings(self) -> list[Finding]:
-        query = select(findings).order_by(findings.c.created_at.desc(), findings.c.id)
+    async def add_finding(
+        self, kind: str, document_id: uuid.UUID, other_document_id: uuid.UUID
+    ) -> bool:
+        statement = (
+            insert(findings)
+            .values(
+                id=uuid.uuid4(),
+                kind=kind,
+                document_id=document_id,
+                other_document_id=other_document_id,
+            )
+            .on_conflict_do_nothing(index_elements=["kind", "document_id", "other_document_id"])
+            .returning(findings.c.id)
+        )
+        async with self._engine.begin() as conn:
+            return (await conn.execute(statement)).first() is not None
+
+    async def get_finding(self, finding_id: uuid.UUID) -> Finding | None:
+        async with self._engine.connect() as conn:
+            row = (
+                (await conn.execute(select(*_FINDING_COLUMNS).where(findings.c.id == finding_id)))
+                .mappings()
+                .first()
+            )
+        return Finding(**row) if row else None
+
+    async def resolve_finding(self, finding_id: uuid.UUID, resolution: str, user: str) -> bool:
+        statement = (
+            update(findings)
+            .where(findings.c.id == finding_id, findings.c.resolution.is_(None))
+            .values(resolution=resolution, resolved_at=func.now(), resolved_by=user)
+            .returning(findings.c.id)
+        )
+        async with self._engine.begin() as conn:
+            return (await conn.execute(statement)).first() is not None
+
+    async def list_open_findings(self, limit: int) -> list[Finding]:
+        query = (
+            select(*_FINDING_COLUMNS)
+            .where(findings.c.resolution.is_(None))
+            .order_by(findings.c.created_at.desc(), findings.c.id)
+            .limit(limit)
+        )
         async with self._engine.connect() as conn:
             rows = (await conn.execute(query)).mappings().all()
         return [Finding(**r) for r in rows]

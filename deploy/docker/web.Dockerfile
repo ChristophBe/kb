@@ -8,7 +8,9 @@ RUN pnpm install --frozen-lockfile --filter "@knowcel/web..." && pnpm --filter @
 
 FROM nginx:1.29-alpine
 COPY deploy/docker/web/nginx.conf /etc/nginx/conf.d/default.conf
+RUN apk add --no-cache jq
 COPY deploy/docker/web/40-runtime-config.sh /docker-entrypoint.d/40-runtime-config.sh
+COPY deploy/docker/web/branding.sh /usr/local/lib/branding.sh
 COPY --from=build /src/apps/web/dist /usr/share/nginx/html
 # The release version, logged at startup by 40-runtime-config.sh; "dev" for local builds.
 ARG KNOWCEL_VERSION=dev

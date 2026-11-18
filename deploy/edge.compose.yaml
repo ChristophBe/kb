@@ -24,5 +24,8 @@ services:
       KNOWCEL_ENABLED_MODULES: ${KNOWCEL_ENABLED_MODULES:-}
       KNOWCEL_OIDC_ISSUER: ${KNOWCEL_OIDC_ISSUER:-http://localhost:5556/dex}
       KNOWCEL_OIDC_CLIENT_ID: ${KNOWCEL_OIDC_CLIENT_ID:-kb-web}
+      KNOWCEL_BRANDING_FILE: ${KNOWCEL_BRANDING_DIR:+/branding/branding.json}
+    volumes:
+      - ${KNOWCEL_BRANDING_DIR:-./branding}:/branding:ro
     ports: ["${KNOWCEL_WEB_PORT:-3000}:80"]
     depends_on: [envoy]

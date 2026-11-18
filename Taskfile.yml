@@ -95,6 +95,7 @@ tasks:
       - task: test:py
       - task: test:ts
       - task: test:boundaries
+      - task: test:deploy
 
   test:go:
     desc: Go unit tests with per-component coverage minimums.
@@ -162,6 +163,14 @@ tasks:
           for m in $MODULES; do [ -d "modules/$m/ui" ] && dirs="$dirs modules/$m/ui"; done
           [ -z "$dirs" ] || pnpm exec vitest run $dirs
         fi
+
+  test:deploy:
+    desc: Test the web container's branding check against the example branding (needs jq).
+    cmds:
+      - |
+        {{.SCOPE}}
+        in_scope all || { echo "skip deploy scripts: not in MODULES"; exit 0; }
+        sh deploy/docker/web/branding_test.sh
 
   test:boundaries:
     desc: Check that the module-boundary lint rules catch the violations in tools/modgen/testdata/boundaries.

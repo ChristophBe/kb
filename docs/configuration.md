@@ -187,6 +187,7 @@ Read when the container starts, by [deploy/docker/web/40-runtime-config.sh](../d
 |---|---|---|
 | `KNOWCEL_VERSION` | `dev` | Version the images are built as and report (the web shell logs it at start); deploy/release.compose.yaml requires a released one, e.g. 0.3.1. |
 | `KNOWCEL_ENABLED_MODULES` | empty | Comma-separated module ids to show in the UI (empty = all). |
+| `KNOWCEL_BRANDING_FILE` | empty | Path of the branding file inside the web container; empty keeps the Knowcelium branding. The container fails to start when the file is not usable. |
 | `KNOWCEL_OIDC_ISSUER` | `http://localhost:5556/dex` | OIDC issuer whose tokens the gateway accepts (the `iss` claim; browsers and tests fetch tokens there). Defaults to the dev Dex; with another KNOWCEL_DEX_PORT change the issuer's port too. |
 | `KNOWCEL_OIDC_CLIENT_ID` | `kb-web` | The web shell's client id at the issuer (authorization code with PKCE). |
 | `KNOWCEL_API_BASE_URL` | `http://localhost:8080` | Addresses the browser uses (keep in sync with the ports above): the gateway the web shell calls, and the object store upload and download URLs point at. |
@@ -198,6 +199,7 @@ Substituted by Docker Compose into the compose files: host ports, the release ve
 | Variable | Default | Description | Used in |
 |---|---|---|---|
 | `KNOWCEL_GATEWAY_PORT` | `8080` | Host port of the gRPC-Web gateway (Envoy). | `deploy/edge.compose.yaml` |
+| `KNOWCEL_BRANDING_DIR` | `./branding` | Host directory with the branding of the UI: a branding.json and the logo and favicon files it names (docs/operations/branding.md; try ./branding/example). Compose mounts it into the web container and sets KNOWCEL_BRANDING_FILE. | `deploy/edge.compose.yaml` |
 | `KNOWCEL_WEB_PORT` | `3000` | Host port of the web shell. | `deploy/edge.compose.yaml`, `deploy/infra.compose.yaml` |
 | `KNOWCEL_WEB_DEV_PORT` | `5173` | Port of the Vite dev server (task web); Dex allows it as a redirect URI. | `deploy/infra.compose.yaml` |
 | `KNOWCEL_DEX_PORT` | `5556` | Host port of the dev Dex identity provider. | `deploy/infra.compose.yaml` |

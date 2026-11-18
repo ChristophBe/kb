@@ -136,6 +136,7 @@ The browser uploads files straight to `s3.publicEndpoint` through presigned URLs
 | `oidc.issuer`, `oidc.jwksUrl`, `oidc.audiences`, `oidc.clientId` | | Required without `infra.enabled` |
 | `ingress.enabled`, `.className`, `.host`, `.tls`, `.annotations` | | |
 | `ollama.enabled`, `ollama.models` | `false` | Local model server, reachable as `http://ollama:11434` |
+| `web.brandingConfigMap` | empty | ConfigMap with a `branding.json` and its images; the UI shows your name, logo and colors ([Branding](branding.md)) |
 | `otel.endpoint` | empty | OTLP endpoint for every component (`KNOWCEL_OTEL_ENDPOINT`); empty leaves tracing off |
 | `components.<name>.enabled`, `.replicas`, `.resources` | | Per module component |
 | `components.<name>.env` | from the module's manifest | `KNOWCEL_*` settings (`.env.example`), e.g. `components.document-service.env.KNOWCEL_MAX_UPLOAD_BYTES` |

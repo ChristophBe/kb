@@ -103,6 +103,10 @@ web:
     repository: knowcelium-web
   # Module ids to show (comma-separated); empty shows all.
   enabledModules: ""
+  # Branding of the UI (docs/operations/branding.md): name of a ConfigMap with a
+  # branding.json and the logo and favicon files it names; empty keeps the
+  # Knowcelium branding. Read when the web pod starts.
+  brandingConfigMap: ""
   resources:
     requests: { cpu: 10m, memory: 16Mi }
     limits: { memory: 64Mi }

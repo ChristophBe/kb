@@ -2,15 +2,18 @@
 their DDL is managed by the Alembic migrations in modules/curation/migrations."""
 
 import asyncio
+import datetime
 import pathlib
 import uuid
+from collections.abc import Collection
 
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import Column, DateTime, Double, MetaData, Table, Text, Uuid, func, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from .curation import Finding, Score
+from .curation import SUPERSEDED, Finding, Score
 
 SCHEMA = "curation"
 MIGRATIONS_DIR = pathlib.Path(__file__).resolve().parents[3] / "migrations"
@@ -22,6 +25,7 @@ document_scores = Table(
     metadata,
     Column("document_id", Uuid, primary_key=True),
     Column("score", Double, nullable=False),
+    Column("processed_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
     Column("updated_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
 )
 
@@ -40,11 +44,30 @@ class SqlCurationStore:
     def __init__(self, engine: AsyncEngine) -> None:
         self._engine = engine
 
-    async def get_score(self, document_id: uuid.UUID) -> Score | None:
-        query = select(document_scores).where(document_scores.c.document_id == document_id)
+    async def get_scores(self, document_ids: Collection[uuid.UUID]) -> list[Score]:
+        query = select(document_scores).where(document_scores.c.document_id.in_(document_ids))
         async with self._engine.connect() as conn:
-            row = (await conn.execute(query)).mappings().first()
-        return Score(**row) if row else None
+            rows = (await conn.execute(query)).mappings().all()
+        return [Score(**r) for r in rows]
+
+    async def save_score(
+        self, document_id: uuid.UUID, processed_at: datetime.datetime, score: float
+    ) -> None:
+        values = {"processed_at": processed_at, "score": score, "updated_at": func.now()}
+        statement = insert(document_scores).values(document_id=document_id, **values)
+        async with self._engine.begin() as conn:
+            await conn.execute(
+                statement.on_conflict_do_update(index_elements=["document_id"], set_=values)
+            )
+
+    async def count_replacements(self, document_id: uuid.UUID) -> int:
+        query = (
+            select(func.count())
+            .select_from(findings)
+            .where(findings.c.document_id == document_id, findings.c.kind == SUPERSEDED)
+        )
+        async with self._engine.connect() as conn:
+            return (await conn.execute(query)).scalar_one()
 
     async def list_findings(self) -> list[Finding]:
         query = select(findings).order_by(findings.c.created_at.desc(), findings.c.id)

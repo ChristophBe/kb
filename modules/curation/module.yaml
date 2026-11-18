@@ -7,7 +7,7 @@ services:
     language: python
     port: 9005
     metrics_port: 9107
-    infra: [postgres]
+    infra: [postgres, nats]
     grpc_services: [knowcel.curation.v1.CurationService]
 # Documents are read and searched through document, contradictions are judged by llm,
 # the processed events come from ingestion, and iam tells which documents a caller may see; while iam is down, only the caller's own do.

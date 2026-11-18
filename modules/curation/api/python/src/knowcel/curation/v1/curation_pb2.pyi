@@ -57,6 +57,18 @@ class GetDocumentScoreResponse(_message.Message):
     score: DocumentScore
     def __init__(self, score: _Optional[_Union[DocumentScore, _Mapping]] = ...) -> None: ...
 
+class ScoreChunksRequest(_message.Message):
+    __slots__ = ("document_ids",)
+    DOCUMENT_IDS_FIELD_NUMBER: _ClassVar[int]
+    document_ids: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, document_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class ScoreChunksResponse(_message.Message):
+    __slots__ = ("scores",)
+    SCORES_FIELD_NUMBER: _ClassVar[int]
+    scores: _containers.RepeatedCompositeFieldContainer[DocumentScore]
+    def __init__(self, scores: _Optional[_Iterable[_Union[DocumentScore, _Mapping]]] = ...) -> None: ...
+
 class ListFindingsRequest(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...

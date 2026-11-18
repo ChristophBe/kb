@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	CurationService_GetDocumentScore_FullMethodName = "/knowcel.curation.v1.CurationService/GetDocumentScore"
+	CurationService_ScoreChunks_FullMethodName      = "/knowcel.curation.v1.CurationService/ScoreChunks"
 	CurationService_ListFindings_FullMethodName     = "/knowcel.curation.v1.CurationService/ListFindings"
 )
 
@@ -29,12 +30,18 @@ const (
 //
 // CurationService keeps the knowledge base consistent: it scores documents by
 // relevance and freshness and reports documents that duplicate, replace or
-// contradict each other. Nothing writes scores or findings yet; restricting
-// results to documents the caller can see comes with the first writer (#81).
+// contradict each other. Scores only cover documents the caller can see;
+// findings are restricted the same way once they are written (#82).
 type CurationServiceClient interface {
 	// GetDocumentScore returns the current score of a document; NOT_FOUND while
-	// it has none.
+	// it has none or when the caller can't see the document.
 	GetDocumentScore(ctx context.Context, in *GetDocumentScoreRequest, opts ...grpc.CallOption) (*GetDocumentScoreResponse, error)
+	// ScoreChunks returns the scores of the documents the given chunks belong
+	// to, so a caller can combine them with a chunk's similarity: every chunk
+	// of a document has the document's score. Documents without a score and
+	// documents the caller can't see are left out. UNAVAILABLE while the
+	// document module is, since visibility can't be checked then.
+	ScoreChunks(ctx context.Context, in *ScoreChunksRequest, opts ...grpc.CallOption) (*ScoreChunksResponse, error)
 	// ListFindings returns the open findings, newest first.
 	ListFindings(ctx context.Context, in *ListFindingsRequest, opts ...grpc.CallOption) (*ListFindingsResponse, error)
 }
@@ -57,6 +64,16 @@ func (c *curationServiceClient) GetDocumentScore(ctx context.Context, in *GetDoc
 	return out, nil
 }
 
+func (c *curationServiceClient) ScoreChunks(ctx context.Context, in *ScoreChunksRequest, opts ...grpc.CallOption) (*ScoreChunksResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ScoreChunksResponse)
+	err := c.cc.Invoke(ctx, CurationService_ScoreChunks_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *curationServiceClient) ListFindings(ctx context.Context, in *ListFindingsRequest, opts ...grpc.CallOption) (*ListFindingsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListFindingsResponse)
@@ -73,12 +90,18 @@ func (c *curationServiceClient) ListFindings(ctx context.Context, in *ListFindin
 //
 // CurationService keeps the knowledge base consistent: it scores documents by
 // relevance and freshness and reports documents that duplicate, replace or
-// contradict each other. Nothing writes scores or findings yet; restricting
-// results to documents the caller can see comes with the first writer (#81).
+// contradict each other. Scores only cover documents the caller can see;
+// findings are restricted the same way once they are written (#82).
 type CurationServiceServer interface {
 	// GetDocumentScore returns the current score of a document; NOT_FOUND while
-	// it has none.
+	// it has none or when the caller can't see the document.
 	GetDocumentScore(context.Context, *GetDocumentScoreRequest) (*GetDocumentScoreResponse, error)
+	// ScoreChunks returns the scores of the documents the given chunks belong
+	// to, so a caller can combine them with a chunk's similarity: every chunk
+	// of a document has the document's score. Documents without a score and
+	// documents the caller can't see are left out. UNAVAILABLE while the
+	// document module is, since visibility can't be checked then.
+	ScoreChunks(context.Context, *ScoreChunksRequest) (*ScoreChunksResponse, error)
 	// ListFindings returns the open findings, newest first.
 	ListFindings(context.Context, *ListFindingsRequest) (*ListFindingsResponse, error)
 	mustEmbedUnimplementedCurationServiceServer()
@@ -93,6 +116,9 @@ type UnimplementedCurationServiceServer struct{}
 
 func (UnimplementedCurationServiceServer) GetDocumentScore(context.Context, *GetDocumentScoreRequest) (*GetDocumentScoreResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetDocumentScore not implemented")
+}
+func (UnimplementedCurationServiceServer) ScoreChunks(context.Context, *ScoreChunksRequest) (*ScoreChunksResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ScoreChunks not implemented")
 }
 func (UnimplementedCurationServiceServer) ListFindings(context.Context, *ListFindingsRequest) (*ListFindingsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListFindings not implemented")
@@ -136,6 +162,24 @@ func _CurationService_GetDocumentScore_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CurationService_ScoreChunks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ScoreChunksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CurationServiceServer).ScoreChunks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CurationService_ScoreChunks_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CurationServiceServer).ScoreChunks(ctx, req.(*ScoreChunksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CurationService_ListFindings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListFindingsRequest)
 	if err := dec(in); err != nil {
@@ -164,6 +208,10 @@ var CurationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDocumentScore",
 			Handler:    _CurationService_GetDocumentScore_Handler,
+		},
+		{
+			MethodName: "ScoreChunks",
+			Handler:    _CurationService_ScoreChunks_Handler,
 		},
 		{
 			MethodName: "ListFindings",

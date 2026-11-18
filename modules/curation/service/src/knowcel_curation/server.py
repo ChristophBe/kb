@@ -1,6 +1,8 @@
 """kb curation module: gRPC transport."""
 
+import base64
 import contextlib
+import datetime
 import logging
 import uuid
 from collections.abc import AsyncIterator, Collection
@@ -19,6 +21,7 @@ from .curation import (
     DocInfo,
     Documents,
     Finding,
+    FindingCursor,
     PeerError,
     PeerUnavailableError,
     Score,
@@ -33,8 +36,10 @@ _Context = grpc.aio.ServicerContext[Any, Any]
 _MAX_SCORE_DOCUMENTS = 100
 _DEFAULT_FINDINGS = 50
 _MAX_FINDINGS = 100
-# Open findings read per finding returned: some are about documents the caller can't see.
-_SCAN_FACTOR = 4
+# Open findings read at a time, and at most per call: many can be about
+# documents the caller can't see.
+_SCAN_BATCH = 100
+_MAX_SCAN = 1000
 
 _RESOLUTIONS = {
     curation_pb2.RESOLUTION_KEEP: KEEP,
@@ -103,21 +108,36 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
     ) -> curation_pb2.ListFindingsResponse:
         await self._require_user(context)
         wanted = min(request.page_size or _DEFAULT_FINDINGS, _MAX_FINDINGS)
+        try:
+            after = _decode_cursor(request.page_token)
+        except ValueError:
+            await abort_invalid_argument(
+                context, violation("page_token", "Page token is not valid")
+            )
         response = curation_pb2.ListFindingsResponse()
         async with self._failures(context, "listing findings"):
-            found = await self._store.list_open_findings(wanted * _SCAN_FACTOR)
-            documents = await self._documents.readable(
-                {i for f in found for i in (f.document_id, f.other_document_id)}
-            )
-            for f in found:
-                if f.document_id in documents and f.other_document_id in documents:
-                    response.findings.append(
-                        _finding_message(
-                            f, documents[f.document_id], documents[f.other_document_id]
+            scanned = 0
+            more = True
+            while more and len(response.findings) < wanted and scanned < _MAX_SCAN:
+                batch = await self._store.list_open_findings(_SCAN_BATCH, after)
+                more = len(batch) == _SCAN_BATCH
+                scanned += len(batch)
+                documents = await self._documents.readable(
+                    {i for f in batch for i in (f.document_id, f.other_document_id)}
+                )
+                for f in batch:
+                    if len(response.findings) == wanted:
+                        more = True
+                        break
+                    after = FindingCursor(f.created_at, f.id)
+                    if f.document_id in documents and f.other_document_id in documents:
+                        response.findings.append(
+                            _finding_message(
+                                f, documents[f.document_id], documents[f.other_document_id]
+                            )
                         )
-                    )
-                if len(response.findings) == wanted:
-                    break
+            if more and after is not None:
+                response.next_page_token = _encode_cursor(after)
         return response
 
     async def ResolveFinding(
@@ -146,7 +166,11 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
                 await context.abort(
                     grpc.StatusCode.FAILED_PRECONDITION, "the finding is already resolved"
                 )
+        try:
             await self._scorer.rescore(finding.document_id)
+        except SQLAlchemyError:
+            # The resolution is saved; the next periodic rescore applies it.
+            log.exception("scoring document %s again failed", finding.document_id)
         return curation_pb2.ResolveFindingResponse()
 
     async def _visible_scores(self, context: _Context, ids: Collection[uuid.UUID]) -> list[Score]:
@@ -201,3 +225,16 @@ def _finding_message(finding: Finding, document: DocInfo, other: DocInfo) -> cur
     )
     message.created_at.FromDatetime(finding.created_at)
     return message
+
+
+def _encode_cursor(cursor: FindingCursor) -> str:
+    raw = f"{cursor.created_at.isoformat()}|{cursor.id}"
+    return base64.urlsafe_b64encode(raw.encode()).decode()
+
+
+def _decode_cursor(token: str) -> FindingCursor | None:
+    """Raises ValueError for a token that isn't one of ours."""
+    if not token:
+        return None
+    created_at, _, finding_id = base64.urlsafe_b64decode(token.encode()).decode().partition("|")
+    return FindingCursor(datetime.datetime.fromisoformat(created_at), uuid.UUID(finding_id))

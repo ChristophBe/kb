@@ -15,7 +15,7 @@ from nats.js.api import AckPolicy, ConsumerConfig
 from nats.js.errors import Error as JetStreamError
 from sqlalchemy.exc import SQLAlchemyError
 
-from .curation import PeerError, PeerUnavailableError, Scorer
+from .curation import PeerError, Scorer
 from .findings import Detector
 
 STREAM = "INGESTION"
@@ -63,13 +63,12 @@ async def deliver(scorer: Scorer, detector: Detector, msg: Delivery) -> None:
                 log.info(
                     "no owner in the event of document %s: not looking for findings", document_id
                 )
-    except (SQLAlchemyError, PeerUnavailableError):
+    except (SQLAlchemyError, PeerError):
+        # Also a peer's refusal: it may be fixed by the time of a retry, and
+        # JetStream drops the event after MAX_DELIVER deliveries.
         log.exception("handling document %s failed, retrying", document_id)
         await msg.nak(delay=RETRY_DELAY)
         return
-    except PeerError:
-        # Retrying a peer's refusal won't help; the score is saved.
-        log.exception("looking for findings of document %s failed", document_id)
     await msg.ack()
 
 
@@ -120,5 +119,5 @@ async def consume(
             try:
                 await deliver(scorer, detector, _Message(msg))
             except Exception:
-                # Not acked: JetStream redelivers it after the ack wait.
                 log.exception("handling a processed event failed")
+                await msg.nak(delay=RETRY_DELAY)

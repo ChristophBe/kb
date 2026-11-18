@@ -21,7 +21,8 @@ service CurationService {
   // document module is, since visibility can't be checked then.
   rpc ScoreChunks(ScoreChunksRequest) returns (ScoreChunksResponse);
   // ListFindings returns the open findings whose two documents the caller can
-  // see, newest first. UNAVAILABLE while the document module is.
+  // see, newest first, a page at a time. UNAVAILABLE while the document
+  // module is.
   rpc ListFindings(ListFindingsRequest) returns (ListFindingsResponse);
   // ResolveFinding closes an open finding with one of the options it lists and
   // updates the scores it affects. NOT_FOUND when the finding doesn't exist or
@@ -101,6 +102,8 @@ message ScoreChunksResponse {
 message ListFindingsRequest {
   // At most this many findings; 0 means 50, and 100 is the most.
   int32 page_size = 1;
+  // The next_page_token of the previous page; empty for the first.
+  string page_token = 2;
 }
 
 message ResolveFindingRequest {
@@ -112,4 +115,7 @@ message ResolveFindingResponse {}
 
 message ListFindingsResponse {
   repeated Finding findings = 1;
+  // Pass it as page_token for the next page; empty after the last. A page
+  // can hold fewer findings than asked for, or none, and still have a next one.
+  string next_page_token = 2;
 }

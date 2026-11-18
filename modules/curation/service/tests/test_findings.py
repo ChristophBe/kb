@@ -181,14 +181,25 @@ async def test_a_document_without_text_is_skipped() -> None:
         ("Policy v2.pdf", "policy"),
         ("policy_final.PDF", "policy"),
         ("policy (1).docx", "policy"),
-        ("policy-2024.md", "policy"),
+        ("policy-v2.1.md", "policy"),
+        ("Policy final v3.docx", "policy"),
+        ("Report 2023.pdf", "report 2023"),
+        ("Chapter 2", "chapter 2"),
         ("Q3 report", "q3 report"),
-        ("2024.pdf", "2024"),
+        ("v2.pdf", "v2"),
         ("notes.v1.txt", "notes"),
+        ("1" * 5000 + "x.pdf", "1" * 200),
     ],
 )
 def test_name_stem(name: str, stem: str) -> None:
     assert name_stem(name) == stem
+
+
+def test_numbered_documents_are_not_versions_of_each_other() -> None:
+    assert not same_name(
+        doc("Report 2023", filename="r23.pdf"), doc("Report 2024", filename="r24.pdf")
+    )
+    assert not same_name(doc("Chapter 1", filename="c1.md"), doc("Chapter 2", filename="c2.md"))
 
 
 def test_versions_are_recognised_by_name() -> None:

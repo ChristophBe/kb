@@ -97,10 +97,12 @@ class ScoreChunksResponse(_message.Message):
     def __init__(self, scores: _Optional[_Iterable[_Union[DocumentScore, _Mapping]]] = ...) -> None: ...
 
 class ListFindingsRequest(_message.Message):
-    __slots__ = ("page_size",)
+    __slots__ = ("page_size", "page_token")
     PAGE_SIZE_FIELD_NUMBER: _ClassVar[int]
+    PAGE_TOKEN_FIELD_NUMBER: _ClassVar[int]
     page_size: int
-    def __init__(self, page_size: _Optional[int] = ...) -> None: ...
+    page_token: str
+    def __init__(self, page_size: _Optional[int] = ..., page_token: _Optional[str] = ...) -> None: ...
 
 class ResolveFindingRequest(_message.Message):
     __slots__ = ("finding_id", "resolution")
@@ -115,7 +117,9 @@ class ResolveFindingResponse(_message.Message):
     def __init__(self) -> None: ...
 
 class ListFindingsResponse(_message.Message):
-    __slots__ = ("findings",)
+    __slots__ = ("findings", "next_page_token")
     FINDINGS_FIELD_NUMBER: _ClassVar[int]
+    NEXT_PAGE_TOKEN_FIELD_NUMBER: _ClassVar[int]
     findings: _containers.RepeatedCompositeFieldContainer[Finding]
-    def __init__(self, findings: _Optional[_Iterable[_Union[Finding, _Mapping]]] = ...) -> None: ...
+    next_page_token: str
+    def __init__(self, findings: _Optional[_Iterable[_Union[Finding, _Mapping]]] = ..., next_page_token: _Optional[str] = ...) -> None: ...

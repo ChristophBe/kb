@@ -88,7 +88,8 @@ class CurationServiceServicer:
 
     def ListFindings(self, request, context):
         """ListFindings returns the open findings whose two documents the caller can
-        see, newest first. UNAVAILABLE while the document module is.
+        see, newest first, a page at a time. UNAVAILABLE while the document
+        module is.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')

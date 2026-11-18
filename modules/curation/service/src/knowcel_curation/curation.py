@@ -53,6 +53,14 @@ class Finding:
 
 
 @dataclass(frozen=True)
+class FindingCursor:
+    """Where a page of findings ends: the next one is older, or as old with a greater id."""
+
+    created_at: datetime.datetime
+    id: uuid.UUID
+
+
+@dataclass(frozen=True)
 class DocInfo:
     """What the curation module reads of a document, from the document module."""
 
@@ -121,8 +129,10 @@ class CurationStore(Protocol):
         """Closes an open finding; False when it doesn't exist or is closed already."""
         ...
 
-    async def list_open_findings(self, limit: int) -> list[Finding]:
-        """The newest open findings."""
+    async def list_open_findings(
+        self, limit: int, after: FindingCursor | None = None
+    ) -> list[Finding]:
+        """Up to `limit` open findings, newest first, after the cursor."""
         ...
 
 

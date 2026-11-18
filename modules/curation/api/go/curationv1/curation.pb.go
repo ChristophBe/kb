@@ -541,7 +541,9 @@ func (x *ScoreChunksResponse) GetScores() []*DocumentScore {
 type ListFindingsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// At most this many findings; 0 means 50, and 100 is the most.
-	PageSize      int32 `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageSize int32 `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	// The next_page_token of the previous page; empty for the first.
+	PageToken     string `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -581,6 +583,13 @@ func (x *ListFindingsRequest) GetPageSize() int32 {
 		return x.PageSize
 	}
 	return 0
+}
+
+func (x *ListFindingsRequest) GetPageToken() string {
+	if x != nil {
+		return x.PageToken
+	}
+	return ""
 }
 
 type ResolveFindingRequest struct {
@@ -672,8 +681,11 @@ func (*ResolveFindingResponse) Descriptor() ([]byte, []int) {
 }
 
 type ListFindingsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Findings      []*Finding             `protobuf:"bytes,1,rep,name=findings,proto3" json:"findings,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Findings []*Finding             `protobuf:"bytes,1,rep,name=findings,proto3" json:"findings,omitempty"`
+	// Pass it as page_token for the next page; empty after the last. A page
+	// can hold fewer findings than asked for, or none, and still have a next one.
+	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -715,6 +727,13 @@ func (x *ListFindingsResponse) GetFindings() []*Finding {
 	return nil
 }
 
+func (x *ListFindingsResponse) GetNextPageToken() string {
+	if x != nil {
+		return x.NextPageToken
+	}
+	return ""
+}
+
 var File_knowcel_curation_v1_curation_proto protoreflect.FileDescriptor
 
 const file_knowcel_curation_v1_curation_proto_rawDesc = "" +
@@ -751,18 +770,21 @@ const file_knowcel_curation_v1_curation_proto_rawDesc = "" +
 	"\x12ScoreChunksRequest\x12!\n" +
 	"\fdocument_ids\x18\x01 \x03(\tR\vdocumentIds\"Q\n" +
 	"\x13ScoreChunksResponse\x12:\n" +
-	"\x06scores\x18\x01 \x03(\v2\".knowcel.curation.v1.DocumentScoreR\x06scores\"2\n" +
+	"\x06scores\x18\x01 \x03(\v2\".knowcel.curation.v1.DocumentScoreR\x06scores\"Q\n" +
 	"\x13ListFindingsRequest\x12\x1b\n" +
-	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\"w\n" +
+	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x1d\n" +
+	"\n" +
+	"page_token\x18\x02 \x01(\tR\tpageToken\"w\n" +
 	"\x15ResolveFindingRequest\x12\x1d\n" +
 	"\n" +
 	"finding_id\x18\x01 \x01(\tR\tfindingId\x12?\n" +
 	"\n" +
 	"resolution\x18\x02 \x01(\x0e2\x1f.knowcel.curation.v1.ResolutionR\n" +
 	"resolution\"\x18\n" +
-	"\x16ResolveFindingResponse\"P\n" +
+	"\x16ResolveFindingResponse\"x\n" +
 	"\x14ListFindingsResponse\x128\n" +
-	"\bfindings\x18\x01 \x03(\v2\x1c.knowcel.curation.v1.FindingR\bfindings*\x7f\n" +
+	"\bfindings\x18\x01 \x03(\v2\x1c.knowcel.curation.v1.FindingR\bfindings\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken*\x7f\n" +
 	"\vFindingKind\x12\x1c\n" +
 	"\x18FINDING_KIND_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16FINDING_KIND_DUPLICATE\x10\x01\x12\x1b\n" +

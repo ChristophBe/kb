@@ -44,7 +44,8 @@ type CurationServiceClient interface {
 	// document module is, since visibility can't be checked then.
 	ScoreChunks(ctx context.Context, in *ScoreChunksRequest, opts ...grpc.CallOption) (*ScoreChunksResponse, error)
 	// ListFindings returns the open findings whose two documents the caller can
-	// see, newest first. UNAVAILABLE while the document module is.
+	// see, newest first, a page at a time. UNAVAILABLE while the document
+	// module is.
 	ListFindings(ctx context.Context, in *ListFindingsRequest, opts ...grpc.CallOption) (*ListFindingsResponse, error)
 	// ResolveFinding closes an open finding with one of the options it lists and
 	// updates the scores it affects. NOT_FOUND when the finding doesn't exist or
@@ -120,7 +121,8 @@ type CurationServiceServer interface {
 	// document module is, since visibility can't be checked then.
 	ScoreChunks(context.Context, *ScoreChunksRequest) (*ScoreChunksResponse, error)
 	// ListFindings returns the open findings whose two documents the caller can
-	// see, newest first. UNAVAILABLE while the document module is.
+	// see, newest first, a page at a time. UNAVAILABLE while the document
+	// module is.
 	ListFindings(context.Context, *ListFindingsRequest) (*ListFindingsResponse, error)
 	// ResolveFinding closes an open finding with one of the options it lists and
 	// updates the scores it affects. NOT_FOUND when the finding doesn't exist or

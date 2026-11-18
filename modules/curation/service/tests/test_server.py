@@ -10,6 +10,7 @@ from knowcel_curation.curation import Finding, Score, Scorer, Weights
 from knowcel_curation.server import CurationServicer
 from knowcel_platform.config import Problems
 from knowcel_platform.grpc import UserInterceptor
+from sqlalchemy.exc import OperationalError
 
 from tests.fakes import NOW, FakeDocuments, FakeStore, doc
 
@@ -286,3 +287,60 @@ def test_settings_are_checked() -> None:
         curation_conflict_checks=-1,
     ).check(bad)
     assert len(bad.items) == 11
+
+
+async def test_findings_come_in_pages_that_skip_unreadable_ones(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    store.findings = [
+        Finding(
+            uuid.uuid4(),
+            "duplicate",
+            (HIDDEN if i % 2 else SEEN).id,
+            OTHER.id,
+            NOW + datetime.timedelta(minutes=i),
+        )
+        for i in range(10)
+    ]
+    seen: list[str] = []
+    token = ""
+    for _ in range(10):
+        page = await stub.ListFindings(
+            curation_pb2.ListFindingsRequest(page_size=2, page_token=token), metadata=USER
+        )
+        assert len(page.findings) <= 2
+        seen += [f.id for f in page.findings]
+        token = page.next_page_token
+        if not token:
+            break
+    readable = [str(f.id) for f in store.findings if f.document_id == SEEN.id]
+    assert sorted(seen) == sorted(readable)
+    assert len(seen) == 5
+
+
+async def test_a_page_token_must_be_ours(stub: curation_pb2_grpc.CurationServiceStub) -> None:
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.ListFindings(
+            curation_pb2.ListFindingsRequest(page_token="garbage"), metadata=USER
+        )
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+
+
+async def test_a_resolution_is_kept_when_scoring_fails(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    finding = await _open_finding(store)
+
+    async def failing(document_id: uuid.UUID) -> int:
+        raise OperationalError("select", {}, Exception("down"))
+
+    store.count_replacements = failing
+    await stub.ResolveFinding(
+        curation_pb2.ResolveFindingRequest(
+            finding_id=str(finding.id), resolution=curation_pb2.RESOLUTION_REPLACE
+        ),
+        metadata=USER,
+    )
+    resolved = await store.get_finding(finding.id)
+    assert resolved is not None
+    assert resolved.resolution == "replace"

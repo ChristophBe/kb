@@ -180,16 +180,25 @@ class FindingStore(Protocol):
     ) -> bool: ...
 
 
+# One trailing marker of a version or copy: "(2)", "(copy)", "final", "draft",
+# "v2", "rev 1.3". Bare numbers are not markers ("Report 2023", "Chapter 2").
 _VERSION_MARKER = re.compile(
-    r"([\s._-]*(\(\d+\)|\(?copy\)?|final|(v|ver|version|rev)?[\s._-]*\d+(\.\d+)*))+$", re.IGNORECASE
+    r"[\s._-]*(\(\d+\)|\(copy\)|copy|final|draft|(?:v|ver|version|rev)[\s._-]?\d+(?:\.\d+)*)$",
+    re.IGNORECASE,
 )
+# Names are cut short before matching, which keeps the work small.
+_MAX_NAME = 200
 
 
 def name_stem(name: str) -> str:
     """A file or document name without its extension and trailing version
     markers ("Policy v2.pdf" and "policy_final.PDF" both give "policy")."""
-    stem = name.rsplit(".", 1)[0] if re.search(r"\.[A-Za-z0-9]{1,5}$", name) else name
-    return _VERSION_MARKER.sub("", stem.strip()).strip().lower() or stem.strip().lower()
+    stem = name[:_MAX_NAME].strip()
+    if re.search(r"\.[A-Za-z0-9]{1,5}$", stem):
+        stem = stem.rsplit(".", 1)[0]
+    while (shorter := _VERSION_MARKER.sub("", stem, count=1).strip()) not in (stem, ""):
+        stem = shorter
+    return stem.lower()
 
 
 def same_name(a: DocInfo, b: DocInfo) -> bool:

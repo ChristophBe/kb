@@ -122,10 +122,11 @@ async def test_an_unavailable_peer_retries_later() -> None:
     assert msg.naked == RETRY_DELAY
 
 
-async def test_a_refusing_peer_does_not_hold_back_the_event() -> None:
+async def test_a_refusing_peer_is_retried_too_and_the_score_is_kept() -> None:
     store = FakeStore()
     document = uuid.uuid4()
     msg = FakeDelivery(str(document))
     await handle(msg, store, RecordingDetector(store, PeerError("llm INTERNAL")))
-    assert msg.acked
+    assert not msg.acked
+    assert msg.naked == RETRY_DELAY
     assert document in store.scores

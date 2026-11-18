@@ -6,6 +6,7 @@ import uuid
 from collections.abc import AsyncIterator, Iterator
 
 import pytest
+from knowcel_curation.curation import FindingCursor
 from knowcel_curation.db import SqlCurationStore, findings, migrate
 from sqlalchemy import insert, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -47,14 +48,17 @@ async def test_save_score_inserts_then_updates(engine: AsyncEngine) -> None:
     assert (score.document_id, score.score, score.processed_at) == (document, 0.5, T0 + DAY)
 
 
-async def test_save_score_keeps_the_newest_processing_time(engine: AsyncEngine) -> None:
+async def test_an_older_writer_does_not_overwrite_a_newer_score(engine: AsyncEngine) -> None:
     store = SqlCurationStore(engine)
     document = uuid.uuid4()
     await store.save_score(document, T0 + DAY, 1.0)
-    # A stale writer's older time doesn't win; its score still does.
     await store.save_score(document, T0, 0.4)
     (score,) = await store.get_scores([document])
-    assert (score.score, score.processed_at) == (0.4, T0 + DAY)
+    assert (score.score, score.processed_at) == (1.0, T0 + DAY)
+    # The same time is a rescore and applies.
+    await store.save_score(document, T0 + DAY, 0.7)
+    (score,) = await store.get_scores([document])
+    assert score.score == 0.7
 
 
 async def test_list_scores_pages_by_document_id(engine: AsyncEngine) -> None:
@@ -111,6 +115,8 @@ async def test_list_open_findings_newest_first_without_resolved_ones(engine: Asy
             )
     assert [f.id for f in await store.list_open_findings(10)] == [new, old]
     assert [f.id for f in await store.list_open_findings(1)] == [new]
+    after = FindingCursor(T0 + DAY, new)
+    assert [f.id for f in await store.list_open_findings(10, after)] == [old]
 
 
 async def test_a_pair_has_one_finding_per_kind(engine: AsyncEngine) -> None:

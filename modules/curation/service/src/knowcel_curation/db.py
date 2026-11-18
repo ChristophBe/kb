@@ -26,7 +26,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from .curation import REPLACE, SUPERSEDED, Finding, Score
+from .curation import REPLACE, SUPERSEDED, Finding, FindingCursor, Score
 
 SCHEMA = "curation"
 MIGRATIONS_DIR = pathlib.Path(__file__).resolve().parents[3] / "migrations"
@@ -86,13 +86,14 @@ class SqlCurationStore:
                 statement.on_conflict_do_update(
                     index_elements=["document_id"],
                     set_={
-                        # Never older than what a concurrent writer stored.
-                        "processed_at": func.greatest(
-                            document_scores.c.processed_at, statement.excluded.processed_at
-                        ),
+                        "processed_at": statement.excluded.processed_at,
                         "score": statement.excluded.score,
                         "updated_at": func.now(),
                     },
+                    # A writer that read an older state (a rescore running
+                    # while a document is processed again) can't overwrite
+                    # the score of a newer one.
+                    where=statement.excluded.processed_at >= document_scores.c.processed_at,
                 )
             )
 
@@ -157,13 +158,22 @@ class SqlCurationStore:
         async with self._engine.begin() as conn:
             return (await conn.execute(statement)).first() is not None
 
-    async def list_open_findings(self, limit: int) -> list[Finding]:
+    async def list_open_findings(
+        self, limit: int, after: FindingCursor | None = None
+    ) -> list[Finding]:
         query = (
             select(*_FINDING_COLUMNS)
             .where(findings.c.resolution.is_(None))
             .order_by(findings.c.created_at.desc(), findings.c.id)
             .limit(limit)
         )
+        if after is not None:
+            query = query.where(
+                or_(
+                    findings.c.created_at < after.created_at,
+                    and_(findings.c.created_at == after.created_at, findings.c.id > after.id),
+                )
+            )
         async with self._engine.connect() as conn:
             rows = (await conn.execute(query)).mappings().all()
         return [Finding(**r) for r in rows]

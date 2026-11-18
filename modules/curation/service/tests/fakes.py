@@ -2,7 +2,13 @@ import datetime
 import uuid
 from collections.abc import Collection, Sequence
 
-from knowcel_curation.curation import DocInfo, Finding, PeerUnavailableError, Score
+from knowcel_curation.curation import (
+    DocInfo,
+    Finding,
+    FindingCursor,
+    PeerUnavailableError,
+    Score,
+)
 from knowcel_curation.findings import Hit
 from sqlalchemy.exc import OperationalError
 
@@ -74,9 +80,18 @@ class FakeStore:
                 return True
         return False
 
-    async def list_open_findings(self, limit: int) -> list[Finding]:
+    async def list_open_findings(
+        self, limit: int, after: FindingCursor | None = None
+    ) -> list[Finding]:
         self._check()
-        return [f for f in self.findings if f.resolution is None][:limit]
+
+        def key(f: Finding) -> tuple[float, uuid.UUID]:
+            return (-f.created_at.timestamp(), f.id)
+
+        ordered = sorted((f for f in self.findings if f.resolution is None), key=key)
+        if after is not None:
+            ordered = [f for f in ordered if key(f) > (-after.created_at.timestamp(), after.id)]
+        return ordered[:limit]
 
     def _check(self) -> None:
         if self.down:

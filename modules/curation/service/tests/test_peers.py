@@ -42,9 +42,18 @@ class FakeDocumentStub:
         )
 
     async def ListChunks(self, request: document_pb2.ListChunksRequest):
-        chunks = [document_pb2.Chunk(index=i, text=f"chunk {i}") for i in range(self.chunks)]
-        chunks.append(document_pb2.Chunk(index=99, text="  "))
-        return document_pb2.ListChunksResponse(chunks=chunks)
+        # Three chunks to a page, a blank one at the end of the last.
+        start = int(request.page.page_token or 0)
+        chunks = [
+            document_pb2.Chunk(index=i, text=f"chunk {i}")
+            for i in range(start, min(start + 3, self.chunks))
+        ]
+        last = start + 3 >= self.chunks
+        if last:
+            chunks.append(document_pb2.Chunk(index=99, text="  "))
+        return document_pb2.ListChunksResponse(
+            chunks=chunks, page={"next_page_token": "" if last else str(start + 3)}
+        )
 
     async def SearchChunks(self, request: document_pb2.SearchChunksRequest):
         self.search = request
@@ -93,6 +102,8 @@ async def test_a_sample_is_spread_over_the_document_and_skips_blank_passages() -
     peers = documents(FakeDocumentStub(chunks=10))
     assert await peers.sample(READABLE, 3) == ["chunk 0", "chunk 3", "chunk 6"]
     assert await peers.sample(READABLE, 20) == [f"chunk {i}" for i in range(10)]
+    # Every page is read: the sample reaches the end of the document.
+    assert (await peers.sample(READABLE, 10))[-1] == "chunk 9"
 
 
 async def test_similar_passages_come_with_their_document() -> None:

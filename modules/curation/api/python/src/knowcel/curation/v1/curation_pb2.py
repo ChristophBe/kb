@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"knowcel/curation/v1/curation.proto\x12\x13knowcel.curation.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x81\x01\n\rDocumentScore\x12\x1f\n\x0b\x64ocument_id\x18\x01 \x01(\tR\ndocumentId\x12\x14\n\x05score\x18\x02 \x01(\x01R\x05score\x12\x39\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tupdatedAt\"u\n\x10ResolutionOption\x12?\n\nresolution\x18\x01 \x01(\x0e\x32\x1f.knowcel.curation.v1.ResolutionR\nresolution\x12 \n\x0b\x64\x65scription\x18\x02 \x01(\tR\x0b\x64\x65scription\"\x93\x03\n\x07\x46inding\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x34\n\x04kind\x18\x02 \x01(\x0e\x32 .knowcel.curation.v1.FindingKindR\x04kind\x12\x1f\n\x0b\x64ocument_id\x18\x03 \x01(\tR\ndocumentId\x12*\n\x11other_document_id\x18\x04 \x01(\tR\x0fotherDocumentId\x12\x39\n\ncreated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tcreatedAt\x12\x18\n\x07summary\x18\x06 \x01(\tR\x07summary\x12%\n\x0e\x64ocument_title\x18\x07 \x01(\tR\rdocumentTitle\x12\x30\n\x14other_document_title\x18\x08 \x01(\tR\x12otherDocumentTitle\x12G\n\x0bresolutions\x18\t \x03(\x0b\x32%.knowcel.curation.v1.ResolutionOptionR\x0bresolutions\":\n\x17GetDocumentScoreRequest\x12\x1f\n\x0b\x64ocument_id\x18\x01 \x01(\tR\ndocumentId\"T\n\x18GetDocumentScoreResponse\x12\x38\n\x05score\x18\x01 \x01(\x0b\x32\".knowcel.curation.v1.DocumentScoreR\x05score\"7\n\x12ScoreChunksRequest\x12!\n\x0c\x64ocument_ids\x18\x01 \x03(\tR\x0b\x64ocumentIds\"Q\n\x13ScoreChunksResponse\x12:\n\x06scores\x18\x01 \x03(\x0b\x32\".knowcel.curation.v1.DocumentScoreR\x06scores\"2\n\x13ListFindingsRequest\x12\x1b\n\tpage_size\x18\x01 \x01(\x05R\x08pageSize\"w\n\x15ResolveFindingRequest\x12\x1d\n\nfinding_id\x18\x01 \x01(\tR\tfindingId\x12?\n\nresolution\x18\x02 \x01(\x0e\x32\x1f.knowcel.curation.v1.ResolutionR\nresolution\"\x18\n\x16ResolveFindingResponse\"P\n\x14ListFindingsResponse\x12\x38\n\x08\x66indings\x18\x01 \x03(\x0b\x32\x1c.knowcel.curation.v1.FindingR\x08\x66indings*\x7f\n\x0b\x46indingKind\x12\x1c\n\x18\x46INDING_KIND_UNSPECIFIED\x10\x00\x12\x1a\n\x16\x46INDING_KIND_DUPLICATE\x10\x01\x12\x1b\n\x17\x46INDING_KIND_SUPERSEDED\x10\x02\x12\x19\n\x15\x46INDING_KIND_CONFLICT\x10\x03*l\n\nResolution\x12\x1a\n\x16RESOLUTION_UNSPECIFIED\x10\x00\x12\x13\n\x0fRESOLUTION_KEEP\x10\x01\x12\x16\n\x12RESOLUTION_REPLACE\x10\x02\x12\x15\n\x11RESOLUTION_IGNORE\x10\x03\x32\xb4\x03\n\x0f\x43urationService\x12o\n\x10GetDocumentScore\x12,.knowcel.curation.v1.GetDocumentScoreRequest\x1a-.knowcel.curation.v1.GetDocumentScoreResponse\x12`\n\x0bScoreChunks\x12\'.knowcel.curation.v1.ScoreChunksRequest\x1a(.knowcel.curation.v1.ScoreChunksResponse\x12\x63\n\x0cListFindings\x12(.knowcel.curation.v1.ListFindingsRequest\x1a).knowcel.curation.v1.ListFindingsResponse\x12i\n\x0eResolveFinding\x12*.knowcel.curation.v1.ResolveFindingRequest\x1a+.knowcel.curation.v1.ResolveFindingResponseBQZOgithub.com/ChristophBe/knowcelium/modules/curation/api/go/curationv1;curationv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"knowcel/curation/v1/curation.proto\x12\x13knowcel.curation.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x81\x01\n\rDocumentScore\x12\x1f\n\x0b\x64ocument_id\x18\x01 \x01(\tR\ndocumentId\x12\x14\n\x05score\x18\x02 \x01(\x01R\x05score\x12\x39\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tupdatedAt\"u\n\x10ResolutionOption\x12?\n\nresolution\x18\x01 \x01(\x0e\x32\x1f.knowcel.curation.v1.ResolutionR\nresolution\x12 \n\x0b\x64\x65scription\x18\x02 \x01(\tR\x0b\x64\x65scription\"\x93\x03\n\x07\x46inding\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x34\n\x04kind\x18\x02 \x01(\x0e\x32 .knowcel.curation.v1.FindingKindR\x04kind\x12\x1f\n\x0b\x64ocument_id\x18\x03 \x01(\tR\ndocumentId\x12*\n\x11other_document_id\x18\x04 \x01(\tR\x0fotherDocumentId\x12\x39\n\ncreated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tcreatedAt\x12\x18\n\x07summary\x18\x06 \x01(\tR\x07summary\x12%\n\x0e\x64ocument_title\x18\x07 \x01(\tR\rdocumentTitle\x12\x30\n\x14other_document_title\x18\x08 \x01(\tR\x12otherDocumentTitle\x12G\n\x0bresolutions\x18\t \x03(\x0b\x32%.knowcel.curation.v1.ResolutionOptionR\x0bresolutions\":\n\x17GetDocumentScoreRequest\x12\x1f\n\x0b\x64ocument_id\x18\x01 \x01(\tR\ndocumentId\"T\n\x18GetDocumentScoreResponse\x12\x38\n\x05score\x18\x01 \x01(\x0b\x32\".knowcel.curation.v1.DocumentScoreR\x05score\"7\n\x12ScoreChunksRequest\x12!\n\x0c\x64ocument_ids\x18\x01 \x03(\tR\x0b\x64ocumentIds\"Q\n\x13ScoreChunksResponse\x12:\n\x06scores\x18\x01 \x03(\x0b\x32\".knowcel.curation.v1.DocumentScoreR\x06scores\"Q\n\x13ListFindingsRequest\x12\x1b\n\tpage_size\x18\x01 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x02 \x01(\tR\tpageToken\"w\n\x15ResolveFindingRequest\x12\x1d\n\nfinding_id\x18\x01 \x01(\tR\tfindingId\x12?\n\nresolution\x18\x02 \x01(\x0e\x32\x1f.knowcel.curation.v1.ResolutionR\nresolution\"\x18\n\x16ResolveFindingResponse\"x\n\x14ListFindingsResponse\x12\x38\n\x08\x66indings\x18\x01 \x03(\x0b\x32\x1c.knowcel.curation.v1.FindingR\x08\x66indings\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken*\x7f\n\x0b\x46indingKind\x12\x1c\n\x18\x46INDING_KIND_UNSPECIFIED\x10\x00\x12\x1a\n\x16\x46INDING_KIND_DUPLICATE\x10\x01\x12\x1b\n\x17\x46INDING_KIND_SUPERSEDED\x10\x02\x12\x19\n\x15\x46INDING_KIND_CONFLICT\x10\x03*l\n\nResolution\x12\x1a\n\x16RESOLUTION_UNSPECIFIED\x10\x00\x12\x13\n\x0fRESOLUTION_KEEP\x10\x01\x12\x16\n\x12RESOLUTION_REPLACE\x10\x02\x12\x15\n\x11RESOLUTION_IGNORE\x10\x03\x32\xb4\x03\n\x0f\x43urationService\x12o\n\x10GetDocumentScore\x12,.knowcel.curation.v1.GetDocumentScoreRequest\x1a-.knowcel.curation.v1.GetDocumentScoreResponse\x12`\n\x0bScoreChunks\x12\'.knowcel.curation.v1.ScoreChunksRequest\x1a(.knowcel.curation.v1.ScoreChunksResponse\x12\x63\n\x0cListFindings\x12(.knowcel.curation.v1.ListFindingsRequest\x1a).knowcel.curation.v1.ListFindingsResponse\x12i\n\x0eResolveFinding\x12*.knowcel.curation.v1.ResolveFindingRequest\x1a+.knowcel.curation.v1.ResolveFindingResponseBQZOgithub.com/ChristophBe/knowcelium/modules/curation/api/go/curationv1;curationv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,10 +33,10 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'knowcel.curation.v1.curatio
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'ZOgithub.com/ChristophBe/knowcelium/modules/curation/api/go/curationv1;curationv1'
-  _globals['_FINDINGKIND']._serialized_start=1316
-  _globals['_FINDINGKIND']._serialized_end=1443
-  _globals['_RESOLUTION']._serialized_start=1445
-  _globals['_RESOLUTION']._serialized_end=1553
+  _globals['_FINDINGKIND']._serialized_start=1387
+  _globals['_FINDINGKIND']._serialized_end=1514
+  _globals['_RESOLUTION']._serialized_start=1516
+  _globals['_RESOLUTION']._serialized_end=1624
   _globals['_DOCUMENTSCORE']._serialized_start=93
   _globals['_DOCUMENTSCORE']._serialized_end=222
   _globals['_RESOLUTIONOPTION']._serialized_start=224
@@ -52,13 +52,13 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_SCORECHUNKSRESPONSE']._serialized_start=952
   _globals['_SCORECHUNKSRESPONSE']._serialized_end=1033
   _globals['_LISTFINDINGSREQUEST']._serialized_start=1035
-  _globals['_LISTFINDINGSREQUEST']._serialized_end=1085
-  _globals['_RESOLVEFINDINGREQUEST']._serialized_start=1087
-  _globals['_RESOLVEFINDINGREQUEST']._serialized_end=1206
-  _globals['_RESOLVEFINDINGRESPONSE']._serialized_start=1208
-  _globals['_RESOLVEFINDINGRESPONSE']._serialized_end=1232
-  _globals['_LISTFINDINGSRESPONSE']._serialized_start=1234
-  _globals['_LISTFINDINGSRESPONSE']._serialized_end=1314
-  _globals['_CURATIONSERVICE']._serialized_start=1556
-  _globals['_CURATIONSERVICE']._serialized_end=1992
+  _globals['_LISTFINDINGSREQUEST']._serialized_end=1116
+  _globals['_RESOLVEFINDINGREQUEST']._serialized_start=1118
+  _globals['_RESOLVEFINDINGREQUEST']._serialized_end=1237
+  _globals['_RESOLVEFINDINGRESPONSE']._serialized_start=1239
+  _globals['_RESOLVEFINDINGRESPONSE']._serialized_end=1263
+  _globals['_LISTFINDINGSRESPONSE']._serialized_start=1265
+  _globals['_LISTFINDINGSRESPONSE']._serialized_end=1385
+  _globals['_CURATIONSERVICE']._serialized_start=1627
+  _globals['_CURATIONSERVICE']._serialized_end=2063
 # @@protoc_insertion_point(module_scope)

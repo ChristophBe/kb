@@ -17,8 +17,10 @@ from .findings import Hit
 # Peer statuses that mean "try again later" rather than a bug.
 _PEER_UNAVAILABLE = {grpc.StatusCode.UNAVAILABLE, grpc.StatusCode.DEADLINE_EXCEEDED}
 
-# Passages read of a document to sample from; the first page of ListChunks.
+# Passages read of a document to sample from: pages of ListChunks, up to a
+# limit, so a very long document is sampled from its first part.
 _CHUNK_PAGE = 100
+_MAX_CHUNKS = 1000
 # Documents looked up at once.
 _CONCURRENCY = 16
 # Characters of a passage given to the model that compares two.
@@ -77,13 +79,20 @@ class PeerDocuments:
         return {i: info for i, info in zip(ids, found, strict=True) if info}
 
     async def sample(self, document_id: uuid.UUID, count: int) -> list[str]:
+        texts: list[str] = []
+        token = ""
         with _peer_errors("document"):
-            response = await self._documents.ListChunks(
-                document_pb2.ListChunksRequest(
-                    document_id=str(document_id), page={"page_size": _CHUNK_PAGE}
+            while len(texts) < _MAX_CHUNKS:
+                response = await self._documents.ListChunks(
+                    document_pb2.ListChunksRequest(
+                        document_id=str(document_id),
+                        page={"page_size": _CHUNK_PAGE, "page_token": token},
+                    )
                 )
-            )
-        texts = [c.text for c in response.chunks if c.text.strip()]
+                texts += [c.text for c in response.chunks if c.text.strip()]
+                token = response.page.next_page_token
+                if not token:
+                    break
         if len(texts) <= count:
             return texts
         # Evenly spread, so the start, middle and end of the document count alike.

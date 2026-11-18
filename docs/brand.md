@@ -61,6 +61,8 @@ In the product, things keep their technical names. A button says "Add connector"
 - **Typeface:** Source Serif 4 for headings, IBM Plex Sans for the interface and IBM Plex Mono for data.
 - **Direction:** technical, abstract and balanced, not illustrative.
 
+The visual identity here is Knowcelium's own. An organization that deploys the product replaces the name, logo, favicon and accent colors through a [branding file](operations/branding.md).
+
 ## Logo
 
 The mark is the `Mark` component and the lockup (mark plus "knowcelium" in lowercase IBM Plex Sans semibold, tight tracking, a gap of 0.3em) is `Logo`, both in [`platform/ui/kit/src/logo.tsx`](../platform/ui/kit/src/logo.tsx). Use them instead of copying the SVG; the favicons (`apps/*/public/favicon.svg`) and the social card (`apps/site/public/og.png`) are the only static copies.

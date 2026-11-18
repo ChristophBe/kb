@@ -27,6 +27,14 @@ spec:
               value: {{ include "kb.oidcIssuer" . | quote }}
             - name: KNOWCEL_OIDC_CLIENT_ID
               value: {{ .Values.oidc.clientId | quote }}
+            {{- with .Values.web.brandingConfigMap }}
+            - name: KNOWCEL_BRANDING_FILE
+              value: /branding/branding.json
+            {{- end }}
+          {{- if .Values.web.brandingConfigMap }}
+          volumeMounts:
+            - { name: branding, mountPath: /branding, readOnly: true }
+          {{- end }}
           ports:
             - name: http
               containerPort: 80
@@ -37,6 +45,11 @@ spec:
             httpGet: { path: /config.json, port: http }
             periodSeconds: 10
           resources: {{- toYaml .Values.web.resources | nindent 12 }}
+      {{- with .Values.web.brandingConfigMap }}
+      volumes:
+        - name: branding
+          configMap: { name: {{ . | quote }} }
+      {{- end }}
 ---
 apiVersion: v1
 kind: Service

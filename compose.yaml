@@ -5,6 +5,7 @@ include:
   - deploy/infra.compose.yaml
   - deploy/edge.compose.yaml
   - modules/chat/compose.yaml
+  - modules/curation/compose.yaml
   - modules/document/compose.yaml
   - modules/iam/compose.yaml
   - modules/ingestion/compose.yaml

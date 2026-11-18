@@ -138,6 +138,7 @@ tasks:
       MINIMUMS: |
         platform/python          5
         modules/chat/service     70
+        modules/curation/service 50
         modules/llm/service      80
         modules/ingestion/worker 75
     cmds:
@@ -211,7 +212,7 @@ tasks:
           in_scope "${pkg%%/*}" || continue
           go test -tags integration -count=1 "./modules/$pkg/..." || status=1
         done
-        for m in chat llm; do
+        for m in chat curation llm; do
           in_scope "$m" || continue
           uv run pytest -q -m integration --rootdir "modules/$m/service" "modules/$m/service" || status=1
         done

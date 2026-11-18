@@ -11,6 +11,10 @@ scrape_configs:
     static_configs:
       - targets: ["chat-service:9103"]
         labels: { module: chat }
+  - job_name: curation-service
+    static_configs:
+      - targets: ["curation-service:9107"]
+        labels: { module: curation }
   - job_name: document-service
     static_configs:
       - targets: ["document-service:9101"]

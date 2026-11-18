@@ -30,6 +30,7 @@ Name, story and voice: [Brand](docs/brand.md).
 | `chat` | Python service :9003 | Conversations, streaming retrieval-augmented answers with citations |
 | `llm` | Python service :9004 | Single gateway to LLM providers (Ollama by default, Anthropic, OpenAI-compatible servers, `fake` for tests) |
 | `iam` | Go service :9006 | Registry of users (registered on first sign-in) and platform admins; teams and roles follow |
+| `curation` | Python service :9005 | Relevance and freshness scores of documents; findings for duplicate, superseded and conflicting ones |
 
 ```
 browser ──gRPC-Web──▶ envoy :8080 ──gRPC──▶ document / ingestion / chat / llm / iam

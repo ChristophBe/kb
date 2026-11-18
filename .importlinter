@@ -8,6 +8,7 @@ root_packages =
     knowcel
     knowcel_platform
     knowcel_chat
+    knowcel_curation
     knowcel_ingestion_worker
     knowcel_llm
 
@@ -19,6 +20,8 @@ source_modules =
 forbidden_modules =
     knowcel.chat
     knowcel_chat
+    knowcel.curation
+    knowcel_curation
     knowcel.document
     knowcel.iam
     knowcel.ingestion
@@ -32,7 +35,20 @@ type = forbidden
 source_modules =
     knowcel_chat
 forbidden_modules =
+    knowcel.curation
+    knowcel_curation
     knowcel.ingestion
+    knowcel_ingestion_worker
+    knowcel_llm
+
+[importlinter:contract:module-curation]
+name = curation imports only its own code, platform/ and the api/ of modules in depends_on
+type = forbidden
+source_modules =
+    knowcel_curation
+forbidden_modules =
+    knowcel.chat
+    knowcel_chat
     knowcel_ingestion_worker
     knowcel_llm
 
@@ -44,6 +60,8 @@ source_modules =
 forbidden_modules =
     knowcel.chat
     knowcel_chat
+    knowcel.curation
+    knowcel_curation
     knowcel_llm
 
 [importlinter:contract:module-llm]
@@ -54,6 +72,8 @@ source_modules =
 forbidden_modules =
     knowcel.chat
     knowcel_chat
+    knowcel.curation
+    knowcel_curation
     knowcel.document
     knowcel.ingestion
     knowcel_ingestion_worker

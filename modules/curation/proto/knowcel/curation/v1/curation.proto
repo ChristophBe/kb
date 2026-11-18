@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package knowcel.curation.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/ChristophBe/knowcelium/modules/curation/api/go/curationv1;curationv1";
+
+// CurationService keeps the knowledge base consistent: it scores documents by
+// relevance and freshness and reports documents that duplicate, replace or
+// contradict each other. Nothing writes scores or findings yet; restricting
+// results to documents the caller can see comes with the first writer (#81).
+service CurationService {
+  // GetDocumentScore returns the current score of a document; NOT_FOUND while
+  // it has none.
+  rpc GetDocumentScore(GetDocumentScoreRequest) returns (GetDocumentScoreResponse);
+  // ListFindings returns the open findings, newest first.
+  rpc ListFindings(ListFindingsRequest) returns (ListFindingsResponse);
+}
+
+// DocumentScore ranks a document for retrieval: higher is more relevant.
+message DocumentScore {
+  string document_id = 1;
+  // Between 0 and 1.
+  double score = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}
+
+enum FindingKind {
+  FINDING_KIND_UNSPECIFIED = 0;
+  // The same content exists twice.
+  FINDING_KIND_DUPLICATE = 1;
+  // A newer version of the document exists.
+  FINDING_KIND_SUPERSEDED = 2;
+  // Two documents contradict each other.
+  FINDING_KIND_CONFLICT = 3;
+}
+
+// Finding is an inconsistency between two documents.
+message Finding {
+  string id = 1;
+  FindingKind kind = 2;
+  // The document the finding is about, and the one it was found against.
+  string document_id = 3;
+  string other_document_id = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message GetDocumentScoreRequest {
+  string document_id = 1;
+}
+
+message GetDocumentScoreResponse {
+  DocumentScore score = 1;
+}
+
+message ListFindingsRequest {}
+
+message ListFindingsResponse {
+  repeated Finding findings = 1;
+}

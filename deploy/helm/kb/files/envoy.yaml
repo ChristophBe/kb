@@ -55,6 +55,10 @@ static_resources:
                           route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.chat.v1.ChatService/UpdatePromptTemplates" }
                           route: { cluster: chat-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.curation.v1.CurationService/GetDocumentScore" }
+                          route: { cluster: curation-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.curation.v1.CurationService/ListFindings" }
+                          route: { cluster: curation-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.document.v1.DocumentService/GetDocument" }
                           route: { cluster: document-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.document.v1.DocumentService/ListDocuments" }
@@ -215,6 +219,22 @@ static_resources:
               - endpoint:
                   address:
                     socket_address: { address: chat-service, port_value: 9003 }
+    - name: curation-service
+      connect_timeout: 1s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      typed_extension_protocol_options:
+        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+          explicit_http_config:
+            http2_protocol_options: {}
+      load_assignment:
+        cluster_name: curation-service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: curation-service, port_value: 9005 }
     - name: document-service
       connect_timeout: 1s
       type: STRICT_DNS

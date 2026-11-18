@@ -10,6 +10,7 @@ Every component serves Prometheus metrics at `/metrics` on its own port, apart f
 | `llm-service` | 9104 |
 | `ingestion-worker` | 9105 |
 | `iam-service` | 9106 |
+| `curation-service` | 9107 |
 
 The default is `metrics_port` in the module's `module.yaml`; compose publishes it on the same host port, the Helm chart as the container and Service port `metrics`.
 

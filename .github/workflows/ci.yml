@@ -34,9 +34,10 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           # buf needs the same modules on both sides, so the PR that adds the
-          # iam module can only be checked without it. Remove this once iam is on main.
+          # iam and curation modules can only be checked without them. Remove each once it is on main.
           exclude=()
           git show "origin/${{ github.base_ref }}:buf.yaml" | grep -q modules/iam/proto || exclude=(--exclude-path modules/iam/proto/knowcel)
+          git show "origin/${{ github.base_ref }}:buf.yaml" | grep -q modules/curation/proto || exclude+=(--exclude-path modules/curation/proto/knowcel)
           go tool -modfile=tools/go.mod buf breaking --against ".git#branch=origin/${{ github.base_ref }}" "${exclude[@]}"
       - run: $TASK lint
       # Pull requests test the modules the change can affect (the changed ones and those

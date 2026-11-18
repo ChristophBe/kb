@@ -37,12 +37,35 @@ linters:
             - github.com/ChristophBe/knowcelium/modules/iam/api/go
             - github.com/ChristophBe/knowcelium/modules/llm/api/go
           deny:
+            - pkg: github.com/ChristophBe/knowcelium/modules/curation
+              desc: curation is not in depends_on of chat
             - pkg: github.com/ChristophBe/knowcelium/modules/document
               desc: only the api/ of a module in depends_on may be imported
             - pkg: github.com/ChristophBe/knowcelium/modules/iam
               desc: only the api/ of a module in depends_on may be imported
             - pkg: github.com/ChristophBe/knowcelium/modules/ingestion
               desc: ingestion is not in depends_on of chat
+            - pkg: github.com/ChristophBe/knowcelium/modules/llm
+              desc: only the api/ of a module in depends_on may be imported
+        module-curation:
+          files: ["**/modules/curation/**"]
+          # lax: everything not denied is allowed; the more specific of an
+          # allow and a deny entry wins (a dependency's api/ under its denied root).
+          list-mode: lax
+          allow:
+            - github.com/ChristophBe/knowcelium/modules/document/api/go
+            - github.com/ChristophBe/knowcelium/modules/iam/api/go
+            - github.com/ChristophBe/knowcelium/modules/ingestion/api/go
+            - github.com/ChristophBe/knowcelium/modules/llm/api/go
+          deny:
+            - pkg: github.com/ChristophBe/knowcelium/modules/chat
+              desc: chat is not in depends_on of curation
+            - pkg: github.com/ChristophBe/knowcelium/modules/document
+              desc: only the api/ of a module in depends_on may be imported
+            - pkg: github.com/ChristophBe/knowcelium/modules/iam
+              desc: only the api/ of a module in depends_on may be imported
+            - pkg: github.com/ChristophBe/knowcelium/modules/ingestion
+              desc: only the api/ of a module in depends_on may be imported
             - pkg: github.com/ChristophBe/knowcelium/modules/llm
               desc: only the api/ of a module in depends_on may be imported
         module-document:
@@ -56,6 +79,8 @@ linters:
           deny:
             - pkg: github.com/ChristophBe/knowcelium/modules/chat
               desc: chat is not in depends_on of document
+            - pkg: github.com/ChristophBe/knowcelium/modules/curation
+              desc: curation is not in depends_on of document
             - pkg: github.com/ChristophBe/knowcelium/modules/iam
               desc: only the api/ of a module in depends_on may be imported
             - pkg: github.com/ChristophBe/knowcelium/modules/ingestion
@@ -70,6 +95,8 @@ linters:
           deny:
             - pkg: github.com/ChristophBe/knowcelium/modules/chat
               desc: chat is not in depends_on of iam
+            - pkg: github.com/ChristophBe/knowcelium/modules/curation
+              desc: curation is not in depends_on of iam
             - pkg: github.com/ChristophBe/knowcelium/modules/document
               desc: document is not in depends_on of iam
             - pkg: github.com/ChristophBe/knowcelium/modules/ingestion
@@ -88,6 +115,8 @@ linters:
           deny:
             - pkg: github.com/ChristophBe/knowcelium/modules/chat
               desc: chat is not in depends_on of ingestion
+            - pkg: github.com/ChristophBe/knowcelium/modules/curation
+              desc: curation is not in depends_on of ingestion
             - pkg: github.com/ChristophBe/knowcelium/modules/document
               desc: only the api/ of a module in depends_on may be imported
             - pkg: github.com/ChristophBe/knowcelium/modules/iam
@@ -104,6 +133,8 @@ linters:
           deny:
             - pkg: github.com/ChristophBe/knowcelium/modules/chat
               desc: chat is not in depends_on of llm
+            - pkg: github.com/ChristophBe/knowcelium/modules/curation
+              desc: curation is not in depends_on of llm
             - pkg: github.com/ChristophBe/knowcelium/modules/document
               desc: document is not in depends_on of llm
             - pkg: github.com/ChristophBe/knowcelium/modules/iam

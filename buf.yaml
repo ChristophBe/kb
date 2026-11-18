@@ -3,6 +3,7 @@ version: v2
 modules:
   - path: platform/proto
   - path: modules/chat/proto
+  - path: modules/curation/proto
   - path: modules/document/proto
   - path: modules/iam/proto
   - path: modules/ingestion/proto

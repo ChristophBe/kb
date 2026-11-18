@@ -11,6 +11,8 @@ services:
       KNOWCEL_NATS_URL: nats://nats:4222
       # Soft dependency: no depends_on on document-service; while it is down, scores can't be read.
       KNOWCEL_DOCUMENT_ADDR: document-service:9001
+      # Soft dependency: no depends_on on llm-service; while it is down, new documents are checked for findings later.
+      KNOWCEL_LLM_ADDR: llm-service:9004
     # gRPC and Prometheus /metrics (docs/metrics.md).
     ports: ["9005:9005", "9107:9107"]
     # Infrastructure only: other modules are soft dependencies (docs/architecture/module.md).

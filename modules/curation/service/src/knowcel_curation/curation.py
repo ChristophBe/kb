@@ -12,7 +12,15 @@ from typing import Protocol
 
 log = logging.getLogger("knowcel_curation")
 
+DUPLICATE = "duplicate"
 SUPERSEDED = "superseded"
+CONFLICT = "conflict"
+
+# Resolutions of a finding.
+KEEP = "keep"
+REPLACE = "replace"
+IGNORE = "ignore"
+RESOLUTIONS = (KEEP, REPLACE, IGNORE)
 
 
 class PeerError(Exception):
@@ -39,6 +47,27 @@ class Finding:
     kind: str
     document_id: uuid.UUID
     other_document_id: uuid.UUID
+    created_at: datetime.datetime
+    # keep, replace or ignore; None while the finding is open.
+    resolution: str | None = None
+
+
+@dataclass(frozen=True)
+class FindingCursor:
+    """Where a page of findings ends: the next one is older, or as old with a greater id."""
+
+    created_at: datetime.datetime
+    id: uuid.UUID
+
+
+@dataclass(frozen=True)
+class DocInfo:
+    """What the curation module reads of a document, from the document module."""
+
+    id: uuid.UUID
+    title: str
+    filename: str
+    sha256: str
     created_at: datetime.datetime
 
 
@@ -88,12 +117,28 @@ class CurationStore(Protocol):
         """Up to `limit` scores ordered by document id, after the one given."""
         ...
 
-    async def list_findings(self) -> list[Finding]: ...
+    async def add_finding(
+        self, kind: str, document_id: uuid.UUID, other_document_id: uuid.UUID
+    ) -> bool:
+        """Records a finding; False when the pair already has one of that kind."""
+        ...
+
+    async def get_finding(self, finding_id: uuid.UUID) -> Finding | None: ...
+
+    async def resolve_finding(self, finding_id: uuid.UUID, resolution: str, user: str) -> bool:
+        """Closes an open finding; False when it doesn't exist or is closed already."""
+        ...
+
+    async def list_open_findings(
+        self, limit: int, after: FindingCursor | None = None
+    ) -> list[Finding]:
+        """Up to `limit` open findings, newest first, after the cursor."""
+        ...
 
 
 class Documents(Protocol):
-    async def visible(self, document_ids: Collection[uuid.UUID]) -> set[uuid.UUID]:
-        """The documents of the current caller can see. Raises PeerUnavailableError."""
+    async def readable(self, document_ids: Collection[uuid.UUID]) -> dict[uuid.UUID, DocInfo]:
+        """Those of the documents the current caller can read. Raises PeerUnavailableError."""
         ...
 
 

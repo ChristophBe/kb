@@ -1,6 +1,7 @@
 from knowcel_platform.config import PlatformSettings, Problems
 
 from .curation import Weights
+from .findings import Thresholds
 
 
 class Settings(PlatformSettings):
@@ -20,6 +21,23 @@ class Settings(PlatformSettings):
     curation_usage_weight: float = 0.0
     # Days after which the recency of a document has halved.
     curation_half_life_days: float = 180
+    # The llm module (host:port), which embeds passages and judges whether two
+    # contradict each other. While it is down, new documents are not checked
+    # for findings until it is back.
+    llm_addr: str = "localhost:9004"
+    # Cosine similarity at which a passage counts as a copy of another.
+    curation_duplicate_threshold: float = 0.97
+    # Cosine similarity at which a passage counts as part of another version of
+    # the same text.
+    curation_version_threshold: float = 0.85
+    # Cosine similarity from which two passages are asked about whether they
+    # contradict each other.
+    curation_conflict_threshold: float = 0.75
+    # Passages of a new document compared with the other documents.
+    curation_sample_chunks: int = 5
+    # Pairs of passages per new document the chat model is asked about; 0 turns
+    # conflict detection off.
+    curation_conflict_checks: int = 3
     # Seconds between scoring all documents again, so that recency keeps
     # decaying while no document is processed.
     curation_rescore_interval: float = 3600
@@ -32,6 +50,7 @@ class Settings(PlatformSettings):
         super().check(problems)
         problems.url("database_url", self.database_url, ["postgresql+asyncpg"])
         problems.addr("document_addr", self.document_addr)
+        problems.addr("llm_addr", self.llm_addr)
         problems.at_least("curation_recency_weight", self.curation_recency_weight, 0)
         problems.at_least("curation_usage_weight", self.curation_usage_weight, 0)
         if not self.curation_recency_weight + self.curation_usage_weight > 0:
@@ -42,7 +61,32 @@ class Settings(PlatformSettings):
             )
         problems.between("curation_replacement_penalty", self.curation_replacement_penalty, 0, 1)
         problems.at_least("curation_rescore_interval", self.curation_rescore_interval, 1)
+        problems.between("curation_conflict_threshold", self.curation_conflict_threshold, -1, 1)
+        problems.between(
+            "curation_version_threshold",
+            self.curation_version_threshold,
+            self.curation_conflict_threshold,
+            1,
+        )
+        problems.between(
+            "curation_duplicate_threshold",
+            self.curation_duplicate_threshold,
+            self.curation_version_threshold,
+            1,
+        )
+        problems.at_least("curation_sample_chunks", self.curation_sample_chunks, 1)
+        problems.at_least("curation_conflict_checks", self.curation_conflict_checks, 0)
         problems.at_least("curation_usage_saturation", self.curation_usage_saturation, 1)
+
+    @property
+    def thresholds(self) -> Thresholds:
+        return Thresholds(
+            duplicate=self.curation_duplicate_threshold,
+            version=self.curation_version_threshold,
+            conflict=self.curation_conflict_threshold,
+            sample_chunks=self.curation_sample_chunks,
+            conflict_checks=self.curation_conflict_checks,
+        )
 
     @property
     def weights(self) -> Weights:

@@ -52,6 +52,10 @@ message DocumentProcessed {
   string document_id = 2;
   int32 chunk_count = 3;
   int32 run = 4;
+  // The user who owns the document (Document.owner_id), for consumers that
+  // read documents on the owner's behalf. Empty for events from before it was
+  // set.
+  string owner_id = 5;
 }
 
 // Subject: knowcel.ingestion.failed

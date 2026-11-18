@@ -41,7 +41,9 @@ class FakeDocuments:
 
     async def SetDocumentStatus(self, request: document_pb2.SetDocumentStatusRequest):
         self.statuses.append(request.status)
-        return document_pb2.SetDocumentStatusResponse()
+        return document_pb2.SetDocumentStatusResponse(
+            document=document_pb2.Document(owner_id="alice")
+        )
 
     async def AddChunks(self, request: document_pb2.AddChunksRequest):
         self.chunks = list(request.chunks)
@@ -199,6 +201,7 @@ async def test_processes_text_into_embedded_chunks() -> None:
     event = published[-1][1]
     assert isinstance(event, events_pb2.DocumentProcessed)
     assert event.chunk_count == len(docs.chunks) > 1
+    assert event.owner_id == "alice"
     assert [c.index for c in docs.chunks] == list(range(len(docs.chunks)))
     assert all(c.embedding for c in docs.chunks)
     assert docs.statuses == [document_pb2.DOCUMENT_STATUS_PROCESSING]

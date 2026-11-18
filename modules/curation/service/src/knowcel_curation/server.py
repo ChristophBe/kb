@@ -1,8 +1,11 @@
 """kb curation module: gRPC transport."""
 
+import base64
+import contextlib
+import datetime
 import logging
 import uuid
-from collections.abc import Collection
+from collections.abc import AsyncIterator, Collection
 from typing import Any
 
 import grpc
@@ -10,13 +13,40 @@ from knowcel.curation.v1 import curation_pb2, curation_pb2_grpc
 from knowcel_platform.grpc import abort_invalid_argument, current_user, violation
 from sqlalchemy.exc import SQLAlchemyError
 
-from .curation import CurationStore, Documents, PeerError, PeerUnavailableError, Score
+from .curation import (
+    IGNORE,
+    KEEP,
+    REPLACE,
+    CurationStore,
+    DocInfo,
+    Documents,
+    Finding,
+    FindingCursor,
+    PeerError,
+    PeerUnavailableError,
+    Score,
+    Scorer,
+)
+from .findings import resolution_options, summary
 
 log = logging.getLogger("knowcel_curation")
 
 _Context = grpc.aio.ServicerContext[Any, Any]
 
 _MAX_SCORE_DOCUMENTS = 100
+_DEFAULT_FINDINGS = 50
+_MAX_FINDINGS = 100
+# Open findings read at a time, and at most per call: many can be about
+# documents the caller can't see.
+_SCAN_BATCH = 100
+_MAX_SCAN = 1000
+
+_RESOLUTIONS = {
+    curation_pb2.RESOLUTION_KEEP: KEEP,
+    curation_pb2.RESOLUTION_REPLACE: REPLACE,
+    curation_pb2.RESOLUTION_IGNORE: IGNORE,
+}
+_RESOLUTION_ENUMS = {name: value for value, name in _RESOLUTIONS.items()}
 
 _KINDS = {
     "duplicate": curation_pb2.FINDING_KIND_DUPLICATE,
@@ -32,9 +62,10 @@ def _score_message(score: Score) -> curation_pb2.DocumentScore:
 
 
 class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
-    def __init__(self, store: CurationStore, documents: Documents) -> None:
+    def __init__(self, store: CurationStore, documents: Documents, scorer: Scorer) -> None:
         self._store = store
         self._documents = documents
+        self._scorer = scorer
 
     async def GetDocumentScore(
         self, request: curation_pb2.GetDocumentScoreRequest, context: _Context
@@ -76,42 +107,134 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
         self, request: curation_pb2.ListFindingsRequest, context: _Context
     ) -> curation_pb2.ListFindingsResponse:
         await self._require_user(context)
+        wanted = min(request.page_size or _DEFAULT_FINDINGS, _MAX_FINDINGS)
         try:
-            found = await self._store.list_findings()
-        except SQLAlchemyError:
-            log.exception("listing findings failed")
-            await context.abort(grpc.StatusCode.UNAVAILABLE, "the database is not available")
-        response = curation_pb2.ListFindingsResponse()
-        for f in found:
-            message = response.findings.add(
-                id=str(f.id),
-                kind=_KINDS.get(f.kind, curation_pb2.FINDING_KIND_UNSPECIFIED),
-                document_id=str(f.document_id),
-                other_document_id=str(f.other_document_id),
+            after = _decode_cursor(request.page_token)
+        except ValueError:
+            await abort_invalid_argument(
+                context, violation("page_token", "Page token is not valid")
             )
-            message.created_at.FromDatetime(f.created_at)
+        response = curation_pb2.ListFindingsResponse()
+        async with self._failures(context, "listing findings"):
+            scanned = 0
+            more = True
+            while more and len(response.findings) < wanted and scanned < _MAX_SCAN:
+                batch = await self._store.list_open_findings(_SCAN_BATCH, after)
+                more = len(batch) == _SCAN_BATCH
+                scanned += len(batch)
+                documents = await self._documents.readable(
+                    {i for f in batch for i in (f.document_id, f.other_document_id)}
+                )
+                for f in batch:
+                    if len(response.findings) == wanted:
+                        more = True
+                        break
+                    after = FindingCursor(f.created_at, f.id)
+                    if f.document_id in documents and f.other_document_id in documents:
+                        response.findings.append(
+                            _finding_message(
+                                f, documents[f.document_id], documents[f.other_document_id]
+                            )
+                        )
+            if more and after is not None:
+                response.next_page_token = _encode_cursor(after)
         return response
+
+    async def ResolveFinding(
+        self, request: curation_pb2.ResolveFindingRequest, context: _Context
+    ) -> curation_pb2.ResolveFindingResponse:
+        user = await self._require_user(context)
+        resolution = _RESOLUTIONS.get(request.resolution)
+        if resolution is None:
+            await abort_invalid_argument(
+                context, violation("resolution", "Choose keep, replace or ignore")
+            )
+        try:
+            finding_id = uuid.UUID(request.finding_id)
+        except ValueError:
+            await context.abort(grpc.StatusCode.NOT_FOUND, "finding not found")
+        async with self._failures(context, "resolving a finding"):
+            finding = await self._store.get_finding(finding_id)
+            if finding is None:
+                await context.abort(grpc.StatusCode.NOT_FOUND, "finding not found")
+            ids = {finding.document_id, finding.other_document_id}
+            if len(await self._documents.readable(ids)) < len(ids):
+                await context.abort(grpc.StatusCode.NOT_FOUND, "finding not found")
+            if finding.resolution is not None or not await self._store.resolve_finding(
+                finding_id, resolution, user
+            ):
+                await context.abort(
+                    grpc.StatusCode.FAILED_PRECONDITION, "the finding is already resolved"
+                )
+        try:
+            await self._scorer.rescore(finding.document_id)
+        except SQLAlchemyError:
+            # The resolution is saved; the next periodic rescore applies it.
+            log.exception("scoring document %s again failed", finding.document_id)
+        return curation_pb2.ResolveFindingResponse()
 
     async def _visible_scores(self, context: _Context, ids: Collection[uuid.UUID]) -> list[Score]:
         """The scores of those of `ids` that have one and that the caller can see."""
         if not ids:
             return []
-        try:
+        async with self._failures(context, "loading scores"):
             scores = await self._store.get_scores(ids)
             # Only scored documents are looked up in the document module.
-            visible = await self._documents.visible({s.document_id for s in scores})
-        except SQLAlchemyError:
-            log.exception("loading scores failed")
-            await context.abort(grpc.StatusCode.UNAVAILABLE, "the database is not available")
-        except PeerUnavailableError:
-            log.warning("scores withheld: the document module is unavailable")
-            await context.abort(grpc.StatusCode.UNAVAILABLE, "documents are unavailable right now")
-        except PeerError:
-            log.exception("checking which documents the caller can see failed")
-            await context.abort(grpc.StatusCode.INTERNAL, "loading scores failed")
+            visible = await self._documents.readable({s.document_id for s in scores})
         return [s for s in scores if s.document_id in visible]
 
+    @contextlib.asynccontextmanager
+    async def _failures(self, context: _Context, what: str) -> AsyncIterator[None]:
+        """Ends the call with the status that fits a failure of the database or
+        of the document module."""
+        try:
+            yield
+        except SQLAlchemyError:
+            log.exception("%s failed", what)
+            await context.abort(grpc.StatusCode.UNAVAILABLE, "the database is not available")
+        except PeerUnavailableError:
+            log.warning("%s failed: the document module is unavailable", what)
+            await context.abort(grpc.StatusCode.UNAVAILABLE, "documents are unavailable right now")
+        except PeerError:
+            log.exception("%s failed", what)
+            await context.abort(grpc.StatusCode.INTERNAL, f"{what} failed")
+
     @staticmethod
-    async def _require_user(context: _Context) -> None:
-        if current_user() is None:
+    async def _require_user(context: _Context) -> str:
+        user = current_user()
+        if user is None:
             await context.abort(grpc.StatusCode.UNAUTHENTICATED, "sign in to see curation results")
+        return user
+
+
+def _finding_message(finding: Finding, document: DocInfo, other: DocInfo) -> curation_pb2.Finding:
+    message = curation_pb2.Finding(
+        id=str(finding.id),
+        kind=_KINDS.get(finding.kind, curation_pb2.FINDING_KIND_UNSPECIFIED),
+        document_id=str(finding.document_id),
+        other_document_id=str(finding.other_document_id),
+        summary=summary(finding, other.title),
+        document_title=document.title,
+        other_document_title=other.title,
+        resolutions=[
+            curation_pb2.ResolutionOption(
+                resolution=_RESOLUTION_ENUMS[resolution], description=description
+            )
+            for resolution, description in resolution_options(finding, document.title, other.title)
+        ],
+    )
+    message.created_at.FromDatetime(finding.created_at)
+    return message
+
+
+def _encode_cursor(cursor: FindingCursor) -> str:
+    raw = f"{cursor.created_at.isoformat()}|{cursor.id}"
+    return base64.urlsafe_b64encode(raw.encode()).decode()
+
+
+def _decode_cursor(token: str) -> FindingCursor | None:
+    """Raises ValueError for a token that isn't one of ours."""
+    if not token:
+        return None
+    created_at, _, finding_id = base64.urlsafe_b64decode(token.encode()).decode().partition("|")
+    return FindingCursor(datetime.datetime.fromisoformat(created_at), uuid.UUID(finding_id))

@@ -6,6 +6,7 @@ import uuid
 from collections.abc import AsyncIterator, Iterator
 
 import pytest
+from knowcel_curation.curation import FindingCursor
 from knowcel_curation.db import SqlCurationStore, findings, migrate
 from sqlalchemy import insert, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -47,14 +48,17 @@ async def test_save_score_inserts_then_updates(engine: AsyncEngine) -> None:
     assert (score.document_id, score.score, score.processed_at) == (document, 0.5, T0 + DAY)
 
 
-async def test_save_score_keeps_the_newest_processing_time(engine: AsyncEngine) -> None:
+async def test_an_older_writer_does_not_overwrite_a_newer_score(engine: AsyncEngine) -> None:
     store = SqlCurationStore(engine)
     document = uuid.uuid4()
     await store.save_score(document, T0 + DAY, 1.0)
-    # A stale writer's older time doesn't win; its score still does.
     await store.save_score(document, T0, 0.4)
     (score,) = await store.get_scores([document])
-    assert (score.score, score.processed_at) == (0.4, T0 + DAY)
+    assert (score.score, score.processed_at) == (1.0, T0 + DAY)
+    # The same time is a rescore and applies.
+    await store.save_score(document, T0 + DAY, 0.7)
+    (score,) = await store.get_scores([document])
+    assert score.score == 0.7
 
 
 async def test_list_scores_pages_by_document_id(engine: AsyncEngine) -> None:
@@ -89,18 +93,70 @@ async def test_count_replacements_counts_superseded_findings_of_the_older_docume
     assert await store.count_replacements(other) == 0
 
 
-async def test_list_findings_newest_first(engine: AsyncEngine) -> None:
+async def test_list_open_findings_newest_first_without_resolved_ones(engine: AsyncEngine) -> None:
     store = SqlCurationStore(engine)
     a, b = uuid.uuid4(), uuid.uuid4()
-    old, new = uuid.uuid4(), uuid.uuid4()
+    old, new, done = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
     async with engine.begin() as conn:
-        for id_, kind, created in (
-            (old, "duplicate", T0),
-            (new, "superseded", T0 + DAY),
+        for id_, kind, created, resolution in (
+            (old, "duplicate", T0, None),
+            (new, "superseded", T0 + DAY, None),
+            (done, "conflict", T0 + 2 * DAY, "ignore"),
         ):
             await conn.execute(
                 insert(findings).values(
-                    id=id_, kind=kind, document_id=a, other_document_id=b, created_at=created
+                    id=id_,
+                    kind=kind,
+                    document_id=a,
+                    other_document_id=b,
+                    created_at=created,
+                    resolution=resolution,
                 )
             )
-    assert [f.id for f in await store.list_findings()] == [new, old]
+    assert [f.id for f in await store.list_open_findings(10)] == [new, old]
+    assert [f.id for f in await store.list_open_findings(1)] == [new]
+    after = FindingCursor(T0 + DAY, new)
+    assert [f.id for f in await store.list_open_findings(10, after)] == [old]
+
+
+async def test_a_pair_has_one_finding_per_kind(engine: AsyncEngine) -> None:
+    store = SqlCurationStore(engine)
+    a, b = uuid.uuid4(), uuid.uuid4()
+    assert await store.add_finding("duplicate", a, b)
+    assert not await store.add_finding("duplicate", a, b)
+    assert await store.add_finding("conflict", a, b)
+    assert len(await store.list_open_findings(10)) == 2
+
+
+async def test_a_finding_is_resolved_once(engine: AsyncEngine) -> None:
+    store = SqlCurationStore(engine)
+    a, b = uuid.uuid4(), uuid.uuid4()
+    await store.add_finding("duplicate", a, b)
+    (finding,) = await store.list_open_findings(10)
+    assert await store.resolve_finding(finding.id, "keep", "alice")
+    assert not await store.resolve_finding(finding.id, "replace", "bob")
+    resolved = await store.get_finding(finding.id)
+    assert resolved is not None
+    assert resolved.resolution == "keep"
+    assert await store.get_finding(uuid.uuid4()) is None
+    # A resolved pair is not found again.
+    assert not await store.add_finding("duplicate", a, b)
+
+
+async def test_resolutions_decide_which_findings_count_as_replacements(
+    engine: AsyncEngine,
+) -> None:
+    store = SqlCurationStore(engine)
+    older, newer, other = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+    await store.add_finding("superseded", older, newer)
+    await store.add_finding("duplicate", older, other)
+    await store.add_finding("conflict", older, uuid.uuid4())
+    # Only the version found counts until someone decides.
+    assert await store.count_replacements(older) == 1
+    findings_by_kind = {f.kind: f for f in await store.list_open_findings(10)}
+    await store.resolve_finding(findings_by_kind["duplicate"].id, "replace", "alice")
+    assert await store.count_replacements(older) == 2
+    await store.resolve_finding(findings_by_kind["superseded"].id, "keep", "alice")
+    assert await store.count_replacements(older) == 1
+    await store.resolve_finding(findings_by_kind["conflict"].id, "ignore", "alice")
+    assert await store.count_replacements(older) == 1

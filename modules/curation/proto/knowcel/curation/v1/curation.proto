@@ -8,8 +8,8 @@ option go_package = "github.com/ChristophBe/knowcelium/modules/curation/api/go/c
 
 // CurationService keeps the knowledge base consistent: it scores documents by
 // relevance and freshness and reports documents that duplicate, replace or
-// contradict each other. Scores only cover documents the caller can see;
-// findings are restricted the same way once they are written (#82).
+// contradict each other. Scores and findings only cover documents the caller
+// can see.
 service CurationService {
   // GetDocumentScore returns the current score of a document; NOT_FOUND while
   // it has none or when the caller can't see the document.
@@ -20,8 +20,15 @@ service CurationService {
   // documents the caller can't see are left out. UNAVAILABLE while the
   // document module is, since visibility can't be checked then.
   rpc ScoreChunks(ScoreChunksRequest) returns (ScoreChunksResponse);
-  // ListFindings returns the open findings, newest first.
+  // ListFindings returns the open findings whose two documents the caller can
+  // see, newest first, a page at a time. UNAVAILABLE while the document
+  // module is.
   rpc ListFindings(ListFindingsRequest) returns (ListFindingsResponse);
+  // ResolveFinding closes an open finding with one of the options it lists and
+  // updates the scores it affects. NOT_FOUND when the finding doesn't exist or
+  // the caller can't see both documents, FAILED_PRECONDITION when it is
+  // already resolved.
+  rpc ResolveFinding(ResolveFindingRequest) returns (ResolveFindingResponse);
 }
 
 // DocumentScore ranks a document for retrieval: higher is more relevant.
@@ -42,6 +49,23 @@ enum FindingKind {
   FINDING_KIND_CONFLICT = 3;
 }
 
+// How a finding is closed. What each does is in the option's description.
+enum Resolution {
+  RESOLUTION_UNSPECIFIED = 0;
+  // Keep the document as it is: it no longer ranks lower because of the other.
+  RESOLUTION_KEEP = 1;
+  // The other document replaces this one: this one ranks lower.
+  RESOLUTION_REPLACE = 2;
+  // Dismiss the finding; nothing changes.
+  RESOLUTION_IGNORE = 3;
+}
+
+// One way to close a finding, worded for the person choosing.
+message ResolutionOption {
+  Resolution resolution = 1;
+  string description = 2;
+}
+
 // Finding is an inconsistency between two documents.
 message Finding {
   string id = 1;
@@ -50,8 +74,14 @@ message Finding {
   string document_id = 3;
   string other_document_id = 4;
   google.protobuf.Timestamp created_at = 5;
+  // What was found, from the point of view of `document_id`, e.g. "Duplicate
+  // of Handbook". A link to each document is /m/document/<id>.
+  string summary = 6;
+  string document_title = 7;
+  string other_document_title = 8;
+  // The ways to close the finding, each with what it does.
+  repeated ResolutionOption resolutions = 9;
 }
-
 message GetDocumentScoreRequest {
   string document_id = 1;
 }
@@ -69,8 +99,23 @@ message ScoreChunksResponse {
   repeated DocumentScore scores = 1;
 }
 
-message ListFindingsRequest {}
+message ListFindingsRequest {
+  // At most this many findings; 0 means 50, and 100 is the most.
+  int32 page_size = 1;
+  // The next_page_token of the previous page; empty for the first.
+  string page_token = 2;
+}
+
+message ResolveFindingRequest {
+  string finding_id = 1;
+  Resolution resolution = 2;
+}
+
+message ResolveFindingResponse {}
 
 message ListFindingsResponse {
   repeated Finding findings = 1;
+  // Pass it as page_token for the next page; empty after the last. A page
+  // can hold fewer findings than asked for, or none, and still have a next one.
+  string next_page_token = 2;
 }

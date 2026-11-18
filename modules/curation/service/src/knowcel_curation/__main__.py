@@ -3,6 +3,7 @@ import logging
 
 from knowcel.curation.v1 import curation_pb2, curation_pb2_grpc
 from knowcel.document.v1 import document_pb2_grpc
+from knowcel.llm.v1 import llm_pb2_grpc
 from knowcel_platform.config import load_settings
 from knowcel_platform.grpc import channel, serve
 from knowcel_platform.logging import setup_logging
@@ -15,7 +16,8 @@ from .config import Settings
 from .curation import Scorer, rescore_periodically
 from .db import SqlCurationStore, migrate
 from .events import STREAM, consume
-from .peers import PeerDocuments
+from .findings import Detector
+from .peers import PeerDocuments, PeerEmbedder, PeerJudge
 from .server import CurationServicer
 
 log = logging.getLogger("knowcel_curation")
@@ -34,17 +36,27 @@ async def run() -> None:
     await ensure_stream(js, STREAM, ["knowcel.ingestion.>"])
     stop = asyncio.Event()
     scorer = Scorer(store, settings.weights)
-    background = [
-        asyncio.create_task(consume(js, scorer, stop)),
-        asyncio.create_task(rescore_periodically(scorer, settings.curation_rescore_interval, stop)),
-    ]
+    background: list[asyncio.Task[None]] = []
     try:
-        # Soft dependency: while document is down, scores can't be read
-        # (UNAVAILABLE); scoring processed documents doesn't need it.
-        async with channel(settings.document_addr) as document_ch:
-            servicer = CurationServicer(
-                store, PeerDocuments(document_pb2_grpc.DocumentServiceStub(document_ch))
+        # Soft dependencies: while document is down, scores and findings can't
+        # be read (UNAVAILABLE); while it or llm is, new documents are checked
+        # for findings later (their events are retried).
+        async with (
+            channel(settings.document_addr) as document_ch,
+            channel(settings.llm_addr) as llm_ch,
+        ):
+            documents = PeerDocuments(document_pb2_grpc.DocumentServiceStub(document_ch))
+            llm = llm_pb2_grpc.LlmServiceStub(llm_ch)
+            detector = Detector(
+                store, documents, PeerEmbedder(llm), PeerJudge(llm), scorer, settings.thresholds
             )
+            background = [
+                asyncio.create_task(consume(js, scorer, detector, stop)),
+                asyncio.create_task(
+                    rescore_periodically(scorer, settings.curation_rescore_interval, stop)
+                ),
+            ]
+            servicer = CurationServicer(store, documents, scorer)
             await serve(
                 settings.grpc_port,
                 [lambda s: curation_pb2_grpc.add_CurationServiceServicer_to_server(servicer, s)],

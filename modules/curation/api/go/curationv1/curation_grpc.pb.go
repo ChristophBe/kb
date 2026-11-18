@@ -22,6 +22,7 @@ const (
 	CurationService_GetDocumentScore_FullMethodName = "/knowcel.curation.v1.CurationService/GetDocumentScore"
 	CurationService_ScoreChunks_FullMethodName      = "/knowcel.curation.v1.CurationService/ScoreChunks"
 	CurationService_ListFindings_FullMethodName     = "/knowcel.curation.v1.CurationService/ListFindings"
+	CurationService_ResolveFinding_FullMethodName   = "/knowcel.curation.v1.CurationService/ResolveFinding"
 )
 
 // CurationServiceClient is the client API for CurationService service.
@@ -30,8 +31,8 @@ const (
 //
 // CurationService keeps the knowledge base consistent: it scores documents by
 // relevance and freshness and reports documents that duplicate, replace or
-// contradict each other. Scores only cover documents the caller can see;
-// findings are restricted the same way once they are written (#82).
+// contradict each other. Scores and findings only cover documents the caller
+// can see.
 type CurationServiceClient interface {
 	// GetDocumentScore returns the current score of a document; NOT_FOUND while
 	// it has none or when the caller can't see the document.
@@ -42,8 +43,15 @@ type CurationServiceClient interface {
 	// documents the caller can't see are left out. UNAVAILABLE while the
 	// document module is, since visibility can't be checked then.
 	ScoreChunks(ctx context.Context, in *ScoreChunksRequest, opts ...grpc.CallOption) (*ScoreChunksResponse, error)
-	// ListFindings returns the open findings, newest first.
+	// ListFindings returns the open findings whose two documents the caller can
+	// see, newest first, a page at a time. UNAVAILABLE while the document
+	// module is.
 	ListFindings(ctx context.Context, in *ListFindingsRequest, opts ...grpc.CallOption) (*ListFindingsResponse, error)
+	// ResolveFinding closes an open finding with one of the options it lists and
+	// updates the scores it affects. NOT_FOUND when the finding doesn't exist or
+	// the caller can't see both documents, FAILED_PRECONDITION when it is
+	// already resolved.
+	ResolveFinding(ctx context.Context, in *ResolveFindingRequest, opts ...grpc.CallOption) (*ResolveFindingResponse, error)
 }
 
 type curationServiceClient struct {
@@ -84,14 +92,24 @@ func (c *curationServiceClient) ListFindings(ctx context.Context, in *ListFindin
 	return out, nil
 }
 
+func (c *curationServiceClient) ResolveFinding(ctx context.Context, in *ResolveFindingRequest, opts ...grpc.CallOption) (*ResolveFindingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ResolveFindingResponse)
+	err := c.cc.Invoke(ctx, CurationService_ResolveFinding_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CurationServiceServer is the server API for CurationService service.
 // All implementations must embed UnimplementedCurationServiceServer
 // for forward compatibility.
 //
 // CurationService keeps the knowledge base consistent: it scores documents by
 // relevance and freshness and reports documents that duplicate, replace or
-// contradict each other. Scores only cover documents the caller can see;
-// findings are restricted the same way once they are written (#82).
+// contradict each other. Scores and findings only cover documents the caller
+// can see.
 type CurationServiceServer interface {
 	// GetDocumentScore returns the current score of a document; NOT_FOUND while
 	// it has none or when the caller can't see the document.
@@ -102,8 +120,15 @@ type CurationServiceServer interface {
 	// documents the caller can't see are left out. UNAVAILABLE while the
 	// document module is, since visibility can't be checked then.
 	ScoreChunks(context.Context, *ScoreChunksRequest) (*ScoreChunksResponse, error)
-	// ListFindings returns the open findings, newest first.
+	// ListFindings returns the open findings whose two documents the caller can
+	// see, newest first, a page at a time. UNAVAILABLE while the document
+	// module is.
 	ListFindings(context.Context, *ListFindingsRequest) (*ListFindingsResponse, error)
+	// ResolveFinding closes an open finding with one of the options it lists and
+	// updates the scores it affects. NOT_FOUND when the finding doesn't exist or
+	// the caller can't see both documents, FAILED_PRECONDITION when it is
+	// already resolved.
+	ResolveFinding(context.Context, *ResolveFindingRequest) (*ResolveFindingResponse, error)
 	mustEmbedUnimplementedCurationServiceServer()
 }
 
@@ -122,6 +147,9 @@ func (UnimplementedCurationServiceServer) ScoreChunks(context.Context, *ScoreChu
 }
 func (UnimplementedCurationServiceServer) ListFindings(context.Context, *ListFindingsRequest) (*ListFindingsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListFindings not implemented")
+}
+func (UnimplementedCurationServiceServer) ResolveFinding(context.Context, *ResolveFindingRequest) (*ResolveFindingResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ResolveFinding not implemented")
 }
 func (UnimplementedCurationServiceServer) mustEmbedUnimplementedCurationServiceServer() {}
 func (UnimplementedCurationServiceServer) testEmbeddedByValue()                         {}
@@ -198,6 +226,24 @@ func _CurationService_ListFindings_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CurationService_ResolveFinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResolveFindingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CurationServiceServer).ResolveFinding(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CurationService_ResolveFinding_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CurationServiceServer).ResolveFinding(ctx, req.(*ResolveFindingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CurationService_ServiceDesc is the grpc.ServiceDesc for CurationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -216,6 +262,10 @@ var CurationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListFindings",
 			Handler:    _CurationService_ListFindings_Handler,
+		},
+		{
+			MethodName: "ResolveFinding",
+			Handler:    _CurationService_ResolveFinding_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

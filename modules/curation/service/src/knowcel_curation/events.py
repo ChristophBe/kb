@@ -15,7 +15,8 @@ from nats.js.api import AckPolicy, ConsumerConfig
 from nats.js.errors import Error as JetStreamError
 from sqlalchemy.exc import SQLAlchemyError
 
-from .curation import Scorer
+from .curation import PeerError, Scorer
+from .findings import Detector
 
 STREAM = "INGESTION"
 SUBJECT_PROCESSED = "knowcel.ingestion.processed"
@@ -39,9 +40,10 @@ class Delivery(Protocol):
     async def nak(self, delay: float | None = None) -> None: ...
 
 
-async def deliver(scorer: Scorer, msg: Delivery) -> None:
-    """Scores the document of one processed event: ack when done, NAK with a
-    delay to retry while the database fails."""
+async def deliver(scorer: Scorer, detector: Detector, msg: Delivery) -> None:
+    """Scores the document of one processed event and looks for findings: ack
+    when done, NAK with a delay to retry while the database or a peer module
+    is unavailable."""
     try:
         event = events_pb2.DocumentProcessed.FromString(msg.data)
         document_id = uuid.UUID(event.document_id)
@@ -55,8 +57,16 @@ async def deliver(scorer: Scorer, msg: Delivery) -> None:
     try:
         with receive(SUBJECT_PROCESSED, msg.headers):
             await scorer.on_processed(document_id, processed_at)
-    except SQLAlchemyError:
-        log.exception("scoring document %s failed, retrying", document_id)
+            if event.owner_id:
+                await detector.detect(document_id, event.owner_id)
+            else:
+                log.info(
+                    "no owner in the event of document %s: not looking for findings", document_id
+                )
+    except (SQLAlchemyError, PeerError):
+        # Also a peer's refusal: it may be fixed by the time of a retry, and
+        # JetStream drops the event after MAX_DELIVER deliveries.
+        log.exception("handling document %s failed, retrying", document_id)
         await msg.nak(delay=RETRY_DELAY)
         return
     await msg.ack()
@@ -78,7 +88,9 @@ class _Message:
         await self._msg.nak(delay=delay)  # pyright: ignore[reportAttributeAccessIssue]
 
 
-async def consume(js: JetStreamContext, scorer: Scorer, stop: asyncio.Event) -> None:
+async def consume(
+    js: JetStreamContext, scorer: Scorer, detector: Detector, stop: asyncio.Event
+) -> None:
     """Scores every processed document until `stop` is set. Deliveries are
     handled one at a time; scoring is a few queries."""
     await js.add_consumer(
@@ -105,7 +117,7 @@ async def consume(js: JetStreamContext, scorer: Scorer, stop: asyncio.Event) -> 
             continue
         for msg in messages:
             try:
-                await deliver(scorer, _Message(msg))
+                await deliver(scorer, detector, _Message(msg))
             except Exception:
-                # Not acked: JetStream redelivers it after the ack wait.
                 log.exception("handling a processed event failed")
+                await msg.nak(delay=RETRY_DELAY)

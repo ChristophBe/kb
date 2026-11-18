@@ -1060,6 +1060,7 @@ dependencies = [
     { name = "knowcel-curation-api" },
     { name = "knowcel-document-api" },
     { name = "knowcel-ingestion-api" },
+    { name = "knowcel-llm-api" },
     { name = "knowcel-platform" },
     { name = "sqlalchemy", extra = ["asyncio"] },
 ]
@@ -1071,6 +1072,7 @@ requires-dist = [
     { name = "knowcel-curation-api", editable = "modules/curation/api/python" },
     { name = "knowcel-document-api", editable = "modules/document/api/python" },
     { name = "knowcel-ingestion-api", editable = "modules/ingestion/api/python" },
+    { name = "knowcel-llm-api", editable = "modules/llm/api/python" },
     { name = "knowcel-platform", editable = "platform/python" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.40" },
 ]

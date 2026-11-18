@@ -77,6 +77,62 @@ func (FindingKind) EnumDescriptor() ([]byte, []int) {
 	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{0}
 }
 
+// How a finding is closed. What each does is in the option's description.
+type Resolution int32
+
+const (
+	Resolution_RESOLUTION_UNSPECIFIED Resolution = 0
+	// Keep the document as it is: it no longer ranks lower because of the other.
+	Resolution_RESOLUTION_KEEP Resolution = 1
+	// The other document replaces this one: this one ranks lower.
+	Resolution_RESOLUTION_REPLACE Resolution = 2
+	// Dismiss the finding; nothing changes.
+	Resolution_RESOLUTION_IGNORE Resolution = 3
+)
+
+// Enum value maps for Resolution.
+var (
+	Resolution_name = map[int32]string{
+		0: "RESOLUTION_UNSPECIFIED",
+		1: "RESOLUTION_KEEP",
+		2: "RESOLUTION_REPLACE",
+		3: "RESOLUTION_IGNORE",
+	}
+	Resolution_value = map[string]int32{
+		"RESOLUTION_UNSPECIFIED": 0,
+		"RESOLUTION_KEEP":        1,
+		"RESOLUTION_REPLACE":     2,
+		"RESOLUTION_IGNORE":      3,
+	}
+)
+
+func (x Resolution) Enum() *Resolution {
+	p := new(Resolution)
+	*p = x
+	return p
+}
+
+func (x Resolution) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Resolution) Descriptor() protoreflect.EnumDescriptor {
+	return file_knowcel_curation_v1_curation_proto_enumTypes[1].Descriptor()
+}
+
+func (Resolution) Type() protoreflect.EnumType {
+	return &file_knowcel_curation_v1_curation_proto_enumTypes[1]
+}
+
+func (x Resolution) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Resolution.Descriptor instead.
+func (Resolution) EnumDescriptor() ([]byte, []int) {
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{1}
+}
+
 // DocumentScore ranks a document for retrieval: higher is more relevant.
 type DocumentScore struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
@@ -139,6 +195,59 @@ func (x *DocumentScore) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+// One way to close a finding, worded for the person choosing.
+type ResolutionOption struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Resolution    Resolution             `protobuf:"varint,1,opt,name=resolution,proto3,enum=knowcel.curation.v1.Resolution" json:"resolution,omitempty"`
+	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResolutionOption) Reset() {
+	*x = ResolutionOption{}
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResolutionOption) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResolutionOption) ProtoMessage() {}
+
+func (x *ResolutionOption) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResolutionOption.ProtoReflect.Descriptor instead.
+func (*ResolutionOption) Descriptor() ([]byte, []int) {
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ResolutionOption) GetResolution() Resolution {
+	if x != nil {
+		return x.Resolution
+	}
+	return Resolution_RESOLUTION_UNSPECIFIED
+}
+
+func (x *ResolutionOption) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
 // Finding is an inconsistency between two documents.
 type Finding struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -148,13 +257,20 @@ type Finding struct {
 	DocumentId      string                 `protobuf:"bytes,3,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
 	OtherDocumentId string                 `protobuf:"bytes,4,opt,name=other_document_id,json=otherDocumentId,proto3" json:"other_document_id,omitempty"`
 	CreatedAt       *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// What was found, from the point of view of `document_id`, e.g. "Duplicate
+	// of Handbook". A link to each document is /m/document/<id>.
+	Summary            string `protobuf:"bytes,6,opt,name=summary,proto3" json:"summary,omitempty"`
+	DocumentTitle      string `protobuf:"bytes,7,opt,name=document_title,json=documentTitle,proto3" json:"document_title,omitempty"`
+	OtherDocumentTitle string `protobuf:"bytes,8,opt,name=other_document_title,json=otherDocumentTitle,proto3" json:"other_document_title,omitempty"`
+	// The ways to close the finding, each with what it does.
+	Resolutions   []*ResolutionOption `protobuf:"bytes,9,rep,name=resolutions,proto3" json:"resolutions,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Finding) Reset() {
 	*x = Finding{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[1]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -166,7 +282,7 @@ func (x *Finding) String() string {
 func (*Finding) ProtoMessage() {}
 
 func (x *Finding) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[1]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -179,7 +295,7 @@ func (x *Finding) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Finding.ProtoReflect.Descriptor instead.
 func (*Finding) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{1}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Finding) GetId() string {
@@ -217,6 +333,34 @@ func (x *Finding) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *Finding) GetSummary() string {
+	if x != nil {
+		return x.Summary
+	}
+	return ""
+}
+
+func (x *Finding) GetDocumentTitle() string {
+	if x != nil {
+		return x.DocumentTitle
+	}
+	return ""
+}
+
+func (x *Finding) GetOtherDocumentTitle() string {
+	if x != nil {
+		return x.OtherDocumentTitle
+	}
+	return ""
+}
+
+func (x *Finding) GetResolutions() []*ResolutionOption {
+	if x != nil {
+		return x.Resolutions
+	}
+	return nil
+}
+
 type GetDocumentScoreRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	DocumentId    string                 `protobuf:"bytes,1,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
@@ -226,7 +370,7 @@ type GetDocumentScoreRequest struct {
 
 func (x *GetDocumentScoreRequest) Reset() {
 	*x = GetDocumentScoreRequest{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[2]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -238,7 +382,7 @@ func (x *GetDocumentScoreRequest) String() string {
 func (*GetDocumentScoreRequest) ProtoMessage() {}
 
 func (x *GetDocumentScoreRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[2]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -251,7 +395,7 @@ func (x *GetDocumentScoreRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDocumentScoreRequest.ProtoReflect.Descriptor instead.
 func (*GetDocumentScoreRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{2}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *GetDocumentScoreRequest) GetDocumentId() string {
@@ -270,7 +414,7 @@ type GetDocumentScoreResponse struct {
 
 func (x *GetDocumentScoreResponse) Reset() {
 	*x = GetDocumentScoreResponse{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[3]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -282,7 +426,7 @@ func (x *GetDocumentScoreResponse) String() string {
 func (*GetDocumentScoreResponse) ProtoMessage() {}
 
 func (x *GetDocumentScoreResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[3]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -295,7 +439,7 @@ func (x *GetDocumentScoreResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDocumentScoreResponse.ProtoReflect.Descriptor instead.
 func (*GetDocumentScoreResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{3}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetDocumentScoreResponse) GetScore() *DocumentScore {
@@ -315,7 +459,7 @@ type ScoreChunksRequest struct {
 
 func (x *ScoreChunksRequest) Reset() {
 	*x = ScoreChunksRequest{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[4]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -327,7 +471,7 @@ func (x *ScoreChunksRequest) String() string {
 func (*ScoreChunksRequest) ProtoMessage() {}
 
 func (x *ScoreChunksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[4]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -340,7 +484,7 @@ func (x *ScoreChunksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScoreChunksRequest.ProtoReflect.Descriptor instead.
 func (*ScoreChunksRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{4}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ScoreChunksRequest) GetDocumentIds() []string {
@@ -359,7 +503,7 @@ type ScoreChunksResponse struct {
 
 func (x *ScoreChunksResponse) Reset() {
 	*x = ScoreChunksResponse{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[5]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -371,7 +515,7 @@ func (x *ScoreChunksResponse) String() string {
 func (*ScoreChunksResponse) ProtoMessage() {}
 
 func (x *ScoreChunksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[5]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -384,7 +528,7 @@ func (x *ScoreChunksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScoreChunksResponse.ProtoReflect.Descriptor instead.
 func (*ScoreChunksResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{5}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ScoreChunksResponse) GetScores() []*DocumentScore {
@@ -395,14 +539,18 @@ func (x *ScoreChunksResponse) GetScores() []*DocumentScore {
 }
 
 type ListFindingsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// At most this many findings; 0 means 50, and 100 is the most.
+	PageSize int32 `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	// The next_page_token of the previous page; empty for the first.
+	PageToken     string `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListFindingsRequest) Reset() {
 	*x = ListFindingsRequest{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[6]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -414,7 +562,7 @@ func (x *ListFindingsRequest) String() string {
 func (*ListFindingsRequest) ProtoMessage() {}
 
 func (x *ListFindingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[6]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -427,19 +575,124 @@ func (x *ListFindingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListFindingsRequest.ProtoReflect.Descriptor instead.
 func (*ListFindingsRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{6}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ListFindingsRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *ListFindingsRequest) GetPageToken() string {
+	if x != nil {
+		return x.PageToken
+	}
+	return ""
+}
+
+type ResolveFindingRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FindingId     string                 `protobuf:"bytes,1,opt,name=finding_id,json=findingId,proto3" json:"finding_id,omitempty"`
+	Resolution    Resolution             `protobuf:"varint,2,opt,name=resolution,proto3,enum=knowcel.curation.v1.Resolution" json:"resolution,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResolveFindingRequest) Reset() {
+	*x = ResolveFindingRequest{}
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResolveFindingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResolveFindingRequest) ProtoMessage() {}
+
+func (x *ResolveFindingRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResolveFindingRequest.ProtoReflect.Descriptor instead.
+func (*ResolveFindingRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ResolveFindingRequest) GetFindingId() string {
+	if x != nil {
+		return x.FindingId
+	}
+	return ""
+}
+
+func (x *ResolveFindingRequest) GetResolution() Resolution {
+	if x != nil {
+		return x.Resolution
+	}
+	return Resolution_RESOLUTION_UNSPECIFIED
+}
+
+type ResolveFindingResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResolveFindingResponse) Reset() {
+	*x = ResolveFindingResponse{}
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResolveFindingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResolveFindingResponse) ProtoMessage() {}
+
+func (x *ResolveFindingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResolveFindingResponse.ProtoReflect.Descriptor instead.
+func (*ResolveFindingResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{9}
 }
 
 type ListFindingsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Findings      []*Finding             `protobuf:"bytes,1,rep,name=findings,proto3" json:"findings,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Findings []*Finding             `protobuf:"bytes,1,rep,name=findings,proto3" json:"findings,omitempty"`
+	// Pass it as page_token for the next page; empty after the last. A page
+	// can hold fewer findings than asked for, or none, and still have a next one.
+	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListFindingsResponse) Reset() {
 	*x = ListFindingsResponse{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[7]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -451,7 +704,7 @@ func (x *ListFindingsResponse) String() string {
 func (*ListFindingsResponse) ProtoMessage() {}
 
 func (x *ListFindingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[7]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -464,7 +717,7 @@ func (x *ListFindingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListFindingsResponse.ProtoReflect.Descriptor instead.
 func (*ListFindingsResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{7}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ListFindingsResponse) GetFindings() []*Finding {
@@ -472,6 +725,13 @@ func (x *ListFindingsResponse) GetFindings() []*Finding {
 		return x.Findings
 	}
 	return nil
+}
+
+func (x *ListFindingsResponse) GetNextPageToken() string {
+	if x != nil {
+		return x.NextPageToken
+	}
+	return ""
 }
 
 var File_knowcel_curation_v1_curation_proto protoreflect.FileDescriptor
@@ -484,7 +744,12 @@ const file_knowcel_curation_v1_curation_proto_rawDesc = "" +
 	"documentId\x12\x14\n" +
 	"\x05score\x18\x02 \x01(\x01R\x05score\x129\n" +
 	"\n" +
-	"updated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xd7\x01\n" +
+	"updated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"u\n" +
+	"\x10ResolutionOption\x12?\n" +
+	"\n" +
+	"resolution\x18\x01 \x01(\x0e2\x1f.knowcel.curation.v1.ResolutionR\n" +
+	"resolution\x12 \n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\"\x93\x03\n" +
 	"\aFinding\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x124\n" +
 	"\x04kind\x18\x02 \x01(\x0e2 .knowcel.curation.v1.FindingKindR\x04kind\x12\x1f\n" +
@@ -492,7 +757,11 @@ const file_knowcel_curation_v1_curation_proto_rawDesc = "" +
 	"documentId\x12*\n" +
 	"\x11other_document_id\x18\x04 \x01(\tR\x0fotherDocumentId\x129\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\":\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12\x18\n" +
+	"\asummary\x18\x06 \x01(\tR\asummary\x12%\n" +
+	"\x0edocument_title\x18\a \x01(\tR\rdocumentTitle\x120\n" +
+	"\x14other_document_title\x18\b \x01(\tR\x12otherDocumentTitle\x12G\n" +
+	"\vresolutions\x18\t \x03(\v2%.knowcel.curation.v1.ResolutionOptionR\vresolutions\":\n" +
 	"\x17GetDocumentScoreRequest\x12\x1f\n" +
 	"\vdocument_id\x18\x01 \x01(\tR\n" +
 	"documentId\"T\n" +
@@ -501,19 +770,37 @@ const file_knowcel_curation_v1_curation_proto_rawDesc = "" +
 	"\x12ScoreChunksRequest\x12!\n" +
 	"\fdocument_ids\x18\x01 \x03(\tR\vdocumentIds\"Q\n" +
 	"\x13ScoreChunksResponse\x12:\n" +
-	"\x06scores\x18\x01 \x03(\v2\".knowcel.curation.v1.DocumentScoreR\x06scores\"\x15\n" +
-	"\x13ListFindingsRequest\"P\n" +
+	"\x06scores\x18\x01 \x03(\v2\".knowcel.curation.v1.DocumentScoreR\x06scores\"Q\n" +
+	"\x13ListFindingsRequest\x12\x1b\n" +
+	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x1d\n" +
+	"\n" +
+	"page_token\x18\x02 \x01(\tR\tpageToken\"w\n" +
+	"\x15ResolveFindingRequest\x12\x1d\n" +
+	"\n" +
+	"finding_id\x18\x01 \x01(\tR\tfindingId\x12?\n" +
+	"\n" +
+	"resolution\x18\x02 \x01(\x0e2\x1f.knowcel.curation.v1.ResolutionR\n" +
+	"resolution\"\x18\n" +
+	"\x16ResolveFindingResponse\"x\n" +
 	"\x14ListFindingsResponse\x128\n" +
-	"\bfindings\x18\x01 \x03(\v2\x1c.knowcel.curation.v1.FindingR\bfindings*\x7f\n" +
+	"\bfindings\x18\x01 \x03(\v2\x1c.knowcel.curation.v1.FindingR\bfindings\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken*\x7f\n" +
 	"\vFindingKind\x12\x1c\n" +
 	"\x18FINDING_KIND_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16FINDING_KIND_DUPLICATE\x10\x01\x12\x1b\n" +
 	"\x17FINDING_KIND_SUPERSEDED\x10\x02\x12\x19\n" +
-	"\x15FINDING_KIND_CONFLICT\x10\x032\xc9\x02\n" +
+	"\x15FINDING_KIND_CONFLICT\x10\x03*l\n" +
+	"\n" +
+	"Resolution\x12\x1a\n" +
+	"\x16RESOLUTION_UNSPECIFIED\x10\x00\x12\x13\n" +
+	"\x0fRESOLUTION_KEEP\x10\x01\x12\x16\n" +
+	"\x12RESOLUTION_REPLACE\x10\x02\x12\x15\n" +
+	"\x11RESOLUTION_IGNORE\x10\x032\xb4\x03\n" +
 	"\x0fCurationService\x12o\n" +
 	"\x10GetDocumentScore\x12,.knowcel.curation.v1.GetDocumentScoreRequest\x1a-.knowcel.curation.v1.GetDocumentScoreResponse\x12`\n" +
 	"\vScoreChunks\x12'.knowcel.curation.v1.ScoreChunksRequest\x1a(.knowcel.curation.v1.ScoreChunksResponse\x12c\n" +
-	"\fListFindings\x12(.knowcel.curation.v1.ListFindingsRequest\x1a).knowcel.curation.v1.ListFindingsResponseBQZOgithub.com/ChristophBe/knowcelium/modules/curation/api/go/curationv1;curationv1b\x06proto3"
+	"\fListFindings\x12(.knowcel.curation.v1.ListFindingsRequest\x1a).knowcel.curation.v1.ListFindingsResponse\x12i\n" +
+	"\x0eResolveFinding\x12*.knowcel.curation.v1.ResolveFindingRequest\x1a+.knowcel.curation.v1.ResolveFindingResponseBQZOgithub.com/ChristophBe/knowcelium/modules/curation/api/go/curationv1;curationv1b\x06proto3"
 
 var (
 	file_knowcel_curation_v1_curation_proto_rawDescOnce sync.Once
@@ -527,38 +814,47 @@ func file_knowcel_curation_v1_curation_proto_rawDescGZIP() []byte {
 	return file_knowcel_curation_v1_curation_proto_rawDescData
 }
 
-var file_knowcel_curation_v1_curation_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_knowcel_curation_v1_curation_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_knowcel_curation_v1_curation_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_knowcel_curation_v1_curation_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_knowcel_curation_v1_curation_proto_goTypes = []any{
 	(FindingKind)(0),                 // 0: knowcel.curation.v1.FindingKind
-	(*DocumentScore)(nil),            // 1: knowcel.curation.v1.DocumentScore
-	(*Finding)(nil),                  // 2: knowcel.curation.v1.Finding
-	(*GetDocumentScoreRequest)(nil),  // 3: knowcel.curation.v1.GetDocumentScoreRequest
-	(*GetDocumentScoreResponse)(nil), // 4: knowcel.curation.v1.GetDocumentScoreResponse
-	(*ScoreChunksRequest)(nil),       // 5: knowcel.curation.v1.ScoreChunksRequest
-	(*ScoreChunksResponse)(nil),      // 6: knowcel.curation.v1.ScoreChunksResponse
-	(*ListFindingsRequest)(nil),      // 7: knowcel.curation.v1.ListFindingsRequest
-	(*ListFindingsResponse)(nil),     // 8: knowcel.curation.v1.ListFindingsResponse
-	(*timestamppb.Timestamp)(nil),    // 9: google.protobuf.Timestamp
+	(Resolution)(0),                  // 1: knowcel.curation.v1.Resolution
+	(*DocumentScore)(nil),            // 2: knowcel.curation.v1.DocumentScore
+	(*ResolutionOption)(nil),         // 3: knowcel.curation.v1.ResolutionOption
+	(*Finding)(nil),                  // 4: knowcel.curation.v1.Finding
+	(*GetDocumentScoreRequest)(nil),  // 5: knowcel.curation.v1.GetDocumentScoreRequest
+	(*GetDocumentScoreResponse)(nil), // 6: knowcel.curation.v1.GetDocumentScoreResponse
+	(*ScoreChunksRequest)(nil),       // 7: knowcel.curation.v1.ScoreChunksRequest
+	(*ScoreChunksResponse)(nil),      // 8: knowcel.curation.v1.ScoreChunksResponse
+	(*ListFindingsRequest)(nil),      // 9: knowcel.curation.v1.ListFindingsRequest
+	(*ResolveFindingRequest)(nil),    // 10: knowcel.curation.v1.ResolveFindingRequest
+	(*ResolveFindingResponse)(nil),   // 11: knowcel.curation.v1.ResolveFindingResponse
+	(*ListFindingsResponse)(nil),     // 12: knowcel.curation.v1.ListFindingsResponse
+	(*timestamppb.Timestamp)(nil),    // 13: google.protobuf.Timestamp
 }
 var file_knowcel_curation_v1_curation_proto_depIdxs = []int32{
-	9, // 0: knowcel.curation.v1.DocumentScore.updated_at:type_name -> google.protobuf.Timestamp
-	0, // 1: knowcel.curation.v1.Finding.kind:type_name -> knowcel.curation.v1.FindingKind
-	9, // 2: knowcel.curation.v1.Finding.created_at:type_name -> google.protobuf.Timestamp
-	1, // 3: knowcel.curation.v1.GetDocumentScoreResponse.score:type_name -> knowcel.curation.v1.DocumentScore
-	1, // 4: knowcel.curation.v1.ScoreChunksResponse.scores:type_name -> knowcel.curation.v1.DocumentScore
-	2, // 5: knowcel.curation.v1.ListFindingsResponse.findings:type_name -> knowcel.curation.v1.Finding
-	3, // 6: knowcel.curation.v1.CurationService.GetDocumentScore:input_type -> knowcel.curation.v1.GetDocumentScoreRequest
-	5, // 7: knowcel.curation.v1.CurationService.ScoreChunks:input_type -> knowcel.curation.v1.ScoreChunksRequest
-	7, // 8: knowcel.curation.v1.CurationService.ListFindings:input_type -> knowcel.curation.v1.ListFindingsRequest
-	4, // 9: knowcel.curation.v1.CurationService.GetDocumentScore:output_type -> knowcel.curation.v1.GetDocumentScoreResponse
-	6, // 10: knowcel.curation.v1.CurationService.ScoreChunks:output_type -> knowcel.curation.v1.ScoreChunksResponse
-	8, // 11: knowcel.curation.v1.CurationService.ListFindings:output_type -> knowcel.curation.v1.ListFindingsResponse
-	9, // [9:12] is the sub-list for method output_type
-	6, // [6:9] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	13, // 0: knowcel.curation.v1.DocumentScore.updated_at:type_name -> google.protobuf.Timestamp
+	1,  // 1: knowcel.curation.v1.ResolutionOption.resolution:type_name -> knowcel.curation.v1.Resolution
+	0,  // 2: knowcel.curation.v1.Finding.kind:type_name -> knowcel.curation.v1.FindingKind
+	13, // 3: knowcel.curation.v1.Finding.created_at:type_name -> google.protobuf.Timestamp
+	3,  // 4: knowcel.curation.v1.Finding.resolutions:type_name -> knowcel.curation.v1.ResolutionOption
+	2,  // 5: knowcel.curation.v1.GetDocumentScoreResponse.score:type_name -> knowcel.curation.v1.DocumentScore
+	2,  // 6: knowcel.curation.v1.ScoreChunksResponse.scores:type_name -> knowcel.curation.v1.DocumentScore
+	1,  // 7: knowcel.curation.v1.ResolveFindingRequest.resolution:type_name -> knowcel.curation.v1.Resolution
+	4,  // 8: knowcel.curation.v1.ListFindingsResponse.findings:type_name -> knowcel.curation.v1.Finding
+	5,  // 9: knowcel.curation.v1.CurationService.GetDocumentScore:input_type -> knowcel.curation.v1.GetDocumentScoreRequest
+	7,  // 10: knowcel.curation.v1.CurationService.ScoreChunks:input_type -> knowcel.curation.v1.ScoreChunksRequest
+	9,  // 11: knowcel.curation.v1.CurationService.ListFindings:input_type -> knowcel.curation.v1.ListFindingsRequest
+	10, // 12: knowcel.curation.v1.CurationService.ResolveFinding:input_type -> knowcel.curation.v1.ResolveFindingRequest
+	6,  // 13: knowcel.curation.v1.CurationService.GetDocumentScore:output_type -> knowcel.curation.v1.GetDocumentScoreResponse
+	8,  // 14: knowcel.curation.v1.CurationService.ScoreChunks:output_type -> knowcel.curation.v1.ScoreChunksResponse
+	12, // 15: knowcel.curation.v1.CurationService.ListFindings:output_type -> knowcel.curation.v1.ListFindingsResponse
+	11, // 16: knowcel.curation.v1.CurationService.ResolveFinding:output_type -> knowcel.curation.v1.ResolveFindingResponse
+	13, // [13:17] is the sub-list for method output_type
+	9,  // [9:13] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_knowcel_curation_v1_curation_proto_init() }
@@ -571,8 +867,8 @@ func file_knowcel_curation_v1_curation_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_knowcel_curation_v1_curation_proto_rawDesc), len(file_knowcel_curation_v1_curation_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   8,
+			NumEnums:      2,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

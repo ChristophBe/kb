@@ -33,7 +33,7 @@ Name, story and voice: [Brand](docs/brand.md).
 | `curation` | Python service :9005 | Relevance and freshness scores of documents; findings for duplicate, superseded and conflicting ones |
 
 ```
-browser ──gRPC-Web──▶ envoy :8080 ──gRPC──▶ document / ingestion / chat / llm / iam
+browser ──gRPC-Web──▶ envoy :8080 ──gRPC──▶ document / ingestion / chat / llm / iam / curation
    │                                              │        │
    └── presigned PUT ──▶ S3 (SeaweedFS) :8333 ◀───┘        └─▶ NATS JetStream ──▶ ingestion-worker
                                      Postgres + pgvector (one schema per module)

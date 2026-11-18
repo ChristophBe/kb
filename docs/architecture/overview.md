@@ -7,14 +7,14 @@ How the modules, the infrastructure and the browser fit together. The diagrams f
 ```mermaid
 flowchart LR
     user([User])
-    kb["kb<br/>knowledge management"]
-    llmvendor[("LLM provider<br/>Ollama (default), Anthropic")]
+    kb["Knowcelium<br/>knowledge management"]
+    llmvendor[("LLM provider<br/>Ollama (default), Anthropic, OpenAI-compatible")]
 
     user -- "browser: upload, browse, chat" --> kb
-    kb -- "generate, embed" --> llmvendor
+    kb -- "generate, embed, rerank" --> llmvendor
 ```
 
-A user works with kb only through the browser. kb's only external dependency is an LLM provider, reached exclusively through the `llm` module ([ADR 0005](../adr/0005-llm-module-is-the-only-vendor-gateway.md)).
+A user works with Knowcelium only through the browser. Its only external dependency is an LLM provider, reached exclusively through the `llm` module ([ADR 0005](../adr/0005-llm-module-is-the-only-vendor-gateway.md)).
 
 ## Containers
 
@@ -44,6 +44,9 @@ flowchart TB
         subgraph iam["iam"]
             iamsvc["iam-service :9006<br/>Go"]
         end
+        subgraph curation["curation"]
+            cursvc["curation-service :9005<br/>Python"]
+        end
     end
 
     subgraph infra["Infrastructure (deploy/infra.compose.yaml)"]
@@ -66,12 +69,13 @@ flowchart TB
     envoy -- "ChatService" --> chatsvc
     envoy -- "LlmService" --> llmsvc
     envoy -- "IamService" --> iamsvc
+    envoy -- "CurationService" --> cursvc
 
     ingsvc -- "CreateDocument, SetDocumentStatus" --> docsvc
     ingworker -- "ReadContent, AddChunks, SetDocumentStatus" --> docsvc
     ingworker -- "Embed" --> llmsvc
     chatsvc -- "SearchChunks" --> docsvc
-    chatsvc -- "Generate, Embed" --> llmsvc
+    chatsvc -- "Generate, Embed, Rerank" --> llmsvc
     docsvc -- "Embed (SearchDocuments)" --> llmsvc
     llmsvc -- "HTTP" --> ollama
 
@@ -85,6 +89,7 @@ flowchart TB
     chatsvc -- "schema chat" --> pg
     iamsvc -- "schema iam" --> pg
     llmsvc -- "schema llm" --> pg
+    cursvc -- "schema curation" --> pg
     docsvc -- "bucket: raw files, presigning" --> s3
 ```
 
@@ -96,6 +101,7 @@ flowchart TB
 | `chat-service` | chat | schema `chat` (conversations, messages) | document, llm | — |
 | `llm-service` | llm | schema `llm` (usage of generations), provider registry | Ollama over HTTP, Anthropic API | — |
 | `iam-service` | iam | schema `iam` (users) | — | — |
+| `curation-service` | curation | schema `curation` (scaffold: no scores or findings yet) | — (planned: document, llm, iam) | — (planned: consumes `knowcel.ingestion.processed`) |
 | `envoy` | — | per-method routes for the public RPCs of each manifest's `grpc_services` (not `internal`); token check, sets `x-kb-user`, `x-kb-email` and `x-kb-name` ([ADR 0009](../adr/0009-oidc-authentication-at-the-gateway.md), [ADR 0013](../adr/0013-iam-module.md)) | all services | — |
 | `web` | — | UI shell; module UIs from `apps/web/src/modules.gen.ts` | via envoy | — |
 
@@ -143,9 +149,11 @@ sequenceDiagram
     I-->>U: job updates on WatchJob
 
     U->>C: ChatService.StreamChat (via envoy)
+    Note over C: answer runs in a detached task;<br/>StreamChat follows it, StopChat stops it
     C->>L: Embed(question)
-    C->>D: SearchChunks(embedding)
-    C->>L: Generate(prompt + chunks) (stream)
+    C->>D: SearchChunks(embedding, question text)
+    C->>L: Rerank(question, candidate chunks)
+    C->>L: Generate(system prompt + chunks) (stream)
     C-->>U: answer tokens + citations (stream)
 ```
 

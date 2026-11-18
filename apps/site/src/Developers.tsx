@@ -31,6 +31,8 @@ const MODULES = [
   },
   { id: "chat", lang: "Python", text: "Conversations and cited, streamed answers" },
   { id: "llm", lang: "Python", text: "The one gateway to language models" },
+  { id: "iam", lang: "Go", text: "Users, teams and who may see which documents" },
+  { id: "curation", lang: "Python", text: "Keeps the knowledge consistent (just started)" },
 ];
 
 /** For people who want to run, read or extend Knowcelium. */
@@ -80,7 +82,7 @@ function Architecture() {
     <figure className="glass rounded-panel p-4 sm:p-6">
       <figcaption className="sr-only">
         Architecture: the browser talks gRPC-Web to Envoy, which routes to the document, ingestion,
-        chat and llm modules; they store data in Postgres with pgvector, S3 and NATS JetStream.
+        chat, llm, iam and curation modules; they store data in Postgres with pgvector, S3 and NATS JetStream.
       </figcaption>
       <div aria-hidden="true" className="flex flex-col items-center gap-2 font-mono text-xs">
         <Box>browser</Box>

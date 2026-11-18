@@ -138,6 +138,13 @@ export function QuickStart() {
           When the logs settle, open{" "}
           <code className="font-mono text-sm text-fg">http://localhost:3000</code>.
         </p>
+        <p className="mt-4 text-left text-base text-fg-muted">
+          Sign in with one of the two test users,{" "}
+          <code className="font-mono text-sm text-fg">alice@example.com</code> or{" "}
+          <code className="font-mono text-sm text-fg">bob@example.com</code>. Both have the password{" "}
+          <code className="font-mono text-sm text-fg">password</code>. They exist for trying
+          Knowcelium out; connect your own sign-in provider before sharing it with others.
+        </p>
         <h3 className="mt-10 mb-2 text-left text-xl font-semibold">
           Prefer another model provider?
         </h3>

@@ -28,7 +28,8 @@ if _version_not_supported:
 class CurationServiceStub:
     """CurationService keeps the knowledge base consistent: it scores documents by
     relevance and freshness and reports documents that duplicate, replace or
-    contradict each other. Only documents the caller can see are returned.
+    contradict each other. Nothing writes scores or findings yet; restricting
+    results to documents the caller can see comes with the first writer (#81).
     """
 
     def __init__(self, channel):
@@ -52,20 +53,20 @@ class CurationServiceStub:
 class CurationServiceServicer:
     """CurationService keeps the knowledge base consistent: it scores documents by
     relevance and freshness and reports documents that duplicate, replace or
-    contradict each other. Only documents the caller can see are returned.
+    contradict each other. Nothing writes scores or findings yet; restricting
+    results to documents the caller can see comes with the first writer (#81).
     """
 
     def GetDocumentScore(self, request, context):
         """GetDocumentScore returns the current score of a document; NOT_FOUND while
-        it has none (not yet processed, or not visible to the caller).
+        it has none.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def ListFindings(self, request, context):
-        """ListFindings returns the open findings that involve documents the caller
-        can see, newest first.
+        """ListFindings returns the open findings, newest first.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -95,7 +96,8 @@ def add_CurationServiceServicer_to_server(servicer, server):
 class CurationService:
     """CurationService keeps the knowledge base consistent: it scores documents by
     relevance and freshness and reports documents that duplicate, replace or
-    contradict each other. Only documents the caller can see are returned.
+    contradict each other. Nothing writes scores or findings yet; restricting
+    results to documents the caller can see comes with the first writer (#81).
     """
 
     @staticmethod

@@ -71,7 +71,6 @@ From `Settings` in [modules/curation/service/src/knowcel_curation/config.py](../
 | `KNOWCEL_GRPC_PORT` | `9005` | Serves the gRPC API; each component defaults it to the port in its module.yaml (0 for workers, which serve none). |
 | `KNOWCEL_METRICS_PORT` | `9107` | Serves Prometheus metrics at /metrics (knowcel_platform.metrics); like KNOWCEL_GRPC_PORT, each component defaults it to the port in its module.yaml. |
 | `KNOWCEL_DATABASE_URL` | `postgresql+asyncpg://kb:kb@localhost:5432/kb` | The Postgres database holding the curation schema (scores and findings), as an SQLAlchemy URL. |
-| `KNOWCEL_IAM_ADDR` | `localhost:9006` | The iam module (host:port), which tells which documents a caller can see. While it is down, only the caller's own are covered. |
 
 ## document-service
 

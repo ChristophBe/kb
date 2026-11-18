@@ -7,9 +7,6 @@ dependencies = [
     "alembic>=1.16",
     "asyncpg>=0.30",
     "knowcel-curation-api",
-    "knowcel-document-api",
-    "knowcel-iam-api",
-    "knowcel-llm-api",
     "knowcel-platform",
     "sqlalchemy[asyncio]>=2.0.40",
 ]
@@ -19,9 +16,6 @@ knowcel-curation-service = "knowcel_curation.__main__:main"
 
 [tool.uv.sources]
 knowcel-curation-api = { workspace = true }
-knowcel-document-api = { workspace = true }
-knowcel-iam-api = { workspace = true }
-knowcel-llm-api = { workspace = true }
 knowcel-platform = { workspace = true }
 
 [build-system]

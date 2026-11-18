@@ -190,14 +190,15 @@ export const FindingKindSchema: GenEnum<FindingKind> = /*@__PURE__*/
 /**
  * CurationService keeps the knowledge base consistent: it scores documents by
  * relevance and freshness and reports documents that duplicate, replace or
- * contradict each other. Only documents the caller can see are returned.
+ * contradict each other. Nothing writes scores or findings yet; restricting
+ * results to documents the caller can see comes with the first writer (#81).
  *
  * @generated from service knowcel.curation.v1.CurationService
  */
 export const CurationService: GenService<{
   /**
    * GetDocumentScore returns the current score of a document; NOT_FOUND while
-   * it has none (not yet processed, or not visible to the caller).
+   * it has none.
    *
    * @generated from rpc knowcel.curation.v1.CurationService.GetDocumentScore
    */
@@ -207,8 +208,7 @@ export const CurationService: GenService<{
     output: typeof GetDocumentScoreResponseSchema;
   },
   /**
-   * ListFindings returns the open findings that involve documents the caller
-   * can see, newest first.
+   * ListFindings returns the open findings, newest first.
    *
    * @generated from rpc knowcel.curation.v1.CurationService.ListFindings
    */

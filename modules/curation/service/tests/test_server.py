@@ -105,8 +105,8 @@ async def test_database_outage_is_unavailable(
 
 def test_settings_are_checked() -> None:
     problems = Problems()
-    Settings(database_url="mysql://x", iam_addr="nope").check(problems)
-    assert len(problems.items) == 2
+    Settings(database_url="mysql://x").check(problems)
+    assert len(problems.items) == 1
     ok = Problems()
     Settings().check(ok)
     assert not ok.items

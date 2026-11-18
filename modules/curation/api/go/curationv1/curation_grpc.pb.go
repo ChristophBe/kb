@@ -29,13 +29,13 @@ const (
 //
 // CurationService keeps the knowledge base consistent: it scores documents by
 // relevance and freshness and reports documents that duplicate, replace or
-// contradict each other. Only documents the caller can see are returned.
+// contradict each other. Nothing writes scores or findings yet; restricting
+// results to documents the caller can see comes with the first writer (#81).
 type CurationServiceClient interface {
 	// GetDocumentScore returns the current score of a document; NOT_FOUND while
-	// it has none (not yet processed, or not visible to the caller).
+	// it has none.
 	GetDocumentScore(ctx context.Context, in *GetDocumentScoreRequest, opts ...grpc.CallOption) (*GetDocumentScoreResponse, error)
-	// ListFindings returns the open findings that involve documents the caller
-	// can see, newest first.
+	// ListFindings returns the open findings, newest first.
 	ListFindings(ctx context.Context, in *ListFindingsRequest, opts ...grpc.CallOption) (*ListFindingsResponse, error)
 }
 
@@ -73,13 +73,13 @@ func (c *curationServiceClient) ListFindings(ctx context.Context, in *ListFindin
 //
 // CurationService keeps the knowledge base consistent: it scores documents by
 // relevance and freshness and reports documents that duplicate, replace or
-// contradict each other. Only documents the caller can see are returned.
+// contradict each other. Nothing writes scores or findings yet; restricting
+// results to documents the caller can see comes with the first writer (#81).
 type CurationServiceServer interface {
 	// GetDocumentScore returns the current score of a document; NOT_FOUND while
-	// it has none (not yet processed, or not visible to the caller).
+	// it has none.
 	GetDocumentScore(context.Context, *GetDocumentScoreRequest) (*GetDocumentScoreResponse, error)
-	// ListFindings returns the open findings that involve documents the caller
-	// can see, newest first.
+	// ListFindings returns the open findings, newest first.
 	ListFindings(context.Context, *ListFindingsRequest) (*ListFindingsResponse, error)
 	mustEmbedUnimplementedCurationServiceServer()
 }

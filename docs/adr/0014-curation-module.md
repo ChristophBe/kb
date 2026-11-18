@@ -18,6 +18,6 @@ We will add a `curation` module (`modules/curation`, Python, schema `curation`, 
 ## Consequences
 
 - `document` and `chat` stay simple; `chat` later ranks with curation scores and falls back to similarity alone while curation is down.
-- Curation results only cover documents the caller can see, so every RPC resolves visibility through `document` and `iam` instead of reading their data.
+- Curation results must only cover documents the caller can see, so RPCs resolve visibility through `document` and `iam` instead of reading their data. The scaffold stores nothing yet; the first change that writes scores or findings adds that filtering.
 - One more service to run and monitor.
 - Revisit if scoring needs to run inside the retrieval query itself, where a round trip per search becomes too slow.

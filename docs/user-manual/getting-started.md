@@ -4,7 +4,7 @@ Knowcelium is where you keep your own documents and ask questions about them. Yo
 
 ## Sign in
 
-Knowcelium asks you to sign in when you open it, and shows who is signed in at the bottom of the sidebar. See [Sign in](sign-in.md).
+Knowcelium asks you to sign in when you open it, and shows who is signed in at the bottom of the sidebar. See [Sign in](sign-in.md). If you started Knowcelium yourself from the quick start, sign in as `alice@example.com` or `bob@example.com`; both have the password `password`.
 
 ## Find your way around
 

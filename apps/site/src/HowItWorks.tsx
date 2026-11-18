@@ -25,7 +25,7 @@ const STEPS: { icon: LucideIcon; title: string; text: string }[] = [
   {
     icon: MessageSquare,
     title: "Ask and search",
-    text: "Search by meaning or ask in plain language; every answer comes with its sources.",
+    text: "Search by meaning or exact words, or ask in plain language; every answer comes with its sources.",
   },
 ];
 

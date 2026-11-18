@@ -20,7 +20,7 @@ const FEATURES: Feature[] = [
   {
     icon: MessageSquare,
     title: "Answers you can check",
-    text: "Every answer cites the passages it is based on. Point at a number to see its source; select it to open the document right at that passage.",
+    text: "Every answer cites the passages it is based on, picked from the best matches by a second ranking pass. Point at a number to see its source; select it to open the document right at that passage.",
     demo: (
       <p className="text-sm">
         Up to 30 days a year
@@ -31,8 +31,8 @@ const FEATURES: Feature[] = [
   },
   {
     icon: Search,
-    title: "Search by meaning",
-    text: "Describe what you are looking for in your own words. Knowcelium finds the passages that mean it, even when they use none of your keywords.",
+    title: "Search by meaning and by words",
+    text: "Describe what you are looking for in your own words and Knowcelium finds the passages that mean it. Looking for an exact name or code? Those match too, with the words shown in context.",
     demo: (
       <ul className="space-y-1.5 text-xs">
         <SearchHit title="Remote work policy 2026" chunk={4} score={0.82} />
@@ -44,7 +44,7 @@ const FEATURES: Feature[] = [
   {
     icon: Upload,
     title: "Drop in your files",
-    text: "Drag PDFs, Markdown or text files onto the page and follow each one until it is ready. When something fails, one click retries it.",
+    text: "Drag PDFs, Markdown or text files onto the page and follow each one until it is ready. Start a question meanwhile: answers keep writing in the background and you are told when one is done. When something fails, one click retries it.",
     demo: (
       <ul className="space-y-1.5 text-xs">
         <UploadRow name="handbook.pdf" status="Done" tone="success" />
@@ -62,7 +62,7 @@ const FEATURES: Feature[] = [
   {
     icon: Cpu,
     title: "Your choice of model provider",
-    text: "Search and chat run on Ollama on your own hardware by default. Prefer a hosted model? Switch chat or search to Claude or any OpenAI-compatible server. You decide what is sent where.",
+    text: "Search and chat run on Ollama on your own hardware by default. Prefer a hosted model? Switch chat or search to Claude or any OpenAI-compatible server. You decide what is sent where, and can tune the system prompt for each conversation.",
     demo: (
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <Badge tone="success">healthy</Badge>

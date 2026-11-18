@@ -48,16 +48,18 @@ class ProcessingProgress(_message.Message):
     def __init__(self, job_id: _Optional[str] = ..., document_id: _Optional[str] = ..., run: _Optional[int] = ..., stage: _Optional[_Union[_ingestion_pb2.JobStage, str]] = ..., progress: _Optional[int] = ...) -> None: ...
 
 class DocumentProcessed(_message.Message):
-    __slots__ = ("job_id", "document_id", "chunk_count", "run")
+    __slots__ = ("job_id", "document_id", "chunk_count", "run", "owner_id")
     JOB_ID_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
     CHUNK_COUNT_FIELD_NUMBER: _ClassVar[int]
     RUN_FIELD_NUMBER: _ClassVar[int]
+    OWNER_ID_FIELD_NUMBER: _ClassVar[int]
     job_id: str
     document_id: str
     chunk_count: int
     run: int
-    def __init__(self, job_id: _Optional[str] = ..., document_id: _Optional[str] = ..., chunk_count: _Optional[int] = ..., run: _Optional[int] = ...) -> None: ...
+    owner_id: str
+    def __init__(self, job_id: _Optional[str] = ..., document_id: _Optional[str] = ..., chunk_count: _Optional[int] = ..., run: _Optional[int] = ..., owner_id: _Optional[str] = ...) -> None: ...
 
 class ProcessingFailed(_message.Message):
     __slots__ = ("job_id", "document_id", "error", "run")

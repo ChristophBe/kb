@@ -153,7 +153,7 @@ class Processor:
             f"{job}:{run}:started",
         )
         try:
-            await self._set_status(doc_id, document_pb2.DOCUMENT_STATUS_PROCESSING)
+            owner_id = await self._set_status(doc_id, document_pb2.DOCUMENT_STATUS_PROCESSING)
             count = await self._process(event)
         except Exception as exc:
             error = _describe(exc)
@@ -183,7 +183,7 @@ class Processor:
         await self._publish(
             SUBJECT_PROCESSED,
             events_pb2.DocumentProcessed(
-                job_id=job, document_id=doc_id, chunk_count=count, run=run
+                job_id=job, document_id=doc_id, chunk_count=count, run=run, owner_id=owner_id
             ),
             f"{job}:{run}:processed",
         )
@@ -282,10 +282,12 @@ class Processor:
         )
         return resp.chunk_count
 
-    async def _set_status(self, doc_id: str, status: int, detail: str = "") -> None:
-        await self._documents.SetDocumentStatus(
+    async def _set_status(self, doc_id: str, status: int, detail: str = "") -> str:
+        """Sets the status; returns the id of the document's owner."""
+        resp = await self._documents.SetDocumentStatus(
             document_pb2.SetDocumentStatusRequest(id=doc_id, status=status, status_detail=detail)  # type: ignore[arg-type]
         )
+        return resp.document.owner_id
 
 
 def _describe(exc: BaseException) -> str:

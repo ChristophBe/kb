@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file knowcel/ingestion/v1/events.proto.
  */
 export const file_knowcel_ingestion_v1_events: GenFile = /*@__PURE__*/
-  fileDesc("CiFrbm93Y2VsL2luZ2VzdGlvbi92MS9ldmVudHMucHJvdG8SFGtub3djZWwuaW5nZXN0aW9uLnYxIn4KEERvY3VtZW50VXBsb2FkZWQSDgoGam9iX2lkGAEgASgJEhMKC2RvY3VtZW50X2lkGAIgASgJEhAKCGZpbGVuYW1lGAMgASgJEhQKDGNvbnRlbnRfdHlwZRgEIAEoCRILCgNydW4YBSABKAUSEAoIdGVhbV9pZHMYBiADKAkiRQoRUHJvY2Vzc2luZ1N0YXJ0ZWQSDgoGam9iX2lkGAEgASgJEhMKC2RvY3VtZW50X2lkGAIgASgJEgsKA3J1bhgDIAEoBSKHAQoSUHJvY2Vzc2luZ1Byb2dyZXNzEg4KBmpvYl9pZBgBIAEoCRITCgtkb2N1bWVudF9pZBgCIAEoCRILCgNydW4YAyABKAUSLQoFc3RhZ2UYBCABKA4yHi5rbm93Y2VsLmluZ2VzdGlvbi52MS5Kb2JTdGFnZRIQCghwcm9ncmVzcxgFIAEoBSJaChFEb2N1bWVudFByb2Nlc3NlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSEwoLY2h1bmtfY291bnQYAyABKAUSCwoDcnVuGAQgASgFIlMKEFByb2Nlc3NpbmdGYWlsZWQSDgoGam9iX2lkGAEgASgJEhMKC2RvY3VtZW50X2lkGAIgASgJEg0KBWVycm9yGAMgASgJEgsKA3J1bhgEIAEoBUJUWlJnaXRodWIuY29tL0NocmlzdG9waEJlL2tub3djZWxpdW0vbW9kdWxlcy9pbmdlc3Rpb24vYXBpL2dvL2luZ2VzdGlvbnYxO2luZ2VzdGlvbnYxYgZwcm90bzM", [file_knowcel_ingestion_v1_ingestion]);
+  fileDesc("CiFrbm93Y2VsL2luZ2VzdGlvbi92MS9ldmVudHMucHJvdG8SFGtub3djZWwuaW5nZXN0aW9uLnYxIn4KEERvY3VtZW50VXBsb2FkZWQSDgoGam9iX2lkGAEgASgJEhMKC2RvY3VtZW50X2lkGAIgASgJEhAKCGZpbGVuYW1lGAMgASgJEhQKDGNvbnRlbnRfdHlwZRgEIAEoCRILCgNydW4YBSABKAUSEAoIdGVhbV9pZHMYBiADKAkiRQoRUHJvY2Vzc2luZ1N0YXJ0ZWQSDgoGam9iX2lkGAEgASgJEhMKC2RvY3VtZW50X2lkGAIgASgJEgsKA3J1bhgDIAEoBSKHAQoSUHJvY2Vzc2luZ1Byb2dyZXNzEg4KBmpvYl9pZBgBIAEoCRITCgtkb2N1bWVudF9pZBgCIAEoCRILCgNydW4YAyABKAUSLQoFc3RhZ2UYBCABKA4yHi5rbm93Y2VsLmluZ2VzdGlvbi52MS5Kb2JTdGFnZRIQCghwcm9ncmVzcxgFIAEoBSJsChFEb2N1bWVudFByb2Nlc3NlZBIOCgZqb2JfaWQYASABKAkSEwoLZG9jdW1lbnRfaWQYAiABKAkSEwoLY2h1bmtfY291bnQYAyABKAUSCwoDcnVuGAQgASgFEhAKCG93bmVyX2lkGAUgASgJIlMKEFByb2Nlc3NpbmdGYWlsZWQSDgoGam9iX2lkGAEgASgJEhMKC2RvY3VtZW50X2lkGAIgASgJEg0KBWVycm9yGAMgASgJEgsKA3J1bhgEIAEoBUJUWlJnaXRodWIuY29tL0NocmlzdG9waEJlL2tub3djZWxpdW0vbW9kdWxlcy9pbmdlc3Rpb24vYXBpL2dvL2luZ2VzdGlvbnYxO2luZ2VzdGlvbnYxYgZwcm90bzM", [file_knowcel_ingestion_v1_ingestion]);
 
 /**
  * Subject: knowcel.ingestion.uploaded
@@ -159,6 +159,15 @@ export type DocumentProcessed = Message<"knowcel.ingestion.v1.DocumentProcessed"
    * @generated from field: int32 run = 4;
    */
   run: number;
+
+  /**
+   * The user who owns the document (Document.owner_id), for consumers that
+   * read documents on the owner's behalf. Empty for events from before it was
+   * set.
+   *
+   * @generated from field: string owner_id = 5;
+   */
+  ownerId: string;
 };
 
 /**

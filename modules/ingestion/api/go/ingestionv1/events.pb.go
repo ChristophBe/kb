@@ -252,11 +252,15 @@ func (x *ProcessingProgress) GetProgress() int32 {
 
 // Subject: knowcel.ingestion.processed
 type DocumentProcessed struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
-	DocumentId    string                 `protobuf:"bytes,2,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
-	ChunkCount    int32                  `protobuf:"varint,3,opt,name=chunk_count,json=chunkCount,proto3" json:"chunk_count,omitempty"`
-	Run           int32                  `protobuf:"varint,4,opt,name=run,proto3" json:"run,omitempty"`
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	JobId      string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	DocumentId string                 `protobuf:"bytes,2,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
+	ChunkCount int32                  `protobuf:"varint,3,opt,name=chunk_count,json=chunkCount,proto3" json:"chunk_count,omitempty"`
+	Run        int32                  `protobuf:"varint,4,opt,name=run,proto3" json:"run,omitempty"`
+	// The user who owns the document (Document.owner_id), for consumers that
+	// read documents on the owner's behalf. Empty for events from before it was
+	// set.
+	OwnerId       string `protobuf:"bytes,5,opt,name=owner_id,json=ownerId,proto3" json:"owner_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -317,6 +321,13 @@ func (x *DocumentProcessed) GetRun() int32 {
 		return x.Run
 	}
 	return 0
+}
+
+func (x *DocumentProcessed) GetOwnerId() string {
+	if x != nil {
+		return x.OwnerId
+	}
+	return ""
 }
 
 // Subject: knowcel.ingestion.failed
@@ -412,14 +423,15 @@ const file_knowcel_ingestion_v1_events_proto_rawDesc = "" +
 	"documentId\x12\x10\n" +
 	"\x03run\x18\x03 \x01(\x05R\x03run\x124\n" +
 	"\x05stage\x18\x04 \x01(\x0e2\x1e.knowcel.ingestion.v1.JobStageR\x05stage\x12\x1a\n" +
-	"\bprogress\x18\x05 \x01(\x05R\bprogress\"~\n" +
+	"\bprogress\x18\x05 \x01(\x05R\bprogress\"\x99\x01\n" +
 	"\x11DocumentProcessed\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n" +
 	"\vdocument_id\x18\x02 \x01(\tR\n" +
 	"documentId\x12\x1f\n" +
 	"\vchunk_count\x18\x03 \x01(\x05R\n" +
 	"chunkCount\x12\x10\n" +
-	"\x03run\x18\x04 \x01(\x05R\x03run\"r\n" +
+	"\x03run\x18\x04 \x01(\x05R\x03run\x12\x19\n" +
+	"\bowner_id\x18\x05 \x01(\tR\aownerId\"r\n" +
 	"\x10ProcessingFailed\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1f\n" +
 	"\vdocument_id\x18\x02 \x01(\tR\n" +

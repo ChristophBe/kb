@@ -71,6 +71,13 @@ From `Settings` in [modules/curation/service/src/knowcel_curation/config.py](../
 | `KNOWCEL_GRPC_PORT` | `9005` | Serves the gRPC API; each component defaults it to the port in its module.yaml (0 for workers, which serve none). |
 | `KNOWCEL_METRICS_PORT` | `9107` | Serves Prometheus metrics at /metrics (knowcel_platform.metrics); like KNOWCEL_GRPC_PORT, each component defaults it to the port in its module.yaml. |
 | `KNOWCEL_DATABASE_URL` | `postgresql+asyncpg://kb:kb@localhost:5432/kb` | The Postgres database holding the curation schema (scores and findings), as an SQLAlchemy URL. |
+| `KNOWCEL_DOCUMENT_ADDR` | `localhost:9001` | The document module (host:port), which tells which documents a caller can see. While it is down, scores can't be read (UNAVAILABLE). |
+| `KNOWCEL_CURATION_RECENCY_WEIGHT` | `1` | Weight of a document's recency in its score. Only the ratio to the usage weight matters. |
+| `KNOWCEL_CURATION_USAGE_WEIGHT` | `0` | Weight of how often chat cites a document. 0 until chat reports its citations; a score then comes from recency and replacements alone. |
+| `KNOWCEL_CURATION_HALF_LIFE_DAYS` | `180` | Days after which the recency of a document has halved. |
+| `KNOWCEL_CURATION_RESCORE_INTERVAL` | `3600` | Seconds between scoring all documents again, so that recency keeps decaying while no document is processed. |
+| `KNOWCEL_CURATION_REPLACEMENT_PENALTY` | `0.5` | Factor a score is multiplied by for each document that replaces it, between 0 and 1. |
+| `KNOWCEL_CURATION_USAGE_SATURATION` | `20` | Citations at which the usage signal is at its maximum. |
 
 ## document-service
 

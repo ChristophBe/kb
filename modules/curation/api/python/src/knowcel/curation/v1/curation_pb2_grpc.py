@@ -28,8 +28,8 @@ if _version_not_supported:
 class CurationServiceStub:
     """CurationService keeps the knowledge base consistent: it scores documents by
     relevance and freshness and reports documents that duplicate, replace or
-    contradict each other. Nothing writes scores or findings yet; restricting
-    results to documents the caller can see comes with the first writer (#81).
+    contradict each other. Scores only cover documents the caller can see;
+    findings are restricted the same way once they are written (#82).
     """
 
     def __init__(self, channel):
@@ -43,6 +43,11 @@ class CurationServiceStub:
                 request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.GetDocumentScoreRequest.SerializeToString,
                 response_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.GetDocumentScoreResponse.FromString,
                 _registered_method=True)
+        self.ScoreChunks = channel.unary_unary(
+                '/knowcel.curation.v1.CurationService/ScoreChunks',
+                request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ScoreChunksRequest.SerializeToString,
+                response_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ScoreChunksResponse.FromString,
+                _registered_method=True)
         self.ListFindings = channel.unary_unary(
                 '/knowcel.curation.v1.CurationService/ListFindings',
                 request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListFindingsRequest.SerializeToString,
@@ -53,13 +58,24 @@ class CurationServiceStub:
 class CurationServiceServicer:
     """CurationService keeps the knowledge base consistent: it scores documents by
     relevance and freshness and reports documents that duplicate, replace or
-    contradict each other. Nothing writes scores or findings yet; restricting
-    results to documents the caller can see comes with the first writer (#81).
+    contradict each other. Scores only cover documents the caller can see;
+    findings are restricted the same way once they are written (#82).
     """
 
     def GetDocumentScore(self, request, context):
         """GetDocumentScore returns the current score of a document; NOT_FOUND while
-        it has none.
+        it has none or when the caller can't see the document.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ScoreChunks(self, request, context):
+        """ScoreChunks returns the scores of the documents the given chunks belong
+        to, so a caller can combine them with a chunk's similarity: every chunk
+        of a document has the document's score. Documents without a score and
+        documents the caller can't see are left out. UNAVAILABLE while the
+        document module is, since visibility can't be checked then.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -80,6 +96,11 @@ def add_CurationServiceServicer_to_server(servicer, server):
                     request_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.GetDocumentScoreRequest.FromString,
                     response_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.GetDocumentScoreResponse.SerializeToString,
             ),
+            'ScoreChunks': grpc.unary_unary_rpc_method_handler(
+                    servicer.ScoreChunks,
+                    request_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ScoreChunksRequest.FromString,
+                    response_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ScoreChunksResponse.SerializeToString,
+            ),
             'ListFindings': grpc.unary_unary_rpc_method_handler(
                     servicer.ListFindings,
                     request_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListFindingsRequest.FromString,
@@ -96,8 +117,8 @@ def add_CurationServiceServicer_to_server(servicer, server):
 class CurationService:
     """CurationService keeps the knowledge base consistent: it scores documents by
     relevance and freshness and reports documents that duplicate, replace or
-    contradict each other. Nothing writes scores or findings yet; restricting
-    results to documents the caller can see comes with the first writer (#81).
+    contradict each other. Scores only cover documents the caller can see;
+    findings are restricted the same way once they are written (#82).
     """
 
     @staticmethod
@@ -117,6 +138,33 @@ class CurationService:
             '/knowcel.curation.v1.CurationService/GetDocumentScore',
             knowcel_dot_curation_dot_v1_dot_curation__pb2.GetDocumentScoreRequest.SerializeToString,
             knowcel_dot_curation_dot_v1_dot_curation__pb2.GetDocumentScoreResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ScoreChunks(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.curation.v1.CurationService/ScoreChunks',
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.ScoreChunksRequest.SerializeToString,
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.ScoreChunksResponse.FromString,
             options,
             channel_credentials,
             insecure,

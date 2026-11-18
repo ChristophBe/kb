@@ -8,11 +8,15 @@ services:
       KNOWCEL_LOG_LEVEL: ${KNOWCEL_LOG_LEVEL:-INFO}
       KNOWCEL_OTEL_ENDPOINT: ${KNOWCEL_OTEL_ENDPOINT:-}
       KNOWCEL_DATABASE_URL: postgresql+asyncpg://kb:kb@postgres:5432/kb
+      KNOWCEL_NATS_URL: nats://nats:4222
+      # Soft dependency: no depends_on on document-service; while it is down, scores can't be read.
+      KNOWCEL_DOCUMENT_ADDR: document-service:9001
     # gRPC and Prometheus /metrics (docs/metrics.md).
     ports: ["9005:9005", "9107:9107"]
     # Infrastructure only: other modules are soft dependencies (docs/architecture/module.md).
     depends_on:
       postgres: { condition: service_healthy }
+      nats: { condition: service_healthy }
     healthcheck:
       test: ["CMD", "python", "-m", "knowcel_platform.healthcheck", "9005"]
       interval: 2s

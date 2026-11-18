@@ -6,7 +6,7 @@ import uuid
 from collections.abc import AsyncIterator, Iterator
 
 import pytest
-from knowcel_curation.db import SqlCurationStore, document_scores, findings, migrate
+from knowcel_curation.db import SqlCurationStore, findings, migrate
 from sqlalchemy import insert, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from testcontainers.community.postgres import PostgresContainer
@@ -15,6 +15,9 @@ pytestmark = pytest.mark.integration
 
 # The image of deploy/infra.compose.yaml, as in modules/llm's tests.
 IMAGE = "pgvector/pgvector:pg17"
+
+DAY = datetime.timedelta(days=1)
+T0 = datetime.datetime(2026, 11, 1, tzinfo=datetime.UTC)
 
 
 @pytest.fixture(scope="module")
@@ -34,26 +37,66 @@ async def engine(database_url: str) -> AsyncIterator[AsyncEngine]:
     await engine.dispose()
 
 
-async def test_get_score(engine: AsyncEngine) -> None:
+async def test_save_score_inserts_then_updates(engine: AsyncEngine) -> None:
     store = SqlCurationStore(engine)
     document = uuid.uuid4()
-    assert await store.get_score(document) is None
+    assert await store.get_scores([document]) == []
+    await store.save_score(document, T0, 1.0)
+    await store.save_score(document, T0 + DAY, 0.5)
+    (score,) = await store.get_scores([document, uuid.uuid4()])
+    assert (score.document_id, score.score, score.processed_at) == (document, 0.5, T0 + DAY)
+
+
+async def test_save_score_keeps_the_newest_processing_time(engine: AsyncEngine) -> None:
+    store = SqlCurationStore(engine)
+    document = uuid.uuid4()
+    await store.save_score(document, T0 + DAY, 1.0)
+    # A stale writer's older time doesn't win; its score still does.
+    await store.save_score(document, T0, 0.4)
+    (score,) = await store.get_scores([document])
+    assert (score.score, score.processed_at) == (0.4, T0 + DAY)
+
+
+async def test_list_scores_pages_by_document_id(engine: AsyncEngine) -> None:
+    store = SqlCurationStore(engine)
+    ids = sorted(uuid.uuid4() for _ in range(5))
+    for document in ids:
+        await store.save_score(document, T0, 1.0)
+    first = await store.list_scores(None, 3)
+    rest = await store.list_scores(first[-1].document_id, 3)
+    assert [s.document_id for s in first + rest] == ids
+
+
+async def test_count_replacements_counts_superseded_findings_of_the_older_document(
+    engine: AsyncEngine,
+) -> None:
+    store = SqlCurationStore(engine)
+    older, newer, other = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
     async with engine.begin() as conn:
-        await conn.execute(insert(document_scores).values(document_id=document, score=0.5))
-    score = await store.get_score(document)
-    assert score is not None
-    assert (score.document_id, score.score) == (document, 0.5)
+        for kind, document, against in (
+            ("superseded", older, newer),
+            ("superseded", older, other),
+            ("duplicate", older, other),
+            ("superseded", newer, older),
+        ):
+            await conn.execute(
+                insert(findings).values(
+                    id=uuid.uuid4(), kind=kind, document_id=document, other_document_id=against
+                )
+            )
+    assert await store.count_replacements(older) == 2
+    assert await store.count_replacements(newer) == 1
+    assert await store.count_replacements(other) == 0
 
 
 async def test_list_findings_newest_first(engine: AsyncEngine) -> None:
     store = SqlCurationStore(engine)
     a, b = uuid.uuid4(), uuid.uuid4()
     old, new = uuid.uuid4(), uuid.uuid4()
-    day = datetime.datetime(2026, 11, 1, tzinfo=datetime.UTC)
     async with engine.begin() as conn:
         for id_, kind, created in (
-            (old, "duplicate", day),
-            (new, "superseded", day + datetime.timedelta(days=1)),
+            (old, "duplicate", T0),
+            (new, "superseded", T0 + DAY),
         ):
             await conn.execute(
                 insert(findings).values(

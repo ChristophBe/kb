@@ -138,7 +138,7 @@ tasks:
       MINIMUMS: |
         platform/python          5
         modules/chat/service     70
-        modules/curation/service 50
+        modules/curation/service 70
         modules/llm/service      80
         modules/ingestion/worker 75
     cmds:

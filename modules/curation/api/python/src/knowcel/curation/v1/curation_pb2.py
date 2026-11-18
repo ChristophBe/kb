@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"knowcel/curation/v1/curation.proto\x12\x13knowcel.curation.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x81\x01\n\rDocumentScore\x12\x1f\n\x0b\x64ocument_id\x18\x01 \x01(\tR\ndocumentId\x12\x14\n\x05score\x18\x02 \x01(\x01R\x05score\x12\x39\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tupdatedAt\"\xd7\x01\n\x07\x46inding\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x34\n\x04kind\x18\x02 \x01(\x0e\x32 .knowcel.curation.v1.FindingKindR\x04kind\x12\x1f\n\x0b\x64ocument_id\x18\x03 \x01(\tR\ndocumentId\x12*\n\x11other_document_id\x18\x04 \x01(\tR\x0fotherDocumentId\x12\x39\n\ncreated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tcreatedAt\":\n\x17GetDocumentScoreRequest\x12\x1f\n\x0b\x64ocument_id\x18\x01 \x01(\tR\ndocumentId\"T\n\x18GetDocumentScoreResponse\x12\x38\n\x05score\x18\x01 \x01(\x0b\x32\".knowcel.curation.v1.DocumentScoreR\x05score\"\x15\n\x13ListFindingsRequest\"P\n\x14ListFindingsResponse\x12\x38\n\x08\x66indings\x18\x01 \x03(\x0b\x32\x1c.knowcel.curation.v1.FindingR\x08\x66indings*\x7f\n\x0b\x46indingKind\x12\x1c\n\x18\x46INDING_KIND_UNSPECIFIED\x10\x00\x12\x1a\n\x16\x46INDING_KIND_DUPLICATE\x10\x01\x12\x1b\n\x17\x46INDING_KIND_SUPERSEDED\x10\x02\x12\x19\n\x15\x46INDING_KIND_CONFLICT\x10\x03\x32\xe7\x01\n\x0f\x43urationService\x12o\n\x10GetDocumentScore\x12,.knowcel.curation.v1.GetDocumentScoreRequest\x1a-.knowcel.curation.v1.GetDocumentScoreResponse\x12\x63\n\x0cListFindings\x12(.knowcel.curation.v1.ListFindingsRequest\x1a).knowcel.curation.v1.ListFindingsResponseBQZOgithub.com/ChristophBe/knowcelium/modules/curation/api/go/curationv1;curationv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"knowcel/curation/v1/curation.proto\x12\x13knowcel.curation.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x81\x01\n\rDocumentScore\x12\x1f\n\x0b\x64ocument_id\x18\x01 \x01(\tR\ndocumentId\x12\x14\n\x05score\x18\x02 \x01(\x01R\x05score\x12\x39\n\nupdated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tupdatedAt\"\xd7\x01\n\x07\x46inding\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x34\n\x04kind\x18\x02 \x01(\x0e\x32 .knowcel.curation.v1.FindingKindR\x04kind\x12\x1f\n\x0b\x64ocument_id\x18\x03 \x01(\tR\ndocumentId\x12*\n\x11other_document_id\x18\x04 \x01(\tR\x0fotherDocumentId\x12\x39\n\ncreated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tcreatedAt\":\n\x17GetDocumentScoreRequest\x12\x1f\n\x0b\x64ocument_id\x18\x01 \x01(\tR\ndocumentId\"T\n\x18GetDocumentScoreResponse\x12\x38\n\x05score\x18\x01 \x01(\x0b\x32\".knowcel.curation.v1.DocumentScoreR\x05score\"7\n\x12ScoreChunksRequest\x12!\n\x0c\x64ocument_ids\x18\x01 \x03(\tR\x0b\x64ocumentIds\"Q\n\x13ScoreChunksResponse\x12:\n\x06scores\x18\x01 \x03(\x0b\x32\".knowcel.curation.v1.DocumentScoreR\x06scores\"\x15\n\x13ListFindingsRequest\"P\n\x14ListFindingsResponse\x12\x38\n\x08\x66indings\x18\x01 \x03(\x0b\x32\x1c.knowcel.curation.v1.FindingR\x08\x66indings*\x7f\n\x0b\x46indingKind\x12\x1c\n\x18\x46INDING_KIND_UNSPECIFIED\x10\x00\x12\x1a\n\x16\x46INDING_KIND_DUPLICATE\x10\x01\x12\x1b\n\x17\x46INDING_KIND_SUPERSEDED\x10\x02\x12\x19\n\x15\x46INDING_KIND_CONFLICT\x10\x03\x32\xc9\x02\n\x0f\x43urationService\x12o\n\x10GetDocumentScore\x12,.knowcel.curation.v1.GetDocumentScoreRequest\x1a-.knowcel.curation.v1.GetDocumentScoreResponse\x12`\n\x0bScoreChunks\x12\'.knowcel.curation.v1.ScoreChunksRequest\x1a(.knowcel.curation.v1.ScoreChunksResponse\x12\x63\n\x0cListFindings\x12(.knowcel.curation.v1.ListFindingsRequest\x1a).knowcel.curation.v1.ListFindingsResponseBQZOgithub.com/ChristophBe/knowcelium/modules/curation/api/go/curationv1;curationv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,8 +33,8 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'knowcel.curation.v1.curatio
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'ZOgithub.com/ChristophBe/knowcelium/modules/curation/api/go/curationv1;curationv1'
-  _globals['_FINDINGKIND']._serialized_start=693
-  _globals['_FINDINGKIND']._serialized_end=820
+  _globals['_FINDINGKIND']._serialized_start=833
+  _globals['_FINDINGKIND']._serialized_end=960
   _globals['_DOCUMENTSCORE']._serialized_start=93
   _globals['_DOCUMENTSCORE']._serialized_end=222
   _globals['_FINDING']._serialized_start=225
@@ -43,10 +43,14 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_GETDOCUMENTSCOREREQUEST']._serialized_end=500
   _globals['_GETDOCUMENTSCORERESPONSE']._serialized_start=502
   _globals['_GETDOCUMENTSCORERESPONSE']._serialized_end=586
-  _globals['_LISTFINDINGSREQUEST']._serialized_start=588
-  _globals['_LISTFINDINGSREQUEST']._serialized_end=609
-  _globals['_LISTFINDINGSRESPONSE']._serialized_start=611
-  _globals['_LISTFINDINGSRESPONSE']._serialized_end=691
-  _globals['_CURATIONSERVICE']._serialized_start=823
-  _globals['_CURATIONSERVICE']._serialized_end=1054
+  _globals['_SCORECHUNKSREQUEST']._serialized_start=588
+  _globals['_SCORECHUNKSREQUEST']._serialized_end=643
+  _globals['_SCORECHUNKSRESPONSE']._serialized_start=645
+  _globals['_SCORECHUNKSRESPONSE']._serialized_end=726
+  _globals['_LISTFINDINGSREQUEST']._serialized_start=728
+  _globals['_LISTFINDINGSREQUEST']._serialized_end=749
+  _globals['_LISTFINDINGSRESPONSE']._serialized_start=751
+  _globals['_LISTFINDINGSRESPONSE']._serialized_end=831
+  _globals['_CURATIONSERVICE']._serialized_start=963
+  _globals['_CURATIONSERVICE']._serialized_end=1292
 # @@protoc_insertion_point(module_scope)

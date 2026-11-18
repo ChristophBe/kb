@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file knowcel/curation/v1/curation.proto.
  */
 export const file_knowcel_curation_v1_curation: GenFile = /*@__PURE__*/
-  fileDesc("CiJrbm93Y2VsL2N1cmF0aW9uL3YxL2N1cmF0aW9uLnByb3RvEhNrbm93Y2VsLmN1cmF0aW9uLnYxImMKDURvY3VtZW50U2NvcmUSEwoLZG9jdW1lbnRfaWQYASABKAkSDQoFc2NvcmUYAiABKAESLgoKdXBkYXRlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAipQEKB0ZpbmRpbmcSCgoCaWQYASABKAkSLgoEa2luZBgCIAEoDjIgLmtub3djZWwuY3VyYXRpb24udjEuRmluZGluZ0tpbmQSEwoLZG9jdW1lbnRfaWQYAyABKAkSGQoRb3RoZXJfZG9jdW1lbnRfaWQYBCABKAkSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiLgoXR2V0RG9jdW1lbnRTY29yZVJlcXVlc3QSEwoLZG9jdW1lbnRfaWQYASABKAkiTQoYR2V0RG9jdW1lbnRTY29yZVJlc3BvbnNlEjEKBXNjb3JlGAEgASgLMiIua25vd2NlbC5jdXJhdGlvbi52MS5Eb2N1bWVudFNjb3JlIhUKE0xpc3RGaW5kaW5nc1JlcXVlc3QiRgoUTGlzdEZpbmRpbmdzUmVzcG9uc2USLgoIZmluZGluZ3MYASADKAsyHC5rbm93Y2VsLmN1cmF0aW9uLnYxLkZpbmRpbmcqfwoLRmluZGluZ0tpbmQSHAoYRklORElOR19LSU5EX1VOU1BFQ0lGSUVEEAASGgoWRklORElOR19LSU5EX0RVUExJQ0FURRABEhsKF0ZJTkRJTkdfS0lORF9TVVBFUlNFREVEEAISGQoVRklORElOR19LSU5EX0NPTkZMSUNUEAMy5wEKD0N1cmF0aW9uU2VydmljZRJvChBHZXREb2N1bWVudFNjb3JlEiwua25vd2NlbC5jdXJhdGlvbi52MS5HZXREb2N1bWVudFNjb3JlUmVxdWVzdBotLmtub3djZWwuY3VyYXRpb24udjEuR2V0RG9jdW1lbnRTY29yZVJlc3BvbnNlEmMKDExpc3RGaW5kaW5ncxIoLmtub3djZWwuY3VyYXRpb24udjEuTGlzdEZpbmRpbmdzUmVxdWVzdBopLmtub3djZWwuY3VyYXRpb24udjEuTGlzdEZpbmRpbmdzUmVzcG9uc2VCUVpPZ2l0aHViLmNvbS9DaHJpc3RvcGhCZS9rbm93Y2VsaXVtL21vZHVsZXMvY3VyYXRpb24vYXBpL2dvL2N1cmF0aW9udjE7Y3VyYXRpb252MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("CiJrbm93Y2VsL2N1cmF0aW9uL3YxL2N1cmF0aW9uLnByb3RvEhNrbm93Y2VsLmN1cmF0aW9uLnYxImMKDURvY3VtZW50U2NvcmUSEwoLZG9jdW1lbnRfaWQYASABKAkSDQoFc2NvcmUYAiABKAESLgoKdXBkYXRlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAipQEKB0ZpbmRpbmcSCgoCaWQYASABKAkSLgoEa2luZBgCIAEoDjIgLmtub3djZWwuY3VyYXRpb24udjEuRmluZGluZ0tpbmQSEwoLZG9jdW1lbnRfaWQYAyABKAkSGQoRb3RoZXJfZG9jdW1lbnRfaWQYBCABKAkSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiLgoXR2V0RG9jdW1lbnRTY29yZVJlcXVlc3QSEwoLZG9jdW1lbnRfaWQYASABKAkiTQoYR2V0RG9jdW1lbnRTY29yZVJlc3BvbnNlEjEKBXNjb3JlGAEgASgLMiIua25vd2NlbC5jdXJhdGlvbi52MS5Eb2N1bWVudFNjb3JlIioKElNjb3JlQ2h1bmtzUmVxdWVzdBIUCgxkb2N1bWVudF9pZHMYASADKAkiSQoTU2NvcmVDaHVua3NSZXNwb25zZRIyCgZzY29yZXMYASADKAsyIi5rbm93Y2VsLmN1cmF0aW9uLnYxLkRvY3VtZW50U2NvcmUiFQoTTGlzdEZpbmRpbmdzUmVxdWVzdCJGChRMaXN0RmluZGluZ3NSZXNwb25zZRIuCghmaW5kaW5ncxgBIAMoCzIcLmtub3djZWwuY3VyYXRpb24udjEuRmluZGluZyp/CgtGaW5kaW5nS2luZBIcChhGSU5ESU5HX0tJTkRfVU5TUEVDSUZJRUQQABIaChZGSU5ESU5HX0tJTkRfRFVQTElDQVRFEAESGwoXRklORElOR19LSU5EX1NVUEVSU0VERUQQAhIZChVGSU5ESU5HX0tJTkRfQ09ORkxJQ1QQAzLJAgoPQ3VyYXRpb25TZXJ2aWNlEm8KEEdldERvY3VtZW50U2NvcmUSLC5rbm93Y2VsLmN1cmF0aW9uLnYxLkdldERvY3VtZW50U2NvcmVSZXF1ZXN0Gi0ua25vd2NlbC5jdXJhdGlvbi52MS5HZXREb2N1bWVudFNjb3JlUmVzcG9uc2USYAoLU2NvcmVDaHVua3MSJy5rbm93Y2VsLmN1cmF0aW9uLnYxLlNjb3JlQ2h1bmtzUmVxdWVzdBooLmtub3djZWwuY3VyYXRpb24udjEuU2NvcmVDaHVua3NSZXNwb25zZRJjCgxMaXN0RmluZGluZ3MSKC5rbm93Y2VsLmN1cmF0aW9uLnYxLkxpc3RGaW5kaW5nc1JlcXVlc3QaKS5rbm93Y2VsLmN1cmF0aW9uLnYxLkxpc3RGaW5kaW5nc1Jlc3BvbnNlQlFaT2dpdGh1Yi5jb20vQ2hyaXN0b3BoQmUva25vd2NlbGl1bS9tb2R1bGVzL2N1cmF0aW9uL2FwaS9nby9jdXJhdGlvbnYxO2N1cmF0aW9udjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * DocumentScore ranks a document for retrieval: higher is more relevant.
@@ -121,6 +121,42 @@ export const GetDocumentScoreResponseSchema: GenMessage<GetDocumentScoreResponse
   messageDesc(file_knowcel_curation_v1_curation, 3);
 
 /**
+ * @generated from message knowcel.curation.v1.ScoreChunksRequest
+ */
+export type ScoreChunksRequest = Message<"knowcel.curation.v1.ScoreChunksRequest"> & {
+  /**
+   * The documents of the chunks to score, at most 100.
+   *
+   * @generated from field: repeated string document_ids = 1;
+   */
+  documentIds: string[];
+};
+
+/**
+ * Describes the message knowcel.curation.v1.ScoreChunksRequest.
+ * Use `create(ScoreChunksRequestSchema)` to create a new message.
+ */
+export const ScoreChunksRequestSchema: GenMessage<ScoreChunksRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 4);
+
+/**
+ * @generated from message knowcel.curation.v1.ScoreChunksResponse
+ */
+export type ScoreChunksResponse = Message<"knowcel.curation.v1.ScoreChunksResponse"> & {
+  /**
+   * @generated from field: repeated knowcel.curation.v1.DocumentScore scores = 1;
+   */
+  scores: DocumentScore[];
+};
+
+/**
+ * Describes the message knowcel.curation.v1.ScoreChunksResponse.
+ * Use `create(ScoreChunksResponseSchema)` to create a new message.
+ */
+export const ScoreChunksResponseSchema: GenMessage<ScoreChunksResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 5);
+
+/**
  * @generated from message knowcel.curation.v1.ListFindingsRequest
  */
 export type ListFindingsRequest = Message<"knowcel.curation.v1.ListFindingsRequest"> & {
@@ -131,7 +167,7 @@ export type ListFindingsRequest = Message<"knowcel.curation.v1.ListFindingsReque
  * Use `create(ListFindingsRequestSchema)` to create a new message.
  */
 export const ListFindingsRequestSchema: GenMessage<ListFindingsRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 4);
+  messageDesc(file_knowcel_curation_v1_curation, 6);
 
 /**
  * @generated from message knowcel.curation.v1.ListFindingsResponse
@@ -148,7 +184,7 @@ export type ListFindingsResponse = Message<"knowcel.curation.v1.ListFindingsResp
  * Use `create(ListFindingsResponseSchema)` to create a new message.
  */
 export const ListFindingsResponseSchema: GenMessage<ListFindingsResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 5);
+  messageDesc(file_knowcel_curation_v1_curation, 7);
 
 /**
  * @generated from enum knowcel.curation.v1.FindingKind
@@ -190,15 +226,15 @@ export const FindingKindSchema: GenEnum<FindingKind> = /*@__PURE__*/
 /**
  * CurationService keeps the knowledge base consistent: it scores documents by
  * relevance and freshness and reports documents that duplicate, replace or
- * contradict each other. Nothing writes scores or findings yet; restricting
- * results to documents the caller can see comes with the first writer (#81).
+ * contradict each other. Scores only cover documents the caller can see;
+ * findings are restricted the same way once they are written (#82).
  *
  * @generated from service knowcel.curation.v1.CurationService
  */
 export const CurationService: GenService<{
   /**
    * GetDocumentScore returns the current score of a document; NOT_FOUND while
-   * it has none.
+   * it has none or when the caller can't see the document.
    *
    * @generated from rpc knowcel.curation.v1.CurationService.GetDocumentScore
    */
@@ -206,6 +242,20 @@ export const CurationService: GenService<{
     methodKind: "unary";
     input: typeof GetDocumentScoreRequestSchema;
     output: typeof GetDocumentScoreResponseSchema;
+  },
+  /**
+   * ScoreChunks returns the scores of the documents the given chunks belong
+   * to, so a caller can combine them with a chunk's similarity: every chunk
+   * of a document has the document's score. Documents without a score and
+   * documents the caller can't see are left out. UNAVAILABLE while the
+   * document module is, since visibility can't be checked then.
+   *
+   * @generated from rpc knowcel.curation.v1.CurationService.ScoreChunks
+   */
+  scoreChunks: {
+    methodKind: "unary";
+    input: typeof ScoreChunksRequestSchema;
+    output: typeof ScoreChunksResponseSchema;
   },
   /**
    * ListFindings returns the open findings, newest first.

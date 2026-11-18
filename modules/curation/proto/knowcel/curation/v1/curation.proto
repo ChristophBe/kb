@@ -8,12 +8,18 @@ option go_package = "github.com/ChristophBe/knowcelium/modules/curation/api/go/c
 
 // CurationService keeps the knowledge base consistent: it scores documents by
 // relevance and freshness and reports documents that duplicate, replace or
-// contradict each other. Nothing writes scores or findings yet; restricting
-// results to documents the caller can see comes with the first writer (#81).
+// contradict each other. Scores only cover documents the caller can see;
+// findings are restricted the same way once they are written (#82).
 service CurationService {
   // GetDocumentScore returns the current score of a document; NOT_FOUND while
-  // it has none.
+  // it has none or when the caller can't see the document.
   rpc GetDocumentScore(GetDocumentScoreRequest) returns (GetDocumentScoreResponse);
+  // ScoreChunks returns the scores of the documents the given chunks belong
+  // to, so a caller can combine them with a chunk's similarity: every chunk
+  // of a document has the document's score. Documents without a score and
+  // documents the caller can't see are left out. UNAVAILABLE while the
+  // document module is, since visibility can't be checked then.
+  rpc ScoreChunks(ScoreChunksRequest) returns (ScoreChunksResponse);
   // ListFindings returns the open findings, newest first.
   rpc ListFindings(ListFindingsRequest) returns (ListFindingsResponse);
 }
@@ -52,6 +58,15 @@ message GetDocumentScoreRequest {
 
 message GetDocumentScoreResponse {
   DocumentScore score = 1;
+}
+
+message ScoreChunksRequest {
+  // The documents of the chunks to score, at most 100.
+  repeated string document_ids = 1;
+}
+
+message ScoreChunksResponse {
+  repeated DocumentScore scores = 1;
 }
 
 message ListFindingsRequest {}

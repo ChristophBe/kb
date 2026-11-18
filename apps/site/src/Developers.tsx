@@ -82,7 +82,8 @@ function Architecture() {
     <figure className="glass rounded-panel p-4 sm:p-6">
       <figcaption className="sr-only">
         Architecture: the browser talks gRPC-Web to Envoy, which routes to the document, ingestion,
-        chat, llm, iam and curation modules; they store data in Postgres with pgvector, S3 and NATS JetStream.
+        chat, llm, iam and curation modules; they store data in Postgres with pgvector, S3 and NATS
+        JetStream.
       </figcaption>
       <div aria-hidden="true" className="flex flex-col items-center gap-2 font-mono text-xs">
         <Box>browser</Box>

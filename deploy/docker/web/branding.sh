@@ -37,24 +37,25 @@ fi
 
 # Unknown keys are mistakes (a typo would silently keep the default).
 for key in $(jq -r 'keys[]' "$file"); do
-  case $key in name | logo | favicon | colors) ;; *) fail "unknown key \"$key\"" ;; esac
+  case $key in name | logo | favicon | colors | fonts) ;; *) fail "unknown key \"$key\"" ;; esac
 done
 
 if jq -e 'has("name")' "$file" >/dev/null; then
   jq -e '.name | type == "string" and length >= 1 and length <= 60' "$file" >/dev/null || fail "name must be a text of 1 to 60 characters"
 fi
 
-# asset <field> <jq path>: validates the file a field names and copies it to <web root>/branding.
+# asset <field> <jq path> <extensions>: validates the file a field names and copies it to <web root>/branding.
 asset() {
   field=$1
+  types=$3
   rel=$(jq -r "$2 // empty" "$file")
   [ -n "$rel" ] || return 0
   case $rel in
     *[!A-Za-z0-9._-]* | .*) fail "$field must be a plain file name next to the branding file, not \"$rel\""; return ;;
   esac
-  case $rel in
-    *.svg | *.png | *.ico | *.webp) ;;
-    *) fail "$field \"$rel\" must be an .svg, .png, .ico or .webp file"; return ;;
+  case " $types " in
+    *" ${rel##*.} "*) ;;
+    *) fail "$field \"$rel\" must be one of these file types: $types"; return ;;
   esac
   if [ ! -f "$dir/$rel" ]; then
     fail "$field \"$rel\" does not exist next to the branding file"
@@ -64,9 +65,37 @@ asset() {
     mkdir -p "$root/branding" && cp "$dir/$rel" "$root/branding/$rel"
   fi
 }
-asset "logo.light" ".logo.light"
-asset "logo.dark" ".logo.dark"
-asset "favicon" ".favicon"
+asset "logo.light" ".logo.light" "svg png webp"
+asset "logo.dark" ".logo.dark" "svg png webp"
+asset "favicon" ".favicon" "svg png ico"
+
+# Fonts: a family name per role, optionally with a font file (otherwise a system font) and a weight or range.
+if jq -e 'has("fonts")' "$file" >/dev/null; then
+  if ! jq -e '.fonts | type == "object"' "$file" >/dev/null; then
+    fail "fonts must be an object with heading, body and mono"
+  else
+    for role in $(jq -r '.fonts | keys[]' "$file"); do
+      case $role in
+        heading | body | mono) ;;
+        *) fail "unknown font role \"$role\" (heading, body or mono)"; continue ;;
+      esac
+      if ! jq -e ".fonts.$role | type == \"object\"" "$file" >/dev/null; then
+        fail "fonts.$role must be an object with family"
+        continue
+      fi
+      for key in $(jq -r ".fonts.$role | keys[]" "$file"); do
+        case $key in family | file | weight) ;; *) fail "unknown key \"$key\" in fonts.$role" ;; esac
+      done
+      family=$(jq -r ".fonts.$role.family // empty" "$file")
+      printf '%s' "$family" | grep -Eq '^[A-Za-z0-9][A-Za-z0-9 .-]{0,79}$' || fail "fonts.$role.family must be a font name of up to 80 letters, digits, spaces, . and -"
+      weight=$(jq -r ".fonts.$role.weight // empty" "$file")
+      if [ -n "$weight" ]; then
+        printf '%s' "$weight" | grep -Eq '^[1-9][0-9]{2}( [1-9][0-9]{2})?$' || fail "fonts.$role.weight must be a weight like 400 or a range like 100 900"
+      fi
+      asset "fonts.$role.file" ".fonts.$role.file" "woff2 woff"
+    done
+  fi
+fi
 
 for mode in light dark; do
   jq -e ".colors.$mode" "$file" >/dev/null 2>&1 || continue
@@ -93,6 +122,7 @@ if [ -n "$errors" ]; then
 fi
 
 # The config.json object: asset names become URLs under /branding.
-jq -c '{name, logo, favicon, colors}
+jq -c '{name, logo, favicon, colors, fonts}
   | (.logo, .favicon) |= (if type == "object" then map_values("/branding/" + .) elif type == "string" then "/branding/" + . else . end)
+  | (.fonts // empty | .[] | select(.file) | .file) |= "/branding/" + .
   | with_entries(select(.value != null))' "$file"

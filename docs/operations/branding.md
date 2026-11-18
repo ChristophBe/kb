@@ -25,16 +25,34 @@ Every key is optional; what you leave out keeps the Knowcelium value.
 | `name` | The product name (1 to 60 characters): the browser tab title, the header and the sign-in page. |
 | `logo.light`, `logo.dark` | The logo on light and dark backgrounds: a file next to `branding.json` (`.svg`, `.png` or `.webp`, up to 512 KiB, named with letters, digits, `.`, `_` and `-`). |
 | `favicon` | The browser tab icon (`.svg`, `.png` or `.ico`, same rules). |
+| `fonts.heading`, `fonts.body`, `fonts.mono` | The typeface of headings, of the interface and of data (code, ids). Each is `{ "family", "file", "weight" }`; see [Fonts](#fonts). |
 | `colors.light`, `colors.dark` | The accent for each mode: `accent` (buttons, links, focus) and `onAccent` (text on an accent button), as `#rrggbb`. Give both of a mode. |
 
 Hover, focus and subtle accent shades are derived from `accent`; the neutral greys, status colors and typeface stay as they are. A logo is shown at the height of the Knowcelium logo plus 40 %, so give it a transparent background and some breathing room; without a logo the product name is shown as text. The UI switches between the light and dark logo with the theme, including the user's own theme choice.
+
+## Fonts
+
+Each role takes a `family` and optionally a `file` and a `weight`:
+
+```json
+"fonts": {
+  "heading": { "family": "Acme Serif", "file": "acme-serif.woff2", "weight": "100 900" },
+  "body": { "family": "Inter" }
+}
+```
+
+- With a `file` (a `.woff2` or `.woff` next to `branding.json`, up to 512 KiB, same name rules as the logos) the web container serves the font itself; the UI loads nothing from other hosts. `weight` is the weight the file has, `400` unless you say otherwise, or a range such as `100 900` for a variable font.
+- Without a `file`, `family` names a font installed on the viewer's device (for example `Georgia`).
+- `family` is a name of up to 80 letters, digits, spaces, `.` and `-`.
+- Until the file has loaded, and wherever a glyph is missing, the text uses the Knowcelium typeface of that role (Source Serif 4, IBM Plex Sans, IBM Plex Mono), so text never disappears.
+- You need the licence to serve a font; check it before you put the file in the branding directory.
 
 ## Checks at start
 
 The web container checks the file when it starts and refuses to start with one line per problem, so a broken branding never reaches users:
 
 - the file is JSON, has only the keys above, and every file it names exists;
-- every color is `#rrggbb`;
+- every color is `#rrggbb`, and every font has a valid family, weight and file;
 - `onAccent` on `accent` and `accent` against the page background (the accent colors links and the active menu entry) each have a contrast of at least 4.5:1, the [WCAG 2.2 AA](../ux-standards.md) limit for text.
 
 ```text

@@ -7,6 +7,7 @@ export {
 export {
   applyBranding,
   type BrandColors,
+  type BrandFont,
   type Branding,
   getBranding,
   productName,

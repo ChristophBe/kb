@@ -156,6 +156,7 @@ def test_settings_are_checked() -> None:
         curation_recency_weight=0,
         curation_half_life_days=0,
         curation_replacement_penalty=2,
+        curation_rescore_interval=0,
         curation_usage_saturation=0,
     ).check(bad)
-    assert len(bad.items) == 6
+    assert len(bad.items) == 7

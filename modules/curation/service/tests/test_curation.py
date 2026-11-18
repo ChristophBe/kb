@@ -1,8 +1,9 @@
+import asyncio
 import datetime
 import uuid
 
 import pytest
-from knowcel_curation.curation import Scorer, Weights, score_document
+from knowcel_curation.curation import Scorer, Weights, rescore_periodically, score_document
 
 from tests.fakes import NOW, FakeStore
 
@@ -89,3 +90,40 @@ async def test_rescoring_an_unscored_document_does_nothing() -> None:
     store = FakeStore()
     await Scorer(store, WEIGHTS).rescore(uuid.uuid4())
     assert not store.scores
+
+
+async def test_rescoring_all_ages_every_score() -> None:
+    store = FakeStore()
+    scorer = Scorer(store, WEIGHTS)
+    ids = [uuid.uuid4() for _ in range(5)]
+    old = datetime.datetime.now(datetime.UTC) - 100 * DAY
+    for document in ids:
+        await store.save_score(document, old, 1.0)
+    await scorer.rescore_all(batch=2)
+    assert [round(store.scores[i].score, 2) for i in ids] == [0.5] * 5
+
+
+async def test_scores_are_rescored_periodically_until_stopped() -> None:
+    store = FakeStore()
+    document = uuid.uuid4()
+    await store.save_score(document, datetime.datetime.now(datetime.UTC) - 100 * DAY, 1.0)
+    stop = asyncio.Event()
+    task = asyncio.create_task(rescore_periodically(Scorer(store, WEIGHTS), 0.01, stop))
+    for _ in range(100):
+        await asyncio.sleep(0.01)
+        if store.scores[document].score < 1:
+            break
+    stop.set()
+    await asyncio.wait_for(task, 1)
+    assert store.scores[document].score == pytest.approx(0.5, abs=0.01)
+
+
+async def test_a_failing_rescore_is_retried() -> None:
+    store = FakeStore()
+    store.down = True
+    stop = asyncio.Event()
+    task = asyncio.create_task(rescore_periodically(Scorer(store, WEIGHTS), 0.01, stop))
+    await asyncio.sleep(0.05)
+    assert not task.done()
+    stop.set()
+    await asyncio.wait_for(task, 1)

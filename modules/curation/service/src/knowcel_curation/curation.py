@@ -1,6 +1,8 @@
 """The scores and findings the curation module keeps, and how documents are
 scored; db.py implements the store, peers.py the document port."""
 
+import asyncio
+import contextlib
 import datetime
 import logging
 import uuid
@@ -82,6 +84,10 @@ class CurationStore(Protocol):
 
     async def count_replacements(self, document_id: uuid.UUID) -> int: ...
 
+    async def list_scores(self, after: uuid.UUID | None, limit: int) -> list[Score]:
+        """Up to `limit` scores ordered by document id, after the one given."""
+        ...
+
     async def list_findings(self) -> list[Finding]: ...
 
 
@@ -111,6 +117,15 @@ class Scorer:
         if current:
             await self._save(document_id, current.processed_at)
 
+    async def rescore_all(self, batch: int = 200) -> None:
+        """Scores every document again: recency decays with time, so stored
+        scores go stale without it."""
+        after = None
+        while scores := await self._store.list_scores(after, batch):
+            for score in scores:
+                await self._save(score.document_id, score.processed_at)
+            after = scores[-1].document_id
+
     async def _current(self, document_id: uuid.UUID) -> Score | None:
         scores = await self._store.get_scores([document_id])
         return scores[0] if scores else None
@@ -124,3 +139,15 @@ class Scorer:
         )
         await self._store.save_score(document_id, processed_at, score)
         log.info("scored document %s: %.3f (%d replacements)", document_id, score, replacements)
+
+
+async def rescore_periodically(scorer: Scorer, interval: float, stop: asyncio.Event) -> None:
+    """Scores every document again every `interval` seconds until `stop` is set."""
+    while not stop.is_set():
+        with contextlib.suppress(TimeoutError):
+            await asyncio.wait_for(stop.wait(), interval)
+            return
+        try:
+            await scorer.rescore_all()
+        except Exception:
+            log.exception("scoring all documents again failed, retrying in %.0f s", interval)

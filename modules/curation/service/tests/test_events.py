@@ -13,9 +13,9 @@ WEIGHTS = Weights(
 
 
 class FakeDelivery:
-    def __init__(self, document_id: str) -> None:
+    def __init__(self, document_id: str, data: bytes | None = None) -> None:
         event = events_pb2.DocumentProcessed(job_id="j", document_id=document_id, chunk_count=3)
-        self.data = event.SerializeToString()
+        self.data = data if data is not None else event.SerializeToString()
         self.headers: dict[str, str] | None = None
         self.timestamp: datetime.datetime = NOW
         self.acked = False
@@ -52,3 +52,21 @@ async def test_a_database_outage_retries_later() -> None:
     await deliver(Scorer(store, WEIGHTS), msg)
     assert not msg.acked
     assert msg.naked == RETRY_DELAY
+
+
+async def test_an_unreadable_event_is_dropped() -> None:
+    store = FakeStore()
+    msg = FakeDelivery("", data=b"\xff\xff\xff")
+    await deliver(Scorer(store, WEIGHTS), msg)
+    assert msg.acked
+    assert not store.scores
+
+
+async def test_a_timestamp_without_a_zone_is_taken_as_utc() -> None:
+    store = FakeStore()
+    document = uuid.uuid4()
+    msg = FakeDelivery(str(document))
+    msg.timestamp = NOW.replace(tzinfo=None)
+    await deliver(Scorer(store, WEIGHTS), msg)
+    assert msg.acked
+    assert store.scores[document].processed_at == NOW

@@ -29,6 +29,11 @@ class FakeStore:
             1 for f in self.findings if f.document_id == document_id and f.kind == "superseded"
         )
 
+    async def list_scores(self, after: uuid.UUID | None, limit: int) -> list[Score]:
+        self._check()
+        ordered = sorted(self.scores.values(), key=lambda s: s.document_id)
+        return [s for s in ordered if after is None or s.document_id > after][:limit]
+
     async def list_findings(self) -> list[Finding]:
         self._check()
         return self.findings

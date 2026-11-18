@@ -20,6 +20,9 @@ class Settings(PlatformSettings):
     curation_usage_weight: float = 0.0
     # Days after which the recency of a document has halved.
     curation_half_life_days: float = 180
+    # Seconds between scoring all documents again, so that recency keeps
+    # decaying while no document is processed.
+    curation_rescore_interval: float = 3600
     # Factor a score is multiplied by for each document that replaces it, between 0 and 1.
     curation_replacement_penalty: float = 0.5
     # Citations at which the usage signal is at its maximum.
@@ -38,6 +41,7 @@ class Settings(PlatformSettings):
                 "curation_half_life_days", f"must be positive, got {self.curation_half_life_days}"
             )
         problems.between("curation_replacement_penalty", self.curation_replacement_penalty, 0, 1)
+        problems.at_least("curation_rescore_interval", self.curation_rescore_interval, 1)
         problems.at_least("curation_usage_saturation", self.curation_usage_saturation, 1)
 
     @property

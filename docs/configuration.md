@@ -75,6 +75,7 @@ From `Settings` in [modules/curation/service/src/knowcel_curation/config.py](../
 | `KNOWCEL_CURATION_RECENCY_WEIGHT` | `1` | Weight of a document's recency in its score. Only the ratio to the usage weight matters. |
 | `KNOWCEL_CURATION_USAGE_WEIGHT` | `0` | Weight of how often chat cites a document. 0 until chat reports its citations; a score then comes from recency and replacements alone. |
 | `KNOWCEL_CURATION_HALF_LIFE_DAYS` | `180` | Days after which the recency of a document has halved. |
+| `KNOWCEL_CURATION_RESCORE_INTERVAL` | `3600` | Seconds between scoring all documents again, so that recency keeps decaying while no document is processed. |
 | `KNOWCEL_CURATION_REPLACEMENT_PENALTY` | `0.5` | Factor a score is multiplied by for each document that replaces it, between 0 and 1. |
 | `KNOWCEL_CURATION_USAGE_SATURATION` | `20` | Citations at which the usage signal is at its maximum. |
 

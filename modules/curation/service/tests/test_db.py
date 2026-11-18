@@ -47,6 +47,26 @@ async def test_save_score_inserts_then_updates(engine: AsyncEngine) -> None:
     assert (score.document_id, score.score, score.processed_at) == (document, 0.5, T0 + DAY)
 
 
+async def test_save_score_keeps_the_newest_processing_time(engine: AsyncEngine) -> None:
+    store = SqlCurationStore(engine)
+    document = uuid.uuid4()
+    await store.save_score(document, T0 + DAY, 1.0)
+    # A stale writer's older time doesn't win; its score still does.
+    await store.save_score(document, T0, 0.4)
+    (score,) = await store.get_scores([document])
+    assert (score.score, score.processed_at) == (0.4, T0 + DAY)
+
+
+async def test_list_scores_pages_by_document_id(engine: AsyncEngine) -> None:
+    store = SqlCurationStore(engine)
+    ids = sorted(uuid.uuid4() for _ in range(5))
+    for document in ids:
+        await store.save_score(document, T0, 1.0)
+    first = await store.list_scores(None, 3)
+    rest = await store.list_scores(first[-1].document_id, 3)
+    assert [s.document_id for s in first + rest] == ids
+
+
 async def test_count_replacements_counts_superseded_findings_of_the_older_document(
     engine: AsyncEngine,
 ) -> None:

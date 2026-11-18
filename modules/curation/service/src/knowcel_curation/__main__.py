@@ -1,5 +1,4 @@
 import asyncio
-import contextlib
 import logging
 
 from knowcel.curation.v1 import curation_pb2, curation_pb2_grpc
@@ -13,7 +12,7 @@ from knowcel_platform.telemetry import setup_tracing
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from .config import Settings
-from .curation import Scorer
+from .curation import Scorer, rescore_periodically
 from .db import SqlCurationStore, migrate
 from .events import STREAM, consume
 from .peers import PeerDocuments
@@ -34,7 +33,11 @@ async def run() -> None:
     js = nc.jetstream()
     await ensure_stream(js, STREAM, ["knowcel.ingestion.>"])
     stop = asyncio.Event()
-    consumer = asyncio.create_task(consume(js, Scorer(store, settings.weights), stop))
+    scorer = Scorer(store, settings.weights)
+    background = [
+        asyncio.create_task(consume(js, scorer, stop)),
+        asyncio.create_task(rescore_periodically(scorer, settings.curation_rescore_interval, stop)),
+    ]
     try:
         # Soft dependency: while document is down, scores can't be read
         # (UNAVAILABLE); scoring processed documents doesn't need it.
@@ -49,8 +52,9 @@ async def run() -> None:
             )
     finally:
         stop.set()
-        with contextlib.suppress(asyncio.CancelledError):
-            await consumer
+        for task in await asyncio.gather(*background, return_exceptions=True):
+            if isinstance(task, Exception):
+                log.error("a background task failed", exc_info=task)
         await nc.drain()
         await engine.dispose()
 

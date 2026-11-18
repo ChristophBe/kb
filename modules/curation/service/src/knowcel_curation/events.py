@@ -6,10 +6,13 @@ import logging
 import uuid
 from typing import Protocol
 
+from google.protobuf.message import DecodeError
 from knowcel.ingestion.v1 import events_pb2
 from knowcel_platform.nats import receive
+from nats.errors import Error as NatsError
 from nats.js import JetStreamContext
 from nats.js.api import AckPolicy, ConsumerConfig
+from nats.js.errors import Error as JetStreamError
 from sqlalchemy.exc import SQLAlchemyError
 
 from .curation import Scorer
@@ -19,6 +22,8 @@ SUBJECT_PROCESSED = "knowcel.ingestion.processed"
 CONSUMER = "curation-service"
 # Seconds before a delivery is retried after a failure.
 RETRY_DELAY = 30
+# Deliveries of one event, after which JetStream drops it.
+MAX_DELIVER = 10
 
 log = logging.getLogger("knowcel_curation")
 
@@ -37,16 +42,19 @@ class Delivery(Protocol):
 async def deliver(scorer: Scorer, msg: Delivery) -> None:
     """Scores the document of one processed event: ack when done, NAK with a
     delay to retry while the database fails."""
-    event = events_pb2.DocumentProcessed.FromString(msg.data)
     try:
+        event = events_pb2.DocumentProcessed.FromString(msg.data)
         document_id = uuid.UUID(event.document_id)
-    except ValueError:
-        log.warning("ignoring a processed event with the document id %r", event.document_id)
+    except (DecodeError, ValueError):
+        log.warning("ignoring a processed event that can't be read")
         await msg.ack()
         return
+    processed_at = msg.timestamp
+    if processed_at.tzinfo is None:
+        processed_at = processed_at.replace(tzinfo=datetime.UTC)
     try:
         with receive(SUBJECT_PROCESSED, msg.headers):
-            await scorer.on_processed(document_id, msg.timestamp)
+            await scorer.on_processed(document_id, processed_at)
     except SQLAlchemyError:
         log.exception("scoring document %s failed, retrying", document_id)
         await msg.nak(delay=RETRY_DELAY)
@@ -80,6 +88,7 @@ async def consume(js: JetStreamContext, scorer: Scorer, stop: asyncio.Event) -> 
             durable_name=CONSUMER,
             filter_subject=SUBJECT_PROCESSED,
             ack_policy=AckPolicy.EXPLICIT,
+            max_deliver=MAX_DELIVER,
         ),
     )
     sub = await js.pull_subscribe_bind(durable=CONSUMER, stream=STREAM)
@@ -88,6 +97,11 @@ async def consume(js: JetStreamContext, scorer: Scorer, stop: asyncio.Event) -> 
         try:
             messages = await sub.fetch(10, timeout=2)
         except TimeoutError:
+            continue
+        except (NatsError, JetStreamError):
+            # NATS is away or the consumer was recreated; try again shortly.
+            log.exception("fetching processed events failed")
+            await asyncio.sleep(RETRY_DELAY / 6)
             continue
         for msg in messages:
             try:

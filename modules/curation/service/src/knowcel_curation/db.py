@@ -53,12 +53,31 @@ class SqlCurationStore:
     async def save_score(
         self, document_id: uuid.UUID, processed_at: datetime.datetime, score: float
     ) -> None:
-        values = {"processed_at": processed_at, "score": score, "updated_at": func.now()}
-        statement = insert(document_scores).values(document_id=document_id, **values)
+        statement = insert(document_scores).values(
+            document_id=document_id, processed_at=processed_at, score=score
+        )
         async with self._engine.begin() as conn:
             await conn.execute(
-                statement.on_conflict_do_update(index_elements=["document_id"], set_=values)
+                statement.on_conflict_do_update(
+                    index_elements=["document_id"],
+                    set_={
+                        # Never older than what a concurrent writer stored.
+                        "processed_at": func.greatest(
+                            document_scores.c.processed_at, statement.excluded.processed_at
+                        ),
+                        "score": statement.excluded.score,
+                        "updated_at": func.now(),
+                    },
+                )
             )
+
+    async def list_scores(self, after: uuid.UUID | None, limit: int) -> list[Score]:
+        query = select(document_scores).order_by(document_scores.c.document_id).limit(limit)
+        if after is not None:
+            query = query.where(document_scores.c.document_id > after)
+        async with self._engine.connect() as conn:
+            rows = (await conn.execute(query)).mappings().all()
+        return [Score(**r) for r in rows]
 
     async def count_replacements(self, document_id: uuid.UUID) -> int:
         query = (

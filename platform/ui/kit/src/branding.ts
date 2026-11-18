@@ -4,6 +4,15 @@ export interface Branding {
   logo?: { light?: string; dark?: string };
   favicon?: string;
   colors?: { light?: BrandColors; dark?: BrandColors };
+  fonts?: { heading?: BrandFont; body?: BrandFont; mono?: BrandFont };
+}
+
+/** A typeface: a font file served by the deployment (else a system font) under a family name. */
+export interface BrandFont {
+  family: string;
+  file?: string;
+  /** A weight such as "400" (the default) or a range such as "100 900" for a variable font. */
+  weight?: string;
 }
 
 export interface BrandColors {
@@ -13,6 +22,25 @@ export interface BrandColors {
 
 const DEFAULT_NAME = "Knowcelium";
 const STYLE_ID = "knowcel-branding";
+
+/** What follows a branded family: the Knowcelium stacks of theme.css. */
+const FALLBACKS = {
+  heading: {
+    token: "--font-serif",
+    stack: "ui-serif, Georgia, serif",
+    default: '"Source Serif 4 Variable"',
+  },
+  body: {
+    token: "--font-sans",
+    stack: "ui-sans-serif, system-ui, sans-serif",
+    default: '"IBM Plex Sans Variable"',
+  },
+  mono: {
+    token: "--font-mono",
+    stack: 'ui-monospace, "SF Mono", Menlo, monospace',
+    default: '"IBM Plex Mono"',
+  },
+} as const;
 
 let current: Branding = {};
 
@@ -43,6 +71,24 @@ function colorRules({ light, dark }: NonNullable<Branding["colors"]>): string {
 }`;
 }
 
+/** `@font-face` rules for the font files and the family tokens, each falling back to the Knowcelium typeface. */
+function fontRules(fonts: NonNullable<Branding["fonts"]>): string[] {
+  const rules: string[] = [];
+  const tokens: string[] = [];
+  for (const [role, font] of Object.entries(fonts) as [keyof typeof FALLBACKS, BrandFont][]) {
+    const family = `"${font.family.replace(/["\\]/g, "")}"`;
+    if (font.file) {
+      const format = font.file.endsWith(".woff2") ? "woff2" : "woff";
+      rules.push(
+        `@font-face { font-family: ${family}; src: url("${font.file}") format("${format}"); font-weight: ${font.weight ?? "400"}; font-display: swap; }`,
+      );
+    }
+    const { token, default: base, stack } = FALLBACKS[role];
+    tokens.push(`  ${token}: ${family}, ${base}, ${stack};`);
+  }
+  return [...rules, `:root:root {\n${tokens.join("\n")}\n}`];
+}
+
 function setFavicon(href: string | undefined) {
   if (!href) return;
   let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
@@ -56,17 +102,21 @@ function setFavicon(href: string | undefined) {
 }
 
 /**
- * Applies a deployment's branding before the first render: the colour tokens,
- * the favicon and the tab title. `Logo` and `useDocumentTitle` read the rest.
+ * Applies a deployment's branding before the first render: the colour and font
+ * tokens, the favicon and the tab title. `Logo` and `useDocumentTitle` read the rest.
  * Without branding the theme stays as it is.
  */
 export function applyBranding(branding: Branding | undefined) {
   current = branding ?? {};
   document.getElementById(STYLE_ID)?.remove();
-  if (current.colors?.light || current.colors?.dark) {
+  const rules: string[] = [];
+  if (current.colors?.light || current.colors?.dark) rules.push(colorRules(current.colors));
+  if (current.fonts && Object.keys(current.fonts).length > 0)
+    rules.push(...fontRules(current.fonts));
+  if (rules.length > 0) {
     const style = document.createElement("style");
     style.id = STYLE_ID;
-    style.textContent = colorRules(current.colors);
+    style.textContent = rules.join("\n");
     document.head.append(style);
   }
   setFavicon(current.favicon);

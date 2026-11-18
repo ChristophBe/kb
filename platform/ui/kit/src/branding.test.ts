@@ -73,3 +73,48 @@ describe("applyBranding", () => {
     expect(link?.getAttribute("href")).toBe("/branding/favicon.png");
   });
 });
+
+describe("applyBranding fonts", () => {
+  it("leaves the typefaces alone without fonts", () => {
+    applyBranding({ name: "Acme" });
+    expect(document.getElementById("knowcel-branding")).toBeNull();
+  });
+
+  it("loads a font file and puts its family before the Knowcelium typeface", () => {
+    applyBranding({
+      fonts: { heading: { family: "Acme Serif", file: "/branding/acme.woff2", weight: "100 900" } },
+    });
+    expect(style()).toContain(
+      '@font-face { font-family: "Acme Serif"; src: url("/branding/acme.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }',
+    );
+    expect(style()).toContain(
+      '--font-serif: "Acme Serif", "Source Serif 4 Variable", ui-serif, Georgia, serif;',
+    );
+    expect(style()).not.toContain("--font-sans");
+  });
+
+  it("uses a system font without a file and weight 400 by default", () => {
+    applyBranding({
+      fonts: { body: { family: "Inter" }, mono: { family: "Acme Mono", file: "/branding/m.woff" } },
+    });
+    expect(style()).toContain('--font-sans: "Inter", "IBM Plex Sans Variable"');
+    expect(style()).toContain('--font-mono: "Acme Mono", "IBM Plex Mono"');
+    expect(style()).toContain('format("woff"); font-weight: 400;');
+    expect(style()).not.toContain('font-family: "Inter"; src');
+  });
+
+  it("drops quotes and backslashes from a family name", () => {
+    applyBranding({ fonts: { body: { family: 'In"ter\\' } } });
+    expect(style()).toContain('--font-sans: "Inter",');
+  });
+
+  it("combines with the colours in one style element", () => {
+    applyBranding({
+      colors: { light: { accent: "#111111", onAccent: "#ffffff" } },
+      fonts: { body: { family: "Inter" } },
+    });
+    expect(document.querySelectorAll("#knowcel-branding")).toHaveLength(1);
+    expect(style()).toContain("--color-accent");
+    expect(style()).toContain("--font-sans");
+  });
+});

@@ -26,5 +26,7 @@ services:
     ports: !reset []
   iam-service:
     ports: !reset []
+  curation-service:
+    ports: !reset []
   ingestion-worker:
     ports: !reset []

@@ -62,6 +62,17 @@ From `Settings` in [modules/chat/service/src/knowcel_chat/config.py](../modules/
 | `KNOWCEL_MANUAL_TOP_K` | `2` | Manual sections an answer may cite on top of the document passages. |
 | `KNOWCEL_MANUAL_MIN_SCORE` | `0.65` | Cosine similarity a manual section needs to be cited: with nomic-embed-text, how-to questions score about 0.7-0.8 and unrelated ones below 0.56. |
 
+## curation-service
+
+From `Settings` in [modules/curation/service/src/knowcel_curation/config.py](../modules/curation/service/src/knowcel_curation/config.py), in addition to the settings every Python component reads.
+
+| Variable | Default | Description |
+|---|---|---|
+| `KNOWCEL_GRPC_PORT` | `9005` | Serves the gRPC API; each component defaults it to the port in its module.yaml (0 for workers, which serve none). |
+| `KNOWCEL_METRICS_PORT` | `9107` | Serves Prometheus metrics at /metrics (knowcel_platform.metrics); like KNOWCEL_GRPC_PORT, each component defaults it to the port in its module.yaml. |
+| `KNOWCEL_DATABASE_URL` | `postgresql+asyncpg://kb:kb@localhost:5432/kb` | The Postgres database holding the curation schema (scores and findings), as an SQLAlchemy URL. |
+| `KNOWCEL_IAM_ADDR` | `localhost:9006` | The iam module (host:port), which tells which documents a caller can see. While it is down, only the caller's own are covered. |
+
 ## document-service
 
 From `Config` in [modules/document/service/cmd/document-service](../modules/document/service/cmd/document-service/main.go), in addition to the settings every Go service reads.

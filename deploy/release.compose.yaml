@@ -6,6 +6,9 @@ services:
   chat-service:
     image: ghcr.io/christophbe/knowcelium-chat-service:${KNOWCEL_VERSION:?set KNOWCEL_VERSION to a released version, e.g. 0.3.1}
     build: !reset null
+  curation-service:
+    image: ghcr.io/christophbe/knowcelium-curation-service:${KNOWCEL_VERSION:?set KNOWCEL_VERSION to a released version, e.g. 0.3.1}
+    build: !reset null
   document-service:
     image: ghcr.io/christophbe/knowcelium-document-service:${KNOWCEL_VERSION:?set KNOWCEL_VERSION to a released version, e.g. 0.3.1}
     build: !reset null

@@ -25,6 +25,7 @@ members = [
     "platform/api/python",
     "modules/*/api/python",
     "modules/chat/service",
+    "modules/curation/service",
     "modules/ingestion/worker",
     "modules/llm/service",
 ]

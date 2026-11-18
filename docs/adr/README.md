@@ -20,3 +20,4 @@ Significant decisions are recorded here, one file per decision, using [template.
 | [0011](0011-helm-chart-generated-from-module-manifests.md) | Deploy to Kubernetes with one Helm chart generated from the module manifests | Accepted |
 | [0012](0012-prometheus-metrics-with-native-clients.md) | Expose Prometheus metrics with the native client libraries | Accepted |
 | [0013](0013-iam-module.md) | Keep users, teams and roles in an `iam` module | Accepted |
+| [0014](0014-curation-module.md) | Keep relevance and consistency in a `curation` module | Accepted |

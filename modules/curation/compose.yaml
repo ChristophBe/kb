@@ -1,0 +1,26 @@
+services:
+  curation-service:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/python.Dockerfile
+      args: { PACKAGE: knowcel-curation-service, KNOWCEL_VERSION: "${KNOWCEL_VERSION:-dev}" }
+    environment:
+      KNOWCEL_LOG_LEVEL: ${KNOWCEL_LOG_LEVEL:-INFO}
+      KNOWCEL_OTEL_ENDPOINT: ${KNOWCEL_OTEL_ENDPOINT:-}
+      KNOWCEL_DATABASE_URL: postgresql+asyncpg://kb:kb@postgres:5432/kb
+      # Soft dependency: no depends_on on iam-service; while it is down, only the caller's own documents are covered.
+      KNOWCEL_IAM_ADDR: iam-service:9006
+    # gRPC and Prometheus /metrics (docs/metrics.md).
+    ports: ["9005:9005", "9107:9107"]
+    # Infrastructure only: other modules are soft dependencies (docs/architecture/module.md).
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-m", "knowcel_platform.healthcheck", "9005"]
+      interval: 2s
+      retries: 30
+    develop:
+      watch:
+        - { action: sync+restart, path: ./service/src, target: /app/modules/curation/service/src }
+        - { action: sync+restart, path: ./migrations, target: /app/modules/curation/migrations }
+        - { action: sync+restart, path: ../../platform/python/src, target: /app/platform/python/src }

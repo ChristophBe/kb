@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.13"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -12,6 +12,8 @@ members = [
     "knowcel-chat-api",
     "knowcel-chat-service",
     "knowcel-common-api",
+    "knowcel-curation-api",
+    "knowcel-curation-service",
     "knowcel-document-api",
     "knowcel-iam-api",
     "knowcel-ingestion-api",
@@ -1029,6 +1031,50 @@ dependencies = [
 requires-dist = [
     { name = "grpcio", specifier = ">=1.85.0" },
     { name = "protobuf", specifier = ">=7.35.1,<8" },
+]
+
+[[package]]
+name = "knowcel-curation-api"
+version = "0.1.0"
+source = { editable = "modules/curation/api/python" }
+dependencies = [
+    { name = "grpcio" },
+    { name = "knowcel-common-api" },
+    { name = "protobuf" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "grpcio", specifier = ">=1.85.0" },
+    { name = "knowcel-common-api", editable = "platform/api/python" },
+    { name = "protobuf", specifier = ">=7.35.1,<8" },
+]
+
+[[package]]
+name = "knowcel-curation-service"
+version = "0.1.0"
+source = { editable = "modules/curation/service" }
+dependencies = [
+    { name = "alembic" },
+    { name = "asyncpg" },
+    { name = "knowcel-curation-api" },
+    { name = "knowcel-document-api" },
+    { name = "knowcel-iam-api" },
+    { name = "knowcel-llm-api" },
+    { name = "knowcel-platform" },
+    { name = "sqlalchemy", extra = ["asyncio"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "alembic", specifier = ">=1.16" },
+    { name = "asyncpg", specifier = ">=0.30" },
+    { name = "knowcel-curation-api", editable = "modules/curation/api/python" },
+    { name = "knowcel-document-api", editable = "modules/document/api/python" },
+    { name = "knowcel-iam-api", editable = "modules/iam/api/python" },
+    { name = "knowcel-llm-api", editable = "modules/llm/api/python" },
+    { name = "knowcel-platform", editable = "platform/python" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.40" },
 ]
 
 [[package]]

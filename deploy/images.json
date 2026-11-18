@@ -8,6 +8,12 @@
       "build_args": "PACKAGE=knowcel-chat-service"
     },
     {
+      "component": "curation-service",
+      "image": "ghcr.io/christophbe/knowcelium-curation-service",
+      "dockerfile": "deploy/docker/python.Dockerfile",
+      "build_args": "PACKAGE=knowcel-curation-service"
+    },
+    {
       "component": "document-service",
       "image": "ghcr.io/christophbe/knowcelium-document-service",
       "dockerfile": "deploy/docker/go.Dockerfile",

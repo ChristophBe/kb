@@ -13,6 +13,7 @@ body:
       description: The module or area this belongs to (matches the `module:*` / `area:*` labels).
       options:
         - chat
+        - curation
         - document
         - iam
         - ingestion

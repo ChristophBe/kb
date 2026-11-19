@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from knowcel.chat.v1 import chat_pb2, chat_pb2_grpc
+from knowcel.curation.v1 import curation_pb2_grpc
 from knowcel.document.v1 import document_pb2_grpc
 from knowcel.iam.v1 import iam_pb2_grpc
 from knowcel.llm.v1 import llm_pb2_grpc
@@ -17,7 +18,7 @@ from .chat import Chat
 from .config import Settings
 from .db import SqlRepository, migrate
 from .manual import Manual, load_sections
-from .peers import PeerEmbedder, PeerGenerator, PeerReranker, PeerRetriever
+from .peers import PeerCuration, PeerEmbedder, PeerGenerator, PeerReranker, PeerRetriever
 from .server import ChatServicer
 
 log = logging.getLogger("knowcel_chat")
@@ -36,6 +37,7 @@ async def run() -> None:
             channel(settings.document_addr) as doc_ch,
             channel(settings.llm_addr) as llm_ch,
             channel(settings.iam_addr) as iam_ch,
+            channel(settings.curation_addr) as curation_ch,
         ):
             repo = SqlRepository(engine)
             documents = document_pb2_grpc.DocumentServiceStub(doc_ch)
@@ -48,6 +50,13 @@ async def run() -> None:
             # In the background: chat answers without the manual until the llm
             # module has embedded it.
             loading = asyncio.create_task(manual.load(PeerEmbedder(llm)))
+            # Soft dependency: while curation is down, passages are ranked by
+            # similarity alone.
+            curation = (
+                PeerCuration(curation_pb2_grpc.CurationServiceStub(curation_ch))
+                if settings.curation_enabled
+                else None
+            )
             reranker = PeerReranker(llm, settings.rerank_model) if settings.rerank_enabled else None
             retriever = PeerRetriever(
                 documents,
@@ -56,6 +65,8 @@ async def run() -> None:
                 settings.rag_min_score,
                 reranker,
                 settings.rerank_candidates,
+                curation,
+                settings.curation_weight,
             )
             chat = Chat(settings, repo, retriever, PeerGenerator(llm))
             servicer = ChatServicer(repo, chat)

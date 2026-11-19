@@ -35,7 +35,6 @@ type = forbidden
 source_modules =
     knowcel_chat
 forbidden_modules =
-    knowcel.curation
     knowcel_curation
     knowcel.ingestion
     knowcel_ingestion_worker

@@ -4,10 +4,13 @@ gRPC statuses end here: callers only see PeerError."""
 import contextlib
 import logging
 import uuid
-from collections.abc import AsyncGenerator, Iterator, Sequence
+from collections.abc import AsyncGenerator, Collection, Iterator, Sequence
+from dataclasses import dataclass
+from typing import Any
 
 import grpc
 from knowcel.chat.v1 import chat_pb2
+from knowcel.curation.v1 import curation_pb2, curation_pb2_grpc
 from knowcel.document.v1 import document_pb2, document_pb2_grpc
 from knowcel.llm.v1 import llm_pb2, llm_pb2_grpc
 
@@ -64,13 +67,66 @@ class PeerReranker:
         return list(ranked.scores)
 
 
+# Documents asked about in one ScoreChunks call, the most it takes.
+_SCORE_BATCH = 100
+# With curation, this many times the passages wanted are fetched, as some
+# belong to documents that are left out.
+_CURATION_OVERFETCH = 2
+
+
+@dataclass(frozen=True)
+class CurationScore:
+    """What the curation module says about a document."""
+
+    score: float
+    # Deprecated or archived: not to be cited.
+    excluded: bool
+    # A newer version, or a confirmed replacement, the caller can read exists.
+    replaced: bool
+
+
+class PeerCuration:
+    """The curation module's view of documents. It only refines retrieval, so
+    a failure is logged and answered with None, and the caller carries on with
+    the similarity order."""
+
+    def __init__(self, curation: curation_pb2_grpc.CurationServiceStub) -> None:
+        self._curation = curation
+
+    async def scores(self, document_ids: Collection[str]) -> dict[str, CurationScore] | None:
+        """The scores of those of the documents that have one and that the
+        caller can see; None when curation can't be asked."""
+        ids = sorted(set(document_ids))
+        found: dict[str, CurationScore] = {}
+        try:
+            for start in range(0, len(ids), _SCORE_BATCH):
+                batch = curation_pb2.ScoreChunksRequest(
+                    document_ids=ids[start : start + _SCORE_BATCH]
+                )
+                response = await self._curation.ScoreChunks(batch)
+                for s in response.scores:
+                    found[s.document_id] = CurationScore(s.score, s.excluded, s.replaced)
+        except grpc.aio.AioRpcError as err:
+            log.warning(
+                "curation unavailable, ranking by similarity alone: %s %s",
+                err.code(),
+                err.details(),
+            )
+            return None
+        return found
+
+
 class PeerRetriever:
     """Finds document passages and, with a manual, the manual sections that
     match the question; the question is embedded once for both. Passages
     scoring below `min_score` are unrelated to the question and left out, unless
-    they contain its words. With
-    a `reranker`, `candidates` passages are fetched and the `limit` best by the
-    reranker's rating are kept; if it fails, the best by similarity are."""
+    they contain its words. With `curation`, passages of documents that are
+    replaced, deprecated or archived are left out, and a passage ranks down
+    with its document's score (by up to `curation_weight`); without an answer
+    from curation the order stays as found. With a `reranker`, `candidates`
+    passages are fetched and the `limit` best by the reranker's rating are
+    kept (passages rated alike keep the order before); if it fails, the best by
+    the order before are."""
 
     def __init__(
         self,
@@ -80,6 +136,8 @@ class PeerRetriever:
         min_score: float = 0.0,
         reranker: PeerReranker | None = None,
         candidates: int = 0,
+        curation: PeerCuration | None = None,
+        curation_weight: float = 0.0,
     ) -> None:
         self._documents = documents
         self._embedder = PeerEmbedder(llm)
@@ -87,6 +145,8 @@ class PeerRetriever:
         self._min_score = min_score
         self._reranker = reranker
         self._candidates = candidates
+        self._curation = curation
+        self._curation_weight = curation_weight
 
     async def retrieve(
         self,
@@ -96,6 +156,9 @@ class PeerRetriever:
         team_ids: Sequence[uuid.UUID] = (),
     ) -> list[chat_pb2.Citation]:
         (embedding,) = await self._embedder.embed([query])
+        fetch = max(limit, self._candidates) if self._reranker else limit
+        if self._curation:
+            fetch = max(fetch, limit * _CURATION_OVERFETCH)
         with _peer_errors(Peer.DOCUMENT):
             result = await self._documents.SearchChunks(
                 document_pb2.SearchChunksRequest(
@@ -106,7 +169,7 @@ class PeerRetriever:
                     query=query,
                     # Visibility is filtered by the document module, so only
                     # passages the caller may read reach the reranker.
-                    limit=max(limit, self._candidates) if self._reranker else limit,
+                    limit=fetch,
                     document_ids=[str(i) for i in document_ids],
                     team_ids=[str(i) for i in team_ids],
                 )
@@ -114,6 +177,7 @@ class PeerRetriever:
         # `min_score` is the similarity; a passage that has the question's words
         # stays even when it is semantically far, as exact terms are.
         found = [r for r in result.results if r.keyword_match or r.score >= self._min_score]
+        found = await self._curate(found)
         documents = [
             chat_pb2.Citation(
                 document_id=r.chunk.document_id,
@@ -131,6 +195,31 @@ class PeerRetriever:
         documents = documents[:limit]
         manual = self._manual.search(embedding) if self._manual else []
         return merge_sources(documents, manual)
+
+    async def _curate(self, found: list[Any]) -> list[Any]:
+        """Leaves out the passages of documents curation says not to cite and
+        ranks the rest down by their document's score. The order of the
+        document module is by rank, not by similarity, so a passage moves back
+        by the factor its document's score takes off, not by a recomputed score."""
+        if self._curation is None or not found:
+            return found
+        scores = await self._curation.scores({r.chunk.document_id for r in found})
+        if scores is None:
+            return found
+        kept = [
+            (position, r)
+            for position, r in enumerate(found)
+            if not ((s := scores.get(r.chunk.document_id)) and (s.excluded or s.replaced))
+        ]
+
+        def key(item: tuple[int, Any]) -> float:
+            position, r = item
+            s = scores.get(r.chunk.document_id)
+            # A document without a score is new: it ranks as it was found.
+            factor = 1 - self._curation_weight * (1 - s.score) if s else 1
+            return (position + 1) / max(factor, 1e-6)
+
+        return [r for _, r in sorted(kept, key=key)]
 
     async def _rerank(
         self, query: str, passages: list[chat_pb2.Citation], texts: list[str]

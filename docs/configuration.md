@@ -50,6 +50,9 @@ From `Settings` in [modules/chat/service/src/knowcel_chat/config.py](../modules/
 | `KNOWCEL_DOCUMENT_ADDR` | `localhost:9001` | The document module (host:port), which retrieves the passages. |
 | `KNOWCEL_LLM_ADDR` | `localhost:9004` | The llm module (host:port), which embeds questions and generates answers. |
 | `KNOWCEL_IAM_ADDR` | `localhost:9006` | The iam module (host:port), which tells the teams of a caller. While it is down, conversations can't be limited to teams; everything else works. |
+| `KNOWCEL_CURATION_ADDR` | `localhost:9005` | The curation module (host:port), which scores the documents of retrieved passages. While it is down, passages are ranked by similarity alone. |
+| `KNOWCEL_CURATION_ENABLED` | `true` | Use curation scores in retrieval: passages of documents that are replaced by a newer one, deprecated or archived are left out, and the rest are ranked down by their document's score. Off ranks by similarity alone. |
+| `KNOWCEL_CURATION_WEIGHT` | `0.3` | How far a document's curation score can rank its passages down, between 0 (not at all) and 1 (a score of 0 puts a passage at the end). |
 | `KNOWCEL_RAG_TOP_K` | `5` | Number of chunks retrieved for grounding an answer. |
 | `KNOWCEL_RAG_MIN_SCORE` | `0.5` | Cosine similarity (-1 to 1) a chunk needs to count as related to the question. Measured with nomic-embed-text: the passage answering a question scores about 0.67-0.84, the best chunk for an unrelated question at most 0.44. Tune it together with the embedding model. |
 | `KNOWCEL_RERANK_ENABLED` | `true` | Rerank the retrieved chunks with the llm module's chat model: more candidates are fetched, rated against the question, and the best KNOWCEL_RAG_TOP_K are kept. Costs one extra model call per question; if it fails, the answer uses the similarity order. |

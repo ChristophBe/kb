@@ -7,6 +7,7 @@ dependencies = [
     "alembic>=1.16",
     "asyncpg>=0.30",
     "knowcel-chat-api",
+    "knowcel-curation-api",
     "knowcel-document-api",
     "knowcel-iam-api",
     "knowcel-llm-api",
@@ -19,6 +20,7 @@ knowcel-chat-service = "knowcel_chat.__main__:main"
 
 [tool.uv.sources]
 knowcel-chat-api = { workspace = true }
+knowcel-curation-api = { workspace = true }
 knowcel-document-api = { workspace = true }
 knowcel-iam-api = { workspace = true }
 knowcel-llm-api = { workspace = true }

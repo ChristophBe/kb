@@ -75,6 +75,8 @@
                       "!@knowcel/common-api/**",
                       "!@knowcel/chat-api",
                       "!@knowcel/chat-api/**",
+                      "!@knowcel/curation-api",
+                      "!@knowcel/curation-api/**",
                       "!@knowcel/document-api",
                       "!@knowcel/document-api/**",
                       "!@knowcel/iam-api",

@@ -208,7 +208,7 @@ class FakeLlm:
         return llm_pb2.EmbedResponse(embeddings=[llm_pb2.Embedding(values=[0.1, 0.2])])
 
     async def _gen(self):
-        for word in ["Paris", " is", " the", " capital", "."]:
+        for word in ["Paris", " is", " the", " capital", " [1]."]:
             yield llm_pb2.GenerateResponse(delta=word)
         yield llm_pb2.GenerateResponse(done=True)
 
@@ -299,7 +299,7 @@ async def test_stream_chat_with_knowledge_base(env: Env) -> None:
     assert set(kinds[1:-1]) == {"delta"}
     events = [e for e in events if e.WhichOneof("event") != "progress"]
     assert events[0].citations.items[0].document_title == "geo.md"
-    assert events[-1].message.content == "Paris is the capital."
+    assert events[-1].message.content == "Paris is the capital [1]."
     assert events[-1].message.citations[0].document_id == "d1"
     assert events[-1].message.status == chat_pb2.MESSAGE_STATUS_COMPLETE
     assert "Paris is in France." in llm.prompts[0][0].content  # grounded system prompt
@@ -337,7 +337,7 @@ class DyingLlm(FakeLlm):
 
     async def _gen(self):
         yield llm_pb2.GenerateResponse(delta="Paris")
-        yield llm_pb2.GenerateResponse(delta=" is")
+        yield llm_pb2.GenerateResponse(delta=" is [1]")
         raise unavailable("connection reset")
 
 
@@ -401,11 +401,11 @@ async def test_an_llm_failure_mid_answer_keeps_the_partial_answer() -> None:
 
     kinds = kinds_of(events)
     assert kinds == ["citations", "delta", "delta", "error", "message"]
-    assert events[-1].message.content == "Paris is"
+    assert events[-1].message.content == "Paris is [1]"
     assert events[-1].message.status == chat_pb2.MESSAGE_STATUS_FAILED
     assert events[-1].message.citations[0].document_id == "d1"
     saved = got.messages[-1]
-    assert (saved.content, saved.status) == ("Paris is", chat_pb2.MESSAGE_STATUS_FAILED)
+    assert (saved.content, saved.status) == ("Paris is [1]", chat_pb2.MESSAGE_STATUS_FAILED)
 
 
 class GatedLlm(FakeLlm):
@@ -500,7 +500,7 @@ async def test_stop_chat_stops_generation_and_keeps_the_answer_as_stopped() -> N
         (chat_pb2.MESSAGE_ROLE_USER, "Hi", chat_pb2.MESSAGE_STATUS_COMPLETE),
         (chat_pb2.MESSAGE_ROLE_ASSISTANT, "Paris is", chat_pb2.MESSAGE_STATUS_STOPPED),
     ]
-    assert got.messages[1].citations[0].document_id == "d1"
+    assert not got.messages[1].citations
     # A stopped answer is not news.
     assert not repo.conversations[uuid.UUID(conv.id)].completed_unseen
 

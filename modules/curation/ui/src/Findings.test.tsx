@@ -2,6 +2,7 @@ import { Code, ConnectError, createRouterTransport } from "@connectrpc/connect";
 import {
   CurationService,
   FindingKind,
+  LifecycleState,
   Resolution,
 } from "@knowcel/curation-api/knowcel/curation/v1/curation_pb";
 import { renderModule } from "@knowcel/module-sdk/testing";
@@ -314,5 +315,66 @@ describe("Findings", () => {
     // The other finding is not held back by the first.
     await waitFor(() => expect(resolveFinding).toHaveBeenCalledTimes(2));
     finish();
+  });
+
+  it("shows the approval state of a finding's document and narrows the list by it and by review", async () => {
+    const transport = createRouterTransport(({ service }) =>
+      service(CurationService, {
+        listFindings: () => ({ findings: [version, reminder], nextPageToken: "" }),
+        scoreChunks: () => ({
+          scores: [
+            {
+              documentId: "d1",
+              score: 0.5,
+              lifecycle: { state: LifecycleState.DEPRECATED, owner: "alice" },
+            },
+            {
+              documentId: "d3",
+              score: 0.9,
+              lifecycle: { state: LifecycleState.APPROVED, owner: "alice" },
+            },
+          ],
+        }),
+      }),
+    );
+    renderModule(curation, transport);
+    const list = await screen.findByRole("list", { name: "Findings" });
+    expect(await within(list).findByText("Deprecated")).toBeTruthy();
+    expect(within(list).getByText("Approved")).toBeTruthy();
+
+    // Review due only: the reminder stays.
+    fireEvent.click(screen.getByRole("checkbox", { name: "Review due only" }));
+    await waitFor(() => expect(screen.queryByText("Newer version of Policy v2 exists")).toBeNull());
+    expect(screen.getByText("Review due for Handbook")).toBeTruthy();
+
+    // And only for documents that are deprecated: nothing is left.
+    fireEvent.change(screen.getByRole("combobox", { name: "Approval state" }), {
+      target: { value: String(LifecycleState.DEPRECATED) },
+    });
+    expect(await screen.findByText("No findings match these filters.")).toBeTruthy();
+
+    // Back to review due only, for a state with a reminder.
+    fireEvent.change(screen.getByRole("combobox", { name: "Approval state" }), {
+      target: { value: String(LifecycleState.APPROVED) },
+    });
+    expect(await screen.findByText("Review due for Handbook")).toBeTruthy();
+
+    // Without findings due for review the page says no document needs one.
+    fireEvent.change(screen.getByRole("combobox", { name: "Approval state" }), {
+      target: { value: String(LifecycleState.UNSPECIFIED) },
+    });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Review due only" }));
+    expect(await screen.findByText("Newer version of Policy v2 exists")).toBeTruthy();
+  });
+
+  it("says no document needs review, and shows everything again on request", async () => {
+    const { transport } = server([version]);
+    renderModule(curation, transport);
+    await screen.findByText("Newer version of Policy v2 exists");
+    fireEvent.click(screen.getByRole("checkbox", { name: "Review due only" }));
+    expect(await screen.findByText("No documents need review.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Show all findings" }));
+    expect(await screen.findByText("Newer version of Policy v2 exists")).toBeTruthy();
+    expect(screen.queryByText("No findings. Your documents look consistent.")).toBeNull();
   });
 });

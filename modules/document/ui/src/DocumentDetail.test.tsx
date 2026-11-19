@@ -216,4 +216,35 @@ describe("DocumentDetail", () => {
     const toolbar = await screen.findByRole("toolbar", { name: "Document actions" });
     expect(await within(toolbar).findByRole("button", { name: "Report d1" })).toBeTruthy();
   });
+
+  it("shows what other modules add below the details", async () => {
+    const history = defineManifest({
+      id: "curation",
+      title: "Curation",
+      icon: () => null,
+      slots: [
+        {
+          slot: "document.detail.sections",
+          load: async () => ({
+            default: ({ documentId }) => <h2>{`History of ${documentId}`}</h2>,
+          }),
+        },
+      ],
+    });
+    const transport = createRouterTransport(({ service }) =>
+      service(DocumentService, {
+        getDocument: () => ({
+          document: {
+            id: "d1",
+            title: "Notes",
+            filename: "notes.md",
+            status: DocumentStatus.READY,
+          },
+        }),
+        listChunks: () => ({ chunks: [] }),
+      }),
+    );
+    renderModule(documents, transport, "/d1", null, undefined, undefined, [history]);
+    expect(await screen.findByRole("heading", { name: "History of d1" })).toBeTruthy();
+  });
 });

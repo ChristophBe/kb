@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@knowcel/curation-api": "workspace:*",
+    "@knowcel/document-api": "workspace:*",
+    "@knowcel/iam-api": "workspace:*",
     "@knowcel/module-sdk": "workspace:*",
     "@knowcel/ui": "workspace:*",
     "react-router": "catalog:"

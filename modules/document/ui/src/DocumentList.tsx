@@ -2,7 +2,7 @@ import {
   DocumentService,
   DocumentStatus,
 } from "@knowcel/document-api/knowcel/document/v1/document_pb";
-import { useClient, useCurrentUser, useInfiniteQuery } from "@knowcel/module-sdk";
+import { Slot, useClient, useCurrentUser, useInfiniteQuery } from "@knowcel/module-sdk";
 import {
   Badge,
   Button,
@@ -180,7 +180,10 @@ export function DocumentList() {
                         </div>
                       </td>
                       <td className="px-4 py-2">
-                        <Badge tone={tone}>{label}</Badge>
+                        <div className="flex flex-wrap items-center gap-1">
+                          <Badge tone={tone}>{label}</Badge>
+                          <Slot name="document.list.badges" documentId={d.id} />
+                        </div>
                       </td>
                       <td className="px-4 py-2">
                         <ChunkStrip count={d.chunkCount} />

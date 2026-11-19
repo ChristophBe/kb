@@ -174,6 +174,7 @@ export function DocumentDetail() {
           ))}
         </dl>
       </Card>
+      <Slot name="document.detail.sections" documentId={d.id} />
       <ChunkList
         documentId={d.id}
         chunkCount={d.chunkCount}

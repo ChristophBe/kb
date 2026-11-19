@@ -3,6 +3,7 @@ import {
   DocumentService,
   DocumentStatus,
 } from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import { defineManifest } from "@knowcel/module-sdk";
 import { renderModule } from "@knowcel/module-sdk/testing";
 import { polyfillDialog } from "@knowcel/ui/testing/dialog";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
@@ -50,6 +51,28 @@ describe("DocumentList", () => {
     expect(link.getAttribute("href")).toBe("/d1");
     expect(row("Quarterly report").getByText("Ready")).toBeTruthy();
     expect(row("Notes").getByText("Processing")).toBeTruthy();
+  });
+
+  it("shows what other modules add next to a document's status, for each row", async () => {
+    const badges = defineManifest({
+      id: "curation",
+      title: "Curation",
+      icon: () => null,
+      slots: [
+        {
+          slot: "document.list.badges",
+          load: async () => ({ default: ({ documentId }) => <span>{`Badge ${documentId}`}</span> }),
+        },
+      ],
+    });
+    const { transport } = documentService([
+      { id: "d1", title: "Quarterly report", status: DocumentStatus.READY },
+      { id: "d2", title: "Notes", status: DocumentStatus.PROCESSING },
+    ]);
+    renderModule(documents, transport, "/", null, undefined, undefined, [badges]);
+    expect(await screen.findByText("Badge d1")).toBeTruthy();
+    expect(row("Quarterly report").getByText("Badge d1")).toBeTruthy();
+    expect(row("Notes").getByText("Badge d2")).toBeTruthy();
   });
 
   it("offers deleting only on the user's own documents", async () => {

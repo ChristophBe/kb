@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { users } from "./users.ts";
 
 // The same text uploaded twice is reported as a duplicate. Unique per run, so
 // the test also passes against a stack that already holds earlier runs' documents.
@@ -75,4 +76,61 @@ test("the document checks fit a phone", async ({ page }) => {
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test("the owner sets a document's approval state, others can only look at it", async ({
+  page,
+  browser,
+}) => {
+  const filename = `handbook-${run}.md`;
+  const handbook = `# Handbook ${run}\n\nThe handbook explains how we work together.\n`;
+  await page.goto("/m/ingestion");
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: "Choose files" }).click();
+  await (await chooser).setFiles({
+    name: filename,
+    mimeType: "text/markdown",
+    buffer: Buffer.from(handbook),
+  });
+  await page.getByRole("button", { name: "Upload", exact: true }).click();
+  await expect(
+    page.getByRole("listitem").filter({ hasText: filename }).getByText("Ready"),
+  ).toBeVisible({ timeout: 60_000 });
+
+  await page.goto("/m/document");
+  await page.getByRole("link", { name: filename }).click();
+  const detailUrl = page.url();
+  await expect(page.getByRole("heading", { name: filename })).toBeVisible();
+
+  // Deprecating says what it does to chat, then needs its own button.
+  await page.getByRole("button", { name: "Approval state" }).click();
+  const dialog = page.getByRole("dialog", { name: "Approval state" });
+  await dialog.getByRole("radio", { name: /Deprecated/ }).check();
+  await expect(dialog.getByRole("note")).toContainText("Chat stops using this document");
+  await dialog.getByLabel(/Note/).fill("Replaced by the new handbook");
+  await dialog.getByRole("button", { name: "Deprecate document" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText("Approval state: Deprecated")).toBeVisible();
+
+  // The page shows the badge and the history with who, when and why.
+  const toolbar = page.getByRole("toolbar", { name: "Document actions" });
+  await expect(toolbar.getByText("Deprecated")).toBeVisible();
+  const history = page.getByRole("region", { name: "Approval history" });
+  await expect(history).toContainText("by you");
+  await expect(history).toContainText("Replaced by the new handbook");
+
+  // The documents list shows it too.
+  await page.goto("/m/document");
+  const row = page.getByRole("row").filter({ hasText: filename });
+  await expect(row.getByText("Deprecated")).toBeVisible();
+
+  // Someone who may not change the state can read it, but not change it.
+  const bobContext = await browser.newContext({ storageState: users.bob.storageState });
+  const bob = await bobContext.newPage();
+  await bob.goto(detailUrl);
+  await expect(bob.getByRole("button", { name: "Approval state" })).toBeDisabled();
+  await expect(
+    bob.getByRole("toolbar", { name: "Document actions" }).getByText("Deprecated"),
+  ).toBeVisible();
+  await bobContext.close();
 });

@@ -67,10 +67,12 @@ test("the sidebar's search and the search page are one search", async ({ page })
 test("a chat answer cites the document and opens the passage", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "New chat" }).click();
-  await page.getByPlaceholder("Ask something…").fill("When does the aurora borealis appear?");
+  await page.getByPlaceholder("Ask something…").fill("When does the aurora borealis appear? [1]");
   await page.getByRole("button", { name: "Ask", exact: true }).click();
 
   const sources = page.getByRole("list", { name: "Sources" });
+  // The fake model echoes the question, so the marker makes it use the first source.
+  await sources.getByRole("button", { name: new RegExp(title) }).click();
   await sources.getByRole("link", { name: `${title}, passage 1` }).click();
   await expect(page).toHaveURL(/\/m\/document\/[^/#]+#chunk-0$/);
   await expect(page.getByRole("heading", { name: title })).toBeVisible();

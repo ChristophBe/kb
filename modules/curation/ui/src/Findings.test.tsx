@@ -516,6 +516,16 @@ describe("Findings", () => {
       await waitFor(() => expect(screen.queryByText("Reported by 2 people")).toBeNull());
     });
 
+    it("refreshes what a document's page shows of its reports when they are closed", async () => {
+      const { transport } = server([reported]);
+      const { queryClient } = renderModule(curation, transport);
+      queryClient.setQueryData(["reports", "d3"], { reports: [] });
+      fireEvent.click(await screen.findByRole("button", { name: "Dismiss reports Handbook" }));
+      await waitFor(() =>
+        expect(queryClient.getQueryState(["reports", "d3"])?.isInvalidated).toBe(true),
+      );
+    });
+
     it("shows a reporter their own report without ways to close it", async () => {
       const own = {
         ...reported,

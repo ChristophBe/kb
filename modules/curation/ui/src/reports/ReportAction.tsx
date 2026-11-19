@@ -59,7 +59,14 @@ export default function ReportAction({ documentId }: { documentId: string }) {
       >
         {mine ? "Reported" : "Report"}
       </Button>
-      {open && <ReportDialog documentId={documentId} mine={mine} onClose={() => setOpen(false)} />}
+      {open && (
+        <ReportDialog
+          documentId={documentId}
+          mine={mine}
+          unknown={reports.isError}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </>
   );
 }
@@ -67,10 +74,13 @@ export default function ReportAction({ documentId }: { documentId: string }) {
 function ReportDialog({
   documentId,
   mine,
+  unknown,
   onClose,
 }: {
   documentId: string;
   mine: Report | undefined;
+  /** Whether the user's earlier report couldn't be loaded. */
+  unknown: boolean;
   onClose: () => void;
 }) {
   const client = useClient(CurationService);
@@ -189,6 +199,11 @@ function ReportDialog({
           />
         </div>
         {next}
+        {unknown && (
+          <p role="note" className="text-fg-muted">
+            Your earlier report, if you made one, couldn't be loaded. Sending a report replaces it.
+          </p>
+        )}
         <ErrorMessage error={reportError(send.error)} />
       </form>
     </Dialog>

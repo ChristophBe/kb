@@ -190,6 +190,10 @@ export function Findings() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["findings"] }),
         queryClient.invalidateQueries({ queryKey: ["finding-scores"] }),
+        // Closing reports changes what a document's page shows of them.
+        queryClient.invalidateQueries({ queryKey: ["reports"] }),
+        queryClient.invalidateQueries({ queryKey: ["lifecycle", "state"] }),
+        queryClient.invalidateQueries({ queryKey: ["lifecycle", "history"] }),
       ]);
       // The row the focus was on is gone: leave it at the top of the list, not on <body>.
       heading.current?.focus();

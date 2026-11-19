@@ -147,4 +147,24 @@ describe("ReportAction", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Send report" }));
     expect(await within(dialog).findByText("This document is no longer available.")).toBeTruthy();
   });
+
+  it("says so when the user's earlier report can't be loaded, as sending replaces it", async () => {
+    const transport = createRouterTransport(({ service }) =>
+      service(CurationService, {
+        listReports: () => {
+          throw new ConnectError("down", Code.Unavailable);
+        },
+        reportDocument: () => ({}),
+      }),
+    );
+    renderWithRuntime(
+      <CurrentUserProvider user={bob}>
+        <ReportAction documentId="d1" />
+      </CurrentUserProvider>,
+      transport,
+    );
+    fireEvent.click(await button("Report"));
+    const dialog = await screen.findByRole("dialog", { name: "Report this document" });
+    expect(within(dialog).getByRole("note").textContent).toContain("couldn't be loaded");
+  });
 });

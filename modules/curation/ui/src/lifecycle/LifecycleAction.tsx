@@ -147,6 +147,8 @@ function OpenStateDialog({
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["lifecycle", "state"] }),
         queryClient.invalidateQueries({ queryKey: ["lifecycle", "history"] }),
+        // Deprecating or archiving closes the reports of the document.
+        queryClient.invalidateQueries({ queryKey: ["reports"] }),
         queryClient.invalidateQueries({ queryKey: ["findings"] }),
         queryClient.invalidateQueries({ queryKey: ["finding-scores"] }),
       ]);

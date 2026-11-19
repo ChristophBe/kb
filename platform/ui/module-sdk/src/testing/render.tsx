@@ -13,8 +13,8 @@ import { type CurrentUser, CurrentUserProvider, type CurrentUserStatus } from ".
  * `transport`: usually `createRouterTransport` from `@connectrpc/connect`,
  * answering the module's RPCs in memory. Every call gets a fresh query cache.
 
- * `user` is what `useCurrentUser` returns, `status` what `useCurrentUserStatus` does, `enabledModules` the deployment's modules (all when omitted), `slotModules` the modules whose slot contributions the pages' slots show (none when omitted). Returns the render result and the
- * router, to check navigation.
+ * `user` is what `useCurrentUser` returns, `status` what `useCurrentUserStatus` does, `enabledModules` the deployment's modules (all when omitted), `slotModules` the modules whose slot contributions the pages' slots show (none when omitted). Returns the render result, the
+ * router, to check navigation, and the query cache.
  */
 export function renderModule(
   module: KbModule,
@@ -40,7 +40,7 @@ export function renderModule(
       </CurrentUserProvider>
     </KbRuntimeProvider>,
   );
-  return { ...result, router };
+  return { ...result, router, queryClient: client };
 }
 
 /**

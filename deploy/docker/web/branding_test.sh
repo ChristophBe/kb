@@ -13,6 +13,8 @@ check() {
   mkdir -p "$tmp/dir" "$tmp/root"
   cp "$example"/*.svg "$tmp/dir/"
   printf font >"$tmp/dir/acme.woff2"
+  printf png >"$tmp/dir/icon.png"
+  head -c 65537 /dev/zero >"$tmp/dir/big.svg"
   printf '%s' "$3" >"$tmp/dir/branding.json"
   out=$(sh "$here/branding.sh" "$tmp/dir/branding.json" "$tmp/root" 2>&1)
   status=$?
@@ -93,6 +95,17 @@ check "logo.showName as text" "logo.showName must be true or false" '{"logo":{"l
 out=$(printf '%s' '{"logo":{"light":"logo-light.svg","showName":true}}' >"$tmp/dir/branding.json"; sh "$here/branding.sh" "$tmp/dir/branding.json" "$tmp/root" 2>&1)
 printf '%s' "$out" | jq -e '.logo.showName == true and .logo.light == "/branding/logo-light.svg"' >/dev/null || { echo "FAIL showName output: $out"; failed=1; }
 # --- end logo.showName ---
+# --- icons ---
+check "icons" ok '{"icons":{"search":"search.svg","menu":"menu.svg"}}'
+check "an icon as png" ok '{"icons":{"search":"icon.png"}}'
+check "icons that are not an object" "icons must be an object" '{"icons":["search"]}'
+check "an unknown icon name" 'icons.searh is not an icon of the UI' '{"icons":{"searh":"search.svg"}}'
+check "an icon that is not a file name" "icons.search must be the name of an image file" '{"icons":{"search":1}}'
+check "a path as an icon file" "icons.search must be a plain file name" '{"icons":{"search":"../search.svg"}}'
+check "an icon of the wrong type" 'icons.search "favicon.gif" must be one of these file types: svg png' '{"icons":{"search":"favicon.gif"}}'
+check "a missing icon file" 'icons.search "nope.svg" does not exist' '{"icons":{"search":"nope.svg"}}'
+check "an oversized icon file" 'icons.search "big.svg" is larger than 64 KiB' '{"icons":{"search":"big.svg"}}'
+# --- end icons ---
 
 rm -rf "$tmp/dir" "$tmp/root"; mkdir -p "$tmp/dir" "$tmp/root"
 cp "$example"/* "$tmp/dir/"
@@ -100,6 +113,12 @@ out=$(sh "$here/branding.sh" "$tmp/dir/branding.json" "$tmp/root")
 for f in logo-light.svg logo-dark.svg favicon.svg; do
   [ -f "$tmp/root/branding/$f" ] || { echo "FAIL assets: $f was not copied"; failed=1; }
 done
+# --- icons ---
+for f in search.svg menu.svg; do
+  [ -f "$tmp/root/branding/icons/$f" ] || { echo "FAIL assets: icon $f was not copied"; failed=1; }
+done
+printf '%s' "$out" | jq -e '.icons == {"search": "/branding/icons/search.svg", "menu": "/branding/icons/menu.svg"}' >/dev/null || { echo "FAIL icon output: $out"; failed=1; }
+# --- end icons ---
 printf '%s' "$out" | jq -e '.logo.light == "/branding/logo-light.svg" and .favicon == "/branding/favicon.svg" and .name == "Acme Knowledge"' >/dev/null || { echo "FAIL output: $out"; failed=1; }
 sh "$here/branding.sh" "$tmp/missing.json" "$tmp/root" 2>&1 | grep -q "does not exist" || { echo "FAIL a missing file"; failed=1; }
 

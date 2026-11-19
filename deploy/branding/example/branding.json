@@ -2,6 +2,7 @@
   "name": "Acme Knowledge",
   "logo": { "light": "logo-light.svg", "dark": "logo-dark.svg", "showName": true },
   "favicon": "favicon.svg",
+  "icons": { "search": "search.svg", "menu": "menu.svg" },
   "fonts": { "heading": { "family": "Georgia" } },
   "colors": {
     "light": {

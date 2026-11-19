@@ -1,3 +1,5 @@
+import { setIconOverrides } from "./icons.tsx";
+
 /** What a deployment's branding file (docs/operations/branding.md) puts into /config.json. */
 export interface Branding {
   name?: string;
@@ -5,6 +7,8 @@ export interface Branding {
   favicon?: string;
   colors?: { light?: BrandColors; dark?: BrandColors };
   fonts?: { heading?: BrandFont; body?: BrandFont; mono?: BrandFont };
+  /** Icon name (kebab-case, see icons.tsx) to the URL of an image that replaces it. */
+  icons?: Record<string, string>;
   navigation?: { light?: BrandNavigation; dark?: BrandNavigation };
 }
 
@@ -309,5 +313,6 @@ export function applyBranding(branding: Branding | undefined, buildVersion?: str
     document.head.append(style);
   }
   setFavicon(current.favicon);
+  setIconOverrides(current.icons);
   if (current.name) document.title = current.name;
 }

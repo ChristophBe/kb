@@ -89,8 +89,12 @@ def _lifecycle_message(lifecycle: Lifecycle) -> curation_pb2.Lifecycle:
     return message
 
 
-def _score_message(score: Score, lifecycle: Lifecycle | None) -> curation_pb2.DocumentScore:
-    message = curation_pb2.DocumentScore(document_id=str(score.document_id), score=score.score)
+def _score_message(
+    score: Score, lifecycle: Lifecycle | None, replaced: bool
+) -> curation_pb2.DocumentScore:
+    message = curation_pb2.DocumentScore(
+        document_id=str(score.document_id), score=score.score, replaced=replaced
+    )
     message.updated_at.FromDatetime(score.updated_at)
     if lifecycle:
         message.lifecycle.CopyFrom(_lifecycle_message(lifecycle))
@@ -132,8 +136,10 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
         scores = await self._visible_scores(context, {document_id})
         if not scores:
             await context.abort(grpc.StatusCode.NOT_FOUND, "document has no score")
-        score, lifecycle = scores[0]
-        return curation_pb2.GetDocumentScoreResponse(score=_score_message(score, lifecycle))
+        score, lifecycle, replaced = scores[0]
+        return curation_pb2.GetDocumentScoreResponse(
+            score=_score_message(score, lifecycle, replaced)
+        )
 
     async def ScoreChunks(
         self, request: curation_pb2.ScoreChunksRequest, context: _Context
@@ -157,7 +163,7 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
                 )
         scores = await self._visible_scores(context, ids)
         return curation_pb2.ScoreChunksResponse(
-            scores=[_score_message(score, lifecycle) for score, lifecycle in scores]
+            scores=[_score_message(*scored) for scored in scores]
         )
 
     async def ListFindings(
@@ -301,9 +307,10 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
 
     async def _visible_scores(
         self, context: _Context, ids: Collection[uuid.UUID]
-    ) -> list[tuple[Score, Lifecycle | None]]:
-        """The scores, with the lifecycle, of those of `ids` that have a score
-        and that the caller can see."""
+    ) -> list[tuple[Score, Lifecycle | None, bool]]:
+        """The scores of those of `ids` that have one and that the caller can
+        see, with the lifecycle and whether a document the caller can read
+        replaces it."""
         if not ids:
             return []
         async with self._failures(context, "loading scores"):
@@ -311,7 +318,19 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
             # Only scored documents are looked up in the document module.
             visible = await self._documents.readable({s.document_id for s in scores})
             lifecycles = await self._store.get_lifecycles(visible)
-        return [(s, lifecycles.get(s.document_id)) for s in scores if s.document_id in visible]
+            replacements = await self._store.get_replacements(visible)
+            # A replacement the caller can't read doesn't count: they'd be left with nothing.
+            replacer_ids = set().union(*replacements.values())
+            replacers = await self._documents.readable(replacer_ids) if replacer_ids else {}
+        return [
+            (
+                s,
+                lifecycles.get(s.document_id),
+                bool(replacements.get(s.document_id, set()) & replacers.keys()),
+            )
+            for s in scores
+            if s.document_id in visible
+        ]
 
     @contextlib.asynccontextmanager
     async def _failures(self, context: _Context, what: str) -> AsyncIterator[None]:

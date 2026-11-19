@@ -179,6 +179,14 @@ class CurationStore(Protocol):
         """Up to `limit` open findings, newest first, after the cursor."""
         ...
 
+    async def get_replacements(
+        self, document_ids: Collection[uuid.UUID]
+    ) -> dict[uuid.UUID, set[uuid.UUID]]:
+        """For each of the documents that are replaced, the documents replacing
+        it: those of a version found and not dismissed, and of a confirmed
+        replacement."""
+        ...
+
     async def get_lifecycles(
         self, document_ids: Collection[uuid.UUID]
     ) -> dict[uuid.UUID, Lifecycle]:

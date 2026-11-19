@@ -52,6 +52,11 @@ message DocumentScore {
   // True for DEPRECATED and ARCHIVED documents: consumers such as chat leave
   // them out of answers.
   bool excluded = 5;
+  // True while a document the caller can read replaces this one (a newer
+  // version found, or a replacement confirmed): consumers such as chat prefer
+  // the replacement and leave this one out. A replacement the caller can't
+  // read doesn't count.
+  bool replaced = 6;
 }
 
 enum LifecycleState {

@@ -50,18 +50,20 @@ RESOLUTION_REPLACE: Resolution
 RESOLUTION_IGNORE: Resolution
 
 class DocumentScore(_message.Message):
-    __slots__ = ("document_id", "score", "updated_at", "lifecycle", "excluded")
+    __slots__ = ("document_id", "score", "updated_at", "lifecycle", "excluded", "replaced")
     DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
     SCORE_FIELD_NUMBER: _ClassVar[int]
     UPDATED_AT_FIELD_NUMBER: _ClassVar[int]
     LIFECYCLE_FIELD_NUMBER: _ClassVar[int]
     EXCLUDED_FIELD_NUMBER: _ClassVar[int]
+    REPLACED_FIELD_NUMBER: _ClassVar[int]
     document_id: str
     score: float
     updated_at: _timestamp_pb2.Timestamp
     lifecycle: Lifecycle
     excluded: bool
-    def __init__(self, document_id: _Optional[str] = ..., score: _Optional[float] = ..., updated_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., lifecycle: _Optional[_Union[Lifecycle, _Mapping]] = ..., excluded: _Optional[bool] = ...) -> None: ...
+    replaced: bool
+    def __init__(self, document_id: _Optional[str] = ..., score: _Optional[float] = ..., updated_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., lifecycle: _Optional[_Union[Lifecycle, _Mapping]] = ..., excluded: _Optional[bool] = ..., replaced: _Optional[bool] = ...) -> None: ...
 
 class Lifecycle(_message.Message):
     __slots__ = ("state", "owner", "review_by")

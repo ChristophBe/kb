@@ -210,7 +210,12 @@ type DocumentScore struct {
 	Lifecycle *Lifecycle `protobuf:"bytes,4,opt,name=lifecycle,proto3" json:"lifecycle,omitempty"`
 	// True for DEPRECATED and ARCHIVED documents: consumers such as chat leave
 	// them out of answers.
-	Excluded      bool `protobuf:"varint,5,opt,name=excluded,proto3" json:"excluded,omitempty"`
+	Excluded bool `protobuf:"varint,5,opt,name=excluded,proto3" json:"excluded,omitempty"`
+	// True while a document the caller can read replaces this one (a newer
+	// version found, or a replacement confirmed): consumers such as chat prefer
+	// the replacement and leave this one out. A replacement the caller can't
+	// read doesn't count.
+	Replaced      bool `protobuf:"varint,6,opt,name=replaced,proto3" json:"replaced,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -276,6 +281,13 @@ func (x *DocumentScore) GetLifecycle() *Lifecycle {
 func (x *DocumentScore) GetExcluded() bool {
 	if x != nil {
 		return x.Excluded
+	}
+	return false
+}
+
+func (x *DocumentScore) GetReplaced() bool {
+	if x != nil {
+		return x.Replaced
 	}
 	return false
 }
@@ -1161,7 +1173,7 @@ var File_knowcel_curation_v1_curation_proto protoreflect.FileDescriptor
 
 const file_knowcel_curation_v1_curation_proto_rawDesc = "" +
 	"\n" +
-	"\"knowcel/curation/v1/curation.proto\x12\x13knowcel.curation.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xdb\x01\n" +
+	"\"knowcel/curation/v1/curation.proto\x12\x13knowcel.curation.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf7\x01\n" +
 	"\rDocumentScore\x12\x1f\n" +
 	"\vdocument_id\x18\x01 \x01(\tR\n" +
 	"documentId\x12\x14\n" +
@@ -1169,7 +1181,8 @@ const file_knowcel_curation_v1_curation_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12<\n" +
 	"\tlifecycle\x18\x04 \x01(\v2\x1e.knowcel.curation.v1.LifecycleR\tlifecycle\x12\x1a\n" +
-	"\bexcluded\x18\x05 \x01(\bR\bexcluded\"\x95\x01\n" +
+	"\bexcluded\x18\x05 \x01(\bR\bexcluded\x12\x1a\n" +
+	"\breplaced\x18\x06 \x01(\bR\breplaced\"\x95\x01\n" +
 	"\tLifecycle\x129\n" +
 	"\x05state\x18\x01 \x01(\x0e2#.knowcel.curation.v1.LifecycleStateR\x05state\x12\x14\n" +
 	"\x05owner\x18\x02 \x01(\tR\x05owner\x127\n" +

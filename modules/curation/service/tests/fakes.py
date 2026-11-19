@@ -112,6 +112,19 @@ class FakeStore:
             ordered = [f for f in ordered if key(f) > (-after.created_at.timestamp(), after.id)]
         return ordered[:limit]
 
+    async def get_replacements(
+        self, document_ids: Collection[uuid.UUID]
+    ) -> dict[uuid.UUID, set[uuid.UUID]]:
+        self._check()
+        replacements: dict[uuid.UUID, set[uuid.UUID]] = {}
+        for f in self.findings:
+            replaced = (
+                f.kind == "superseded" and f.resolution is None
+            ) or f.resolution == "replace"
+            if f.document_id in document_ids and replaced:
+                replacements.setdefault(f.document_id, set()).add(f.other_document_id)
+        return replacements
+
     async def get_lifecycles(
         self, document_ids: Collection[uuid.UUID]
     ) -> dict[uuid.UUID, Lifecycle]:

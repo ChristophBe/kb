@@ -102,7 +102,7 @@ async def test_score_chunks_returns_the_scores_of_visible_documents(
     response = await stub.ScoreChunks(request, metadata=USER)
     assert {s.document_id: s.score for s in response.scores} == {str(SEEN.id): 0.75}
     # Only documents with a score are looked up.
-    assert documents.asked == [{SEEN.id, HIDDEN.id}]
+    assert documents.asked[0] == {SEEN.id, HIDDEN.id}
 
 
 async def test_score_chunks_without_documents_is_empty(
@@ -585,3 +585,48 @@ async def test_a_review_date_out_of_range_is_invalid(
     with pytest.raises(grpc.aio.AioRpcError) as err:
         await set_state(stub, OWNED, "alice", review_by=far)
     assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+
+
+async def test_a_document_is_replaced_while_a_readable_document_replaces_it(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    for document in (SEEN, OTHER):
+        await store.save_score(document.id, NOW, 0.5)
+    # SEEN has an open version found (OTHER is newer and readable).
+    request = curation_pb2.ScoreChunksRequest(document_ids=[str(SEEN.id), str(OTHER.id)])
+    scores = {s.document_id: s for s in (await stub.ScoreChunks(request, metadata=USER)).scores}
+    assert scores[str(SEEN.id)].replaced
+    assert not scores[str(OTHER.id)].replaced
+    one = await stub.GetDocumentScore(
+        curation_pb2.GetDocumentScoreRequest(document_id=str(SEEN.id)), metadata=USER
+    )
+    assert one.score.replaced
+
+
+async def test_a_replacement_the_caller_cannot_read_or_that_was_kept_does_not_count(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    kept = doc("Kept")
+    secret = doc("Secret")
+    for document in (SEEN, kept, secret):
+        await store.save_score(document.id, NOW, 0.5)
+    store.findings = [
+        # Replaced by a document the caller can't read (HIDDEN is not readable).
+        Finding(uuid.uuid4(), "superseded", SEEN.id, HIDDEN.id, NOW),
+        # A version found, then kept by someone.
+        Finding(uuid.uuid4(), "superseded", kept.id, OTHER.id, NOW, resolution="keep"),
+    ]
+    documents = FakeDocuments(SEEN, kept, OTHER)
+    scorer = Scorer(store, WEIGHTS)
+    servicer = CurationServicer(store, documents, scorer, LifecycleService(store, scorer))
+    server = grpc.aio.server(interceptors=[UserInterceptor()])
+    curation_pb2_grpc.add_CurationServiceServicer_to_server(servicer, server)
+    port = server.add_insecure_port("127.0.0.1:0")
+    await server.start()
+    async with grpc.aio.insecure_channel(f"127.0.0.1:{port}") as channel:
+        response = await curation_pb2_grpc.CurationServiceStub(channel).ScoreChunks(
+            curation_pb2.ScoreChunksRequest(document_ids=[str(SEEN.id), str(kept.id)]),
+            metadata=USER,
+        )
+    await server.stop(None)
+    assert [s.replaced for s in response.scores] == [False, False]

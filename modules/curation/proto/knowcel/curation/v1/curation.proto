@@ -44,6 +44,16 @@ service CurationService {
   // document's owner, admins of teams it is shared with and platform admins,
   // otherwise only the caller's own.
   rpc ListReports(ListReportsRequest) returns (ListReportsResponse);
+  // RateDocument saves the caller's rating of a document, or of one of its
+  // passages when chunk_index is set. A user has one rating per document and
+  // passage: rating again replaces it, and RATING_NONE takes it back. The
+  // ratings of a document count in its score. NOT_FOUND when the caller can't
+  // read the document.
+  rpc RateDocument(RateDocumentRequest) returns (RateDocumentResponse);
+  // GetRatingSummary counts how many users found a document helpful or not,
+  // each by their latest rating of the document or of any of its passages, and
+  // returns the caller's own rating of the document or passage asked about.
+  rpc GetRatingSummary(GetRatingSummaryRequest) returns (GetRatingSummaryResponse);
   // ResolveFinding closes an open finding with one of the options it lists and
   // updates the scores it affects. NOT_FOUND when the finding doesn't exist or
   // the caller can't see both documents, FAILED_PRECONDITION when it is
@@ -229,6 +239,41 @@ message ListReportsRequest {
 
 message ListReportsResponse {
   repeated Report reports = 1;
+}
+
+enum Rating {
+  RATING_UNSPECIFIED = 0;
+  RATING_HELPFUL = 1;
+  RATING_NOT_HELPFUL = 2;
+  // In a request: take the caller's rating back. Never in a response.
+  RATING_NONE = 3;
+}
+
+message RateDocumentRequest {
+  string document_id = 1;
+  // The passage rated, counted from 0; unset for the document as a whole.
+  optional int32 chunk_index = 2;
+  // Required.
+  Rating rating = 3;
+  // The conversation the rating was given in, for ratings of a chat source.
+  string conversation_id = 4;
+}
+
+message RateDocumentResponse {}
+
+message GetRatingSummaryRequest {
+  string document_id = 1;
+  // The passage whose rating of the caller to return; unset for the document.
+  // The counts are always those of the whole document.
+  optional int32 chunk_index = 2;
+}
+
+message GetRatingSummaryResponse {
+  int32 helpful = 1;
+  int32 not_helpful = 2;
+  // The caller's own rating of the document or passage asked about (not of the
+  // others); RATING_NONE when they have none.
+  Rating my_rating = 3;
 }
 
 message ListFindingsRequest {

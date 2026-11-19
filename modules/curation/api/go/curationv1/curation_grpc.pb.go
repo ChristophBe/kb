@@ -26,6 +26,8 @@ const (
 	CurationService_ListLifecycleHistory_FullMethodName = "/knowcel.curation.v1.CurationService/ListLifecycleHistory"
 	CurationService_ReportDocument_FullMethodName       = "/knowcel.curation.v1.CurationService/ReportDocument"
 	CurationService_ListReports_FullMethodName          = "/knowcel.curation.v1.CurationService/ListReports"
+	CurationService_RateDocument_FullMethodName         = "/knowcel.curation.v1.CurationService/RateDocument"
+	CurationService_GetRatingSummary_FullMethodName     = "/knowcel.curation.v1.CurationService/GetRatingSummary"
 	CurationService_ResolveFinding_FullMethodName       = "/knowcel.curation.v1.CurationService/ResolveFinding"
 )
 
@@ -71,6 +73,16 @@ type CurationServiceClient interface {
 	// document's owner, admins of teams it is shared with and platform admins,
 	// otherwise only the caller's own.
 	ListReports(ctx context.Context, in *ListReportsRequest, opts ...grpc.CallOption) (*ListReportsResponse, error)
+	// RateDocument saves the caller's rating of a document, or of one of its
+	// passages when chunk_index is set. A user has one rating per document and
+	// passage: rating again replaces it, and RATING_NONE takes it back. The
+	// ratings of a document count in its score. NOT_FOUND when the caller can't
+	// read the document.
+	RateDocument(ctx context.Context, in *RateDocumentRequest, opts ...grpc.CallOption) (*RateDocumentResponse, error)
+	// GetRatingSummary counts how many users found a document helpful or not,
+	// each by their latest rating of the document or of any of its passages, and
+	// returns the caller's own rating of the document or passage asked about.
+	GetRatingSummary(ctx context.Context, in *GetRatingSummaryRequest, opts ...grpc.CallOption) (*GetRatingSummaryResponse, error)
 	// ResolveFinding closes an open finding with one of the options it lists and
 	// updates the scores it affects. NOT_FOUND when the finding doesn't exist or
 	// the caller can't see both documents, FAILED_PRECONDITION when it is
@@ -156,6 +168,26 @@ func (c *curationServiceClient) ListReports(ctx context.Context, in *ListReports
 	return out, nil
 }
 
+func (c *curationServiceClient) RateDocument(ctx context.Context, in *RateDocumentRequest, opts ...grpc.CallOption) (*RateDocumentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RateDocumentResponse)
+	err := c.cc.Invoke(ctx, CurationService_RateDocument_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *curationServiceClient) GetRatingSummary(ctx context.Context, in *GetRatingSummaryRequest, opts ...grpc.CallOption) (*GetRatingSummaryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetRatingSummaryResponse)
+	err := c.cc.Invoke(ctx, CurationService_GetRatingSummary_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *curationServiceClient) ResolveFinding(ctx context.Context, in *ResolveFindingRequest, opts ...grpc.CallOption) (*ResolveFindingResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ResolveFindingResponse)
@@ -208,6 +240,16 @@ type CurationServiceServer interface {
 	// document's owner, admins of teams it is shared with and platform admins,
 	// otherwise only the caller's own.
 	ListReports(context.Context, *ListReportsRequest) (*ListReportsResponse, error)
+	// RateDocument saves the caller's rating of a document, or of one of its
+	// passages when chunk_index is set. A user has one rating per document and
+	// passage: rating again replaces it, and RATING_NONE takes it back. The
+	// ratings of a document count in its score. NOT_FOUND when the caller can't
+	// read the document.
+	RateDocument(context.Context, *RateDocumentRequest) (*RateDocumentResponse, error)
+	// GetRatingSummary counts how many users found a document helpful or not,
+	// each by their latest rating of the document or of any of its passages, and
+	// returns the caller's own rating of the document or passage asked about.
+	GetRatingSummary(context.Context, *GetRatingSummaryRequest) (*GetRatingSummaryResponse, error)
 	// ResolveFinding closes an open finding with one of the options it lists and
 	// updates the scores it affects. NOT_FOUND when the finding doesn't exist or
 	// the caller can't see both documents, FAILED_PRECONDITION when it is
@@ -243,6 +285,12 @@ func (UnimplementedCurationServiceServer) ReportDocument(context.Context, *Repor
 }
 func (UnimplementedCurationServiceServer) ListReports(context.Context, *ListReportsRequest) (*ListReportsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListReports not implemented")
+}
+func (UnimplementedCurationServiceServer) RateDocument(context.Context, *RateDocumentRequest) (*RateDocumentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RateDocument not implemented")
+}
+func (UnimplementedCurationServiceServer) GetRatingSummary(context.Context, *GetRatingSummaryRequest) (*GetRatingSummaryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetRatingSummary not implemented")
 }
 func (UnimplementedCurationServiceServer) ResolveFinding(context.Context, *ResolveFindingRequest) (*ResolveFindingResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ResolveFinding not implemented")
@@ -394,6 +442,42 @@ func _CurationService_ListReports_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CurationService_RateDocument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RateDocumentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CurationServiceServer).RateDocument(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CurationService_RateDocument_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CurationServiceServer).RateDocument(ctx, req.(*RateDocumentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CurationService_GetRatingSummary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRatingSummaryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CurationServiceServer).GetRatingSummary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CurationService_GetRatingSummary_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CurationServiceServer).GetRatingSummary(ctx, req.(*GetRatingSummaryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CurationService_ResolveFinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ResolveFindingRequest)
 	if err := dec(in); err != nil {
@@ -446,6 +530,14 @@ var CurationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListReports",
 			Handler:    _CurationService_ListReports_Handler,
+		},
+		{
+			MethodName: "RateDocument",
+			Handler:    _CurationService_RateDocument_Handler,
+		},
+		{
+			MethodName: "GetRatingSummary",
+			Handler:    _CurationService_GetRatingSummary_Handler,
 		},
 		{
 			MethodName: "ResolveFinding",

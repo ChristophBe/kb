@@ -11,6 +11,7 @@ from typing import Any
 import grpc
 from knowcel.curation.v1 import curation_pb2, curation_pb2_grpc
 from knowcel_platform.grpc import (
+    FieldViolation,
     Principal,
     abort_invalid_argument,
     current_principal,
@@ -26,10 +27,12 @@ from .curation import (
     DEPRECATED,
     DRAFT,
     EXCLUDED,
+    HELPFUL,
     IGNORE,
     IN_REVIEW,
     INAPPROPRIATE,
     KEEP,
+    NOT_HELPFUL,
     OTHER,
     OUTDATED,
     REPLACE,
@@ -51,6 +54,7 @@ from .curation import (
 )
 from .findings import resolution_options, summary
 from .lifecycle import LifecycleService, may_change
+from .ratings import RatingService
 from .reports import ReportService, sees_all_reports, visible_reports
 
 log = logging.getLogger("knowcel_curation")
@@ -88,6 +92,14 @@ _REASONS = {
     curation_pb2.REPORT_REASON_OTHER: OTHER,
 }
 _REASON_ENUMS = {name: value for value, name in _REASONS.items()}
+_RATINGS = {
+    curation_pb2.RATING_HELPFUL: HELPFUL,
+    curation_pb2.RATING_NOT_HELPFUL: NOT_HELPFUL,
+}
+_RATING_ENUMS = {name: value for value, name in _RATINGS.items()}
+_MAX_CONVERSATION_ID = 100
+# Passages of a document are far fewer; this only keeps absurd values out.
+_MAX_CHUNK_INDEX = 1_000_000
 _MAX_NOTE = 1000
 _MAX_OWNER = 200
 
@@ -146,12 +158,14 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
         scorer: Scorer,
         lifecycle: LifecycleService,
         reports: ReportService,
+        ratings: RatingService,
     ) -> None:
         self._store = store
         self._documents = documents
         self._scorer = scorer
         self._lifecycle = lifecycle
         self._reports = reports
+        self._ratings = ratings
 
     async def GetDocumentScore(
         self, request: curation_pb2.GetDocumentScoreRequest, context: _Context
@@ -267,6 +281,51 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
             found = (await self._store.list_reports({document_id})).get(document_id, [])
         shown = visible_reports(found, document, user, current_principal())
         return curation_pb2.ListReportsResponse(reports=[_report_message(r) for r in shown])
+
+    async def RateDocument(
+        self, request: curation_pb2.RateDocumentRequest, context: _Context
+    ) -> curation_pb2.RateDocumentResponse:
+        user = await self._require_user(context)
+        violations = []
+        rating = _RATINGS.get(request.rating)
+        if rating is None and request.rating != curation_pb2.RATING_NONE:
+            violations.append(violation("rating", "Choose helpful or not helpful"))
+        chunk_index = request.chunk_index if request.HasField("chunk_index") else None
+        violations += _chunk_violations(chunk_index)
+        if len(request.conversation_id) > _MAX_CONVERSATION_ID:
+            violations.append(violation("conversation_id", "Conversation id is too long"))
+        if violations:
+            await abort_invalid_argument(context, *violations)
+        document_id = await self._document_id(context, request.document_id)
+        async with self._failures(context, "rating a document"):
+            document = (await self._documents.readable({document_id})).get(document_id)
+            if document is None:
+                await context.abort(grpc.StatusCode.NOT_FOUND, "document not found")
+            await self._ratings.rate(
+                document_id, user, chunk_index, rating, request.conversation_id, document.created_at
+            )
+        return curation_pb2.RateDocumentResponse()
+
+    async def GetRatingSummary(
+        self, request: curation_pb2.GetRatingSummaryRequest, context: _Context
+    ) -> curation_pb2.GetRatingSummaryResponse:
+        user = await self._require_user(context)
+        chunk_index = request.chunk_index if request.HasField("chunk_index") else None
+        if violations := _chunk_violations(chunk_index):
+            await abort_invalid_argument(context, *violations)
+        document_id = await self._document_id(context, request.document_id)
+        async with self._failures(context, "loading the ratings"):
+            if document_id not in await self._documents.readable({document_id}):
+                await context.abort(grpc.StatusCode.NOT_FOUND, "document not found")
+            helpful, unhelpful = (await self._store.rating_counts({document_id})).get(
+                document_id, (0, 0)
+            )
+            mine = await self._store.get_rating(document_id, user, chunk_index)
+        return curation_pb2.GetRatingSummaryResponse(
+            helpful=helpful,
+            not_helpful=unhelpful,
+            my_rating=_RATING_ENUMS.get(mine or "", curation_pb2.RATING_NONE),
+        )
 
     async def SetLifecycle(
         self, request: curation_pb2.SetLifecycleRequest, context: _Context
@@ -473,6 +532,12 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
         if user is None:
             await context.abort(grpc.StatusCode.UNAUTHENTICATED, "sign in to see curation results")
         return user
+
+
+def _chunk_violations(chunk_index: int | None) -> list[FieldViolation]:
+    if chunk_index is not None and not 0 <= chunk_index < _MAX_CHUNK_INDEX:
+        return [violation("chunk_index", "Passage number is not valid")]
+    return []
 
 
 def _report_message(report: Report) -> curation_pb2.Report:

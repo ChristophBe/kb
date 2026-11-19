@@ -35,6 +35,11 @@ IGNORE = "ignore"
 DEPRECATE = "deprecate"
 RESOLUTIONS = (KEEP, REPLACE, IGNORE, DEPRECATE)
 
+# Ratings of a document or passage.
+HELPFUL = "helpful"
+NOT_HELPFUL = "not_helpful"
+RATINGS = (HELPFUL, NOT_HELPFUL)
+
 # Reasons for reporting a document.
 WRONG = "wrong"
 OUTDATED = "outdated"
@@ -142,6 +147,10 @@ class Weights:
     # each user who reported the document, but not below `report_floor`.
     report_penalty: float = 1.0
     report_floor: float = 0.0
+    # Weight of how helpful users found the document, next to the other signals,
+    # once it has at least `rating_min` ratings; 0 leaves ratings out.
+    rating: float = 0.0
+    rating_min: int = 1
 
 
 def score_document(
@@ -152,17 +161,24 @@ def score_document(
     weights: Weights,
     state: str | None = None,
     reports: int = 0,
+    ratings: tuple[int, int] = (0, 0),
 ) -> float:
     """A score between 0 and 1: the weighted mean of recency (1 when just
     processed, halving every `half_life_days`) and usage (citations up to
     `usage_saturation`), times `replacement_penalty` once per replacement and
     `report_penalty` once per reporting user (not below `report_floor`), then
-    raised for an approved document and lowered for a deprecated or archived one."""
+    raised for an approved document and lowered for a deprecated or archived one.
+    `ratings` are the numbers of helpful and unhelpful ratings: from
+    `rating_min` of them on, the share found helpful is a signal of its own."""
     age_days = max((now - processed_at).total_seconds(), 0) / 86400
     recency = 0.5 ** (age_days / weights.half_life_days)
     usage = min(citations / weights.usage_saturation, 1)
-    signals = (weights.recency * recency + weights.usage * usage) / (
-        weights.recency + weights.usage
+    helpful, unhelpful = ratings
+    rated = weights.rating > 0 and helpful + unhelpful >= max(weights.rating_min, 1)
+    rating_weight = weights.rating if rated else 0
+    share = helpful / (helpful + unhelpful) if rated else 0
+    signals = (weights.recency * recency + weights.usage * usage + rating_weight * share) / (
+        weights.recency + weights.usage + rating_weight
     )
     score = signals * weights.replacement_penalty**replacements
     score *= max(weights.report_floor, weights.report_penalty**reports)
@@ -223,6 +239,34 @@ class CurationStore(Protocol):
         self, document_ids: Collection[uuid.UUID]
     ) -> dict[uuid.UUID, Lifecycle]:
         """The current lifecycle of those of the documents that have one."""
+        ...
+
+    async def save_rating(
+        self,
+        document_id: uuid.UUID,
+        user: str,
+        chunk_index: int | None,
+        rating: str,
+        conversation_id: str,
+    ) -> None:
+        """Records the user's rating of the document or passage, replacing their earlier one."""
+        ...
+
+    async def delete_rating(
+        self, document_id: uuid.UUID, user: str, chunk_index: int | None
+    ) -> None:
+        """Takes the user's rating of the document or passage back."""
+        ...
+
+    async def get_rating(
+        self, document_id: uuid.UUID, user: str, chunk_index: int | None
+    ) -> str | None: ...
+
+    async def rating_counts(
+        self, document_ids: Collection[uuid.UUID]
+    ) -> dict[uuid.UUID, tuple[int, int]]:
+        """For each document with ratings, how many users found it helpful and how
+        many not, each by their latest rating of the document or of a passage of it."""
         ...
 
     async def save_report(
@@ -305,8 +349,11 @@ class Scorer:
             ids = {s.document_id for s in scores}
             lifecycles = await self._store.get_lifecycles(ids)
             reports = {i: len(r) for i, r in (await self._store.list_reports(ids)).items()}
+            ratings = await self._store.rating_counts(ids)
             for score in scores:
-                await self._save(score.document_id, score.processed_at, lifecycles, reports)
+                await self._save(
+                    score.document_id, score.processed_at, lifecycles, reports, ratings
+                )
             after = scores[-1].document_id
 
     async def _current(self, document_id: uuid.UUID) -> Score | None:
@@ -319,6 +366,7 @@ class Scorer:
         processed_at: datetime.datetime,
         lifecycles: dict[uuid.UUID, Lifecycle] | None = None,
         reports: dict[uuid.UUID, int] | None = None,
+        ratings: dict[uuid.UUID, tuple[int, int]] | None = None,
     ) -> None:
         replacements = await self._store.count_replacements(document_id)
         if lifecycles is None:
@@ -329,6 +377,8 @@ class Scorer:
             }
         # The usage signal needs chat to report its citations; until it does,
         # usage is 0 (and weighs nothing unless KNOWCEL_CURATION_USAGE_WEIGHT is set).
+        if ratings is None:
+            ratings = await self._store.rating_counts([document_id])
         lifecycle = lifecycles.get(document_id)
         score = score_document(
             processed_at,
@@ -338,6 +388,7 @@ class Scorer:
             self._weights,
             lifecycle.state if lifecycle else None,
             reports.get(document_id, 0),
+            ratings.get(document_id, (0, 0)),
         )
         await self._store.save_score(document_id, processed_at, score)
         log.info("scored document %s: %.3f (%d replacements)", document_id, score, replacements)

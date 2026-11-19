@@ -13,6 +13,7 @@ from sqlalchemy import (
     Column,
     DateTime,
     Double,
+    Integer,
     MetaData,
     RowMapping,
     Table,
@@ -32,6 +33,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from .curation import (
     ARCHIVED,
     DEPRECATE,
+    HELPFUL,
     REPLACE,
     REPORTED,
     REVIEW_DUE,
@@ -82,6 +84,18 @@ document_lifecycle = Table(
     Column("note", Text, nullable=False),
     Column("changed_by", Text, nullable=False),
     Column("changed_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+)
+
+ratings = Table(
+    "ratings",
+    metadata,
+    Column("document_id", Uuid, primary_key=True),
+    Column("user_id", Text, primary_key=True),
+    # -1 is the document as a whole.
+    Column("chunk_index", Integer, primary_key=True, server_default="-1"),
+    Column("rating", Text, nullable=False),
+    Column("conversation_id", Text, nullable=False, server_default=""),
+    Column("updated_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
 )
 
 reports = Table(
@@ -320,6 +334,78 @@ class SqlCurationStore:
         async with self._engine.connect() as conn:
             return list((await conn.execute(query)).scalars())
 
+    async def save_rating(
+        self,
+        document_id: uuid.UUID,
+        user: str,
+        chunk_index: int | None,
+        rating: str,
+        conversation_id: str,
+    ) -> None:
+        statement = insert(ratings).values(
+            document_id=document_id,
+            user_id=user,
+            chunk_index=_chunk(chunk_index),
+            rating=rating,
+            conversation_id=conversation_id,
+        )
+        async with self._engine.begin() as conn:
+            await conn.execute(
+                statement.on_conflict_do_update(
+                    index_elements=["document_id", "user_id", "chunk_index"],
+                    set_={
+                        "rating": statement.excluded.rating,
+                        "conversation_id": statement.excluded.conversation_id,
+                        "updated_at": func.now(),
+                    },
+                )
+            )
+
+    async def delete_rating(
+        self, document_id: uuid.UUID, user: str, chunk_index: int | None
+    ) -> None:
+        async with self._engine.begin() as conn:
+            await conn.execute(
+                delete(ratings).where(
+                    ratings.c.document_id == document_id,
+                    ratings.c.user_id == user,
+                    ratings.c.chunk_index == _chunk(chunk_index),
+                )
+            )
+
+    async def get_rating(
+        self, document_id: uuid.UUID, user: str, chunk_index: int | None
+    ) -> str | None:
+        query = select(ratings.c.rating).where(
+            ratings.c.document_id == document_id,
+            ratings.c.user_id == user,
+            ratings.c.chunk_index == _chunk(chunk_index),
+        )
+        async with self._engine.connect() as conn:
+            return (await conn.execute(query)).scalar_one_or_none()
+
+    async def rating_counts(
+        self, document_ids: Collection[uuid.UUID]
+    ) -> dict[uuid.UUID, tuple[int, int]]:
+        # A user counts once per document, by their latest rating of it or of any passage.
+        latest = (
+            select(ratings.c.document_id, ratings.c.rating)
+            .where(ratings.c.document_id.in_(document_ids))
+            .ext(distinct_on(ratings.c.document_id, ratings.c.user_id))
+            .order_by(ratings.c.document_id, ratings.c.user_id, ratings.c.updated_at.desc())
+            .subquery()
+        )
+        query = select(latest.c.document_id, latest.c.rating, func.count()).group_by(
+            latest.c.document_id, latest.c.rating
+        )
+        async with self._engine.connect() as conn:
+            rows = (await conn.execute(query)).all()
+        counts: dict[uuid.UUID, list[int]] = {}
+        for document_id, rating, n in rows:
+            pair = counts.setdefault(document_id, [0, 0])
+            pair[0 if rating == HELPFUL else 1] += n
+        return {i: (h, u) for i, (h, u) in counts.items()}
+
     async def save_report(
         self, document_id: uuid.UUID, reporter: str, reason: str, comment: str
     ) -> None:
@@ -382,6 +468,11 @@ async def _close_reports(conn: AsyncConnection, document_id: uuid.UUID) -> None:
         .where(reports.c.document_id == document_id, reports.c.closed_at.is_(None))
         .values(closed_at=func.now())
     )
+
+
+def _chunk(chunk_index: int | None) -> int:
+    """How the rated passage is stored: -1 for the document as a whole."""
+    return -1 if chunk_index is None else chunk_index
 
 
 def _lifecycle(row: RowMapping) -> Lifecycle:

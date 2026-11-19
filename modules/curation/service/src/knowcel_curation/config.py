@@ -47,6 +47,12 @@ class Settings(PlatformSettings):
     curation_report_penalty: float = 0.8
     # The least the reports can take a score down to, as a factor between 0 and 1.
     curation_report_floor: float = 0.3
+    # Weight of how helpful users found a document, next to its recency (see
+    # KNOWCEL_CURATION_RECENCY_WEIGHT), once it has KNOWCEL_CURATION_RATING_MIN
+    # ratings. 0 leaves ratings out of the score.
+    curation_rating_weight: float = 0.5
+    # Ratings a document needs before they count, so one vote doesn't decide.
+    curation_rating_min: int = 3
     # Seconds between scoring all documents again, so that recency keeps
     # decaying while no document is processed. Documents past their review date
     # are opened as findings at the same time.
@@ -82,6 +88,8 @@ class Settings(PlatformSettings):
         problems.between("curation_archived_factor", self.curation_archived_factor, 0, 1)
         problems.between("curation_report_penalty", self.curation_report_penalty, 0, 1)
         problems.between("curation_report_floor", self.curation_report_floor, 0, 1)
+        problems.at_least("curation_rating_weight", self.curation_rating_weight, 0)
+        problems.at_least("curation_rating_min", self.curation_rating_min, 1)
         problems.at_least("curation_rescore_interval", self.curation_rescore_interval, 1)
         problems.between("curation_conflict_threshold", self.curation_conflict_threshold, -1, 1)
         problems.between(
@@ -123,4 +131,6 @@ class Settings(PlatformSettings):
             archived_factor=self.curation_archived_factor,
             report_penalty=self.curation_report_penalty,
             report_floor=self.curation_report_floor,
+            rating=self.curation_rating_weight,
+            rating_min=self.curation_rating_min,
         )

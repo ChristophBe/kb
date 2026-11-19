@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file knowcel/curation/v1/curation.proto.
  */
 export const file_knowcel_curation_v1_curation: GenFile = /*@__PURE__*/
-  fileDesc("CiJrbm93Y2VsL2N1cmF0aW9uL3YxL2N1cmF0aW9uLnByb3RvEhNrbm93Y2VsLmN1cmF0aW9uLnYxIroBCg1Eb2N1bWVudFNjb3JlEhMKC2RvY3VtZW50X2lkGAEgASgJEg0KBXNjb3JlGAIgASgBEi4KCnVwZGF0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjEKCWxpZmVjeWNsZRgEIAEoCzIeLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlEhAKCGV4Y2x1ZGVkGAUgASgIEhAKCHJlcGxhY2VkGAYgASgIIn0KCUxpZmVjeWNsZRIyCgVzdGF0ZRgBIAEoDjIjLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlU3RhdGUSDQoFb3duZXIYAiABKAkSLQoJcmV2aWV3X2J5GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKWAQoPTGlmZWN5Y2xlQ2hhbmdlEjEKCWxpZmVjeWNsZRgBIAEoCzIeLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlEgwKBG5vdGUYAiABKAkSEgoKY2hhbmdlZF9ieRgDIAEoCRIuCgpjaGFuZ2VkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJcChBSZXNvbHV0aW9uT3B0aW9uEjMKCnJlc29sdXRpb24YASABKA4yHy5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlc29sdXRpb24SEwoLZGVzY3JpcHRpb24YAiABKAki7AIKB0ZpbmRpbmcSCgoCaWQYASABKAkSLgoEa2luZBgCIAEoDjIgLmtub3djZWwuY3VyYXRpb24udjEuRmluZGluZ0tpbmQSEwoLZG9jdW1lbnRfaWQYAyABKAkSGQoRb3RoZXJfZG9jdW1lbnRfaWQYBCABKAkSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASDwoHc3VtbWFyeRgGIAEoCRIWCg5kb2N1bWVudF90aXRsZRgHIAEoCRIcChRvdGhlcl9kb2N1bWVudF90aXRsZRgIIAEoCRI6CgtyZXNvbHV0aW9ucxgJIAMoCzIlLmtub3djZWwuY3VyYXRpb24udjEuUmVzb2x1dGlvbk9wdGlvbhIsCgdyZXBvcnRzGAogAygLMhsua25vd2NlbC5jdXJhdGlvbi52MS5SZXBvcnQSFAoMcmVwb3J0X2NvdW50GAsgASgFIo4BCgZSZXBvcnQSEAoIcmVwb3J0ZXIYASABKAkSMQoGcmVhc29uGAIgASgOMiEua25vd2NlbC5jdXJhdGlvbi52MS5SZXBvcnRSZWFzb24SDwoHY29tbWVudBgDIAEoCRIuCgpjcmVhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCIuChdHZXREb2N1bWVudFNjb3JlUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCSJNChhHZXREb2N1bWVudFNjb3JlUmVzcG9uc2USMQoFc2NvcmUYASABKAsyIi5rbm93Y2VsLmN1cmF0aW9uLnYxLkRvY3VtZW50U2NvcmUiKgoSU2NvcmVDaHVua3NSZXF1ZXN0EhQKDGRvY3VtZW50X2lkcxgBIAMoCSJJChNTY29yZUNodW5rc1Jlc3BvbnNlEjIKBnNjb3JlcxgBIAMoCzIiLmtub3djZWwuY3VyYXRpb24udjEuRG9jdW1lbnRTY29yZSKqAQoTU2V0TGlmZWN5Y2xlUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCRIyCgVzdGF0ZRgCIAEoDjIjLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlU3RhdGUSDQoFb3duZXIYAyABKAkSLQoJcmV2aWV3X2J5GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIMCgRub3RlGAUgASgJIhYKFFNldExpZmVjeWNsZVJlc3BvbnNlIjIKG0xpc3RMaWZlY3ljbGVIaXN0b3J5UmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCSJVChxMaXN0TGlmZWN5Y2xlSGlzdG9yeVJlc3BvbnNlEjUKB2NoYW5nZXMYASADKAsyJC5rbm93Y2VsLmN1cmF0aW9uLnYxLkxpZmVjeWNsZUNoYW5nZSJwChVSZXBvcnREb2N1bWVudFJlcXVlc3QSEwoLZG9jdW1lbnRfaWQYASABKAkSMQoGcmVhc29uGAIgASgOMiEua25vd2NlbC5jdXJhdGlvbi52MS5SZXBvcnRSZWFzb24SDwoHY29tbWVudBgDIAEoCSIYChZSZXBvcnREb2N1bWVudFJlc3BvbnNlIikKEkxpc3RSZXBvcnRzUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCSJDChNMaXN0UmVwb3J0c1Jlc3BvbnNlEiwKB3JlcG9ydHMYASADKAsyGy5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlcG9ydCJtChNMaXN0RmluZGluZ3NSZXF1ZXN0EhEKCXBhZ2Vfc2l6ZRgBIAEoBRISCgpwYWdlX3Rva2VuGAIgASgJEi8KBWtpbmRzGAMgAygOMiAua25vd2NlbC5jdXJhdGlvbi52MS5GaW5kaW5nS2luZCJgChVSZXNvbHZlRmluZGluZ1JlcXVlc3QSEgoKZmluZGluZ19pZBgBIAEoCRIzCgpyZXNvbHV0aW9uGAIgASgOMh8ua25vd2NlbC5jdXJhdGlvbi52MS5SZXNvbHV0aW9uIhgKFlJlc29sdmVGaW5kaW5nUmVzcG9uc2UiXwoUTGlzdEZpbmRpbmdzUmVzcG9uc2USLgoIZmluZGluZ3MYASADKAsyHC5rbm93Y2VsLmN1cmF0aW9uLnYxLkZpbmRpbmcSFwoPbmV4dF9wYWdlX3Rva2VuGAIgASgJKscBCg5MaWZlY3ljbGVTdGF0ZRIfChtMSUZFQ1lDTEVfU1RBVEVfVU5TUEVDSUZJRUQQABIZChVMSUZFQ1lDTEVfU1RBVEVfRFJBRlQQARIdChlMSUZFQ1lDTEVfU1RBVEVfSU5fUkVWSUVXEAISHAoYTElGRUNZQ0xFX1NUQVRFX0FQUFJPVkVEEAMSHgoaTElGRUNZQ0xFX1NUQVRFX0RFUFJFQ0FURUQQBBIcChhMSUZFQ1lDTEVfU1RBVEVfQVJDSElWRUQQBSq3AQoLRmluZGluZ0tpbmQSHAoYRklORElOR19LSU5EX1VOU1BFQ0lGSUVEEAASGgoWRklORElOR19LSU5EX0RVUExJQ0FURRABEhsKF0ZJTkRJTkdfS0lORF9TVVBFUlNFREVEEAISGQoVRklORElOR19LSU5EX0NPTkZMSUNUEAMSGwoXRklORElOR19LSU5EX1JFVklFV19EVUUQBBIZChVGSU5ESU5HX0tJTkRfUkVQT1JURUQQBSqGAQoKUmVzb2x1dGlvbhIaChZSRVNPTFVUSU9OX1VOU1BFQ0lGSUVEEAASEwoPUkVTT0xVVElPTl9LRUVQEAESFgoSUkVTT0xVVElPTl9SRVBMQUNFEAISFQoRUkVTT0xVVElPTl9JR05PUkUQAxIYChRSRVNPTFVUSU9OX0RFUFJFQ0FURRAEKpwBCgxSZXBvcnRSZWFzb24SHQoZUkVQT1JUX1JFQVNPTl9VTlNQRUNJRklFRBAAEhcKE1JFUE9SVF9SRUFTT05fV1JPTkcQARIaChZSRVBPUlRfUkVBU09OX09VVERBVEVEEAISHwobUkVQT1JUX1JFQVNPTl9JTkFQUFJPUFJJQVRFEAMSFwoTUkVQT1JUX1JFQVNPTl9PVEhFUhAEMuMGCg9DdXJhdGlvblNlcnZpY2USbwoQR2V0RG9jdW1lbnRTY29yZRIsLmtub3djZWwuY3VyYXRpb24udjEuR2V0RG9jdW1lbnRTY29yZVJlcXVlc3QaLS5rbm93Y2VsLmN1cmF0aW9uLnYxLkdldERvY3VtZW50U2NvcmVSZXNwb25zZRJgCgtTY29yZUNodW5rcxInLmtub3djZWwuY3VyYXRpb24udjEuU2NvcmVDaHVua3NSZXF1ZXN0Gigua25vd2NlbC5jdXJhdGlvbi52MS5TY29yZUNodW5rc1Jlc3BvbnNlEmMKDExpc3RGaW5kaW5ncxIoLmtub3djZWwuY3VyYXRpb24udjEuTGlzdEZpbmRpbmdzUmVxdWVzdBopLmtub3djZWwuY3VyYXRpb24udjEuTGlzdEZpbmRpbmdzUmVzcG9uc2USYwoMU2V0TGlmZWN5Y2xlEigua25vd2NlbC5jdXJhdGlvbi52MS5TZXRMaWZlY3ljbGVSZXF1ZXN0Gikua25vd2NlbC5jdXJhdGlvbi52MS5TZXRMaWZlY3ljbGVSZXNwb25zZRJ7ChRMaXN0TGlmZWN5Y2xlSGlzdG9yeRIwLmtub3djZWwuY3VyYXRpb24udjEuTGlzdExpZmVjeWNsZUhpc3RvcnlSZXF1ZXN0GjEua25vd2NlbC5jdXJhdGlvbi52MS5MaXN0TGlmZWN5Y2xlSGlzdG9yeVJlc3BvbnNlEmkKDlJlcG9ydERvY3VtZW50Eioua25vd2NlbC5jdXJhdGlvbi52MS5SZXBvcnREb2N1bWVudFJlcXVlc3QaKy5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlcG9ydERvY3VtZW50UmVzcG9uc2USYAoLTGlzdFJlcG9ydHMSJy5rbm93Y2VsLmN1cmF0aW9uLnYxLkxpc3RSZXBvcnRzUmVxdWVzdBooLmtub3djZWwuY3VyYXRpb24udjEuTGlzdFJlcG9ydHNSZXNwb25zZRJpCg5SZXNvbHZlRmluZGluZxIqLmtub3djZWwuY3VyYXRpb24udjEuUmVzb2x2ZUZpbmRpbmdSZXF1ZXN0Gisua25vd2NlbC5jdXJhdGlvbi52MS5SZXNvbHZlRmluZGluZ1Jlc3BvbnNlQlFaT2dpdGh1Yi5jb20vQ2hyaXN0b3BoQmUva25vd2NlbGl1bS9tb2R1bGVzL2N1cmF0aW9uL2FwaS9nby9jdXJhdGlvbnYxO2N1cmF0aW9udjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
+  fileDesc("CiJrbm93Y2VsL2N1cmF0aW9uL3YxL2N1cmF0aW9uLnByb3RvEhNrbm93Y2VsLmN1cmF0aW9uLnYxIroBCg1Eb2N1bWVudFNjb3JlEhMKC2RvY3VtZW50X2lkGAEgASgJEg0KBXNjb3JlGAIgASgBEi4KCnVwZGF0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjEKCWxpZmVjeWNsZRgEIAEoCzIeLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlEhAKCGV4Y2x1ZGVkGAUgASgIEhAKCHJlcGxhY2VkGAYgASgIIn0KCUxpZmVjeWNsZRIyCgVzdGF0ZRgBIAEoDjIjLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlU3RhdGUSDQoFb3duZXIYAiABKAkSLQoJcmV2aWV3X2J5GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKWAQoPTGlmZWN5Y2xlQ2hhbmdlEjEKCWxpZmVjeWNsZRgBIAEoCzIeLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlEgwKBG5vdGUYAiABKAkSEgoKY2hhbmdlZF9ieRgDIAEoCRIuCgpjaGFuZ2VkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJcChBSZXNvbHV0aW9uT3B0aW9uEjMKCnJlc29sdXRpb24YASABKA4yHy5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlc29sdXRpb24SEwoLZGVzY3JpcHRpb24YAiABKAki7AIKB0ZpbmRpbmcSCgoCaWQYASABKAkSLgoEa2luZBgCIAEoDjIgLmtub3djZWwuY3VyYXRpb24udjEuRmluZGluZ0tpbmQSEwoLZG9jdW1lbnRfaWQYAyABKAkSGQoRb3RoZXJfZG9jdW1lbnRfaWQYBCABKAkSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASDwoHc3VtbWFyeRgGIAEoCRIWCg5kb2N1bWVudF90aXRsZRgHIAEoCRIcChRvdGhlcl9kb2N1bWVudF90aXRsZRgIIAEoCRI6CgtyZXNvbHV0aW9ucxgJIAMoCzIlLmtub3djZWwuY3VyYXRpb24udjEuUmVzb2x1dGlvbk9wdGlvbhIsCgdyZXBvcnRzGAogAygLMhsua25vd2NlbC5jdXJhdGlvbi52MS5SZXBvcnQSFAoMcmVwb3J0X2NvdW50GAsgASgFIo4BCgZSZXBvcnQSEAoIcmVwb3J0ZXIYASABKAkSMQoGcmVhc29uGAIgASgOMiEua25vd2NlbC5jdXJhdGlvbi52MS5SZXBvcnRSZWFzb24SDwoHY29tbWVudBgDIAEoCRIuCgpjcmVhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCIuChdHZXREb2N1bWVudFNjb3JlUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCSJNChhHZXREb2N1bWVudFNjb3JlUmVzcG9uc2USMQoFc2NvcmUYASABKAsyIi5rbm93Y2VsLmN1cmF0aW9uLnYxLkRvY3VtZW50U2NvcmUiKgoSU2NvcmVDaHVua3NSZXF1ZXN0EhQKDGRvY3VtZW50X2lkcxgBIAMoCSJJChNTY29yZUNodW5rc1Jlc3BvbnNlEjIKBnNjb3JlcxgBIAMoCzIiLmtub3djZWwuY3VyYXRpb24udjEuRG9jdW1lbnRTY29yZSKqAQoTU2V0TGlmZWN5Y2xlUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCRIyCgVzdGF0ZRgCIAEoDjIjLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlU3RhdGUSDQoFb3duZXIYAyABKAkSLQoJcmV2aWV3X2J5GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIMCgRub3RlGAUgASgJIhYKFFNldExpZmVjeWNsZVJlc3BvbnNlIjIKG0xpc3RMaWZlY3ljbGVIaXN0b3J5UmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCSJVChxMaXN0TGlmZWN5Y2xlSGlzdG9yeVJlc3BvbnNlEjUKB2NoYW5nZXMYASADKAsyJC5rbm93Y2VsLmN1cmF0aW9uLnYxLkxpZmVjeWNsZUNoYW5nZSJwChVSZXBvcnREb2N1bWVudFJlcXVlc3QSEwoLZG9jdW1lbnRfaWQYASABKAkSMQoGcmVhc29uGAIgASgOMiEua25vd2NlbC5jdXJhdGlvbi52MS5SZXBvcnRSZWFzb24SDwoHY29tbWVudBgDIAEoCSIYChZSZXBvcnREb2N1bWVudFJlc3BvbnNlIikKEkxpc3RSZXBvcnRzUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCSJDChNMaXN0UmVwb3J0c1Jlc3BvbnNlEiwKB3JlcG9ydHMYASADKAsyGy5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlcG9ydCKaAQoTUmF0ZURvY3VtZW50UmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCRIYCgtjaHVua19pbmRleBgCIAEoBUgAiAEBEisKBnJhdGluZxgDIAEoDjIbLmtub3djZWwuY3VyYXRpb24udjEuUmF0aW5nEhcKD2NvbnZlcnNhdGlvbl9pZBgEIAEoCUIOCgxfY2h1bmtfaW5kZXgiFgoUUmF0ZURvY3VtZW50UmVzcG9uc2UiWAoXR2V0UmF0aW5nU3VtbWFyeVJlcXVlc3QSEwoLZG9jdW1lbnRfaWQYASABKAkSGAoLY2h1bmtfaW5kZXgYAiABKAVIAIgBAUIOCgxfY2h1bmtfaW5kZXgicAoYR2V0UmF0aW5nU3VtbWFyeVJlc3BvbnNlEg8KB2hlbHBmdWwYASABKAUSEwoLbm90X2hlbHBmdWwYAiABKAUSLgoJbXlfcmF0aW5nGAMgASgOMhsua25vd2NlbC5jdXJhdGlvbi52MS5SYXRpbmcibQoTTGlzdEZpbmRpbmdzUmVxdWVzdBIRCglwYWdlX3NpemUYASABKAUSEgoKcGFnZV90b2tlbhgCIAEoCRIvCgVraW5kcxgDIAMoDjIgLmtub3djZWwuY3VyYXRpb24udjEuRmluZGluZ0tpbmQiYAoVUmVzb2x2ZUZpbmRpbmdSZXF1ZXN0EhIKCmZpbmRpbmdfaWQYASABKAkSMwoKcmVzb2x1dGlvbhgCIAEoDjIfLmtub3djZWwuY3VyYXRpb24udjEuUmVzb2x1dGlvbiIYChZSZXNvbHZlRmluZGluZ1Jlc3BvbnNlIl8KFExpc3RGaW5kaW5nc1Jlc3BvbnNlEi4KCGZpbmRpbmdzGAEgAygLMhwua25vd2NlbC5jdXJhdGlvbi52MS5GaW5kaW5nEhcKD25leHRfcGFnZV90b2tlbhgCIAEoCSrHAQoOTGlmZWN5Y2xlU3RhdGUSHwobTElGRUNZQ0xFX1NUQVRFX1VOU1BFQ0lGSUVEEAASGQoVTElGRUNZQ0xFX1NUQVRFX0RSQUZUEAESHQoZTElGRUNZQ0xFX1NUQVRFX0lOX1JFVklFVxACEhwKGExJRkVDWUNMRV9TVEFURV9BUFBST1ZFRBADEh4KGkxJRkVDWUNMRV9TVEFURV9ERVBSRUNBVEVEEAQSHAoYTElGRUNZQ0xFX1NUQVRFX0FSQ0hJVkVEEAUqtwEKC0ZpbmRpbmdLaW5kEhwKGEZJTkRJTkdfS0lORF9VTlNQRUNJRklFRBAAEhoKFkZJTkRJTkdfS0lORF9EVVBMSUNBVEUQARIbChdGSU5ESU5HX0tJTkRfU1VQRVJTRURFRBACEhkKFUZJTkRJTkdfS0lORF9DT05GTElDVBADEhsKF0ZJTkRJTkdfS0lORF9SRVZJRVdfRFVFEAQSGQoVRklORElOR19LSU5EX1JFUE9SVEVEEAUqhgEKClJlc29sdXRpb24SGgoWUkVTT0xVVElPTl9VTlNQRUNJRklFRBAAEhMKD1JFU09MVVRJT05fS0VFUBABEhYKElJFU09MVVRJT05fUkVQTEFDRRACEhUKEVJFU09MVVRJT05fSUdOT1JFEAMSGAoUUkVTT0xVVElPTl9ERVBSRUNBVEUQBCqcAQoMUmVwb3J0UmVhc29uEh0KGVJFUE9SVF9SRUFTT05fVU5TUEVDSUZJRUQQABIXChNSRVBPUlRfUkVBU09OX1dST05HEAESGgoWUkVQT1JUX1JFQVNPTl9PVVREQVRFRBACEh8KG1JFUE9SVF9SRUFTT05fSU5BUFBST1BSSUFURRADEhcKE1JFUE9SVF9SRUFTT05fT1RIRVIQBCpdCgZSYXRpbmcSFgoSUkFUSU5HX1VOU1BFQ0lGSUVEEAASEgoOUkFUSU5HX0hFTFBGVUwQARIWChJSQVRJTkdfTk9UX0hFTFBGVUwQAhIPCgtSQVRJTkdfTk9ORRADMrkICg9DdXJhdGlvblNlcnZpY2USbwoQR2V0RG9jdW1lbnRTY29yZRIsLmtub3djZWwuY3VyYXRpb24udjEuR2V0RG9jdW1lbnRTY29yZVJlcXVlc3QaLS5rbm93Y2VsLmN1cmF0aW9uLnYxLkdldERvY3VtZW50U2NvcmVSZXNwb25zZRJgCgtTY29yZUNodW5rcxInLmtub3djZWwuY3VyYXRpb24udjEuU2NvcmVDaHVua3NSZXF1ZXN0Gigua25vd2NlbC5jdXJhdGlvbi52MS5TY29yZUNodW5rc1Jlc3BvbnNlEmMKDExpc3RGaW5kaW5ncxIoLmtub3djZWwuY3VyYXRpb24udjEuTGlzdEZpbmRpbmdzUmVxdWVzdBopLmtub3djZWwuY3VyYXRpb24udjEuTGlzdEZpbmRpbmdzUmVzcG9uc2USYwoMU2V0TGlmZWN5Y2xlEigua25vd2NlbC5jdXJhdGlvbi52MS5TZXRMaWZlY3ljbGVSZXF1ZXN0Gikua25vd2NlbC5jdXJhdGlvbi52MS5TZXRMaWZlY3ljbGVSZXNwb25zZRJ7ChRMaXN0TGlmZWN5Y2xlSGlzdG9yeRIwLmtub3djZWwuY3VyYXRpb24udjEuTGlzdExpZmVjeWNsZUhpc3RvcnlSZXF1ZXN0GjEua25vd2NlbC5jdXJhdGlvbi52MS5MaXN0TGlmZWN5Y2xlSGlzdG9yeVJlc3BvbnNlEmkKDlJlcG9ydERvY3VtZW50Eioua25vd2NlbC5jdXJhdGlvbi52MS5SZXBvcnREb2N1bWVudFJlcXVlc3QaKy5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlcG9ydERvY3VtZW50UmVzcG9uc2USYAoLTGlzdFJlcG9ydHMSJy5rbm93Y2VsLmN1cmF0aW9uLnYxLkxpc3RSZXBvcnRzUmVxdWVzdBooLmtub3djZWwuY3VyYXRpb24udjEuTGlzdFJlcG9ydHNSZXNwb25zZRJjCgxSYXRlRG9jdW1lbnQSKC5rbm93Y2VsLmN1cmF0aW9uLnYxLlJhdGVEb2N1bWVudFJlcXVlc3QaKS5rbm93Y2VsLmN1cmF0aW9uLnYxLlJhdGVEb2N1bWVudFJlc3BvbnNlEm8KEEdldFJhdGluZ1N1bW1hcnkSLC5rbm93Y2VsLmN1cmF0aW9uLnYxLkdldFJhdGluZ1N1bW1hcnlSZXF1ZXN0Gi0ua25vd2NlbC5jdXJhdGlvbi52MS5HZXRSYXRpbmdTdW1tYXJ5UmVzcG9uc2USaQoOUmVzb2x2ZUZpbmRpbmcSKi5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlc29sdmVGaW5kaW5nUmVxdWVzdBorLmtub3djZWwuY3VyYXRpb24udjEuUmVzb2x2ZUZpbmRpbmdSZXNwb25zZUJRWk9naXRodWIuY29tL0NocmlzdG9waEJlL2tub3djZWxpdW0vbW9kdWxlcy9jdXJhdGlvbi9hcGkvZ28vY3VyYXRpb252MTtjdXJhdGlvbnYxYgZwcm90bzM", [file_google_protobuf_timestamp]);
 
 /**
  * DocumentScore ranks a document for retrieval: higher is more relevant.
@@ -520,6 +520,112 @@ export const ListReportsResponseSchema: GenMessage<ListReportsResponse> = /*@__P
   messageDesc(file_knowcel_curation_v1_curation, 17);
 
 /**
+ * @generated from message knowcel.curation.v1.RateDocumentRequest
+ */
+export type RateDocumentRequest = Message<"knowcel.curation.v1.RateDocumentRequest"> & {
+  /**
+   * @generated from field: string document_id = 1;
+   */
+  documentId: string;
+
+  /**
+   * The passage rated, counted from 0; unset for the document as a whole.
+   *
+   * @generated from field: optional int32 chunk_index = 2;
+   */
+  chunkIndex?: number | undefined;
+
+  /**
+   * Required.
+   *
+   * @generated from field: knowcel.curation.v1.Rating rating = 3;
+   */
+  rating: Rating;
+
+  /**
+   * The conversation the rating was given in, for ratings of a chat source.
+   *
+   * @generated from field: string conversation_id = 4;
+   */
+  conversationId: string;
+};
+
+/**
+ * Describes the message knowcel.curation.v1.RateDocumentRequest.
+ * Use `create(RateDocumentRequestSchema)` to create a new message.
+ */
+export const RateDocumentRequestSchema: GenMessage<RateDocumentRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 18);
+
+/**
+ * @generated from message knowcel.curation.v1.RateDocumentResponse
+ */
+export type RateDocumentResponse = Message<"knowcel.curation.v1.RateDocumentResponse"> & {
+};
+
+/**
+ * Describes the message knowcel.curation.v1.RateDocumentResponse.
+ * Use `create(RateDocumentResponseSchema)` to create a new message.
+ */
+export const RateDocumentResponseSchema: GenMessage<RateDocumentResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 19);
+
+/**
+ * @generated from message knowcel.curation.v1.GetRatingSummaryRequest
+ */
+export type GetRatingSummaryRequest = Message<"knowcel.curation.v1.GetRatingSummaryRequest"> & {
+  /**
+   * @generated from field: string document_id = 1;
+   */
+  documentId: string;
+
+  /**
+   * The passage whose rating of the caller to return; unset for the document.
+   * The counts are always those of the whole document.
+   *
+   * @generated from field: optional int32 chunk_index = 2;
+   */
+  chunkIndex?: number | undefined;
+};
+
+/**
+ * Describes the message knowcel.curation.v1.GetRatingSummaryRequest.
+ * Use `create(GetRatingSummaryRequestSchema)` to create a new message.
+ */
+export const GetRatingSummaryRequestSchema: GenMessage<GetRatingSummaryRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 20);
+
+/**
+ * @generated from message knowcel.curation.v1.GetRatingSummaryResponse
+ */
+export type GetRatingSummaryResponse = Message<"knowcel.curation.v1.GetRatingSummaryResponse"> & {
+  /**
+   * @generated from field: int32 helpful = 1;
+   */
+  helpful: number;
+
+  /**
+   * @generated from field: int32 not_helpful = 2;
+   */
+  notHelpful: number;
+
+  /**
+   * The caller's own rating of the document or passage asked about (not of the
+   * others); RATING_NONE when they have none.
+   *
+   * @generated from field: knowcel.curation.v1.Rating my_rating = 3;
+   */
+  myRating: Rating;
+};
+
+/**
+ * Describes the message knowcel.curation.v1.GetRatingSummaryResponse.
+ * Use `create(GetRatingSummaryResponseSchema)` to create a new message.
+ */
+export const GetRatingSummaryResponseSchema: GenMessage<GetRatingSummaryResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 21);
+
+/**
  * @generated from message knowcel.curation.v1.ListFindingsRequest
  */
 export type ListFindingsRequest = Message<"knowcel.curation.v1.ListFindingsRequest"> & {
@@ -550,7 +656,7 @@ export type ListFindingsRequest = Message<"knowcel.curation.v1.ListFindingsReque
  * Use `create(ListFindingsRequestSchema)` to create a new message.
  */
 export const ListFindingsRequestSchema: GenMessage<ListFindingsRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 18);
+  messageDesc(file_knowcel_curation_v1_curation, 22);
 
 /**
  * @generated from message knowcel.curation.v1.ResolveFindingRequest
@@ -572,7 +678,7 @@ export type ResolveFindingRequest = Message<"knowcel.curation.v1.ResolveFindingR
  * Use `create(ResolveFindingRequestSchema)` to create a new message.
  */
 export const ResolveFindingRequestSchema: GenMessage<ResolveFindingRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 19);
+  messageDesc(file_knowcel_curation_v1_curation, 23);
 
 /**
  * @generated from message knowcel.curation.v1.ResolveFindingResponse
@@ -585,7 +691,7 @@ export type ResolveFindingResponse = Message<"knowcel.curation.v1.ResolveFinding
  * Use `create(ResolveFindingResponseSchema)` to create a new message.
  */
 export const ResolveFindingResponseSchema: GenMessage<ResolveFindingResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 20);
+  messageDesc(file_knowcel_curation_v1_curation, 24);
 
 /**
  * @generated from message knowcel.curation.v1.ListFindingsResponse
@@ -610,7 +716,7 @@ export type ListFindingsResponse = Message<"knowcel.curation.v1.ListFindingsResp
  * Use `create(ListFindingsResponseSchema)` to create a new message.
  */
 export const ListFindingsResponseSchema: GenMessage<ListFindingsResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 21);
+  messageDesc(file_knowcel_curation_v1_curation, 25);
 
 /**
  * @generated from enum knowcel.curation.v1.LifecycleState
@@ -797,6 +903,39 @@ export const ReportReasonSchema: GenEnum<ReportReason> = /*@__PURE__*/
   enumDesc(file_knowcel_curation_v1_curation, 3);
 
 /**
+ * @generated from enum knowcel.curation.v1.Rating
+ */
+export enum Rating {
+  /**
+   * @generated from enum value: RATING_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: RATING_HELPFUL = 1;
+   */
+  HELPFUL = 1,
+
+  /**
+   * @generated from enum value: RATING_NOT_HELPFUL = 2;
+   */
+  NOT_HELPFUL = 2,
+
+  /**
+   * In a request: take the caller's rating back. Never in a response.
+   *
+   * @generated from enum value: RATING_NONE = 3;
+   */
+  NONE = 3,
+}
+
+/**
+ * Describes the enum knowcel.curation.v1.Rating.
+ */
+export const RatingSchema: GenEnum<Rating> = /*@__PURE__*/
+  enumDesc(file_knowcel_curation_v1_curation, 4);
+
+/**
  * CurationService keeps the knowledge base consistent: it scores documents by
  * relevance and freshness and reports documents that duplicate, replace or
  * contradict each other. Scores and findings only cover documents the caller
@@ -893,6 +1032,32 @@ export const CurationService: GenService<{
     methodKind: "unary";
     input: typeof ListReportsRequestSchema;
     output: typeof ListReportsResponseSchema;
+  },
+  /**
+   * RateDocument saves the caller's rating of a document, or of one of its
+   * passages when chunk_index is set. A user has one rating per document and
+   * passage: rating again replaces it, and RATING_NONE takes it back. The
+   * ratings of a document count in its score. NOT_FOUND when the caller can't
+   * read the document.
+   *
+   * @generated from rpc knowcel.curation.v1.CurationService.RateDocument
+   */
+  rateDocument: {
+    methodKind: "unary";
+    input: typeof RateDocumentRequestSchema;
+    output: typeof RateDocumentResponseSchema;
+  },
+  /**
+   * GetRatingSummary counts how many users found a document helpful or not,
+   * each by their latest rating of the document or of any of its passages, and
+   * returns the caller's own rating of the document or passage asked about.
+   *
+   * @generated from rpc knowcel.curation.v1.CurationService.GetRatingSummary
+   */
+  getRatingSummary: {
+    methodKind: "unary";
+    input: typeof GetRatingSummaryRequestSchema;
+    output: typeof GetRatingSummaryResponseSchema;
   },
   /**
    * ResolveFinding closes an open finding with one of the options it lists and

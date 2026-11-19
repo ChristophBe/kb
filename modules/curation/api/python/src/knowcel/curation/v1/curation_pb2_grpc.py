@@ -73,6 +73,16 @@ class CurationServiceStub:
                 request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListReportsRequest.SerializeToString,
                 response_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListReportsResponse.FromString,
                 _registered_method=True)
+        self.RateDocument = channel.unary_unary(
+                '/knowcel.curation.v1.CurationService/RateDocument',
+                request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.RateDocumentRequest.SerializeToString,
+                response_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.RateDocumentResponse.FromString,
+                _registered_method=True)
+        self.GetRatingSummary = channel.unary_unary(
+                '/knowcel.curation.v1.CurationService/GetRatingSummary',
+                request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.GetRatingSummaryRequest.SerializeToString,
+                response_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.GetRatingSummaryResponse.FromString,
+                _registered_method=True)
         self.ResolveFinding = channel.unary_unary(
                 '/knowcel.curation.v1.CurationService/ResolveFinding',
                 request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ResolveFindingRequest.SerializeToString,
@@ -155,6 +165,26 @@ class CurationServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def RateDocument(self, request, context):
+        """RateDocument saves the caller's rating of a document, or of one of its
+        passages when chunk_index is set. A user has one rating per document and
+        passage: rating again replaces it, and RATING_NONE takes it back. The
+        ratings of a document count in its score. NOT_FOUND when the caller can't
+        read the document.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetRatingSummary(self, request, context):
+        """GetRatingSummary counts how many users found a document helpful or not,
+        each by their latest rating of the document or of any of its passages, and
+        returns the caller's own rating of the document or passage asked about.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ResolveFinding(self, request, context):
         """ResolveFinding closes an open finding with one of the options it lists and
         updates the scores it affects. NOT_FOUND when the finding doesn't exist or
@@ -202,6 +232,16 @@ def add_CurationServiceServicer_to_server(servicer, server):
                     servicer.ListReports,
                     request_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListReportsRequest.FromString,
                     response_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListReportsResponse.SerializeToString,
+            ),
+            'RateDocument': grpc.unary_unary_rpc_method_handler(
+                    servicer.RateDocument,
+                    request_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.RateDocumentRequest.FromString,
+                    response_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.RateDocumentResponse.SerializeToString,
+            ),
+            'GetRatingSummary': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetRatingSummary,
+                    request_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.GetRatingSummaryRequest.FromString,
+                    response_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.GetRatingSummaryResponse.SerializeToString,
             ),
             'ResolveFinding': grpc.unary_unary_rpc_method_handler(
                     servicer.ResolveFinding,
@@ -402,6 +442,60 @@ class CurationService:
             '/knowcel.curation.v1.CurationService/ListReports',
             knowcel_dot_curation_dot_v1_dot_curation__pb2.ListReportsRequest.SerializeToString,
             knowcel_dot_curation_dot_v1_dot_curation__pb2.ListReportsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def RateDocument(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.curation.v1.CurationService/RateDocument',
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.RateDocumentRequest.SerializeToString,
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.RateDocumentResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetRatingSummary(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.curation.v1.CurationService/GetRatingSummary',
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.GetRatingSummaryRequest.SerializeToString,
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.GetRatingSummaryResponse.FromString,
             options,
             channel_credentials,
             insecure,

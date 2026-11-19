@@ -48,6 +48,8 @@ class FakeStore:
         self.resolved_by: dict[uuid.UUID, str] = {}
         self.history: list[tuple[uuid.UUID, LifecycleChange]] = []
         self.reports: dict[tuple[uuid.UUID, str], tuple[Report, bool]] = {}
+        self.ratings: dict[tuple[uuid.UUID, str, int | None], tuple[str, str, int]] = {}
+        self._seq = 0
         self.down = False
 
     async def get_scores(self, document_ids: Collection[uuid.UUID]) -> list[Score]:
@@ -121,6 +123,44 @@ class FakeStore:
         if after is not None:
             ordered = [f for f in ordered if key(f) > (-after.created_at.timestamp(), after.id)]
         return ordered[:limit]
+
+    async def save_rating(
+        self,
+        document_id: uuid.UUID,
+        user: str,
+        chunk_index: int | None,
+        rating: str,
+        conversation_id: str,
+    ) -> None:
+        self._check()
+        self._seq += 1
+        self.ratings[(document_id, user, chunk_index)] = (rating, conversation_id, self._seq)
+
+    async def delete_rating(
+        self, document_id: uuid.UUID, user: str, chunk_index: int | None
+    ) -> None:
+        self._check()
+        self.ratings.pop((document_id, user, chunk_index), None)
+
+    async def get_rating(
+        self, document_id: uuid.UUID, user: str, chunk_index: int | None
+    ) -> str | None:
+        self._check()
+        found = self.ratings.get((document_id, user, chunk_index))
+        return found[0] if found else None
+
+    async def rating_counts(
+        self, document_ids: Collection[uuid.UUID]
+    ) -> dict[uuid.UUID, tuple[int, int]]:
+        self._check()
+        latest: dict[tuple[uuid.UUID, str], tuple[str, int]] = {}
+        for (document_id, user, _), (rating, _, seq) in self.ratings.items():
+            if document_id in document_ids and seq > latest.get((document_id, user), ("", 0))[1]:
+                latest[(document_id, user)] = (rating, seq)
+        counts: dict[uuid.UUID, list[int]] = {}
+        for (document_id, _), (rating, _) in latest.items():
+            counts.setdefault(document_id, [0, 0])[0 if rating == "helpful" else 1] += 1
+        return {i: (h, u) for i, (h, u) in counts.items()}
 
     async def save_report(
         self, document_id: uuid.UUID, reporter: str, reason: str, comment: str

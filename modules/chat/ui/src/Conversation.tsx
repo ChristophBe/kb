@@ -305,6 +305,7 @@ export function Conversation() {
                 content={stopped.answer}
                 citations={stopped.citations}
                 stopped
+                streaming
               />
             </>
           )}
@@ -317,6 +318,7 @@ export function Conversation() {
                   content={pending.answer}
                   citations={pending.citations}
                   failure={pending.failure}
+                  streaming
                 />
               ) : (
                 <ProgressLine stage={pending.stage} />
@@ -406,6 +408,7 @@ function Bubble({
   stopped = false,
   announce = false,
   actions = false,
+  streaming = false,
   onRetry,
 }: Pick<ChatMessage, "role" | "content" | "citations"> & {
   /** The conversation the answer is in, for what other modules add to its sources. */
@@ -418,6 +421,8 @@ function Bubble({
   announce?: boolean;
   /** Shows the answer's actions: Copy, and Retry when `onRetry` is set. */
   actions?: boolean;
+  /** The answer isn't saved yet, so its sources aren't final. */
+  streaming?: boolean;
   onRetry?: () => void;
 }) {
   if (role === MessageRole.USER) {
@@ -432,7 +437,12 @@ function Bubble({
   return (
     <div className="flex flex-col gap-2 rounded-card border border-border bg-surface px-4 py-2 text-base @container">
       {content && (
-        <Answer content={content} citations={citations} conversationId={conversationId} />
+        <Answer
+          content={content}
+          citations={citations}
+          conversationId={conversationId}
+          streaming={streaming}
+        />
       )}
       {stopped && (
         <p className="flex items-center gap-2 text-xs text-fg-muted">

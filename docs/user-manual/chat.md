@@ -34,10 +34,10 @@ Follow-up questions in the same conversation can refer to earlier questions and 
 
 ## Check the sources of an answer
 
-Answers from your documents contain numbers like [1] and [2]. Each number points to a passage listed under the answer's sources. Only the sources an answer actually uses are listed, numbered in the order the answer first uses them, so the list reads in the order of the answer. Each source shows the document's title, the passage number and a short excerpt. When your question contains words that a passage has, such as a name or an identifier, the excerpt shows the part of the passage around those words. Passage numbers are the same as in search and on the document's page.
+Answers from your documents contain numbers like [1] and [2]. Each number points to a passage listed under the answer's sources. The **Sources** appear at the bottom of the answer once it is finished, one row per document with the number of passages used; select a row to show those passages. Only the sources an answer actually uses are listed, numbered in the order the answer first uses them, so the list reads in the order of the answer. Each passage shows the document's title, the passage number and a short excerpt. When your question contains words that a passage has, such as a name or an identifier, the excerpt shows the part of the passage around those words. Passage numbers are the same as in search and on the document's page.
 
-- Point at or focus a number to highlight its source, and the other way round.
-- Select a number or a source's title to open the document at that passage. The passage is scrolled into view and briefly highlighted.
+- Point at or focus a number to highlight its passage, and the other way round.
+- Select a number, which also opens its document's row, or a passage's title to open the document at that passage. The passage is scrolled into view and briefly highlighted.
 
 Answers prefer current knowledge. Passages of a document that has been replaced by a newer version you can see, or that is marked deprecated or archived, are left out of the sources, and passages of documents that rate lower, for example because they are old, come after those of better ones. If that check isn't available, the passages are ranked by how well they match your question alone. An administrator can turn it off.
 
@@ -55,7 +55,7 @@ The choice is remembered for each conversation in this browser, also after a rel
 
 ## Ask how to use Knowcelium
 
-Chat also knows this manual. Ask how to do something, for example "How do I restrict a chat to some documents?", and the answer explains it, citing the sections of the manual it used. These sources are marked **user manual**; select one to open that section of the help page.
+Chat also knows this manual. Ask how to do something, for example "How do I restrict a chat to some documents?", and the answer explains it, citing the sections of the manual it used. These sources are grouped in one **User manual** row; expand it and select a section to open that section of the help page.
 
 The manual is searched alongside your documents and only when **Use platform knowledge** is ticked. Its sections never replace passages from your documents, and they are only cited when they match your question closely. When Knowcelium has just started, it can take a moment before chat knows the manual.
 

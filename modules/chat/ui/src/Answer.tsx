@@ -1,7 +1,7 @@
 import type { Citation } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
 import { Slot } from "@knowcel/module-sdk";
-import { Check, Copy, IconButton, SourceNote } from "@knowcel/ui";
-import { type ComponentProps, useCallback, useMemo, useRef, useState } from "react";
+import { Check, ChevronLeft, Copy, cn, IconButton, SourceNote } from "@knowcel/ui";
+import { type ComponentProps, useCallback, useId, useMemo, useRef, useState } from "react";
 import Markdown, { type Components } from "react-markdown";
 import { Link } from "react-router";
 import rehypeSanitize from "rehype-sanitize";
@@ -118,13 +118,28 @@ export function Answer({
   content,
   citations,
   conversationId,
+  streaming = false,
 }: {
   content: string;
   citations: Citation[];
   /** Given to what other modules add to the sources. */
   conversationId?: string;
+  /** The answer isn't final yet: its sources are not listed until they are. */
+  streaming?: boolean;
 }) {
   const { active, linked } = useHighlight();
+  const groups = useMemo(() => groupSources(citations), [citations]);
+  const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
+  const toggle = useCallback(
+    (key: string, expand?: boolean) =>
+      setOpen((current) => {
+        const next = new Set(current);
+        if (expand ?? !next.has(key)) next.add(key);
+        else next.delete(key);
+        return next;
+      }),
+    [],
+  );
 
   // Stable across highlight changes: new components would remount the links and drop focus.
   const components = useMemo<Components>(
@@ -140,6 +155,7 @@ export function Answer({
               to={sourcePath(citation)}
               aria-label={citationName(n, citation)}
               className="font-mono text-xs hover:underline"
+              onClick={() => toggle(groupKey(citation), true)}
               {...linked(n)}
             >
               {children}
@@ -153,11 +169,11 @@ export function Answer({
         );
       },
     }),
-    [citations, linked],
+    [citations, linked, toggle],
   );
 
   return (
-    <div className="grid gap-x-6 gap-y-3 @xl:grid-cols-[minmax(0,1fr)_13rem]">
+    <div className="flex flex-col gap-3">
       <div className={PROSE}>
         <Markdown
           remarkPlugins={[remarkGfm, [remarkCitations, { count: citations.length }]]}
@@ -167,39 +183,123 @@ export function Answer({
           {content}
         </Markdown>
       </div>
-      {citations.length > 0 && (
-        <ul aria-label="Sources" className="space-y-3">
-          {citations.map((c, i) => {
-            const n = i + 1;
-            return (
-              <SourceNote
-                key={
-                  c.manualPage
-                    ? `${c.manualPage}#${c.manualSection}`
-                    : `${c.documentId}-${c.chunkIndex}`
-                }
-                n={n}
-                active={active === n}
-                detail={sourceDetail(c)}
-                snippet={c.snippet}
-                title={<SourceLink citation={c} {...linked(n)} />}
-                // Only documents can be acted on, not sections of the user manual.
-                actions={
-                  c.manualPage ? undefined : (
-                    <Slot
-                      name="chat.citation.actions"
-                      documentId={c.documentId}
-                      chunkIndex={c.chunkIndex}
-                      conversationId={conversationId}
-                    />
-                  )
-                }
-              />
-            );
-          })}
+      {!streaming && groups.length > 0 && (
+        <ul aria-label="Sources" className="space-y-1 border-t border-border pt-2">
+          {groups.map((group) => (
+            <SourceGroupRow
+              key={group.key}
+              group={group}
+              open={open.has(group.key)}
+              onToggle={() => toggle(group.key)}
+              active={active}
+              linked={linked}
+              conversationId={conversationId}
+            />
+          ))}
         </ul>
       )}
     </div>
+  );
+}
+
+/** The passages an answer used from one document, or from the user manual as a whole. */
+interface SourceGroup {
+  key: string;
+  title: string;
+  manual: boolean;
+  /** Each with its number in the answer. */
+  passages: { n: number; citation: Citation }[];
+}
+
+const groupKey = (c: Citation) => (c.manualPage ? "user-manual" : `document-${c.documentId}`);
+
+/** One group per document, in the order the answer first uses them; manual sections share one. */
+function groupSources(citations: Citation[]): SourceGroup[] {
+  const groups = new Map<string, SourceGroup>();
+  citations.forEach((citation, i) => {
+    const key = groupKey(citation);
+    const manual = Boolean(citation.manualPage);
+    let group = groups.get(key);
+    if (!group) {
+      group = { key, title: manual ? "User manual" : citation.documentTitle, manual, passages: [] };
+      groups.set(key, group);
+    }
+    group.passages.push({ n: i + 1, citation });
+  });
+  return [...groups.values()];
+}
+
+function SourceGroupRow({
+  group,
+  open,
+  onToggle,
+  active,
+  linked,
+  conversationId,
+}: {
+  group: SourceGroup;
+  open: boolean;
+  onToggle: () => void;
+  active: number | null;
+  linked: ReturnType<typeof useHighlight>["linked"];
+  conversationId?: string;
+}) {
+  const listId = useId();
+  const count = group.passages.length;
+  const unit = group.manual ? "section" : "passage";
+  const highlighted = group.passages.some((p) => p.n === active);
+  return (
+    <li
+      className={cn(
+        "border-l-2 pl-3 text-xs transition-colors",
+        highlighted ? "border-accent" : "border-border",
+      )}
+    >
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={listId}
+        onClick={onToggle}
+        className="flex min-h-11 w-full items-center gap-2 text-left hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-focus"
+      >
+        <ChevronLeft
+          className={cn("size-4 shrink-0 transition-transform", open ? "-rotate-90" : "rotate-180")}
+          aria-hidden="true"
+        />
+        <span className="min-w-0 flex-1 font-medium wrap-anywhere text-fg">{group.title}</span>
+        <span className="shrink-0 font-mono text-fg-muted">
+          {count} {unit}
+          {count === 1 ? "" : "s"}
+        </span>
+      </button>
+      <ul id={listId} hidden={!open} className="space-y-3 pb-2">
+        {group.passages.map(({ n, citation: c }) => (
+          <SourceNote
+            key={
+              c.manualPage
+                ? `${c.manualPage}#${c.manualSection}`
+                : `${c.documentId}-${c.chunkIndex}`
+            }
+            n={n}
+            active={active === n}
+            detail={sourceDetail(c)}
+            snippet={c.snippet}
+            title={<SourceLink citation={c} {...linked(n)} />}
+            // Only documents can be acted on, not sections of the user manual.
+            actions={
+              c.manualPage ? undefined : (
+                <Slot
+                  name="chat.citation.actions"
+                  documentId={c.documentId}
+                  chunkIndex={c.chunkIndex}
+                  conversationId={conversationId}
+                />
+              )
+            }
+          />
+        ))}
+      </ul>
+    </li>
   );
 }
 

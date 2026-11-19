@@ -121,7 +121,7 @@ Tailwind's default breakpoints apply. Design mobile first:
 
 | Width | Layout |
 |---|---|
-| < 768 px (default) | Single column. The shell's sidebar is a drawer opened from a labelled menu button in a top bar (`App.tsx`): it traps focus while open and closes on navigation, `Esc` and its backdrop, returning focus to the button. Secondary panes become their own full-width view (chat: the conversation list is the index route and a conversation has an "All conversations" back link). Page padding is `p-4`; full-height panes use `dvh`, so the mobile browser's toolbar does not cover the composer. |
+| < 768 px (default) | Single column. The shell's sidebar is a drawer opened from a labelled menu button in a top bar (`App.tsx`): it traps focus while open and closes on navigation, `Esc` and its backdrop, returning focus to the button. Secondary panes become their own full-width view (chat: the conversation list is the index route and a conversation has an "All conversations" back link). Page padding is `p-4`; a page that fills the viewport (the chat) uses the `page-fill` class, which sizes it in `dvh` so the mobile browser's toolbar does not cover the composer, and leaves room for the top bar and the "Powered by" credit of a branded deployment. Never size a page with `dvh` or `h-screen` yourself; a test fails. |
 | `sm` ≥ 640 px | Forms and dialogs get their max width; tables may show more columns. |
 | `md` ≥ 768 px | Shell sidebar visible; page padding `p-8`; two-pane layouts (list + detail, conversations + chat). |
 | `lg` ≥ 1024 px | Wider content area; optional third column (e.g. citations panel). |

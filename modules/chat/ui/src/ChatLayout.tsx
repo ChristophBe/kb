@@ -73,9 +73,8 @@ export function ChatLayout() {
     });
 
   return (
-    // At narrow widths the list and the conversation are separate full-width views;
-    // 3.5rem is the shell's top bar.
-    <div className="-m-4 flex h-[calc(100dvh-3.5rem)] md:-m-8 md:h-dvh">
+    // At narrow widths the list and the conversation are separate full-width views.
+    <div className="page-fill flex">
       <Area
         tone="secondary"
         className={`h-full w-full shrink-0 border-r md:w-64 ${openId ? "max-md:hidden" : ""}`}

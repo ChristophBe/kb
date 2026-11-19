@@ -6,13 +6,13 @@ import { App } from "./App.tsx";
 import "./index.css";
 
 /** /config.json: the runtime config plus the deployment's branding, when it has one. */
-type ShellConfig = RuntimeConfig & { branding?: Branding };
+type ShellConfig = RuntimeConfig & { branding?: Branding; version?: string };
 
 async function loadConfig(): Promise<RuntimeConfig> {
   const res = await fetch("/config.json");
   if (!res.ok) throw new Error(`failed to load /config.json: ${res.status}`);
   const config: ShellConfig = await res.json();
-  applyBranding(config.branding);
+  applyBranding(config.branding, config.version);
   return config;
 }
 

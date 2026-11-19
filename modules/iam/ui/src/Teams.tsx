@@ -3,6 +3,7 @@ import { toast, useClient, useMutation, useQuery, useQueryClient } from "@knowce
 import {
   Badge,
   Button,
+  brandText,
   Card,
   DelayedLoading,
   ErrorMessage,
@@ -56,7 +57,7 @@ export function Teams() {
   return (
     <div>
       <PageHeader
-        eyebrow="knowcelium / teams"
+        eyebrow={brandText("knowcelium / teams")}
         title="Teams"
         description="Group people into teams to share documents with them."
       />

@@ -11,6 +11,7 @@ import {
 import {
   Badge,
   Button,
+  brandText,
   buttonClass,
   Card,
   ChunkStrip,
@@ -136,7 +137,9 @@ export function DocumentDetail() {
   return (
     <div>
       {BACK}
-      <p className="mt-2 mb-2 font-mono text-xs text-fg-muted">knowcelium / documents</p>
+      <p className="mt-2 mb-2 font-mono text-xs text-fg-muted">
+        {brandText("knowcelium / documents")}
+      </p>
       <TitleEditor id={d.id} title={d.title} />
       <div role="toolbar" aria-label="Document actions" className="-mt-4 mb-6 flex flex-wrap gap-2">
         <Button variant="secondary" onClick={() => download(d.id)}>

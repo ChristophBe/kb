@@ -1,11 +1,13 @@
 import type { SearchHit, SearchProvider } from "@knowcel/module-sdk";
 import {
   Button,
+  brandText,
   Card,
   DelayedLoading,
   EmptyState,
   Input,
   PageHeader,
+  productName,
   SearchX,
   SkeletonRows,
 } from "@knowcel/ui";
@@ -50,21 +52,21 @@ export function SearchPage({ providers }: { providers: SearchProvider[] }) {
   return (
     <div className="max-w-3xl">
       <PageHeader
-        eyebrow="knowcelium / search"
+        eyebrow={brandText("knowcelium / search")}
         title="Search"
-        description="Results from every area of Knowcelium."
+        description={brandText("Results from every area of Knowcelium.")}
       />
       <search className="mb-4 block">
         <form noValidate onSubmit={submit}>
           <label htmlFor={inputId} className="sr-only">
-            Search Knowcelium
+            {`Search ${productName()}`}
           </label>
           <div className="flex gap-2">
             <Input
               ref={input}
               id={inputId}
               type="search"
-              placeholder="Search Knowcelium"
+              placeholder={`Search ${productName()}`}
               value={draft}
               onChange={(e) => {
                 setDraft(e.target.value);

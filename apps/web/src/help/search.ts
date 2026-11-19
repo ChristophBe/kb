@@ -63,7 +63,8 @@ export function pageSections(page: ManualPage): ManualSection[] {
   return sections;
 }
 
-const sections = manualPages.flatMap(pageSections);
+// Read per search: the manual follows the deployment's product name.
+const sections = () => manualPages().flatMap(pageSections);
 
 /** About SNIPPET_CHARS characters of `text` around `at`, cut at word boundaries. */
 function excerpt(text: string, at: number): string {
@@ -89,7 +90,7 @@ export const helpProvider: SearchProvider = {
     if (words.length === 0) return [];
     const inHeading: SearchHit[] = [];
     const inText: SearchHit[] = [];
-    for (const s of sections) {
+    for (const s of sections()) {
       const heading = s.heading.toLowerCase();
       const text = s.text.toLowerCase();
       const all = `${heading} ${text}`;

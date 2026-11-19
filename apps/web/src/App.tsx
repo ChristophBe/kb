@@ -8,9 +8,11 @@ import {
 } from "@knowcel/module-sdk";
 import {
   Area,
+  appVersion,
   CircleHelp,
   CircleUser,
   IconButton,
+  isBranded,
   LogOut,
   Logo,
   Menu,
@@ -141,7 +143,7 @@ function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: S
         >
           <Menu className="size-5" />
         </IconButton>
-        <Logo size={22} className="font-serif" />
+        <Logo size={22} nameUnderImage={false} className="font-serif" />
       </header>
       {drawer.open && (
         <button
@@ -200,12 +202,34 @@ function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: S
         ref={main}
         tabIndex={-1}
         {...behind}
-        className="min-w-0 flex-1 p-4 outline-none md:p-8"
+        className="flex min-w-0 flex-1 flex-col p-4 outline-none md:p-8"
       >
-        <Outlet />
+        <div className="min-w-0 flex-1">
+          <Outlet />
+        </div>
+        {isBranded() && <PoweredBy />}
       </main>
       <ToastHost />
     </div>
+  );
+}
+
+/** The credit of a branded deployment, at the end of the page (never over its content). */
+function PoweredBy() {
+  const projectUrl = "https://christophbe.github.io/knowcelium/";
+  return (
+    <p className="mt-8 self-end text-xs text-fg-muted">
+      Powered by{" "}
+      <a
+        href={projectUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="rounded-sm text-fg underline underline-offset-2"
+      >
+        Knowcelium
+      </a>{" "}
+      {appVersion()}
+    </p>
   );
 }
 

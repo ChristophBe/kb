@@ -12,6 +12,7 @@ import {
 import {
   Badge,
   Button,
+  brandText,
   Card,
   CircleAlert,
   ConfirmDialog,
@@ -40,9 +41,11 @@ export function Users() {
   return (
     <div>
       <PageHeader
-        eyebrow="knowcelium / users"
+        eyebrow={brandText("knowcelium / users")}
         title="Users"
-        description="Everyone who has signed in to Knowcelium. Platform admins can designate other platform admins."
+        description={brandText(
+          "Everyone who has signed in to Knowcelium. Platform admins can designate other platform admins.",
+        )}
       />
       {status === "loading" ? (
         <Card>

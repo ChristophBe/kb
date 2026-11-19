@@ -1,7 +1,7 @@
 /** What a deployment's branding file (docs/operations/branding.md) puts into /config.json. */
 export interface Branding {
   name?: string;
-  logo?: { light?: string; dark?: string };
+  logo?: { light?: string; dark?: string; showName?: boolean };
   favicon?: string;
   colors?: { light?: BrandColors; dark?: BrandColors };
   fonts?: { heading?: BrandFont; body?: BrandFont; mono?: BrandFont };
@@ -52,6 +52,9 @@ const FALLBACKS = {
 } as const;
 
 let current: Branding = {};
+// --- product name everywhere (#360) ---
+let branded = false;
+let version = "dev";
 
 /** The branding applied by `applyBranding`; empty for the Knowcelium defaults. */
 export function getBranding(): Branding {
@@ -61,6 +64,27 @@ export function getBranding(): Branding {
 /** The product name: the branded one, else "Knowcelium". */
 export function productName(): string {
   return current.name ?? DEFAULT_NAME;
+}
+
+/** Whether the deployment has a branding file (even an empty one). */
+export function isBranded(): boolean {
+  return branded;
+}
+
+/** The running web build's version (`version` of /config.json), "dev" for local builds. */
+export function appVersion(): string {
+  return version;
+}
+
+/**
+ * Text with the product name written "Knowcelium" (or "knowcelium" in an eyebrow)
+ * shown with the deployment's name; unchanged without branding. Possessives
+ * ("Knowcelium's") follow.
+ */
+export function brandText(text: string): string {
+  if (!current.name) return text;
+  const name = current.name;
+  return text.replace(/knowcelium/gi, () => name);
 }
 
 /**
@@ -160,11 +184,14 @@ function setFavicon(href: string | undefined) {
 
 /**
  * Applies a deployment's branding before the first render: the colour and font
- * tokens, the favicon and the tab title. `Logo` and `useDocumentTitle` read the rest.
+ * tokens, the favicon and the tab title. `Logo` and `useDocumentTitle` read the rest;
+ * `buildVersion` is the web build's version for the credit line.
  * Without branding the theme stays as it is.
  */
-export function applyBranding(branding: Branding | undefined) {
+export function applyBranding(branding: Branding | undefined, buildVersion?: string) {
   current = branding ?? {};
+  branded = branding !== undefined;
+  version = buildVersion ?? "dev";
   document.getElementById(STYLE_ID)?.remove();
   const rules: string[] = [];
   if (current.colors?.light || current.colors?.dark) rules.push(colorRules(current.colors));

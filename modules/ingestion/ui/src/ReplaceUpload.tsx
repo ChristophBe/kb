@@ -3,6 +3,7 @@ import { toast, useClient } from "@knowcel/module-sdk";
 import {
   AlertTriangle,
   Button,
+  brandText,
   fieldViolations,
   PageHeader,
   Upload as UploadIcon,
@@ -90,7 +91,7 @@ export function ReplaceUpload() {
         ← Back to the document
       </Link>
       <PageHeader
-        eyebrow="knowcelium / upload"
+        eyebrow={brandText("knowcelium / upload")}
         title="Upload new version"
         description={`Choose the new file${title ? ` for “${title}”` : ""}. The document keeps its title, metadata and links in chats, and stays readable with its current file until the new one is ready.`}
       />

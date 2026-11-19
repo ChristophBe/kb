@@ -1,3 +1,5 @@
+import { brandText } from "@knowcel/ui";
+
 // The user manual in docs/user-manual, bundled at build time: edits show up after
 // a rebuild, with no copy kept here.
 const files = import.meta.glob<string>("../../../../docs/user-manual/*.md", {
@@ -46,8 +48,21 @@ function buildPages(): ManualPage[] {
   return [...listed, ...unlisted].map((p) => ({ ...p, markdown: sources.get(p.slug) ?? "" }));
 }
 
-/** The manual's pages in index order; the README (contributor rules) isn't one. */
-export const manualPages: ManualPage[] = buildPages();
+const pages: ManualPage[] = buildPages();
+
+/**
+ * The manual's pages in index order; the README (contributor rules) isn't one.
+ * The source writes the product name "Knowcelium"; it is read with the
+ * deployment's name, so call this after the branding has been applied.
+ */
+export function manualPages(): ManualPage[] {
+  return pages.map((p) => ({
+    ...p,
+    title: brandText(p.title),
+    summary: brandText(p.summary),
+    markdown: brandText(p.markdown),
+  }));
+}
 
 /**
  * Where a link inside the manual leads in the app: "chat.md#stop-an-answer"

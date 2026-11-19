@@ -15,6 +15,7 @@ import {
 import {
   Badge,
   Button,
+  brandText,
   Card,
   ConfirmDialog,
   Cpu,
@@ -136,7 +137,7 @@ export function Models() {
   return (
     <div>
       <PageHeader
-        eyebrow="knowcelium / models"
+        eyebrow={brandText("knowcelium / models")}
         title="Models"
         description="The LLM providers used by all modules."
       />

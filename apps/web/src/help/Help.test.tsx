@@ -1,3 +1,4 @@
+import { applyBranding } from "@knowcel/ui";
 import { expectNoAxeViolations } from "@knowcel/ui/testing";
 import { render, screen } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
@@ -18,12 +19,12 @@ function renderAt(url: string) {
 
 describe("manual", () => {
   it("bundles every page of docs/user-manual, in index order, without the README", () => {
-    const slugs = manualPages.map((p) => p.slug);
+    const slugs = manualPages().map((p) => p.slug);
     expect(slugs.slice(0, 2)).toEqual(["getting-started", "sign-in"]);
     expect(slugs).toEqual(expect.arrayContaining(["documents", "search", "chat", "models"]));
     expect(slugs).not.toContain("README");
     // A page missing from the README index would come without a summary.
-    for (const p of manualPages) expect(p.summary, p.slug).not.toBe("");
+    for (const p of manualPages()) expect(p.summary, p.slug).not.toBe("");
   });
 
   it.each([
@@ -42,7 +43,7 @@ describe("HelpIndex", () => {
   it("links every manual page with its summary", async () => {
     const { container } = renderAt("/help");
     expect(screen.getByRole("heading", { level: 1, name: "Help" })).toBeTruthy();
-    for (const p of manualPages) {
+    for (const p of manualPages()) {
       expect(screen.getByRole("link", { name: new RegExp(p.title) }).getAttribute("href")).toBe(
         `/help/${p.slug}`,
       );
@@ -83,5 +84,35 @@ describe("HelpPage", () => {
     renderAt("/help/nope");
     expect(screen.getByText(/There is no help page "nope"/)).toBeTruthy();
     expect(screen.getByRole("link", { name: "All help pages" }).getAttribute("href")).toBe("/help");
+  });
+});
+
+// --- product name everywhere (#360) ---
+describe("a branded deployment", () => {
+  afterEach(() => applyBranding(undefined));
+
+  it("keeps the product name of the manual without branding", () => {
+    renderAt("/help");
+    expect(screen.getByText("How to use Knowcelium, by area.")).toBeTruthy();
+    expect(document.body.textContent).toContain("the areas of Knowcelium");
+  });
+
+  it("shows the configured name on the index and every page, possessives included", () => {
+    applyBranding({ name: "Acme Knowledge" });
+    const { unmount } = renderAt("/help");
+    expect(screen.getByText("How to use Acme Knowledge, by area.")).toBeTruthy();
+    expect(screen.getByText("Acme Knowledge / help")).toBeTruthy();
+    expect(document.body.textContent).not.toMatch(/knowcelium/i);
+    unmount();
+    for (const p of manualPages()) {
+      const { container, unmount: done } = renderAt(`/help/${p.slug}`);
+      expect(container.textContent, p.slug).not.toMatch(/knowcelium/i);
+      done();
+    }
+    expect(
+      manualPages()
+        .map((p) => p.summary)
+        .join(" "),
+    ).toContain("the areas of Acme Knowledge");
   });
 });

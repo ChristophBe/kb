@@ -91,3 +91,43 @@ describe("Logo with branding", () => {
     expect(container.querySelector("title")?.textContent).toBe("Acme Knowledge");
   });
 });
+
+// --- logo.showName (#360) ---
+describe("Logo with showName", () => {
+  const logo = { light: "/branding/logo.svg" };
+
+  it("shows the product name under the logo image", async () => {
+    applyBranding({ name: "Acme Knowledge", logo: { ...logo, showName: true } });
+    const { container } = render(<Logo />);
+    const image = container.querySelector("img");
+    expect(image?.getAttribute("src")).toBe("/branding/logo.svg");
+    // The text names it; the image alone would repeat it.
+    expect(image?.getAttribute("alt")).toBe("");
+    const name = screen.getByText("Acme Knowledge");
+    expect(image?.compareDocumentPosition(name)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    await expectNoAxeViolations(container);
+  });
+
+  it("shows the image alone when false or unset", () => {
+    for (const showName of [false, undefined]) {
+      applyBranding({ name: "Acme Knowledge", logo: { ...logo, showName } });
+      const { container, unmount } = render(<Logo />);
+      expect(container.textContent).toBe("");
+      expect(screen.getByAltText("Acme Knowledge")).toBeTruthy();
+      unmount();
+    }
+  });
+
+  it("keeps the image only where the name is turned off (the mobile header)", () => {
+    applyBranding({ name: "Acme Knowledge", logo: { ...logo, showName: true } });
+    const { container } = render(<Logo nameUnderImage={false} />);
+    expect(container.textContent).toBe("");
+    expect(screen.getByAltText("Acme Knowledge")).toBeTruthy();
+  });
+
+  it("has no effect without a logo image, where the name already is the logo", () => {
+    applyBranding({ name: "Acme Knowledge", logo: { showName: true } });
+    const { container } = render(<Logo />);
+    expect(container.textContent).toBe("Acme Knowledge");
+  });
+});

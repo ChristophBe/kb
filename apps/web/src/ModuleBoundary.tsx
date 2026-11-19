@@ -1,4 +1,4 @@
-import { Button, buttonClass, DelayedLoading, SkeletonRows } from "@knowcel/ui";
+import { Button, brandText, buttonClass, DelayedLoading, SkeletonRows } from "@knowcel/ui";
 import { Component, type ReactNode, Suspense, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router";
 
@@ -87,7 +87,9 @@ function ErrorPanel({
       </h1>
       <p className="mt-1">
         {chunk
-          ? "Knowcelium may have been updated since you opened it. Reload the page to get the latest version."
+          ? brandText(
+              "Knowcelium may have been updated since you opened it. Reload the page to get the latest version.",
+            )
           : "The rest of the app still works."}
       </p>
       <div className="mt-3 flex gap-2">

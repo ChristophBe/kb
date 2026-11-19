@@ -1,5 +1,5 @@
 import type { SearchProvider } from "@knowcel/module-sdk";
-import { ArrowRight, cn, Search } from "@knowcel/ui";
+import { ArrowRight, cn, productName, Search } from "@knowcel/ui";
 import {
   type CSSProperties,
   type KeyboardEvent,
@@ -128,7 +128,7 @@ export function HeaderSearch({ providers }: { providers: SearchProvider[] }) {
   return (
     <search className="block">
       <label htmlFor={`${id}-input`} className="sr-only">
-        Search Knowcelium
+        {`Search ${productName()}`}
       </label>
       <div
         ref={field}

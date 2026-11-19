@@ -150,4 +150,6 @@ def _info(document: document_pb2.Document) -> DocInfo:
         filename=document.filename,
         sha256=document.sha256,
         created_at=document.create_time.ToDatetime(tzinfo=datetime.UTC),
+        owner_id=document.owner_id,
+        team_ids=tuple(document.team_ids),
     )

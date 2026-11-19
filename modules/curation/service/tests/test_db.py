@@ -6,7 +6,7 @@ import uuid
 from collections.abc import AsyncIterator, Iterator
 
 import pytest
-from knowcel_curation.curation import FindingCursor
+from knowcel_curation.curation import REVIEW_DUE, FindingCursor, Lifecycle
 from knowcel_curation.db import SqlCurationStore, findings, migrate
 from sqlalchemy import insert, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -33,7 +33,11 @@ def database_url() -> Iterator[str]:
 async def engine(database_url: str) -> AsyncIterator[AsyncEngine]:
     engine = create_async_engine(database_url)
     async with engine.begin() as conn:
-        await conn.execute(text("TRUNCATE curation.document_scores, curation.findings"))
+        await conn.execute(
+            text(
+                "TRUNCATE curation.document_scores, curation.findings, curation.document_lifecycle"
+            )
+        )
     yield engine
     await engine.dispose()
 
@@ -160,3 +164,53 @@ async def test_resolutions_decide_which_findings_count_as_replacements(
     assert await store.count_replacements(older) == 1
     await store.resolve_finding(findings_by_kind["conflict"].id, "ignore", "alice")
     assert await store.count_replacements(older) == 1
+
+
+async def test_the_latest_change_is_the_current_lifecycle_and_all_are_kept(
+    engine: AsyncEngine,
+) -> None:
+    store = SqlCurationStore(engine)
+    document, other = uuid.uuid4(), uuid.uuid4()
+    assert await store.get_lifecycles([document]) == {}
+    await store.add_lifecycle_change(document, Lifecycle("draft", "alice"), "first", "alice")
+    await store.add_lifecycle_change(document, Lifecycle("approved", "bob", T0), "ok", "bob")
+    await store.add_lifecycle_change(other, Lifecycle("deprecated", "alice"), "", "alice")
+    current = await store.get_lifecycles([document, other, uuid.uuid4()])
+    assert current == {
+        document: Lifecycle("approved", "bob", T0),
+        other: Lifecycle("deprecated", "alice"),
+    }
+    history = await store.list_lifecycle_history(document)
+    assert [(c.lifecycle.state, c.note, c.changed_by) for c in history] == [
+        ("approved", "ok", "bob"),
+        ("draft", "first", "alice"),
+    ]
+
+
+async def test_review_is_due_for_the_current_lifecycle_unless_archived(
+    engine: AsyncEngine,
+) -> None:
+    store = SqlCurationStore(engine)
+    late, renewed, archived, none = (uuid.uuid4() for _ in range(4))
+    now = T0 + 10 * DAY
+    await store.add_lifecycle_change(late, Lifecycle("approved", "a", T0), "", "a")
+    # An earlier date that was replaced by a later one is not due.
+    await store.add_lifecycle_change(renewed, Lifecycle("approved", "a", T0), "", "a")
+    await store.add_lifecycle_change(renewed, Lifecycle("approved", "a", T0 + 30 * DAY), "", "a")
+    await store.add_lifecycle_change(archived, Lifecycle("archived", "a", T0), "", "a")
+    await store.add_lifecycle_change(none, Lifecycle("approved", "a"), "", "a")
+    assert await store.list_review_due(now, 10) == [late]
+
+
+async def test_a_review_reminder_is_a_finding_that_can_be_removed(engine: AsyncEngine) -> None:
+    store = SqlCurationStore(engine)
+    document, other = uuid.uuid4(), uuid.uuid4()
+    assert await store.add_finding(REVIEW_DUE, document, document)
+    assert not await store.add_finding(REVIEW_DUE, document, document)
+    assert await store.add_finding("duplicate", document, other)
+    (reminder,) = [f for f in await store.list_open_findings(10) if f.kind == REVIEW_DUE]
+    await store.resolve_finding(reminder.id, "keep", "alice")
+    await store.delete_review_due(document)
+    # Closed or not, the reminder goes with the next lifecycle change; others stay.
+    assert [f.kind for f in await store.list_open_findings(10)] == ["duplicate"]
+    assert await store.add_finding(REVIEW_DUE, document, document)

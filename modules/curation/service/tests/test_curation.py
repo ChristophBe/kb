@@ -3,7 +3,7 @@ import datetime
 import uuid
 
 import pytest
-from knowcel_curation.curation import Scorer, Weights, rescore_periodically, score_document
+from knowcel_curation.curation import Lifecycle, Scorer, Weights, run_periodically, score_document
 
 from tests.fakes import NOW, FakeStore
 
@@ -108,7 +108,7 @@ async def test_scores_are_rescored_periodically_until_stopped() -> None:
     document = uuid.uuid4()
     await store.save_score(document, datetime.datetime.now(datetime.UTC) - 100 * DAY, 1.0)
     stop = asyncio.Event()
-    task = asyncio.create_task(rescore_periodically(Scorer(store, WEIGHTS), 0.01, stop))
+    task = asyncio.create_task(run_periodically([Scorer(store, WEIGHTS).rescore_all], 0.01, stop))
     for _ in range(100):
         await asyncio.sleep(0.01)
         if store.scores[document].score < 1:
@@ -122,8 +122,57 @@ async def test_a_failing_rescore_is_retried() -> None:
     store = FakeStore()
     store.down = True
     stop = asyncio.Event()
-    task = asyncio.create_task(rescore_periodically(Scorer(store, WEIGHTS), 0.01, stop))
+    task = asyncio.create_task(run_periodically([Scorer(store, WEIGHTS).rescore_all], 0.01, stop))
     await asyncio.sleep(0.05)
     assert not task.done()
     stop.set()
     await asyncio.wait_for(task, 1)
+
+
+def test_the_lifecycle_state_raises_or_lowers_the_score() -> None:
+    weights = Weights(
+        1, 0, 100, 0.5, 10, approved_boost=1.5, deprecated_factor=0.1, archived_factor=0.01
+    )
+    old = NOW - 100 * DAY  # a score of 0.5
+    score = lambda state: score_document(old, NOW, 0, 0, weights, state)  # noqa: E731
+    assert score(None) == pytest.approx(0.5)
+    assert score("draft") == pytest.approx(0.5)
+    assert score("in_review") == pytest.approx(0.5)
+    assert score("approved") == pytest.approx(0.75)
+    assert score("deprecated") == pytest.approx(0.05)
+    assert score("archived") == pytest.approx(0.005)
+    # An approved document never scores above 1.
+    assert score_document(NOW, NOW, 0, 0, weights, "approved") == 1
+
+
+async def test_a_documents_state_counts_when_it_is_scored() -> None:
+    store = FakeStore()
+    weights = Weights(1, 0, 100, 0.5, 10, deprecated_factor=0.1)
+    scorer = Scorer(store, weights)
+    document = uuid.uuid4()
+    await scorer.on_processed(document, datetime.datetime.now(datetime.UTC))
+    before = store.scores[document].score
+    await store.add_lifecycle_change(document, Lifecycle("deprecated", "alice"), "", "alice")
+    await scorer.rescore(document)
+    assert store.scores[document].score == pytest.approx(before * 0.1)
+
+
+async def test_every_job_runs_and_a_failing_one_does_not_stop_the_others() -> None:
+    ran: list[str] = []
+
+    async def failing() -> None:
+        ran.append("failing")
+        raise RuntimeError("boom")
+
+    async def working() -> None:
+        ran.append("working")
+
+    stop = asyncio.Event()
+    task = asyncio.create_task(run_periodically([failing, working], 0.01, stop))
+    for _ in range(100):
+        await asyncio.sleep(0.01)
+        if "working" in ran:
+            break
+    stop.set()
+    await asyncio.wait_for(task, 1)
+    assert ran[:2] == ["failing", "working"]

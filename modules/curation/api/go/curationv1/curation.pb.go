@@ -22,6 +22,67 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type LifecycleState int32
+
+const (
+	LifecycleState_LIFECYCLE_STATE_UNSPECIFIED LifecycleState = 0
+	LifecycleState_LIFECYCLE_STATE_DRAFT       LifecycleState = 1
+	LifecycleState_LIFECYCLE_STATE_IN_REVIEW   LifecycleState = 2
+	// Checked and authoritative: scores higher.
+	LifecycleState_LIFECYCLE_STATE_APPROVED LifecycleState = 3
+	// Outdated but kept for reference: scores much lower and is excluded.
+	LifecycleState_LIFECYCLE_STATE_DEPRECATED LifecycleState = 4
+	// Kept for the record only: scores lowest and is excluded.
+	LifecycleState_LIFECYCLE_STATE_ARCHIVED LifecycleState = 5
+)
+
+// Enum value maps for LifecycleState.
+var (
+	LifecycleState_name = map[int32]string{
+		0: "LIFECYCLE_STATE_UNSPECIFIED",
+		1: "LIFECYCLE_STATE_DRAFT",
+		2: "LIFECYCLE_STATE_IN_REVIEW",
+		3: "LIFECYCLE_STATE_APPROVED",
+		4: "LIFECYCLE_STATE_DEPRECATED",
+		5: "LIFECYCLE_STATE_ARCHIVED",
+	}
+	LifecycleState_value = map[string]int32{
+		"LIFECYCLE_STATE_UNSPECIFIED": 0,
+		"LIFECYCLE_STATE_DRAFT":       1,
+		"LIFECYCLE_STATE_IN_REVIEW":   2,
+		"LIFECYCLE_STATE_APPROVED":    3,
+		"LIFECYCLE_STATE_DEPRECATED":  4,
+		"LIFECYCLE_STATE_ARCHIVED":    5,
+	}
+)
+
+func (x LifecycleState) Enum() *LifecycleState {
+	p := new(LifecycleState)
+	*p = x
+	return p
+}
+
+func (x LifecycleState) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (LifecycleState) Descriptor() protoreflect.EnumDescriptor {
+	return file_knowcel_curation_v1_curation_proto_enumTypes[0].Descriptor()
+}
+
+func (LifecycleState) Type() protoreflect.EnumType {
+	return &file_knowcel_curation_v1_curation_proto_enumTypes[0]
+}
+
+func (x LifecycleState) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use LifecycleState.Descriptor instead.
+func (LifecycleState) EnumDescriptor() ([]byte, []int) {
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{0}
+}
+
 type FindingKind int32
 
 const (
@@ -32,6 +93,9 @@ const (
 	FindingKind_FINDING_KIND_SUPERSEDED FindingKind = 2
 	// Two documents contradict each other.
 	FindingKind_FINDING_KIND_CONFLICT FindingKind = 3
+	// The document is past its review date. Its document_id and
+	// other_document_id are the same.
+	FindingKind_FINDING_KIND_REVIEW_DUE FindingKind = 4
 )
 
 // Enum value maps for FindingKind.
@@ -41,12 +105,14 @@ var (
 		1: "FINDING_KIND_DUPLICATE",
 		2: "FINDING_KIND_SUPERSEDED",
 		3: "FINDING_KIND_CONFLICT",
+		4: "FINDING_KIND_REVIEW_DUE",
 	}
 	FindingKind_value = map[string]int32{
 		"FINDING_KIND_UNSPECIFIED": 0,
 		"FINDING_KIND_DUPLICATE":   1,
 		"FINDING_KIND_SUPERSEDED":  2,
 		"FINDING_KIND_CONFLICT":    3,
+		"FINDING_KIND_REVIEW_DUE":  4,
 	}
 )
 
@@ -61,11 +127,11 @@ func (x FindingKind) String() string {
 }
 
 func (FindingKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_knowcel_curation_v1_curation_proto_enumTypes[0].Descriptor()
+	return file_knowcel_curation_v1_curation_proto_enumTypes[1].Descriptor()
 }
 
 func (FindingKind) Type() protoreflect.EnumType {
-	return &file_knowcel_curation_v1_curation_proto_enumTypes[0]
+	return &file_knowcel_curation_v1_curation_proto_enumTypes[1]
 }
 
 func (x FindingKind) Number() protoreflect.EnumNumber {
@@ -74,7 +140,7 @@ func (x FindingKind) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use FindingKind.Descriptor instead.
 func (FindingKind) EnumDescriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{0}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{1}
 }
 
 // How a finding is closed. What each does is in the option's description.
@@ -117,11 +183,11 @@ func (x Resolution) String() string {
 }
 
 func (Resolution) Descriptor() protoreflect.EnumDescriptor {
-	return file_knowcel_curation_v1_curation_proto_enumTypes[1].Descriptor()
+	return file_knowcel_curation_v1_curation_proto_enumTypes[2].Descriptor()
 }
 
 func (Resolution) Type() protoreflect.EnumType {
-	return &file_knowcel_curation_v1_curation_proto_enumTypes[1]
+	return &file_knowcel_curation_v1_curation_proto_enumTypes[2]
 }
 
 func (x Resolution) Number() protoreflect.EnumNumber {
@@ -130,7 +196,7 @@ func (x Resolution) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Resolution.Descriptor instead.
 func (Resolution) EnumDescriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{1}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{2}
 }
 
 // DocumentScore ranks a document for retrieval: higher is more relevant.
@@ -138,8 +204,13 @@ type DocumentScore struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	DocumentId string                 `protobuf:"bytes,1,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
 	// Between 0 and 1.
-	Score         float64                `protobuf:"fixed64,2,opt,name=score,proto3" json:"score,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Score     float64                `protobuf:"fixed64,2,opt,name=score,proto3" json:"score,omitempty"`
+	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// The current lifecycle; unset for a document that was never given a state.
+	Lifecycle *Lifecycle `protobuf:"bytes,4,opt,name=lifecycle,proto3" json:"lifecycle,omitempty"`
+	// True for DEPRECATED and ARCHIVED documents: consumers such as chat leave
+	// them out of answers.
+	Excluded      bool `protobuf:"varint,5,opt,name=excluded,proto3" json:"excluded,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -195,6 +266,153 @@ func (x *DocumentScore) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *DocumentScore) GetLifecycle() *Lifecycle {
+	if x != nil {
+		return x.Lifecycle
+	}
+	return nil
+}
+
+func (x *DocumentScore) GetExcluded() bool {
+	if x != nil {
+		return x.Excluded
+	}
+	return false
+}
+
+// Lifecycle is where a document stands in review and approval.
+type Lifecycle struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	State LifecycleState         `protobuf:"varint,1,opt,name=state,proto3,enum=knowcel.curation.v1.LifecycleState" json:"state,omitempty"`
+	// The user responsible for reviewing the document.
+	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
+	// When the document is next due for review; unset for none.
+	ReviewBy      *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=review_by,json=reviewBy,proto3" json:"review_by,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Lifecycle) Reset() {
+	*x = Lifecycle{}
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Lifecycle) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Lifecycle) ProtoMessage() {}
+
+func (x *Lifecycle) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Lifecycle.ProtoReflect.Descriptor instead.
+func (*Lifecycle) Descriptor() ([]byte, []int) {
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Lifecycle) GetState() LifecycleState {
+	if x != nil {
+		return x.State
+	}
+	return LifecycleState_LIFECYCLE_STATE_UNSPECIFIED
+}
+
+func (x *Lifecycle) GetOwner() string {
+	if x != nil {
+		return x.Owner
+	}
+	return ""
+}
+
+func (x *Lifecycle) GetReviewBy() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ReviewBy
+	}
+	return nil
+}
+
+// LifecycleChange is one entry of a document's lifecycle history.
+type LifecycleChange struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Lifecycle *Lifecycle             `protobuf:"bytes,1,opt,name=lifecycle,proto3" json:"lifecycle,omitempty"`
+	Note      string                 `protobuf:"bytes,2,opt,name=note,proto3" json:"note,omitempty"`
+	// The user who made the change.
+	ChangedBy     string                 `protobuf:"bytes,3,opt,name=changed_by,json=changedBy,proto3" json:"changed_by,omitempty"`
+	ChangedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=changed_at,json=changedAt,proto3" json:"changed_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LifecycleChange) Reset() {
+	*x = LifecycleChange{}
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LifecycleChange) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LifecycleChange) ProtoMessage() {}
+
+func (x *LifecycleChange) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LifecycleChange.ProtoReflect.Descriptor instead.
+func (*LifecycleChange) Descriptor() ([]byte, []int) {
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *LifecycleChange) GetLifecycle() *Lifecycle {
+	if x != nil {
+		return x.Lifecycle
+	}
+	return nil
+}
+
+func (x *LifecycleChange) GetNote() string {
+	if x != nil {
+		return x.Note
+	}
+	return ""
+}
+
+func (x *LifecycleChange) GetChangedBy() string {
+	if x != nil {
+		return x.ChangedBy
+	}
+	return ""
+}
+
+func (x *LifecycleChange) GetChangedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ChangedAt
+	}
+	return nil
+}
+
 // One way to close a finding, worded for the person choosing.
 type ResolutionOption struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -206,7 +424,7 @@ type ResolutionOption struct {
 
 func (x *ResolutionOption) Reset() {
 	*x = ResolutionOption{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[1]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -218,7 +436,7 @@ func (x *ResolutionOption) String() string {
 func (*ResolutionOption) ProtoMessage() {}
 
 func (x *ResolutionOption) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[1]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -231,7 +449,7 @@ func (x *ResolutionOption) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResolutionOption.ProtoReflect.Descriptor instead.
 func (*ResolutionOption) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{1}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ResolutionOption) GetResolution() Resolution {
@@ -270,7 +488,7 @@ type Finding struct {
 
 func (x *Finding) Reset() {
 	*x = Finding{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[2]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -282,7 +500,7 @@ func (x *Finding) String() string {
 func (*Finding) ProtoMessage() {}
 
 func (x *Finding) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[2]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -295,7 +513,7 @@ func (x *Finding) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Finding.ProtoReflect.Descriptor instead.
 func (*Finding) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{2}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Finding) GetId() string {
@@ -370,7 +588,7 @@ type GetDocumentScoreRequest struct {
 
 func (x *GetDocumentScoreRequest) Reset() {
 	*x = GetDocumentScoreRequest{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[3]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -382,7 +600,7 @@ func (x *GetDocumentScoreRequest) String() string {
 func (*GetDocumentScoreRequest) ProtoMessage() {}
 
 func (x *GetDocumentScoreRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[3]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -395,7 +613,7 @@ func (x *GetDocumentScoreRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDocumentScoreRequest.ProtoReflect.Descriptor instead.
 func (*GetDocumentScoreRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{3}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetDocumentScoreRequest) GetDocumentId() string {
@@ -414,7 +632,7 @@ type GetDocumentScoreResponse struct {
 
 func (x *GetDocumentScoreResponse) Reset() {
 	*x = GetDocumentScoreResponse{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[4]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -426,7 +644,7 @@ func (x *GetDocumentScoreResponse) String() string {
 func (*GetDocumentScoreResponse) ProtoMessage() {}
 
 func (x *GetDocumentScoreResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[4]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -439,7 +657,7 @@ func (x *GetDocumentScoreResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDocumentScoreResponse.ProtoReflect.Descriptor instead.
 func (*GetDocumentScoreResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{4}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetDocumentScoreResponse) GetScore() *DocumentScore {
@@ -459,7 +677,7 @@ type ScoreChunksRequest struct {
 
 func (x *ScoreChunksRequest) Reset() {
 	*x = ScoreChunksRequest{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[5]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -471,7 +689,7 @@ func (x *ScoreChunksRequest) String() string {
 func (*ScoreChunksRequest) ProtoMessage() {}
 
 func (x *ScoreChunksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[5]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -484,7 +702,7 @@ func (x *ScoreChunksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScoreChunksRequest.ProtoReflect.Descriptor instead.
 func (*ScoreChunksRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{5}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ScoreChunksRequest) GetDocumentIds() []string {
@@ -503,7 +721,7 @@ type ScoreChunksResponse struct {
 
 func (x *ScoreChunksResponse) Reset() {
 	*x = ScoreChunksResponse{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[6]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -515,7 +733,7 @@ func (x *ScoreChunksResponse) String() string {
 func (*ScoreChunksResponse) ProtoMessage() {}
 
 func (x *ScoreChunksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[6]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -528,12 +746,216 @@ func (x *ScoreChunksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScoreChunksResponse.ProtoReflect.Descriptor instead.
 func (*ScoreChunksResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{6}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ScoreChunksResponse) GetScores() []*DocumentScore {
 	if x != nil {
 		return x.Scores
+	}
+	return nil
+}
+
+type SetLifecycleRequest struct {
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	DocumentId string                 `protobuf:"bytes,1,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
+	// Required.
+	State LifecycleState `protobuf:"varint,2,opt,name=state,proto3,enum=knowcel.curation.v1.LifecycleState" json:"state,omitempty"`
+	// The user responsible for the review; the caller when empty.
+	Owner string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
+	// When the document is next due for review; leave unset for none.
+	ReviewBy *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=review_by,json=reviewBy,proto3" json:"review_by,omitempty"`
+	// Why, shown in the history; at most 1000 characters.
+	Note          string `protobuf:"bytes,5,opt,name=note,proto3" json:"note,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetLifecycleRequest) Reset() {
+	*x = SetLifecycleRequest{}
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetLifecycleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetLifecycleRequest) ProtoMessage() {}
+
+func (x *SetLifecycleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetLifecycleRequest.ProtoReflect.Descriptor instead.
+func (*SetLifecycleRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *SetLifecycleRequest) GetDocumentId() string {
+	if x != nil {
+		return x.DocumentId
+	}
+	return ""
+}
+
+func (x *SetLifecycleRequest) GetState() LifecycleState {
+	if x != nil {
+		return x.State
+	}
+	return LifecycleState_LIFECYCLE_STATE_UNSPECIFIED
+}
+
+func (x *SetLifecycleRequest) GetOwner() string {
+	if x != nil {
+		return x.Owner
+	}
+	return ""
+}
+
+func (x *SetLifecycleRequest) GetReviewBy() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ReviewBy
+	}
+	return nil
+}
+
+func (x *SetLifecycleRequest) GetNote() string {
+	if x != nil {
+		return x.Note
+	}
+	return ""
+}
+
+type SetLifecycleResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetLifecycleResponse) Reset() {
+	*x = SetLifecycleResponse{}
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetLifecycleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetLifecycleResponse) ProtoMessage() {}
+
+func (x *SetLifecycleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetLifecycleResponse.ProtoReflect.Descriptor instead.
+func (*SetLifecycleResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{10}
+}
+
+type ListLifecycleHistoryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DocumentId    string                 `protobuf:"bytes,1,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListLifecycleHistoryRequest) Reset() {
+	*x = ListLifecycleHistoryRequest{}
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListLifecycleHistoryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListLifecycleHistoryRequest) ProtoMessage() {}
+
+func (x *ListLifecycleHistoryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListLifecycleHistoryRequest.ProtoReflect.Descriptor instead.
+func (*ListLifecycleHistoryRequest) Descriptor() ([]byte, []int) {
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *ListLifecycleHistoryRequest) GetDocumentId() string {
+	if x != nil {
+		return x.DocumentId
+	}
+	return ""
+}
+
+type ListLifecycleHistoryResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Changes       []*LifecycleChange     `protobuf:"bytes,1,rep,name=changes,proto3" json:"changes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListLifecycleHistoryResponse) Reset() {
+	*x = ListLifecycleHistoryResponse{}
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListLifecycleHistoryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListLifecycleHistoryResponse) ProtoMessage() {}
+
+func (x *ListLifecycleHistoryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListLifecycleHistoryResponse.ProtoReflect.Descriptor instead.
+func (*ListLifecycleHistoryResponse) Descriptor() ([]byte, []int) {
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ListLifecycleHistoryResponse) GetChanges() []*LifecycleChange {
+	if x != nil {
+		return x.Changes
 	}
 	return nil
 }
@@ -550,7 +972,7 @@ type ListFindingsRequest struct {
 
 func (x *ListFindingsRequest) Reset() {
 	*x = ListFindingsRequest{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[7]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -562,7 +984,7 @@ func (x *ListFindingsRequest) String() string {
 func (*ListFindingsRequest) ProtoMessage() {}
 
 func (x *ListFindingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[7]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -575,7 +997,7 @@ func (x *ListFindingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListFindingsRequest.ProtoReflect.Descriptor instead.
 func (*ListFindingsRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{7}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ListFindingsRequest) GetPageSize() int32 {
@@ -602,7 +1024,7 @@ type ResolveFindingRequest struct {
 
 func (x *ResolveFindingRequest) Reset() {
 	*x = ResolveFindingRequest{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[8]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -614,7 +1036,7 @@ func (x *ResolveFindingRequest) String() string {
 func (*ResolveFindingRequest) ProtoMessage() {}
 
 func (x *ResolveFindingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[8]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -627,7 +1049,7 @@ func (x *ResolveFindingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResolveFindingRequest.ProtoReflect.Descriptor instead.
 func (*ResolveFindingRequest) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{8}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ResolveFindingRequest) GetFindingId() string {
@@ -652,7 +1074,7 @@ type ResolveFindingResponse struct {
 
 func (x *ResolveFindingResponse) Reset() {
 	*x = ResolveFindingResponse{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[9]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -664,7 +1086,7 @@ func (x *ResolveFindingResponse) String() string {
 func (*ResolveFindingResponse) ProtoMessage() {}
 
 func (x *ResolveFindingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[9]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -677,7 +1099,7 @@ func (x *ResolveFindingResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResolveFindingResponse.ProtoReflect.Descriptor instead.
 func (*ResolveFindingResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{9}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{15}
 }
 
 type ListFindingsResponse struct {
@@ -692,7 +1114,7 @@ type ListFindingsResponse struct {
 
 func (x *ListFindingsResponse) Reset() {
 	*x = ListFindingsResponse{}
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[10]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -704,7 +1126,7 @@ func (x *ListFindingsResponse) String() string {
 func (*ListFindingsResponse) ProtoMessage() {}
 
 func (x *ListFindingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[10]
+	mi := &file_knowcel_curation_v1_curation_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -717,7 +1139,7 @@ func (x *ListFindingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListFindingsResponse.ProtoReflect.Descriptor instead.
 func (*ListFindingsResponse) Descriptor() ([]byte, []int) {
-	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{10}
+	return file_knowcel_curation_v1_curation_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ListFindingsResponse) GetFindings() []*Finding {
@@ -738,13 +1160,26 @@ var File_knowcel_curation_v1_curation_proto protoreflect.FileDescriptor
 
 const file_knowcel_curation_v1_curation_proto_rawDesc = "" +
 	"\n" +
-	"\"knowcel/curation/v1/curation.proto\x12\x13knowcel.curation.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x81\x01\n" +
+	"\"knowcel/curation/v1/curation.proto\x12\x13knowcel.curation.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xdb\x01\n" +
 	"\rDocumentScore\x12\x1f\n" +
 	"\vdocument_id\x18\x01 \x01(\tR\n" +
 	"documentId\x12\x14\n" +
 	"\x05score\x18\x02 \x01(\x01R\x05score\x129\n" +
 	"\n" +
-	"updated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"u\n" +
+	"updated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12<\n" +
+	"\tlifecycle\x18\x04 \x01(\v2\x1e.knowcel.curation.v1.LifecycleR\tlifecycle\x12\x1a\n" +
+	"\bexcluded\x18\x05 \x01(\bR\bexcluded\"\x95\x01\n" +
+	"\tLifecycle\x129\n" +
+	"\x05state\x18\x01 \x01(\x0e2#.knowcel.curation.v1.LifecycleStateR\x05state\x12\x14\n" +
+	"\x05owner\x18\x02 \x01(\tR\x05owner\x127\n" +
+	"\treview_by\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\breviewBy\"\xbd\x01\n" +
+	"\x0fLifecycleChange\x12<\n" +
+	"\tlifecycle\x18\x01 \x01(\v2\x1e.knowcel.curation.v1.LifecycleR\tlifecycle\x12\x12\n" +
+	"\x04note\x18\x02 \x01(\tR\x04note\x12\x1d\n" +
+	"\n" +
+	"changed_by\x18\x03 \x01(\tR\tchangedBy\x129\n" +
+	"\n" +
+	"changed_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tchangedAt\"u\n" +
 	"\x10ResolutionOption\x12?\n" +
 	"\n" +
 	"resolution\x18\x01 \x01(\x0e2\x1f.knowcel.curation.v1.ResolutionR\n" +
@@ -770,7 +1205,20 @@ const file_knowcel_curation_v1_curation_proto_rawDesc = "" +
 	"\x12ScoreChunksRequest\x12!\n" +
 	"\fdocument_ids\x18\x01 \x03(\tR\vdocumentIds\"Q\n" +
 	"\x13ScoreChunksResponse\x12:\n" +
-	"\x06scores\x18\x01 \x03(\v2\".knowcel.curation.v1.DocumentScoreR\x06scores\"Q\n" +
+	"\x06scores\x18\x01 \x03(\v2\".knowcel.curation.v1.DocumentScoreR\x06scores\"\xd4\x01\n" +
+	"\x13SetLifecycleRequest\x12\x1f\n" +
+	"\vdocument_id\x18\x01 \x01(\tR\n" +
+	"documentId\x129\n" +
+	"\x05state\x18\x02 \x01(\x0e2#.knowcel.curation.v1.LifecycleStateR\x05state\x12\x14\n" +
+	"\x05owner\x18\x03 \x01(\tR\x05owner\x127\n" +
+	"\treview_by\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\breviewBy\x12\x12\n" +
+	"\x04note\x18\x05 \x01(\tR\x04note\"\x16\n" +
+	"\x14SetLifecycleResponse\">\n" +
+	"\x1bListLifecycleHistoryRequest\x12\x1f\n" +
+	"\vdocument_id\x18\x01 \x01(\tR\n" +
+	"documentId\"^\n" +
+	"\x1cListLifecycleHistoryResponse\x12>\n" +
+	"\achanges\x18\x01 \x03(\v2$.knowcel.curation.v1.LifecycleChangeR\achanges\"Q\n" +
 	"\x13ListFindingsRequest\x12\x1b\n" +
 	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
@@ -784,22 +1232,32 @@ const file_knowcel_curation_v1_curation_proto_rawDesc = "" +
 	"\x16ResolveFindingResponse\"x\n" +
 	"\x14ListFindingsResponse\x128\n" +
 	"\bfindings\x18\x01 \x03(\v2\x1c.knowcel.curation.v1.FindingR\bfindings\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken*\x7f\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken*\xc7\x01\n" +
+	"\x0eLifecycleState\x12\x1f\n" +
+	"\x1bLIFECYCLE_STATE_UNSPECIFIED\x10\x00\x12\x19\n" +
+	"\x15LIFECYCLE_STATE_DRAFT\x10\x01\x12\x1d\n" +
+	"\x19LIFECYCLE_STATE_IN_REVIEW\x10\x02\x12\x1c\n" +
+	"\x18LIFECYCLE_STATE_APPROVED\x10\x03\x12\x1e\n" +
+	"\x1aLIFECYCLE_STATE_DEPRECATED\x10\x04\x12\x1c\n" +
+	"\x18LIFECYCLE_STATE_ARCHIVED\x10\x05*\x9c\x01\n" +
 	"\vFindingKind\x12\x1c\n" +
 	"\x18FINDING_KIND_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16FINDING_KIND_DUPLICATE\x10\x01\x12\x1b\n" +
 	"\x17FINDING_KIND_SUPERSEDED\x10\x02\x12\x19\n" +
-	"\x15FINDING_KIND_CONFLICT\x10\x03*l\n" +
+	"\x15FINDING_KIND_CONFLICT\x10\x03\x12\x1b\n" +
+	"\x17FINDING_KIND_REVIEW_DUE\x10\x04*l\n" +
 	"\n" +
 	"Resolution\x12\x1a\n" +
 	"\x16RESOLUTION_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fRESOLUTION_KEEP\x10\x01\x12\x16\n" +
 	"\x12RESOLUTION_REPLACE\x10\x02\x12\x15\n" +
-	"\x11RESOLUTION_IGNORE\x10\x032\xb4\x03\n" +
+	"\x11RESOLUTION_IGNORE\x10\x032\x96\x05\n" +
 	"\x0fCurationService\x12o\n" +
 	"\x10GetDocumentScore\x12,.knowcel.curation.v1.GetDocumentScoreRequest\x1a-.knowcel.curation.v1.GetDocumentScoreResponse\x12`\n" +
 	"\vScoreChunks\x12'.knowcel.curation.v1.ScoreChunksRequest\x1a(.knowcel.curation.v1.ScoreChunksResponse\x12c\n" +
-	"\fListFindings\x12(.knowcel.curation.v1.ListFindingsRequest\x1a).knowcel.curation.v1.ListFindingsResponse\x12i\n" +
+	"\fListFindings\x12(.knowcel.curation.v1.ListFindingsRequest\x1a).knowcel.curation.v1.ListFindingsResponse\x12c\n" +
+	"\fSetLifecycle\x12(.knowcel.curation.v1.SetLifecycleRequest\x1a).knowcel.curation.v1.SetLifecycleResponse\x12{\n" +
+	"\x14ListLifecycleHistory\x120.knowcel.curation.v1.ListLifecycleHistoryRequest\x1a1.knowcel.curation.v1.ListLifecycleHistoryResponse\x12i\n" +
 	"\x0eResolveFinding\x12*.knowcel.curation.v1.ResolveFindingRequest\x1a+.knowcel.curation.v1.ResolveFindingResponseBQZOgithub.com/ChristophBe/knowcelium/modules/curation/api/go/curationv1;curationv1b\x06proto3"
 
 var (
@@ -814,47 +1272,66 @@ func file_knowcel_curation_v1_curation_proto_rawDescGZIP() []byte {
 	return file_knowcel_curation_v1_curation_proto_rawDescData
 }
 
-var file_knowcel_curation_v1_curation_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_knowcel_curation_v1_curation_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_knowcel_curation_v1_curation_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_knowcel_curation_v1_curation_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_knowcel_curation_v1_curation_proto_goTypes = []any{
-	(FindingKind)(0),                 // 0: knowcel.curation.v1.FindingKind
-	(Resolution)(0),                  // 1: knowcel.curation.v1.Resolution
-	(*DocumentScore)(nil),            // 2: knowcel.curation.v1.DocumentScore
-	(*ResolutionOption)(nil),         // 3: knowcel.curation.v1.ResolutionOption
-	(*Finding)(nil),                  // 4: knowcel.curation.v1.Finding
-	(*GetDocumentScoreRequest)(nil),  // 5: knowcel.curation.v1.GetDocumentScoreRequest
-	(*GetDocumentScoreResponse)(nil), // 6: knowcel.curation.v1.GetDocumentScoreResponse
-	(*ScoreChunksRequest)(nil),       // 7: knowcel.curation.v1.ScoreChunksRequest
-	(*ScoreChunksResponse)(nil),      // 8: knowcel.curation.v1.ScoreChunksResponse
-	(*ListFindingsRequest)(nil),      // 9: knowcel.curation.v1.ListFindingsRequest
-	(*ResolveFindingRequest)(nil),    // 10: knowcel.curation.v1.ResolveFindingRequest
-	(*ResolveFindingResponse)(nil),   // 11: knowcel.curation.v1.ResolveFindingResponse
-	(*ListFindingsResponse)(nil),     // 12: knowcel.curation.v1.ListFindingsResponse
-	(*timestamppb.Timestamp)(nil),    // 13: google.protobuf.Timestamp
+	(LifecycleState)(0),                  // 0: knowcel.curation.v1.LifecycleState
+	(FindingKind)(0),                     // 1: knowcel.curation.v1.FindingKind
+	(Resolution)(0),                      // 2: knowcel.curation.v1.Resolution
+	(*DocumentScore)(nil),                // 3: knowcel.curation.v1.DocumentScore
+	(*Lifecycle)(nil),                    // 4: knowcel.curation.v1.Lifecycle
+	(*LifecycleChange)(nil),              // 5: knowcel.curation.v1.LifecycleChange
+	(*ResolutionOption)(nil),             // 6: knowcel.curation.v1.ResolutionOption
+	(*Finding)(nil),                      // 7: knowcel.curation.v1.Finding
+	(*GetDocumentScoreRequest)(nil),      // 8: knowcel.curation.v1.GetDocumentScoreRequest
+	(*GetDocumentScoreResponse)(nil),     // 9: knowcel.curation.v1.GetDocumentScoreResponse
+	(*ScoreChunksRequest)(nil),           // 10: knowcel.curation.v1.ScoreChunksRequest
+	(*ScoreChunksResponse)(nil),          // 11: knowcel.curation.v1.ScoreChunksResponse
+	(*SetLifecycleRequest)(nil),          // 12: knowcel.curation.v1.SetLifecycleRequest
+	(*SetLifecycleResponse)(nil),         // 13: knowcel.curation.v1.SetLifecycleResponse
+	(*ListLifecycleHistoryRequest)(nil),  // 14: knowcel.curation.v1.ListLifecycleHistoryRequest
+	(*ListLifecycleHistoryResponse)(nil), // 15: knowcel.curation.v1.ListLifecycleHistoryResponse
+	(*ListFindingsRequest)(nil),          // 16: knowcel.curation.v1.ListFindingsRequest
+	(*ResolveFindingRequest)(nil),        // 17: knowcel.curation.v1.ResolveFindingRequest
+	(*ResolveFindingResponse)(nil),       // 18: knowcel.curation.v1.ResolveFindingResponse
+	(*ListFindingsResponse)(nil),         // 19: knowcel.curation.v1.ListFindingsResponse
+	(*timestamppb.Timestamp)(nil),        // 20: google.protobuf.Timestamp
 }
 var file_knowcel_curation_v1_curation_proto_depIdxs = []int32{
-	13, // 0: knowcel.curation.v1.DocumentScore.updated_at:type_name -> google.protobuf.Timestamp
-	1,  // 1: knowcel.curation.v1.ResolutionOption.resolution:type_name -> knowcel.curation.v1.Resolution
-	0,  // 2: knowcel.curation.v1.Finding.kind:type_name -> knowcel.curation.v1.FindingKind
-	13, // 3: knowcel.curation.v1.Finding.created_at:type_name -> google.protobuf.Timestamp
-	3,  // 4: knowcel.curation.v1.Finding.resolutions:type_name -> knowcel.curation.v1.ResolutionOption
-	2,  // 5: knowcel.curation.v1.GetDocumentScoreResponse.score:type_name -> knowcel.curation.v1.DocumentScore
-	2,  // 6: knowcel.curation.v1.ScoreChunksResponse.scores:type_name -> knowcel.curation.v1.DocumentScore
-	1,  // 7: knowcel.curation.v1.ResolveFindingRequest.resolution:type_name -> knowcel.curation.v1.Resolution
-	4,  // 8: knowcel.curation.v1.ListFindingsResponse.findings:type_name -> knowcel.curation.v1.Finding
-	5,  // 9: knowcel.curation.v1.CurationService.GetDocumentScore:input_type -> knowcel.curation.v1.GetDocumentScoreRequest
-	7,  // 10: knowcel.curation.v1.CurationService.ScoreChunks:input_type -> knowcel.curation.v1.ScoreChunksRequest
-	9,  // 11: knowcel.curation.v1.CurationService.ListFindings:input_type -> knowcel.curation.v1.ListFindingsRequest
-	10, // 12: knowcel.curation.v1.CurationService.ResolveFinding:input_type -> knowcel.curation.v1.ResolveFindingRequest
-	6,  // 13: knowcel.curation.v1.CurationService.GetDocumentScore:output_type -> knowcel.curation.v1.GetDocumentScoreResponse
-	8,  // 14: knowcel.curation.v1.CurationService.ScoreChunks:output_type -> knowcel.curation.v1.ScoreChunksResponse
-	12, // 15: knowcel.curation.v1.CurationService.ListFindings:output_type -> knowcel.curation.v1.ListFindingsResponse
-	11, // 16: knowcel.curation.v1.CurationService.ResolveFinding:output_type -> knowcel.curation.v1.ResolveFindingResponse
-	13, // [13:17] is the sub-list for method output_type
-	9,  // [9:13] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	20, // 0: knowcel.curation.v1.DocumentScore.updated_at:type_name -> google.protobuf.Timestamp
+	4,  // 1: knowcel.curation.v1.DocumentScore.lifecycle:type_name -> knowcel.curation.v1.Lifecycle
+	0,  // 2: knowcel.curation.v1.Lifecycle.state:type_name -> knowcel.curation.v1.LifecycleState
+	20, // 3: knowcel.curation.v1.Lifecycle.review_by:type_name -> google.protobuf.Timestamp
+	4,  // 4: knowcel.curation.v1.LifecycleChange.lifecycle:type_name -> knowcel.curation.v1.Lifecycle
+	20, // 5: knowcel.curation.v1.LifecycleChange.changed_at:type_name -> google.protobuf.Timestamp
+	2,  // 6: knowcel.curation.v1.ResolutionOption.resolution:type_name -> knowcel.curation.v1.Resolution
+	1,  // 7: knowcel.curation.v1.Finding.kind:type_name -> knowcel.curation.v1.FindingKind
+	20, // 8: knowcel.curation.v1.Finding.created_at:type_name -> google.protobuf.Timestamp
+	6,  // 9: knowcel.curation.v1.Finding.resolutions:type_name -> knowcel.curation.v1.ResolutionOption
+	3,  // 10: knowcel.curation.v1.GetDocumentScoreResponse.score:type_name -> knowcel.curation.v1.DocumentScore
+	3,  // 11: knowcel.curation.v1.ScoreChunksResponse.scores:type_name -> knowcel.curation.v1.DocumentScore
+	0,  // 12: knowcel.curation.v1.SetLifecycleRequest.state:type_name -> knowcel.curation.v1.LifecycleState
+	20, // 13: knowcel.curation.v1.SetLifecycleRequest.review_by:type_name -> google.protobuf.Timestamp
+	5,  // 14: knowcel.curation.v1.ListLifecycleHistoryResponse.changes:type_name -> knowcel.curation.v1.LifecycleChange
+	2,  // 15: knowcel.curation.v1.ResolveFindingRequest.resolution:type_name -> knowcel.curation.v1.Resolution
+	7,  // 16: knowcel.curation.v1.ListFindingsResponse.findings:type_name -> knowcel.curation.v1.Finding
+	8,  // 17: knowcel.curation.v1.CurationService.GetDocumentScore:input_type -> knowcel.curation.v1.GetDocumentScoreRequest
+	10, // 18: knowcel.curation.v1.CurationService.ScoreChunks:input_type -> knowcel.curation.v1.ScoreChunksRequest
+	16, // 19: knowcel.curation.v1.CurationService.ListFindings:input_type -> knowcel.curation.v1.ListFindingsRequest
+	12, // 20: knowcel.curation.v1.CurationService.SetLifecycle:input_type -> knowcel.curation.v1.SetLifecycleRequest
+	14, // 21: knowcel.curation.v1.CurationService.ListLifecycleHistory:input_type -> knowcel.curation.v1.ListLifecycleHistoryRequest
+	17, // 22: knowcel.curation.v1.CurationService.ResolveFinding:input_type -> knowcel.curation.v1.ResolveFindingRequest
+	9,  // 23: knowcel.curation.v1.CurationService.GetDocumentScore:output_type -> knowcel.curation.v1.GetDocumentScoreResponse
+	11, // 24: knowcel.curation.v1.CurationService.ScoreChunks:output_type -> knowcel.curation.v1.ScoreChunksResponse
+	19, // 25: knowcel.curation.v1.CurationService.ListFindings:output_type -> knowcel.curation.v1.ListFindingsResponse
+	13, // 26: knowcel.curation.v1.CurationService.SetLifecycle:output_type -> knowcel.curation.v1.SetLifecycleResponse
+	15, // 27: knowcel.curation.v1.CurationService.ListLifecycleHistory:output_type -> knowcel.curation.v1.ListLifecycleHistoryResponse
+	18, // 28: knowcel.curation.v1.CurationService.ResolveFinding:output_type -> knowcel.curation.v1.ResolveFindingResponse
+	23, // [23:29] is the sub-list for method output_type
+	17, // [17:23] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_knowcel_curation_v1_curation_proto_init() }
@@ -867,8 +1344,8 @@ func file_knowcel_curation_v1_curation_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_knowcel_curation_v1_curation_proto_rawDesc), len(file_knowcel_curation_v1_curation_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   11,
+			NumEnums:      3,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

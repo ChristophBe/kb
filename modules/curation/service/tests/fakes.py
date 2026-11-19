@@ -3,9 +3,13 @@ import uuid
 from collections.abc import Collection, Sequence
 
 from knowcel_curation.curation import (
+    ARCHIVED,
+    REVIEW_DUE,
     DocInfo,
     Finding,
     FindingCursor,
+    Lifecycle,
+    LifecycleChange,
     PeerUnavailableError,
     Score,
 )
@@ -17,9 +21,23 @@ DAY = datetime.timedelta(days=1)
 
 
 def doc(
-    title: str = "Handbook", *, filename: str = "", sha256: str = "", age_days: float = 0
+    title: str = "Handbook",
+    *,
+    filename: str = "",
+    sha256: str = "",
+    age_days: float = 0,
+    owner: str = "alice",
+    teams: Sequence[str] = (),
 ) -> DocInfo:
-    return DocInfo(uuid.uuid4(), title, filename or title + ".md", sha256, NOW - age_days * DAY)
+    return DocInfo(
+        uuid.uuid4(),
+        title,
+        filename or title + ".md",
+        sha256,
+        NOW - age_days * DAY,
+        owner,
+        tuple(teams),
+    )
 
 
 class FakeStore:
@@ -27,6 +45,7 @@ class FakeStore:
         self.scores: dict[uuid.UUID, Score] = {}
         self.findings: list[Finding] = []
         self.resolved_by: dict[uuid.UUID, str] = {}
+        self.history: list[tuple[uuid.UUID, LifecycleChange]] = []
         self.down = False
 
     async def get_scores(self, document_ids: Collection[uuid.UUID]) -> list[Score]:
@@ -92,6 +111,42 @@ class FakeStore:
         if after is not None:
             ordered = [f for f in ordered if key(f) > (-after.created_at.timestamp(), after.id)]
         return ordered[:limit]
+
+    async def get_lifecycles(
+        self, document_ids: Collection[uuid.UUID]
+    ) -> dict[uuid.UUID, Lifecycle]:
+        self._check()
+        current: dict[uuid.UUID, Lifecycle] = {}
+        for document_id, change in self.history:  # oldest first
+            if document_id in document_ids:
+                current[document_id] = change.lifecycle
+        return current
+
+    async def add_lifecycle_change(
+        self, document_id: uuid.UUID, lifecycle: Lifecycle, note: str, user: str
+    ) -> None:
+        self._check()
+        at = NOW + len(self.history) * datetime.timedelta(seconds=1)
+        self.history.append((document_id, LifecycleChange(lifecycle, note, user, at)))
+
+    async def list_lifecycle_history(self, document_id: uuid.UUID) -> list[LifecycleChange]:
+        self._check()
+        return [c for i, c in reversed(self.history) if i == document_id]
+
+    async def list_review_due(self, now: datetime.datetime, limit: int) -> list[uuid.UUID]:
+        self._check()
+        current = await self.get_lifecycles({i for i, _ in self.history})
+        return [
+            i
+            for i, lc in current.items()
+            if lc.state != ARCHIVED and lc.review_by is not None and lc.review_by < now
+        ][:limit]
+
+    async def delete_review_due(self, document_id: uuid.UUID) -> None:
+        self._check()
+        self.findings = [
+            f for f in self.findings if not (f.kind == REVIEW_DUE and f.document_id == document_id)
+        ]
 
     def _check(self) -> None:
         if self.down:

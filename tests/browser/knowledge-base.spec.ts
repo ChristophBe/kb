@@ -67,7 +67,9 @@ test("the sidebar's search and the search page are one search", async ({ page })
 test("a chat answer cites the document and opens the passage", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "New chat" }).click();
-  await page.getByPlaceholder("Ask something…").fill("When does the aurora borealis appear? [1] [2] [3] [4] [5]");
+  await page
+    .getByPlaceholder("Ask something…")
+    .fill("When does the aurora borealis appear? [1] [2] [3] [4] [5]");
   await page.getByRole("button", { name: "Ask", exact: true }).click();
 
   const sources = page.getByRole("list", { name: "Sources" });

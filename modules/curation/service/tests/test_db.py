@@ -288,7 +288,9 @@ async def test_a_user_has_one_report_per_document_and_closed_reports_stop_counti
     }
     assert len(found[other]) == 1
 
-    await store.close_reports(document)
+    assert await store.add_finding("reported", document, document)
+    (finding,) = await store.list_open_findings(10, kinds=["reported"])
+    await store.resolve_finding(finding.id, "ignore", "alice")
     assert document not in await store.list_reports([document])
     assert other in await store.list_reports([other])
     # A user whose report was closed can report again, and it is open again.
@@ -310,3 +312,17 @@ async def test_a_resolved_report_finding_can_be_made_anew_but_an_open_one_stays(
     await store.resolve_finding(finding.id, "ignore", "alice")
     await store.delete_resolved_finding("reported", document)
     assert await store.add_finding("reported", document, document)
+
+
+async def test_deprecating_closes_the_open_report_finding_and_its_reports_together(
+    engine: AsyncEngine,
+) -> None:
+    store = SqlCurationStore(engine)
+    document = uuid.uuid4()
+    await store.save_report(document, "bob", "wrong", "")
+    await store.add_finding("reported", document, document)
+    await store.close_report_finding(document, "alice")
+    assert await store.list_open_findings(10, kinds=["reported"]) == []
+    assert await store.list_reports([document]) == {}
+    # Without a report finding it does nothing.
+    await store.close_report_finding(uuid.uuid4(), "alice")

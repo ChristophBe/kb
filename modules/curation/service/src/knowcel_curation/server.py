@@ -241,7 +241,8 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
         violations = []
         if reason is None:
             violations.append(violation("reason", "Choose a reason"))
-        if len(request.comment) > _MAX_NOTE:
+        comment = request.comment.strip()
+        if len(comment) > _MAX_NOTE:
             violations.append(
                 violation("comment", f"Comment must be at most {_MAX_NOTE} characters")
             )
@@ -251,7 +252,7 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
         async with self._failures(context, "reporting a document"):
             if document_id not in await self._documents.readable({document_id}):
                 await context.abort(grpc.StatusCode.NOT_FOUND, "document not found")
-            await self._reports.report(document_id, user, reason, request.comment.strip())
+            await self._reports.report(document_id, user, reason, comment)
         return curation_pb2.ReportDocumentResponse()
 
     async def ListReports(
@@ -367,17 +368,32 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
                     grpc.StatusCode.FAILED_PRECONDITION, "the finding is already resolved"
                 )
             if finding.kind == REPORTED:
-                await self._resolve_report(context, finding, document, resolution, user)
+                await self._check_report_resolution(context, document, resolution, user)
             elif resolution == DEPRECATE:
                 await abort_invalid_argument(
                     context, violation("resolution", "Deprecate only applies to reports")
                 )
+            # The finding is claimed first (a report finding takes its reports with it), so
+            # of two who resolve it at once, one acts.
             if not await self._store.resolve_finding(finding_id, resolution, user):
                 await context.abort(
                     grpc.StatusCode.FAILED_PRECONDITION, "the finding is already resolved"
                 )
-            if finding.kind == REPORTED:
-                await self._reports.close(finding.document_id)
+            if finding.kind == REPORTED and resolution == DEPRECATE:
+                current = (await self._store.get_lifecycles([finding.document_id])).get(
+                    finding.document_id
+                )
+                await self._lifecycle.set(
+                    finding.document_id,
+                    Lifecycle(
+                        DEPRECATED,
+                        current.owner if current else document.owner_id or user,
+                        current.review_by if current else None,
+                    ),
+                    "Deprecated after reports",
+                    user,
+                    document.created_at,
+                )
         try:
             await self._scorer.rescore(finding.document_id)
         except SQLAlchemyError:
@@ -385,16 +401,11 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
             log.exception("scoring document %s again failed", finding.document_id)
         return curation_pb2.ResolveFindingResponse()
 
-    async def _resolve_report(
-        self,
-        context: _Context,
-        finding: Finding,
-        document: DocInfo,
-        resolution: str,
-        user: str,
+    async def _check_report_resolution(
+        self, context: _Context, document: DocInfo, resolution: str, user: str
     ) -> None:
-        """What closing a report finding needs: a choice that fits it, the right
-        to change the document's lifecycle, and, to deprecate, that change."""
+        """What closing a report finding needs: a choice that fits it, and the
+        right to change the document's lifecycle."""
         if resolution not in (IGNORE, DEPRECATE):
             await abort_invalid_argument(
                 context, violation("resolution", "Choose dismiss or deprecate for reports")
@@ -406,17 +417,6 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
             await context.abort(
                 grpc.StatusCode.PERMISSION_DENIED,
                 "only the owner, a team admin or a platform admin can close reports",
-            )
-        if resolution == DEPRECATE:
-            current = (await self._store.get_lifecycles([finding.document_id])).get(
-                finding.document_id
-            )
-            await self._lifecycle.set(
-                finding.document_id,
-                Lifecycle(DEPRECATED, current.owner if current else user, None),
-                "Deprecated after reports",
-                user,
-                document.created_at,
             )
 
     async def _visible_scores(

@@ -27,11 +27,13 @@ from sqlalchemy import (
     update,
 )
 from sqlalchemy.dialects.postgresql import distinct_on, insert
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from .curation import (
     ARCHIVED,
+    DEPRECATE,
     REPLACE,
+    REPORTED,
     REVIEW_DUE,
     SUPERSEDED,
     Finding,
@@ -191,10 +193,28 @@ class SqlCurationStore:
             update(findings)
             .where(findings.c.id == finding_id, findings.c.resolution.is_(None))
             .values(resolution=resolution, resolved_at=func.now(), resolved_by=user)
-            .returning(findings.c.id)
+            .returning(findings.c.kind, findings.c.document_id)
         )
         async with self._engine.begin() as conn:
-            return (await conn.execute(statement)).first() is not None
+            row = (await conn.execute(statement)).first()
+            if row is None:
+                return False
+            if row.kind == REPORTED:
+                await _close_reports(conn, row.document_id)
+            return True
+
+    async def close_report_finding(self, document_id: uuid.UUID, user: str) -> None:
+        async with self._engine.begin() as conn:
+            await conn.execute(
+                update(findings)
+                .where(
+                    findings.c.document_id == document_id,
+                    findings.c.kind == REPORTED,
+                    findings.c.resolution.is_(None),
+                )
+                .values(resolution=DEPRECATE, resolved_at=func.now(), resolved_by=user)
+            )
+            await _close_reports(conn, document_id)
 
     async def list_open_findings(
         self,
@@ -336,14 +356,6 @@ class SqlCurationStore:
             )
         return found
 
-    async def close_reports(self, document_id: uuid.UUID) -> None:
-        async with self._engine.begin() as conn:
-            await conn.execute(
-                update(reports)
-                .where(reports.c.document_id == document_id, reports.c.closed_at.is_(None))
-                .values(closed_at=func.now())
-            )
-
     async def delete_resolved_finding(self, kind: str, document_id: uuid.UUID) -> None:
         async with self._engine.begin() as conn:
             await conn.execute(
@@ -361,6 +373,15 @@ class SqlCurationStore:
                     findings.c.document_id == document_id, findings.c.kind == REVIEW_DUE
                 )
             )
+
+
+async def _close_reports(conn: AsyncConnection, document_id: uuid.UUID) -> None:
+    """The open reports of a document stop counting."""
+    await conn.execute(
+        update(reports)
+        .where(reports.c.document_id == document_id, reports.c.closed_at.is_(None))
+        .values(closed_at=func.now())
+    )
 
 
 def _lifecycle(row: RowMapping) -> Lifecycle:

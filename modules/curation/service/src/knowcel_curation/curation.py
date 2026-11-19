@@ -197,7 +197,8 @@ class CurationStore(Protocol):
     async def get_finding(self, finding_id: uuid.UUID) -> Finding | None: ...
 
     async def resolve_finding(self, finding_id: uuid.UUID, resolution: str, user: str) -> bool:
-        """Closes an open finding; False when it doesn't exist or is closed already."""
+        """Closes an open finding, and the reports of a REPORTED one in the same
+        change; False when it doesn't exist or is closed already."""
         ...
 
     async def list_open_findings(
@@ -236,8 +237,9 @@ class CurationStore(Protocol):
         """The open reports of those of the documents that have any, oldest first."""
         ...
 
-    async def close_reports(self, document_id: uuid.UUID) -> None:
-        """Closes the open reports of a document: they stop counting."""
+    async def close_report_finding(self, document_id: uuid.UUID, user: str) -> None:
+        """Resolves the document's open REPORTED finding as deprecated and closes
+        its reports, as one change; nothing when it has none."""
         ...
 
     async def delete_resolved_finding(self, kind: str, document_id: uuid.UUID) -> None:

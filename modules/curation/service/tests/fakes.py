@@ -98,6 +98,8 @@ class FakeStore:
                     f.id, f.kind, f.document_id, f.other_document_id, f.created_at, resolution
                 )
                 self.resolved_by[finding_id] = user
+                if f.kind == "reported":
+                    self._close_reports(f.document_id)
                 return True
         return False
 
@@ -140,11 +142,19 @@ class FakeStore:
                 found.setdefault(document_id, []).append(report)
         return found
 
-    async def close_reports(self, document_id: uuid.UUID) -> None:
-        self._check()
+    def _close_reports(self, document_id: uuid.UUID) -> None:
         for key, (report, _) in list(self.reports.items()):
             if key[0] == document_id:
                 self.reports[key] = (report, True)
+
+    async def close_report_finding(self, document_id: uuid.UUID, user: str) -> None:
+        self._check()
+        for i, f in enumerate(self.findings):
+            if f.kind == "reported" and f.document_id == document_id and f.resolution is None:
+                self.findings[i] = Finding(
+                    f.id, f.kind, f.document_id, f.other_document_id, f.created_at, "deprecate"
+                )
+        self._close_reports(document_id)
 
     async def delete_resolved_finding(self, kind: str, document_id: uuid.UUID) -> None:
         self._check()

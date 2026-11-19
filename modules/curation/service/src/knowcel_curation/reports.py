@@ -39,7 +39,3 @@ class ReportService:
         if await self._store.add_finding(REPORTED, document_id, document_id):
             log.info("document %s was reported", document_id)
         await self._scorer.rescore(document_id)
-
-    async def close(self, document_id: uuid.UUID) -> None:
-        """The reports of the document stop counting."""
-        await self._store.close_reports(document_id)

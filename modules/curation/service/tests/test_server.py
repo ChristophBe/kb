@@ -8,7 +8,7 @@ import pytest
 from google.protobuf.timestamp_pb2 import Timestamp
 from knowcel.curation.v1 import curation_pb2, curation_pb2_grpc
 from knowcel_curation.config import Settings
-from knowcel_curation.curation import DocInfo, Finding, Score, Scorer, Weights
+from knowcel_curation.curation import DocInfo, Finding, Lifecycle, Score, Scorer, Weights
 from knowcel_curation.lifecycle import LifecycleService
 from knowcel_curation.reports import ReportService
 from knowcel_curation.server import CurationServicer
@@ -802,6 +802,11 @@ async def test_only_a_document_the_caller_can_read_can_be_reported_with_a_reason
     with pytest.raises(grpc.aio.AioRpcError) as err:
         await report(stub, OWNED, "bob", comment="x" * 1001)
     assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    # Spaces around a comment don't count.
+    await report(stub, OWNED, "bob", comment=f" {'x' * 1000} ")
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await report(stub, OWNED, "bob", comment="x" * 1001)
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
     with pytest.raises(grpc.aio.AioRpcError) as err:
         await stub.ReportDocument(
             curation_pb2.ReportDocumentRequest(
@@ -874,6 +879,7 @@ async def test_deprecating_from_a_report_deprecates_the_document(
     )
     (current,) = (await store.get_lifecycles([OWNED.id])).values()
     assert current.state == "deprecated"
+    assert current.owner == "alice"
     history = await store.list_lifecycle_history(OWNED.id)
     assert (history[0].note, history[0].changed_by) == ("Deprecated after reports", "alice")
     scores = await stub.GetDocumentScore(
@@ -916,3 +922,37 @@ async def test_only_those_who_may_change_the_lifecycle_close_reports(
             metadata=USER,
         )
     assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+
+
+async def test_deprecating_from_a_report_keeps_the_owner_and_the_review_date(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    store.findings = []
+    review_by = NOW + datetime.timedelta(days=30)
+    await store.add_lifecycle_change(OWNED.id, Lifecycle("approved", "carol", review_by), "", "x")
+    await report(stub, OWNED, "bob")
+    (finding,) = await findings_of(stub, "alice")
+    await stub.ResolveFinding(
+        curation_pb2.ResolveFindingRequest(
+            finding_id=finding.id, resolution=curation_pb2.RESOLUTION_DEPRECATE
+        ),
+        metadata=USER,
+    )
+    (current,) = (await store.get_lifecycles([OWNED.id])).values()
+    assert (current.state, current.owner, current.review_by) == ("deprecated", "carol", review_by)
+
+
+async def test_only_one_of_two_who_deprecate_from_a_report_acts(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    store.findings = []
+    await report(stub, OWNED, "bob")
+    (finding,) = await findings_of(stub, "alice")
+    request = curation_pb2.ResolveFindingRequest(
+        finding_id=finding.id, resolution=curation_pb2.RESOLUTION_DEPRECATE
+    )
+    await stub.ResolveFinding(request, metadata=USER)
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.ResolveFinding(request, metadata=as_user("root"))
+    assert err.value.code() == grpc.StatusCode.FAILED_PRECONDITION
+    assert len(store.history) == 1

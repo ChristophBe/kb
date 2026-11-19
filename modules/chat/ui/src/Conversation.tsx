@@ -255,6 +255,7 @@ export function Conversation() {
               role={m.role}
               content={m.content}
               citations={m.citations}
+              conversationId={id}
               failure={m.status === MessageStatus.FAILED ? (failures[m.id] ?? "") : undefined}
               stopped={m.status === MessageStatus.STOPPED}
               announce={m.id in failures}
@@ -367,12 +368,15 @@ function Bubble({
   role,
   content,
   citations,
+  conversationId,
   failure,
   stopped = false,
   announce = false,
   actions = false,
   onRetry,
 }: Pick<ChatMessage, "role" | "content" | "citations"> & {
+  /** The conversation the answer is in, for what other modules add to its sources. */
+  conversationId?: string;
   /** Set when the answer failed: the reason, or "" when it isn't known. */
   failure?: string;
   /** The user stopped the answer; its text so far is kept. */
@@ -394,7 +398,9 @@ function Bubble({
   }
   return (
     <div className="flex flex-col gap-2 rounded-card border border-border bg-surface px-4 py-2 text-base @container">
-      {content && <Answer content={content} citations={citations} />}
+      {content && (
+        <Answer content={content} citations={citations} conversationId={conversationId} />
+      )}
       {stopped && (
         <p className="flex items-center gap-2 text-xs text-fg-muted">
           <Square className="size-3 fill-current" aria-hidden="true" />

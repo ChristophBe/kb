@@ -259,19 +259,22 @@ export function ErrorMessage({ error, exclude = [] }: { error: unknown; exclude?
 /**
  * A margin note for a citation, shown beside the text it supports. Render it
  * in a `<ul aria-label="Sources">`. `active` marks it while its marker in the
- * text is hovered or focused.
+ * text is hovered or focused. `actions` are buttons for the source, below
+ * its excerpt; the row takes no room while they render nothing.
  */
 export function SourceNote({
   n,
   title,
   detail,
   snippet,
+  actions,
   active = false,
 }: {
   n: number;
   title: ReactNode;
   detail?: string;
   snippet?: string;
+  actions?: ReactNode;
   active?: boolean;
 }) {
   return (
@@ -286,6 +289,7 @@ export function SourceNote({
       </p>
       {detail && <p className="mt-0.5 font-mono text-fg-muted">{detail}</p>}
       {snippet && <p className="mt-1 line-clamp-3 text-fg-muted">{snippet}</p>}
+      {actions && <div className="mt-1 flex flex-wrap gap-1 empty:hidden">{actions}</div>}
     </li>
   );
 }

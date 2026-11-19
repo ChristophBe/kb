@@ -12,6 +12,7 @@ export {
   useSearchContext,
 } from "./runtime.tsx";
 export { SearchError } from "./search.ts";
+export { Slot, SlotsProvider } from "./slots.tsx";
 export {
   dismissToast,
   type Toast,
@@ -31,6 +32,9 @@ export {
   type SearchContext,
   type SearchHit,
   type SearchProvider,
+  type SlotContribution,
+  type SlotName,
+  type SlotProps,
 } from "./types.ts";
 export {
   type CurrentUser,

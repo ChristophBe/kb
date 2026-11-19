@@ -4,6 +4,7 @@ import {
   type RuntimeAuth,
   type RuntimeConfig,
   type SearchProvider,
+  SlotsProvider,
   useIsPlatformAdmin,
 } from "@knowcel/module-sdk";
 import {
@@ -86,8 +87,8 @@ function Routes({ config }: { config: RuntimeConfig }) {
   // The search reads it when it runs, so the router does not restart when the user is known.
   const isPlatformAdmin = useRef(false);
   isPlatformAdmin.current = useIsPlatformAdmin();
+  const modules = useMemo(() => activeModules(config), [config]);
   const router = useMemo(() => {
-    const modules = activeModules(config);
     const providers = searchProviders(modules, () => isPlatformAdmin.current);
     return createBrowserRouter([
       {
@@ -110,8 +111,13 @@ function Routes({ config }: { config: RuntimeConfig }) {
         ],
       },
     ]);
-  }, [config]);
-  return <RouterProvider router={router} />;
+  }, [modules]);
+  // The pages of every module can show what other enabled modules add to their slots.
+  return (
+    <SlotsProvider modules={modules}>
+      <RouterProvider router={router} />
+    </SlotsProvider>
+  );
 }
 
 function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: SearchProvider[] }) {

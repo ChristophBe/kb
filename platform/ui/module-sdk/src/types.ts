@@ -55,6 +55,44 @@ export interface SearchProvider {
 }
 
 /**
+ * The slots that pages offer to other modules, each with the props the page
+ * passes to what fills it. A page that owns a slot renders
+ * `<Slot name="..." {...props} />`; add an entry here when a page starts to
+ * offer one.
+ */
+export interface SlotProps {
+  /** Actions in the toolbar of a document's page. */
+  "document.detail.actions": { documentId: string };
+  /** Actions on a source of a chat answer; only for sources that are documents. */
+  "chat.citation.actions": { documentId: string; chunkIndex: number; conversationId?: string };
+}
+
+export type SlotName = keyof SlotProps;
+
+/**
+ * A module's component for a slot of a page it doesn't own. It is part of the
+ * manifest, so the slot works before the module's pages have been visited;
+ * keep the component's code out of it: `load` imports it on first render, e.g.
+ * `() => import("./ReportAction.tsx")`.
+ */
+export type SlotContribution = {
+  [N in SlotName]: {
+    slot: N;
+    load(): Promise<{ default: ComponentType<SlotProps[N]> }>;
+    /**
+     * Render it only for platform admins. This hides the component, it does
+     * not protect anything: the module's service still has to check the role.
+     */
+    requiresPlatformAdmin?: boolean;
+    /**
+     * Position among the slot's contributions, lowest first. Contributions
+     * without one come after all ordered ones, in module order.
+     */
+    order?: number;
+  };
+}[SlotName];
+
+/**
  * What the shell knows about a module before its code loads: enough for the
  * sidebar and the global search. A module package exports it
  * from `@knowcel/module-<id>/manifest` (`src/manifest.ts`). Every manifest ships in
@@ -72,6 +110,8 @@ export interface ModuleManifest {
   order?: number;
   /** The module's group in the global search, usually from `lazySearch`. */
   search?: SearchProvider;
+  /** What the module adds to slots of other modules' pages. */
+  slots?: SlotContribution[];
 }
 
 /**

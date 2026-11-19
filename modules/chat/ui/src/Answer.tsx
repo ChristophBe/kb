@@ -1,4 +1,5 @@
 import type { Citation } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { Slot } from "@knowcel/module-sdk";
 import { Check, Copy, IconButton, SourceNote } from "@knowcel/ui";
 import { type ComponentProps, useCallback, useMemo, useRef, useState } from "react";
 import Markdown, { type Components } from "react-markdown";
@@ -113,7 +114,16 @@ function useHighlight() {
   return { active, linked };
 }
 
-export function Answer({ content, citations }: { content: string; citations: Citation[] }) {
+export function Answer({
+  content,
+  citations,
+  conversationId,
+}: {
+  content: string;
+  citations: Citation[];
+  /** Given to what other modules add to the sources. */
+  conversationId?: string;
+}) {
   const { active, linked } = useHighlight();
 
   // Stable across highlight changes: new components would remount the links and drop focus.
@@ -173,6 +183,17 @@ export function Answer({ content, citations }: { content: string; citations: Cit
                 detail={sourceDetail(c)}
                 snippet={c.snippet}
                 title={<SourceLink citation={c} {...linked(n)} />}
+                // Only documents can be acted on, not sections of the user manual.
+                actions={
+                  c.manualPage ? undefined : (
+                    <Slot
+                      name="chat.citation.actions"
+                      documentId={c.documentId}
+                      chunkIndex={c.chunkIndex}
+                      conversationId={conversationId}
+                    />
+                  )
+                }
               />
             );
           })}

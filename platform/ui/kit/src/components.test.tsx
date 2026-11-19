@@ -166,6 +166,21 @@ describe("kit components have no axe violations", () => {
     await expectNoAxeViolations(container);
   });
 
+  it("SourceNote shows actions below the excerpt", async () => {
+    const { container } = render(
+      <ul aria-label="Sources">
+        <SourceNote
+          n={1}
+          title="Quarterly report"
+          snippet="Revenue grew."
+          actions={<button type="button">Rate</button>}
+        />
+      </ul>,
+    );
+    expect(screen.getByRole("button", { name: "Rate" })).toBeTruthy();
+    await expectNoAxeViolations(container);
+  });
+
   it("ChunkStrip", async () => {
     const { container } = render(<ChunkStrip count={42} marked={[0, 7]} />);
     await expectNoAxeViolations(container);

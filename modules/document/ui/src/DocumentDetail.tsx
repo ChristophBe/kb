@@ -2,6 +2,7 @@ import { DocumentService } from "@knowcel/document-api/knowcel/document/v1/docum
 import {
   Code,
   ConnectError,
+  Slot,
   useClient,
   useCurrentUser,
   useModuleEnabled,
@@ -154,6 +155,7 @@ export function DocumentDetail() {
             <MessageSquare className="size-4" aria-hidden="true" /> Ask about this document
           </Link>
         )}
+        <Slot name="document.detail.actions" documentId={d.id} />
         {isOwner && <AccessEditor document={d} />}
         {isOwner && (
           <Button variant="danger" onClick={() => setDeleting(true)}>

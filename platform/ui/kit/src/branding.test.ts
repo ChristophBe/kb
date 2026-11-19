@@ -1,3 +1,6 @@
+/// <reference types="node" />
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   applyBranding,
@@ -78,6 +81,101 @@ describe("applyBranding", () => {
     const link = document.querySelector('link[rel="icon"]');
     expect(link?.getAttribute("type")).toBeNull();
     expect(link?.getAttribute("href")).toBe("/branding/favicon.png");
+  });
+});
+
+describe("applyBranding page colors", () => {
+  const light = { canvas: "#f2f5fb", surface: "#fbfcff", text: "#16203a", textMuted: "#4a5878" };
+
+  it("sets the page colors of a mode and keeps the theme's for the other", () => {
+    applyBranding({ colors: { light: { ...light, border: "#d3daea", borderStrong: "#6b7a99" } } });
+    expect(style()).toContain("--color-canvas: light-dark(#f2f5fb, var(--color-stone-900))");
+    expect(style()).toContain("--color-surface: light-dark(#fbfcff, var(--color-stone-850))");
+    expect(style()).toContain("--color-fg: light-dark(#16203a, var(--color-stone-150))");
+    expect(style()).toContain("--color-fg-muted: light-dark(#4a5878, var(--color-stone-400))");
+    expect(style()).toContain("--color-border: light-dark(#d3daea, var(--color-stone-700))");
+    expect(style()).toContain("--color-border-strong: light-dark(#6b7a99, var(--color-stone-500))");
+  });
+
+  it("leaves the accent alone when only page colors are set", () => {
+    applyBranding({ colors: { dark: { canvas: "#0c101c" } } });
+    expect(style()).toContain("--color-canvas: light-dark(var(--color-stone-100), #0c101c)");
+    expect(style()).not.toContain("--color-accent:");
+    expect(style()).not.toContain("--color-glass");
+    expect(style()).not.toContain("--color-glow");
+    expect(style()).not.toContain("--color-surface-muted");
+  });
+
+  it("emits only the roles of keys that are set", () => {
+    applyBranding({ colors: { light: { accent: "#1d4ed8" } } });
+    expect(style()).not.toContain("--color-canvas:");
+    expect(style()).not.toContain("--color-on-accent");
+    expect(style()).not.toContain("--color-accent-2");
+  });
+
+  it("sets the second stop of the hero gradient", () => {
+    applyBranding({ colors: { light: { accent2: "#0e7490" }, dark: { accent2: "#67c5e0" } } });
+    expect(style()).toContain("--color-accent-2: light-dark(#0e7490, #67c5e0)");
+  });
+
+  it("mixes the muted surface from the surface and the text", () => {
+    applyBranding({ colors: { light } });
+    expect(style()).toContain(
+      "--color-surface-muted: light-dark(color-mix(in oklab, #fbfcff, #16203a 8%), var(--color-stone-750))",
+    );
+    applyBranding({ colors: { dark: { text: "#ffffff" } } });
+    expect(style()).toContain("color-mix(in oklab, var(--color-stone-850), #ffffff 8%)");
+  });
+
+  it("sets the glows at the opacity of the theme, per mode", () => {
+    applyBranding({
+      colors: {
+        light: { glow1: "#1d4ed8", glow2: "#0e7490" },
+        dark: { glow1: "#93b4ff", glow2: "#67c5e0" },
+      },
+    });
+    expect(style()).toContain(
+      "--color-glow-1: light-dark(color-mix(in srgb, #1d4ed8 10%, transparent), color-mix(in srgb, #93b4ff 10%, transparent))",
+    );
+    expect(style()).toContain(
+      "--color-glow-2: light-dark(color-mix(in srgb, #0e7490 10%, transparent), color-mix(in srgb, #67c5e0 8%, transparent))",
+    );
+  });
+
+  it("turns a glow off with none and keeps the other light", () => {
+    applyBranding({ colors: { light: { glow1: "none" } } });
+    expect(style()).toContain("--color-glow-1: light-dark(transparent, rgb(140 200 160 / 0.1))");
+    expect(style()).not.toContain("--color-glow-2");
+  });
+
+  it("makes the glass follow the surface where the browser blurs and the user allows it", () => {
+    applyBranding({ colors: { light: { surface: "#fbfcff" } } });
+    const css = style();
+    expect(css).toContain("@supports (backdrop-filter: blur(1px))");
+    expect(css).toContain("@media not (prefers-reduced-transparency: reduce)");
+    expect(css).toContain(
+      "--color-glass: light-dark(color-mix(in srgb, #fbfcff 72%, transparent), rgb(25 26 23 / 0.72))",
+    );
+    expect(css).toContain("--color-glass-strong: light-dark(color-mix(in srgb, #fbfcff 86%");
+    expect(css).toContain("--color-glass-subtle: light-dark(color-mix(in srgb, #fbfcff 40%");
+    // The opaque fallbacks of theme.css stay in charge outside that condition.
+    expect(css.indexOf("--color-glass:")).toBeGreaterThan(css.indexOf("@supports"));
+  });
+
+  it("keeps focus on the accent", () => {
+    applyBranding({ colors: { dark: { canvas: "#0c101c" } } });
+    expect(style()).toContain("--color-focus: var(--color-accent)");
+  });
+
+  it("falls back to the literal colours of theme.css for a mode left out", () => {
+    const theme = readFileSync(join(import.meta.dirname, "theme.css"), "utf8");
+    const keys = { surface: "#fbfcff", glow1: "#1d4ed8", glow2: "#0e7490" };
+    for (const colors of [{ light: keys }, { dark: keys }]) {
+      applyBranding({ colors });
+      const literals = style().match(/rgb\([^)]*\)/g) ?? [];
+      expect(literals).toHaveLength(5); // three glass fills, two glows
+      for (const literal of literals) expect(theme).toContain(literal);
+    }
   });
 });
 

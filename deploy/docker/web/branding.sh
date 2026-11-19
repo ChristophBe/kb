@@ -10,9 +10,33 @@ errors=""
 fail() { errors="${errors}branding: $1
 "; }
 
-# The page canvas of the default theme (theme.css), which the accent text must stand out against.
-CANVAS_LIGHT="#f4f4f0"
-CANVAS_DARK="#11120f"
+# The Knowcelium color of every key per mode, as sRGB hex (theme.css; theme.test.ts fails when they drift).
+# A key a branding file leaves out keeps this value, so it takes part in the contrast checks.
+DEFAULT_COLORS='
+light.accent #3a6343
+light.onAccent #fcfcfa
+light.accent2 #997238
+light.canvas #f4f4f0
+light.surface #fcfcfa
+light.text #21221e
+light.textMuted #5a5c56
+light.border #d7d8d2
+light.borderStrong #777870
+light.glow1 #427054
+light.glow2 #a97416
+dark.accent #8ec899
+dark.onAccent #101911
+dark.accent2 #d8ba79
+dark.canvas #11120f
+dark.surface #191b18
+dark.text #ebebe7
+dark.textMuted #a4a69f
+dark.border #31342f
+dark.borderStrong #797b74
+dark.glow1 #8cc8a0
+dark.glow2 #eec469
+'
+COLOR_KEYS="accent onAccent accent2 canvas surface text textMuted border borderStrong glow1 glow2"
 
 # contrast <#rrggbb> <#rrggbb>: the WCAG contrast ratio (POSIX awk: no strtonum in busybox).
 contrast() {
@@ -103,23 +127,63 @@ if jq -e 'has("fonts")' "$file" >/dev/null; then
   fi
 fi
 
+# default_color <mode> <key>
+default_color() { printf '%s\n' "$DEFAULT_COLORS" | awk -v k="$1.$2" '$1 == k { print $2 }'; }
+
+# check_pair <mode> <foreground key> <background key> <what the background is> <minimum>
+check_pair() {
+  eval "fg_value=\$c_$2 bg_value=\$c_$3"
+  ratio=$(contrast "$fg_value" "$bg_value")
+  at_least "$ratio" "$5" || fail "colors.$1.$2 $fg_value has contrast $ratio:1 against $4 ($3 $bg_value), needs $5:1"
+}
+
+if jq -e 'has("colors")' "$file" >/dev/null; then
+  if ! jq -e '.colors | type == "object"' "$file" >/dev/null; then
+    fail "colors must be an object with light and dark"
+  else
+    for mode in $(jq -r '.colors | keys[]' "$file"); do
+      case $mode in light | dark) ;; *) fail "unknown mode \"$mode\" in colors (light or dark)" ;; esac
+    done
+  fi
+fi
+
 for mode in light dark; do
   jq -e ".colors.$mode" "$file" >/dev/null 2>&1 || continue
-  if [ "$mode" = light ]; then canvas=$CANVAS_LIGHT; else canvas=$CANVAS_DARK; fi
-  accent=$(jq -r ".colors.$mode.accent // empty" "$file")
-  on=$(jq -r ".colors.$mode.onAccent // empty" "$file")
+  if ! jq -e ".colors.$mode | type == \"object\"" "$file" >/dev/null; then
+    fail "colors.$mode must be an object of colors"
+    continue
+  fi
   ok=1
-  for pair in "accent:$accent" "onAccent:$on"; do
-    if ! printf '%s' "${pair#*:}" | grep -Eq '^#[0-9a-fA-F]{6}$'; then
-      fail "colors.$mode.${pair%%:*} must be a color like #1d4ed8"
-      ok=0
+  for key in $(jq -r ".colors.$mode | keys[]" "$file"); do
+    case " $COLOR_KEYS " in *" $key "*) ;; *) fail "unknown key \"$key\" in colors.$mode"; ok=0 ;; esac
+  done
+  # The effective color of every key: configured, else the Knowcelium default of the mode.
+  for key in $COLOR_KEYS; do
+    value=$(default_color "$mode" "$key")
+    if jq -e ".colors.$mode | has(\"$key\")" "$file" >/dev/null; then
+      value=$(jq -r ".colors.$mode.$key | tostring" "$file")
+      if ! printf '%s' "$value" | grep -Eq '^#[0-9a-fA-F]{6}$'; then
+        # A glow may also be "none" (that light is off); it stays out of the contrast checks.
+        case "$key:$value" in
+          glow1:none | glow2:none) ;;
+          glow*) fail "colors.$mode.$key must be a color like #1d4ed8 or \"none\""; ok=0 ;;
+          *) fail "colors.$mode.$key must be a color like #1d4ed8"; ok=0 ;;
+        esac
+      fi
     fi
+    eval "c_$key=\$value"
   done
   [ "$ok" = 1 ] || continue
-  ratio=$(contrast "$accent" "$on")
-  at_least "$ratio" 4.5 || fail "colors.$mode: text on the accent has contrast $ratio:1 (accent $accent, onAccent $on), needs 4.5:1"
-  ratio=$(contrast "$accent" "$canvas")
-  at_least "$ratio" 4.5 || fail "colors.$mode.accent $accent has contrast $ratio:1 against the page background $canvas, needs 4.5:1"
+  ratio=$(contrast "$c_accent" "$c_onAccent")
+  at_least "$ratio" 4.5 || fail "colors.$mode: text on the accent has contrast $ratio:1 (accent $c_accent, onAccent $c_onAccent), needs 4.5:1"
+  check_pair "$mode" accent canvas "the page background" 4.5
+  for bg in canvas surface; do
+    if [ "$bg" = canvas ]; then what="the page background"; else what="the cards"; fi
+    check_pair "$mode" text "$bg" "$what" 4.5
+    check_pair "$mode" textMuted "$bg" "$what" 4.5
+    check_pair "$mode" borderStrong "$bg" "$what" 3
+  done
+  check_pair "$mode" accent2 canvas "the page background" 3
 done
 
 # --- navigation: the background (color or gradient) and text color of the main sidebar, per mode ---

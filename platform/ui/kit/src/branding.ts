@@ -24,9 +24,21 @@ export interface BrandFont {
   weight?: string;
 }
 
+/** Colours of one mode as `#rrggbb`; a key left out keeps the theme's colour. */
 export interface BrandColors {
-  accent: string;
-  onAccent: string;
+  accent?: string;
+  onAccent?: string;
+  /** The second stop of the hero gradient. */
+  accent2?: string;
+  canvas?: string;
+  surface?: string;
+  text?: string;
+  textMuted?: string;
+  border?: string;
+  borderStrong?: string;
+  /** The two background lights: a colour, or "none" to turn the light off. */
+  glow1?: string;
+  glow2?: string;
 }
 
 const DEFAULT_NAME = "Knowcelium";
@@ -87,21 +99,113 @@ export function brandText(text: string): string {
   return text.replace(/knowcelium/gi, () => name);
 }
 
+/** The roles one key sets, as [token, key, light fallback, dark fallback] with the theme's own steps. */
+const COLOR_ROLES = [
+  ["--color-accent-2", "accent2", "var(--color-ochre-500)", "var(--color-ochre-350)"],
+  ["--color-canvas", "canvas", "var(--color-stone-100)", "var(--color-stone-900)"],
+  ["--color-surface", "surface", "var(--color-stone-50)", "var(--color-stone-850)"],
+  ["--color-fg", "text", "var(--color-stone-800)", "var(--color-stone-150)"],
+  ["--color-fg-muted", "textMuted", "var(--color-stone-600)", "var(--color-stone-400)"],
+  ["--color-border", "border", "var(--color-stone-300)", "var(--color-stone-700)"],
+  ["--color-border-strong", "borderStrong", "var(--color-stone-550)", "var(--color-stone-500)"],
+] as const;
+
+/** The two background lights: the theme's literal colours (theme.css) and their opacity per mode. */
+const GLOWS = [
+  ["--color-glow-1", "glow1", ["rgb(66 112 84 / 0.1)", 10], ["rgb(140 200 160 / 0.1)", 10]],
+  ["--color-glow-2", "glow2", ["rgb(169 116 22 / 0.1)", 10], ["rgb(238 196 105 / 0.08)", 8]],
+] as const;
+
+/** The glass fills: the theme's literal colours (theme.css) and the share of `surface` they keep. */
+const GLASS = [
+  ["--color-glass", "rgb(252 252 250 / 0.72)", "rgb(25 26 23 / 0.72)", 72],
+  ["--color-glass-strong", "rgb(252 252 250 / 0.86)", "rgb(25 26 23 / 0.86)", 86],
+  ["--color-glass-subtle", "rgb(252 252 250 / 0.4)", "rgb(25 26 23 / 0.4)", 40],
+] as const;
+
 /**
- * Colour roles derived from one accent per mode; a mode without colours keeps the theme's.
- * Hover moves away from the page (darker in light mode, lighter in dark mode).
+ * Colour roles of the configured keys; a mode or key left out keeps the theme's colour.
+ * Derived from the accent: hover (moves away from the page, darker in light mode, lighter in
+ * dark mode) and the subtle fill. Derived from the page colours: the muted surface and the glass.
  */
-function colorRules({ light, dark }: NonNullable<Branding["colors"]>): string {
-  const hover = (c: BrandColors, toward: string) =>
-    `color-mix(in oklab, ${c.accent}, ${toward} 18%)`;
-  const subtle = (c: BrandColors) => `color-mix(in oklab, ${c.accent} 10%, var(--color-canvas))`;
-  return `:root:root {
-  --color-accent: light-dark(${light?.accent ?? "var(--color-sage-700)"}, ${dark?.accent ?? "var(--color-sage-400)"});
-  --color-accent-hover: light-dark(${light ? hover(light, "black") : "var(--color-sage-800)"}, ${dark ? hover(dark, "white") : "var(--color-sage-300)"});
-  --color-on-accent: light-dark(${light?.onAccent ?? "var(--color-stone-25)"}, ${dark?.onAccent ?? "var(--color-sage-950)"});
-  --color-accent-subtle: light-dark(${light ? subtle(light) : "var(--color-sage-50)"}, ${dark ? subtle(dark) : "var(--color-sage-900)"});
-  --color-focus: var(--color-accent);
-}`;
+function colorRules({ light, dark }: NonNullable<Branding["colors"]>): string[] {
+  const set = (key: keyof BrandColors) => light?.[key] !== undefined || dark?.[key] !== undefined;
+  const role = (token: string, l: string, d: string) => `  ${token}: light-dark(${l}, ${d});`;
+  const hover = (accent: string, toward: string) => `color-mix(in oklab, ${accent}, ${toward} 18%)`;
+  const subtle = (accent: string) => `color-mix(in oklab, ${accent} 10%, var(--color-canvas))`;
+  const lines: string[] = [];
+
+  if (set("accent"))
+    lines.push(
+      role(
+        "--color-accent",
+        light?.accent ?? "var(--color-sage-700)",
+        dark?.accent ?? "var(--color-sage-400)",
+      ),
+      role(
+        "--color-accent-hover",
+        light?.accent ? hover(light.accent, "black") : "var(--color-sage-800)",
+        dark?.accent ? hover(dark.accent, "white") : "var(--color-sage-300)",
+      ),
+      role(
+        "--color-accent-subtle",
+        light?.accent ? subtle(light.accent) : "var(--color-sage-50)",
+        dark?.accent ? subtle(dark.accent) : "var(--color-sage-900)",
+      ),
+    );
+  if (set("onAccent"))
+    lines.push(
+      role(
+        "--color-on-accent",
+        light?.onAccent ?? "var(--color-stone-25)",
+        dark?.onAccent ?? "var(--color-sage-950)",
+      ),
+    );
+  for (const [token, key, l, d] of COLOR_ROLES)
+    if (set(key)) lines.push(role(token, light?.[key] ?? l, dark?.[key] ?? d));
+  if (set("surface") || set("text")) {
+    // A mix of the surface and the text colour of the mode, which the theme's grey also is.
+    const muted = (c: BrandColors | undefined, surface: string, text: string) =>
+      c?.surface || c?.text
+        ? `color-mix(in oklab, ${c.surface ?? surface}, ${c.text ?? text} 8%)`
+        : undefined;
+    lines.push(
+      role(
+        "--color-surface-muted",
+        muted(light, "var(--color-stone-50)", "var(--color-stone-800)") ?? "var(--color-stone-200)",
+        muted(dark, "var(--color-stone-850)", "var(--color-stone-150)") ?? "var(--color-stone-750)",
+      ),
+    );
+  }
+  for (const [token, key, l, d] of GLOWS) {
+    if (!set(key)) continue;
+    const lightValue = light?.[key];
+    const darkValue = dark?.[key];
+    const lit = (value: string, alpha: number) =>
+      value === "none" ? "transparent" : `color-mix(in srgb, ${value} ${alpha}%, transparent)`;
+    lines.push(
+      role(
+        token,
+        lightValue ? lit(lightValue, l[1]) : l[0],
+        darkValue ? lit(darkValue, d[1]) : d[0],
+      ),
+    );
+  }
+  lines.push("  --color-focus: var(--color-accent);");
+  const rules = [`:root:root {\n${lines.join("\n")}\n}`];
+
+  if (light?.surface || dark?.surface) {
+    const glass = GLASS.map(([token, l, d, share]) => {
+      const fill = (c: BrandColors | undefined, fallback: string) =>
+        c?.surface ? `color-mix(in srgb, ${c.surface} ${share}%, transparent)` : fallback;
+      return role(token, fill(light, l), fill(dark, d));
+    });
+    // Where glass cannot blur or is unwanted the theme uses the opaque surface, which follows the branding.
+    rules.push(
+      `@supports (backdrop-filter: blur(1px)) {\n@media not (prefers-reduced-transparency: reduce) {\n:root:root {\n${glass.join("\n")}\n}\n}\n}`,
+    );
+  }
+  return rules;
 }
 
 /** `@font-face` rules for the font files and the family tokens, each falling back to the Knowcelium typeface. */
@@ -194,7 +298,7 @@ export function applyBranding(branding: Branding | undefined, buildVersion?: str
   version = buildVersion ?? "dev";
   document.getElementById(STYLE_ID)?.remove();
   const rules: string[] = [];
-  if (current.colors?.light || current.colors?.dark) rules.push(colorRules(current.colors));
+  if (current.colors?.light || current.colors?.dark) rules.push(...colorRules(current.colors));
   if (current.fonts && Object.keys(current.fonts).length > 0)
     rules.push(...fontRules(current.fonts));
   if (current.navigation) rules.push(navigationRules(current.navigation));

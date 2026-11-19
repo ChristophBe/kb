@@ -4,8 +4,32 @@
   "favicon": "favicon.svg",
   "fonts": { "heading": { "family": "Georgia" } },
   "colors": {
-    "light": { "accent": "#1d4ed8", "onAccent": "#ffffff" },
-    "dark": { "accent": "#93b4ff", "onAccent": "#0b1220" }
+    "light": {
+      "accent": "#1d4ed8",
+      "onAccent": "#ffffff",
+      "accent2": "#0e7490",
+      "canvas": "#f2f5fb",
+      "surface": "#fbfcff",
+      "text": "#16203a",
+      "textMuted": "#4a5878",
+      "border": "#d3daea",
+      "borderStrong": "#6b7a99",
+      "glow1": "#1d4ed8",
+      "glow2": "#0e7490"
+    },
+    "dark": {
+      "accent": "#93b4ff",
+      "onAccent": "#0b1220",
+      "accent2": "#67c5e0",
+      "canvas": "#0c101c",
+      "surface": "#141a2b",
+      "text": "#e6ebf7",
+      "textMuted": "#9ba8c7",
+      "border": "#2a3350",
+      "borderStrong": "#7886a8",
+      "glow1": "#93b4ff",
+      "glow2": "#67c5e0"
+    }
   },
   "navigation": {
     "light": {

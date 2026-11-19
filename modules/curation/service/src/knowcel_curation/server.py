@@ -244,7 +244,11 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
             current = (await self._store.get_lifecycles([document_id])).get(document_id)
             owner = request.owner or (current.owner if current else user)
             await self._lifecycle.set(
-                document_id, Lifecycle(state, owner, review_by), request.note, user
+                document_id,
+                Lifecycle(state, owner, review_by),
+                request.note,
+                user,
+                document.created_at,
             )
         return curation_pb2.SetLifecycleResponse()
 
@@ -322,11 +326,16 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
             # A replacement the caller can't read doesn't count: they'd be left with nothing.
             replacer_ids = set().union(*replacements.values())
             replacers = await self._documents.readable(replacer_ids) if replacer_ids else {}
+            # Two documents that replace each other are both kept.
+            onward = await self._store.get_replacements(replacer_ids) if replacer_ids else {}
         return [
             (
                 s,
                 lifecycles.get(s.document_id),
-                bool(replacements.get(s.document_id, set()) & replacers.keys()),
+                any(
+                    r in replacers and s.document_id not in onward.get(r, ())
+                    for r in replacements.get(s.document_id, ())
+                ),
             )
             for s in scores
             if s.document_id in visible

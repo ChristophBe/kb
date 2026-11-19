@@ -630,3 +630,32 @@ async def test_a_replacement_the_caller_cannot_read_or_that_was_kept_does_not_co
         )
     await server.stop(None)
     assert [s.replaced for s in response.scores] == [False, False]
+
+
+async def test_two_documents_replacing_each_other_are_both_kept(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    for document in (SEEN, OTHER):
+        await store.save_score(document.id, NOW, 0.5)
+    store.findings = [
+        Finding(uuid.uuid4(), "superseded", SEEN.id, OTHER.id, NOW),
+        Finding(uuid.uuid4(), "duplicate", OTHER.id, SEEN.id, NOW, resolution="replace"),
+    ]
+    response = await stub.ScoreChunks(
+        curation_pb2.ScoreChunksRequest(document_ids=[str(SEEN.id), str(OTHER.id)]),
+        metadata=USER,
+    )
+    assert [s.replaced for s in response.scores] == [False, False]
+
+
+async def test_a_document_deprecated_before_it_was_scored_is_reported_excluded(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    assert OWNED.id not in store.scores
+    await set_state(stub, OWNED, "alice", curation_pb2.LIFECYCLE_STATE_DEPRECATED)
+    response = await stub.ScoreChunks(
+        curation_pb2.ScoreChunksRequest(document_ids=[str(OWNED.id)]), metadata=USER
+    )
+    (score,) = response.scores
+    assert score.excluded
+    assert store.scores[OWNED.id].processed_at == OWNED.created_at

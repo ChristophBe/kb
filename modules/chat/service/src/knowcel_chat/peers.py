@@ -90,8 +90,11 @@ class PeerCuration:
     a failure is logged and answered with None, and the caller carries on with
     the similarity order."""
 
-    def __init__(self, curation: curation_pb2_grpc.CurationServiceStub) -> None:
+    def __init__(
+        self, curation: curation_pb2_grpc.CurationServiceStub, timeout: float = 3.0
+    ) -> None:
         self._curation = curation
+        self._timeout = timeout
 
     async def scores(self, document_ids: Collection[str]) -> dict[str, CurationScore] | None:
         """The scores of those of the documents that have one and that the
@@ -103,7 +106,7 @@ class PeerCuration:
                 batch = curation_pb2.ScoreChunksRequest(
                     document_ids=ids[start : start + _SCORE_BATCH]
                 )
-                response = await self._curation.ScoreChunks(batch)
+                response = await self._curation.ScoreChunks(batch, timeout=self._timeout)
                 for s in response.scores:
                     found[s.document_id] = CurationScore(s.score, s.excluded, s.replaced)
         except grpc.aio.AioRpcError as err:

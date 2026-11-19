@@ -26,6 +26,7 @@ def test_default_settings_are_valid() -> None:
         ({"document_addr": "document"}, "KNOWCEL_DOCUMENT_ADDR: must be host:port, got 'document'"),
         ({"llm_addr": ":9004"}, "KNOWCEL_LLM_ADDR: must be host:port, got ':9004'"),
         ({"curation_addr": "curation"}, "KNOWCEL_CURATION_ADDR: must be host:port, got 'curation'"),
+        ({"curation_timeout": 0}, "KNOWCEL_CURATION_TIMEOUT: must be positive, got 0.0"),
         ({"curation_weight": 1.5}, "KNOWCEL_CURATION_WEIGHT: must be between 0 and 1, got 1.5"),
         ({"rag_top_k": 0}, "KNOWCEL_RAG_TOP_K: must be at least 1, got 0"),
         (

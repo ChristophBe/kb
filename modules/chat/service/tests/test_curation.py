@@ -56,9 +56,15 @@ class FakeCuration:
         self.scores = scores or {}
         self.down = down
         self.requests: list[list[str]] = []
+        self.timeouts: list[float | None] = []
 
-    async def ScoreChunks(self, request: Any) -> Any:
+    async def ScoreChunks(
+        self,
+        request: Any,
+        timeout: float | None = None,  # noqa: ASYNC109
+    ) -> Any:
         self.requests.append(list(request.document_ids))
+        self.timeouts.append(timeout)
         if self.down:
             raise grpc.aio.AioRpcError(
                 grpc.StatusCode.UNAVAILABLE, grpc.aio.Metadata(), grpc.aio.Metadata(), "down"
@@ -174,3 +180,9 @@ async def test_a_left_out_document_never_reaches_the_reranker() -> None:
     ).retrieve("q", 4, [])
     assert llm.rated == [["passage 0", "passage 2", "passage 3"]]
     assert indexes(found) == [0, 2, 3]
+
+
+async def test_curation_gets_a_deadline_so_a_slow_answer_falls_back() -> None:
+    curation = FakeCuration()
+    await retriever(FakeDocuments(), curation).retrieve("q", 2, [])
+    assert curation.timeouts == [3.0]

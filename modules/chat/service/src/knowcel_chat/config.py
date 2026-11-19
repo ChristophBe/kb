@@ -25,6 +25,9 @@ class Settings(PlatformSettings):
     # by a newer one, deprecated or archived are left out, and the rest are
     # ranked down by their document's score. Off ranks by similarity alone.
     curation_enabled: bool = True
+    # Seconds the curation module may take to answer before passages are ranked
+    # by similarity alone.
+    curation_timeout: float = 3
     # How far a document's curation score can rank its passages down, between 0
     # (not at all) and 1 (a score of 0 puts a passage at the end).
     curation_weight: float = 0.3
@@ -69,6 +72,8 @@ class Settings(PlatformSettings):
         problems.addr("iam_addr", self.iam_addr)
         problems.addr("curation_addr", self.curation_addr)
         problems.between("curation_weight", self.curation_weight, 0, 1)
+        if not self.curation_timeout > 0:
+            problems.add("curation_timeout", f"must be positive, got {self.curation_timeout}")
         problems.at_least("rag_top_k", self.rag_top_k, 1)
         problems.at_least("rerank_candidates", self.rerank_candidates, self.rag_top_k)
         problems.between("rag_min_score", self.rag_min_score, -1, 1)

@@ -247,3 +247,12 @@ async def test_replacements_are_the_versions_found_and_the_confirmed_ones(
     await store.resolve_finding(by_document[dismissed].id, "ignore", "a")
     found = await store.get_replacements([older, copy, kept, dismissed, other])
     assert found == {older: {newer}, copy: {other}}
+
+
+async def test_the_longest_overdue_documents_come_first(engine: AsyncEngine) -> None:
+    store = SqlCurationStore(engine)
+    newest, oldest, middle = (uuid.uuid4() for _ in range(3))
+    for document, due in ((newest, T0 + 5 * DAY), (oldest, T0), (middle, T0 + DAY)):
+        await store.add_lifecycle_change(document, Lifecycle("approved", "a", due), "", "a")
+    now = T0 + 10 * DAY
+    assert await store.list_review_due(now, 2) == [oldest, middle]

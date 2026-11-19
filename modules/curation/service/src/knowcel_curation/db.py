@@ -276,6 +276,8 @@ class SqlCurationStore:
                     findings.c.kind == REVIEW_DUE, findings.c.document_id == latest.c.document_id
                 ),
             )
+            # Longest overdue first, so a batch moves on deterministically.
+            .order_by(latest.c.review_by, latest.c.document_id)
             .limit(limit)
         )
         async with self._engine.connect() as conn:

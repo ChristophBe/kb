@@ -53,7 +53,9 @@ async def run() -> None:
             # Soft dependency: while curation is down, passages are ranked by
             # similarity alone.
             curation = (
-                PeerCuration(curation_pb2_grpc.CurationServiceStub(curation_ch))
+                PeerCuration(
+                    curation_pb2_grpc.CurationServiceStub(curation_ch), settings.curation_timeout
+                )
                 if settings.curation_enabled
                 else None
             )

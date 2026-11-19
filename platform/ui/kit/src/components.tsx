@@ -99,7 +99,7 @@ export function Area({
   return (
     <Element
       className={cn(
-        tone === "primary" ? "glass-area" : "glass-subtle",
+        tone === "primary" ? "glass-area nav-area" : "glass-subtle",
         "flex h-screen flex-col border-border",
         className,
       )}

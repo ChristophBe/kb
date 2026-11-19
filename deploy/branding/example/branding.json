@@ -6,5 +6,12 @@
   "colors": {
     "light": { "accent": "#1d4ed8", "onAccent": "#ffffff" },
     "dark": { "accent": "#93b4ff", "onAccent": "#0b1220" }
+  },
+  "navigation": {
+    "light": {
+      "background": { "from": "#eff4ff", "to": "#c7d7fe", "angle": 180 },
+      "text": "#0b1220"
+    },
+    "dark": { "background": { "from": "#0b1220", "to": "#1e3a8a" }, "text": "#ffffff" }
   }
 }

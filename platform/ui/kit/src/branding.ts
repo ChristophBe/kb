@@ -5,6 +5,15 @@ export interface Branding {
   favicon?: string;
   colors?: { light?: BrandColors; dark?: BrandColors };
   fonts?: { heading?: BrandFont; body?: BrandFont; mono?: BrandFont };
+  navigation?: { light?: BrandNavigation; dark?: BrandNavigation };
+}
+
+/** The main sidebar of one mode: a solid color or a linear gradient, and optionally its text color. */
+export interface BrandNavigation {
+  background:
+    | string
+    | { from: string; to: string /** Degrees; 180 (top to bottom) by default. */; angle?: number };
+  text?: string;
 }
 
 /** A typeface: a font file served by the deployment (else a system font) under a family name. */
@@ -89,6 +98,54 @@ function fontRules(fonts: NonNullable<Branding["fonts"]>): string[] {
   return [...rules, `:root:root {\n${tokens.join("\n")}\n}`];
 }
 
+// --- navigation ---
+/**
+ * The sidebar background as one gradient layer per mode, each transparent in the other mode
+ * (`light-dark()` takes colours only, and the angles may differ); a mode without a value keeps the glass.
+ */
+function navigationBackground({ light, dark }: NonNullable<Branding["navigation"]>) {
+  const layer = (nav: BrandNavigation | undefined, mode: "light" | "dark") => {
+    if (!nav) return [];
+    const { from, to, angle } =
+      typeof nav.background === "string"
+        ? { from: nav.background, to: nav.background, angle: 180 }
+        : { ...nav.background, angle: nav.background.angle ?? 180 };
+    const stop = (c: string) =>
+      mode === "light" ? `light-dark(${c}, transparent)` : `light-dark(transparent, ${c})`;
+    return [`linear-gradient(${angle}deg, ${stop(from)}, ${stop(to)})`];
+  };
+  return [...layer(light, "light"), ...layer(dark, "dark")].join(", ");
+}
+
+/**
+ * The sidebar text tokens (`nav-area` in theme.css): text, icons, and the hover, active and
+ * input fills tinted from the text color so they stay readable on the background.
+ */
+function navigationTextRules({ light, dark }: NonNullable<Branding["navigation"]>): string[] {
+  const pick = (role: (text: string) => string, fallback: string) =>
+    `light-dark(${light?.text ? role(light.text) : fallback}, ${dark?.text ? role(dark.text) : fallback})`;
+  const tint = (pct: number, fallback: string) =>
+    pick((t) => `color-mix(in oklab, ${t} ${pct}%, transparent)`, fallback);
+  return [
+    `--navigation-fg: light-dark(${light?.text ?? "var(--color-stone-800)"}, ${dark?.text ?? "var(--color-stone-150)"});`,
+    `--navigation-fg-muted: light-dark(${light?.text ?? "var(--color-stone-600)"}, ${dark?.text ?? "var(--color-stone-400)"});`,
+    `--navigation-hover: ${tint(12, "var(--color-surface-muted)")};`,
+    `--navigation-active: ${tint(18, "var(--color-accent-subtle)")};`,
+    `--navigation-surface: ${tint(14, "var(--color-surface)")};`,
+    `--navigation-accent: light-dark(${light?.text ?? "var(--color-accent)"}, ${dark?.text ?? "var(--color-accent)"});`,
+  ];
+}
+
+function navigationRules(navigation: NonNullable<Branding["navigation"]>): string {
+  const declarations = [];
+  if (navigation.light || navigation.dark)
+    declarations.push(`--navigation-background: ${navigationBackground(navigation)};`);
+  if (navigation.light?.text || navigation.dark?.text)
+    declarations.push(...navigationTextRules(navigation));
+  return `:root:root {\n  ${declarations.join("\n  ")}\n}`;
+}
+// --- end navigation ---
+
 function setFavicon(href: string | undefined) {
   if (!href) return;
   let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
@@ -113,6 +170,7 @@ export function applyBranding(branding: Branding | undefined) {
   if (current.colors?.light || current.colors?.dark) rules.push(colorRules(current.colors));
   if (current.fonts && Object.keys(current.fonts).length > 0)
     rules.push(...fontRules(current.fonts));
+  if (current.navigation) rules.push(navigationRules(current.navigation));
   if (rules.length > 0) {
     const style = document.createElement("style");
     style.id = STYLE_ID;

@@ -117,4 +117,47 @@ describe("applyBranding fonts", () => {
     expect(style()).toContain("--color-accent");
     expect(style()).toContain("--font-sans");
   });
+  // --- navigation ---
+  describe("navigation", () => {
+    it("paints a solid color as a gradient layer of the mode it is for", () => {
+      applyBranding({ navigation: { light: { background: "#1d4ed8" } } });
+      expect(style()).toContain(
+        "--navigation-background: linear-gradient(180deg, light-dark(#1d4ed8, transparent), light-dark(#1d4ed8, transparent));",
+      );
+      expect(style()).not.toContain("--navigation-fg");
+    });
+
+    it("runs a gradient top to bottom unless an angle is given", () => {
+      applyBranding({
+        navigation: {
+          light: { background: { from: "#ffffff", to: "#dbeafe" } },
+          dark: { background: { from: "#0b1220", to: "#1e3a8a", angle: 90 } },
+        },
+      });
+      expect(style()).toContain(
+        "linear-gradient(180deg, light-dark(#ffffff, transparent), light-dark(#dbeafe, transparent)), linear-gradient(90deg, light-dark(transparent, #0b1220), light-dark(transparent, #1e3a8a))",
+      );
+    });
+
+    it("sets the text token and tints the fills from it; a mode without text keeps the theme's", () => {
+      applyBranding({ navigation: { dark: { background: "#0b1220", text: "#ffffff" } } });
+      expect(style()).toContain("--navigation-fg: light-dark(var(--color-stone-800), #ffffff);");
+      expect(style()).toContain(
+        "--navigation-hover: light-dark(var(--color-surface-muted), color-mix(in oklab, #ffffff 12%, transparent));",
+      );
+    });
+
+    it("is removed without branding and combines with the colors in one style element", () => {
+      applyBranding({
+        colors: { light: { accent: "#111111", onAccent: "#ffffff" } },
+        navigation: { light: { background: "#eeeeee" } },
+      });
+      expect(document.querySelectorAll("#knowcel-branding")).toHaveLength(1);
+      expect(style()).toContain("--color-accent");
+      expect(style()).toContain("--navigation-background");
+      applyBranding(undefined);
+      expect(document.getElementById("knowcel-branding")).toBeNull();
+    });
+  });
+  // --- end navigation ---
 });

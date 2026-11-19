@@ -1,6 +1,6 @@
 import asyncio
 import uuid
-from collections.abc import AsyncGenerator, AsyncIterator, Sequence
+from collections.abc import AsyncGenerator, AsyncIterator, Callable, Sequence
 from datetime import UTC, datetime
 from typing import Any
 
@@ -18,6 +18,7 @@ from knowcel_chat.chat import (
     Peer,
     PeerError,
     PeerUnavailableError,
+    ProgressChanged,
     PromptMessage,
     PromptRole,
     SourcesFound,
@@ -73,8 +74,12 @@ class FakeRepo:
 
 class FakeRetriever:
     def __init__(
-        self, error: Exception | None = None, results: list[chat_pb2.Citation] | None = None
+        self,
+        error: Exception | None = None,
+        results: list[chat_pb2.Citation] | None = None,
+        rates: bool = False,
     ) -> None:
+        self.rates = rates
         self.error = error
         self.results = results
         self.calls: list[tuple[str, int, list[uuid.UUID]]] = []
@@ -86,7 +91,10 @@ class FakeRetriever:
         limit: int,
         document_ids: Sequence[uuid.UUID],
         team_ids: Sequence[uuid.UUID] = (),
+        on_rating: Callable[[], None] | None = None,
     ) -> list[chat_pb2.Citation]:
+        if self.rates and on_rating:
+            on_rating()
         self.calls.append((query, limit, list(document_ids)))
         self.team_calls.append(list(team_ids))
         if self.error:
@@ -145,8 +153,14 @@ def make(
     return Chat(Settings(**settings), port, retriever, generator), repo, retriever, generator
 
 
-async def collect(chat: Chat, repo: FakeRepo, use_kb: bool = True) -> list[AnswerEvent]:
+async def collect_all(chat: Chat, repo: FakeRepo, use_kb: bool = True) -> list[AnswerEvent]:
     return [e async for e in chat.answer(OWNER, repo.conv.id, "Capital?", "m1", use_kb)]
+
+
+async def collect(chat: Chat, repo: FakeRepo, use_kb: bool = True) -> list[AnswerEvent]:
+    """The events without the progress ones, which have their own tests."""
+    events = await collect_all(chat, repo, use_kb)
+    return [e for e in events if not isinstance(e, ProgressChanged)]
 
 
 async def test_answer_streams_sources_then_deltas_then_the_saved_message() -> None:
@@ -174,6 +188,49 @@ async def test_answer_streams_sources_then_deltas_then_the_saved_message() -> No
         (USER, "Capital?", COMPLETE),
         (ASSISTANT, "Paris", COMPLETE),
     ]
+
+
+async def test_progress_follows_searching_rating_and_writing() -> None:
+    chat, repo, _, _ = make(retriever=FakeRetriever(rates=True))
+    events = await collect_all(chat, repo)
+
+    assert [e.stage for e in events if isinstance(e, ProgressChanged)] == [
+        chat_pb2.PROGRESS_STAGE_SEARCHING,
+        chat_pb2.PROGRESS_STAGE_RATING,
+        chat_pb2.PROGRESS_STAGE_WRITING,
+    ]
+    first_delta = next(i for i, e in enumerate(events) if isinstance(e, AnswerDelta))
+    assert all(i < first_delta for i, e in enumerate(events) if isinstance(e, ProgressChanged))
+
+
+async def test_progress_skips_rating_when_nothing_is_rated() -> None:
+    chat, repo, _, _ = make()
+    events = await collect_all(chat, repo)
+
+    assert [e.stage for e in events if isinstance(e, ProgressChanged)] == [
+        chat_pb2.PROGRESS_STAGE_SEARCHING,
+        chat_pb2.PROGRESS_STAGE_WRITING,
+    ]
+
+
+async def test_without_the_knowledge_base_progress_is_only_writing() -> None:
+    chat, repo, _, _ = make()
+    events = await collect_all(chat, repo, use_kb=False)
+
+    assert [e for e in events if isinstance(e, ProgressChanged)] == [
+        ProgressChanged(chat_pb2.PROGRESS_STAGE_WRITING)
+    ]
+
+
+async def test_a_failed_search_ends_without_a_writing_stage() -> None:
+    error = PeerUnavailableError(Peer.DOCUMENT, "down")
+    chat, repo, _, _ = make(retriever=FakeRetriever(error=error))
+    events = await collect_all(chat, repo)
+
+    assert [e.stage for e in events if isinstance(e, ProgressChanged)] == [
+        chat_pb2.PROGRESS_STAGE_SEARCHING
+    ]
+    assert isinstance(events[-1], AnswerSaved)
 
 
 async def test_retrieval_is_limited_to_the_conversation_scope() -> None:
@@ -321,6 +378,7 @@ async def test_manual_sources_are_named_as_such_and_saved_with_their_section() -
             limit: int,
             document_ids: Sequence[uuid.UUID],
             team_ids: Sequence[uuid.UUID] = (),
+            on_rating: Callable[[], None] | None = None,
         ) -> list[chat_pb2.Citation]:
             return [
                 chat_pb2.Citation(
@@ -444,6 +502,7 @@ async def test_closing_the_stream_early_stops_generation_and_saves_it_as_stopped
     chat, repo, _, _ = make(generator=generator)
     events = chat.answer(OWNER, repo.conv.id, "Capital?", "m1", False)
 
+    assert await anext(events) == ProgressChanged(chat_pb2.PROGRESS_STAGE_WRITING)
     assert await anext(events) == AnswerDelta("Par")
     await events.aclose()
 
@@ -563,6 +622,7 @@ async def test_only_the_sources_that_fit_are_cited() -> None:
             limit: int,
             document_ids: Sequence[uuid.UUID],
             team_ids: Sequence[uuid.UUID] = (),
+            on_rating: Callable[[], None] | None = None,
         ) -> list[chat_pb2.Citation]:
             return [
                 chat_pb2.Citation(document_id="best", snippet="best " * 5, score=0.9),

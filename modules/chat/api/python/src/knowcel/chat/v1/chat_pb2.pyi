@@ -29,6 +29,13 @@ class ChatErrorCode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     CHAT_ERROR_CODE_UNSPECIFIED: _ClassVar[ChatErrorCode]
     CHAT_ERROR_CODE_UNAVAILABLE: _ClassVar[ChatErrorCode]
     CHAT_ERROR_CODE_INTERNAL: _ClassVar[ChatErrorCode]
+
+class ProgressStage(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    PROGRESS_STAGE_UNSPECIFIED: _ClassVar[ProgressStage]
+    PROGRESS_STAGE_SEARCHING: _ClassVar[ProgressStage]
+    PROGRESS_STAGE_RATING: _ClassVar[ProgressStage]
+    PROGRESS_STAGE_WRITING: _ClassVar[ProgressStage]
 MESSAGE_ROLE_UNSPECIFIED: MessageRole
 MESSAGE_ROLE_USER: MessageRole
 MESSAGE_ROLE_ASSISTANT: MessageRole
@@ -39,6 +46,10 @@ MESSAGE_STATUS_FAILED: MessageStatus
 CHAT_ERROR_CODE_UNSPECIFIED: ChatErrorCode
 CHAT_ERROR_CODE_UNAVAILABLE: ChatErrorCode
 CHAT_ERROR_CODE_INTERNAL: ChatErrorCode
+PROGRESS_STAGE_UNSPECIFIED: ProgressStage
+PROGRESS_STAGE_SEARCHING: ProgressStage
+PROGRESS_STAGE_RATING: ProgressStage
+PROGRESS_STAGE_WRITING: ProgressStage
 
 class Citation(_message.Message):
     __slots__ = ("document_id", "document_title", "chunk_index", "snippet", "score", "manual_page", "manual_section")
@@ -233,16 +244,18 @@ class StopChatResponse(_message.Message):
     def __init__(self) -> None: ...
 
 class StreamChatResponse(_message.Message):
-    __slots__ = ("citations", "delta", "message", "error")
+    __slots__ = ("citations", "delta", "message", "error", "progress")
     CITATIONS_FIELD_NUMBER: _ClassVar[int]
     DELTA_FIELD_NUMBER: _ClassVar[int]
     MESSAGE_FIELD_NUMBER: _ClassVar[int]
     ERROR_FIELD_NUMBER: _ClassVar[int]
+    PROGRESS_FIELD_NUMBER: _ClassVar[int]
     citations: Citations
     delta: str
     message: ChatMessage
     error: ChatError
-    def __init__(self, citations: _Optional[_Union[Citations, _Mapping]] = ..., delta: _Optional[str] = ..., message: _Optional[_Union[ChatMessage, _Mapping]] = ..., error: _Optional[_Union[ChatError, _Mapping]] = ...) -> None: ...
+    progress: ProgressStage
+    def __init__(self, citations: _Optional[_Union[Citations, _Mapping]] = ..., delta: _Optional[str] = ..., message: _Optional[_Union[ChatMessage, _Mapping]] = ..., error: _Optional[_Union[ChatError, _Mapping]] = ..., progress: _Optional[_Union[ProgressStage, str]] = ...) -> None: ...
 
 class ChatError(_message.Message):
     __slots__ = ("code", "message")

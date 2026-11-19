@@ -4,7 +4,7 @@ gRPC statuses end here: callers only see PeerError."""
 import contextlib
 import logging
 import uuid
-from collections.abc import AsyncGenerator, Collection, Iterator, Sequence
+from collections.abc import AsyncGenerator, Callable, Collection, Iterator, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -157,6 +157,7 @@ class PeerRetriever:
         limit: int,
         document_ids: Sequence[uuid.UUID],
         team_ids: Sequence[uuid.UUID] = (),
+        on_rating: Callable[[], None] | None = None,
     ) -> list[chat_pb2.Citation]:
         (embedding,) = await self._embedder.embed([query])
         fetch = max(limit, self._candidates) if self._reranker else limit
@@ -194,7 +195,9 @@ class PeerRetriever:
         ]
         if self._reranker:
             # Rated on the whole chunk, whatever fragment is shown.
-            documents = await self._rerank(query, documents, [r.chunk.text for r in found])
+            documents = await self._rerank(
+                query, documents, [r.chunk.text for r in found], on_rating
+            )
         documents = documents[:limit]
         manual = self._manual.search(embedding) if self._manual else []
         return merge_sources(documents, manual)
@@ -225,10 +228,16 @@ class PeerRetriever:
         return [r for _, r in sorted(kept, key=key)]
 
     async def _rerank(
-        self, query: str, passages: list[chat_pb2.Citation], texts: list[str]
+        self,
+        query: str,
+        passages: list[chat_pb2.Citation],
+        texts: list[str],
+        on_rating: Callable[[], None] | None,
     ) -> list[chat_pb2.Citation]:
         if len(passages) < 2 or self._reranker is None:
             return passages
+        if on_rating:
+            on_rating()
         try:
             scores = await self._reranker.rerank(query, texts)
         except PeerError as err:

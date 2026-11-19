@@ -1,7 +1,7 @@
 import asyncio
 import contextlib
 import uuid
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Sequence
 from datetime import UTC, datetime
 from typing import Any
 
@@ -250,6 +250,20 @@ class FakeDocuments:
         )
 
 
+def kinds_of(events: Sequence[Any]) -> list[str]:
+    """The kinds of the events, without the progress ones."""
+    return [k for e in events if (k := e.WhichOneof("event")) != "progress"]
+
+
+async def read_kinds(call: Any, count: int) -> list[str]:
+    """The kinds of the next `count` events, without the progress ones."""
+    kinds: list[str] = []
+    while len(kinds) < count:
+        if (kind := (await call.read()).WhichOneof("event")) != "progress":
+            kinds.append(kind)
+    return kinds
+
+
 Env = tuple[chat_pb2_grpc.ChatServiceStub, MemoryRepo, FakeLlm, FakeDocuments]
 
 
@@ -279,10 +293,11 @@ async def test_stream_chat_with_knowledge_base(env: Env) -> None:
             )
         )
     ]
-    kinds = [e.WhichOneof("event") for e in events]
+    kinds = kinds_of(events)
     assert kinds[0] == "citations"
     assert kinds[-1] == "message"
     assert set(kinds[1:-1]) == {"delta"}
+    events = [e for e in events if e.WhichOneof("event") != "progress"]
     assert events[0].citations.items[0].document_title == "geo.md"
     assert events[-1].message.content == "Paris is the capital."
     assert events[-1].message.citations[0].document_id == "d1"
@@ -368,7 +383,8 @@ async def test_an_unavailable_peer_ends_the_stream_with_an_error(
 ) -> None:
     events, got = await stream_with(documents, llm)
 
-    assert [e.WhichOneof("event") for e in events] == ["error", "message"]
+    assert kinds_of(events) == ["error", "message"]
+    events = [e for e in events if e.WhichOneof("event") != "progress"]
     assert events[0].error.code == chat_pb2.CHAT_ERROR_CODE_UNAVAILABLE
     assert events[0].error.message == (
         f"The {service} service isn't available. Try again in a moment."
@@ -383,7 +399,7 @@ async def test_an_unavailable_peer_ends_the_stream_with_an_error(
 async def test_an_llm_failure_mid_answer_keeps_the_partial_answer() -> None:
     events, got = await stream_with(FakeDocuments(), DyingLlm())
 
-    kinds = [e.WhichOneof("event") for e in events]
+    kinds = kinds_of(events)
     assert kinds == ["citations", "delta", "delta", "error", "message"]
     assert events[-1].message.content == "Paris is"
     assert events[-1].message.status == chat_pb2.MESSAGE_STATUS_FAILED
@@ -419,7 +435,7 @@ async def _start_answer(stub: Any, content: str = "Hi") -> tuple[Any, str]:
             conversation_id=conv.id, content=content, use_knowledge_base=True
         )
     )
-    kinds = [(await call.read()).WhichOneof("event") for _ in range(2)]
+    kinds = await read_kinds(call, 2)
     assert kinds == ["citations", "delta"]
     return call, conv.id
 
@@ -470,7 +486,7 @@ async def test_stop_chat_stops_generation_and_keeps_the_answer_as_stopped() -> N
                 conversation_id=conv.id, content="Hi", use_knowledge_base=True
             )
         )
-        kinds = [(await call.read()).WhichOneof("event") for _ in range(3)]
+        kinds = await read_kinds(call, 3)
         assert kinds == ["citations", "delta", "delta"]
 
         await stub.StopChat(chat_pb2.StopChatRequest(conversation_id=conv.id))
@@ -575,7 +591,8 @@ class BrokenLlm(FakeLlm):
 async def test_other_peer_errors_are_hidden_from_the_user() -> None:
     events, _ = await stream_with(FakeDocuments(), BrokenLlm(), use_knowledge_base=False)
 
-    assert [e.WhichOneof("event") for e in events] == ["error", "message"]
+    assert kinds_of(events) == ["error", "message"]
+    events = [e for e in events if e.WhichOneof("event") != "progress"]
     assert events[0].error.code == chat_pb2.CHAT_ERROR_CODE_INTERNAL
     assert events[0].error.message == "The Models service couldn't complete the answer."
     assert "no such model" not in events[0].error.message
@@ -1114,3 +1131,24 @@ async def test_default_templates_are_validated() -> None:
                 await stub.UpdatePromptTemplates(request)
             assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
             assert [v.field for v in field_violations(err.value)] == [field]
+
+
+async def test_stream_chat_reports_progress_before_the_first_word(env: Env) -> None:
+    stub, _repo, _llm, _documents = env
+    conv = (await stub.CreateConversation(chat_pb2.CreateConversationRequest())).conversation
+
+    events = [
+        e
+        async for e in stub.StreamChat(
+            chat_pb2.StreamChatRequest(
+                conversation_id=conv.id, content="Capital of France?", use_knowledge_base=True
+            )
+        )
+    ]
+
+    kinds = [e.WhichOneof("event") for e in events]
+    assert [e.progress for e in events if e.WhichOneof("event") == "progress"] == [
+        chat_pb2.PROGRESS_STAGE_SEARCHING,
+        chat_pb2.PROGRESS_STAGE_WRITING,
+    ]
+    assert kinds.index("delta") > max(i for i, k in enumerate(kinds) if k == "progress")

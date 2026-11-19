@@ -9,6 +9,7 @@ import {
   GetConversationResponseSchema,
   MessageRole,
   MessageStatus,
+  ProgressStage,
   type StreamChatRequest,
   type StreamChatResponse,
   StreamChatResponseSchema,
@@ -269,6 +270,78 @@ describe("Conversation", () => {
       fireEvent.click(screen.getByRole("button", { name: "Stop" }));
     });
     expect(stopChat).toHaveBeenCalledOnce();
+  });
+
+  describe("progress", () => {
+    /** A stream that sends the given events one by one, as `next` is called. */
+    function steppedStream(steps: StreamChatResponse["event"][]) {
+      const gates: (() => void)[] = [];
+      const stream = async function* (req: StreamChatRequest) {
+        saved.push(message(MessageRole.USER, req.content));
+        for (const step of steps) {
+          await new Promise<void>((resolve) => gates.push(resolve));
+          yield event(step);
+        }
+      };
+      const next = async () => {
+        await act(async () => gates.shift()?.());
+      };
+      return { stream, next };
+    }
+
+    const stage = (value: ProgressStage): StreamChatResponse["event"] => ({
+      case: "progress",
+      value,
+    });
+
+    it("shows and announces each stage until the first words arrive", async () => {
+      const done = message(MessageRole.ASSISTANT, "Paris.");
+      const { stream, next } = steppedStream([
+        stage(ProgressStage.SEARCHING),
+        stage(ProgressStage.RATING),
+        stage(ProgressStage.WRITING),
+        { case: "delta", value: "Paris." },
+        { case: "message", value: done },
+      ]);
+      streamChat.mockImplementation(stream);
+      await renderConversation();
+      await ask("Capital?");
+
+      // Shown at once, before the server has said anything.
+      // The line and the screen-reader region both carry the text.
+      expect(screen.getAllByText("Searching your documents and the user manual…")).toHaveLength(2);
+      await next();
+      await next();
+      expect(screen.getAllByText("Choosing the best passages…")).toHaveLength(2);
+      await next();
+      expect(screen.getAllByText("Writing the answer…")).toHaveLength(2);
+      await next();
+      expect(screen.getByText("Paris.")).toBeTruthy();
+      expect(screen.queryByText("Writing the answer…")).toBeNull();
+    });
+
+    it("replaces the status line by the failure when the answer fails in a stage", async () => {
+      const failed = message(MessageRole.ASSISTANT, "", MessageStatus.FAILED);
+      const { stream, next } = steppedStream([
+        stage(ProgressStage.SEARCHING),
+        {
+          case: "error",
+          value: create(ChatErrorSchema, {
+            code: ChatErrorCode.UNAVAILABLE,
+            message: "The Documents service isn't available.",
+          }),
+        },
+        { case: "message", value: failed },
+      ]);
+      streamChat.mockImplementation(stream);
+      await renderConversation();
+      await ask("Capital?");
+      await next();
+      await next();
+
+      expect(await screen.findByText(/Documents service isn't available/)).toBeTruthy();
+      expect(screen.queryByText("Searching your documents and the user manual…")).toBeNull();
+    });
   });
 
   describe("notifications", () => {

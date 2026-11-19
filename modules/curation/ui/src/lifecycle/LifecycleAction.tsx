@@ -122,6 +122,8 @@ function OpenStateDialog({
   const queryClient = useQueryClient();
   const name = useId();
   const formId = useId();
+  const reviewId = useId();
+  const noteId = useId();
   const [state, setState] = useState<LifecycleState>(current?.state ?? LifecycleState.UNSPECIFIED);
   const [reviewBy, setReviewBy] = useState(dateValue(current?.reviewBy));
   const [note, setNote] = useState("");
@@ -209,23 +211,37 @@ function OpenStateDialog({
             and in search, and you can change its state again.
           </p>
         )}
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Review by (optional)</span>
-          <Input type="date" value={reviewBy} onChange={(e) => setReviewBy(e.target.value)} />
-          <span className="text-xs text-fg-muted">
+        <div className="flex flex-col gap-1 text-sm">
+          <label htmlFor={reviewId} className="font-medium">
+            Review by (optional)
+          </label>
+          <Input
+            id={reviewId}
+            type="date"
+            value={reviewBy}
+            aria-describedby={`${reviewId}-hint`}
+            onChange={(e) => setReviewBy(e.target.value)}
+          />
+          <span id={`${reviewId}-hint`} className="text-xs text-fg-muted">
             From this day the document shows up under Document checks as due for review.
           </span>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Note (optional)</span>
+        </div>
+        <div className="flex flex-col gap-1 text-sm">
+          <label htmlFor={noteId} className="font-medium">
+            Note (optional)
+          </label>
           <Textarea
+            id={noteId}
             rows={3}
             maxLength={MAX_NOTE}
             value={note}
+            aria-describedby={`${noteId}-hint`}
             onChange={(e) => setNote(e.target.value)}
           />
-          <span className="text-xs text-fg-muted">Shown in the document's approval history.</span>
-        </label>
+          <span id={`${noteId}-hint`} className="text-xs text-fg-muted">
+            Shown in the document's approval history.
+          </span>
+        </div>
         <ErrorMessage error={saveError(save.error)} />
       </form>
     </Dialog>

@@ -1,6 +1,8 @@
 /// <reference types="node" />
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { render } from "@testing-library/react";
+import { createElement } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   applyBranding,
@@ -10,6 +12,7 @@ import {
   isBranded,
   productName,
 } from "./branding.ts";
+import { Menu, Search } from "./icons.tsx";
 
 const style = () => document.getElementById("knowcel-branding")?.textContent ?? "";
 
@@ -298,5 +301,23 @@ describe("branded deployments", () => {
     expect([isBranded(), appVersion()]).toEqual([false, "dev"]);
     applyBranding({}, "1.2.3");
     expect([isBranded(), appVersion()]).toEqual([true, "1.2.3"]);
+  });
+});
+
+describe("applyBranding icons", () => {
+  it("replaces an icon and restores it without branding", () => {
+    applyBranding({ icons: { search: "/branding/icons/search.svg" } });
+    const { container, unmount } = render(createElement(Search, { className: "size-4" }));
+    expect(container.querySelector("span.size-4")).toBeTruthy();
+    unmount();
+    applyBranding(undefined);
+    const again = render(createElement(Search, { className: "size-4" }));
+    expect(again.container.querySelector("svg.size-4")).toBeTruthy();
+  });
+
+  it("keeps the other icons", () => {
+    applyBranding({ icons: { search: "/branding/icons/search.svg" } });
+    const { container } = render(createElement(Menu, { className: "size-4" }));
+    expect(container.querySelector("svg.size-4")).toBeTruthy();
   });
 });

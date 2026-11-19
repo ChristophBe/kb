@@ -61,7 +61,7 @@ fi
 
 # Unknown keys are mistakes (a typo would silently keep the default).
 for key in $(jq -r 'keys[]' "$file"); do
-  case $key in name | logo | favicon | colors | fonts | navigation) ;; *) fail "unknown key \"$key\"" ;; esac
+  case $key in name | logo | favicon | colors | fonts | navigation | icons) ;; *) fail "unknown key \"$key\"" ;; esac
 done
 
 if jq -e 'has("name")' "$file" >/dev/null; then
@@ -146,6 +146,41 @@ if jq -e 'has("colors")' "$file" >/dev/null; then
     done
   fi
 fi
+# --- icons: an object from icon name to an image file (copied to <web root>/branding/icons) ---
+# The icon names of the UI (platform/ui/kit/src/icons.tsx; a test keeps this list and the guide in step).
+ICON_NAMES="alert-triangle arrow-left arrow-right arrow-up bar-chart-3 check check-circle-2 chevron-left circle-alert circle-help circle-user copy cpu download file-text file-up info layers library log-out menu message-square message-square-text monitor moon plus rotate-ccw search search-x shield-alert square sun trash-2 triangle-alert upload user-minus user-round-cog users-round x"
+if jq -e 'has("icons")' "$file" >/dev/null; then
+  if ! jq -e '.icons | type == "object"' "$file" >/dev/null; then
+    fail "icons must be an object from icon name to image file"
+  else
+    for name in $(jq -r '.icons | keys[]' "$file"); do
+      case " $ICON_NAMES " in
+        *" $name "*) ;;
+        *) fail "icons.$name is not an icon of the UI (see the icon list in docs/operations/branding.md)"; continue ;;
+      esac
+      if ! jq -e --arg n "$name" '.icons[$n] | type == "string"' "$file" >/dev/null; then
+        fail "icons.$name must be the name of an image file"
+        continue
+      fi
+      rel=$(jq -r --arg n "$name" '.icons[$n]' "$file")
+      case $rel in
+        "" | *[!A-Za-z0-9._-]* | .*) fail "icons.$name must be a plain file name next to the branding file, not \"$rel\""; continue ;;
+      esac
+      case ${rel##*.} in
+        svg | png) ;;
+        *) fail "icons.$name \"$rel\" must be one of these file types: svg png"; continue ;;
+      esac
+      if [ ! -f "$dir/$rel" ]; then
+        fail "icons.$name \"$rel\" does not exist next to the branding file"
+      elif [ "$(wc -c <"$dir/$rel")" -gt 65536 ]; then
+        fail "icons.$name \"$rel\" is larger than 64 KiB"
+      else
+        mkdir -p "$root/branding/icons" && cp "$dir/$rel" "$root/branding/icons/$rel"
+      fi
+    done
+  fi
+fi
+# --- end icons ---
 
 for mode in light dark; do
   jq -e ".colors.$mode" "$file" >/dev/null 2>&1 || continue
@@ -251,8 +286,9 @@ if [ -n "$errors" ]; then
 fi
 
 # The config.json object: asset names become URLs under /branding.
-jq -c '{name, logo, favicon, colors, fonts, navigation}
+jq -c '{name, logo, favicon, colors, fonts, navigation, icons}
   | (.logo | objects | (.light, .dark) | strings) |= ("/branding/" + .)
   | (.favicon | strings) |= ("/branding/" + .)
   | (.fonts // empty | .[] | select(.file) | .file) |= "/branding/" + .
+  | (.icons // empty | .[]) |= "/branding/icons/" + .
   | with_entries(select(.value != null))' "$file"

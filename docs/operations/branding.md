@@ -29,6 +29,7 @@ The example in the repository sets every color key. Every key is optional; what 
 | `fonts.heading`, `fonts.body`, `fonts.mono` | The typeface of headings, of the interface and of data (code, ids). Each is `{ "family", "file", "weight" }`; see [Fonts](#fonts). |
 | `navigation.light`, `navigation.dark` | The sidebar background (color or gradient) and text color for each mode; see [Navigation](#navigation). |
 | `colors.light`, `colors.dark` | The colors of each mode, as `#rrggbb`; see [Colors](#colors). A mode you leave out keeps the Knowcelium colors, and so does every color key you leave out of a mode. |
+| `icons` | Replaces icons of the UI by your own images; see [Icons](#icons). |
 
 The status colors and the neutral palette steps stay as they are. A logo is shown at the height of the Knowcelium logo plus 40 %, so give it a transparent background and some breathing room; without a logo the product name is shown as text. The UI switches between the light and dark logo with the theme, including the user's own theme choice.
 
@@ -92,11 +93,27 @@ Each role takes a `family` and optionally a `file` and a `weight`:
 - Until the file has loaded, and wherever a glyph is missing, the text uses the Knowcelium typeface of that role (Source Serif 4, IBM Plex Sans, IBM Plex Mono), so text never disappears.
 - You need the licence to serve a font; check it before you put the file in the branding directory.
 
+## Icons
+
+`icons` maps the name of an icon of the UI to an image file next to `branding.json`:
+
+```json
+"icons": { "search": "search.svg", "menu": "menu.svg" }
+```
+
+- A file is an `.svg` or `.png` of up to 64 KiB, named like the other files. Icons without an entry keep the Knowcelium icon.
+- An icon is drawn as a **single-color shape**: the UI uses the image's opacity as a mask and fills it with the surrounding text color, so it follows light and dark mode, hover and disabled states, and the size the UI gives the icon. The colors inside the image are ignored; use opaque strokes on a transparent background and a square canvas (the Knowcelium icons are 24 x 24 outlines).
+- A name must be one of these (each is the kebab-case name of an icon of the UI; a test keeps the list in step with the code):
+
+<!-- icons:start -->
+`alert-triangle`, `arrow-left`, `arrow-right`, `arrow-up`, `bar-chart-3`, `check`, `check-circle-2`, `chevron-left`, `circle-alert`, `circle-help`, `circle-user`, `copy`, `cpu`, `download`, `file-text`, `file-up`, `info`, `layers`, `library`, `log-out`, `menu`, `message-square`, `message-square-text`, `monitor`, `moon`, `plus`, `rotate-ccw`, `search`, `search-x`, `shield-alert`, `square`, `sun`, `trash-2`, `triangle-alert`, `upload`, `user-minus`, `user-round-cog`, `users-round`, `x`
+<!-- icons:end -->
+
 ## Checks at start
 
 The web container checks the file when it starts and refuses to start with one line per problem, so a broken branding never reaches users:
 
-- the file is JSON, has only the keys above, `logo.showName` is `true` or `false`, and every file it names exists;
+- the file is JSON, has only the keys above, `logo.showName` is `true` or `false`, and every file it names exists, and every `icons` name is an icon of the UI, with an `.svg` or `.png` of at most 64 KiB;
 - every color is `#rrggbb` (a glow may be `"none"`), a navigation gradient has `from` and `to`, an `angle` is 0 to 360, and every font has a valid family, weight and file;
 - text has a contrast of at least 4.5:1, the [WCAG 2.2 AA](../ux-standards.md) limit: `text` and `textMuted` on `canvas` and on `surface`, `accent` on `canvas` (the accent colors links and the active menu entry) and `onAccent` on `accent`;
 - `borderStrong` on `canvas` and on `surface` and `accent2` on `canvas` (large gradient text) have a contrast of at least 3:1.
@@ -130,6 +147,6 @@ kubectl create configmap acme-branding \
 helm upgrade --install kb deploy/helm/kb --reuse-values --set web.brandingConfigMap=acme-branding
 ```
 
-Roll the web deployment after changing the ConfigMap (`kubectl rollout restart deployment/web`); the pod reads it at start. A ConfigMap holds up to 1 MiB, so keep the images small.
+Roll the web deployment after changing the ConfigMap (`kubectl rollout restart deployment/web`); the pod reads it at start. A ConfigMap holds up to 1 MiB, so keep the images small. Many icons can exceed that limit; the chart only mounts a ConfigMap, so then mount a volume that holds the directory at `/branding` and set `KNOWCEL_BRANDING_FILE=/branding/branding.json` yourself, for example from your own chart overlay or a derived image (Compose mounts a whole directory and has no such limit).
 
 Both settings are listed in the [configuration reference](../configuration.md).

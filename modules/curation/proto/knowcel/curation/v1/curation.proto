@@ -50,8 +50,9 @@ service CurationService {
   // ratings of a document count in its score. NOT_FOUND when the caller can't
   // read the document.
   rpc RateDocument(RateDocumentRequest) returns (RateDocumentResponse);
-  // GetRatingSummary counts how many users found a document helpful or not
-  // (its passages included) and returns the caller's own rating.
+  // GetRatingSummary counts how many users found a document helpful or not,
+  // each by their latest rating of the document or of any of its passages, and
+  // returns the caller's own rating of the document or passage asked about.
   rpc GetRatingSummary(GetRatingSummaryRequest) returns (GetRatingSummaryResponse);
   // ResolveFinding closes an open finding with one of the options it lists and
   // updates the scores it affects. NOT_FOUND when the finding doesn't exist or
@@ -270,8 +271,8 @@ message GetRatingSummaryRequest {
 message GetRatingSummaryResponse {
   int32 helpful = 1;
   int32 not_helpful = 2;
-  // The caller's own rating of the document or passage asked about; RATING_NONE
-  // when they have none.
+  // The caller's own rating of the document or passage asked about (not of the
+  // others); RATING_NONE when they have none.
   Rating my_rating = 3;
 }
 

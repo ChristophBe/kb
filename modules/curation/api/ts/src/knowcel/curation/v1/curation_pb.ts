@@ -610,8 +610,8 @@ export type GetRatingSummaryResponse = Message<"knowcel.curation.v1.GetRatingSum
   notHelpful: number;
 
   /**
-   * The caller's own rating of the document or passage asked about; RATING_NONE
-   * when they have none.
+   * The caller's own rating of the document or passage asked about (not of the
+   * others); RATING_NONE when they have none.
    *
    * @generated from field: knowcel.curation.v1.Rating my_rating = 3;
    */
@@ -1048,8 +1048,9 @@ export const CurationService: GenService<{
     output: typeof RateDocumentResponseSchema;
   },
   /**
-   * GetRatingSummary counts how many users found a document helpful or not
-   * (its passages included) and returns the caller's own rating.
+   * GetRatingSummary counts how many users found a document helpful or not,
+   * each by their latest rating of the document or of any of its passages, and
+   * returns the caller's own rating of the document or passage asked about.
    *
    * @generated from rpc knowcel.curation.v1.CurationService.GetRatingSummary
    */

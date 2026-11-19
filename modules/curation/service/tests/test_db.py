@@ -340,15 +340,19 @@ async def test_a_user_rates_a_document_and_each_passage_once_and_can_take_it_bac
     assert await store.get_rating(document, "bob", None) == "helpful"
     assert await store.get_rating(document, "bob", 3) == "not_helpful"
     assert await store.get_rating(document, "bob", 4) is None
+    # A user counts once per document, by their latest rating of it or of any passage.
     assert await store.rating_counts([document, other, uuid.uuid4()]) == {
-        document: (1, 2),
+        document: (0, 2),
         other: (1, 0),
     }
     # Rating again replaces; the count doesn't grow.
     await store.save_rating(document, "bob", 3, "helpful", "c2")
     assert await store.get_rating(document, "bob", 3) == "helpful"
-    assert (await store.rating_counts([document]))[document] == (2, 1)
+    assert (await store.rating_counts([document]))[document] == (1, 1)
+    # Taking the latest back leaves their earlier rating of the document as their vote.
     await store.delete_rating(document, "bob", 3)
     await store.delete_rating(document, "bob", 3)
     assert await store.get_rating(document, "bob", 3) is None
     assert (await store.rating_counts([document]))[document] == (1, 1)
+    await store.delete_rating(document, "bob", None)
+    assert await store.rating_counts([document]) == {document: (0, 1)}

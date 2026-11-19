@@ -387,10 +387,16 @@ class SqlCurationStore:
     async def rating_counts(
         self, document_ids: Collection[uuid.UUID]
     ) -> dict[uuid.UUID, tuple[int, int]]:
-        query = (
-            select(ratings.c.document_id, ratings.c.rating, func.count())
+        # A user counts once per document, by their latest rating of it or of any passage.
+        latest = (
+            select(ratings.c.document_id, ratings.c.rating)
             .where(ratings.c.document_id.in_(document_ids))
-            .group_by(ratings.c.document_id, ratings.c.rating)
+            .ext(distinct_on(ratings.c.document_id, ratings.c.user_id))
+            .order_by(ratings.c.document_id, ratings.c.user_id, ratings.c.updated_at.desc())
+            .subquery()
+        )
+        query = select(latest.c.document_id, latest.c.rating, func.count()).group_by(
+            latest.c.document_id, latest.c.rating
         )
         async with self._engine.connect() as conn:
             rows = (await conn.execute(query)).all()

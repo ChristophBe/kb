@@ -265,8 +265,8 @@ class CurationStore(Protocol):
     async def rating_counts(
         self, document_ids: Collection[uuid.UUID]
     ) -> dict[uuid.UUID, tuple[int, int]]:
-        """For each document with ratings, how many are helpful and how many not
-        (the document's and its passages' together)."""
+        """For each document with ratings, how many users found it helpful and how
+        many not, each by their latest rating of the document or of a passage of it."""
         ...
 
     async def save_report(

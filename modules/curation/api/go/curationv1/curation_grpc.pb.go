@@ -79,8 +79,9 @@ type CurationServiceClient interface {
 	// ratings of a document count in its score. NOT_FOUND when the caller can't
 	// read the document.
 	RateDocument(ctx context.Context, in *RateDocumentRequest, opts ...grpc.CallOption) (*RateDocumentResponse, error)
-	// GetRatingSummary counts how many users found a document helpful or not
-	// (its passages included) and returns the caller's own rating.
+	// GetRatingSummary counts how many users found a document helpful or not,
+	// each by their latest rating of the document or of any of its passages, and
+	// returns the caller's own rating of the document or passage asked about.
 	GetRatingSummary(ctx context.Context, in *GetRatingSummaryRequest, opts ...grpc.CallOption) (*GetRatingSummaryResponse, error)
 	// ResolveFinding closes an open finding with one of the options it lists and
 	// updates the scores it affects. NOT_FOUND when the finding doesn't exist or
@@ -245,8 +246,9 @@ type CurationServiceServer interface {
 	// ratings of a document count in its score. NOT_FOUND when the caller can't
 	// read the document.
 	RateDocument(context.Context, *RateDocumentRequest) (*RateDocumentResponse, error)
-	// GetRatingSummary counts how many users found a document helpful or not
-	// (its passages included) and returns the caller's own rating.
+	// GetRatingSummary counts how many users found a document helpful or not,
+	// each by their latest rating of the document or of any of its passages, and
+	// returns the caller's own rating of the document or passage asked about.
 	GetRatingSummary(context.Context, *GetRatingSummaryRequest) (*GetRatingSummaryResponse, error)
 	// ResolveFinding closes an open finding with one of the options it lists and
 	// updates the scores it affects. NOT_FOUND when the finding doesn't exist or

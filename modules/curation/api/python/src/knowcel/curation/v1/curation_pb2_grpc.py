@@ -177,8 +177,9 @@ class CurationServiceServicer:
         raise NotImplementedError('Method not implemented!')
 
     def GetRatingSummary(self, request, context):
-        """GetRatingSummary counts how many users found a document helpful or not
-        (its passages included) and returns the caller's own rating.
+        """GetRatingSummary counts how many users found a document helpful or not,
+        each by their latest rating of the document or of any of its passages, and
+        returns the caller's own rating of the document or passage asked about.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')

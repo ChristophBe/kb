@@ -48,7 +48,8 @@ class FakeStore:
         self.resolved_by: dict[uuid.UUID, str] = {}
         self.history: list[tuple[uuid.UUID, LifecycleChange]] = []
         self.reports: dict[tuple[uuid.UUID, str], tuple[Report, bool]] = {}
-        self.ratings: dict[tuple[uuid.UUID, str, int | None], tuple[str, str]] = {}
+        self.ratings: dict[tuple[uuid.UUID, str, int | None], tuple[str, str, int]] = {}
+        self._seq = 0
         self.down = False
 
     async def get_scores(self, document_ids: Collection[uuid.UUID]) -> list[Score]:
@@ -132,7 +133,8 @@ class FakeStore:
         conversation_id: str,
     ) -> None:
         self._check()
-        self.ratings[(document_id, user, chunk_index)] = (rating, conversation_id)
+        self._seq += 1
+        self.ratings[(document_id, user, chunk_index)] = (rating, conversation_id, self._seq)
 
     async def delete_rating(
         self, document_id: uuid.UUID, user: str, chunk_index: int | None
@@ -151,10 +153,13 @@ class FakeStore:
         self, document_ids: Collection[uuid.UUID]
     ) -> dict[uuid.UUID, tuple[int, int]]:
         self._check()
+        latest: dict[tuple[uuid.UUID, str], tuple[str, int]] = {}
+        for (document_id, user, _), (rating, _, seq) in self.ratings.items():
+            if document_id in document_ids and seq > latest.get((document_id, user), ("", 0))[1]:
+                latest[(document_id, user)] = (rating, seq)
         counts: dict[uuid.UUID, list[int]] = {}
-        for (document_id, _, _), (rating, _) in self.ratings.items():
-            if document_id in document_ids:
-                counts.setdefault(document_id, [0, 0])[0 if rating == "helpful" else 1] += 1
+        for (document_id, _), (rating, _) in latest.items():
+            counts.setdefault(document_id, [0, 0])[0 if rating == "helpful" else 1] += 1
         return {i: (h, u) for i, (h, u) in counts.items()}
 
     async def save_report(

@@ -1531,8 +1531,8 @@ type GetRatingSummaryResponse struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	Helpful    int32                  `protobuf:"varint,1,opt,name=helpful,proto3" json:"helpful,omitempty"`
 	NotHelpful int32                  `protobuf:"varint,2,opt,name=not_helpful,json=notHelpful,proto3" json:"not_helpful,omitempty"`
-	// The caller's own rating of the document or passage asked about; RATING_NONE
-	// when they have none.
+	// The caller's own rating of the document or passage asked about (not of the
+	// others); RATING_NONE when they have none.
 	MyRating      Rating `protobuf:"varint,3,opt,name=my_rating,json=myRating,proto3,enum=knowcel.curation.v1.Rating" json:"my_rating,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

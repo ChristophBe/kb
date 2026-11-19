@@ -1003,7 +1003,7 @@ async def test_ratings_are_saved_summed_up_and_shown_to_their_giver(
         stub, OWNED, "carol", curation_pb2.RATING_NOT_HELPFUL, chunk_index=2, conversation_id="c1"
     )
     await rate(stub, OWNED, "dave", curation_pb2.RATING_HELPFUL, chunk_index=2)
-    assert store.ratings[(OWNED.id, "carol", 2)] == ("not_helpful", "c1")
+    assert store.ratings[(OWNED.id, "carol", 2)][:2] == ("not_helpful", "c1")
     # The counts are the document's, passages included.
     bobs = await summary(stub, OWNED, "bob")
     assert (bobs.helpful, bobs.not_helpful) == (2, 1)
@@ -1080,3 +1080,28 @@ async def test_ratings_change_the_score_at_once_once_there_are_enough_of_them(
     # Taking one back drops it below the minimum: the rating is left out again.
     await rate(stub, OWNED, "dave", curation_pb2.RATING_NONE, chunk_index=1)
     assert store.scores[OWNED.id].score == pytest.approx(before)
+
+
+async def test_a_user_counts_once_whatever_the_number_of_passages_they_rated(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    await Scorer(store, WEIGHTS).on_processed(OWNED.id, datetime.datetime.now(datetime.UTC))
+    before = store.scores[OWNED.id].score
+    for chunk in range(5):
+        await rate(stub, OWNED, "bob", curation_pb2.RATING_NOT_HELPFUL, chunk_index=chunk)
+    summary_now = await summary(stub, OWNED, "carol")
+    assert (summary_now.helpful, summary_now.not_helpful) == (0, 1)
+    # One person is below the minimum of three, however much they rated.
+    assert store.scores[OWNED.id].score == pytest.approx(before)
+    # Their latest rating is the one that counts.
+    await rate(stub, OWNED, "bob", curation_pb2.RATING_HELPFUL)
+    latest = await summary(stub, OWNED, "carol")
+    assert (latest.helpful, latest.not_helpful) == (1, 0)
+
+
+async def test_rating_a_document_that_was_never_scored_gives_it_a_score(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    assert OWNED.id not in store.scores
+    await rate(stub, OWNED, "bob", curation_pb2.RATING_HELPFUL)
+    assert store.scores[OWNED.id].processed_at == OWNED.created_at

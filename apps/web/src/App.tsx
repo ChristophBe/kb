@@ -26,6 +26,7 @@ import {
   X,
 } from "@knowcel/ui";
 import {
+  type CSSProperties,
   type KeyboardEvent,
   lazy,
   type ReactNode,
@@ -129,7 +130,11 @@ function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: S
   // While the drawer is open, the rest of the page is out of reach.
   const behind = drawer.open ? { inert: true } : {};
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
+    <div
+      className="flex min-h-screen flex-col md:flex-row"
+      // The room a full-height page (`page-fill`) leaves for the credit: its margin and one line.
+      style={isBranded() ? ({ "--shell-credit": CREDIT_SPACE } as CSSProperties) : undefined}
+    >
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg"
@@ -219,6 +224,9 @@ function Shell({ modules, providers }: { modules: ModuleManifest[]; providers: S
     </div>
   );
 }
+
+/** What the credit takes below a full-height page: its top margin (`mt-8`) and one `text-xs` line. */
+const CREDIT_SPACE = "3rem";
 
 /** The credit of a branded deployment, at the end of the page (never over its content). */
 function PoweredBy() {

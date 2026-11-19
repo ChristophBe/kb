@@ -1,6 +1,6 @@
 import { applyBranding } from "@knowcel/ui";
 import { expectNoAxeViolations } from "@knowcel/ui/testing";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App.tsx";
 
@@ -54,6 +54,20 @@ describe("App shell", () => {
   it("shows no credit without a branding file", () => {
     renderAt("/nope");
     expect(screen.queryByText(/Powered by/)).toBeNull();
+  });
+
+  it("tells full-height pages how much room the credit needs, only when it is shown", () => {
+    const shell = (container: HTMLElement) => container.firstElementChild as HTMLElement;
+    expect(shell(renderAt("/nope").container).style.getPropertyValue("--shell-credit")).toBe("");
+    cleanup();
+    applyBranding({ name: "Acme Knowledge" }, "1.4.0");
+    try {
+      expect(shell(renderAt("/nope").container).style.getPropertyValue("--shell-credit")).toBe(
+        "3rem",
+      );
+    } finally {
+      applyBranding(undefined);
+    }
   });
 
   it("credits Knowcelium and the version in a branded deployment", async () => {

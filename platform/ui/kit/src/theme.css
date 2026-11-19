@@ -202,6 +202,22 @@
   }
 }
 
+/*
+ * A page that fills the viewport instead of scrolling with the shell (the chat): it cancels the
+ * shell's page padding (p-4, md:p-8) and takes the viewport height minus what the shell keeps
+ * for itself, the top bar on a narrow screen and the "Powered by" credit of a branded deployment
+ * (--shell-credit, set by App.tsx). A full-height page uses this, never dvh or h-screen
+ * (apps/web/src/full-height.test.ts).
+ */
+@utility page-fill {
+  margin: calc(var(--spacing) * -4);
+  height: calc(100dvh - 3.5rem - var(--shell-credit, 0px));
+  @media (min-width: 768px) {
+    margin: calc(var(--spacing) * -8);
+    height: calc(100dvh - var(--shell-credit, 0px));
+  }
+}
+
 /* Liquid glass: blur and saturate what's behind, with a light rim on top. */
 /* A frosted region of the layout (sidebar, list pane): edge to edge, no float. */
 @utility glass-area {

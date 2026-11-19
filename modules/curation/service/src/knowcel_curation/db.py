@@ -185,7 +185,10 @@ class SqlCurationStore:
             return (await conn.execute(statement)).first() is not None
 
     async def list_open_findings(
-        self, limit: int, after: FindingCursor | None = None
+        self,
+        limit: int,
+        after: FindingCursor | None = None,
+        kinds: Collection[str] = (),
     ) -> list[Finding]:
         query = (
             select(*_FINDING_COLUMNS)
@@ -193,6 +196,8 @@ class SqlCurationStore:
             .order_by(findings.c.created_at.desc(), findings.c.id)
             .limit(limit)
         )
+        if kinds:
+            query = query.where(findings.c.kind.in_(kinds))
         if after is not None:
             query = query.where(
                 or_(

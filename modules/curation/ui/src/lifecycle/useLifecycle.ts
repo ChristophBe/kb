@@ -24,25 +24,25 @@ const WINDOW_MS = 20;
  * score has no state; its answer is undefined.
  */
 class Batcher {
-  private waiting = new Map<string, ((state: DocumentState | undefined) => void)[]>();
-  private failed = new Map<string, ((err: unknown) => void)[]>();
+  private waiting = new Map<
+    string,
+    { resolve: (state: DocumentState | undefined) => void; reject: (err: unknown) => void }[]
+  >();
   private timer: ReturnType<typeof setTimeout> | undefined;
 
-  constructor(private readonly client: Client) {}
+  /** The client of whoever asked last: it follows the transport when that changes. */
+  constructor(public client: Client) {}
 
   get(id: string): Promise<DocumentState | undefined> {
     return new Promise((resolve, reject) => {
-      this.waiting.set(id, [...(this.waiting.get(id) ?? []), resolve]);
-      this.failed.set(id, [...(this.failed.get(id) ?? []), reject]);
+      this.waiting.set(id, [...(this.waiting.get(id) ?? []), { resolve, reject }]);
       this.timer ??= setTimeout(() => void this.flush(), WINDOW_MS);
     });
   }
 
   private async flush() {
     const waiting = this.waiting;
-    const failed = this.failed;
     this.waiting = new Map();
-    this.failed = new Map();
     this.timer = undefined;
     const ids = [...waiting.keys()];
     for (let i = 0; i < ids.length; i += BATCH) {
@@ -53,10 +53,10 @@ class Batcher {
         for (const id of batch) {
           const s = found.get(id);
           const state = s && { lifecycle: s.lifecycle, excluded: s.excluded };
-          for (const resolve of waiting.get(id) ?? []) resolve(state);
+          for (const w of waiting.get(id) ?? []) w.resolve(state);
         }
       } catch (err) {
-        for (const id of batch) for (const reject of failed.get(id) ?? []) reject(err);
+        for (const id of batch) for (const w of waiting.get(id) ?? []) w.reject(err);
       }
     }
   }
@@ -70,13 +70,14 @@ export function useDocumentState(documentId: string) {
   const client = useClient(CurationService);
   const cache = useQueryClient();
   return useQuery({
-    queryKey: ["lifecycle", documentId],
+    queryKey: ["lifecycle", "state", documentId],
     queryFn: () => {
       let batcher = batchers.get(cache);
       if (!batcher) {
         batcher = new Batcher(client);
         batchers.set(cache, batcher);
       }
+      batcher.client = client;
       return batcher.get(documentId);
     },
     retry: false,

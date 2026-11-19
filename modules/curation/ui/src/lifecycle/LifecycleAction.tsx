@@ -63,9 +63,12 @@ export default function LifecycleAction({ documentId }: { documentId: string }) 
     queryFn: () => iam.listMyTeams({}),
     retry: false,
   });
+  // Not known while loading or when a service can't be asked: the service decides.
   const allowed = document.data?.document
-    ? mayChange(user, document.data.document, teams.data?.teams ?? [])
+    ? mayChange(user, document.data.document, teams.data?.teams)
     : true;
+  // The dialog starts from the current state, so it waits for it (and for who may change it).
+  const loading = state.isPending || document.isPending || (teams.isPending && !!user);
 
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
@@ -73,7 +76,7 @@ export default function LifecycleAction({ documentId }: { documentId: string }) 
       <Button
         ref={button}
         variant="secondary"
-        disabled={!allowed}
+        disabled={!allowed || loading}
         aria-describedby={allowed ? undefined : hint}
         title={allowed ? undefined : WHO_MAY}
         onClick={() => setOpen(true)}
@@ -143,7 +146,8 @@ function OpenStateDialog({
     onSuccess: async () => {
       toast.success(`Approval state: ${info?.label ?? "saved"}`);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["lifecycle"] }),
+        queryClient.invalidateQueries({ queryKey: ["lifecycle", "state"] }),
+        queryClient.invalidateQueries({ queryKey: ["lifecycle", "history"] }),
         queryClient.invalidateQueries({ queryKey: ["findings"] }),
         queryClient.invalidateQueries({ queryKey: ["finding-scores"] }),
       ]);

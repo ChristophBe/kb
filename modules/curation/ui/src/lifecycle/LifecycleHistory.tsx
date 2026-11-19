@@ -49,7 +49,7 @@ export default function LifecycleHistory({ documentId }: { documentId: string })
             const info = c.lifecycle ? stateInfo(c.lifecycle.state) : undefined;
             return (
               <li
-                key={`${c.changedAt?.seconds}-${c.changedBy}-${c.lifecycle?.state}`}
+                key={`${c.changedAt?.seconds}.${c.changedAt?.nanos}-${c.changedBy}-${c.lifecycle?.state}-${c.note}`}
                 className="px-4 py-2"
               >
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

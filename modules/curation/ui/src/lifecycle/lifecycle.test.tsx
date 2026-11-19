@@ -121,6 +121,15 @@ describe("LifecycleBadge", () => {
   });
 });
 
+/** The button, once the state and who may change it are known. */
+async function approvalButton() {
+  const button = (await screen.findByRole("button", {
+    name: "Approval state",
+  })) as HTMLButtonElement;
+  await waitFor(() => expect(button.disabled).toBe(false));
+  return button;
+}
+
 describe("LifecycleAction", () => {
   beforeAll(polyfillDialog);
 
@@ -128,7 +137,7 @@ describe("LifecycleAction", () => {
     const t = transport({ states: { d1: approved } });
     const { container } = render(<LifecycleAction documentId="d1" />, t);
     expect(await screen.findByText("Approved")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Approval state" }));
+    fireEvent.click(await approvalButton());
     const dialog = await screen.findByRole("dialog", { name: "Approval state" });
     // It starts from the current state and date.
     expect(
@@ -159,7 +168,7 @@ describe("LifecycleAction", () => {
   it("explains what deprecating does to chat before it is saved", async () => {
     const t = transport({ states: { d1: approved } });
     render(<LifecycleAction documentId="d1" />, t);
-    fireEvent.click(await screen.findByRole("button", { name: "Approval state" }));
+    fireEvent.click(await approvalButton());
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).queryByRole("note")).toBeNull();
     fireEvent.click(within(dialog).getByRole("radio", { name: /Deprecated/ }));
@@ -175,7 +184,7 @@ describe("LifecycleAction", () => {
   it("asks to archive in so many words, and can't save without a state", async () => {
     const t = transport({ states: {} });
     render(<LifecycleAction documentId="d1" />, t);
-    fireEvent.click(await screen.findByRole("button", { name: "Approval state" }));
+    fireEvent.click(await approvalButton());
     const dialog = await screen.findByRole("dialog");
     expect(
       (within(dialog).getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled,
@@ -190,7 +199,7 @@ describe("LifecycleAction", () => {
     };
     const t = transport({ states: { d1: approved }, setLifecycle });
     render(<LifecycleAction documentId="d1" />, t);
-    fireEvent.click(await screen.findByRole("button", { name: "Approval state" }));
+    fireEvent.click(await approvalButton());
     const dialog = await screen.findByRole("dialog");
     fireEvent.click(within(dialog).getByRole("radio", { name: /Draft/ }));
     fireEvent.click(within(dialog).getByRole("button", { name: "Save" }));
@@ -235,6 +244,44 @@ describe("LifecycleAction", () => {
   });
 });
 
+describe("who may change the state, when a service can't be asked", () => {
+  it("leaves it to the service when the teams are out of reach", async () => {
+    const down = createRouterTransport(({ service }) => {
+      service(CurationService, {
+        scoreChunks: () => ({ scores: [] }),
+        listLifecycleHistory: () => ({ changes: [] }),
+      });
+      service(DocumentService, {
+        getDocument: () => ({ document: { id: "d1", ownerId: "alice", teamIds: ["t1"] } }),
+      });
+      service(IamService, {
+        listMyTeams: () => {
+          throw new ConnectError("down", Code.Unavailable);
+        },
+      });
+    });
+    renderWithRuntime(
+      <CurrentUserProvider user={bob}>
+        <LifecycleAction documentId="d1" />
+      </CurrentUserProvider>,
+      down,
+    );
+    const button = (await screen.findByRole("button", {
+      name: "Approval state",
+    })) as HTMLButtonElement;
+    await waitFor(() => expect(button.disabled).toBe(false));
+  });
+
+  it("is disabled until the state and the permission are known", async () => {
+    const t = transport({ states: { d1: approved } });
+    render(<LifecycleAction documentId="d1" />, t);
+    expect(
+      (screen.getByRole("button", { name: "Approval state" }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    await approvalButton();
+  });
+});
+
 describe("LifecycleHistory", () => {
   const changes = [
     {
@@ -269,6 +316,31 @@ describe("LifecycleHistory", () => {
     expect(items[1]?.textContent).toContain("Review by");
     expect(screen.getByRole("heading", { name: "Approval history" })).toBeTruthy();
     await expectNoAxeViolations(container);
+  });
+
+  it("names the people it can, even when one team can't be read", async () => {
+    const t = createRouterTransport(({ service }) => {
+      service(CurationService, { listLifecycleHistory: () => ({ changes }) });
+      service(IamService, {
+        listMyTeams: () => ({
+          teams: [
+            { id: "gone", name: "Gone", myRole: TeamRole.MEMBER },
+            { id: "t1", name: "T", myRole: TeamRole.MEMBER },
+          ],
+        }),
+        getTeam: ({ id }) => {
+          if (id === "gone") throw new ConnectError("no", Code.NotFound);
+          return { team: { members: [{ userId: "carol", displayName: "Carol", email: "c@x" }] } };
+        },
+      });
+    });
+    renderWithRuntime(
+      <CurrentUserProvider user={alice}>
+        <LifecycleHistory documentId="d1" />
+      </CurrentUserProvider>,
+      t,
+    );
+    expect(await screen.findByText(/by Carol/)).toBeTruthy();
   });
 
   it("shows nothing for a document that never had a state", async () => {

@@ -13,9 +13,11 @@ export function useUserNames(): ReadonlyMap<string, string> {
     queryFn: async () => {
       const found = new Map<string, string>();
       const { teams } = await client.listMyTeams({});
-      for (const t of teams) {
-        const { team } = await client.getTeam({ id: t.id });
-        for (const m of team?.members ?? []) found.set(m.userId, m.displayName || m.email);
+      // A team that can't be read (gone, or IAM failing for it) only costs its own members' names.
+      const read = await Promise.allSettled(teams.map((t) => client.getTeam({ id: t.id })));
+      for (const r of read) {
+        if (r.status !== "fulfilled") continue;
+        for (const m of r.value.team?.members ?? []) found.set(m.userId, m.displayName || m.email);
       }
       return found;
     },

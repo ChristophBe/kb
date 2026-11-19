@@ -172,12 +172,14 @@ class ListLifecycleHistoryResponse(_message.Message):
     def __init__(self, changes: _Optional[_Iterable[_Union[LifecycleChange, _Mapping]]] = ...) -> None: ...
 
 class ListFindingsRequest(_message.Message):
-    __slots__ = ("page_size", "page_token")
+    __slots__ = ("page_size", "page_token", "kinds")
     PAGE_SIZE_FIELD_NUMBER: _ClassVar[int]
     PAGE_TOKEN_FIELD_NUMBER: _ClassVar[int]
+    KINDS_FIELD_NUMBER: _ClassVar[int]
     page_size: int
     page_token: str
-    def __init__(self, page_size: _Optional[int] = ..., page_token: _Optional[str] = ...) -> None: ...
+    kinds: _containers.RepeatedScalarFieldContainer[FindingKind]
+    def __init__(self, page_size: _Optional[int] = ..., page_token: _Optional[str] = ..., kinds: _Optional[_Iterable[_Union[FindingKind, str]]] = ...) -> None: ...
 
 class ResolveFindingRequest(_message.Message):
     __slots__ = ("finding_id", "resolution")

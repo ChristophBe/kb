@@ -180,6 +180,8 @@ message ListFindingsRequest {
   int32 page_size = 1;
   // The next_page_token of the previous page; empty for the first.
   string page_token = 2;
+  // Only findings of these kinds; all kinds when empty.
+  repeated FindingKind kinds = 3;
 }
 
 message ResolveFindingRequest {

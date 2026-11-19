@@ -53,7 +53,10 @@ function server(open = [version, reminder]) {
   const scoreChunks = vi.fn(() => ({
     scores: [{ documentId: "d1", score: 0.5 }],
   }));
-  const listFindings = vi.fn(() => ({ findings: left, nextPageToken: "" }));
+  const listFindings = vi.fn(({ kinds }: { kinds: FindingKind[] }) => ({
+    findings: left.filter((f) => kinds.length === 0 || kinds.includes(f.kind)),
+    nextPageToken: "",
+  }));
   const transport = createRouterTransport(({ service }) =>
     service(CurationService, { listFindings, resolveFinding, scoreChunks }),
   );
@@ -320,7 +323,10 @@ describe("Findings", () => {
   it("shows the approval state of a finding's document and narrows the list by it and by review", async () => {
     const transport = createRouterTransport(({ service }) =>
       service(CurationService, {
-        listFindings: () => ({ findings: [version, reminder], nextPageToken: "" }),
+        listFindings: ({ kinds }) => ({
+          findings: [version, reminder].filter((f) => kinds.length === 0 || kinds.includes(f.kind)),
+          nextPageToken: "",
+        }),
         scoreChunks: () => ({
           scores: [
             {
@@ -345,7 +351,7 @@ describe("Findings", () => {
     // Review due only: the reminder stays.
     fireEvent.click(screen.getByRole("checkbox", { name: "Review due only" }));
     await waitFor(() => expect(screen.queryByText("Newer version of Policy v2 exists")).toBeNull());
-    expect(screen.getByText("Review due for Handbook")).toBeTruthy();
+    expect(await screen.findByText("Review due for Handbook")).toBeTruthy();
 
     // And only for documents that are deprecated: nothing is left.
     fireEvent.change(screen.getByRole("combobox", { name: "Approval state" }), {
@@ -376,5 +382,43 @@ describe("Findings", () => {
     fireEvent.click(screen.getByRole("button", { name: "Show all findings" }));
     expect(await screen.findByText("Newer version of Policy v2 exists")).toBeTruthy();
     expect(screen.queryByText("No findings. Your documents look consistent.")).toBeNull();
+  });
+
+  it("asks the service for the findings due for review, and doesn't page through everything while the states are missing", async () => {
+    const listFindings = vi.fn(({ pageToken }: { pageToken: string; kinds: FindingKind[] }) => ({
+      findings: [version],
+      nextPageToken: pageToken === "" ? "p2" : pageToken === "p2" ? "p3" : "",
+    }));
+    const transport = createRouterTransport(({ service }) =>
+      service(CurationService, {
+        listFindings,
+        scoreChunks: () => {
+          throw new ConnectError("down", Code.Unavailable);
+        },
+      }),
+    );
+    renderModule(curation, transport);
+    await screen.findByText("Newer version of Policy v2 exists");
+    fireEvent.click(screen.getByRole("checkbox", { name: "Review due only" }));
+    await waitFor(() =>
+      expect(listFindings).toHaveBeenLastCalledWith(
+        expect.objectContaining({ kinds: [FindingKind.REVIEW_DUE] }),
+        expect.anything(),
+      ),
+    );
+    fireEvent.click(screen.getByRole("checkbox", { name: "Review due only" }));
+    await screen.findByText("Newer version of Policy v2 exists");
+
+    // By state, with the states out of reach: it says so and doesn't fetch page after page.
+    fireEvent.change(screen.getByRole("combobox", { name: "Approval state" }), {
+      target: { value: String(LifecycleState.APPROVED) },
+    });
+    expect(
+      await screen.findByText("Approval states aren't available right now. Try again in a moment."),
+    ).toBeTruthy();
+    const calls = listFindings.mock.calls.length;
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 100)));
+    expect(listFindings).toHaveBeenCalledTimes(calls);
+    expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
   });
 });

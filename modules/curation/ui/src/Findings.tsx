@@ -8,6 +8,7 @@ import {
   type ResolutionOption,
 } from "@knowcel/curation-api/knowcel/curation/v1/curation_pb";
 import {
+  keepPreviousData,
   toast,
   useClient,
   useInfiniteQuery,
@@ -90,8 +91,15 @@ export function Findings() {
   const [closing, setClosing] = useState<ReadonlySet<string>>(new Set());
 
   const findings = useInfiniteQuery({
-    queryKey: ["findings"],
-    queryFn: ({ pageParam }) => client.listFindings({ pageSize: PAGE_SIZE, pageToken: pageParam }),
+    queryKey: ["findings", { reviewOnly }],
+    // Narrowing the list keeps what is shown until the narrowed list is there.
+    placeholderData: keepPreviousData,
+    queryFn: ({ pageParam }) =>
+      client.listFindings({
+        pageSize: PAGE_SIZE,
+        pageToken: pageParam,
+        kinds: reviewOnly ? [FindingKind.REVIEW_DUE] : [],
+      }),
     initialPageParam: "",
     getNextPageParam: (last) => last.nextPageToken || undefined,
   });
@@ -101,7 +109,7 @@ export function Findings() {
     queryKey: ["finding-scores", documentIds],
     enabled: documentIds.length > 0,
     // The scores shown stay while those of a longer list load.
-    placeholderData: (previous) => previous,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const found = new Map<string, { score: number; lifecycle?: Lifecycle }>();
       for (let i = 0; i < documentIds.length; i += SCORE_BATCH) {
@@ -115,20 +123,34 @@ export function Findings() {
   });
 
   const filtered = reviewOnly || stateFilter !== LifecycleState.UNSPECIFIED;
+  // The states come with the scores, so the list can only be narrowed by one once they are known.
+  const byState = stateFilter !== LifecycleState.UNSPECIFIED;
   const items = loaded.filter(
-    (f) =>
-      (!reviewOnly || f.kind === FindingKind.REVIEW_DUE) &&
-      (stateFilter === LifecycleState.UNSPECIFIED ||
-        scores.data?.get(f.documentId)?.lifecycle?.state === stateFilter),
+    (f) => !byState || scores.data?.get(f.documentId)?.lifecycle?.state === stateFilter,
   );
   // A page can hold none of the findings the user may see, or none the filters let through,
   // and still have a next one.
   const { hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage } = findings;
   useEffect(() => {
-    if (items.length === 0 && hasNextPage && !isFetchingNextPage && !isFetchNextPageError) {
+    const ready = !byState || scores.isSuccess;
+    if (
+      ready &&
+      items.length === 0 &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      !isFetchNextPageError
+    ) {
       void fetchNextPage();
     }
-  }, [items.length, hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
+  }, [
+    byState,
+    scores.isSuccess,
+    items.length,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    fetchNextPage,
+  ]);
 
   const resolve = useMutation({
     mutationFn: ({ finding, option }: Choice) =>
@@ -184,7 +206,7 @@ export function Findings() {
       <h2 ref={heading} tabIndex={-1} className="sr-only">
         Findings
       </h2>
-      {loaded.length > 0 && (
+      {(loaded.length > 0 || filtered) && (
         <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
           <label className="flex min-h-6 items-center gap-2 text-sm">
             <input
@@ -250,11 +272,20 @@ export function Findings() {
             </div>
           )}
         </>
+      ) : byState && scores.isError ? (
+        <div className="flex flex-col items-start gap-3">
+          <ErrorMessage
+            error={new Error("Approval states aren't available right now. Try again in a moment.")}
+          />
+          <Button variant="secondary" onClick={() => void scores.refetch()}>
+            Try again
+          </Button>
+        </div>
       ) : hasNextPage || isFetchingNextPage ? (
         <DelayedLoading>
           <SkeletonRows label="Loading findings" />
         </DelayedLoading>
-      ) : filtered && loaded.length > 0 ? (
+      ) : filtered ? (
         <EmptyState
           icon={CheckCircle2}
           action={

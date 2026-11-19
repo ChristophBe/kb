@@ -174,9 +174,13 @@ class CurationStore(Protocol):
         ...
 
     async def list_open_findings(
-        self, limit: int, after: FindingCursor | None = None
+        self,
+        limit: int,
+        after: FindingCursor | None = None,
+        kinds: Collection[str] = (),
     ) -> list[Finding]:
-        """Up to `limit` open findings, newest first, after the cursor."""
+        """Up to `limit` open findings, newest first, after the cursor; only of
+        the kinds given, when any."""
         ...
 
     async def get_replacements(

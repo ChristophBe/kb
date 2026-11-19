@@ -212,11 +212,14 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
         if state is None or violations:
             await abort_invalid_argument(context, *violations)
         document_id = await self._document_id(context, request.document_id)
-        review_by = (
-            request.review_by.ToDatetime(tzinfo=datetime.UTC)
-            if request.HasField("review_by")
-            else None
-        )
+        review_by = None
+        if request.HasField("review_by"):
+            try:
+                review_by = request.review_by.ToDatetime(tzinfo=datetime.UTC)
+            except (ValueError, OverflowError):
+                await abort_invalid_argument(
+                    context, violation("review_by", "Review date is not a valid date")
+                )
         async with self._failures(context, "setting the lifecycle"):
             document = (await self._documents.readable({document_id})).get(document_id)
             if document is None:
@@ -231,8 +234,11 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
                     grpc.StatusCode.PERMISSION_DENIED,
                     "only the owner, a team admin or a platform admin can change the lifecycle",
                 )
+            # Without an owner in the request, the one responsible stays so.
+            current = (await self._store.get_lifecycles([document_id])).get(document_id)
+            owner = request.owner or (current.owner if current else user)
             await self._lifecycle.set(
-                document_id, Lifecycle(state, request.owner or user, review_by), request.note, user
+                document_id, Lifecycle(state, owner, review_by), request.note, user
             )
         return curation_pb2.SetLifecycleResponse()
 

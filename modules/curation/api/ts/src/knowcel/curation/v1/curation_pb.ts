@@ -306,7 +306,8 @@ export type SetLifecycleRequest = Message<"knowcel.curation.v1.SetLifecycleReque
   state: LifecycleState;
 
   /**
-   * The user responsible for the review; the caller when empty.
+   * The user responsible for the review; when empty, the current one, or the
+   * caller for a document's first change.
    *
    * @generated from field: string owner = 3;
    */

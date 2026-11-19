@@ -566,3 +566,22 @@ async def test_a_review_reminder_is_listed_and_cannot_be_replaced(
         ),
         metadata=USER,
     )
+
+
+async def test_a_change_without_an_owner_keeps_the_one_responsible(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    await set_state(stub, SHARED, "alice", curation_pb2.LIFECYCLE_STATE_APPROVED, owner="carol")
+    await set_state(stub, SHARED, "team-admin", curation_pb2.LIFECYCLE_STATE_DEPRECATED)
+    (latest, first) = await store.list_lifecycle_history(SHARED.id)
+    assert (first.lifecycle.owner, latest.lifecycle.owner) == ("carol", "carol")
+    assert latest.changed_by == "team-admin"
+
+
+async def test_a_review_date_out_of_range_is_invalid(
+    stub: curation_pb2_grpc.CurationServiceStub,
+) -> None:
+    far = Timestamp(seconds=10**12)
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await set_state(stub, OWNED, "alice", review_by=far)
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT

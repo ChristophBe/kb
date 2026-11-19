@@ -761,7 +761,8 @@ type SetLifecycleRequest struct {
 	DocumentId string                 `protobuf:"bytes,1,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
 	// Required.
 	State LifecycleState `protobuf:"varint,2,opt,name=state,proto3,enum=knowcel.curation.v1.LifecycleState" json:"state,omitempty"`
-	// The user responsible for the review; the caller when empty.
+	// The user responsible for the review; when empty, the current one, or the
+	// caller for a document's first change.
 	Owner string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
 	// When the document is next due for review; leave unset for none.
 	ReviewBy *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=review_by,json=reviewBy,proto3" json:"review_by,omitempty"`

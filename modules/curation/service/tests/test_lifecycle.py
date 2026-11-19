@@ -80,3 +80,17 @@ async def test_a_new_review_date_closes_the_finding_and_the_next_miss_opens_a_ne
     await service.set(document, Lifecycle("approved", "alice", now - DAY), "", "alice")
     await service.open_review_findings()
     assert len(store.findings) == 1
+
+
+async def test_a_change_that_keeps_the_review_date_leaves_a_dismissed_reminder_alone() -> None:
+    store = FakeStore()
+    service = LifecycleService(store, Scorer(store, WEIGHTS))
+    document = uuid.uuid4()
+    late = datetime.datetime.now(datetime.UTC) - DAY
+    await service.set(document, Lifecycle("approved", "alice", late), "", "alice")
+    await service.open_review_findings()
+    (reminder,) = store.findings
+    await store.resolve_finding(reminder.id, "keep", "alice")
+    # Only the note and state change; the date stays.
+    await service.set(document, Lifecycle("in_review", "alice", late), "looking", "bob")
+    assert [f.resolution for f in store.findings] == ["keep"]

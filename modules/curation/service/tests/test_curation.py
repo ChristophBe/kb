@@ -176,3 +176,21 @@ async def test_every_job_runs_and_a_failing_one_does_not_stop_the_others() -> No
     stop.set()
     await asyncio.wait_for(task, 1)
     assert ran[:2] == ["failing", "working"]
+
+
+async def test_rescoring_all_looks_up_the_lifecycles_of_a_batch_at_once() -> None:
+    store = FakeStore()
+    lookups: list[int] = []
+    original = store.get_lifecycles
+
+    async def counting(ids):  # type: ignore[no-untyped-def]
+        lookups.append(len(ids))
+        return await original(ids)
+
+    store.get_lifecycles = counting  # type: ignore[method-assign]
+    scorer = Scorer(store, WEIGHTS)
+    ids = [uuid.uuid4() for _ in range(5)]
+    for document in ids:
+        await store.save_score(document, NOW, 1.0)
+    await scorer.rescore_all(batch=3)
+    assert lookups == [3, 2]

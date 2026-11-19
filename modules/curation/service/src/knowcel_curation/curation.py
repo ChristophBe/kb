@@ -195,7 +195,7 @@ class CurationStore(Protocol):
 
     async def list_review_due(self, now: datetime.datetime, limit: int) -> list[uuid.UUID]:
         """Documents whose current lifecycle is not archived and has a review
-        date before `now`."""
+        date before `now`, and that have no review-due finding yet."""
         ...
 
     async def delete_review_due(self, document_id: uuid.UUID) -> None:
@@ -234,19 +234,27 @@ class Scorer:
         scores go stale without it."""
         after = None
         while scores := await self._store.list_scores(after, batch):
+            lifecycles = await self._store.get_lifecycles({s.document_id for s in scores})
             for score in scores:
-                await self._save(score.document_id, score.processed_at)
+                await self._save(score.document_id, score.processed_at, lifecycles)
             after = scores[-1].document_id
 
     async def _current(self, document_id: uuid.UUID) -> Score | None:
         scores = await self._store.get_scores([document_id])
         return scores[0] if scores else None
 
-    async def _save(self, document_id: uuid.UUID, processed_at: datetime.datetime) -> None:
+    async def _save(
+        self,
+        document_id: uuid.UUID,
+        processed_at: datetime.datetime,
+        lifecycles: dict[uuid.UUID, Lifecycle] | None = None,
+    ) -> None:
         replacements = await self._store.count_replacements(document_id)
+        if lifecycles is None:
+            lifecycles = await self._store.get_lifecycles([document_id])
         # The usage signal needs chat to report its citations; until it does,
         # usage is 0 (and weighs nothing unless KNOWCEL_CURATION_USAGE_WEIGHT is set).
-        lifecycle = (await self._store.get_lifecycles([document_id])).get(document_id)
+        lifecycle = lifecycles.get(document_id)
         score = score_document(
             processed_at,
             datetime.datetime.now(datetime.UTC),

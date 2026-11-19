@@ -151,7 +151,8 @@ message SetLifecycleRequest {
   string document_id = 1;
   // Required.
   LifecycleState state = 2;
-  // The user responsible for the review; the caller when empty.
+  // The user responsible for the review; when empty, the current one, or the
+  // caller for a document's first change.
   string owner = 3;
   // When the document is next due for review; leave unset for none.
   google.protobuf.Timestamp review_by = 4;

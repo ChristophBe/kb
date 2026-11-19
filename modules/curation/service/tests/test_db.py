@@ -202,6 +202,22 @@ async def test_review_is_due_for_the_current_lifecycle_unless_archived(
     assert await store.list_review_due(now, 10) == [late]
 
 
+async def test_documents_with_a_reminder_are_not_due_again_so_a_batch_moves_on(
+    engine: AsyncEngine,
+) -> None:
+    store = SqlCurationStore(engine)
+    documents = [uuid.uuid4() for _ in range(3)]
+    for document in documents:
+        await store.add_lifecycle_change(document, Lifecycle("approved", "a", T0), "", "a")
+    now = T0 + DAY
+    first = await store.list_review_due(now, 2)
+    assert len(first) == 2
+    for document in first:
+        await store.add_finding(REVIEW_DUE, document, document)
+    (rest,) = await store.list_review_due(now, 2)
+    assert rest not in first
+
+
 async def test_a_review_reminder_is_a_finding_that_can_be_removed(engine: AsyncEngine) -> None:
     store = SqlCurationStore(engine)
     document, other = uuid.uuid4(), uuid.uuid4()

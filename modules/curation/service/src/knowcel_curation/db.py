@@ -20,6 +20,7 @@ from sqlalchemy import (
     Uuid,
     and_,
     delete,
+    exists,
     func,
     or_,
     select,
@@ -254,7 +255,14 @@ class SqlCurationStore:
         )
         query = (
             select(latest.c.document_id)
-            .where(latest.c.review_by < now, latest.c.state != ARCHIVED)
+            .where(
+                latest.c.review_by < now,
+                latest.c.state != ARCHIVED,
+                # Those already reminded (or dismissed) are done until their date changes.
+                ~exists().where(
+                    findings.c.kind == REVIEW_DUE, findings.c.document_id == latest.c.document_id
+                ),
+            )
             .limit(limit)
         )
         async with self._engine.connect() as conn:

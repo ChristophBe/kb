@@ -51,7 +51,9 @@ func TestUploadAndChat(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateConversation: %v", err)
 	}
-	sources, answer := ask(ctx, t, c, conv.Msg.GetConversation().GetId(), "When does the aurora borealis appear?")
+	// The fake model echoes the question, so the marker makes the "answer" use
+	// the first source; only used sources are saved.
+	sources, answer := ask(ctx, t, c, conv.Msg.GetConversation().GetId(), "When does the aurora borealis appear? [1]")
 	if !cites(sources, documentID, title) {
 		t.Errorf("streamed sources do not cite document %s %q: %v", documentID, title, sources)
 	}

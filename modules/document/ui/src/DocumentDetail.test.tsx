@@ -3,6 +3,7 @@ import {
   DocumentService,
   DocumentStatus,
 } from "@knowcel/document-api/knowcel/document/v1/document_pb";
+import { defineManifest } from "@knowcel/module-sdk";
 import { renderModule } from "@knowcel/module-sdk/testing";
 import { polyfillDialog } from "@knowcel/ui/testing/dialog";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
@@ -182,5 +183,37 @@ describe("DocumentDetail", () => {
     renderDocument({ version: 1, status: DocumentStatus.PROCESSING });
     await versionRow();
     expect(screen.queryByRole("link", { name: "Upload new version" })).toBeNull();
+  });
+
+  it("shows what other modules add to the actions, in the toolbar", async () => {
+    const report = defineManifest({
+      id: "curation",
+      title: "Curation",
+      icon: () => null,
+      slots: [
+        {
+          slot: "document.detail.actions",
+          load: async () => ({
+            default: ({ documentId }) => <button type="button">{`Report ${documentId}`}</button>,
+          }),
+        },
+      ],
+    });
+    const transport = createRouterTransport(({ service }) =>
+      service(DocumentService, {
+        getDocument: () => ({
+          document: {
+            id: "d1",
+            title: "Notes",
+            filename: "notes.md",
+            status: DocumentStatus.READY,
+          },
+        }),
+        listChunks: () => ({ chunks: [] }),
+      }),
+    );
+    renderModule(documents, transport, "/d1", null, undefined, undefined, [report]);
+    const toolbar = await screen.findByRole("toolbar", { name: "Document actions" });
+    expect(await within(toolbar).findByRole("button", { name: "Report d1" })).toBeTruthy();
   });
 });

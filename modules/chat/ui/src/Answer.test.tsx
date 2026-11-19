@@ -1,5 +1,6 @@
 import { create } from "@bufbuild/protobuf";
 import { type Citation, CitationSchema } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
+import { defineManifest, SlotsProvider } from "@knowcel/module-sdk";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
@@ -138,5 +139,53 @@ describe("Answer", () => {
     expect(writeText).toHaveBeenCalledWith("code here\n");
     expect(await screen.findByRole("button", { name: "Copied" })).toBeTruthy();
     vi.unstubAllGlobals();
+  });
+
+  it("lets other modules add actions to a source that is a document, with its details", async () => {
+    const rate = defineManifest({
+      id: "curation",
+      title: "Curation",
+      icon: () => null,
+      slots: [
+        {
+          slot: "chat.citation.actions",
+          load: async () => ({
+            default: ({ documentId, chunkIndex, conversationId }) => (
+              <button type="button">{`Rate ${documentId}/${chunkIndex}/${conversationId}`}</button>
+            ),
+          }),
+        },
+      ],
+    });
+    render(
+      <SlotsProvider modules={[rate]}>
+        <MemoryRouter>
+          <Answer
+            content="See [1] and [2]."
+            citations={[
+              ...sources,
+              create(CitationSchema, {
+                documentTitle: "Help",
+                manualPage: "chat",
+                manualSection: "ask",
+              }),
+            ]}
+            conversationId="c1"
+          />
+        </MemoryRouter>
+      </SlotsProvider>,
+    );
+    expect(await screen.findByRole("button", { name: "Rate d1/3/c1" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Rate d2/0/c1" })).toBeTruthy();
+    // The user manual has no document to act on.
+    expect(screen.getAllByRole("button", { name: /^Rate / })).toHaveLength(2);
+  });
+
+  it("leaves the sources as they are without a module that fills the slot", () => {
+    const { container } = renderAnswer("See [1].", sources);
+    // The row for actions stays empty, and is hidden by its empty: style.
+    const rows = container.querySelectorAll("ul[aria-label='Sources'] li > div");
+    expect([...rows].every((row) => row.innerHTML === "")).toBe(true);
+    expect([...rows].every((row) => row.className.includes("empty:hidden"))).toBe(true);
   });
 });

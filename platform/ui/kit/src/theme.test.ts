@@ -153,6 +153,47 @@ describe.each(["light", "dark"] as const)("%s mode", (mode) => {
   });
 });
 
+// The Knowcelium colours branding.sh checks a branding file against (the table in deploy/docker/web/branding.sh).
+describe("the default colours of branding.sh", () => {
+  const script = readFileSync(
+    new URL("../../../../deploy/docker/web/branding.sh", import.meta.url),
+    "utf8",
+  );
+  const table = [...script.matchAll(/^(light|dark)\.(\w+) (#[\da-f]{6})$/gm)];
+  const tokens: Record<string, string> = {
+    accent: "accent",
+    onAccent: "on-accent",
+    accent2: "accent-2",
+    canvas: "canvas",
+    surface: "surface",
+    text: "fg",
+    textMuted: "fg-muted",
+    border: "border",
+    borderStrong: "border-strong",
+    glow1: "glow-1",
+    glow2: "glow-2",
+  };
+  const hex = ([r, g, b]: Rgba) =>
+    `#${[r, g, b]
+      .map((c) =>
+        Math.round(c * 255)
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("")}`;
+
+  it("lists every key for both modes", () => {
+    expect(table).toHaveLength(2 * Object.keys(tokens).length);
+  });
+
+  it.each(table.map(([, mode, key, value]) => [mode, key, value] as const))(
+    "%s.%s equals theme.css",
+    (mode, key, value) => {
+      expect(hex(colour(tokens[key as string] as string, mode as Mode))).toBe(value);
+    },
+  );
+});
+
 it("converts known colours", () => {
   expect(contrast(parse("#fff"), parse("#000"))).toBeCloseTo(21, 1);
   // Tailwind zinc-900 is #18181b.

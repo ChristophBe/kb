@@ -1,6 +1,6 @@
 # Branding
 
-An organization can present the web UI as its own: the product name, the logo, the favicon and the accent colors come from a **branding file** that the deployment points the web container at. There is no admin page and no runtime editing; a change takes effect when the web container is restarted or redeployed. Without a branding file the UI keeps the Knowcelium name, logo and colors.
+An organization can present the web UI as its own: the product name, the logo, the favicon, the fonts and the colors come from a **branding file** that the deployment points the web container at. There is no admin page and no runtime editing; a change takes effect when the web container is restarted or redeployed. Without a branding file the UI keeps the Knowcelium name, logo and colors.
 
 ## The branding file
 
@@ -12,13 +12,13 @@ A directory holds `branding.json` and the image files it names. [`deploy/brandin
   "logo": { "light": "logo-light.svg", "dark": "logo-dark.svg", "showName": true },
   "favicon": "favicon.svg",
   "colors": {
-    "light": { "accent": "#1d4ed8", "onAccent": "#ffffff" },
-    "dark": { "accent": "#93b4ff", "onAccent": "#0b1220" }
+    "light": { "accent": "#1d4ed8", "onAccent": "#ffffff", "canvas": "#f2f5fb", "glow1": "#1d4ed8" },
+    "dark": { "accent": "#93b4ff", "onAccent": "#0b1220", "canvas": "#0c101c", "glow1": "#93b4ff" }
   }
 }
 ```
 
-Every key is optional; what you leave out keeps the Knowcelium value.
+The example in the repository sets every color key. Every key is optional; what you leave out keeps the Knowcelium value.
 
 | Key | Meaning |
 |---|---|
@@ -28,9 +28,26 @@ Every key is optional; what you leave out keeps the Knowcelium value.
 | `favicon` | The browser tab icon (`.svg`, `.png` or `.ico`, same rules). |
 | `fonts.heading`, `fonts.body`, `fonts.mono` | The typeface of headings, of the interface and of data (code, ids). Each is `{ "family", "file", "weight" }`; see [Fonts](#fonts). |
 | `navigation.light`, `navigation.dark` | The sidebar background (color or gradient) and text color for each mode; see [Navigation](#navigation). |
-| `colors.light`, `colors.dark` | The accent for each mode: `accent` (buttons, links, focus) and `onAccent` (text on an accent button), as `#rrggbb`. Give both of a mode. |
+| `colors.light`, `colors.dark` | The colors of each mode, as `#rrggbb`; see [Colors](#colors). A mode you leave out keeps the Knowcelium colors, and so does every color key you leave out of a mode. |
 
-Hover, focus and subtle accent shades are derived from `accent`; the neutral greys, status colors and typeface stay as they are. A logo is shown at the height of the Knowcelium logo plus 40 %, so give it a transparent background and some breathing room; without a logo the product name is shown as text. The UI switches between the light and dark logo with the theme, including the user's own theme choice.
+The status colors and the neutral palette steps stay as they are. A logo is shown at the height of the Knowcelium logo plus 40 %, so give it a transparent background and some breathing room; without a logo the product name is shown as text. The UI switches between the light and dark logo with the theme, including the user's own theme choice.
+
+## Colors
+
+Light and dark mode take their own values, including the theme the user picks in the UI. Each key is `#rrggbb`:
+
+| Key | Meaning |
+|---|---|
+| `accent`, `onAccent` | Buttons, links, the current place and the focus ring; the text on an accent button. |
+| `accent2` | The second stop of the hero gradient (the accent word on the home page). |
+| `canvas`, `surface` | The page background; cards, inputs and the glass panels. |
+| `text`, `textMuted` | Body text and headings; secondary text and icons. |
+| `border`, `borderStrong` | Decorative dividers; the boundaries of controls. |
+| `glow1`, `glow2` | The two soft lights behind the glass (top right, bottom left), at the opacity of the Knowcelium theme. A glow may also be `"none"`: the light is off and that part of the page is the plain `canvas`. |
+
+Derived, so they have no key: the hover and subtle shades of the accent, the focus ring (the accent), the hover and fill color `surface-muted` (a mix of `surface` and `text`), the translucent glass fills (`surface` at 72 %, 86 % and 40 %; the opaque `surface` where the browser cannot blur or the user asks for less transparency), the glass rim and the shadows.
+
+A key you leave out keeps the Knowcelium color of that mode, and the checks below use it: a branded `canvas` is checked against the default `text` and accent. Set the colors that belong together in a mode, for example a dark `canvas` together with a light `text`. A mode you leave out keeps all Knowcelium colors, so a brand that only has a light palette still gets the Knowcelium dark mode.
 
 <!-- navigation -->
 ## Navigation
@@ -80,11 +97,16 @@ Each role takes a `family` and optionally a `file` and a `weight`:
 The web container checks the file when it starts and refuses to start with one line per problem, so a broken branding never reaches users:
 
 - the file is JSON, has only the keys above, `logo.showName` is `true` or `false`, and every file it names exists;
-- every color (accent and navigation) is `#rrggbb`, a navigation gradient has `from` and `to`, an `angle` is 0 to 360, and every font has a valid family, weight and file;
-- `onAccent` on `accent` and `accent` against the page background (the accent colors links and the active menu entry) each have a contrast of at least 4.5:1, the [WCAG 2.2 AA](../ux-standards.md) limit for text; so does the navigation text against its background (both stops of a gradient).
+- every color is `#rrggbb` (a glow may be `"none"`), a navigation gradient has `from` and `to`, an `angle` is 0 to 360, and every font has a valid family, weight and file;
+- text has a contrast of at least 4.5:1, the [WCAG 2.2 AA](../ux-standards.md) limit: `text` and `textMuted` on `canvas` and on `surface`, `accent` on `canvas` (the accent colors links and the active menu entry) and `onAccent` on `accent`;
+- `borderStrong` on `canvas` and on `surface` and `accent2` on `canvas` (large gradient text) have a contrast of at least 3:1.
+- the navigation text has a contrast of at least 4.5:1 against its color, or against both stops of a gradient (the worse one counts).
+
+Every pair uses the effective colors: the configured value, else the Knowcelium default of that mode. The message names the field that fails, also when the other color of the pair is a default.
 
 ```text
 branding: colors.light: text on the accent has contrast 1.09:1 (accent #1d4ed8, onAccent #2255dd), needs 4.5:1
+branding: colors.light.text #21221e has contrast 1.27:1 against the page background (canvas #333333), needs 4.5:1
 ```
 
 ## Apply it

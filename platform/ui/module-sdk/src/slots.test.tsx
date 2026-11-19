@@ -136,6 +136,24 @@ describe("Slot", () => {
     expect(load).toHaveBeenCalledTimes(2);
   });
 
+  it("tries a contribution that failed again when the page shows another document", async () => {
+    const load = vi
+      .fn<DocumentLoad>()
+      .mockRejectedValueOnce(new Error("chunk missing"))
+      .mockImplementation(action("Back"));
+    const modules = [manifest("flaky", [{ slot: "document.detail.actions", load }])];
+    const view = (id: string) => (
+      <SlotsProvider modules={modules}>
+        <Slot name="document.detail.actions" documentId={id} />
+      </SlotsProvider>
+    );
+    const { rerender } = render(view("d1"));
+    await act(async () => {});
+    expect(screen.queryByText("Back d1")).toBeNull();
+    rerender(view("d2"));
+    expect(await screen.findByText("Back d2")).toBeTruthy();
+  });
+
   it("loads a contribution once, however often the slot renders", async () => {
     const load = vi.fn<DocumentLoad>().mockImplementation(action("Once"));
     const modules = [manifest("once", [{ slot: "document.detail.actions", load }])];

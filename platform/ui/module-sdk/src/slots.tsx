@@ -57,7 +57,9 @@ function componentOf(contribution: SlotContribution): Loaded {
 /**
  * Shows nothing when a contribution fails to load or render, so the page and
  * the other contributions keep working. The failure is logged, and the
- * contribution is loaded again the next time the slot is shown.
+ * contribution is loaded again the next time the slot is shown, which includes
+ * its props changing (the page shows another document): its boundary is keyed
+ * by them.
  */
 class Contained extends Component<
   { contribution: SlotContribution; children: ReactNode },
@@ -112,7 +114,7 @@ export function Slot<N extends SlotName>({ name, ...props }: { name: N } & SlotP
       {mine.map(({ id, contribution }) => {
         const Contribution = componentOf(contribution);
         return (
-          <Contained key={id} contribution={contribution}>
+          <Contained key={`${id}|${Object.values(props).join("|")}`} contribution={contribution}>
             <Suspense fallback={null}>
               <Contribution {...props} />
             </Suspense>

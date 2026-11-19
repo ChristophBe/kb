@@ -68,16 +68,26 @@ export function Mark({
  * the cap height). A deployment's branding replaces it: its logo image (the
  * one for the current light or dark mode), else its product name as text.
  */
-export function Logo({ size = 24, className }: { size?: number; className?: string }) {
+export function Logo({
+  size = 24,
+  className,
+  nameUnderImage = true,
+}: {
+  size?: number;
+  className?: string;
+  /** Show the name under a logo image when the branding asks for it; the mobile header sets it to false. */
+  nameUnderImage?: boolean;
+}) {
   const { logo, name } = getBranding();
   const either = logo?.light ?? logo?.dark;
   if (logo && either) {
     const height = Math.round(size * 1.4);
+    const named = Boolean(logo.showName) && nameUnderImage;
     const image = (src: string, mode?: "light" | "dark") => (
       <img
         key={mode ?? "both"}
         src={src}
-        alt={productName()}
+        alt={named ? "" : productName()}
         height={height}
         className={cn("w-auto max-w-full", mode && `brand-logo-${mode}`)}
         style={{ height }}
@@ -85,10 +95,26 @@ export function Logo({ size = 24, className }: { size?: number; className?: stri
     );
     const light = logo.light ?? either;
     const dark = logo.dark ?? either;
+    const images = light === dark ? image(light) : [image(light, "light"), image(dark, "dark")];
+    // The name under the image is text, so the image's alt text would repeat it.
+    if (named) {
+      return (
+        <span
+          className={cn("inline-flex max-w-full flex-col items-start gap-1", className)}
+          style={{ fontSize: size }}
+        >
+          {/* One image serves both modes; two are switched by theme.css. */}
+          {images}
+          <span className="max-w-full break-words text-[0.6em] leading-tight font-semibold">
+            {productName()}
+          </span>
+        </span>
+      );
+    }
     return (
       <span className={cn("inline-flex items-center", className)}>
         {/* One image serves both modes; two are switched by theme.css. */}
-        {light === dark ? image(light) : [image(light, "light"), image(dark, "dark")]}
+        {images}
       </span>
     );
   }

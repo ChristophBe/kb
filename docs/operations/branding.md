@@ -9,7 +9,7 @@ A directory holds `branding.json` and the image files it names. [`deploy/brandin
 ```json
 {
   "name": "Acme Knowledge",
-  "logo": { "light": "logo-light.svg", "dark": "logo-dark.svg" },
+  "logo": { "light": "logo-light.svg", "dark": "logo-dark.svg", "showName": true },
   "favicon": "favicon.svg",
   "colors": {
     "light": { "accent": "#1d4ed8", "onAccent": "#ffffff" },
@@ -22,8 +22,9 @@ Every key is optional; what you leave out keeps the Knowcelium value.
 
 | Key | Meaning |
 |---|---|
-| `name` | The product name (1 to 60 characters): the browser tab title, the header and the sign-in page. |
+| `name` | The product name (1 to 60 characters): the browser tab title, the header, the sign-in page and every other place the UI and the user manual say "Knowcelium" (see [The product name](#the-product-name)). |
 | `logo.light`, `logo.dark` | The logo on light and dark backgrounds: a file next to `branding.json` (`.svg`, `.png` or `.webp`, up to 512 KiB, named with letters, digits, `.`, `_` and `-`). |
+| `logo.showName` | `true` shows the product name as text under the logo image in the sidebar and on the sign-in page; `false` (the default) shows the image alone. It has an effect only with a logo image: without one the name already is the logo. The narrow-screen header always shows the image alone. |
 | `favicon` | The browser tab icon (`.svg`, `.png` or `.ico`, same rules). |
 | `fonts.heading`, `fonts.body`, `fonts.mono` | The typeface of headings, of the interface and of data (code, ids). Each is `{ "family", "file", "weight" }`; see [Fonts](#fonts). |
 | `navigation.light`, `navigation.dark` | The sidebar background (color or gradient) and text color for each mode; see [Navigation](#navigation). |
@@ -49,6 +50,14 @@ The main sidebar keeps the frosted Knowcelium surface unless the file gives it a
 - The conversation list and the rest of the page keep their surfaces. On a narrow screen the same background shows wherever the sidebar is shown (the menu drawer).
 <!-- end navigation -->
 
+## The product name
+
+With a `name`, the UI says it everywhere: the search box, the search page, the Help page, error messages and the whole user manual (its index, headings and text, so "Acme Knowledge's manual" reads right). The manual is written once with the name "Knowcelium" and shown with yours. No page mentions Knowcelium except the credit below.
+
+## Powered by
+
+A deployment with a branding file shows "Powered by Knowcelium *version*" at the bottom right of every page after sign-in, below the page content and never over it. *version* is the version of the running web build (`version` in the web container's `/config.json`, the `KNOWCEL_VERSION` the image was built with, `dev` for a local build). "Knowcelium" links to the project page. The line cannot be changed or hidden. Without a branding file nothing is added.
+
 ## Fonts
 
 Each role takes a `family` and optionally a `file` and a `weight`:
@@ -70,7 +79,7 @@ Each role takes a `family` and optionally a `file` and a `weight`:
 
 The web container checks the file when it starts and refuses to start with one line per problem, so a broken branding never reaches users:
 
-- the file is JSON, has only the keys above, and every file it names exists;
+- the file is JSON, has only the keys above, `logo.showName` is `true` or `false`, and every file it names exists;
 - every color (accent and navigation) is `#rrggbb`, a navigation gradient has `from` and `to`, an `angle` is 0 to 360, and every font has a valid family, weight and file;
 - `onAccent` on `accent` and `accent` against the page background (the accent colors links and the active menu entry) each have a contrast of at least 4.5:1, the [WCAG 2.2 AA](../ux-standards.md) limit for text; so does the navigation text against its background (both stops of a gradient).
 

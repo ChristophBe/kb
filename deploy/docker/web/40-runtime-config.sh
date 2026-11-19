@@ -15,5 +15,6 @@ if [ -n "${KNOWCEL_BRANDING_FILE:-}" ]; then
 fi
 auth=$(printf '"auth": { "issuer": "%s", "clientId": "%s" }' \
   "${KNOWCEL_OIDC_ISSUER:-http://localhost:5556/dex}" "${KNOWCEL_OIDC_CLIENT_ID:-kb-web}")
-printf '{ "apiBaseUrl": "%s", %s%s }\n' "${KNOWCEL_API_BASE_URL:-http://localhost:8080}" "$auth" "$modules$branding" \
+version=", \"version\": \"${KNOWCEL_VERSION:-dev}\""
+printf '{ "apiBaseUrl": "%s", %s%s }\n' "${KNOWCEL_API_BASE_URL:-http://localhost:8080}" "$auth" "$modules$branding$version" \
   > /usr/share/nginx/html/config.json

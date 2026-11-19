@@ -26,7 +26,7 @@ describe("plainText", () => {
 
 describe("pageSections", () => {
   it("splits a page at its h2 and h3 headings, linking each section", () => {
-    const chat = manualPages.find((p) => p.slug === "chat");
+    const chat = manualPages().find((p) => p.slug === "chat");
     if (!chat) throw new Error("no chat page");
     const sections = pageSections(chat);
     expect(sections[0]).toMatchObject({ heading: "", href: "/help/chat" });

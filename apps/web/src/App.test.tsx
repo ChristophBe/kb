@@ -50,6 +50,31 @@ describe("App shell", () => {
     }
   });
 
+  // --- Powered by credit (#360) ---
+  it("shows no credit without a branding file", () => {
+    renderAt("/nope");
+    expect(screen.queryByText(/Powered by/)).toBeNull();
+  });
+
+  it("credits Knowcelium and the version in a branded deployment", async () => {
+    applyBranding({ name: "Acme Knowledge" }, "1.4.0");
+    try {
+      const { container } = renderAt("/nope");
+      const credit = screen.getByText(/Powered by/);
+      expect(credit.textContent).toBe("Powered by Knowcelium 1.4.0");
+      const link = screen.getByRole("link", { name: "Knowcelium" });
+      expect(link.getAttribute("href")).toBe("https://christophbe.github.io/knowcelium/");
+      expect(link.getAttribute("target")).toBe("_blank");
+      expect(link.getAttribute("rel")).toBe("noopener noreferrer");
+      // At the end of the page, after its content.
+      const main = screen.getByRole("main");
+      expect(main.lastElementChild).toBe(credit);
+      await expectNoAxeViolations(container);
+    } finally {
+      applyBranding(undefined);
+    }
+  });
+
   it("moves focus to the page heading after a route change", async () => {
     renderAt("/nope");
     // The first page load keeps focus where it is.

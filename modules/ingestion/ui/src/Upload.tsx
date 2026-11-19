@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   Badge,
   Button,
+  brandText,
   Card,
   DelayedLoading,
   EmptyState,
@@ -211,7 +212,7 @@ export function Upload() {
   return (
     <div>
       <PageHeader
-        eyebrow="knowcelium / upload"
+        eyebrow={brandText("knowcelium / upload")}
         title="Upload"
         description="Upload documents or add web pages to the knowledge base."
       />

@@ -8,6 +8,7 @@ The design drafts in [`docs/ux/`](../ux/) are for contributors; this manual is f
 
 - **Audience: the end user.** Describe what they see and do in the UI. No internals: no code, APIs, services, module names, databases or configuration.
 - **Current behaviour only.** Describe the tool as it is on `main`. No changelog, no "new in", no "previously", no planned features. When behaviour changes, rewrite the description; when a feature is removed, remove its description.
+- **Write the product name as "Knowcelium".** A deployment with its own branding shows its own name instead; the web UI replaces "Knowcelium" at display time (also in possessives such as "Knowcelium's"). Don't spell the name any other way and don't use it in a URL or a code sample.
 - **One page per area** of the UI (for example documents, search, chat). A task belongs to the area where the user starts it.
 - **Kept up to date with the code.** A pull request that adds or changes a user-facing feature updates the matching page; see [CONTRIBUTING.md](../../CONTRIBUTING.md#pull-requests).
 

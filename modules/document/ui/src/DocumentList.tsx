@@ -6,6 +6,7 @@ import { useClient, useCurrentUser, useInfiniteQuery } from "@knowcel/module-sdk
 import {
   Badge,
   Button,
+  brandText,
   buttonClass,
   Card,
   ChunkStrip,
@@ -97,7 +98,7 @@ export function DocumentList() {
   return (
     <div>
       <PageHeader
-        eyebrow="knowcelium / documents"
+        eyebrow={brandText("knowcelium / documents")}
         title="Documents"
         description="Everything in your knowledge base."
         actions={

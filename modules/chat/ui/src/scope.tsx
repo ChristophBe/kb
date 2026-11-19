@@ -11,6 +11,7 @@ import {
 } from "@knowcel/module-sdk";
 import {
   Button,
+  brandText,
   Dialog,
   ErrorMessage,
   IconButton,
@@ -318,7 +319,9 @@ export function SourcesControl({
               Use platform knowledge
             </label>
             <p id={knowledgeHint} className="pl-6 text-xs text-fg-muted">
-              Answers are based on the documents and teams you can access in Knowcelium.
+              {brandText(
+                "Answers are based on the documents and teams you can access in Knowcelium.",
+              )}
             </p>
           </div>
           <div className="flex flex-col gap-3">

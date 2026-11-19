@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { applyBranding, getBranding, productName } from "./branding.ts";
+import {
+  applyBranding,
+  appVersion,
+  brandText,
+  getBranding,
+  isBranded,
+  productName,
+} from "./branding.ts";
 
 const style = () => document.getElementById("knowcel-branding")?.textContent ?? "";
 
@@ -160,4 +167,38 @@ describe("applyBranding fonts", () => {
     });
   });
   // --- end navigation ---
+});
+
+// --- product name everywhere (#360) ---
+describe("brandText", () => {
+  it("is the identity without branding", () => {
+    applyBranding(undefined);
+    expect(brandText("Search Knowcelium / knowcelium")).toBe("Search Knowcelium / knowcelium");
+  });
+
+  it("is the identity with a branding file that sets no name", () => {
+    applyBranding({ colors: { light: { accent: "#1d4ed8", onAccent: "#ffffff" } } });
+    expect(brandText("Knowcelium")).toBe("Knowcelium");
+  });
+
+  it("replaces the name in every spelling, possessives included", () => {
+    applyBranding({ name: "Acme Knowledge" });
+    expect(brandText("Knowcelium's manual: knowcelium / help, KNOWCELIUM")).toBe(
+      "Acme Knowledge's manual: Acme Knowledge / help, Acme Knowledge",
+    );
+  });
+
+  it("does not treat $ in the name as a replacement pattern", () => {
+    applyBranding({ name: "A$&B" });
+    expect(brandText("Knowcelium")).toBe("A$&B");
+  });
+});
+
+describe("branded deployments", () => {
+  it("knows whether a branding file is active, even an empty one, and the build version", () => {
+    applyBranding(undefined);
+    expect([isBranded(), appVersion()]).toEqual([false, "dev"]);
+    applyBranding({}, "1.2.3");
+    expect([isBranded(), appVersion()]).toEqual([true, "1.2.3"]);
+  });
 });

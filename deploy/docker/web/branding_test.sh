@@ -60,6 +60,13 @@ check "a navigation without a background" "navigation.light.background is missin
 check "low contrast on one gradient stop" "navigation.light: text #ffffff has contrast" '{"navigation":{"light":{"background":{"from":"#1d4ed8","to":"#9ec5fe"},"text":"#ffffff"}}}'
 check "low contrast on a solid navigation" "needs 4.5:1" '{"navigation":{"dark":{"background":"#333333","text":"#555555"}}}'
 # --- end navigation ---
+# --- logo.showName (#360) ---
+check "logo.showName true" ok '{"logo":{"light":"logo-light.svg","showName":true}}'
+check "logo.showName false" ok '{"logo":{"light":"logo-light.svg","showName":false}}'
+check "logo.showName as text" "logo.showName must be true or false" '{"logo":{"light":"logo-light.svg","showName":"yes"}}'
+out=$(printf '%s' '{"logo":{"light":"logo-light.svg","showName":true}}' >"$tmp/dir/branding.json"; sh "$here/branding.sh" "$tmp/dir/branding.json" "$tmp/root" 2>&1)
+printf '%s' "$out" | jq -e '.logo.showName == true and .logo.light == "/branding/logo-light.svg"' >/dev/null || { echo "FAIL showName output: $out"; failed=1; }
+# --- end logo.showName ---
 
 rm -rf "$tmp/dir" "$tmp/root"; mkdir -p "$tmp/dir" "$tmp/root"
 cp "$example"/* "$tmp/dir/"

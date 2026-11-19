@@ -65,6 +65,12 @@ asset() {
     mkdir -p "$root/branding" && cp "$dir/$rel" "$root/branding/$rel"
   fi
 }
+# --- logo.showName (#360): the product name as text under a logo image ---
+if jq -e '.logo | type == "object" and has("showName")' "$file" >/dev/null 2>&1; then
+  jq -e '.logo.showName | type == "boolean"' "$file" >/dev/null || fail "logo.showName must be true or false"
+fi
+# --- end logo.showName ---
+
 asset "logo.light" ".logo.light" "svg png webp"
 asset "logo.dark" ".logo.dark" "svg png webp"
 asset "favicon" ".favicon" "svg png ico"
@@ -182,6 +188,7 @@ fi
 
 # The config.json object: asset names become URLs under /branding.
 jq -c '{name, logo, favicon, colors, fonts, navigation}
-  | (.logo, .favicon) |= (if type == "object" then map_values("/branding/" + .) elif type == "string" then "/branding/" + . else . end)
+  | (.logo | objects | (.light, .dark) | strings) |= ("/branding/" + .)
+  | (.favicon | strings) |= ("/branding/" + .)
   | (.fonts // empty | .[] | select(.file) | .file) |= "/branding/" + .
   | with_entries(select(.value != null))' "$file"

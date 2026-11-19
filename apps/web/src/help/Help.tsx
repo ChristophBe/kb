@@ -1,4 +1,12 @@
-import { ArrowLeft, Card, EmptyState, headingSlug, PageHeader, PageTitle } from "@knowcel/ui";
+import {
+  ArrowLeft,
+  brandText,
+  Card,
+  EmptyState,
+  headingSlug,
+  PageHeader,
+  PageTitle,
+} from "@knowcel/ui";
 import { type ReactNode, useEffect } from "react";
 import Markdown, { type Components, type ExtraProps } from "react-markdown";
 import { Link, useLocation, useParams } from "react-router";
@@ -14,12 +22,12 @@ export function HelpIndex() {
   return (
     <div className="max-w-3xl">
       <PageHeader
-        eyebrow="knowcelium / help"
+        eyebrow={brandText("knowcelium / help")}
         title="Help"
-        description="How to use Knowcelium, by area."
+        description={brandText("How to use Knowcelium, by area.")}
       />
       <ul className="grid gap-3">
-        {manualPages.map((p) => (
+        {manualPages().map((p) => (
           <li key={p.slug}>
             <Link to={`/help/${p.slug}`} className="block rounded-card">
               <Card className="p-5 transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-glass">
@@ -38,7 +46,7 @@ export function HelpIndex() {
 export function HelpPage() {
   const { page } = useParams();
   const { hash } = useLocation();
-  const manual = manualPages.find((p) => p.slug === page);
+  const manual = manualPages().find((p) => p.slug === page);
 
   useEffect(() => {
     if (!manual || !hash) return;

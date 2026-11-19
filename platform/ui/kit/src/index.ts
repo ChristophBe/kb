@@ -6,10 +6,13 @@ export {
 } from "./access-picker.tsx";
 export {
   applyBranding,
+  appVersion,
   type BrandColors,
   type BrandFont,
   type Branding,
+  brandText,
   getBranding,
+  isBranded,
   productName,
 } from "./branding.ts";
 export { cn } from "./cn.ts";

@@ -111,6 +111,8 @@ test("the owner sets a document's approval state, others can only look at it", a
   await dialog.getByRole("button", { name: "Deprecate document" }).click();
   await expect(dialog).toBeHidden();
   await expect(page.getByText("Approval state: Deprecated")).toBeVisible();
+  // The focus is back on the button that opened the dialog.
+  await expect(page.getByRole("button", { name: "Approval state" })).toBeFocused();
 
   // The page shows the badge and the history with who, when and why.
   const toolbar = page.getByRole("toolbar", { name: "Document actions" });
@@ -132,5 +134,78 @@ test("the owner sets a document's approval state, others can only look at it", a
   await expect(
     bob.getByRole("toolbar", { name: "Document actions" }).getByText("Deprecated"),
   ).toBeVisible();
+  await bobContext.close();
+});
+
+test("a reported document shows up for its owner, who can dismiss the reports", async ({
+  page,
+  browser,
+}) => {
+  const filename = `report-${run}.md`;
+  await page.goto("/m/ingestion");
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: "Choose files" }).click();
+  await (await chooser).setFiles({
+    name: filename,
+    mimeType: "text/markdown",
+    buffer: Buffer.from(`# Report ${run}\n\nThe prices on this page are from last year.\n`),
+  });
+  await page.getByRole("button", { name: "Upload", exact: true }).click();
+  await expect(
+    page.getByRole("listitem").filter({ hasText: filename }).getByText("Ready"),
+  ).toBeVisible({ timeout: 60_000 });
+  await page.goto("/m/document");
+  await page.getByRole("link", { name: filename }).click();
+  const detailUrl = page.url();
+
+  // Bob reads it and reports it; the dialog says what happens next.
+  const bobContext = await browser.newContext({ storageState: users.bob.storageState });
+  const bob = await bobContext.newPage();
+  await bob.goto(detailUrl);
+  await bob.getByRole("button", { name: "Report", exact: true }).click();
+  const dialog = bob.getByRole("dialog", { name: "Report this document" });
+  await expect(dialog).toContainText("ranks a little lower until they have looked at it");
+  await dialog.getByRole("radio", { name: /Outdated/ }).check();
+  await dialog.getByLabel(/Comment/).fill("Prices are from last year");
+  await dialog.getByRole("button", { name: "Send report" }).click();
+  await expect(bob.getByText("Report sent")).toBeVisible();
+  await expect(bob.getByRole("button", { name: "Reported" })).toBeFocused();
+
+  // Having reported, he sees his report, not a second form.
+  await bob.getByRole("button", { name: "Reported" }).click();
+  const mine = bob.getByRole("dialog", { name: "You reported this document" });
+  await expect(mine).toContainText("Outdated");
+  await expect(mine.getByRole("radio")).toHaveCount(0);
+  await mine.getByRole("button", { name: "Close" }).click();
+
+  // The owner sees the report on Document checks, with its reason and comment.
+  await page.getByRole("link", { name: "Document checks", exact: true }).click();
+  const finding = page
+    .getByRole("list", { name: "Findings" })
+    .getByRole("listitem")
+    .filter({ hasText: "Reported by one person" })
+    .filter({ hasText: filename });
+  await expect(finding).toBeVisible();
+  await expect(finding.getByRole("list", { name: "Reports" })).toContainText("Outdated");
+  await expect(finding.getByRole("list", { name: "Reports" })).toContainText(
+    "Prices are from last year",
+  );
+
+  // Bob sees only his own report there, and can't close it.
+  await bob.getByRole("link", { name: "Document checks", exact: true }).click();
+  const bobsFinding = bob
+    .getByRole("list", { name: "Findings" })
+    .getByRole("listitem")
+    .filter({ hasText: `You reported ${filename}` });
+  await expect(bobsFinding).toBeVisible();
+  await expect(bobsFinding.getByRole("button")).toHaveCount(0);
+
+  // The owner dismisses the reports: they leave the list and the document ranks as before.
+  await finding.getByRole("button", { name: `Dismiss reports ${filename}` }).click();
+  await expect(page.getByText("Reports dismissed")).toBeVisible();
+  await expect(finding).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Findings" })).toBeFocused();
+  await bob.goto(detailUrl);
+  await expect(bob.getByRole("button", { name: "Report", exact: true })).toBeVisible();
   await bobContext.close();
 });

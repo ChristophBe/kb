@@ -51,6 +51,18 @@ The document stays in your list and in search, and you can change its state agai
 
 Only the document's owner, an admin of a team the document is shared with, and platform admins can change the state. For everyone else **Approval state** is disabled and says so.
 
+## Report a document
+
+If a document you can read is wrong, outdated or doesn't belong here, report it so that the people who look after it can decide what to do.
+
+1. Open the document and select **Report**.
+2. Choose a **Reason**: **Wrong**, **Outdated**, **Inappropriate** or **Other**. You can add a **Comment**.
+3. Select **Send report**. A notification confirms it.
+
+The document's owner, the admins of the teams it is shared with and platform admins see your report on [Document checks](document-checks.md), and the document ranks a little lower in answers and search until they have looked at it. Other people don't see your report. You only see your own.
+
+You have one report per document. Once you have reported a document, the button reads **Reported**: select it to see your report, and **Change report** to change the reason or the comment. When the report has been dismissed, the button reads **Report** again.
+
 ## Open a document
 
 Select a document's title. The page shows its **Status**, **Detail** (the reason when processing failed), its **Version** (1 for the first upload, one more for every [new version](#replace-a-document-with-a-new-version)), **Filename**, **Content type**, **Size**, **Passages**, when it was **Created** and **Updated**, its **Metadata** and its **ID**. A value that is empty shows as "—".

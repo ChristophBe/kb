@@ -4,6 +4,7 @@ import {
   FindingKind,
   type Lifecycle,
   LifecycleState,
+  type Report,
   Resolution,
   type ResolutionOption,
 } from "@knowcel/curation-api/knowcel/curation/v1/curation_pb";
@@ -11,6 +12,7 @@ import {
   keepPreviousData,
   toast,
   useClient,
+  useCurrentUser,
   useInfiniteQuery,
   useModuleEnabled,
   useMutation,
@@ -36,6 +38,8 @@ import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { findingIsGone, findingsError, resolveError } from "./errors.ts";
 import { STATES, stateInfo } from "./lifecycle/states.ts";
+import { useUserNames } from "./lifecycle/useUserNames.ts";
+import { reasonLabel } from "./reports/reasons.ts";
 
 const PAGE_SIZE = 25;
 // ScoreChunks takes at most this many documents at once.
@@ -46,13 +50,24 @@ const KINDS: Record<number, { label: string; tone: Tone }> = {
   [FindingKind.SUPERSEDED]: { label: "Newer version", tone: "info" },
   [FindingKind.CONFLICT]: { label: "Conflict", tone: "danger" },
   [FindingKind.REVIEW_DUE]: { label: "Review due", tone: "warning" },
+  [FindingKind.REPORTED]: { label: "Reported", tone: "warning" },
 };
 
 const RESOLUTIONS: Record<number, string> = {
   [Resolution.KEEP]: "Keep",
   [Resolution.REPLACE]: "Replace",
   [Resolution.IGNORE]: "Ignore",
+  [Resolution.DEPRECATE]: "Deprecate",
 };
+
+/** What a button that closes a finding says; reports have words of their own. */
+function optionLabel(kind: FindingKind, resolution: Resolution): string {
+  if (kind === FindingKind.REPORTED) {
+    if (resolution === Resolution.IGNORE) return "Dismiss reports";
+    if (resolution === Resolution.DEPRECATE) return "Deprecate document";
+  }
+  return RESOLUTIONS[resolution] ?? "";
+}
 
 /** The toast after a finding was closed. */
 function resolvedMessage(finding: Finding, resolution: Resolution): string {
@@ -61,9 +76,16 @@ function resolvedMessage(finding: Finding, resolution: Resolution): string {
       return `Kept ${finding.documentTitle}`;
     case Resolution.REPLACE:
       return `${finding.otherDocumentTitle} now replaces ${finding.documentTitle}`;
+    case Resolution.DEPRECATE:
+      return `${finding.documentTitle} deprecated`;
     default:
-      return "Finding ignored";
+      return finding.kind === FindingKind.REPORTED ? "Reports dismissed" : "Finding ignored";
   }
+}
+
+/** Replacing and deprecating change how a document ranks, so they ask first. */
+function asksFirst(resolution: Resolution): boolean {
+  return resolution === Resolution.REPLACE || resolution === Resolution.DEPRECATE;
 }
 
 interface Choice {
@@ -191,8 +213,8 @@ export function Findings() {
       const { [choice.finding.id]: _, ...rest } = f;
       return rest;
     });
-    // Replacing makes the document rank lower in answers, so it asks first.
-    if (choice.option.resolution === Resolution.REPLACE) setConfirming(choice);
+    // Replacing or deprecating makes the document rank lower in answers, so it asks first.
+    if (asksFirst(choice.option.resolution)) setConfirming(choice);
     else resolve.mutate(choice);
   };
 
@@ -201,7 +223,7 @@ export function Findings() {
       <PageHeader
         eyebrow={brandText("knowcelium / checks")}
         title="Document checks"
-        description="Documents that repeat, replace or contradict each other, and documents that are due for review. Close a finding to keep answers consistent."
+        description="Documents that repeat, replace or contradict each other, documents that are due for review and documents people have reported. Close a finding to keep answers consistent."
       />
       <h2 ref={heading} tabIndex={-1} className="sr-only">
         Findings
@@ -309,15 +331,25 @@ export function Findings() {
       )}
       <ConfirmDialog
         open={confirming !== null}
-        title={`Replace ${shown.current?.finding.documentTitle ?? ""}?`}
-        confirmLabel="Replace document"
+        title={`${shown.current?.option.resolution === Resolution.DEPRECATE ? "Deprecate" : "Replace"} ${shown.current?.finding.documentTitle ?? ""}?`}
+        confirmLabel={
+          shown.current?.option.resolution === Resolution.DEPRECATE
+            ? "Deprecate document"
+            : "Replace document"
+        }
         pending={resolve.isPending}
         error={confirming ? failures[confirming.finding.id]?.message : undefined}
         onConfirm={() => confirming && resolve.mutate(confirming)}
         onCancel={() => setConfirming(null)}
         fallbackFocus={heading}
       >
-        {shown.current?.option.description}
+        <p>{shown.current?.option.description}</p>
+        {shown.current?.option.resolution === Resolution.DEPRECATE && (
+          <p className="mt-2">
+            Chat stops using this document in its answers and sources. You can change its approval
+            state again later.
+          </p>
+        )}
       </ConfirmDialog>
     </div>
   );
@@ -365,6 +397,7 @@ function FindingCard({
           Found {formatTime(f.createdAt)}
           {score !== undefined && ` · Relevance ${Math.round(score * 100)} %`}
         </p>
+        {f.reports.length > 0 && <ReportList reports={f.reports} />}
         <ul className="mt-3 flex flex-col gap-2">
           {f.resolutions
             .filter((o) => o.resolution in RESOLUTIONS)
@@ -379,10 +412,10 @@ function FindingCard({
                     variant="secondary"
                     disabled={pending}
                     aria-describedby={describedBy}
-                    aria-label={`${RESOLUTIONS[option.resolution]} ${f.documentTitle}`}
+                    aria-label={`${optionLabel(f.kind, option.resolution)} ${f.documentTitle}`}
                     onClick={() => onChoose({ finding: f, option })}
                   >
-                    {RESOLUTIONS[option.resolution]}
+                    {optionLabel(f.kind, option.resolution)}
                   </Button>
                   <span id={describedBy} className="min-w-0 flex-1 text-sm text-fg-muted">
                     {option.description}
@@ -398,6 +431,27 @@ function FindingCard({
         )}
       </Card>
     </li>
+  );
+}
+
+/** The reports of a document the viewer may see, each with its reason, who and when. */
+function ReportList({ reports }: { reports: Report[] }) {
+  const user = useCurrentUser();
+  const names = useUserNames();
+  const who = (id: string) => (id === user?.id ? "you" : (names.get(id) ?? "another user"));
+  return (
+    <ul aria-label="Reports" className="mt-3 flex flex-col gap-2 border-l-2 border-border pl-3">
+      {reports.map((r) => (
+        <li key={r.reporter} className="text-sm">
+          <span className="font-medium">{reasonLabel(r.reason) ?? "Other"}</span>
+          <span className="text-fg-muted">
+            {" · "}by {who(r.reporter)}
+            {r.createdAt && ` · ${formatTime(r.createdAt)}`}
+          </span>
+          {r.comment && <p className="mt-0.5 wrap-anywhere">{r.comment}</p>}
+        </li>
+      ))}
+    </ul>
   );
 }
 

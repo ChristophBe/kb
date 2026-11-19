@@ -18,6 +18,7 @@ import {
 import { Button, Dialog, ErrorMessage, Input, Textarea } from "@knowcel/ui";
 import { useId, useRef, useState } from "react";
 import { findingsError } from "../errors.ts";
+import { useReturnFocus } from "../focus.ts";
 import LifecycleBadge from "./LifecycleBadge.tsx";
 import { mayChange } from "./permission.ts";
 import { leavesChat, STATES, stateInfo } from "./states.ts";
@@ -52,6 +53,7 @@ export default function LifecycleAction({ documentId }: { documentId: string }) 
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const hint = useId();
+  useReturnFocus(open, button);
   const state = useDocumentState(documentId);
   const document = useQuery({
     queryKey: ["lifecycle", "document", documentId],
@@ -92,10 +94,7 @@ export default function LifecycleAction({ documentId }: { documentId: string }) 
         documentId={documentId}
         current={state.data?.lifecycle}
         open={open}
-        onClose={() => {
-          setOpen(false);
-          button.current?.focus();
-        }}
+        onClose={() => setOpen(false)}
       />
     </span>
   );

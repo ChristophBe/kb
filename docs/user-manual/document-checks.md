@@ -20,6 +20,7 @@ When nothing needs a check, the page says "No findings. Your documents look cons
 - **Newer version**: the document looks like an older version of another one, which has a similar name and mostly the same text. The older document ranks lower in answers and search until you decide.
 - **Conflict**: two documents that say things that can't both be true. Knowcelium asks the language model to compare their closest passages, so check the finding yourself before closing it.
 - **Review due**: a document passed its review date.
+- **Reported**: people reported the document as wrong, outdated or inappropriate. The finding counts the reports of the document, lists each with its reason, who reported it, when, and the comment. The owner of the document, the admins of its teams and platform admins see all of them. Anyone else who reported the document sees the finding with only their own report, and no way to close it.
 
 ## Close a finding
 
@@ -28,6 +29,8 @@ Each finding offers some of these, and says what each does:
 - **Keep**: the document stays as it is, and doesn't rank lower because of the other one.
 - **Replace**: the other document replaces this one, so this one ranks lower in answers. Knowcelium asks you to confirm first. Select **Replace document** to go on, or **Cancel**.
 - **Ignore**: dismiss the finding; nothing changes.
+- **Dismiss reports** (for a reported document): the reports are closed, and the document ranks as before.
+- **Deprecate document** (for a reported document): the document is set to [deprecated](documents.md#set-the-approval-state-of-a-document), so it ranks much lower and chat leaves it out. Knowcelium asks you to confirm first. Only the owner, an admin of a team the document is shared with and a platform admin can close reports.
 
 Closing a finding shows a notification, and the finding leaves the list. Your keyboard focus moves to the list's heading. If the finding can't be closed, the reason appears under it and you can try again. If someone else has already closed it, Knowcelium says so and refreshes the list.
 

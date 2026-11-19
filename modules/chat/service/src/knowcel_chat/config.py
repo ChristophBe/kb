@@ -18,6 +18,19 @@ class Settings(PlatformSettings):
     # The iam module (host:port), which tells the teams of a caller. While it is
     # down, conversations can't be limited to teams; everything else works.
     iam_addr: str = "localhost:9006"
+    # The curation module (host:port), which scores the documents of retrieved
+    # passages. While it is down, passages are ranked by similarity alone.
+    curation_addr: str = "localhost:9005"
+    # Use curation scores in retrieval: passages of documents that are replaced
+    # by a newer one, deprecated or archived are left out, and the rest are
+    # ranked down by their document's score. Off ranks by similarity alone.
+    curation_enabled: bool = True
+    # Seconds the curation module may take to answer before passages are ranked
+    # by similarity alone.
+    curation_timeout: float = 3
+    # How far a document's curation score can rank its passages down, between 0
+    # (not at all) and 1 (a score of 0 puts a passage at the end).
+    curation_weight: float = 0.3
     # Number of chunks retrieved for grounding an answer.
     rag_top_k: int = 5
     # Cosine similarity (-1 to 1) a chunk needs to count as related to the
@@ -57,6 +70,10 @@ class Settings(PlatformSettings):
         problems.addr("document_addr", self.document_addr)
         problems.addr("llm_addr", self.llm_addr)
         problems.addr("iam_addr", self.iam_addr)
+        problems.addr("curation_addr", self.curation_addr)
+        problems.between("curation_weight", self.curation_weight, 0, 1)
+        if not self.curation_timeout > 0:
+            problems.add("curation_timeout", f"must be positive, got {self.curation_timeout}")
         problems.at_least("rag_top_k", self.rag_top_k, 1)
         problems.at_least("rerank_candidates", self.rerank_candidates, self.rag_top_k)
         problems.between("rag_min_score", self.rag_min_score, -1, 1)

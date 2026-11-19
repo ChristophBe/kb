@@ -179,6 +179,14 @@ class CurationStore(Protocol):
         """Up to `limit` open findings, newest first, after the cursor."""
         ...
 
+    async def get_replacements(
+        self, document_ids: Collection[uuid.UUID]
+    ) -> dict[uuid.UUID, set[uuid.UUID]]:
+        """For each of the documents that are replaced, the documents replacing
+        it: those of a version found and not dismissed, and of a confirmed
+        replacement."""
+        ...
+
     async def get_lifecycles(
         self, document_ids: Collection[uuid.UUID]
     ) -> dict[uuid.UUID, Lifecycle]:
@@ -222,12 +230,18 @@ class Scorer:
             processed_at = current.processed_at
         await self._save(document_id, processed_at)
 
-    async def rescore(self, document_id: uuid.UUID) -> None:
-        """Scores a document again after its replacements changed; documents
-        that were never processed have no score to update."""
+    async def rescore(
+        self, document_id: uuid.UUID, unscored_since: datetime.datetime | None = None
+    ) -> None:
+        """Scores a document again after its replacements or lifecycle changed.
+        A document that was never processed has no score to update, unless
+        `unscored_since` says from when to score it (its creation): consumers
+        must still learn that it is deprecated."""
         current = await self._current(document_id)
         if current:
             await self._save(document_id, current.processed_at)
+        elif unscored_since is not None:
+            await self._save(document_id, unscored_since)
 
     async def rescore_all(self, batch: int = 200) -> None:
         """Scores every document again: recency decays with time, so stored

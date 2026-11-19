@@ -12,5 +12,7 @@ services:
 ui: "@knowcel/module-chat"
 # Retrieval (SearchChunks) and generation/embeddings. iam tells the caller's
 # teams, which a conversation can be limited to; while it is down, only
-# "all documents" works.
-depends_on: [document, llm, iam]
+# "all documents" works. curation scores the retrieved passages' documents and
+# says which are replaced, deprecated or archived; while it is down, passages
+# are ranked by similarity alone.
+depends_on: [document, llm, iam, curation]

@@ -30,16 +30,24 @@ class LifecycleService:
         self._store = store
         self._scorer = scorer
 
-    async def set(self, document_id: uuid.UUID, lifecycle: Lifecycle, note: str, user: str) -> None:
+    async def set(
+        self,
+        document_id: uuid.UUID,
+        lifecycle: Lifecycle,
+        note: str,
+        user: str,
+        created_at: datetime.datetime | None = None,
+    ) -> None:
         """Records the change and scores the document again. A new review date
         starts the reminder over: the document's review-due finding goes, and
         the job opens a new one when the date passes. A change that keeps the
-        date leaves a reminder, and a dismissed one, as it is."""
+        date leaves a reminder, and a dismissed one, as it is. A document not
+        scored yet is scored from `created_at`."""
         previous = (await self._store.get_lifecycles([document_id])).get(document_id)
         await self._store.add_lifecycle_change(document_id, lifecycle, note, user)
         if previous is None or previous.review_by != lifecycle.review_by:
             await self._store.delete_review_due(document_id)
-        await self._scorer.rescore(document_id)
+        await self._scorer.rescore(document_id, created_at)
 
     async def open_review_findings(self) -> None:
         """Opens a REVIEW_DUE finding for each document past its review date."""

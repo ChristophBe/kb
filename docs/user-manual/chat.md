@@ -37,6 +37,8 @@ Answers from your documents contain numbers like [1] and [2]. Each number points
 - Point at or focus a number to highlight its source, and the other way round.
 - Select a number or a source's title to open the document at that passage. The passage is scrolled into view and briefly highlighted.
 
+Answers prefer current knowledge. Passages of a document that has been replaced by a newer version you can see, or that is marked deprecated or archived, are left out of the sources, and passages of documents that rate lower, for example because they are old, come after those of better ones. If that check isn't available, the passages are ranked by how well they match your question alone. An administrator can turn it off.
+
 The sources are the passages that matched your question best; the answer doesn't have to use all of them. Knowcelium first finds more passages than it needs, has the language model rate how well each answers your question and keeps the best rated ones, so the first sources are the most helpful, not just the most similar. If the rating fails, the most similar passages are used instead. An administrator can turn the rating off. Passages that aren't related to your question are left out unless they contain words of it, so an answer can have fewer sources, or none. An answer without sources comes from the language model's general knowledge, and is meant to say first that nothing in your documents relates to the question. When the sources don't contain the answer, the answer is meant to say so, but check the sources before relying on it.
 
 ## Answer without platform knowledge

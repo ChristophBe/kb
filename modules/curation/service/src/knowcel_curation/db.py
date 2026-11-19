@@ -91,6 +91,14 @@ _FINDING_COLUMNS = (
 )
 
 
+# A version found is a replacement until someone decides otherwise; any other
+# finding only when confirmed.
+_REPLACED = or_(
+    and_(findings.c.kind == SUPERSEDED, findings.c.resolution.is_(None)),
+    findings.c.resolution == REPLACE,
+)
+
+
 class SqlCurationStore:
     def __init__(self, engine: AsyncEngine) -> None:
         self._engine = engine
@@ -135,15 +143,7 @@ class SqlCurationStore:
         query = (
             select(func.count())
             .select_from(findings)
-            .where(
-                findings.c.document_id == document_id,
-                # A version found is a replacement until someone decides
-                # otherwise; any other finding only when confirmed.
-                or_(
-                    and_(findings.c.kind == SUPERSEDED, findings.c.resolution.is_(None)),
-                    findings.c.resolution == REPLACE,
-                ),
-            )
+            .where(findings.c.document_id == document_id, _REPLACED)
         )
         async with self._engine.connect() as conn:
             return (await conn.execute(query)).scalar_one()
@@ -204,6 +204,19 @@ class SqlCurationStore:
             rows = (await conn.execute(query)).mappings().all()
         return [Finding(**r) for r in rows]
 
+    async def get_replacements(
+        self, document_ids: Collection[uuid.UUID]
+    ) -> dict[uuid.UUID, set[uuid.UUID]]:
+        query = select(findings.c.document_id, findings.c.other_document_id).where(
+            findings.c.document_id.in_(document_ids), _REPLACED
+        )
+        async with self._engine.connect() as conn:
+            rows = (await conn.execute(query)).all()
+        replacements: dict[uuid.UUID, set[uuid.UUID]] = {}
+        for document_id, other_id in rows:
+            replacements.setdefault(document_id, set()).add(other_id)
+        return replacements
+
     async def get_lifecycles(
         self, document_ids: Collection[uuid.UUID]
     ) -> dict[uuid.UUID, Lifecycle]:
@@ -263,6 +276,8 @@ class SqlCurationStore:
                     findings.c.kind == REVIEW_DUE, findings.c.document_id == latest.c.document_id
                 ),
             )
+            # Longest overdue first, so a batch moves on deterministically.
+            .order_by(latest.c.review_by, latest.c.document_id)
             .limit(limit)
         )
         async with self._engine.connect() as conn:

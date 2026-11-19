@@ -659,3 +659,29 @@ async def test_a_document_deprecated_before_it_was_scored_is_reported_excluded(
     (score,) = response.scores
     assert score.excluded
     assert store.scores[OWNED.id].processed_at == OWNED.created_at
+
+
+async def test_findings_can_be_limited_to_some_kinds(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    store.findings = [
+        Finding(uuid.uuid4(), "duplicate", SEEN.id, OTHER.id, NOW),
+        Finding(uuid.uuid4(), "review_due", OWNED.id, OWNED.id, NOW),
+        Finding(uuid.uuid4(), "conflict", SEEN.id, OTHER.id, NOW),
+    ]
+    only = await stub.ListFindings(
+        curation_pb2.ListFindingsRequest(kinds=[curation_pb2.FINDING_KIND_REVIEW_DUE]),
+        metadata=USER,
+    )
+    assert [f.kind for f in only.findings] == [curation_pb2.FINDING_KIND_REVIEW_DUE]
+    two = await stub.ListFindings(
+        curation_pb2.ListFindingsRequest(
+            kinds=[curation_pb2.FINDING_KIND_DUPLICATE, curation_pb2.FINDING_KIND_CONFLICT]
+        ),
+        metadata=USER,
+    )
+    assert len(two.findings) == 2
+    assert (
+        len((await stub.ListFindings(curation_pb2.ListFindingsRequest(), metadata=USER)).findings)
+        == 3
+    )

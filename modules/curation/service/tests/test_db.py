@@ -256,3 +256,15 @@ async def test_the_longest_overdue_documents_come_first(engine: AsyncEngine) -> 
         await store.add_lifecycle_change(document, Lifecycle("approved", "a", due), "", "a")
     now = T0 + 10 * DAY
     assert await store.list_review_due(now, 2) == [oldest, middle]
+
+
+async def test_open_findings_can_be_limited_to_kinds(engine: AsyncEngine) -> None:
+    store = SqlCurationStore(engine)
+    a, b = uuid.uuid4(), uuid.uuid4()
+    await store.add_finding("duplicate", a, b)
+    await store.add_finding("review_due", a, a)
+    assert [f.kind for f in await store.list_open_findings(10, kinds=["review_due"])] == [
+        "review_due"
+    ]
+    assert len(await store.list_open_findings(10, kinds=["review_due", "duplicate"])) == 2
+    assert len(await store.list_open_findings(10, kinds=[])) == 2

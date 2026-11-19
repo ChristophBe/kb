@@ -63,6 +63,10 @@ export interface SearchProvider {
 export interface SlotProps {
   /** Actions in the toolbar of a document's page. */
   "document.detail.actions": { documentId: string };
+  /** Sections below the details of a document's page, e.g. a history. */
+  "document.detail.sections": { documentId: string };
+  /** Small status badges next to a document in the documents list. */
+  "document.list.badges": { documentId: string };
   /** Actions on a source of a chat answer; only for sources that are documents. */
   "chat.citation.actions": { documentId: string; chunkIndex: number; conversationId?: string };
 }

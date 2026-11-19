@@ -32,6 +32,25 @@ A document is either **public**, so that every signed-in user can see it, or a *
 
 Only **Ready** documents show up in search results and chat answers.
 
+## Set the approval state of a document
+
+A document can be marked as **Draft**, **In review**, **Approved**, **Deprecated** or **Archived**, so that everyone sees which documents to trust. A document shows its state as a label next to its status in the list and next to its actions on its page. A document that was never given a state shows none.
+
+- **Approved**: checked and authoritative. It ranks higher in answers and search.
+- **Deprecated**: outdated but kept for reference. It ranks much lower, and chat leaves it out of its answers and sources.
+- **Archived**: kept for the record only. It ranks lowest, and chat leaves it out too.
+- **Draft** and **In review** change nothing about how the document ranks.
+
+To change the state:
+
+1. Open the document and select **Approval state**.
+2. Choose the state. Optionally choose a **Review by** date, from which the document shows up as due in [Document checks](document-checks.md), and write a **Note** that explains the change.
+3. Select **Save**. For **Deprecated** and **Archived** the dialog first says that chat will stop using the document, and the button reads **Deprecate document** or **Archive document**.
+
+The document stays in your list and in search, and you can change its state again at any time. Under the document's details, **Approval history** lists every change with the state, who made it, when, and the note.
+
+Only the document's owner, an admin of a team the document is shared with, and platform admins can change the state. For everyone else **Approval state** is disabled and says so.
+
 ## Open a document
 
 Select a document's title. The page shows its **Status**, **Detail** (the reason when processing failed), its **Version** (1 for the first upload, one more for every [new version](#replace-a-document-with-a-new-version)), **Filename**, **Content type**, **Size**, **Passages**, when it was **Created** and **Updated**, its **Metadata** and its **ID**. A value that is empty shows as "—".

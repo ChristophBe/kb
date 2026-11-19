@@ -74,6 +74,13 @@ _STATE_ENUMS = {name: value for value, name in _STATES.items()}
 _MAX_NOTE = 1000
 _MAX_OWNER = 200
 
+_KIND_NAMES = {
+    curation_pb2.FINDING_KIND_DUPLICATE: "duplicate",
+    curation_pb2.FINDING_KIND_SUPERSEDED: "superseded",
+    curation_pb2.FINDING_KIND_CONFLICT: "conflict",
+    curation_pb2.FINDING_KIND_REVIEW_DUE: "review_due",
+}
+
 _KINDS = {
     "review_due": curation_pb2.FINDING_KIND_REVIEW_DUE,
     "duplicate": curation_pb2.FINDING_KIND_DUPLICATE,
@@ -177,12 +184,13 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
             await abort_invalid_argument(
                 context, violation("page_token", "Page token is not valid")
             )
+        kinds = [k for kind, k in _KIND_NAMES.items() if kind in request.kinds]
         response = curation_pb2.ListFindingsResponse()
         async with self._failures(context, "listing findings"):
             scanned = 0
             more = True
             while more and len(response.findings) < wanted and scanned < _MAX_SCAN:
-                batch = await self._store.list_open_findings(_SCAN_BATCH, after)
+                batch = await self._store.list_open_findings(_SCAN_BATCH, after, kinds)
                 more = len(batch) == _SCAN_BATCH
                 scanned += len(batch)
                 documents = await self._documents.readable(

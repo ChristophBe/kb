@@ -2,10 +2,13 @@ import {
   CurationService,
   type Finding,
   FindingKind,
+  type Lifecycle,
+  LifecycleState,
   Resolution,
   type ResolutionOption,
 } from "@knowcel/curation-api/knowcel/curation/v1/curation_pb";
 import {
+  keepPreviousData,
   toast,
   useClient,
   useInfiniteQuery,
@@ -32,6 +35,7 @@ import {
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { findingIsGone, findingsError, resolveError } from "./errors.ts";
+import { STATES, stateInfo } from "./lifecycle/states.ts";
 
 const PAGE_SIZE = 25;
 // ScoreChunks takes at most this many documents at once.
@@ -80,41 +84,73 @@ export function Findings() {
   const shown = useRef<Choice | null>(null);
   if (confirming) shown.current = confirming;
   const [failures, setFailures] = useState<Record<string, Error>>({});
+  // Narrow the findings loaded to those due for review, or about documents in one approval state.
+  const [reviewOnly, setReviewOnly] = useState(false);
+  const [stateFilter, setStateFilter] = useState<LifecycleState>(LifecycleState.UNSPECIFIED);
   // The findings being closed; each can only be closed once at a time.
   const [closing, setClosing] = useState<ReadonlySet<string>>(new Set());
 
   const findings = useInfiniteQuery({
-    queryKey: ["findings"],
-    queryFn: ({ pageParam }) => client.listFindings({ pageSize: PAGE_SIZE, pageToken: pageParam }),
+    queryKey: ["findings", { reviewOnly }],
+    // Narrowing the list keeps what is shown until the narrowed list is there.
+    placeholderData: keepPreviousData,
+    queryFn: ({ pageParam }) =>
+      client.listFindings({
+        pageSize: PAGE_SIZE,
+        pageToken: pageParam,
+        kinds: reviewOnly ? [FindingKind.REVIEW_DUE] : [],
+      }),
     initialPageParam: "",
     getNextPageParam: (last) => last.nextPageToken || undefined,
   });
-  const items = findings.data?.pages.flatMap((p) => p.findings) ?? [];
-  // A page can hold none of the findings the user may see and still have a next one.
-  const { hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage } = findings;
-  useEffect(() => {
-    if (items.length === 0 && hasNextPage && !isFetchingNextPage && !isFetchNextPageError) {
-      void fetchNextPage();
-    }
-  }, [items.length, hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
-
-  const documentIds = [...new Set(items.map((f) => f.documentId))].sort();
+  const loaded = findings.data?.pages.flatMap((p) => p.findings) ?? [];
+  const documentIds = [...new Set(loaded.map((f) => f.documentId))].sort();
   const scores = useQuery({
     queryKey: ["finding-scores", documentIds],
     enabled: documentIds.length > 0,
     // The scores shown stay while those of a longer list load.
-    placeholderData: (previous) => previous,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
-      const found = new Map<string, number>();
+      const found = new Map<string, { score: number; lifecycle?: Lifecycle }>();
       for (let i = 0; i < documentIds.length; i += SCORE_BATCH) {
         const { scores } = await client.scoreChunks({
           documentIds: documentIds.slice(i, i + SCORE_BATCH),
         });
-        for (const s of scores) found.set(s.documentId, s.score);
+        for (const s of scores) found.set(s.documentId, { score: s.score, lifecycle: s.lifecycle });
       }
       return found;
     },
   });
+
+  const filtered = reviewOnly || stateFilter !== LifecycleState.UNSPECIFIED;
+  // The states come with the scores, so the list can only be narrowed by one once they are known.
+  const byState = stateFilter !== LifecycleState.UNSPECIFIED;
+  const items = loaded.filter(
+    (f) => !byState || scores.data?.get(f.documentId)?.lifecycle?.state === stateFilter,
+  );
+  // A page can hold none of the findings the user may see, or none the filters let through,
+  // and still have a next one.
+  const { hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage } = findings;
+  useEffect(() => {
+    const ready = !byState || scores.isSuccess;
+    if (
+      ready &&
+      items.length === 0 &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      !isFetchNextPageError
+    ) {
+      void fetchNextPage();
+    }
+  }, [
+    byState,
+    scores.isSuccess,
+    items.length,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    fetchNextPage,
+  ]);
 
   const resolve = useMutation({
     mutationFn: ({ finding, option }: Choice) =>
@@ -170,6 +206,34 @@ export function Findings() {
       <h2 ref={heading} tabIndex={-1} className="sr-only">
         Findings
       </h2>
+      {(loaded.length > 0 || filtered) && (
+        <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <label className="flex min-h-6 items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="size-4 accent-accent"
+              checked={reviewOnly}
+              onChange={(e) => setReviewOnly(e.target.checked)}
+            />
+            Review due only
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            Approval state
+            <select
+              value={stateFilter}
+              onChange={(e) => setStateFilter(Number(e.target.value))}
+              className="rounded-control border border-border-strong bg-surface px-2 py-1.5 text-sm hover:border-fg-muted"
+            >
+              <option value={LifecycleState.UNSPECIFIED}>Any</option>
+              {STATES.map(({ state, info }) => (
+                <option key={state} value={state}>
+                  {info.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
       {findings.isPending ? (
         <DelayedLoading>
           <SkeletonRows label="Loading findings" />
@@ -188,7 +252,8 @@ export function Findings() {
               <FindingCard
                 key={f.id}
                 finding={f}
-                score={scores.data?.get(f.documentId)}
+                score={scores.data?.get(f.documentId)?.score}
+                lifecycle={scores.data?.get(f.documentId)?.lifecycle}
                 pending={closing.has(f.id)}
                 failure={failures[f.id]}
                 onChoose={choose}
@@ -207,10 +272,38 @@ export function Findings() {
             </div>
           )}
         </>
+      ) : byState && scores.isError ? (
+        <div className="flex flex-col items-start gap-3">
+          <ErrorMessage
+            error={new Error("Approval states aren't available right now. Try again in a moment.")}
+          />
+          <Button variant="secondary" onClick={() => void scores.refetch()}>
+            Try again
+          </Button>
+        </div>
       ) : hasNextPage || isFetchingNextPage ? (
         <DelayedLoading>
           <SkeletonRows label="Loading findings" />
         </DelayedLoading>
+      ) : filtered ? (
+        <EmptyState
+          icon={CheckCircle2}
+          action={
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setReviewOnly(false);
+                setStateFilter(LifecycleState.UNSPECIFIED);
+              }}
+            >
+              Show all findings
+            </Button>
+          }
+        >
+          {reviewOnly && stateFilter === LifecycleState.UNSPECIFIED
+            ? "No documents need review."
+            : "No findings match these filters."}
+        </EmptyState>
       ) : (
         <EmptyState icon={CheckCircle2}>No findings. Your documents look consistent.</EmptyState>
       )}
@@ -233,12 +326,14 @@ export function Findings() {
 function FindingCard({
   finding: f,
   score,
+  lifecycle,
   pending,
   failure,
   onChoose,
 }: {
   finding: Finding;
   score: number | undefined;
+  lifecycle: Lifecycle | undefined;
   pending: boolean;
   failure: Error | undefined;
   onChoose: (choice: Choice) => void;
@@ -250,6 +345,11 @@ function FindingCard({
       <Card className="p-4">
         <div className="flex flex-wrap items-center gap-2">
           {kind && <Badge tone={kind.tone}>{kind.label}</Badge>}
+          {lifecycle && stateInfo(lifecycle.state) && (
+            <Badge tone={stateInfo(lifecycle.state)?.tone}>
+              {stateInfo(lifecycle.state)?.label}
+            </Badge>
+          )}
           <h3 className="min-w-0 font-medium wrap-anywhere">{f.summary}</h3>
         </div>
         <p className="mt-1 text-sm text-fg-muted">

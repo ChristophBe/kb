@@ -100,14 +100,20 @@ class FakeStore:
         return False
 
     async def list_open_findings(
-        self, limit: int, after: FindingCursor | None = None
+        self,
+        limit: int,
+        after: FindingCursor | None = None,
+        kinds: Collection[str] = (),
     ) -> list[Finding]:
         self._check()
 
         def key(f: Finding) -> tuple[float, uuid.UUID]:
             return (-f.created_at.timestamp(), f.id)
 
-        ordered = sorted((f for f in self.findings if f.resolution is None), key=key)
+        wanted = (
+            f for f in self.findings if f.resolution is None and (not kinds or f.kind in kinds)
+        )
+        ordered = sorted(wanted, key=key)
         if after is not None:
             ordered = [f for f in ordered if key(f) > (-after.created_at.timestamp(), after.id)]
         return ordered[:limit]

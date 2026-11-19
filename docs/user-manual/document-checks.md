@@ -10,6 +10,8 @@ Open **Document checks** in the sidebar. The page lists the open findings, newes
 - the documents involved, as links to their pages, when it was found, and, when it is known, how relevant the document is for answers (**Relevance**, as a percentage);
 - the ways to close it, each with what it does.
 
+Next to a finding's label, the page shows the [approval state](documents.md#set-the-approval-state-of-a-document) of its document. To narrow the findings you have loaded, tick **Review due only** or choose an **Approval state**. With no document due for review, the page says "No documents need review." and **Show all findings** clears the filters.
+
 When nothing needs a check, the page says "No findings. Your documents look consistent." Select **Show more** to see older findings. If the page can't load them, it says so and **Try again** loads them again.
 
 ## What the findings mean

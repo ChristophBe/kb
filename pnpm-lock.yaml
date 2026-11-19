@@ -353,6 +353,12 @@ importers:
       '@knowcel/curation-api':
         specifier: workspace:*
         version: link:../api/ts
+      '@knowcel/document-api':
+        specifier: workspace:*
+        version: link:../../document/api/ts
+      '@knowcel/iam-api':
+        specifier: workspace:*
+        version: link:../../iam/api/ts
       '@knowcel/module-sdk':
         specifier: workspace:*
         version: link:../../../platform/ui/module-sdk

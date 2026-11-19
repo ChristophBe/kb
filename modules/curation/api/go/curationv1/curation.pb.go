@@ -978,7 +978,9 @@ type ListFindingsRequest struct {
 	// At most this many findings; 0 means 50, and 100 is the most.
 	PageSize int32 `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// The next_page_token of the previous page; empty for the first.
-	PageToken     string `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	PageToken string `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	// Only findings of these kinds; all kinds when empty.
+	Kinds         []FindingKind `protobuf:"varint,3,rep,packed,name=kinds,proto3,enum=knowcel.curation.v1.FindingKind" json:"kinds,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1025,6 +1027,13 @@ func (x *ListFindingsRequest) GetPageToken() string {
 		return x.PageToken
 	}
 	return ""
+}
+
+func (x *ListFindingsRequest) GetKinds() []FindingKind {
+	if x != nil {
+		return x.Kinds
+	}
+	return nil
 }
 
 type ResolveFindingRequest struct {
@@ -1232,11 +1241,12 @@ const file_knowcel_curation_v1_curation_proto_rawDesc = "" +
 	"\vdocument_id\x18\x01 \x01(\tR\n" +
 	"documentId\"^\n" +
 	"\x1cListLifecycleHistoryResponse\x12>\n" +
-	"\achanges\x18\x01 \x03(\v2$.knowcel.curation.v1.LifecycleChangeR\achanges\"Q\n" +
+	"\achanges\x18\x01 \x03(\v2$.knowcel.curation.v1.LifecycleChangeR\achanges\"\x89\x01\n" +
 	"\x13ListFindingsRequest\x12\x1b\n" +
 	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x02 \x01(\tR\tpageToken\"w\n" +
+	"page_token\x18\x02 \x01(\tR\tpageToken\x126\n" +
+	"\x05kinds\x18\x03 \x03(\x0e2 .knowcel.curation.v1.FindingKindR\x05kinds\"w\n" +
 	"\x15ResolveFindingRequest\x12\x1d\n" +
 	"\n" +
 	"finding_id\x18\x01 \x01(\tR\tfindingId\x12?\n" +
@@ -1327,25 +1337,26 @@ var file_knowcel_curation_v1_curation_proto_depIdxs = []int32{
 	0,  // 12: knowcel.curation.v1.SetLifecycleRequest.state:type_name -> knowcel.curation.v1.LifecycleState
 	20, // 13: knowcel.curation.v1.SetLifecycleRequest.review_by:type_name -> google.protobuf.Timestamp
 	5,  // 14: knowcel.curation.v1.ListLifecycleHistoryResponse.changes:type_name -> knowcel.curation.v1.LifecycleChange
-	2,  // 15: knowcel.curation.v1.ResolveFindingRequest.resolution:type_name -> knowcel.curation.v1.Resolution
-	7,  // 16: knowcel.curation.v1.ListFindingsResponse.findings:type_name -> knowcel.curation.v1.Finding
-	8,  // 17: knowcel.curation.v1.CurationService.GetDocumentScore:input_type -> knowcel.curation.v1.GetDocumentScoreRequest
-	10, // 18: knowcel.curation.v1.CurationService.ScoreChunks:input_type -> knowcel.curation.v1.ScoreChunksRequest
-	16, // 19: knowcel.curation.v1.CurationService.ListFindings:input_type -> knowcel.curation.v1.ListFindingsRequest
-	12, // 20: knowcel.curation.v1.CurationService.SetLifecycle:input_type -> knowcel.curation.v1.SetLifecycleRequest
-	14, // 21: knowcel.curation.v1.CurationService.ListLifecycleHistory:input_type -> knowcel.curation.v1.ListLifecycleHistoryRequest
-	17, // 22: knowcel.curation.v1.CurationService.ResolveFinding:input_type -> knowcel.curation.v1.ResolveFindingRequest
-	9,  // 23: knowcel.curation.v1.CurationService.GetDocumentScore:output_type -> knowcel.curation.v1.GetDocumentScoreResponse
-	11, // 24: knowcel.curation.v1.CurationService.ScoreChunks:output_type -> knowcel.curation.v1.ScoreChunksResponse
-	19, // 25: knowcel.curation.v1.CurationService.ListFindings:output_type -> knowcel.curation.v1.ListFindingsResponse
-	13, // 26: knowcel.curation.v1.CurationService.SetLifecycle:output_type -> knowcel.curation.v1.SetLifecycleResponse
-	15, // 27: knowcel.curation.v1.CurationService.ListLifecycleHistory:output_type -> knowcel.curation.v1.ListLifecycleHistoryResponse
-	18, // 28: knowcel.curation.v1.CurationService.ResolveFinding:output_type -> knowcel.curation.v1.ResolveFindingResponse
-	23, // [23:29] is the sub-list for method output_type
-	17, // [17:23] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	1,  // 15: knowcel.curation.v1.ListFindingsRequest.kinds:type_name -> knowcel.curation.v1.FindingKind
+	2,  // 16: knowcel.curation.v1.ResolveFindingRequest.resolution:type_name -> knowcel.curation.v1.Resolution
+	7,  // 17: knowcel.curation.v1.ListFindingsResponse.findings:type_name -> knowcel.curation.v1.Finding
+	8,  // 18: knowcel.curation.v1.CurationService.GetDocumentScore:input_type -> knowcel.curation.v1.GetDocumentScoreRequest
+	10, // 19: knowcel.curation.v1.CurationService.ScoreChunks:input_type -> knowcel.curation.v1.ScoreChunksRequest
+	16, // 20: knowcel.curation.v1.CurationService.ListFindings:input_type -> knowcel.curation.v1.ListFindingsRequest
+	12, // 21: knowcel.curation.v1.CurationService.SetLifecycle:input_type -> knowcel.curation.v1.SetLifecycleRequest
+	14, // 22: knowcel.curation.v1.CurationService.ListLifecycleHistory:input_type -> knowcel.curation.v1.ListLifecycleHistoryRequest
+	17, // 23: knowcel.curation.v1.CurationService.ResolveFinding:input_type -> knowcel.curation.v1.ResolveFindingRequest
+	9,  // 24: knowcel.curation.v1.CurationService.GetDocumentScore:output_type -> knowcel.curation.v1.GetDocumentScoreResponse
+	11, // 25: knowcel.curation.v1.CurationService.ScoreChunks:output_type -> knowcel.curation.v1.ScoreChunksResponse
+	19, // 26: knowcel.curation.v1.CurationService.ListFindings:output_type -> knowcel.curation.v1.ListFindingsResponse
+	13, // 27: knowcel.curation.v1.CurationService.SetLifecycle:output_type -> knowcel.curation.v1.SetLifecycleResponse
+	15, // 28: knowcel.curation.v1.CurationService.ListLifecycleHistory:output_type -> knowcel.curation.v1.ListLifecycleHistoryResponse
+	18, // 29: knowcel.curation.v1.CurationService.ResolveFinding:output_type -> knowcel.curation.v1.ResolveFindingResponse
+	24, // [24:30] is the sub-list for method output_type
+	18, // [18:24] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_knowcel_curation_v1_curation_proto_init() }

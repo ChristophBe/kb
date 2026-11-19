@@ -1,5 +1,11 @@
 export { Code, ConnectError } from "@connectrpc/connect";
-export { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+export {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 export { useModuleRoutes } from "./routes.tsx";
 export {
   authInterceptor,

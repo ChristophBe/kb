@@ -34,7 +34,7 @@ export function Dialog({
       onClose={(e) => {
         if (!e.currentTarget.open) onClose();
       }}
-      className="m-auto w-[min(36rem,calc(100vw-2rem))] glass-strong rounded-panel p-0 text-fg backdrop:bg-black/30 backdrop:backdrop-blur-sm"
+      className="m-auto w-[min(36rem,calc(100vw-2rem))] glass-strong rounded-panel p-0 text-fg backdrop:bg-scrim backdrop:backdrop-blur-sm"
     >
       {open && (
         <div className="flex flex-col gap-4 p-6">

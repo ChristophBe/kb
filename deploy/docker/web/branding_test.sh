@@ -74,6 +74,22 @@ check "a family that could break out of the CSS" "fonts.body.family must be" '{"
 check "a missing font file" 'fonts.mono.file "nope.woff2" does not exist' '{"fonts":{"mono":{"family":"Acme Mono","file":"nope.woff2"}}}'
 check "a font file of the wrong type" "must be one of these file types: woff2 woff" '{"fonts":{"mono":{"family":"Acme Mono","file":"favicon.svg"}}}'
 check "a malformed weight" "fonts.body.weight must be" '{"fonts":{"body":{"family":"Inter","weight":"bold"}}}'
+# --- status colors (#367) ---
+check "a full status of each name" ok '{"colors":{"light":{"status":{"info":{"text":"#1d4ed8","background":"#e0e9ff"},"success":{"text":"#0f6b3a","background":"#cdebd9"},"warning":{"text":"#8a4b08","background":"#f8e1b4"},"danger":{"text":"#a11d1d","background":"#f9d3d3"},"neutral":{"text":"#4a5878","background":"#e4e9f4"}}}}}'
+check "a status with only a text" ok '{"colors":{"dark":{"status":{"danger":{"text":"#f8a5a5"}}}}}'
+check "a status with only a background" ok '{"colors":{"light":{"status":{"info":{"background":"#e0e9ff"}}}}}'
+check "an empty status" ok '{"colors":{"light":{"status":{}}}}'
+check "a malformed status text" "colors.light.status.info.text must be a color like #1d4ed8" '{"colors":{"light":{"status":{"info":{"text":"blue"}}}}}'
+check "a malformed status background" "colors.dark.status.warning.background must be a color" '{"colors":{"dark":{"status":{"warning":{"background":"#12345"}}}}}'
+check "a status that is not an object" "colors.light.status.info must be an object" '{"colors":{"light":{"status":{"info":"#ffffff"}}}}'
+check "status that is not an object" "colors.dark.status must be an object" '{"colors":{"dark":{"status":"red"}}}'
+check "an unknown status" 'unknown status "error" in colors.light.status' '{"colors":{"light":{"status":{"error":{"text":"#a11d1d"}}}}}'
+check "an unknown status key" 'unknown key "border" in colors.light.status.info' '{"colors":{"light":{"status":{"info":{"border":"#a11d1d"}}}}}'
+check "a status text that vanishes on its background" "colors.light.status.danger.text #cc9999 has contrast" '{"colors":{"light":{"status":{"danger":{"text":"#cc9999","background":"#f9d3d3"}}}}}'
+check "a status text that vanishes on the canvas" "colors.light.status.info.text #1d4ed8 has contrast" '{"colors":{"light":{"canvas":"#2a4aa0","status":{"info":{"text":"#1d4ed8","background":"#ffffff"}}}}}'
+check "a status text that vanishes on the surface" "against the cards" '{"colors":{"dark":{"surface":"#8a8c85","status":{"success":{"text":"#7fd6a2","background":"#12301f"}}}}}'
+check "a status background that vanishes on the canvas" "colors.light.status.neutral.background #f4f4f0 has contrast 1.00:1 against the page background" '{"colors":{"light":{"status":{"neutral":{"background":"#f4f4f0"}}}}}'
+# --- end status colors ---
 
 # --- navigation ---
 check "a solid navigation" ok '{"navigation":{"light":{"background":"#1d4ed8","text":"#ffffff"}}}'

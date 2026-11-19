@@ -43,6 +43,17 @@ export interface BrandColors {
   /** The two background lights: a colour, or "none" to turn the light off. */
   glow1?: string;
   glow2?: string;
+  /** The status colours: the text colour and the subtle background of each status. */
+  status?: { [name in StatusName]?: BrandStatus };
+}
+
+export const STATUS_NAMES = ["info", "success", "warning", "danger", "neutral"] as const;
+export type StatusName = (typeof STATUS_NAMES)[number];
+
+/** One status: `--color-<name>` (text, icons) on `--color-<name>-subtle` (badge, alert and toast fill). */
+export interface BrandStatus {
+  text?: string;
+  background?: string;
 }
 
 const DEFAULT_NAME = "Knowcelium";
@@ -113,6 +124,15 @@ const COLOR_ROLES = [
   ["--color-border", "border", "var(--color-stone-300)", "var(--color-stone-700)"],
   ["--color-border-strong", "borderStrong", "var(--color-stone-550)", "var(--color-stone-500)"],
 ] as const;
+
+/** The status roles of theme.css: the theme's own steps, as [text light, text dark, background light, background dark]. */
+const STATUS_ROLES = {
+  info: ["river-700", "river-300", "river-50", "river-900"],
+  success: ["lichen-700", "lichen-300", "lichen-50", "lichen-900"],
+  warning: ["ochre-800", "ochre-300", "ochre-50", "ochre-900"],
+  danger: ["clay-700", "clay-300", "clay-50", "clay-900"],
+  neutral: ["stone-600", "stone-400", "stone-200", "stone-750"],
+} as const;
 
 /** The two background lights: the theme's literal colours (theme.css) and their opacity per mode. */
 const GLOWS = [
@@ -194,6 +214,17 @@ function colorRules({ light, dark }: NonNullable<Branding["colors"]>): string[] 
         darkValue ? lit(darkValue, d[1]) : d[0],
       ),
     );
+  }
+  for (const name of STATUS_NAMES) {
+    const [tl, td, bl, bd] = STATUS_ROLES[name].map((step) => `var(--color-${step})`);
+    const l = light?.status?.[name];
+    const d = dark?.status?.[name];
+    if (l?.text || d?.text)
+      lines.push(role(`--color-${name}`, l?.text ?? tl ?? "", d?.text ?? td ?? ""));
+    if (l?.background || d?.background)
+      lines.push(
+        role(`--color-${name}-subtle`, l?.background ?? bl ?? "", d?.background ?? bd ?? ""),
+      );
   }
   lines.push("  --color-focus: var(--color-accent);");
   const rules = [`:root:root {\n${lines.join("\n")}\n}`];

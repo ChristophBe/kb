@@ -16,7 +16,14 @@
       "border": "#d3daea",
       "borderStrong": "#6b7a99",
       "glow1": "#1d4ed8",
-      "glow2": "#0e7490"
+      "glow2": "#0e7490",
+      "status": {
+        "info": { "text": "#1d4ed8", "background": "#e0e9ff" },
+        "success": { "text": "#0f6b3a", "background": "#cdebd9" },
+        "warning": { "text": "#8a4b08", "background": "#f8e1b4" },
+        "danger": { "text": "#a11d1d", "background": "#f9d3d3" },
+        "neutral": { "text": "#4a5878", "background": "#e4e9f4" }
+      }
     },
     "dark": {
       "accent": "#93b4ff",
@@ -29,7 +36,14 @@
       "border": "#2a3350",
       "borderStrong": "#7886a8",
       "glow1": "#93b4ff",
-      "glow2": "#67c5e0"
+      "glow2": "#67c5e0",
+      "status": {
+        "info": { "text": "#93b4ff", "background": "#1a2a52" },
+        "success": { "text": "#7fd6a2", "background": "#12301f" },
+        "warning": { "text": "#f2c26b", "background": "#3a2a0c" },
+        "danger": { "text": "#f8a5a5", "background": "#3b1219" },
+        "neutral": { "text": "#9ba8c7", "background": "#232b45" }
+      }
     }
   },
   "navigation": {

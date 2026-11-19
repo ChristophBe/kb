@@ -31,7 +31,7 @@ The example in the repository sets every color key. Every key is optional; what 
 | `colors.light`, `colors.dark` | The colors of each mode, as `#rrggbb`; see [Colors](#colors). A mode you leave out keeps the Knowcelium colors, and so does every color key you leave out of a mode. |
 | `icons` | Replaces icons of the UI by your own images; see [Icons](#icons). |
 
-The status colors and the neutral palette steps stay as they are. A logo is shown at the height of the Knowcelium logo plus 40 %, so give it a transparent background and some breathing room; without a logo the product name is shown as text. The UI switches between the light and dark logo with the theme, including the user's own theme choice.
+A logo is shown at the height of the Knowcelium logo plus 40 %, so give it a transparent background and some breathing room; without a logo the product name is shown as text. The UI switches between the light and dark logo with the theme, including the user's own theme choice.
 
 ## Colors
 
@@ -46,7 +46,47 @@ Light and dark mode take their own values, including the theme the user picks in
 | `border`, `borderStrong` | Decorative dividers; the boundaries of controls. |
 | `glow1`, `glow2` | The two soft lights behind the glass (top right, bottom left), at the opacity of the Knowcelium theme. A glow may also be `"none"`: the light is off and that part of the page is the plain `canvas`. |
 
-Derived, so they have no key: the hover and subtle shades of the accent, the focus ring (the accent), the hover and fill color `surface-muted` (a mix of `surface` and `text`), the translucent glass fills (`surface` at 72 %, 86 % and 40 %; the opaque `surface` where the browser cannot blur or the user asks for less transparency), the glass rim and the shadows.
+### Status colors
+
+`status` sets the colors of badges, alerts, toasts and document statuses. It sits inside a mode and names any of `info`, `success`, `warning`, `danger` and `neutral`; each takes a `text` color (the text and icons) and a `background` (the subtle fill behind them), both optional, so the one you leave out keeps the Knowcelium color:
+
+```json
+"colors": {
+  "light": { "status": { "danger": { "text": "#9b1c1c", "background": "#f9d3d3" } } },
+  "dark": { "status": { "danger": { "text": "#f8a5a5", "background": "#3b1219" } } }
+}
+```
+
+### Every color role
+
+Every `--color-*` role of the theme is either set by a key or follows other colors. A test fails when the theme gets a role that is not listed here.
+
+| Role | Colors | Key or derivation | Knowcelium default (light / dark) |
+|---|---|---|---|
+| `--color-accent` | Buttons, links, the current place | `accent` | sage 700 / sage 400 |
+| `--color-on-accent` | Text on an accent button | `onAccent` | stone 25 / sage 950 |
+| `--color-accent-2` | The hero gradient's second stop | `accent2` | ochre 500 / ochre 350 |
+| `--color-canvas` | The page background | `canvas` | stone 100 / stone 900 |
+| `--color-surface` | Cards, inputs | `surface` | stone 50 / stone 850 |
+| `--color-fg` | Body text, headings | `text` | stone 800 / stone 150 |
+| `--color-fg-muted` | Secondary text, icons | `textMuted` | stone 600 / stone 400 |
+| `--color-border` | Decorative dividers | `border` | stone 300 / stone 700 |
+| `--color-border-strong` | Boundaries of controls | `borderStrong` | stone 550 / stone 500 |
+| `--color-glow-1`, `--color-glow-2` | The lights behind the glass | `glow1`, `glow2` (or `"none"`) | sage / ochre at 10 % |
+| `--color-info`, `--color-info-subtle` | Info badges, alerts, toasts | `status.info.text`, `status.info.background` | river 700 on river 50 / river 300 on river 900 |
+| `--color-success`, `--color-success-subtle` | Success | `status.success.text`, `.background` | lichen 700 on lichen 50 / lichen 300 on lichen 900 |
+| `--color-warning`, `--color-warning-subtle` | Warnings | `status.warning.text`, `.background` | ochre 800 on ochre 50 / ochre 300 on ochre 900 |
+| `--color-danger`, `--color-danger-subtle` | Errors, destructive actions | `status.danger.text`, `.background` | clay 700 on clay 50 / clay 300 on clay 900 |
+| `--color-neutral`, `--color-neutral-subtle` | Neutral badges and statuses | `status.neutral.text`, `.background` | stone 600 on stone 200 / stone 400 on stone 750 |
+| `--color-accent-hover` | Hovered accent button | Derived: the `accent`, 18 % toward black (light) or white (dark) | sage 800 / sage 300 |
+| `--color-accent-subtle` | Selected rows, own messages | Derived: the `accent`, 10 % over the `canvas` | sage 50 / sage 900 |
+| `--color-focus` | The focus ring | Derived: the `accent` | sage 700 / sage 400 |
+| `--color-surface-muted` | Hover and fill | Derived: a mix of `surface` and `text` (8 %) | stone 200 / stone 750 |
+| `--color-glass`, `--color-glass-strong`, `--color-glass-subtle` | Translucent chrome, overlays, veils | Derived: the `surface` at 72 %, 86 % and 40 % (the opaque `surface` where the browser cannot blur or the user asks for less transparency) | white-ish / dark at the same opacity |
+| `--color-glass-edge` | The rim of the glass | Fixed: white at 70 % (light) or 10 % (dark) | not configurable |
+| `--color-scrim` | The veil behind a dialog | Fixed: black at 30 % | not configurable |
+
+The shadows are fixed too. No color is written into the UI code: every color comes from one of these roles, and a test fails when a hex, `rgb()` or `oklch()` value, a raw palette class or a `dark:` variant is added outside the theme.
 
 A key you leave out keeps the Knowcelium color of that mode, and the checks below use it: a branded `canvas` is checked against the default `text` and accent. Set the colors that belong together in a mode, for example a dark `canvas` together with a light `text`. A mode you leave out keeps all Knowcelium colors, so a brand that only has a light palette still gets the Knowcelium dark mode.
 
@@ -114,8 +154,9 @@ Each role takes a `family` and optionally a `file` and a `weight`:
 The web container checks the file when it starts and refuses to start with one line per problem, so a broken branding never reaches users:
 
 - the file is JSON, has only the keys above, `logo.showName` is `true` or `false`, and every file it names exists, and every `icons` name is an icon of the UI, with an `.svg` or `.png` of at most 64 KiB;
-- every color is `#rrggbb` (a glow may be `"none"`), a navigation gradient has `from` and `to`, an `angle` is 0 to 360, and every font has a valid family, weight and file;
+- every color (status colors included) is `#rrggbb` (a glow may be `"none"`), a navigation gradient has `from` and `to`, an `angle` is 0 to 360, and every font has a valid family, weight and file;
 - text has a contrast of at least 4.5:1, the [WCAG 2.2 AA](../ux-standards.md) limit: `text` and `textMuted` on `canvas` and on `surface`, `accent` on `canvas` (the accent colors links and the active menu entry) and `onAccent` on `accent`;
+- a configured status has a `text` with a contrast of at least 4.5:1 against its `background`, the `canvas` and the `surface`, and a configured `background` is at least 1.1:1 against the `canvas` so it stays visible; an unknown status name stops the start;
 - `borderStrong` on `canvas` and on `surface` and `accent2` on `canvas` (large gradient text) have a contrast of at least 3:1.
 - the navigation text has a contrast of at least 4.5:1 against its color, or against both stops of a gradient (the worse one counts).
 

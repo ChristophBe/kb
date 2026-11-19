@@ -26,6 +26,7 @@ class FindingKind(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     FINDING_KIND_SUPERSEDED: _ClassVar[FindingKind]
     FINDING_KIND_CONFLICT: _ClassVar[FindingKind]
     FINDING_KIND_REVIEW_DUE: _ClassVar[FindingKind]
+    FINDING_KIND_REPORTED: _ClassVar[FindingKind]
 
 class Resolution(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -33,6 +34,15 @@ class Resolution(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     RESOLUTION_KEEP: _ClassVar[Resolution]
     RESOLUTION_REPLACE: _ClassVar[Resolution]
     RESOLUTION_IGNORE: _ClassVar[Resolution]
+    RESOLUTION_DEPRECATE: _ClassVar[Resolution]
+
+class ReportReason(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    REPORT_REASON_UNSPECIFIED: _ClassVar[ReportReason]
+    REPORT_REASON_WRONG: _ClassVar[ReportReason]
+    REPORT_REASON_OUTDATED: _ClassVar[ReportReason]
+    REPORT_REASON_INAPPROPRIATE: _ClassVar[ReportReason]
+    REPORT_REASON_OTHER: _ClassVar[ReportReason]
 LIFECYCLE_STATE_UNSPECIFIED: LifecycleState
 LIFECYCLE_STATE_DRAFT: LifecycleState
 LIFECYCLE_STATE_IN_REVIEW: LifecycleState
@@ -44,10 +54,17 @@ FINDING_KIND_DUPLICATE: FindingKind
 FINDING_KIND_SUPERSEDED: FindingKind
 FINDING_KIND_CONFLICT: FindingKind
 FINDING_KIND_REVIEW_DUE: FindingKind
+FINDING_KIND_REPORTED: FindingKind
 RESOLUTION_UNSPECIFIED: Resolution
 RESOLUTION_KEEP: Resolution
 RESOLUTION_REPLACE: Resolution
 RESOLUTION_IGNORE: Resolution
+RESOLUTION_DEPRECATE: Resolution
+REPORT_REASON_UNSPECIFIED: ReportReason
+REPORT_REASON_WRONG: ReportReason
+REPORT_REASON_OUTDATED: ReportReason
+REPORT_REASON_INAPPROPRIATE: ReportReason
+REPORT_REASON_OTHER: ReportReason
 
 class DocumentScore(_message.Message):
     __slots__ = ("document_id", "score", "updated_at", "lifecycle", "excluded", "replaced")
@@ -96,7 +113,7 @@ class ResolutionOption(_message.Message):
     def __init__(self, resolution: _Optional[_Union[Resolution, str]] = ..., description: _Optional[str] = ...) -> None: ...
 
 class Finding(_message.Message):
-    __slots__ = ("id", "kind", "document_id", "other_document_id", "created_at", "summary", "document_title", "other_document_title", "resolutions")
+    __slots__ = ("id", "kind", "document_id", "other_document_id", "created_at", "summary", "document_title", "other_document_title", "resolutions", "reports", "report_count")
     ID_FIELD_NUMBER: _ClassVar[int]
     KIND_FIELD_NUMBER: _ClassVar[int]
     DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
@@ -106,6 +123,8 @@ class Finding(_message.Message):
     DOCUMENT_TITLE_FIELD_NUMBER: _ClassVar[int]
     OTHER_DOCUMENT_TITLE_FIELD_NUMBER: _ClassVar[int]
     RESOLUTIONS_FIELD_NUMBER: _ClassVar[int]
+    REPORTS_FIELD_NUMBER: _ClassVar[int]
+    REPORT_COUNT_FIELD_NUMBER: _ClassVar[int]
     id: str
     kind: FindingKind
     document_id: str
@@ -115,7 +134,21 @@ class Finding(_message.Message):
     document_title: str
     other_document_title: str
     resolutions: _containers.RepeatedCompositeFieldContainer[ResolutionOption]
-    def __init__(self, id: _Optional[str] = ..., kind: _Optional[_Union[FindingKind, str]] = ..., document_id: _Optional[str] = ..., other_document_id: _Optional[str] = ..., created_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., summary: _Optional[str] = ..., document_title: _Optional[str] = ..., other_document_title: _Optional[str] = ..., resolutions: _Optional[_Iterable[_Union[ResolutionOption, _Mapping]]] = ...) -> None: ...
+    reports: _containers.RepeatedCompositeFieldContainer[Report]
+    report_count: int
+    def __init__(self, id: _Optional[str] = ..., kind: _Optional[_Union[FindingKind, str]] = ..., document_id: _Optional[str] = ..., other_document_id: _Optional[str] = ..., created_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., summary: _Optional[str] = ..., document_title: _Optional[str] = ..., other_document_title: _Optional[str] = ..., resolutions: _Optional[_Iterable[_Union[ResolutionOption, _Mapping]]] = ..., reports: _Optional[_Iterable[_Union[Report, _Mapping]]] = ..., report_count: _Optional[int] = ...) -> None: ...
+
+class Report(_message.Message):
+    __slots__ = ("reporter", "reason", "comment", "created_at")
+    REPORTER_FIELD_NUMBER: _ClassVar[int]
+    REASON_FIELD_NUMBER: _ClassVar[int]
+    COMMENT_FIELD_NUMBER: _ClassVar[int]
+    CREATED_AT_FIELD_NUMBER: _ClassVar[int]
+    reporter: str
+    reason: ReportReason
+    comment: str
+    created_at: _timestamp_pb2.Timestamp
+    def __init__(self, reporter: _Optional[str] = ..., reason: _Optional[_Union[ReportReason, str]] = ..., comment: _Optional[str] = ..., created_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
 
 class GetDocumentScoreRequest(_message.Message):
     __slots__ = ("document_id",)
@@ -170,6 +203,32 @@ class ListLifecycleHistoryResponse(_message.Message):
     CHANGES_FIELD_NUMBER: _ClassVar[int]
     changes: _containers.RepeatedCompositeFieldContainer[LifecycleChange]
     def __init__(self, changes: _Optional[_Iterable[_Union[LifecycleChange, _Mapping]]] = ...) -> None: ...
+
+class ReportDocumentRequest(_message.Message):
+    __slots__ = ("document_id", "reason", "comment")
+    DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
+    REASON_FIELD_NUMBER: _ClassVar[int]
+    COMMENT_FIELD_NUMBER: _ClassVar[int]
+    document_id: str
+    reason: ReportReason
+    comment: str
+    def __init__(self, document_id: _Optional[str] = ..., reason: _Optional[_Union[ReportReason, str]] = ..., comment: _Optional[str] = ...) -> None: ...
+
+class ReportDocumentResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class ListReportsRequest(_message.Message):
+    __slots__ = ("document_id",)
+    DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
+    document_id: str
+    def __init__(self, document_id: _Optional[str] = ...) -> None: ...
+
+class ListReportsResponse(_message.Message):
+    __slots__ = ("reports",)
+    REPORTS_FIELD_NUMBER: _ClassVar[int]
+    reports: _containers.RepeatedCompositeFieldContainer[Report]
+    def __init__(self, reports: _Optional[_Iterable[_Union[Report, _Mapping]]] = ...) -> None: ...
 
 class ListFindingsRequest(_message.Message):
     __slots__ = ("page_size", "page_token", "kinds")

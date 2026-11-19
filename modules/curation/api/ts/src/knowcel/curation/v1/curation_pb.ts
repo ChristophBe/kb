@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file knowcel/curation/v1/curation.proto.
  */
 export const file_knowcel_curation_v1_curation: GenFile = /*@__PURE__*/
-  fileDesc("CiJrbm93Y2VsL2N1cmF0aW9uL3YxL2N1cmF0aW9uLnByb3RvEhNrbm93Y2VsLmN1cmF0aW9uLnYxIroBCg1Eb2N1bWVudFNjb3JlEhMKC2RvY3VtZW50X2lkGAEgASgJEg0KBXNjb3JlGAIgASgBEi4KCnVwZGF0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjEKCWxpZmVjeWNsZRgEIAEoCzIeLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlEhAKCGV4Y2x1ZGVkGAUgASgIEhAKCHJlcGxhY2VkGAYgASgIIn0KCUxpZmVjeWNsZRIyCgVzdGF0ZRgBIAEoDjIjLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlU3RhdGUSDQoFb3duZXIYAiABKAkSLQoJcmV2aWV3X2J5GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKWAQoPTGlmZWN5Y2xlQ2hhbmdlEjEKCWxpZmVjeWNsZRgBIAEoCzIeLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlEgwKBG5vdGUYAiABKAkSEgoKY2hhbmdlZF9ieRgDIAEoCRIuCgpjaGFuZ2VkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJcChBSZXNvbHV0aW9uT3B0aW9uEjMKCnJlc29sdXRpb24YASABKA4yHy5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlc29sdXRpb24SEwoLZGVzY3JpcHRpb24YAiABKAkiqAIKB0ZpbmRpbmcSCgoCaWQYASABKAkSLgoEa2luZBgCIAEoDjIgLmtub3djZWwuY3VyYXRpb24udjEuRmluZGluZ0tpbmQSEwoLZG9jdW1lbnRfaWQYAyABKAkSGQoRb3RoZXJfZG9jdW1lbnRfaWQYBCABKAkSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASDwoHc3VtbWFyeRgGIAEoCRIWCg5kb2N1bWVudF90aXRsZRgHIAEoCRIcChRvdGhlcl9kb2N1bWVudF90aXRsZRgIIAEoCRI6CgtyZXNvbHV0aW9ucxgJIAMoCzIlLmtub3djZWwuY3VyYXRpb24udjEuUmVzb2x1dGlvbk9wdGlvbiIuChdHZXREb2N1bWVudFNjb3JlUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCSJNChhHZXREb2N1bWVudFNjb3JlUmVzcG9uc2USMQoFc2NvcmUYASABKAsyIi5rbm93Y2VsLmN1cmF0aW9uLnYxLkRvY3VtZW50U2NvcmUiKgoSU2NvcmVDaHVua3NSZXF1ZXN0EhQKDGRvY3VtZW50X2lkcxgBIAMoCSJJChNTY29yZUNodW5rc1Jlc3BvbnNlEjIKBnNjb3JlcxgBIAMoCzIiLmtub3djZWwuY3VyYXRpb24udjEuRG9jdW1lbnRTY29yZSKqAQoTU2V0TGlmZWN5Y2xlUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCRIyCgVzdGF0ZRgCIAEoDjIjLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlU3RhdGUSDQoFb3duZXIYAyABKAkSLQoJcmV2aWV3X2J5GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIMCgRub3RlGAUgASgJIhYKFFNldExpZmVjeWNsZVJlc3BvbnNlIjIKG0xpc3RMaWZlY3ljbGVIaXN0b3J5UmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCSJVChxMaXN0TGlmZWN5Y2xlSGlzdG9yeVJlc3BvbnNlEjUKB2NoYW5nZXMYASADKAsyJC5rbm93Y2VsLmN1cmF0aW9uLnYxLkxpZmVjeWNsZUNoYW5nZSJtChNMaXN0RmluZGluZ3NSZXF1ZXN0EhEKCXBhZ2Vfc2l6ZRgBIAEoBRISCgpwYWdlX3Rva2VuGAIgASgJEi8KBWtpbmRzGAMgAygOMiAua25vd2NlbC5jdXJhdGlvbi52MS5GaW5kaW5nS2luZCJgChVSZXNvbHZlRmluZGluZ1JlcXVlc3QSEgoKZmluZGluZ19pZBgBIAEoCRIzCgpyZXNvbHV0aW9uGAIgASgOMh8ua25vd2NlbC5jdXJhdGlvbi52MS5SZXNvbHV0aW9uIhgKFlJlc29sdmVGaW5kaW5nUmVzcG9uc2UiXwoUTGlzdEZpbmRpbmdzUmVzcG9uc2USLgoIZmluZGluZ3MYASADKAsyHC5rbm93Y2VsLmN1cmF0aW9uLnYxLkZpbmRpbmcSFwoPbmV4dF9wYWdlX3Rva2VuGAIgASgJKscBCg5MaWZlY3ljbGVTdGF0ZRIfChtMSUZFQ1lDTEVfU1RBVEVfVU5TUEVDSUZJRUQQABIZChVMSUZFQ1lDTEVfU1RBVEVfRFJBRlQQARIdChlMSUZFQ1lDTEVfU1RBVEVfSU5fUkVWSUVXEAISHAoYTElGRUNZQ0xFX1NUQVRFX0FQUFJPVkVEEAMSHgoaTElGRUNZQ0xFX1NUQVRFX0RFUFJFQ0FURUQQBBIcChhMSUZFQ1lDTEVfU1RBVEVfQVJDSElWRUQQBSqcAQoLRmluZGluZ0tpbmQSHAoYRklORElOR19LSU5EX1VOU1BFQ0lGSUVEEAASGgoWRklORElOR19LSU5EX0RVUExJQ0FURRABEhsKF0ZJTkRJTkdfS0lORF9TVVBFUlNFREVEEAISGQoVRklORElOR19LSU5EX0NPTkZMSUNUEAMSGwoXRklORElOR19LSU5EX1JFVklFV19EVUUQBCpsCgpSZXNvbHV0aW9uEhoKFlJFU09MVVRJT05fVU5TUEVDSUZJRUQQABITCg9SRVNPTFVUSU9OX0tFRVAQARIWChJSRVNPTFVUSU9OX1JFUExBQ0UQAhIVChFSRVNPTFVUSU9OX0lHTk9SRRADMpYFCg9DdXJhdGlvblNlcnZpY2USbwoQR2V0RG9jdW1lbnRTY29yZRIsLmtub3djZWwuY3VyYXRpb24udjEuR2V0RG9jdW1lbnRTY29yZVJlcXVlc3QaLS5rbm93Y2VsLmN1cmF0aW9uLnYxLkdldERvY3VtZW50U2NvcmVSZXNwb25zZRJgCgtTY29yZUNodW5rcxInLmtub3djZWwuY3VyYXRpb24udjEuU2NvcmVDaHVua3NSZXF1ZXN0Gigua25vd2NlbC5jdXJhdGlvbi52MS5TY29yZUNodW5rc1Jlc3BvbnNlEmMKDExpc3RGaW5kaW5ncxIoLmtub3djZWwuY3VyYXRpb24udjEuTGlzdEZpbmRpbmdzUmVxdWVzdBopLmtub3djZWwuY3VyYXRpb24udjEuTGlzdEZpbmRpbmdzUmVzcG9uc2USYwoMU2V0TGlmZWN5Y2xlEigua25vd2NlbC5jdXJhdGlvbi52MS5TZXRMaWZlY3ljbGVSZXF1ZXN0Gikua25vd2NlbC5jdXJhdGlvbi52MS5TZXRMaWZlY3ljbGVSZXNwb25zZRJ7ChRMaXN0TGlmZWN5Y2xlSGlzdG9yeRIwLmtub3djZWwuY3VyYXRpb24udjEuTGlzdExpZmVjeWNsZUhpc3RvcnlSZXF1ZXN0GjEua25vd2NlbC5jdXJhdGlvbi52MS5MaXN0TGlmZWN5Y2xlSGlzdG9yeVJlc3BvbnNlEmkKDlJlc29sdmVGaW5kaW5nEioua25vd2NlbC5jdXJhdGlvbi52MS5SZXNvbHZlRmluZGluZ1JlcXVlc3QaKy5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlc29sdmVGaW5kaW5nUmVzcG9uc2VCUVpPZ2l0aHViLmNvbS9DaHJpc3RvcGhCZS9rbm93Y2VsaXVtL21vZHVsZXMvY3VyYXRpb24vYXBpL2dvL2N1cmF0aW9udjE7Y3VyYXRpb252MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("CiJrbm93Y2VsL2N1cmF0aW9uL3YxL2N1cmF0aW9uLnByb3RvEhNrbm93Y2VsLmN1cmF0aW9uLnYxIroBCg1Eb2N1bWVudFNjb3JlEhMKC2RvY3VtZW50X2lkGAEgASgJEg0KBXNjb3JlGAIgASgBEi4KCnVwZGF0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjEKCWxpZmVjeWNsZRgEIAEoCzIeLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlEhAKCGV4Y2x1ZGVkGAUgASgIEhAKCHJlcGxhY2VkGAYgASgIIn0KCUxpZmVjeWNsZRIyCgVzdGF0ZRgBIAEoDjIjLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlU3RhdGUSDQoFb3duZXIYAiABKAkSLQoJcmV2aWV3X2J5GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKWAQoPTGlmZWN5Y2xlQ2hhbmdlEjEKCWxpZmVjeWNsZRgBIAEoCzIeLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlEgwKBG5vdGUYAiABKAkSEgoKY2hhbmdlZF9ieRgDIAEoCRIuCgpjaGFuZ2VkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJcChBSZXNvbHV0aW9uT3B0aW9uEjMKCnJlc29sdXRpb24YASABKA4yHy5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlc29sdXRpb24SEwoLZGVzY3JpcHRpb24YAiABKAki7AIKB0ZpbmRpbmcSCgoCaWQYASABKAkSLgoEa2luZBgCIAEoDjIgLmtub3djZWwuY3VyYXRpb24udjEuRmluZGluZ0tpbmQSEwoLZG9jdW1lbnRfaWQYAyABKAkSGQoRb3RoZXJfZG9jdW1lbnRfaWQYBCABKAkSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASDwoHc3VtbWFyeRgGIAEoCRIWCg5kb2N1bWVudF90aXRsZRgHIAEoCRIcChRvdGhlcl9kb2N1bWVudF90aXRsZRgIIAEoCRI6CgtyZXNvbHV0aW9ucxgJIAMoCzIlLmtub3djZWwuY3VyYXRpb24udjEuUmVzb2x1dGlvbk9wdGlvbhIsCgdyZXBvcnRzGAogAygLMhsua25vd2NlbC5jdXJhdGlvbi52MS5SZXBvcnQSFAoMcmVwb3J0X2NvdW50GAsgASgFIo4BCgZSZXBvcnQSEAoIcmVwb3J0ZXIYASABKAkSMQoGcmVhc29uGAIgASgOMiEua25vd2NlbC5jdXJhdGlvbi52MS5SZXBvcnRSZWFzb24SDwoHY29tbWVudBgDIAEoCRIuCgpjcmVhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCIuChdHZXREb2N1bWVudFNjb3JlUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCSJNChhHZXREb2N1bWVudFNjb3JlUmVzcG9uc2USMQoFc2NvcmUYASABKAsyIi5rbm93Y2VsLmN1cmF0aW9uLnYxLkRvY3VtZW50U2NvcmUiKgoSU2NvcmVDaHVua3NSZXF1ZXN0EhQKDGRvY3VtZW50X2lkcxgBIAMoCSJJChNTY29yZUNodW5rc1Jlc3BvbnNlEjIKBnNjb3JlcxgBIAMoCzIiLmtub3djZWwuY3VyYXRpb24udjEuRG9jdW1lbnRTY29yZSKqAQoTU2V0TGlmZWN5Y2xlUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCRIyCgVzdGF0ZRgCIAEoDjIjLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlU3RhdGUSDQoFb3duZXIYAyABKAkSLQoJcmV2aWV3X2J5GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIMCgRub3RlGAUgASgJIhYKFFNldExpZmVjeWNsZVJlc3BvbnNlIjIKG0xpc3RMaWZlY3ljbGVIaXN0b3J5UmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCSJVChxMaXN0TGlmZWN5Y2xlSGlzdG9yeVJlc3BvbnNlEjUKB2NoYW5nZXMYASADKAsyJC5rbm93Y2VsLmN1cmF0aW9uLnYxLkxpZmVjeWNsZUNoYW5nZSJwChVSZXBvcnREb2N1bWVudFJlcXVlc3QSEwoLZG9jdW1lbnRfaWQYASABKAkSMQoGcmVhc29uGAIgASgOMiEua25vd2NlbC5jdXJhdGlvbi52MS5SZXBvcnRSZWFzb24SDwoHY29tbWVudBgDIAEoCSIYChZSZXBvcnREb2N1bWVudFJlc3BvbnNlIikKEkxpc3RSZXBvcnRzUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCSJDChNMaXN0UmVwb3J0c1Jlc3BvbnNlEiwKB3JlcG9ydHMYASADKAsyGy5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlcG9ydCJtChNMaXN0RmluZGluZ3NSZXF1ZXN0EhEKCXBhZ2Vfc2l6ZRgBIAEoBRISCgpwYWdlX3Rva2VuGAIgASgJEi8KBWtpbmRzGAMgAygOMiAua25vd2NlbC5jdXJhdGlvbi52MS5GaW5kaW5nS2luZCJgChVSZXNvbHZlRmluZGluZ1JlcXVlc3QSEgoKZmluZGluZ19pZBgBIAEoCRIzCgpyZXNvbHV0aW9uGAIgASgOMh8ua25vd2NlbC5jdXJhdGlvbi52MS5SZXNvbHV0aW9uIhgKFlJlc29sdmVGaW5kaW5nUmVzcG9uc2UiXwoUTGlzdEZpbmRpbmdzUmVzcG9uc2USLgoIZmluZGluZ3MYASADKAsyHC5rbm93Y2VsLmN1cmF0aW9uLnYxLkZpbmRpbmcSFwoPbmV4dF9wYWdlX3Rva2VuGAIgASgJKscBCg5MaWZlY3ljbGVTdGF0ZRIfChtMSUZFQ1lDTEVfU1RBVEVfVU5TUEVDSUZJRUQQABIZChVMSUZFQ1lDTEVfU1RBVEVfRFJBRlQQARIdChlMSUZFQ1lDTEVfU1RBVEVfSU5fUkVWSUVXEAISHAoYTElGRUNZQ0xFX1NUQVRFX0FQUFJPVkVEEAMSHgoaTElGRUNZQ0xFX1NUQVRFX0RFUFJFQ0FURUQQBBIcChhMSUZFQ1lDTEVfU1RBVEVfQVJDSElWRUQQBSq3AQoLRmluZGluZ0tpbmQSHAoYRklORElOR19LSU5EX1VOU1BFQ0lGSUVEEAASGgoWRklORElOR19LSU5EX0RVUExJQ0FURRABEhsKF0ZJTkRJTkdfS0lORF9TVVBFUlNFREVEEAISGQoVRklORElOR19LSU5EX0NPTkZMSUNUEAMSGwoXRklORElOR19LSU5EX1JFVklFV19EVUUQBBIZChVGSU5ESU5HX0tJTkRfUkVQT1JURUQQBSqGAQoKUmVzb2x1dGlvbhIaChZSRVNPTFVUSU9OX1VOU1BFQ0lGSUVEEAASEwoPUkVTT0xVVElPTl9LRUVQEAESFgoSUkVTT0xVVElPTl9SRVBMQUNFEAISFQoRUkVTT0xVVElPTl9JR05PUkUQAxIYChRSRVNPTFVUSU9OX0RFUFJFQ0FURRAEKpwBCgxSZXBvcnRSZWFzb24SHQoZUkVQT1JUX1JFQVNPTl9VTlNQRUNJRklFRBAAEhcKE1JFUE9SVF9SRUFTT05fV1JPTkcQARIaChZSRVBPUlRfUkVBU09OX09VVERBVEVEEAISHwobUkVQT1JUX1JFQVNPTl9JTkFQUFJPUFJJQVRFEAMSFwoTUkVQT1JUX1JFQVNPTl9PVEhFUhAEMuMGCg9DdXJhdGlvblNlcnZpY2USbwoQR2V0RG9jdW1lbnRTY29yZRIsLmtub3djZWwuY3VyYXRpb24udjEuR2V0RG9jdW1lbnRTY29yZVJlcXVlc3QaLS5rbm93Y2VsLmN1cmF0aW9uLnYxLkdldERvY3VtZW50U2NvcmVSZXNwb25zZRJgCgtTY29yZUNodW5rcxInLmtub3djZWwuY3VyYXRpb24udjEuU2NvcmVDaHVua3NSZXF1ZXN0Gigua25vd2NlbC5jdXJhdGlvbi52MS5TY29yZUNodW5rc1Jlc3BvbnNlEmMKDExpc3RGaW5kaW5ncxIoLmtub3djZWwuY3VyYXRpb24udjEuTGlzdEZpbmRpbmdzUmVxdWVzdBopLmtub3djZWwuY3VyYXRpb24udjEuTGlzdEZpbmRpbmdzUmVzcG9uc2USYwoMU2V0TGlmZWN5Y2xlEigua25vd2NlbC5jdXJhdGlvbi52MS5TZXRMaWZlY3ljbGVSZXF1ZXN0Gikua25vd2NlbC5jdXJhdGlvbi52MS5TZXRMaWZlY3ljbGVSZXNwb25zZRJ7ChRMaXN0TGlmZWN5Y2xlSGlzdG9yeRIwLmtub3djZWwuY3VyYXRpb24udjEuTGlzdExpZmVjeWNsZUhpc3RvcnlSZXF1ZXN0GjEua25vd2NlbC5jdXJhdGlvbi52MS5MaXN0TGlmZWN5Y2xlSGlzdG9yeVJlc3BvbnNlEmkKDlJlcG9ydERvY3VtZW50Eioua25vd2NlbC5jdXJhdGlvbi52MS5SZXBvcnREb2N1bWVudFJlcXVlc3QaKy5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlcG9ydERvY3VtZW50UmVzcG9uc2USYAoLTGlzdFJlcG9ydHMSJy5rbm93Y2VsLmN1cmF0aW9uLnYxLkxpc3RSZXBvcnRzUmVxdWVzdBooLmtub3djZWwuY3VyYXRpb24udjEuTGlzdFJlcG9ydHNSZXNwb25zZRJpCg5SZXNvbHZlRmluZGluZxIqLmtub3djZWwuY3VyYXRpb24udjEuUmVzb2x2ZUZpbmRpbmdSZXF1ZXN0Gisua25vd2NlbC5jdXJhdGlvbi52MS5SZXNvbHZlRmluZGluZ1Jlc3BvbnNlQlFaT2dpdGh1Yi5jb20vQ2hyaXN0b3BoQmUva25vd2NlbGl1bS9tb2R1bGVzL2N1cmF0aW9uL2FwaS9nby9jdXJhdGlvbnYxO2N1cmF0aW9udjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * DocumentScore ranks a document for retrieval: higher is more relevant.
@@ -220,6 +220,19 @@ export type Finding = Message<"knowcel.curation.v1.Finding"> & {
    * @generated from field: repeated knowcel.curation.v1.ResolutionOption resolutions = 9;
    */
   resolutions: ResolutionOption[];
+
+  /**
+   * For a REPORTED finding, the open reports the caller may see, and how many
+   * there are of them.
+   *
+   * @generated from field: repeated knowcel.curation.v1.Report reports = 10;
+   */
+  reports: Report[];
+
+  /**
+   * @generated from field: int32 report_count = 11;
+   */
+  reportCount: number;
 };
 
 /**
@@ -228,6 +241,42 @@ export type Finding = Message<"knowcel.curation.v1.Finding"> & {
  */
 export const FindingSchema: GenMessage<Finding> = /*@__PURE__*/
   messageDesc(file_knowcel_curation_v1_curation, 4);
+
+/**
+ * Report is one user's report of a document.
+ *
+ * @generated from message knowcel.curation.v1.Report
+ */
+export type Report = Message<"knowcel.curation.v1.Report"> & {
+  /**
+   * The user who reported, as the subject of their token.
+   *
+   * @generated from field: string reporter = 1;
+   */
+  reporter: string;
+
+  /**
+   * @generated from field: knowcel.curation.v1.ReportReason reason = 2;
+   */
+  reason: ReportReason;
+
+  /**
+   * @generated from field: string comment = 3;
+   */
+  comment: string;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 4;
+   */
+  createdAt?: Timestamp | undefined;
+};
+
+/**
+ * Describes the message knowcel.curation.v1.Report.
+ * Use `create(ReportSchema)` to create a new message.
+ */
+export const ReportSchema: GenMessage<Report> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 5);
 
 /**
  * @generated from message knowcel.curation.v1.GetDocumentScoreRequest
@@ -244,7 +293,7 @@ export type GetDocumentScoreRequest = Message<"knowcel.curation.v1.GetDocumentSc
  * Use `create(GetDocumentScoreRequestSchema)` to create a new message.
  */
 export const GetDocumentScoreRequestSchema: GenMessage<GetDocumentScoreRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 5);
+  messageDesc(file_knowcel_curation_v1_curation, 6);
 
 /**
  * @generated from message knowcel.curation.v1.GetDocumentScoreResponse
@@ -261,7 +310,7 @@ export type GetDocumentScoreResponse = Message<"knowcel.curation.v1.GetDocumentS
  * Use `create(GetDocumentScoreResponseSchema)` to create a new message.
  */
 export const GetDocumentScoreResponseSchema: GenMessage<GetDocumentScoreResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 6);
+  messageDesc(file_knowcel_curation_v1_curation, 7);
 
 /**
  * @generated from message knowcel.curation.v1.ScoreChunksRequest
@@ -280,7 +329,7 @@ export type ScoreChunksRequest = Message<"knowcel.curation.v1.ScoreChunksRequest
  * Use `create(ScoreChunksRequestSchema)` to create a new message.
  */
 export const ScoreChunksRequestSchema: GenMessage<ScoreChunksRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 7);
+  messageDesc(file_knowcel_curation_v1_curation, 8);
 
 /**
  * @generated from message knowcel.curation.v1.ScoreChunksResponse
@@ -297,7 +346,7 @@ export type ScoreChunksResponse = Message<"knowcel.curation.v1.ScoreChunksRespon
  * Use `create(ScoreChunksResponseSchema)` to create a new message.
  */
 export const ScoreChunksResponseSchema: GenMessage<ScoreChunksResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 8);
+  messageDesc(file_knowcel_curation_v1_curation, 9);
 
 /**
  * @generated from message knowcel.curation.v1.SetLifecycleRequest
@@ -343,7 +392,7 @@ export type SetLifecycleRequest = Message<"knowcel.curation.v1.SetLifecycleReque
  * Use `create(SetLifecycleRequestSchema)` to create a new message.
  */
 export const SetLifecycleRequestSchema: GenMessage<SetLifecycleRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 9);
+  messageDesc(file_knowcel_curation_v1_curation, 10);
 
 /**
  * @generated from message knowcel.curation.v1.SetLifecycleResponse
@@ -356,7 +405,7 @@ export type SetLifecycleResponse = Message<"knowcel.curation.v1.SetLifecycleResp
  * Use `create(SetLifecycleResponseSchema)` to create a new message.
  */
 export const SetLifecycleResponseSchema: GenMessage<SetLifecycleResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 10);
+  messageDesc(file_knowcel_curation_v1_curation, 11);
 
 /**
  * @generated from message knowcel.curation.v1.ListLifecycleHistoryRequest
@@ -373,7 +422,7 @@ export type ListLifecycleHistoryRequest = Message<"knowcel.curation.v1.ListLifec
  * Use `create(ListLifecycleHistoryRequestSchema)` to create a new message.
  */
 export const ListLifecycleHistoryRequestSchema: GenMessage<ListLifecycleHistoryRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 11);
+  messageDesc(file_knowcel_curation_v1_curation, 12);
 
 /**
  * @generated from message knowcel.curation.v1.ListLifecycleHistoryResponse
@@ -390,7 +439,85 @@ export type ListLifecycleHistoryResponse = Message<"knowcel.curation.v1.ListLife
  * Use `create(ListLifecycleHistoryResponseSchema)` to create a new message.
  */
 export const ListLifecycleHistoryResponseSchema: GenMessage<ListLifecycleHistoryResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 12);
+  messageDesc(file_knowcel_curation_v1_curation, 13);
+
+/**
+ * @generated from message knowcel.curation.v1.ReportDocumentRequest
+ */
+export type ReportDocumentRequest = Message<"knowcel.curation.v1.ReportDocumentRequest"> & {
+  /**
+   * @generated from field: string document_id = 1;
+   */
+  documentId: string;
+
+  /**
+   * Required.
+   *
+   * @generated from field: knowcel.curation.v1.ReportReason reason = 2;
+   */
+  reason: ReportReason;
+
+  /**
+   * Optional, at most 1000 characters.
+   *
+   * @generated from field: string comment = 3;
+   */
+  comment: string;
+};
+
+/**
+ * Describes the message knowcel.curation.v1.ReportDocumentRequest.
+ * Use `create(ReportDocumentRequestSchema)` to create a new message.
+ */
+export const ReportDocumentRequestSchema: GenMessage<ReportDocumentRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 14);
+
+/**
+ * @generated from message knowcel.curation.v1.ReportDocumentResponse
+ */
+export type ReportDocumentResponse = Message<"knowcel.curation.v1.ReportDocumentResponse"> & {
+};
+
+/**
+ * Describes the message knowcel.curation.v1.ReportDocumentResponse.
+ * Use `create(ReportDocumentResponseSchema)` to create a new message.
+ */
+export const ReportDocumentResponseSchema: GenMessage<ReportDocumentResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 15);
+
+/**
+ * @generated from message knowcel.curation.v1.ListReportsRequest
+ */
+export type ListReportsRequest = Message<"knowcel.curation.v1.ListReportsRequest"> & {
+  /**
+   * @generated from field: string document_id = 1;
+   */
+  documentId: string;
+};
+
+/**
+ * Describes the message knowcel.curation.v1.ListReportsRequest.
+ * Use `create(ListReportsRequestSchema)` to create a new message.
+ */
+export const ListReportsRequestSchema: GenMessage<ListReportsRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 16);
+
+/**
+ * @generated from message knowcel.curation.v1.ListReportsResponse
+ */
+export type ListReportsResponse = Message<"knowcel.curation.v1.ListReportsResponse"> & {
+  /**
+   * @generated from field: repeated knowcel.curation.v1.Report reports = 1;
+   */
+  reports: Report[];
+};
+
+/**
+ * Describes the message knowcel.curation.v1.ListReportsResponse.
+ * Use `create(ListReportsResponseSchema)` to create a new message.
+ */
+export const ListReportsResponseSchema: GenMessage<ListReportsResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 17);
 
 /**
  * @generated from message knowcel.curation.v1.ListFindingsRequest
@@ -423,7 +550,7 @@ export type ListFindingsRequest = Message<"knowcel.curation.v1.ListFindingsReque
  * Use `create(ListFindingsRequestSchema)` to create a new message.
  */
 export const ListFindingsRequestSchema: GenMessage<ListFindingsRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 13);
+  messageDesc(file_knowcel_curation_v1_curation, 18);
 
 /**
  * @generated from message knowcel.curation.v1.ResolveFindingRequest
@@ -445,7 +572,7 @@ export type ResolveFindingRequest = Message<"knowcel.curation.v1.ResolveFindingR
  * Use `create(ResolveFindingRequestSchema)` to create a new message.
  */
 export const ResolveFindingRequestSchema: GenMessage<ResolveFindingRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 14);
+  messageDesc(file_knowcel_curation_v1_curation, 19);
 
 /**
  * @generated from message knowcel.curation.v1.ResolveFindingResponse
@@ -458,7 +585,7 @@ export type ResolveFindingResponse = Message<"knowcel.curation.v1.ResolveFinding
  * Use `create(ResolveFindingResponseSchema)` to create a new message.
  */
 export const ResolveFindingResponseSchema: GenMessage<ResolveFindingResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 15);
+  messageDesc(file_knowcel_curation_v1_curation, 20);
 
 /**
  * @generated from message knowcel.curation.v1.ListFindingsResponse
@@ -483,7 +610,7 @@ export type ListFindingsResponse = Message<"knowcel.curation.v1.ListFindingsResp
  * Use `create(ListFindingsResponseSchema)` to create a new message.
  */
 export const ListFindingsResponseSchema: GenMessage<ListFindingsResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 16);
+  messageDesc(file_knowcel_curation_v1_curation, 21);
 
 /**
  * @generated from enum knowcel.curation.v1.LifecycleState
@@ -569,6 +696,15 @@ export enum FindingKind {
    * @generated from enum value: FINDING_KIND_REVIEW_DUE = 4;
    */
   REVIEW_DUE = 4,
+
+  /**
+   * The document was reported. Its document_id and other_document_id are the
+   * same. Only those who may change its lifecycle, and those who reported it,
+   * see it.
+   *
+   * @generated from enum value: FINDING_KIND_REPORTED = 5;
+   */
+  REPORTED = 5,
 }
 
 /**
@@ -608,6 +744,14 @@ export enum Resolution {
    * @generated from enum value: RESOLUTION_IGNORE = 3;
    */
   IGNORE = 3,
+
+  /**
+   * Deprecate the document (for a REPORTED finding): the same as setting its
+   * lifecycle to DEPRECATED, and only for those who may.
+   *
+   * @generated from enum value: RESOLUTION_DEPRECATE = 4;
+   */
+  DEPRECATE = 4,
 }
 
 /**
@@ -615,6 +759,42 @@ export enum Resolution {
  */
 export const ResolutionSchema: GenEnum<Resolution> = /*@__PURE__*/
   enumDesc(file_knowcel_curation_v1_curation, 2);
+
+/**
+ * @generated from enum knowcel.curation.v1.ReportReason
+ */
+export enum ReportReason {
+  /**
+   * @generated from enum value: REPORT_REASON_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: REPORT_REASON_WRONG = 1;
+   */
+  WRONG = 1,
+
+  /**
+   * @generated from enum value: REPORT_REASON_OUTDATED = 2;
+   */
+  OUTDATED = 2,
+
+  /**
+   * @generated from enum value: REPORT_REASON_INAPPROPRIATE = 3;
+   */
+  INAPPROPRIATE = 3,
+
+  /**
+   * @generated from enum value: REPORT_REASON_OTHER = 4;
+   */
+  OTHER = 4,
+}
+
+/**
+ * Describes the enum knowcel.curation.v1.ReportReason.
+ */
+export const ReportReasonSchema: GenEnum<ReportReason> = /*@__PURE__*/
+  enumDesc(file_knowcel_curation_v1_curation, 3);
 
 /**
  * CurationService keeps the knowledge base consistent: it scores documents by
@@ -687,6 +867,32 @@ export const CurationService: GenService<{
     methodKind: "unary";
     input: typeof ListLifecycleHistoryRequestSchema;
     output: typeof ListLifecycleHistoryResponseSchema;
+  },
+  /**
+   * ReportDocument reports a document the caller can read as wrong, outdated
+   * or inappropriate. A user has one report per document: reporting again
+   * replaces their earlier one. The reports of a document are counted under
+   * one REPORTED finding, and open reports lower its score. NOT_FOUND when the
+   * caller can't read the document.
+   *
+   * @generated from rpc knowcel.curation.v1.CurationService.ReportDocument
+   */
+  reportDocument: {
+    methodKind: "unary";
+    input: typeof ReportDocumentRequestSchema;
+    output: typeof ReportDocumentResponseSchema;
+  },
+  /**
+   * ListReports returns the open reports of a document: all of them for the
+   * document's owner, admins of teams it is shared with and platform admins,
+   * otherwise only the caller's own.
+   *
+   * @generated from rpc knowcel.curation.v1.CurationService.ListReports
+   */
+  listReports: {
+    methodKind: "unary";
+    input: typeof ListReportsRequestSchema;
+    output: typeof ListReportsResponseSchema;
   },
   /**
    * ResolveFinding closes an open finding with one of the options it lists and

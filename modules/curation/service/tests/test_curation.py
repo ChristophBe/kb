@@ -194,3 +194,16 @@ async def test_rescoring_all_looks_up_the_lifecycles_of_a_batch_at_once() -> Non
         await store.save_score(document, NOW, 1.0)
     await scorer.rescore_all(batch=3)
     assert lookups == [3, 2]
+
+
+def test_reports_lower_the_score_once_per_reporter_down_to_a_floor() -> None:
+    weights = Weights(1, 0, 100, 0.5, 10, report_penalty=0.8, report_floor=0.5)
+    score = lambda reports: score_document(NOW, NOW, 0, 0, weights, None, reports)  # noqa: E731
+    assert score(0) == 1
+    assert score(1) == pytest.approx(0.8)
+    assert score(2) == pytest.approx(0.64)
+    assert score(3) == pytest.approx(0.512)
+    assert score(4) == pytest.approx(0.5)
+    assert score(10) == pytest.approx(0.5)
+    # Reports and a replacement add up, and the state still counts after them.
+    assert score_document(NOW, NOW, 1, 0, weights, "deprecated", 1) == pytest.approx(0.5 * 0.8)

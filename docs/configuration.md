@@ -86,6 +86,8 @@ From `Settings` in [modules/curation/service/src/knowcel_curation/config.py](../
 | `KNOWCEL_CURATION_CONFLICT_THRESHOLD` | `0.75` | Cosine similarity from which two passages are asked about whether they contradict each other. |
 | `KNOWCEL_CURATION_SAMPLE_CHUNKS` | `5` | Passages of a new document compared with the other documents. |
 | `KNOWCEL_CURATION_CONFLICT_CHECKS` | `3` | Pairs of passages per new document the chat model is asked about; 0 turns conflict detection off. |
+| `KNOWCEL_CURATION_REPORT_PENALTY` | `0.8` | Factor a score is multiplied by for each user who reported the document, between 0 and 1. Reports stop counting when they are dismissed. |
+| `KNOWCEL_CURATION_REPORT_FLOOR` | `0.3` | The least the reports can take a score down to, as a factor between 0 and 1. |
 | `KNOWCEL_CURATION_RESCORE_INTERVAL` | `3600` | Seconds between scoring all documents again, so that recency keeps decaying while no document is processed. Documents past their review date are opened as findings at the same time. |
 | `KNOWCEL_CURATION_APPROVED_BOOST` | `1.25` | Factor an approved document's score is multiplied by, at most up to 1. |
 | `KNOWCEL_CURATION_DEPRECATED_FACTOR` | `0.1` | Factor a deprecated document's score is multiplied by, between 0 and 1. |

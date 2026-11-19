@@ -1,7 +1,6 @@
 import { ChatService, type Conversation } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
 import { ConnectError, toast, useClient, useMutation, useQueryClient } from "@knowcel/module-sdk";
-import { Button, Input } from "@knowcel/ui";
-import { ChevronLeft } from "lucide-react";
+import { Button, ChevronLeft, Input } from "@knowcel/ui";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { PromptEditor } from "./PromptEditor.tsx";

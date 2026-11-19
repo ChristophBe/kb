@@ -15,13 +15,15 @@ import {
   Card,
   ChunkStrip,
   DelayedLoading,
+  Download,
   ErrorMessage,
   formatBytes,
   formatTime,
+  MessageSquare,
   Skeleton,
   SkeletonRows,
+  Trash2,
 } from "@knowcel/ui";
-import { Download, MessageSquare, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { AccessEditor } from "./AccessEditor.tsx";

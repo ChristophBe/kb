@@ -7,12 +7,14 @@ import { toast, useClient, useQuery, useQueryClient } from "@knowcel/module-sdk"
 import {
   type AccessChoice,
   AccessPicker,
+  AlertTriangle,
   Badge,
   Button,
   Card,
   DelayedLoading,
   EmptyState,
   ErrorMessage,
+  FileUp,
   formatBytes,
   formatTime,
   IconButton,
@@ -21,8 +23,9 @@ import {
   PUBLIC_ACCESS,
   SkeletonRows,
   type Tone,
+  Upload as UploadIcon,
+  X,
 } from "@knowcel/ui";
-import { AlertTriangle, FileUp, Upload as UploadIcon, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { accessText, JobAccess } from "./access.tsx";

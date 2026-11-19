@@ -27,9 +27,10 @@ import {
   IconButton,
   Input,
   SkeletonRows,
+  UserMinus,
+  UsersRound,
   useDocumentTitle,
 } from "@knowcel/ui";
-import { UserMinus, UsersRound } from "lucide-react";
 import { type FormEvent, useId, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { teamError } from "./errors.ts";

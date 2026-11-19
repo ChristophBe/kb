@@ -17,7 +17,6 @@
     "@knowcel/llm-api": "workspace:*",
     "@knowcel/module-sdk": "workspace:*",
     "@knowcel/ui": "workspace:*",
-    "lucide-react": "catalog:",
     "react-markdown": "catalog:",
     "react-router": "catalog:",
     "rehype-sanitize": "catalog:",

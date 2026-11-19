@@ -1,5 +1,5 @@
-import { Monitor, Moon, Sun } from "lucide-react";
 import { cn } from "./cn.ts";
+import { Monitor, Moon, Sun } from "./icons.tsx";
 import { type ThemePref, useThemePref } from "./theme.ts";
 
 const options = [

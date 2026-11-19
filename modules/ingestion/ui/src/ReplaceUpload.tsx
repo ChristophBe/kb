@@ -1,7 +1,12 @@
 import { IngestionService } from "@knowcel/ingestion-api/knowcel/ingestion/v1/ingestion_pb";
 import { toast, useClient } from "@knowcel/module-sdk";
-import { Button, fieldViolations, PageHeader } from "@knowcel/ui";
-import { AlertTriangle, Upload as UploadIcon } from "lucide-react";
+import {
+  AlertTriangle,
+  Button,
+  fieldViolations,
+  PageHeader,
+  Upload as UploadIcon,
+} from "@knowcel/ui";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { isSupported, SUPPORTED_FORMATS, sha256 } from "./files.ts";

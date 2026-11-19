@@ -18,7 +18,6 @@
     "@knowcel/module-llm": "workspace:*",
     "@knowcel/module-sdk": "workspace:*",
     "@knowcel/ui": "workspace:*",
-    "lucide-react": "catalog:",
     "oidc-client-ts": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

@@ -1,5 +1,5 @@
 import { defineManifest, lazySearch } from "@knowcel/module-sdk";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare } from "@knowcel/ui";
 import { useUnseenAnswers } from "./badge.ts";
 
 export default defineManifest({

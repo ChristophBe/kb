@@ -10,16 +10,20 @@ import {
   Card,
   ChunkStrip,
   DelayedLoading,
+  Download,
   EmptyState,
   ErrorMessage,
+  FileText,
   formatBytes,
   formatTime,
   IconButton,
   Input,
   PageHeader,
+  Search as SearchIcon,
   SkeletonRows,
+  Trash2,
+  Upload,
 } from "@knowcel/ui";
-import { Download, FileText, Search as SearchIcon, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { Link } from "react-router";
 import { DeleteDocumentDialog, useDownloadDocument } from "./documentActions.tsx";

@@ -1,7 +1,6 @@
 import { DocumentService } from "@knowcel/document-api/knowcel/document/v1/document_pb";
 import { ConnectError, toast, useClient, useMutation, useQueryClient } from "@knowcel/module-sdk";
-import { Button, Dialog, ErrorMessage, fieldViolations, Input } from "@knowcel/ui";
-import { Plus, X } from "lucide-react";
+import { Button, Dialog, ErrorMessage, fieldViolations, Input, Plus, X } from "@knowcel/ui";
 import { useEffect, useRef, useState } from "react";
 
 interface Row {

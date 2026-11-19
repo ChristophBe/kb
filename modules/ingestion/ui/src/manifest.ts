@@ -1,5 +1,5 @@
 import { defineManifest } from "@knowcel/module-sdk";
-import { Upload } from "lucide-react";
+import { Upload } from "@knowcel/ui";
 
 export default defineManifest({
   id: "ingestion",

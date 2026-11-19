@@ -1,6 +1,5 @@
 import { dismissToast, type Toast, useToasts } from "@knowcel/module-sdk";
-import { cn, IconButton } from "@knowcel/ui";
-import { AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, cn, IconButton, Info, X } from "@knowcel/ui";
 import { useEffect, useState } from "react";
 
 const AUTO_DISMISS_MS = 5000;

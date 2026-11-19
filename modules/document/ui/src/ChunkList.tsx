@@ -4,8 +4,15 @@ import {
   DocumentStatus,
 } from "@knowcel/document-api/knowcel/document/v1/document_pb";
 import { useClient, useQuery, useQueryClient } from "@knowcel/module-sdk";
-import { Button, Card, DelayedLoading, EmptyState, ErrorMessage, SkeletonRows } from "@knowcel/ui";
-import { Layers } from "lucide-react";
+import {
+  Button,
+  Card,
+  DelayedLoading,
+  EmptyState,
+  ErrorMessage,
+  Layers,
+  SkeletonRows,
+} from "@knowcel/ui";
 import { useEffect, useRef, useState } from "react";
 
 export const CHUNK_PAGE_SIZE = 20;

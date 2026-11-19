@@ -1,5 +1,5 @@
 import { defineManifest } from "@knowcel/module-sdk";
-import { Cpu } from "lucide-react";
+import { Cpu } from "@knowcel/ui";
 
 export default defineManifest({
   id: "llm",

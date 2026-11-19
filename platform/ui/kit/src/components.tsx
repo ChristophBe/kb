@@ -1,4 +1,3 @@
-import type { LucideIcon } from "lucide-react";
 import {
   type ComponentProps,
   type HTMLAttributes,
@@ -10,6 +9,7 @@ import { productName } from "./branding.ts";
 import { cn } from "./cn.ts";
 import { fieldViolations } from "./errors.ts";
 import { formatRelativeTime, formatTime } from "./format.ts";
+import type { IconComponent } from "./icons.tsx";
 
 export type Variant = "primary" | "secondary" | "ghost" | "danger";
 
@@ -205,7 +205,7 @@ export function EmptyState({
   action,
   children,
 }: {
-  icon?: LucideIcon;
+  icon?: IconComponent;
   action?: ReactNode;
   children: ReactNode;
 }) {

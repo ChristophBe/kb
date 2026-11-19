@@ -15,7 +15,6 @@
     "@knowcel/iam-api": "workspace:*",
     "@knowcel/module-sdk": "workspace:*",
     "@knowcel/ui": "workspace:*",
-    "lucide-react": "catalog:",
     "react-router": "catalog:"
   },
   "peerDependencies": {

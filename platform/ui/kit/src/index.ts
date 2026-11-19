@@ -45,6 +45,7 @@ export {
   fieldViolations,
 } from "./errors.ts";
 export { formatBytes, formatRelativeTime, formatTime } from "./format.ts";
+export * from "./icons.tsx";
 export { DelayedLoading, Skeleton, SkeletonRows } from "./loading.tsx";
 export { Logo, Mark } from "./logo.tsx";
 export { NARROW_QUERY, useMediaQuery } from "./media.ts";

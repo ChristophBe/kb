@@ -1,7 +1,6 @@
 import { LlmService } from "@knowcel/llm-api/knowcel/llm/v1/llm_pb";
 import { useClient, useIsPlatformAdmin, useQuery } from "@knowcel/module-sdk";
-import { Card, EmptyState, ErrorMessage, Spinner } from "@knowcel/ui";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Card, EmptyState, ErrorMessage, Spinner } from "@knowcel/ui";
 
 const DAYS = 30;
 const number = new Intl.NumberFormat();

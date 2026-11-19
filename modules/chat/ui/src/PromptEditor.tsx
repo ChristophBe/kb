@@ -12,8 +12,15 @@ import {
   useQuery,
   useQueryClient,
 } from "@knowcel/module-sdk";
-import { Button, Dialog, ErrorMessage, fieldError, Spinner, Textarea } from "@knowcel/ui";
-import { MessageSquareText } from "lucide-react";
+import {
+  Button,
+  Dialog,
+  ErrorMessage,
+  fieldError,
+  MessageSquareText,
+  Spinner,
+  Textarea,
+} from "@knowcel/ui";
 import { useId, useState } from "react";
 
 const TEMPLATES_KEY = ["prompt-templates"];

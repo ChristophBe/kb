@@ -127,6 +127,8 @@
   /* A lighter veil: secondary regions (the conversation list) and bars content scrolls under. */
   --color-glass-subtle: light-dark(rgb(252 252 250 / 0.4), rgb(25 26 23 / 0.4));
   --color-glass-edge: light-dark(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.1)); /* specular rim */
+  /* The veil behind a dialog; the same dimming in both modes. */
+  --color-scrim: light-dark(rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.3));
 
   /* Soft sage and ochre light behind the glass, so it has something to refract. */
   --color-glow-1: light-dark(rgb(66 112 84 / 0.1), rgb(140 200 160 / 0.1));

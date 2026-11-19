@@ -24,6 +24,16 @@ light.border #d7d8d2
 light.borderStrong #777870
 light.glow1 #427054
 light.glow2 #a97416
+light.infoText #236292
+light.infoBackground #e4f0fb
+light.successText #086d5f
+light.successBackground #def4ef
+light.warningText #8d4f0c
+light.warningBackground #fdf0dc
+light.dangerText #b02b27
+light.dangerBackground #ffedeb
+light.neutralText #5a5c56
+light.neutralBackground #e8e8e4
 dark.accent #8ec899
 dark.onAccent #101911
 dark.accent2 #d8ba79
@@ -35,8 +45,20 @@ dark.border #31342f
 dark.borderStrong #797b74
 dark.glow1 #8cc8a0
 dark.glow2 #eec469
+dark.infoText #87c6f2
+dark.infoBackground #152839
+dark.successText #75dac4
+dark.successBackground #0b2d27
+dark.warningText #f5c761
+dark.warningBackground #382409
+dark.dangerText #fda19e
+dark.dangerBackground #3f1917
+dark.neutralText #a4a69f
+dark.neutralBackground #252723
 '
 COLOR_KEYS="accent onAccent accent2 canvas surface text textMuted border borderStrong glow1 glow2"
+# The status colors (#367): text and subtle background of each status, as colors.<mode>.status.<name>.{text,background}.
+STATUS_NAMES="info success warning danger neutral"
 
 # contrast <#rrggbb> <#rrggbb>: the WCAG contrast ratio (POSIX awk: no strtonum in busybox).
 contrast() {
@@ -190,7 +212,7 @@ for mode in light dark; do
   fi
   ok=1
   for key in $(jq -r ".colors.$mode | keys[]" "$file"); do
-    case " $COLOR_KEYS " in *" $key "*) ;; *) fail "unknown key \"$key\" in colors.$mode"; ok=0 ;; esac
+    case " $COLOR_KEYS status " in *" $key "*) ;; *) fail "unknown key \"$key\" in colors.$mode"; ok=0 ;; esac
   done
   # The effective color of every key: configured, else the Knowcelium default of the mode.
   for key in $COLOR_KEYS; do
@@ -220,6 +242,63 @@ for mode in light dark; do
   done
   check_pair "$mode" accent2 canvas "the page background" 3
 done
+
+# --- status colors (#367): colors.<mode>.status.<name> = { text, background } ---
+# is_color <value>
+is_color() { printf '%s' "$1" | grep -Eq '^#[0-9a-fA-F]{6}$'; }
+# effective_color <mode> <key>: the configured page color if it is a valid color, else the Knowcelium default.
+effective_color() {
+  v=$(jq -r ".colors.$1.$2 | if type == \"string\" then . else empty end" "$file" 2>/dev/null)
+  if is_color "$v"; then printf '%s' "$v"; else default_color "$1" "$2"; fi
+}
+# status_pair <mode> <status> <foreground part> <background value> <what the background is> <minimum>
+status_pair() {
+  ratio=$(contrast "$fg" "$4")
+  at_least "$ratio" "$6" || fail "colors.$1.status.$2.$3 $fg has contrast $ratio:1 against $5 ($4), needs $6:1"
+}
+for mode in light dark; do
+  jq -e ".colors.$mode | type == \"object\" and has(\"status\")" "$file" >/dev/null 2>&1 || continue
+  st=".colors.$mode.status"
+  if ! jq -e "$st | type == \"object\"" "$file" >/dev/null; then
+    fail "colors.$mode.status must be an object from status name to { text, background }"
+    continue
+  fi
+  canvas=$(effective_color "$mode" canvas)
+  surface=$(effective_color "$mode" surface)
+  for name in $(jq -r "$st | keys[]" "$file"); do
+    case " $STATUS_NAMES " in
+      *" $name "*) ;;
+      *) fail "unknown status \"$name\" in colors.$mode.status (info, success, warning, danger or neutral)"; continue ;;
+    esac
+    if ! jq -e "$st.$name | type == \"object\"" "$file" >/dev/null; then
+      fail "colors.$mode.status.$name must be an object with text and background"
+      continue
+    fi
+    ok=1
+    for key in $(jq -r "$st.$name | keys[]" "$file"); do
+      case $key in text | background) ;; *) fail "unknown key \"$key\" in colors.$mode.status.$name (text or background)"; ok=0 ;; esac
+    done
+    text=$(default_color "$mode" "${name}Text")
+    background=$(default_color "$mode" "${name}Background")
+    for part in text background; do
+      jq -e "$st.$name | has(\"$part\")" "$file" >/dev/null || continue
+      value=$(jq -r "$st.$name.$part | tostring" "$file")
+      if is_color "$value"; then eval "$part=\$value"; else fail "colors.$mode.status.$name.$part must be a color like #1d4ed8"; ok=0; fi
+    done
+    [ "$ok" = 1 ] || continue
+    fg=$text
+    status_pair "$mode" "$name" text "$background" "its background" 4.5
+    status_pair "$mode" "$name" text "$canvas" "the page background" 4.5
+    status_pair "$mode" "$name" text "$surface" "the cards" 4.5
+    # A background left out keeps the default, which is not held to this limit.
+    if jq -e "$st.$name | has(\"background\")" "$file" >/dev/null; then
+      fg=$background
+      ratio=$(contrast "$background" "$canvas")
+      at_least "$ratio" 1.1 || fail "colors.$mode.status.$name.background $background has contrast $ratio:1 against the page background ($canvas), needs 1.1:1 to stay visible"
+    fi
+  done
+done
+# --- end status colors ---
 
 # --- navigation: the background (color or gradient) and text color of the main sidebar, per mode ---
 if jq -e 'has("navigation")' "$file" >/dev/null; then

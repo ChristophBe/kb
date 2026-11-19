@@ -172,6 +172,12 @@ describe("the default colours of branding.sh", () => {
     borderStrong: "border-strong",
     glow1: "glow-1",
     glow2: "glow-2",
+    ...Object.fromEntries(
+      tones.flatMap((tone) => [
+        [`${tone}Text`, tone],
+        [`${tone}Background`, `${tone}-subtle`],
+      ]),
+    ),
   };
   const hex = ([r, g, b]: Rgba) =>
     `#${[r, g, b]

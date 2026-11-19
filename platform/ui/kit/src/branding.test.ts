@@ -11,6 +11,7 @@ import {
   getBranding,
   isBranded,
   productName,
+  STATUS_NAMES,
 } from "./branding.ts";
 import { Menu, Search } from "./icons.tsx";
 
@@ -319,5 +320,118 @@ describe("applyBranding icons", () => {
     applyBranding({ icons: { search: "/branding/icons/search.svg" } });
     const { container } = render(createElement(Menu, { className: "size-4" }));
     expect(container.querySelector("svg.size-4")).toBeTruthy();
+  });
+});
+
+describe("applyBranding status colors", () => {
+  it("sets the text and the subtle background of a status per mode", () => {
+    applyBranding({
+      colors: {
+        light: { status: { info: { text: "#1d4ed8", background: "#e0e9ff" } } },
+        dark: { status: { info: { text: "#93b4ff", background: "#1a2a52" } } },
+      },
+    });
+    expect(style()).toContain("--color-info: light-dark(#1d4ed8, #93b4ff)");
+    expect(style()).toContain("--color-info-subtle: light-dark(#e0e9ff, #1a2a52)");
+    expect(style()).not.toContain("--color-danger");
+  });
+
+  it("keeps the theme's step for a key or mode left out", () => {
+    applyBranding({ colors: { dark: { status: { danger: { text: "#ff8080" } } } } });
+    expect(style()).toContain("--color-danger: light-dark(var(--color-clay-700), #ff8080)");
+    expect(style()).not.toContain("--color-danger-subtle");
+    applyBranding({ colors: { light: { status: { neutral: { background: "#eeeeee" } } } } });
+    expect(style()).toContain(
+      "--color-neutral-subtle: light-dark(#eeeeee, var(--color-stone-750))",
+    );
+    expect(style()).not.toContain("--color-neutral:");
+  });
+});
+
+// Every colour role of theme.css can be branded or has a documented derivation (#367).
+describe("colour roles", () => {
+  const theme = readFileSync(join(import.meta.dirname, "theme.css"), "utf8");
+  const guide = readFileSync(
+    join(import.meta.dirname, "..", "..", "..", "..", "docs", "operations", "branding.md"),
+    "utf8",
+  );
+  const palette = /^--color-(stone|sage|ochre|river|lichen|clay)-\d+$/;
+  const roles = [...theme.matchAll(/^\s*(--color-[\w-]+):/gm)]
+    .map((m) => m[1] as string)
+    .filter((name, i, all) => !palette.test(name) && all.indexOf(name) === i);
+
+  /** Roles a branding key sets, each with the key that does. */
+  const CONFIGURABLE: Record<string, string> = {
+    "--color-accent": "accent",
+    "--color-on-accent": "onAccent",
+    "--color-accent-2": "accent2",
+    "--color-canvas": "canvas",
+    "--color-surface": "surface",
+    "--color-fg": "text",
+    "--color-fg-muted": "textMuted",
+    "--color-border": "border",
+    "--color-border-strong": "borderStrong",
+    "--color-glow-1": "glow1",
+    "--color-glow-2": "glow2",
+    ...Object.fromEntries(
+      STATUS_NAMES.flatMap((n) => [
+        [`--color-${n}`, `status.${n}.text`],
+        [`--color-${n}-subtle`, `status.${n}.background`],
+      ]),
+    ),
+  };
+
+  /** Roles without a key of their own, with what they follow. Add a role here only with its derivation in the guide. */
+  const DERIVED: Record<string, string> = {
+    "--color-accent-hover": "the accent, 18 % toward black (light) or white (dark)",
+    "--color-accent-subtle": "the accent, 10 % over the canvas",
+    "--color-focus": "the accent",
+    "--color-surface-muted": "a mix of the surface and the text, 8 %",
+    "--color-glass": "the surface at 72 %",
+    "--color-glass-strong": "the surface at 86 %",
+    "--color-glass-subtle": "the surface at 40 %",
+    "--color-glass-edge": "fixed: a white rim",
+    "--color-scrim": "fixed: black at 30 %",
+  };
+
+  const light = {
+    accent: "#111111",
+    onAccent: "#ffffff",
+    accent2: "#222222",
+    canvas: "#333333",
+    surface: "#444444",
+    text: "#555555",
+    textMuted: "#666666",
+    border: "#777777",
+    borderStrong: "#888888",
+    glow1: "#999999",
+    glow2: "#aaaaaa",
+    status: Object.fromEntries(
+      STATUS_NAMES.map((n) => [n, { text: "#bbbbbb", background: "#cccccc" }]),
+    ),
+  };
+
+  it("lists every role as configurable or derived", () => {
+    const unknown = roles.filter((r) => !(r in CONFIGURABLE) && !(r in DERIVED));
+    expect(unknown, "add a branding key (colorRules) or list a derivation").toEqual([]);
+    const stale = [...Object.keys(CONFIGURABLE), ...Object.keys(DERIVED)].filter(
+      (r) => !roles.includes(r),
+    );
+    expect(stale).toEqual([]);
+  });
+
+  it("sets every configurable role from its key", () => {
+    applyBranding({ colors: { light, dark: light } });
+    for (const role of Object.keys(CONFIGURABLE)) expect(style()).toContain(`${role}: light-dark(`);
+  });
+
+  it("does not set a configurable role without its key", () => {
+    applyBranding({ colors: { light: { accent: "#111111" } } });
+    for (const role of Object.keys(CONFIGURABLE).filter((r) => r !== "--color-accent"))
+      expect(style()).not.toContain(`${role}:`);
+  });
+
+  it("describes every role in the branding guide", () => {
+    for (const role of roles) expect(guide, role).toContain(`\`${role}\``);
   });
 });

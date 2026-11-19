@@ -12,6 +12,7 @@ The sidebar on the left leads to every area:
 
 - **Chat**: ask questions about your documents. See [Chat](chat.md).
 - **Documents**: everything in your account. See [Documents](documents.md).
+- **Document checks**: see documents that repeat, replace or contradict each other, and close each finding. See [Document checks](document-checks.md).
 - **Upload**: add files. See [Upload](ingestion.md).
 - **Teams**: create teams and manage who is in them. See [Teams](teams.md).
 - **Users**, for platform admins only: see who has signed in and who is a platform admin. See [Users](users.md).

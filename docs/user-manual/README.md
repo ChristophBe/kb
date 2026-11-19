@@ -34,5 +34,6 @@ The design drafts in [`docs/ux/`](../ux/) are for contributors; this manual is f
 - [Search](search.md) — one search, from the box in the sidebar or the Search page: documents by their best matching passage, conversations, pages and help sections, and opening a document at that passage
 - [Chat](chat.md) — asking questions, sources, choosing the model, restricting to documents, changing the prompt, stopping and retrying answers, managing conversations
 - [Models](models.md) — whether the chat and embedding providers are available, which models are installed, how many tokens were used, and for platform admins pulling and deleting models
+- [Document checks](document-checks.md) — findings about documents that repeat, replace or contradict each other or are due for review, and closing them with keep, replace or ignore
 - [Teams](teams.md) — creating teams, adding and removing members by email, admin and member roles, leaving, renaming and deleting a team
 - [Users](users.md) — the user list for platform admins, making someone a platform admin and taking the role away

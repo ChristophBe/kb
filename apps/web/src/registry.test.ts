@@ -7,7 +7,7 @@ const ids = (enabledModules?: string[]) =>
 
 describe("activeModules", () => {
   it("shows every compiled-in module when the config names none", () => {
-    expect(ids()).toEqual(["chat", "document", "iam", "ingestion", "llm"]);
+    expect(ids()).toEqual(["chat", "curation", "document", "iam", "ingestion", "llm"]);
   });
 
   it("shows only the enabled modules, in compiled-in order", () => {
@@ -38,6 +38,7 @@ describe("navEntries", () => {
     expect(entries.map((e) => [e.label, e.to, e.end])).toEqual([
       ["Chat", "/m/chat", false],
       ["Documents", "/m/document", false],
+      ["Document checks", "/m/curation", false],
       ["Upload", "/m/ingestion", false],
       ["Teams", "/m/iam/teams", false],
       ["Models", "/m/llm", false],

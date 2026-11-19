@@ -10,6 +10,7 @@ from knowcel.curation.v1 import curation_pb2, curation_pb2_grpc
 from knowcel_curation.config import Settings
 from knowcel_curation.curation import DocInfo, Finding, Lifecycle, Score, Scorer, Weights
 from knowcel_curation.lifecycle import LifecycleService
+from knowcel_curation.ratings import RatingService
 from knowcel_curation.reports import ReportService
 from knowcel_curation.server import CurationServicer
 from knowcel_platform.config import Problems
@@ -29,6 +30,8 @@ WEIGHTS = Weights(
     deprecated_factor=0.1,
     report_penalty=0.5,
     report_floor=0.25,
+    rating=1,
+    rating_min=3,
 )
 
 
@@ -72,7 +75,12 @@ async def stub(
 ) -> AsyncIterator[curation_pb2_grpc.CurationServiceStub]:
     scorer = Scorer(store, WEIGHTS)
     servicer = CurationServicer(
-        store, documents, scorer, LifecycleService(store, scorer), ReportService(store, scorer)
+        store,
+        documents,
+        scorer,
+        LifecycleService(store, scorer),
+        ReportService(store, scorer),
+        RatingService(store, scorer),
     )
     server = grpc.aio.server(interceptors=[UserInterceptor(PrincipalResolver(resolve_principal))])
     curation_pb2_grpc.add_CurationServiceServicer_to_server(servicer, server)
@@ -324,12 +332,14 @@ def test_settings_are_checked() -> None:
         curation_conflict_checks=-1,
         curation_report_penalty=2,
         curation_report_floor=-1,
+        curation_rating_weight=-1,
+        curation_rating_min=0,
         iam_addr="nope",
         curation_approved_boost=0.5,
         curation_deprecated_factor=2,
         curation_archived_factor=-1,
     ).check(bad)
-    assert len(bad.items) == 17
+    assert len(bad.items) == 19
 
 
 async def test_findings_come_in_pages_that_skip_unreadable_ones(
@@ -631,7 +641,12 @@ async def test_a_replacement_the_caller_cannot_read_or_that_was_kept_does_not_co
     documents = FakeDocuments(SEEN, kept, OTHER)
     scorer = Scorer(store, WEIGHTS)
     servicer = CurationServicer(
-        store, documents, scorer, LifecycleService(store, scorer), ReportService(store, scorer)
+        store,
+        documents,
+        scorer,
+        LifecycleService(store, scorer),
+        ReportService(store, scorer),
+        RatingService(store, scorer),
     )
     server = grpc.aio.server(interceptors=[UserInterceptor()])
     curation_pb2_grpc.add_CurationServiceServicer_to_server(servicer, server)
@@ -956,3 +971,112 @@ async def test_only_one_of_two_who_deprecate_from_a_report_acts(
         await stub.ResolveFinding(request, metadata=as_user("root"))
     assert err.value.code() == grpc.StatusCode.FAILED_PRECONDITION
     assert len(store.history) == 1
+
+
+def rate(
+    stub: curation_pb2_grpc.CurationServiceStub,
+    document: DocInfo,
+    user: str,
+    rating: Any,
+    **fields: Any,
+):
+    return stub.RateDocument(
+        curation_pb2.RateDocumentRequest(document_id=str(document.id), rating=rating, **fields),
+        metadata=as_user(user),
+    )
+
+
+def summary(
+    stub: curation_pb2_grpc.CurationServiceStub, document: DocInfo, user: str, **fields: Any
+):
+    return stub.GetRatingSummary(
+        curation_pb2.GetRatingSummaryRequest(document_id=str(document.id), **fields),
+        metadata=as_user(user),
+    )
+
+
+async def test_ratings_are_saved_summed_up_and_shown_to_their_giver(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    await rate(stub, OWNED, "bob", curation_pb2.RATING_HELPFUL)
+    await rate(
+        stub, OWNED, "carol", curation_pb2.RATING_NOT_HELPFUL, chunk_index=2, conversation_id="c1"
+    )
+    await rate(stub, OWNED, "dave", curation_pb2.RATING_HELPFUL, chunk_index=2)
+    assert store.ratings[(OWNED.id, "carol", 2)] == ("not_helpful", "c1")
+    # The counts are the document's, passages included.
+    bobs = await summary(stub, OWNED, "bob")
+    assert (bobs.helpful, bobs.not_helpful) == (2, 1)
+    # The caller's own rating is of the document, or of the passage asked about.
+    assert bobs.my_rating == curation_pb2.RATING_HELPFUL
+    assert (await summary(stub, OWNED, "bob", chunk_index=2)).my_rating == curation_pb2.RATING_NONE
+    carols = await summary(stub, OWNED, "carol", chunk_index=2)
+    assert carols.my_rating == curation_pb2.RATING_NOT_HELPFUL
+    assert (await summary(stub, OWNED, "carol")).my_rating == curation_pb2.RATING_NONE
+
+
+async def test_rating_again_replaces_the_rating_and_none_takes_it_back(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    await rate(stub, OWNED, "bob", curation_pb2.RATING_HELPFUL)
+    await rate(stub, OWNED, "bob", curation_pb2.RATING_NOT_HELPFUL)
+    now = await summary(stub, OWNED, "bob")
+    assert (now.helpful, now.not_helpful, now.my_rating) == (
+        0,
+        1,
+        curation_pb2.RATING_NOT_HELPFUL,
+    )
+    await rate(stub, OWNED, "bob", curation_pb2.RATING_NONE)
+    gone = await summary(stub, OWNED, "bob")
+    assert (gone.helpful, gone.not_helpful, gone.my_rating) == (0, 0, curation_pb2.RATING_NONE)
+    # Taking back what was never given is fine too.
+    await rate(stub, OWNED, "carol", curation_pb2.RATING_NONE, chunk_index=4)
+    assert not store.ratings
+
+
+async def test_only_those_who_can_read_a_document_rate_it_and_a_rating_needs_a_value(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    for call in (
+        rate(stub, HIDDEN, "bob", curation_pb2.RATING_HELPFUL),
+        summary(stub, HIDDEN, "bob"),
+    ):
+        with pytest.raises(grpc.aio.AioRpcError) as err:
+            await call
+        assert err.value.code() == grpc.StatusCode.NOT_FOUND
+    for fields in (
+        {"rating": curation_pb2.RATING_UNSPECIFIED},
+        {"rating": curation_pb2.RATING_HELPFUL, "chunk_index": -1},
+        {"rating": curation_pb2.RATING_HELPFUL, "conversation_id": "x" * 101},
+    ):
+        with pytest.raises(grpc.aio.AioRpcError) as err:
+            await rate(stub, OWNED, "bob", **fields)
+        assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await summary(stub, OWNED, "bob", chunk_index=-2)
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.RateDocument(
+            curation_pb2.RateDocumentRequest(
+                document_id=str(OWNED.id), rating=curation_pb2.RATING_HELPFUL
+            )
+        )
+    assert err.value.code() == grpc.StatusCode.UNAUTHENTICATED
+    assert not store.ratings
+
+
+async def test_ratings_change_the_score_at_once_once_there_are_enough_of_them(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    await Scorer(store, WEIGHTS).on_processed(OWNED.id, datetime.datetime.now(datetime.UTC))
+    before = store.scores[OWNED.id].score
+    # Too few to count (the minimum is three).
+    await rate(stub, OWNED, "bob", curation_pb2.RATING_NOT_HELPFUL)
+    await rate(stub, OWNED, "carol", curation_pb2.RATING_NOT_HELPFUL)
+    assert store.scores[OWNED.id].score == pytest.approx(before)
+    await rate(stub, OWNED, "dave", curation_pb2.RATING_NOT_HELPFUL, chunk_index=1)
+    # A fresh document scores 1, and with all three against it, (1 + 0) / 2.
+    assert store.scores[OWNED.id].score == pytest.approx(before * 0.5)
+    # Taking one back drops it below the minimum: the rating is left out again.
+    await rate(stub, OWNED, "dave", curation_pb2.RATING_NONE, chunk_index=1)
+    assert store.scores[OWNED.id].score == pytest.approx(before)

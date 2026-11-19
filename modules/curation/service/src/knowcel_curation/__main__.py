@@ -21,6 +21,7 @@ from .events import STREAM, consume
 from .findings import Detector
 from .lifecycle import LifecycleService
 from .peers import PeerDocuments, PeerEmbedder, PeerJudge
+from .ratings import RatingService
 from .reports import ReportService
 from .server import CurationServicer
 
@@ -65,7 +66,12 @@ async def run() -> None:
                 ),
             ]
             servicer = CurationServicer(
-                store, documents, scorer, lifecycle, ReportService(store, scorer)
+                store,
+                documents,
+                scorer,
+                lifecycle,
+                ReportService(store, scorer),
+                RatingService(store, scorer),
             )
             iam = iam_pb2_grpc.IamServiceStub(iam_ch)
             await serve(

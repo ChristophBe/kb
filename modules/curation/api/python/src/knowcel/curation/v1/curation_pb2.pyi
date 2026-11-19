@@ -43,6 +43,13 @@ class ReportReason(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     REPORT_REASON_OUTDATED: _ClassVar[ReportReason]
     REPORT_REASON_INAPPROPRIATE: _ClassVar[ReportReason]
     REPORT_REASON_OTHER: _ClassVar[ReportReason]
+
+class Rating(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    RATING_UNSPECIFIED: _ClassVar[Rating]
+    RATING_HELPFUL: _ClassVar[Rating]
+    RATING_NOT_HELPFUL: _ClassVar[Rating]
+    RATING_NONE: _ClassVar[Rating]
 LIFECYCLE_STATE_UNSPECIFIED: LifecycleState
 LIFECYCLE_STATE_DRAFT: LifecycleState
 LIFECYCLE_STATE_IN_REVIEW: LifecycleState
@@ -65,6 +72,10 @@ REPORT_REASON_WRONG: ReportReason
 REPORT_REASON_OUTDATED: ReportReason
 REPORT_REASON_INAPPROPRIATE: ReportReason
 REPORT_REASON_OTHER: ReportReason
+RATING_UNSPECIFIED: Rating
+RATING_HELPFUL: Rating
+RATING_NOT_HELPFUL: Rating
+RATING_NONE: Rating
 
 class DocumentScore(_message.Message):
     __slots__ = ("document_id", "score", "updated_at", "lifecycle", "excluded", "replaced")
@@ -229,6 +240,40 @@ class ListReportsResponse(_message.Message):
     REPORTS_FIELD_NUMBER: _ClassVar[int]
     reports: _containers.RepeatedCompositeFieldContainer[Report]
     def __init__(self, reports: _Optional[_Iterable[_Union[Report, _Mapping]]] = ...) -> None: ...
+
+class RateDocumentRequest(_message.Message):
+    __slots__ = ("document_id", "chunk_index", "rating", "conversation_id")
+    DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
+    CHUNK_INDEX_FIELD_NUMBER: _ClassVar[int]
+    RATING_FIELD_NUMBER: _ClassVar[int]
+    CONVERSATION_ID_FIELD_NUMBER: _ClassVar[int]
+    document_id: str
+    chunk_index: int
+    rating: Rating
+    conversation_id: str
+    def __init__(self, document_id: _Optional[str] = ..., chunk_index: _Optional[int] = ..., rating: _Optional[_Union[Rating, str]] = ..., conversation_id: _Optional[str] = ...) -> None: ...
+
+class RateDocumentResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class GetRatingSummaryRequest(_message.Message):
+    __slots__ = ("document_id", "chunk_index")
+    DOCUMENT_ID_FIELD_NUMBER: _ClassVar[int]
+    CHUNK_INDEX_FIELD_NUMBER: _ClassVar[int]
+    document_id: str
+    chunk_index: int
+    def __init__(self, document_id: _Optional[str] = ..., chunk_index: _Optional[int] = ...) -> None: ...
+
+class GetRatingSummaryResponse(_message.Message):
+    __slots__ = ("helpful", "not_helpful", "my_rating")
+    HELPFUL_FIELD_NUMBER: _ClassVar[int]
+    NOT_HELPFUL_FIELD_NUMBER: _ClassVar[int]
+    MY_RATING_FIELD_NUMBER: _ClassVar[int]
+    helpful: int
+    not_helpful: int
+    my_rating: Rating
+    def __init__(self, helpful: _Optional[int] = ..., not_helpful: _Optional[int] = ..., my_rating: _Optional[_Union[Rating, str]] = ...) -> None: ...
 
 class ListFindingsRequest(_message.Message):
     __slots__ = ("page_size", "page_token", "kinds")

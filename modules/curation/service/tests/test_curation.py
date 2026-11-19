@@ -207,3 +207,31 @@ def test_reports_lower_the_score_once_per_reporter_down_to_a_floor() -> None:
     assert score(10) == pytest.approx(0.5)
     # Reports and a replacement add up, and the state still counts after them.
     assert score_document(NOW, NOW, 1, 0, weights, "deprecated", 1) == pytest.approx(0.5 * 0.8)
+
+
+def test_ratings_count_from_a_minimum_and_by_their_share_of_helpful_ones() -> None:
+    weights = Weights(1, 0, 100, 0.5, 10, rating=1, rating_min=4)
+    old = NOW - 100 * DAY  # recency 0.5
+    score = lambda helpful, unhelpful: score_document(  # noqa: E731
+        old, NOW, 0, 0, weights, None, 0, (helpful, unhelpful)
+    )
+    assert score(0, 0) == pytest.approx(0.5)
+    # Below the minimum they change nothing.
+    assert score(0, 3) == pytest.approx(0.5)
+    assert score(3, 0) == pytest.approx(0.5)
+    # From it on the share found helpful is a signal next to the recency: (0.5 + share) / 2.
+    assert score(4, 0) == pytest.approx(0.75)
+    assert score(0, 4) == pytest.approx(0.25)
+    assert score(2, 2) == pytest.approx(0.5)
+    assert score(3, 1) == pytest.approx(0.625)
+    # A document found unhelpful scores lower than a similar one without ratings, helpful higher.
+    assert score(0, 10) < score(0, 0) < score(10, 0)
+
+
+def test_the_rating_weight_sets_how_much_ratings_count_and_zero_leaves_them_out() -> None:
+    old = NOW - 100 * DAY
+    heavy = Weights(1, 0, 100, 0.5, 10, rating=3, rating_min=1)
+    # (1 * 0.5 + 3 * 0) / 4
+    assert score_document(old, NOW, 0, 0, heavy, None, 0, (0, 5)) == pytest.approx(0.125)
+    off = Weights(1, 0, 100, 0.5, 10, rating=0, rating_min=1)
+    assert score_document(old, NOW, 0, 0, off, None, 0, (0, 50)) == pytest.approx(0.5)

@@ -36,7 +36,7 @@ async def engine(database_url: str) -> AsyncIterator[AsyncEngine]:
         await conn.execute(
             text(
                 "TRUNCATE curation.document_scores, curation.findings, "
-                "curation.document_lifecycle, curation.reports"
+                "curation.document_lifecycle, curation.reports, curation.ratings"
             )
         )
     yield engine
@@ -326,3 +326,29 @@ async def test_deprecating_closes_the_open_report_finding_and_its_reports_togeth
     assert await store.list_reports([document]) == {}
     # Without a report finding it does nothing.
     await store.close_report_finding(uuid.uuid4(), "alice")
+
+
+async def test_a_user_rates_a_document_and_each_passage_once_and_can_take_it_back(
+    engine: AsyncEngine,
+) -> None:
+    store = SqlCurationStore(engine)
+    document, other = uuid.uuid4(), uuid.uuid4()
+    await store.save_rating(document, "bob", None, "helpful", "")
+    await store.save_rating(document, "bob", 3, "not_helpful", "c1")
+    await store.save_rating(document, "carol", 3, "not_helpful", "")
+    await store.save_rating(other, "bob", None, "helpful", "")
+    assert await store.get_rating(document, "bob", None) == "helpful"
+    assert await store.get_rating(document, "bob", 3) == "not_helpful"
+    assert await store.get_rating(document, "bob", 4) is None
+    assert await store.rating_counts([document, other, uuid.uuid4()]) == {
+        document: (1, 2),
+        other: (1, 0),
+    }
+    # Rating again replaces; the count doesn't grow.
+    await store.save_rating(document, "bob", 3, "helpful", "c2")
+    assert await store.get_rating(document, "bob", 3) == "helpful"
+    assert (await store.rating_counts([document]))[document] == (2, 1)
+    await store.delete_rating(document, "bob", 3)
+    await store.delete_rating(document, "bob", 3)
+    assert await store.get_rating(document, "bob", 3) is None
+    assert (await store.rating_counts([document]))[document] == (1, 1)

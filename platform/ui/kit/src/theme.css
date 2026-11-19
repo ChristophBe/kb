@@ -207,6 +207,29 @@
   backdrop-filter: blur(24px) saturate(180%);
 }
 
+/*
+ * The main sidebar (Area tone="primary"): the glass, or the branded background and text
+ * (docs/operations/branding.md; the --navigation-* tokens are set by applyBranding). The text roles
+ * are redefined for the region only; a popover inside it keeps the theme's (--base-*).
+ */
+@utility nav-area {
+  background-image: var(--navigation-background, none);
+  --color-fg: var(--navigation-fg);
+  --color-fg-muted: var(--navigation-fg-muted);
+  --color-surface-muted: var(--navigation-hover);
+  --color-accent-subtle: var(--navigation-active);
+  --color-surface: var(--navigation-surface);
+  --color-accent: var(--navigation-accent);
+  --color-focus: var(--navigation-accent);
+  color: var(--color-fg);
+}
+@utility nav-popover {
+  --color-fg: var(--base-fg);
+  --color-fg-muted: var(--base-fg-muted);
+  --color-surface-muted: var(--base-surface-muted);
+  --color-accent: var(--base-accent);
+}
+
 /* Secondary regions and bars that content scrolls under: a lighter, blurring veil. */
 @utility glass-subtle {
   background-color: var(--color-glass-subtle);
@@ -254,6 +277,20 @@
       radial-gradient(60rem 40rem at 85% -10%, var(--color-glow-1), transparent 70%),
       radial-gradient(50rem 40rem at -10% 110%, var(--color-glow-2), transparent 70%);
     background-attachment: fixed;
+  }
+
+  /* The sidebar tokens default to the theme's roles; branding overrides them. */
+  :root {
+    --navigation-fg: var(--color-fg);
+    --navigation-fg-muted: var(--color-fg-muted);
+    --navigation-hover: var(--color-surface-muted);
+    --navigation-active: var(--color-accent-subtle);
+    --navigation-surface: var(--color-surface);
+    --navigation-accent: var(--color-accent);
+    --base-fg: var(--color-fg);
+    --base-fg-muted: var(--color-fg-muted);
+    --base-surface-muted: var(--color-surface-muted);
+    --base-accent: var(--color-accent);
   }
 
   /* Glass falls back to an opaque surface where it can't blur or isn't wanted. */

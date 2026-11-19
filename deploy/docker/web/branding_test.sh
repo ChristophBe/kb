@@ -47,6 +47,20 @@ check "a missing font file" 'fonts.mono.file "nope.woff2" does not exist' '{"fon
 check "a font file of the wrong type" "must be one of these file types: woff2 woff" '{"fonts":{"mono":{"family":"Acme Mono","file":"favicon.svg"}}}'
 check "a malformed weight" "fonts.body.weight must be" '{"fonts":{"body":{"family":"Inter","weight":"bold"}}}'
 
+# --- navigation ---
+check "a solid navigation" ok '{"navigation":{"light":{"background":"#1d4ed8","text":"#ffffff"}}}'
+check "a gradient navigation" ok '{"navigation":{"dark":{"background":{"from":"#0b1220","to":"#1e3a8a","angle":90},"text":"#ffffff"}}}'
+check "a gradient without an angle and text" ok '{"navigation":{"light":{"background":{"from":"#ffffff","to":"#dbeafe"}}}}'
+check "a gradient without a stop" "navigation.light.background.to must be a color" '{"navigation":{"light":{"background":{"from":"#ffffff"}}}}'
+check "an angle out of range" "navigation.dark.background.angle must be a number from 0 to 360" '{"navigation":{"dark":{"background":{"from":"#000000","to":"#111111","angle":361}}}}'
+check "a malformed navigation color" "navigation.light.background must be a color" '{"navigation":{"light":{"background":"blue"}}}'
+check "an unknown navigation key" 'unknown key "image" in navigation.light' '{"navigation":{"light":{"background":"#ffffff","image":"x.png"}}}'
+check "an unknown navigation mode" 'unknown key "sepia" in navigation' '{"navigation":{"sepia":{"background":"#ffffff"}}}'
+check "a navigation without a background" "navigation.light.background is missing" '{"navigation":{"light":{"text":"#000000"}}}'
+check "low contrast on one gradient stop" "navigation.light: text #ffffff has contrast" '{"navigation":{"light":{"background":{"from":"#1d4ed8","to":"#9ec5fe"},"text":"#ffffff"}}}'
+check "low contrast on a solid navigation" "needs 4.5:1" '{"navigation":{"dark":{"background":"#333333","text":"#555555"}}}'
+# --- end navigation ---
+
 rm -rf "$tmp/dir" "$tmp/root"; mkdir -p "$tmp/dir" "$tmp/root"
 cp "$example"/* "$tmp/dir/"
 out=$(sh "$here/branding.sh" "$tmp/dir/branding.json" "$tmp/root")

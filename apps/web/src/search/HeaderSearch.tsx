@@ -245,7 +245,7 @@ function Popup({
       style={style}
       // Clicks keep the focus in the field, so it doesn't blur and close the popup first.
       onMouseDown={(e) => e.preventDefault()}
-      className="glass-strong fixed z-50 overflow-y-auto rounded-card p-1.5"
+      className="glass-strong nav-popover fixed z-50 overflow-y-auto rounded-card p-1.5"
     >
       {groups.map((g, gi) => {
         if (g.status === "done" && g.hits.length === 0) return null;

@@ -37,7 +37,7 @@ fi
 
 # Unknown keys are mistakes (a typo would silently keep the default).
 for key in $(jq -r 'keys[]' "$file"); do
-  case $key in name | logo | favicon | colors | fonts) ;; *) fail "unknown key \"$key\"" ;; esac
+  case $key in name | logo | favicon | colors | fonts | navigation) ;; *) fail "unknown key \"$key\"" ;; esac
 done
 
 if jq -e 'has("name")' "$file" >/dev/null; then
@@ -116,13 +116,72 @@ for mode in light dark; do
   at_least "$ratio" 4.5 || fail "colors.$mode.accent $accent has contrast $ratio:1 against the page background $canvas, needs 4.5:1"
 done
 
+# --- navigation: the background (color or gradient) and text color of the main sidebar, per mode ---
+if jq -e 'has("navigation")' "$file" >/dev/null; then
+  if ! jq -e '.navigation | type == "object"' "$file" >/dev/null; then
+    fail "navigation must be an object with light and dark"
+  else
+    for mode in $(jq -r '.navigation | keys[]' "$file"); do
+      case $mode in light | dark) ;; *) fail "unknown key \"$mode\" in navigation (light or dark)"; continue ;; esac
+      nav=".navigation.$mode"
+      if ! jq -e "$nav | type == \"object\"" "$file" >/dev/null; then
+        fail "navigation.$mode must be an object with background and text"
+        continue
+      fi
+      for key in $(jq -r "$nav | keys[]" "$file"); do
+        case $key in background | text) ;; *) fail "unknown key \"$key\" in navigation.$mode" ;; esac
+      done
+      stops=""
+      ok=1
+      kind=$(jq -r "$nav.background | if . == null then \"none\" else type end" "$file")
+      case $kind in
+        none) fail "navigation.$mode.background is missing (a color like #1d4ed8 or { from, to, angle })"; ok=0 ;;
+        string)
+          stops=$(jq -r "$nav.background" "$file")
+          printf '%s' "$stops" | grep -Eq '^#[0-9a-fA-F]{6}$' || { fail "navigation.$mode.background must be a color like #1d4ed8 or an object with from and to"; ok=0; }
+          ;;
+        object)
+          for key in $(jq -r "$nav.background | keys[]" "$file"); do
+            case $key in from | to | angle) ;; *) fail "unknown key \"$key\" in navigation.$mode.background"; ok=0 ;; esac
+          done
+          for key in from to; do
+            c=$(jq -r "$nav.background.$key | if type == \"string\" then . else empty end" "$file")
+            if printf '%s' "$c" | grep -Eq '^#[0-9a-fA-F]{6}$'; then
+              stops="$stops $c"
+            else
+              fail "navigation.$mode.background.$key must be a color like #1d4ed8"
+              ok=0
+            fi
+          done
+          jq -e "$nav.background | has(\"angle\") | not" "$file" >/dev/null ||
+            jq -e "$nav.background.angle | type == \"number\" and . >= 0 and . <= 360" "$file" >/dev/null ||
+            { fail "navigation.$mode.background.angle must be a number from 0 to 360"; ok=0; }
+          ;;
+        *) fail "navigation.$mode.background must be a color like #1d4ed8 or an object with from and to"; ok=0 ;;
+      esac
+      if jq -e "$nav | has(\"text\")" "$file" >/dev/null; then
+        text=$(jq -r "$nav.text | if type == \"string\" then . else empty end" "$file")
+        if ! printf '%s' "$text" | grep -Eq '^#[0-9a-fA-F]{6}$'; then
+          fail "navigation.$mode.text must be a color like #ffffff"
+        elif [ "$ok" = 1 ]; then
+          for stop in $stops; do
+            ratio=$(contrast "$stop" "$text")
+            at_least "$ratio" 4.5 || fail "navigation.$mode: text $text has contrast $ratio:1 against the background $stop, needs 4.5:1"
+          done
+        fi
+      fi
+    done
+  fi
+fi
+# --- end navigation ---
+
 if [ -n "$errors" ]; then
   printf '%s' "$errors" >&2
   exit 1
 fi
 
 # The config.json object: asset names become URLs under /branding.
-jq -c '{name, logo, favicon, colors, fonts}
+jq -c '{name, logo, favicon, colors, fonts, navigation}
   | (.logo, .favicon) |= (if type == "object" then map_values("/branding/" + .) elif type == "string" then "/branding/" + . else . end)
   | (.fonts // empty | .[] | select(.file) | .file) |= "/branding/" + .
   | with_entries(select(.value != null))' "$file"

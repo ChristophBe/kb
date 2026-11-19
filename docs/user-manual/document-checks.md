@@ -7,7 +7,7 @@ Document checks find documents that repeat, replace or contradict each other, an
 Open **Document checks** in the sidebar. The page lists the open findings, newest first. Each one shows:
 
 - what was found, with a label: **Duplicate**, **Newer version**, **Conflict** or **Review due**, and a short sentence such as "Duplicate of Handbook" or "Newer version of Policy v2 exists";
-- the documents involved, as links to their pages, when it was found, and how relevant the document is for answers (**Relevance**, as a percentage);
+- the documents involved, as links to their pages, when it was found, and, when it is known, how relevant the document is for answers (**Relevance**, as a percentage);
 - the ways to close it, each with what it does.
 
 When nothing needs a check, the page says "No findings. Your documents look consistent." Select **Show more** to see older findings. If the page can't load them, it says so and **Try again** loads them again.

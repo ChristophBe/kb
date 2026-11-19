@@ -76,7 +76,12 @@ export function Findings() {
   const queryClient = useQueryClient();
   const heading = useRef<HTMLHeadingElement>(null);
   const [confirming, setConfirming] = useState<Choice | null>(null);
+  // What the dialog showed last, so it keeps its words while it closes.
+  const shown = useRef<Choice | null>(null);
+  if (confirming) shown.current = confirming;
   const [failures, setFailures] = useState<Record<string, Error>>({});
+  // The findings being closed; each can only be closed once at a time.
+  const [closing, setClosing] = useState<ReadonlySet<string>>(new Set());
 
   const findings = useInfiniteQuery({
     queryKey: ["findings"],
@@ -86,15 +91,19 @@ export function Findings() {
   });
   const items = findings.data?.pages.flatMap((p) => p.findings) ?? [];
   // A page can hold none of the findings the user may see and still have a next one.
-  const { hasNextPage, isFetchingNextPage, fetchNextPage } = findings;
+  const { hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage } = findings;
   useEffect(() => {
-    if (items.length === 0 && hasNextPage && !isFetchingNextPage) void fetchNextPage();
-  }, [items.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
+    if (items.length === 0 && hasNextPage && !isFetchingNextPage && !isFetchNextPageError) {
+      void fetchNextPage();
+    }
+  }, [items.length, hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
 
   const documentIds = [...new Set(items.map((f) => f.documentId))].sort();
   const scores = useQuery({
     queryKey: ["finding-scores", documentIds],
     enabled: documentIds.length > 0,
+    // The scores shown stay while those of a longer list load.
+    placeholderData: (previous) => previous,
     queryFn: async () => {
       const found = new Map<string, number>();
       for (let i = 0; i < documentIds.length; i += SCORE_BATCH) {
@@ -110,8 +119,15 @@ export function Findings() {
   const resolve = useMutation({
     mutationFn: ({ finding, option }: Choice) =>
       client.resolveFinding({ findingId: finding.id, resolution: option.resolution }),
+    onMutate: ({ finding }) => setClosing((c) => new Set(c).add(finding.id)),
+    onSettled: (_data, _err, { finding }) =>
+      setClosing((c) => {
+        const rest = new Set(c);
+        rest.delete(finding.id);
+        return rest;
+      }),
     onSuccess: async (_, { finding, option }) => {
-      setConfirming(null);
+      setConfirming((c) => (c?.finding.id === finding.id ? null : c));
       toast.success(resolvedMessage(finding, option.resolution));
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["findings"] }),
@@ -121,12 +137,20 @@ export function Findings() {
       heading.current?.focus();
     },
     onError: async (err, { finding }) => {
-      setFailures((f) => ({ ...f, [finding.id]: resolveError(err) ?? new Error("Failed") }));
-      if (findingIsGone(err)) await queryClient.invalidateQueries({ queryKey: ["findings"] });
+      const failure = resolveError(err) ?? new Error("Failed");
+      if (findingIsGone(err)) {
+        // Its row is about to leave the list, so say it in a toast and close the dialog.
+        setConfirming((c) => (c?.finding.id === finding.id ? null : c));
+        toast.error(failure.message);
+        await queryClient.invalidateQueries({ queryKey: ["findings"] });
+        return;
+      }
+      setFailures((f) => ({ ...f, [finding.id]: failure }));
     },
   });
 
   const choose = (choice: Choice) => {
+    if (closing.has(choice.finding.id)) return;
     setFailures((f) => {
       const { [choice.finding.id]: _, ...rest } = f;
       return rest;
@@ -165,7 +189,7 @@ export function Findings() {
                 key={f.id}
                 finding={f}
                 score={scores.data?.get(f.documentId)}
-                pending={resolve.isPending && resolve.variables?.finding.id === f.id}
+                pending={closing.has(f.id)}
                 failure={failures[f.id]}
                 onChoose={choose}
               />
@@ -192,7 +216,7 @@ export function Findings() {
       )}
       <ConfirmDialog
         open={confirming !== null}
-        title={`Replace ${confirming?.finding.documentTitle ?? ""}?`}
+        title={`Replace ${shown.current?.finding.documentTitle ?? ""}?`}
         confirmLabel="Replace document"
         pending={resolve.isPending}
         error={confirming ? failures[confirming.finding.id]?.message : undefined}
@@ -200,7 +224,7 @@ export function Findings() {
         onCancel={() => setConfirming(null)}
         fallbackFocus={heading}
       >
-        {confirming?.option.description}
+        {shown.current?.option.description}
       </ConfirmDialog>
     </div>
   );
@@ -229,7 +253,7 @@ function FindingCard({
           <h3 className="min-w-0 font-medium wrap-anywhere">{f.summary}</h3>
         </div>
         <p className="mt-1 text-sm text-fg-muted">
-          {f.otherDocumentId === f.documentId ? (
+          {f.otherDocumentId === f.documentId || f.otherDocumentId === "" ? (
             <DocumentLink id={f.documentId}>{f.documentTitle}</DocumentLink>
           ) : (
             <>
@@ -242,25 +266,30 @@ function FindingCard({
           {score !== undefined && ` · Relevance ${Math.round(score * 100)} %`}
         </p>
         <ul className="mt-3 flex flex-col gap-2">
-          {f.resolutions.map((option) => {
-            const describedBy = `${id}-${option.resolution}`;
-            return (
-              <li key={option.resolution} className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <Button
-                  variant="secondary"
-                  disabled={pending}
-                  aria-describedby={describedBy}
-                  aria-label={`${RESOLUTIONS[option.resolution]} ${f.documentTitle}`}
-                  onClick={() => onChoose({ finding: f, option })}
+          {f.resolutions
+            .filter((o) => o.resolution in RESOLUTIONS)
+            .map((option) => {
+              const describedBy = `${id}-${option.resolution}`;
+              return (
+                <li
+                  key={option.resolution}
+                  className="flex flex-wrap items-baseline gap-x-3 gap-y-1"
                 >
-                  {RESOLUTIONS[option.resolution]}
-                </Button>
-                <span id={describedBy} className="min-w-0 flex-1 text-sm text-fg-muted">
-                  {option.description}
-                </span>
-              </li>
-            );
-          })}
+                  <Button
+                    variant="secondary"
+                    disabled={pending}
+                    aria-describedby={describedBy}
+                    aria-label={`${RESOLUTIONS[option.resolution]} ${f.documentTitle}`}
+                    onClick={() => onChoose({ finding: f, option })}
+                  >
+                    {RESOLUTIONS[option.resolution]}
+                  </Button>
+                  <span id={describedBy} className="min-w-0 flex-1 text-sm text-fg-muted">
+                    {option.description}
+                  </span>
+                </li>
+              );
+            })}
         </ul>
         {failure && (
           <div className="mt-3">

@@ -211,4 +211,108 @@ describe("Findings", () => {
     expect(within(list).queryAllByRole("link")).toHaveLength(0);
     expect(within(list).getByText("Policy v1")).toBeTruthy();
   });
+
+  it("doesn't ask again and again when the next page can't be loaded", async () => {
+    const listFindings = vi.fn(({ pageToken }: { pageToken: string }) => {
+      if (pageToken === "") return { findings: [], nextPageToken: "p2" };
+      throw new ConnectError("down", Code.Unavailable);
+    });
+    const transport = createRouterTransport(({ service }) =>
+      service(CurationService, { listFindings, scoreChunks: () => ({ scores: [] }) }),
+    );
+    renderModule(curation, transport);
+    expect(
+      await screen.findByText("Documents aren't available right now. Try again in a moment."),
+    ).toBeTruthy();
+    const calls = listFindings.mock.calls.length;
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 100)));
+    expect(listFindings).toHaveBeenCalledTimes(calls);
+    expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
+  });
+
+  it("keeps the relevance shown while it loads more findings", async () => {
+    const listFindings = vi.fn(({ pageToken }: { pageToken: string }) =>
+      pageToken === ""
+        ? { findings: [version], nextPageToken: "p2" }
+        : { findings: [reminder], nextPageToken: "" },
+    );
+    let release: () => void = () => undefined;
+    const slow = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const scoreChunks = vi.fn(async ({ documentIds }: { documentIds: string[] }) => {
+      if (documentIds.length > 1) await slow;
+      return { scores: [{ documentId: "d1", score: 0.5 }] };
+    });
+    const transport = createRouterTransport(({ service }) =>
+      service(CurationService, { listFindings, scoreChunks }),
+    );
+    renderModule(curation, transport);
+    expect(await screen.findByText(/Relevance 50 %/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Show more" }));
+    expect(await screen.findByText("Review due for Handbook")).toBeTruthy();
+    // The scores of the longer list are still on their way.
+    expect(screen.getByText(/Relevance 50 %/)).toBeTruthy();
+    release();
+  });
+
+  it("closes the dialog and says so when a finding to replace is already gone", async () => {
+    const left = [version];
+    const transport = createRouterTransport(({ service }) =>
+      service(CurationService, {
+        listFindings: () => ({ findings: left, nextPageToken: "" }),
+        scoreChunks: () => ({ scores: [] }),
+        resolveFinding: () => {
+          left.length = 0;
+          throw new ConnectError("done", Code.FailedPrecondition);
+        },
+      }),
+    );
+    renderModule(curation, transport);
+    fireEvent.click(await screen.findByRole("button", { name: "Replace Policy v1" }));
+    fireEvent.click(
+      within(await screen.findByRole("dialog")).getByRole("button", { name: "Replace document" }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(await screen.findByText("No findings. Your documents look consistent.")).toBeTruthy();
+  });
+
+  it("offers only the ways to close a finding that it knows, and no empty second document", async () => {
+    const odd = {
+      ...version,
+      otherDocumentId: "",
+      resolutions: [{ resolution: Resolution.UNSPECIFIED, description: "?" }, ...options],
+    };
+    const { transport } = server([odd]);
+    renderModule(curation, transport);
+    const list = await screen.findByRole("list", { name: "Findings" });
+    expect(within(list).getAllByRole("button")).toHaveLength(3);
+    expect(within(list).getAllByRole("link")).toHaveLength(1);
+  });
+
+  it("closes a finding only once at a time", async () => {
+    let finish: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    const resolveFinding = vi.fn(async () => {
+      await gate;
+      return {};
+    });
+    const transport = createRouterTransport(({ service }) =>
+      service(CurationService, {
+        listFindings: () => ({ findings: [version, reminder], nextPageToken: "" }),
+        scoreChunks: () => ({ scores: [] }),
+        resolveFinding,
+      }),
+    );
+    renderModule(curation, transport);
+    const ignore = await screen.findByRole("button", { name: "Ignore Policy v1" });
+    fireEvent.click(ignore);
+    await waitFor(() => expect((ignore as HTMLButtonElement).disabled).toBe(true));
+    fireEvent.click(screen.getByRole("button", { name: "Ignore Handbook" }));
+    // The other finding is not held back by the first.
+    await waitFor(() => expect(resolveFinding).toHaveBeenCalledTimes(2));
+    finish();
+  });
 });

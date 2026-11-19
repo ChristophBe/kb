@@ -57,6 +57,17 @@ enum ChatErrorCode {
   CHAT_ERROR_CODE_INTERNAL = 2;
 }
 
+// What the system is doing while an answer is prepared.
+enum ProgressStage {
+  PROGRESS_STAGE_UNSPECIFIED = 0;
+  // Looking up documents and the user manual.
+  PROGRESS_STAGE_SEARCHING = 1;
+  // Rating how well the passages found answer the question.
+  PROGRESS_STAGE_RATING = 2;
+  // The prompt is built and the answer is being generated.
+  PROGRESS_STAGE_WRITING = 3;
+}
+
 // A source an answer is grounded in: a chunk of a document, or a section of the
 // user manual. Manual citations set manual_page and manual_section instead of
 // document_id and chunk_index; their document_title names the page and section.
@@ -233,6 +244,9 @@ message StreamChatResponse {
     ChatMessage message = 3;
     // The answer failed. Sent once, before the message with the failed status.
     ChatError error = 4;
+    // The stage the answer has reached, sent before the first delta. Stages
+    // that don't happen are skipped; the last one is always WRITING.
+    ProgressStage progress = 5;
   }
 }
 

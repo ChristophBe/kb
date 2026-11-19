@@ -24,6 +24,8 @@ Open a document and select **Ask about this document** to start a new conversati
 1. Type your question in the box at the bottom (**Ask something…**).
 2. Press Enter or select the send button. Press Shift+Enter for a new line without sending.
 
+Until the first words appear, a status line below your question shows what Knowcelium is doing: **Searching your documents and the user manual…**, then **Choosing the best passages…** (when the passages are rated), then **Writing the answer…**. Without platform knowledge it only says **Writing the answer…**. Screen readers announce each change. If you reopen a conversation whose answer is still being written, it shows **Writing the answer…**. If the answer fails or you stop it, the status line gives way to the failure or stopped message.
+
 The answer appears as it is written. While it is being written, you can't send another question; wait for it or [stop it](#stop-an-answer). Answers can contain lists, tables and code; select **Copy code** on a code block to copy it.
 
 Under the newest answer, select **Copy answer** to copy its text to the clipboard (a notification confirms it). Older answers can't be copied this way; select their text instead.

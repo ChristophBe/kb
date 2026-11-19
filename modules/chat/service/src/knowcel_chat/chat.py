@@ -5,7 +5,7 @@ import contextlib
 import functools
 import logging
 import uuid
-from collections.abc import AsyncGenerator, Sequence
+from collections.abc import AsyncGenerator, Callable, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Protocol
@@ -59,8 +59,9 @@ class PromptMessage:
 
 class Retriever(Protocol):
     """Finds the passages most relevant to a question, only in `document_ids`
-    and only in documents of `team_ids`, each unless empty. Failures are raised
-    as PeerError."""
+    and only in documents of `team_ids`, each unless empty. `on_rating` is called
+    when the passages found are about to be rated. Failures are raised as
+    PeerError."""
 
     async def retrieve(
         self,
@@ -68,6 +69,7 @@ class Retriever(Protocol):
         limit: int,
         document_ids: Sequence[uuid.UUID],
         team_ids: Sequence[uuid.UUID] = (),
+        on_rating: Callable[[], None] | None = None,
     ) -> list[chat_pb2.Citation]: ...
 
 
@@ -100,7 +102,12 @@ class AnswerSaved:
     message: MessageRow
 
 
-AnswerEvent = SourcesFound | AnswerDelta | AnswerFailed | AnswerSaved
+@dataclass(frozen=True)
+class ProgressChanged:
+    stage: chat_pb2.ProgressStage
+
+
+AnswerEvent = ProgressChanged | SourcesFound | AnswerDelta | AnswerFailed | AnswerSaved
 
 _PROMPT_ROLES = {
     chat_pb2.MESSAGE_ROLE_USER: PromptRole.USER,
@@ -169,12 +176,30 @@ class Chat:
         try:
             retrieved: list[chat_pb2.Citation] = []
             if use_knowledge_base:
-                retrieved = await self._retriever.retrieve(
-                    content,
-                    self._settings.rag_top_k,
-                    conv.document_ids,
-                    _current_teams(conv.team_ids, member_team_ids),
-                )
+                yield ProgressChanged(chat_pb2.PROGRESS_STAGE_SEARCHING)
+                # The retriever reports the rating from inside its call, so it
+                # runs as a task and its stages are passed on as they come.
+                stages: asyncio.Queue[chat_pb2.ProgressStage | None] = asyncio.Queue()
+
+                async def search() -> list[chat_pb2.Citation]:
+                    try:
+                        return await self._retriever.retrieve(
+                            content,
+                            self._settings.rag_top_k,
+                            conv.document_ids,
+                            _current_teams(conv.team_ids, member_team_ids),
+                            on_rating=lambda: stages.put_nowait(chat_pb2.PROGRESS_STAGE_RATING),
+                        )
+                    finally:
+                        stages.put_nowait(None)
+
+                searching = asyncio.create_task(search())
+                try:
+                    while (stage := await stages.get()) is not None:
+                        yield ProgressChanged(stage)
+                    retrieved = await searching
+                finally:
+                    searching.cancel()
             budget = self._settings.context_tokens - self._settings.answer_reserve_tokens
             prompts = await self._prompts(conv)
             system_prompt = prompts.system_for(use_knowledge_base)
@@ -192,6 +217,7 @@ class Chat:
             if use_knowledge_base:
                 yield SourcesFound(citations)
 
+            yield ProgressChanged(chat_pb2.PROGRESS_STAGE_WRITING)
             prompt = _prompt(
                 system_prompt(citations, context.history),
                 [] if prompts.history_in_prompt else context.history,

@@ -5,6 +5,7 @@ import {
   type GetConversationResponse,
   MessageRole,
   MessageStatus,
+  ProgressStage,
 } from "@knowcel/chat-api/knowcel/chat/v1/chat_pb";
 import {
   Code,
@@ -40,6 +41,8 @@ interface Pending {
   question: string;
   answer: string;
   citations: Citation[];
+  /** What the system is doing until the first words arrive. */
+  stage: ProgressStage;
   /** The reason from the stream's error event, once the answer failed. */
   failure?: string;
 }
@@ -49,6 +52,23 @@ interface Stopped extends Pending {
   conversationId: string;
   /** The conversation's message count once the stopped answer is saved. */
   savedCount: number;
+}
+
+const STAGE_LABELS: Record<ProgressStage, string> = {
+  [ProgressStage.UNSPECIFIED]: "Writing the answer…",
+  [ProgressStage.SEARCHING]: "Searching your documents and the user manual…",
+  [ProgressStage.RATING]: "Choosing the best passages…",
+  [ProgressStage.WRITING]: "Writing the answer…",
+};
+
+/** What the system is doing while no words of the answer are there yet. */
+function ProgressLine({ stage }: { stage: ProgressStage }) {
+  return (
+    <div className="flex items-center gap-2 rounded-card border border-border bg-surface px-4 py-2 text-base text-fg-muted">
+      <Spinner />
+      {STAGE_LABELS[stage]}
+    </div>
+  );
 }
 
 const INTERRUPTED = "The answer was interrupted.";
@@ -142,8 +162,11 @@ export function Conversation() {
     setError(null);
     setStopped(null);
     setStatus("");
-    let state: Pending = { question, answer: "", citations: [] };
+    // Without platform knowledge there is no search; the first event may take a moment.
+    const stage = useKnowledgeBase ? ProgressStage.SEARCHING : ProgressStage.WRITING;
+    let state: Pending = { question, answer: "", citations: [], stage };
     setPending(state);
+    setStatus(STAGE_LABELS[stage]);
     const controller = new AbortController();
     abort.current = controller;
     stopping.current = false;
@@ -164,8 +187,18 @@ export function Conversation() {
       for await (const res of stream) {
         const event = res.event;
         if (event.case === "citations") state = { ...state, citations: event.value.items };
-        if (event.case === "delta") state = { ...state, answer: state.answer + event.value };
-        if (event.case === "error") state = { ...state, failure: event.value.message };
+        if (event.case === "progress") {
+          state = { ...state, stage: event.value };
+          setStatus(STAGE_LABELS[event.value]);
+        }
+        if (event.case === "delta") {
+          if (!state.answer) setStatus("");
+          state = { ...state, answer: state.answer + event.value };
+        }
+        if (event.case === "error") {
+          state = { ...state, failure: event.value.message };
+          setStatus("");
+        }
         if (event.case === "message" && state.failure !== undefined) {
           const [messageId, reason] = [event.value.id, state.failure];
           setFailures((f) => ({ ...f, [messageId]: reason }));
@@ -176,6 +209,7 @@ export function Conversation() {
         }
         setPending(state);
       }
+      setStatus("");
       await queryClient.invalidateQueries({ queryKey: ["conversations"] });
       queryClient.invalidateQueries({ queryKey: ACTIVITY_KEY });
     } catch (err) {
@@ -277,20 +311,19 @@ export function Conversation() {
           {pending && (
             <>
               <Bubble role={MessageRole.USER} content={pending.question} citations={[]} />
-              <Bubble
-                role={MessageRole.ASSISTANT}
-                content={pending.answer || (pending.failure === undefined ? "…" : "")}
-                citations={pending.citations}
-                failure={pending.failure}
-              />
+              {pending.answer || pending.failure !== undefined ? (
+                <Bubble
+                  role={MessageRole.ASSISTANT}
+                  content={pending.answer}
+                  citations={pending.citations}
+                  failure={pending.failure}
+                />
+              ) : (
+                <ProgressLine stage={pending.stage} />
+              )}
             </>
           )}
-          {generating && (
-            <div className="flex items-center gap-2 rounded-card border border-border bg-surface px-4 py-2 text-base text-fg-muted">
-              <Spinner />
-              Writing the answer…
-            </div>
-          )}
+          {generating && <ProgressLine stage={ProgressStage.WRITING} />}
           <div ref={bottom} />
         </div>
         <p role="status" className="sr-only">

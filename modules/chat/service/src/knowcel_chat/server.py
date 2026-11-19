@@ -27,6 +27,7 @@ from .chat import (
     Peer,
     PeerError,
     PeerUnavailableError,
+    ProgressChanged,
     SourcesFound,
 )
 from .prompts import DEFAULTS, VARIABLES, TemplateError, TemplateName, parse
@@ -428,6 +429,8 @@ def _response(event: AnswerEvent) -> chat_pb2.StreamChatResponse:
     match event:
         case SourcesFound(citations):
             return chat_pb2.StreamChatResponse(citations=chat_pb2.Citations(items=citations))
+        case ProgressChanged(stage):
+            return chat_pb2.StreamChatResponse(progress=stage)
         case AnswerDelta(text):
             return chat_pb2.StreamChatResponse(delta=text)
         case AnswerFailed(error):

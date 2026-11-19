@@ -109,7 +109,7 @@ class FakeRetriever:
 
 
 class FakeGenerator:
-    def __init__(self, deltas: tuple[str, ...] = ("Par", "is"), error: Exception | None = None):
+    def __init__(self, deltas: tuple[str, ...] = ("Par", "is [1]"), error: Exception | None = None):
         self.deltas = deltas
         self.error = error
         self.calls: list[tuple[str, list[PromptMessage]]] = []
@@ -168,9 +168,9 @@ async def test_answer_streams_sources_then_deltas_then_the_saved_message() -> No
     events = await collect(chat, repo)
 
     assert isinstance(events[0], SourcesFound)
-    assert events[1:3] == [AnswerDelta("Par"), AnswerDelta("is")]
+    assert events[1:3] == [AnswerDelta("Par"), AnswerDelta("is [1]")]
     assert isinstance(events[3], AnswerSaved)
-    assert events[3].message.content == "Paris"
+    assert events[3].message.content == "Paris [1]"
     assert events[3].message.citations == [
         {
             "document_id": "d1",
@@ -186,7 +186,7 @@ async def test_answer_streams_sources_then_deltas_then_the_saved_message() -> No
     assert generator.calls[0][0] == "m1"
     assert [(m.role, m.content, m.status) for m in repo.messages] == [
         (USER, "Capital?", COMPLETE),
-        (ASSISTANT, "Paris", COMPLETE),
+        (ASSISTANT, "Paris [1]", COMPLETE),
     ]
 
 
@@ -231,6 +231,35 @@ async def test_a_failed_search_ends_without_a_writing_stage() -> None:
         chat_pb2.PROGRESS_STAGE_SEARCHING
     ]
     assert isinstance(events[-1], AnswerSaved)
+
+
+async def test_only_the_sources_the_answer_uses_are_saved_in_order_of_use() -> None:
+    results = [
+        chat_pb2.Citation(document_id=f"d{i}", document_title=f"doc{i}.md", snippet=f"s{i}")
+        for i in (1, 2, 3)
+    ]
+    generator = FakeGenerator(("Third [3], first [1], third again [3], see `[2]`.",))
+    chat, repo, _, _ = make(retriever=FakeRetriever(results=results), generator=generator)
+    events = await collect(chat, repo)
+
+    found = events[0]
+    assert isinstance(found, SourcesFound)
+    assert len(found.citations) == 3  # all are streamed before the answer exists
+    saved = events[-1]
+    assert isinstance(saved, AnswerSaved)
+    assert saved.message.content == "Third [1], first [2], third again [1], see `[2]`."
+    assert [c["document_id"] for c in saved.message.citations] == ["d3", "d1"]
+    assert repo.messages[-1].citations == saved.message.citations
+
+
+async def test_an_answer_that_cites_nothing_is_saved_without_sources() -> None:
+    chat, repo, _, _ = make(generator=FakeGenerator(("I don't know.",)))
+    events = await collect(chat, repo)
+
+    saved = events[-1]
+    assert isinstance(saved, AnswerSaved)
+    assert saved.message.citations == []
+    assert repo.messages[-1].citations == []
 
 
 async def test_retrieval_is_limited_to_the_conversation_scope() -> None:
@@ -390,7 +419,9 @@ async def test_manual_sources_are_named_as_such_and_saved_with_their_section() -
                 )
             ]
 
-    chat, repo, _, generator = make(retriever=ManualRetriever())
+    chat, repo, _, generator = make(
+        retriever=ManualRetriever(), generator=FakeGenerator(("Select ", "Stop [1]."))
+    )
     events = await collect(chat, repo)
 
     system = generator.calls[0][1][0]
@@ -458,14 +489,14 @@ async def test_a_failed_retrieval_saves_an_empty_failed_answer(error: PeerError)
 
 async def test_a_failure_while_generating_keeps_the_partial_answer() -> None:
     error = PeerUnavailableError(Peer.LLM, "down")
-    chat, repo, _, _ = make(generator=FakeGenerator(("Par",), error=error))
+    chat, repo, _, _ = make(generator=FakeGenerator(("Par [1]",), error=error))
     events = await collect(chat, repo)
 
     assert isinstance(events[0], SourcesFound)
-    assert events[1:3] == [AnswerDelta("Par"), AnswerFailed(error)]
+    assert events[1:3] == [AnswerDelta("Par [1]"), AnswerFailed(error)]
     saved = events[3]
     assert isinstance(saved, AnswerSaved)
-    assert (saved.message.content, saved.message.status) == ("Par", FAILED)
+    assert (saved.message.content, saved.message.status) == ("Par [1]", FAILED)
     assert saved.message.citations[0]["document_id"] == "d1"
     assert [(m.role, m.status) for m in repo.messages] == [(USER, COMPLETE), (ASSISTANT, FAILED)]
 
@@ -481,7 +512,7 @@ async def test_failed_answers_are_left_out_of_the_prompt() -> None:
 
 
 async def test_cancelling_the_answer_stops_generation_and_saves_it_as_stopped() -> None:
-    generator = HangingGenerator()
+    generator = HangingGenerator(("Par [1]",))
     chat, repo, _, _ = make(generator=generator)
     task = asyncio.create_task(collect(chat, repo))
     await generator.waiting.wait()
@@ -492,7 +523,7 @@ async def test_cancelling_the_answer_stops_generation_and_saves_it_as_stopped() 
     assert generator.closed
     assert [(m.role, m.content, m.status) for m in repo.messages] == [
         (USER, "Capital?", COMPLETE),
-        (ASSISTANT, "Par", STOPPED),
+        (ASSISTANT, "Par [1]", STOPPED),
     ]
     assert repo.messages[1].citations[0]["document_id"] == "d1"
 

@@ -12,6 +12,7 @@ from typing import Any, Protocol
 
 from knowcel.chat.v1 import chat_pb2
 
+from .citations import used_sources
 from .config import Settings
 from .context import ApproximateTokenCounter, SystemPrompt, TokenCounter, fit
 from .prompts import DEFAULTS, Template, TemplateError, TemplateName, parse
@@ -262,11 +263,13 @@ class Chat:
         citations: list[chat_pb2.Citation],
         status: chat_pb2.MessageStatus,
     ) -> MessageRow:
+        # Only the sources the text refers to are kept, numbered as it uses them.
+        text, used = used_sources("".join(answer), citations)
         return await self._repo.add_message(
             conversation_id,
             chat_pb2.MESSAGE_ROLE_ASSISTANT,
-            "".join(answer),
-            [_citation_to_dict(c) for c in citations],
+            text,
+            [_citation_to_dict(c) for c in used],
             status,
         )
 

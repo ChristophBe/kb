@@ -1,0 +1,284 @@
+import {
+  CurationService,
+  type Finding,
+  FindingKind,
+  Resolution,
+  type ResolutionOption,
+} from "@knowcel/curation-api/knowcel/curation/v1/curation_pb";
+import {
+  toast,
+  useClient,
+  useInfiniteQuery,
+  useModuleEnabled,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@knowcel/module-sdk";
+import {
+  Badge,
+  Button,
+  brandText,
+  Card,
+  CheckCircle2,
+  ConfirmDialog,
+  DelayedLoading,
+  EmptyState,
+  ErrorMessage,
+  formatTime,
+  PageHeader,
+  SkeletonRows,
+  type Tone,
+} from "@knowcel/ui";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { Link } from "react-router";
+import { findingIsGone, findingsError, resolveError } from "./errors.ts";
+
+const PAGE_SIZE = 25;
+// ScoreChunks takes at most this many documents at once.
+const SCORE_BATCH = 100;
+
+const KINDS: Record<number, { label: string; tone: Tone }> = {
+  [FindingKind.DUPLICATE]: { label: "Duplicate", tone: "neutral" },
+  [FindingKind.SUPERSEDED]: { label: "Newer version", tone: "info" },
+  [FindingKind.CONFLICT]: { label: "Conflict", tone: "danger" },
+  [FindingKind.REVIEW_DUE]: { label: "Review due", tone: "warning" },
+};
+
+const RESOLUTIONS: Record<number, string> = {
+  [Resolution.KEEP]: "Keep",
+  [Resolution.REPLACE]: "Replace",
+  [Resolution.IGNORE]: "Ignore",
+};
+
+/** The toast after a finding was closed. */
+function resolvedMessage(finding: Finding, resolution: Resolution): string {
+  switch (resolution) {
+    case Resolution.KEEP:
+      return `Kept ${finding.documentTitle}`;
+    case Resolution.REPLACE:
+      return `${finding.otherDocumentTitle} now replaces ${finding.documentTitle}`;
+    default:
+      return "Finding ignored";
+  }
+}
+
+interface Choice {
+  finding: Finding;
+  option: ResolutionOption;
+}
+
+/**
+ * The findings about the user's documents (duplicates, newer versions,
+ * contradictions, reviews that are due), each with the ways to close it.
+ */
+export function Findings() {
+  const client = useClient(CurationService);
+  const queryClient = useQueryClient();
+  const heading = useRef<HTMLHeadingElement>(null);
+  const [confirming, setConfirming] = useState<Choice | null>(null);
+  const [failures, setFailures] = useState<Record<string, Error>>({});
+
+  const findings = useInfiniteQuery({
+    queryKey: ["findings"],
+    queryFn: ({ pageParam }) => client.listFindings({ pageSize: PAGE_SIZE, pageToken: pageParam }),
+    initialPageParam: "",
+    getNextPageParam: (last) => last.nextPageToken || undefined,
+  });
+  const items = findings.data?.pages.flatMap((p) => p.findings) ?? [];
+  // A page can hold none of the findings the user may see and still have a next one.
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = findings;
+  useEffect(() => {
+    if (items.length === 0 && hasNextPage && !isFetchingNextPage) void fetchNextPage();
+  }, [items.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const documentIds = [...new Set(items.map((f) => f.documentId))].sort();
+  const scores = useQuery({
+    queryKey: ["finding-scores", documentIds],
+    enabled: documentIds.length > 0,
+    queryFn: async () => {
+      const found = new Map<string, number>();
+      for (let i = 0; i < documentIds.length; i += SCORE_BATCH) {
+        const { scores } = await client.scoreChunks({
+          documentIds: documentIds.slice(i, i + SCORE_BATCH),
+        });
+        for (const s of scores) found.set(s.documentId, s.score);
+      }
+      return found;
+    },
+  });
+
+  const resolve = useMutation({
+    mutationFn: ({ finding, option }: Choice) =>
+      client.resolveFinding({ findingId: finding.id, resolution: option.resolution }),
+    onSuccess: async (_, { finding, option }) => {
+      setConfirming(null);
+      toast.success(resolvedMessage(finding, option.resolution));
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["findings"] }),
+        queryClient.invalidateQueries({ queryKey: ["finding-scores"] }),
+      ]);
+      // The row the focus was on is gone: leave it at the top of the list, not on <body>.
+      heading.current?.focus();
+    },
+    onError: async (err, { finding }) => {
+      setFailures((f) => ({ ...f, [finding.id]: resolveError(err) ?? new Error("Failed") }));
+      if (findingIsGone(err)) await queryClient.invalidateQueries({ queryKey: ["findings"] });
+    },
+  });
+
+  const choose = (choice: Choice) => {
+    setFailures((f) => {
+      const { [choice.finding.id]: _, ...rest } = f;
+      return rest;
+    });
+    // Replacing makes the document rank lower in answers, so it asks first.
+    if (choice.option.resolution === Resolution.REPLACE) setConfirming(choice);
+    else resolve.mutate(choice);
+  };
+
+  return (
+    <div>
+      <PageHeader
+        eyebrow={brandText("knowcelium / checks")}
+        title="Document checks"
+        description="Documents that repeat, replace or contradict each other, and documents that are due for review. Close a finding to keep answers consistent."
+      />
+      <h2 ref={heading} tabIndex={-1} className="sr-only">
+        Findings
+      </h2>
+      {findings.isPending ? (
+        <DelayedLoading>
+          <SkeletonRows label="Loading findings" />
+        </DelayedLoading>
+      ) : findings.error ? (
+        <div className="flex flex-col items-start gap-3">
+          <ErrorMessage error={findingsError(findings.error)} />
+          <Button variant="secondary" onClick={() => void findings.refetch()}>
+            Try again
+          </Button>
+        </div>
+      ) : items.length > 0 ? (
+        <>
+          <ul aria-label="Findings" className="flex flex-col gap-4">
+            {items.map((f) => (
+              <FindingCard
+                key={f.id}
+                finding={f}
+                score={scores.data?.get(f.documentId)}
+                pending={resolve.isPending && resolve.variables?.finding.id === f.id}
+                failure={failures[f.id]}
+                onChoose={choose}
+              />
+            ))}
+          </ul>
+          {hasNextPage && (
+            <div className="mt-4">
+              <Button
+                variant="secondary"
+                disabled={isFetchingNextPage}
+                onClick={() => void fetchNextPage()}
+              >
+                {isFetchingNextPage ? "Loading…" : "Show more"}
+              </Button>
+            </div>
+          )}
+        </>
+      ) : hasNextPage || isFetchingNextPage ? (
+        <DelayedLoading>
+          <SkeletonRows label="Loading findings" />
+        </DelayedLoading>
+      ) : (
+        <EmptyState icon={CheckCircle2}>No findings. Your documents look consistent.</EmptyState>
+      )}
+      <ConfirmDialog
+        open={confirming !== null}
+        title={`Replace ${confirming?.finding.documentTitle ?? ""}?`}
+        confirmLabel="Replace document"
+        pending={resolve.isPending}
+        error={confirming ? failures[confirming.finding.id]?.message : undefined}
+        onConfirm={() => confirming && resolve.mutate(confirming)}
+        onCancel={() => setConfirming(null)}
+        fallbackFocus={heading}
+      >
+        {confirming?.option.description}
+      </ConfirmDialog>
+    </div>
+  );
+}
+
+function FindingCard({
+  finding: f,
+  score,
+  pending,
+  failure,
+  onChoose,
+}: {
+  finding: Finding;
+  score: number | undefined;
+  pending: boolean;
+  failure: Error | undefined;
+  onChoose: (choice: Choice) => void;
+}) {
+  const kind = KINDS[f.kind];
+  const id = useId();
+  return (
+    <li>
+      <Card className="p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {kind && <Badge tone={kind.tone}>{kind.label}</Badge>}
+          <h3 className="min-w-0 font-medium wrap-anywhere">{f.summary}</h3>
+        </div>
+        <p className="mt-1 text-sm text-fg-muted">
+          {f.otherDocumentId === f.documentId ? (
+            <DocumentLink id={f.documentId}>{f.documentTitle}</DocumentLink>
+          ) : (
+            <>
+              <DocumentLink id={f.documentId}>{f.documentTitle}</DocumentLink> and{" "}
+              <DocumentLink id={f.otherDocumentId}>{f.otherDocumentTitle}</DocumentLink>
+            </>
+          )}
+          {" · "}
+          Found {formatTime(f.createdAt)}
+          {score !== undefined && ` · Relevance ${Math.round(score * 100)} %`}
+        </p>
+        <ul className="mt-3 flex flex-col gap-2">
+          {f.resolutions.map((option) => {
+            const describedBy = `${id}-${option.resolution}`;
+            return (
+              <li key={option.resolution} className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <Button
+                  variant="secondary"
+                  disabled={pending}
+                  aria-describedby={describedBy}
+                  aria-label={`${RESOLUTIONS[option.resolution]} ${f.documentTitle}`}
+                  onClick={() => onChoose({ finding: f, option })}
+                >
+                  {RESOLUTIONS[option.resolution]}
+                </Button>
+                <span id={describedBy} className="min-w-0 flex-1 text-sm text-fg-muted">
+                  {option.description}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+        {failure && (
+          <div className="mt-3">
+            <ErrorMessage error={failure} />
+          </div>
+        )}
+      </Card>
+    </li>
+  );
+}
+
+/** A link to the document, or only its title while the document module is off. */
+function DocumentLink({ id, children }: { id: string; children: ReactNode }) {
+  const enabled = useModuleEnabled("document");
+  if (!enabled) return <span className="font-medium text-fg">{children}</span>;
+  return (
+    <Link to={`/m/document/${id}`} className="font-medium text-accent hover:underline">
+      {children}
+    </Link>
+  );
+}

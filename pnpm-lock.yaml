@@ -189,6 +189,9 @@ importers:
       '@knowcel/module-chat':
         specifier: workspace:*
         version: link:../../modules/chat/ui
+      '@knowcel/module-curation':
+        specifier: workspace:*
+        version: link:../../modules/curation/ui
       '@knowcel/module-document':
         specifier: workspace:*
         version: link:../../modules/document/ui
@@ -344,6 +347,46 @@ importers:
       '@knowcel/common-api':
         specifier: workspace:*
         version: link:../../../../platform/api/ts
+
+  modules/curation/ui:
+    dependencies:
+      '@knowcel/curation-api':
+        specifier: workspace:*
+        version: link:../api/ts
+      '@knowcel/module-sdk':
+        specifier: workspace:*
+        version: link:../../../platform/ui/module-sdk
+      '@knowcel/ui':
+        specifier: workspace:*
+        version: link:../../../platform/ui/kit
+      react-router:
+        specifier: 'catalog:'
+        version: 8.5.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+    devDependencies:
+      '@connectrpc/connect':
+        specifier: 'catalog:'
+        version: 2.3.0(@bufbuild/protobuf@2.16.0)
+      '@testing-library/dom':
+        specifier: 'catalog:'
+        version: 10.4.2
+      '@testing-library/react':
+        specifier: 'catalog:'
+        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      react:
+        specifier: 'catalog:'
+        version: 19.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.1(react@19.3.1)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@26.6.6)(@vitest/coverage-v8@5.0.5)(jsdom@30.1.3)(vite@8.3.5(@types/node@26.6.6)(jiti@2.7.0))
 
   modules/document/api/ts:
     dependencies:

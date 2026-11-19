@@ -12,6 +12,7 @@
   "dependencies": {
     "@knowcel/iam-api": "workspace:*",
     "@knowcel/module-chat": "workspace:*",
+    "@knowcel/module-curation": "workspace:*",
     "@knowcel/module-document": "workspace:*",
     "@knowcel/module-iam": "workspace:*",
     "@knowcel/module-ingestion": "workspace:*",

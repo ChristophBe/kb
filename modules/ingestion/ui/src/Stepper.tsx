@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check } from "@knowcel/ui";
 
 export type StepState = "done" | "current" | "upcoming";
 

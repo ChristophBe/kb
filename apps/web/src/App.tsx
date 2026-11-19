@@ -8,16 +8,20 @@ import {
 } from "@knowcel/module-sdk";
 import {
   Area,
+  CircleHelp,
+  CircleUser,
   IconButton,
+  LogOut,
   Logo,
+  Menu,
   NARROW_QUERY,
   navItemClass,
   PageTitle,
   ThemeToggle,
   useDocumentTitle,
   useMediaQuery,
+  X,
 } from "@knowcel/ui";
-import { CircleHelp, CircleUser, LogOut, Menu, X } from "lucide-react";
 import {
   type KeyboardEvent,
   lazy,

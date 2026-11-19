@@ -14,8 +14,18 @@ import {
   useQuery,
   useQueryClient,
 } from "@knowcel/module-sdk";
-import { Button, buttonClass, ErrorMessage, Spinner } from "@knowcel/ui";
-import { ArrowUp, Copy, MessageSquare, RotateCcw, Square, TriangleAlert } from "lucide-react";
+import {
+  ArrowUp,
+  Button,
+  buttonClass,
+  Copy,
+  ErrorMessage,
+  MessageSquare,
+  RotateCcw,
+  Spinner,
+  Square,
+  TriangleAlert,
+} from "@knowcel/ui";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { Answer } from "./Answer.tsx";

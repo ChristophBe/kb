@@ -1,5 +1,4 @@
-import { Card, EmptyState } from "@knowcel/ui";
-import { UsersRound } from "lucide-react";
+import { Card, EmptyState, UsersRound } from "@knowcel/ui";
 
 export function TeamPlaceholder() {
   return (

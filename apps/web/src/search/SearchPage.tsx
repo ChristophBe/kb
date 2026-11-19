@@ -6,9 +6,9 @@ import {
   EmptyState,
   Input,
   PageHeader,
+  SearchX,
   SkeletonRows,
 } from "@knowcel/ui";
-import { SearchX } from "lucide-react";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { resultCount, type SearchGroup, useSearch } from "./useSearch.ts";

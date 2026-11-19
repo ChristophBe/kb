@@ -51,6 +51,30 @@
       "a11y": "error"
     }
   },
+  "overrides": [
+    {
+      "includes": [
+        "apps/web/src/**",
+        "platform/ui/**",
+        "modules/*/ui/**",
+        "!platform/ui/kit/src/icons.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "lucide-react": "Import icons from @knowcel/ui, which holds every icon of the UI (platform/ui/kit/src/icons.tsx)."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "assist": {
     "actions": {
       "source": {

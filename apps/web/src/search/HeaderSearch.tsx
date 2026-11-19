@@ -1,6 +1,5 @@
 import type { SearchProvider } from "@knowcel/module-sdk";
-import { cn } from "@knowcel/ui";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight, cn, Search } from "@knowcel/ui";
 import {
   type CSSProperties,
   type KeyboardEvent,

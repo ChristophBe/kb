@@ -17,6 +17,7 @@ import {
   Button,
   Card,
   ConfirmDialog,
+  Cpu,
   EmptyState,
   ErrorMessage,
   Input,
@@ -24,7 +25,6 @@ import {
   Spinner,
   useDocumentTitle,
 } from "@knowcel/ui";
-import { Cpu } from "lucide-react";
 import { type FormEvent, useRef, useState } from "react";
 import { modelError } from "./errors.ts";
 import { Usage } from "./Usage.tsx";

@@ -1,5 +1,5 @@
 import { defineManifest, lazySearch } from "@knowcel/module-sdk";
-import { FileText } from "lucide-react";
+import { FileText } from "@knowcel/ui";
 
 export default defineManifest({
   id: "document",

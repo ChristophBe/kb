@@ -1,5 +1,5 @@
 import { defineManifest } from "@knowcel/module-sdk";
-import { UserRoundCog, UsersRound } from "lucide-react";
+import { UserRoundCog, UsersRound } from "@knowcel/ui";
 
 export default defineManifest({
   id: "iam",

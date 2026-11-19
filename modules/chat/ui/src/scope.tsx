@@ -9,8 +9,17 @@ import {
   useQuery,
   useQueryClient,
 } from "@knowcel/module-sdk";
-import { Button, Dialog, ErrorMessage, IconButton, Input, Spinner, TeamPicker } from "@knowcel/ui";
-import { Library, X } from "lucide-react";
+import {
+  Button,
+  Dialog,
+  ErrorMessage,
+  IconButton,
+  Input,
+  Library,
+  Spinner,
+  TeamPicker,
+  X,
+} from "@knowcel/ui";
 import { useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { useMyTeams } from "./useMyTeams.ts";

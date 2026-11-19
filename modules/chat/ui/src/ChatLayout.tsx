@@ -9,12 +9,15 @@ import {
   EmptyState,
   ErrorMessage,
   IconButton,
+  MessageSquare,
   NARROW_QUERY,
   navItemClass,
+  Plus,
   RelativeTime,
+  Trash2,
+  Upload,
   useMediaQuery,
 } from "@knowcel/ui";
-import { MessageSquare, Plus, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { Link, Navigate, NavLink, Outlet, useNavigate, useParams } from "react-router";
 import { UNTITLED } from "./ConversationHeader.tsx";

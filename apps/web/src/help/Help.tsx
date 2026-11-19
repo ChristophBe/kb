@@ -1,5 +1,4 @@
-import { Card, EmptyState, headingSlug, PageHeader, PageTitle } from "@knowcel/ui";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Card, EmptyState, headingSlug, PageHeader, PageTitle } from "@knowcel/ui";
 import { type ReactNode, useEffect } from "react";
 import Markdown, { type Components, type ExtraProps } from "react-markdown";
 import { Link, useLocation, useParams } from "react-router";

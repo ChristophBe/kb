@@ -2,8 +2,7 @@ import {
   type Document,
   DocumentStatus,
 } from "@knowcel/document-api/knowcel/document/v1/document_pb";
-import { Badge, buttonClass } from "@knowcel/ui";
-import { AlertTriangle, Upload } from "lucide-react";
+import { AlertTriangle, Badge, buttonClass, Upload } from "@knowcel/ui";
 import { Link } from "react-router";
 import { statusLabel } from "./status.ts";
 

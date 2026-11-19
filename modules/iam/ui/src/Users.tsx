@@ -13,15 +13,16 @@ import {
   Badge,
   Button,
   Card,
+  CircleAlert,
   ConfirmDialog,
   DelayedLoading,
   EmptyState,
   ErrorMessage,
   PageHeader,
+  ShieldAlert,
   SkeletonRows,
   useDocumentTitle,
 } from "@knowcel/ui";
-import { CircleAlert, ShieldAlert } from "lucide-react";
 import { useRef, useState } from "react";
 import { userError } from "./errors.ts";
 

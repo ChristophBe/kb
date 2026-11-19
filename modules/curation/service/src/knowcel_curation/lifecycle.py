@@ -7,7 +7,7 @@ import uuid
 
 from knowcel_platform.grpc import Principal
 
-from .curation import REVIEW_DUE, CurationStore, DocInfo, Lifecycle, Scorer
+from .curation import EXCLUDED, REVIEW_DUE, CurationStore, DocInfo, Lifecycle, Scorer
 
 log = logging.getLogger("knowcel_curation")
 
@@ -47,6 +47,9 @@ class LifecycleService:
         await self._store.add_lifecycle_change(document_id, lifecycle, note, user)
         if previous is None or previous.review_by != lifecycle.review_by:
             await self._store.delete_review_due(document_id)
+        if lifecycle.state in EXCLUDED:
+            # Reports of a document that is deprecated or archived have done their work.
+            await self._store.close_report_finding(document_id, user)
         await self._scorer.rescore(document_id, created_at)
 
     async def open_review_findings(self) -> None:

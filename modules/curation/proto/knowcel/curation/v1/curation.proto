@@ -34,6 +34,16 @@ service CurationService {
   // ListLifecycleHistory returns every lifecycle change of a document the
   // caller can read, newest first.
   rpc ListLifecycleHistory(ListLifecycleHistoryRequest) returns (ListLifecycleHistoryResponse);
+  // ReportDocument reports a document the caller can read as wrong, outdated
+  // or inappropriate. A user has one report per document: reporting again
+  // replaces their earlier one. The reports of a document are counted under
+  // one REPORTED finding, and open reports lower its score. NOT_FOUND when the
+  // caller can't read the document.
+  rpc ReportDocument(ReportDocumentRequest) returns (ReportDocumentResponse);
+  // ListReports returns the open reports of a document: all of them for the
+  // document's owner, admins of teams it is shared with and platform admins,
+  // otherwise only the caller's own.
+  rpc ListReports(ListReportsRequest) returns (ListReportsResponse);
   // ResolveFinding closes an open finding with one of the options it lists and
   // updates the scores it affects. NOT_FOUND when the finding doesn't exist or
   // the caller can't see both documents, FAILED_PRECONDITION when it is
@@ -100,6 +110,10 @@ enum FindingKind {
   // The document is past its review date. Its document_id and
   // other_document_id are the same.
   FINDING_KIND_REVIEW_DUE = 4;
+  // The document was reported. Its document_id and other_document_id are the
+  // same. Only those who may change its lifecycle, and those who reported it,
+  // see it.
+  FINDING_KIND_REPORTED = 5;
 }
 
 // How a finding is closed. What each does is in the option's description.
@@ -111,6 +125,9 @@ enum Resolution {
   RESOLUTION_REPLACE = 2;
   // Dismiss the finding; nothing changes.
   RESOLUTION_IGNORE = 3;
+  // Deprecate the document (for a REPORTED finding): the same as setting its
+  // lifecycle to DEPRECATED, and only for those who may.
+  RESOLUTION_DEPRECATE = 4;
 }
 
 // One way to close a finding, worded for the person choosing.
@@ -134,6 +151,27 @@ message Finding {
   string other_document_title = 8;
   // The ways to close the finding, each with what it does.
   repeated ResolutionOption resolutions = 9;
+  // For a REPORTED finding, the open reports the caller may see, and how many
+  // there are of them.
+  repeated Report reports = 10;
+  int32 report_count = 11;
+}
+
+enum ReportReason {
+  REPORT_REASON_UNSPECIFIED = 0;
+  REPORT_REASON_WRONG = 1;
+  REPORT_REASON_OUTDATED = 2;
+  REPORT_REASON_INAPPROPRIATE = 3;
+  REPORT_REASON_OTHER = 4;
+}
+
+// Report is one user's report of a document.
+message Report {
+  // The user who reported, as the subject of their token.
+  string reporter = 1;
+  ReportReason reason = 2;
+  string comment = 3;
+  google.protobuf.Timestamp created_at = 4;
 }
 message GetDocumentScoreRequest {
   string document_id = 1;
@@ -173,6 +211,24 @@ message ListLifecycleHistoryRequest {
 
 message ListLifecycleHistoryResponse {
   repeated LifecycleChange changes = 1;
+}
+
+message ReportDocumentRequest {
+  string document_id = 1;
+  // Required.
+  ReportReason reason = 2;
+  // Optional, at most 1000 characters.
+  string comment = 3;
+}
+
+message ReportDocumentResponse {}
+
+message ListReportsRequest {
+  string document_id = 1;
+}
+
+message ListReportsResponse {
+  repeated Report reports = 1;
 }
 
 message ListFindingsRequest {

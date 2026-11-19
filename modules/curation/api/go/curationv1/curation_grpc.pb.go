@@ -24,6 +24,8 @@ const (
 	CurationService_ListFindings_FullMethodName         = "/knowcel.curation.v1.CurationService/ListFindings"
 	CurationService_SetLifecycle_FullMethodName         = "/knowcel.curation.v1.CurationService/SetLifecycle"
 	CurationService_ListLifecycleHistory_FullMethodName = "/knowcel.curation.v1.CurationService/ListLifecycleHistory"
+	CurationService_ReportDocument_FullMethodName       = "/knowcel.curation.v1.CurationService/ReportDocument"
+	CurationService_ListReports_FullMethodName          = "/knowcel.curation.v1.CurationService/ListReports"
 	CurationService_ResolveFinding_FullMethodName       = "/knowcel.curation.v1.CurationService/ResolveFinding"
 )
 
@@ -59,6 +61,16 @@ type CurationServiceClient interface {
 	// ListLifecycleHistory returns every lifecycle change of a document the
 	// caller can read, newest first.
 	ListLifecycleHistory(ctx context.Context, in *ListLifecycleHistoryRequest, opts ...grpc.CallOption) (*ListLifecycleHistoryResponse, error)
+	// ReportDocument reports a document the caller can read as wrong, outdated
+	// or inappropriate. A user has one report per document: reporting again
+	// replaces their earlier one. The reports of a document are counted under
+	// one REPORTED finding, and open reports lower its score. NOT_FOUND when the
+	// caller can't read the document.
+	ReportDocument(ctx context.Context, in *ReportDocumentRequest, opts ...grpc.CallOption) (*ReportDocumentResponse, error)
+	// ListReports returns the open reports of a document: all of them for the
+	// document's owner, admins of teams it is shared with and platform admins,
+	// otherwise only the caller's own.
+	ListReports(ctx context.Context, in *ListReportsRequest, opts ...grpc.CallOption) (*ListReportsResponse, error)
 	// ResolveFinding closes an open finding with one of the options it lists and
 	// updates the scores it affects. NOT_FOUND when the finding doesn't exist or
 	// the caller can't see both documents, FAILED_PRECONDITION when it is
@@ -124,6 +136,26 @@ func (c *curationServiceClient) ListLifecycleHistory(ctx context.Context, in *Li
 	return out, nil
 }
 
+func (c *curationServiceClient) ReportDocument(ctx context.Context, in *ReportDocumentRequest, opts ...grpc.CallOption) (*ReportDocumentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReportDocumentResponse)
+	err := c.cc.Invoke(ctx, CurationService_ReportDocument_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *curationServiceClient) ListReports(ctx context.Context, in *ListReportsRequest, opts ...grpc.CallOption) (*ListReportsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListReportsResponse)
+	err := c.cc.Invoke(ctx, CurationService_ListReports_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *curationServiceClient) ResolveFinding(ctx context.Context, in *ResolveFindingRequest, opts ...grpc.CallOption) (*ResolveFindingResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ResolveFindingResponse)
@@ -166,6 +198,16 @@ type CurationServiceServer interface {
 	// ListLifecycleHistory returns every lifecycle change of a document the
 	// caller can read, newest first.
 	ListLifecycleHistory(context.Context, *ListLifecycleHistoryRequest) (*ListLifecycleHistoryResponse, error)
+	// ReportDocument reports a document the caller can read as wrong, outdated
+	// or inappropriate. A user has one report per document: reporting again
+	// replaces their earlier one. The reports of a document are counted under
+	// one REPORTED finding, and open reports lower its score. NOT_FOUND when the
+	// caller can't read the document.
+	ReportDocument(context.Context, *ReportDocumentRequest) (*ReportDocumentResponse, error)
+	// ListReports returns the open reports of a document: all of them for the
+	// document's owner, admins of teams it is shared with and platform admins,
+	// otherwise only the caller's own.
+	ListReports(context.Context, *ListReportsRequest) (*ListReportsResponse, error)
 	// ResolveFinding closes an open finding with one of the options it lists and
 	// updates the scores it affects. NOT_FOUND when the finding doesn't exist or
 	// the caller can't see both documents, FAILED_PRECONDITION when it is
@@ -195,6 +237,12 @@ func (UnimplementedCurationServiceServer) SetLifecycle(context.Context, *SetLife
 }
 func (UnimplementedCurationServiceServer) ListLifecycleHistory(context.Context, *ListLifecycleHistoryRequest) (*ListLifecycleHistoryResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListLifecycleHistory not implemented")
+}
+func (UnimplementedCurationServiceServer) ReportDocument(context.Context, *ReportDocumentRequest) (*ReportDocumentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReportDocument not implemented")
+}
+func (UnimplementedCurationServiceServer) ListReports(context.Context, *ListReportsRequest) (*ListReportsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListReports not implemented")
 }
 func (UnimplementedCurationServiceServer) ResolveFinding(context.Context, *ResolveFindingRequest) (*ResolveFindingResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ResolveFinding not implemented")
@@ -310,6 +358,42 @@ func _CurationService_ListLifecycleHistory_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CurationService_ReportDocument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReportDocumentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CurationServiceServer).ReportDocument(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CurationService_ReportDocument_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CurationServiceServer).ReportDocument(ctx, req.(*ReportDocumentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CurationService_ListReports_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListReportsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CurationServiceServer).ListReports(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CurationService_ListReports_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CurationServiceServer).ListReports(ctx, req.(*ListReportsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CurationService_ResolveFinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ResolveFindingRequest)
 	if err := dec(in); err != nil {
@@ -354,6 +438,14 @@ var CurationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListLifecycleHistory",
 			Handler:    _CurationService_ListLifecycleHistory_Handler,
+		},
+		{
+			MethodName: "ReportDocument",
+			Handler:    _CurationService_ReportDocument_Handler,
+		},
+		{
+			MethodName: "ListReports",
+			Handler:    _CurationService_ListReports_Handler,
 		},
 		{
 			MethodName: "ResolveFinding",

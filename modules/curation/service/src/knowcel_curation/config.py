@@ -42,6 +42,11 @@ class Settings(PlatformSettings):
     # Pairs of passages per new document the chat model is asked about; 0 turns
     # conflict detection off.
     curation_conflict_checks: int = 3
+    # Factor a score is multiplied by for each user who reported the document,
+    # between 0 and 1. Reports stop counting when they are dismissed.
+    curation_report_penalty: float = 0.8
+    # The least the reports can take a score down to, as a factor between 0 and 1.
+    curation_report_floor: float = 0.3
     # Seconds between scoring all documents again, so that recency keeps
     # decaying while no document is processed. Documents past their review date
     # are opened as findings at the same time.
@@ -75,6 +80,8 @@ class Settings(PlatformSettings):
         problems.at_least("curation_approved_boost", self.curation_approved_boost, 1)
         problems.between("curation_deprecated_factor", self.curation_deprecated_factor, 0, 1)
         problems.between("curation_archived_factor", self.curation_archived_factor, 0, 1)
+        problems.between("curation_report_penalty", self.curation_report_penalty, 0, 1)
+        problems.between("curation_report_floor", self.curation_report_floor, 0, 1)
         problems.at_least("curation_rescore_interval", self.curation_rescore_interval, 1)
         problems.between("curation_conflict_threshold", self.curation_conflict_threshold, -1, 1)
         problems.between(
@@ -114,4 +121,6 @@ class Settings(PlatformSettings):
             approved_boost=self.curation_approved_boost,
             deprecated_factor=self.curation_deprecated_factor,
             archived_factor=self.curation_archived_factor,
+            report_penalty=self.curation_report_penalty,
+            report_floor=self.curation_report_floor,
         )

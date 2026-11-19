@@ -11,6 +11,7 @@ from knowcel_curation.curation import (
     Lifecycle,
     LifecycleChange,
     PeerUnavailableError,
+    Report,
     Score,
 )
 from knowcel_curation.findings import Hit
@@ -46,6 +47,7 @@ class FakeStore:
         self.findings: list[Finding] = []
         self.resolved_by: dict[uuid.UUID, str] = {}
         self.history: list[tuple[uuid.UUID, LifecycleChange]] = []
+        self.reports: dict[tuple[uuid.UUID, str], tuple[Report, bool]] = {}
         self.down = False
 
     async def get_scores(self, document_ids: Collection[uuid.UUID]) -> list[Score]:
@@ -96,6 +98,8 @@ class FakeStore:
                     f.id, f.kind, f.document_id, f.other_document_id, f.created_at, resolution
                 )
                 self.resolved_by[finding_id] = user
+                if f.kind == "reported":
+                    self._close_reports(f.document_id)
                 return True
         return False
 
@@ -117,6 +121,48 @@ class FakeStore:
         if after is not None:
             ordered = [f for f in ordered if key(f) > (-after.created_at.timestamp(), after.id)]
         return ordered[:limit]
+
+    async def save_report(
+        self, document_id: uuid.UUID, reporter: str, reason: str, comment: str
+    ) -> None:
+        self._check()
+        at = NOW + len(self.reports) * datetime.timedelta(seconds=1)
+        self.reports[(document_id, reporter)] = (
+            Report(document_id, reporter, reason, comment, at),
+            False,
+        )
+
+    async def list_reports(
+        self, document_ids: Collection[uuid.UUID]
+    ) -> dict[uuid.UUID, list[Report]]:
+        self._check()
+        found: dict[uuid.UUID, list[Report]] = {}
+        for (document_id, _), (report, closed) in self.reports.items():
+            if document_id in document_ids and not closed:
+                found.setdefault(document_id, []).append(report)
+        return found
+
+    def _close_reports(self, document_id: uuid.UUID) -> None:
+        for key, (report, _) in list(self.reports.items()):
+            if key[0] == document_id:
+                self.reports[key] = (report, True)
+
+    async def close_report_finding(self, document_id: uuid.UUID, user: str) -> None:
+        self._check()
+        for i, f in enumerate(self.findings):
+            if f.kind == "reported" and f.document_id == document_id and f.resolution is None:
+                self.findings[i] = Finding(
+                    f.id, f.kind, f.document_id, f.other_document_id, f.created_at, "deprecate"
+                )
+        self._close_reports(document_id)
+
+    async def delete_resolved_finding(self, kind: str, document_id: uuid.UUID) -> None:
+        self._check()
+        self.findings = [
+            f
+            for f in self.findings
+            if not (f.kind == kind and f.document_id == document_id and f.resolution is not None)
+        ]
 
     async def get_replacements(
         self, document_ids: Collection[uuid.UUID]

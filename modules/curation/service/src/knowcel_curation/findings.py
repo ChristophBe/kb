@@ -12,10 +12,12 @@ from knowcel_platform.grpc import as_user
 
 from .curation import (
     CONFLICT,
+    DEPRECATE,
     DUPLICATE,
     IGNORE,
     KEEP,
     REPLACE,
+    REPORTED,
     REVIEW_DUE,
     SUPERSEDED,
     DocInfo,
@@ -209,7 +211,11 @@ def same_name(a: DocInfo, b: DocInfo) -> bool:
     )
 
 
-def summary(finding: Finding, other_title: str) -> str:
+def summary(finding: Finding, other_title: str, reports: int = 0, privileged: bool = True) -> str:
+    if finding.kind == REPORTED:
+        if not privileged:
+            return f"You reported {other_title}"
+        return f"Reported by {'one person' if reports == 1 else f'{reports} people'}"
     return {
         DUPLICATE: f"Duplicate of {other_title}",
         SUPERSEDED: f"Newer version of {other_title} exists",
@@ -221,6 +227,14 @@ def summary(finding: Finding, other_title: str) -> str:
 def resolution_options(finding: Finding, title: str, other_title: str) -> list[tuple[str, str]]:
     """The ways to close a finding with what each does, from the point of view
     of the document it is about."""
+    if finding.kind == REPORTED:
+        return [
+            (IGNORE, "Dismiss the reports; nothing changes."),
+            (
+                DEPRECATE,
+                f"Deprecate {title}: it ranks much lower and chat stops using it.",
+            ),
+        ]
     if finding.kind == REVIEW_DUE:
         return [
             (

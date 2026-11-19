@@ -11,6 +11,7 @@ from typing import Any
 import grpc
 from knowcel.curation.v1 import curation_pb2, curation_pb2_grpc
 from knowcel_platform.grpc import (
+    Principal,
     abort_invalid_argument,
     current_principal,
     current_user,
@@ -21,14 +22,20 @@ from sqlalchemy.exc import SQLAlchemyError
 from .curation import (
     APPROVED,
     ARCHIVED,
+    DEPRECATE,
     DEPRECATED,
     DRAFT,
     EXCLUDED,
     IGNORE,
     IN_REVIEW,
+    INAPPROPRIATE,
     KEEP,
+    OTHER,
+    OUTDATED,
     REPLACE,
+    REPORTED,
     REVIEW_DUE,
+    WRONG,
     CurationStore,
     DocInfo,
     Documents,
@@ -38,11 +45,13 @@ from .curation import (
     LifecycleChange,
     PeerError,
     PeerUnavailableError,
+    Report,
     Score,
     Scorer,
 )
 from .findings import resolution_options, summary
 from .lifecycle import LifecycleService, may_change
+from .reports import ReportService, sees_all_reports, visible_reports
 
 log = logging.getLogger("knowcel_curation")
 
@@ -60,6 +69,7 @@ _RESOLUTIONS = {
     curation_pb2.RESOLUTION_KEEP: KEEP,
     curation_pb2.RESOLUTION_REPLACE: REPLACE,
     curation_pb2.RESOLUTION_IGNORE: IGNORE,
+    curation_pb2.RESOLUTION_DEPRECATE: DEPRECATE,
 }
 _RESOLUTION_ENUMS = {name: value for value, name in _RESOLUTIONS.items()}
 
@@ -71,6 +81,13 @@ _STATES = {
     curation_pb2.LIFECYCLE_STATE_ARCHIVED: ARCHIVED,
 }
 _STATE_ENUMS = {name: value for value, name in _STATES.items()}
+_REASONS = {
+    curation_pb2.REPORT_REASON_WRONG: WRONG,
+    curation_pb2.REPORT_REASON_OUTDATED: OUTDATED,
+    curation_pb2.REPORT_REASON_INAPPROPRIATE: INAPPROPRIATE,
+    curation_pb2.REPORT_REASON_OTHER: OTHER,
+}
+_REASON_ENUMS = {name: value for value, name in _REASONS.items()}
 _MAX_NOTE = 1000
 _MAX_OWNER = 200
 
@@ -79,10 +96,12 @@ _KIND_NAMES = {
     curation_pb2.FINDING_KIND_SUPERSEDED: "superseded",
     curation_pb2.FINDING_KIND_CONFLICT: "conflict",
     curation_pb2.FINDING_KIND_REVIEW_DUE: "review_due",
+    curation_pb2.FINDING_KIND_REPORTED: "reported",
 }
 
 _KINDS = {
     "review_due": curation_pb2.FINDING_KIND_REVIEW_DUE,
+    "reported": curation_pb2.FINDING_KIND_REPORTED,
     "duplicate": curation_pb2.FINDING_KIND_DUPLICATE,
     "superseded": curation_pb2.FINDING_KIND_SUPERSEDED,
     "conflict": curation_pb2.FINDING_KIND_CONFLICT,
@@ -126,11 +145,13 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
         documents: Documents,
         scorer: Scorer,
         lifecycle: LifecycleService,
+        reports: ReportService,
     ) -> None:
         self._store = store
         self._documents = documents
         self._scorer = scorer
         self._lifecycle = lifecycle
+        self._reports = reports
 
     async def GetDocumentScore(
         self, request: curation_pb2.GetDocumentScoreRequest, context: _Context
@@ -176,7 +197,8 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
     async def ListFindings(
         self, request: curation_pb2.ListFindingsRequest, context: _Context
     ) -> curation_pb2.ListFindingsResponse:
-        await self._require_user(context)
+        user = await self._require_user(context)
+        principal = current_principal()
         wanted = min(request.page_size or _DEFAULT_FINDINGS, _MAX_FINDINGS)
         try:
             after = _decode_cursor(request.page_token)
@@ -196,20 +218,55 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
                 documents = await self._documents.readable(
                     {i for f in batch for i in (f.document_id, f.other_document_id)}
                 )
+                reported_ids = {f.document_id for f in batch if f.kind == REPORTED}
+                reported = await self._store.list_reports(reported_ids) if reported_ids else {}
                 for f in batch:
                     if len(response.findings) == wanted:
                         more = True
                         break
                     after = FindingCursor(f.created_at, f.id)
                     if f.document_id in documents and f.other_document_id in documents:
-                        response.findings.append(
-                            _finding_message(
-                                f, documents[f.document_id], documents[f.other_document_id]
-                            )
-                        )
+                        message = _present(f, documents, reported, user, principal)
+                        if message:
+                            response.findings.append(message)
             if more and after is not None:
                 response.next_page_token = _encode_cursor(after)
         return response
+
+    async def ReportDocument(
+        self, request: curation_pb2.ReportDocumentRequest, context: _Context
+    ) -> curation_pb2.ReportDocumentResponse:
+        user = await self._require_user(context)
+        reason = _REASONS.get(request.reason)
+        violations = []
+        if reason is None:
+            violations.append(violation("reason", "Choose a reason"))
+        comment = request.comment.strip()
+        if len(comment) > _MAX_NOTE:
+            violations.append(
+                violation("comment", f"Comment must be at most {_MAX_NOTE} characters")
+            )
+        if reason is None or violations:
+            await abort_invalid_argument(context, *violations)
+        document_id = await self._document_id(context, request.document_id)
+        async with self._failures(context, "reporting a document"):
+            if document_id not in await self._documents.readable({document_id}):
+                await context.abort(grpc.StatusCode.NOT_FOUND, "document not found")
+            await self._reports.report(document_id, user, reason, comment)
+        return curation_pb2.ReportDocumentResponse()
+
+    async def ListReports(
+        self, request: curation_pb2.ListReportsRequest, context: _Context
+    ) -> curation_pb2.ListReportsResponse:
+        user = await self._require_user(context)
+        document_id = await self._document_id(context, request.document_id)
+        async with self._failures(context, "listing reports"):
+            document = (await self._documents.readable({document_id})).get(document_id)
+            if document is None:
+                await context.abort(grpc.StatusCode.NOT_FOUND, "document not found")
+            found = (await self._store.list_reports({document_id})).get(document_id, [])
+        shown = visible_reports(found, document, user, current_principal())
+        return curation_pb2.ListReportsResponse(reports=[_report_message(r) for r in shown])
 
     async def SetLifecycle(
         self, request: curation_pb2.SetLifecycleRequest, context: _Context
@@ -302,13 +359,40 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
                     context, violation("resolution", "Replace doesn't apply to a review reminder")
                 )
             ids = {finding.document_id, finding.other_document_id}
-            if len(await self._documents.readable(ids)) < len(ids):
+            readable = await self._documents.readable(ids)
+            if len(readable) < len(ids):
                 await context.abort(grpc.StatusCode.NOT_FOUND, "finding not found")
-            if finding.resolution is not None or not await self._store.resolve_finding(
-                finding_id, resolution, user
-            ):
+            document = readable[finding.document_id]
+            if finding.resolution is not None:
                 await context.abort(
                     grpc.StatusCode.FAILED_PRECONDITION, "the finding is already resolved"
+                )
+            if finding.kind == REPORTED:
+                await self._check_report_resolution(context, document, resolution, user)
+            elif resolution == DEPRECATE:
+                await abort_invalid_argument(
+                    context, violation("resolution", "Deprecate only applies to reports")
+                )
+            # The finding is claimed first (a report finding takes its reports with it), so
+            # of two who resolve it at once, one acts.
+            if not await self._store.resolve_finding(finding_id, resolution, user):
+                await context.abort(
+                    grpc.StatusCode.FAILED_PRECONDITION, "the finding is already resolved"
+                )
+            if finding.kind == REPORTED and resolution == DEPRECATE:
+                current = (await self._store.get_lifecycles([finding.document_id])).get(
+                    finding.document_id
+                )
+                await self._lifecycle.set(
+                    finding.document_id,
+                    Lifecycle(
+                        DEPRECATED,
+                        current.owner if current else document.owner_id or user,
+                        current.review_by if current else None,
+                    ),
+                    "Deprecated after reports",
+                    user,
+                    document.created_at,
                 )
         try:
             await self._scorer.rescore(finding.document_id)
@@ -316,6 +400,24 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
             # The resolution is saved; the next periodic rescore applies it.
             log.exception("scoring document %s again failed", finding.document_id)
         return curation_pb2.ResolveFindingResponse()
+
+    async def _check_report_resolution(
+        self, context: _Context, document: DocInfo, resolution: str, user: str
+    ) -> None:
+        """What closing a report finding needs: a choice that fits it, and the
+        right to change the document's lifecycle."""
+        if resolution not in (IGNORE, DEPRECATE):
+            await abort_invalid_argument(
+                context, violation("resolution", "Choose dismiss or deprecate for reports")
+            )
+        principal = current_principal()
+        if not may_change(document, user, principal):
+            if principal is not None and principal.unavailable:
+                await context.abort(grpc.StatusCode.UNAVAILABLE, "teams are unavailable right now")
+            await context.abort(
+                grpc.StatusCode.PERMISSION_DENIED,
+                "only the owner, a team admin or a platform admin can close reports",
+            )
 
     async def _visible_scores(
         self, context: _Context, ids: Collection[uuid.UUID]
@@ -373,13 +475,48 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
         return user
 
 
-def _finding_message(finding: Finding, document: DocInfo, other: DocInfo) -> curation_pb2.Finding:
+def _report_message(report: Report) -> curation_pb2.Report:
+    message = curation_pb2.Report(
+        reporter=report.reporter,
+        reason=_REASON_ENUMS[report.reason],
+        comment=report.comment,
+    )
+    message.created_at.FromDatetime(report.created_at)
+    return message
+
+
+def _present(
+    finding: Finding,
+    documents: dict[uuid.UUID, DocInfo],
+    reported: dict[uuid.UUID, list[Report]],
+    user: str,
+    principal: Principal | None,
+) -> curation_pb2.Finding | None:
+    """The finding as the caller sees it; None when it isn't for them."""
+    document, other = documents[finding.document_id], documents[finding.other_document_id]
+    if finding.kind != REPORTED:
+        return _finding_message(finding, document, other)
+    shown = visible_reports(reported.get(finding.document_id, []), document, user, principal)
+    if not shown:
+        return None
+    return _finding_message(
+        finding, document, other, shown, sees_all_reports(document, user, principal)
+    )
+
+
+def _finding_message(
+    finding: Finding,
+    document: DocInfo,
+    other: DocInfo,
+    reports: list[Report] | None = None,
+    privileged: bool = True,
+) -> curation_pb2.Finding:
     message = curation_pb2.Finding(
         id=str(finding.id),
         kind=_KINDS.get(finding.kind, curation_pb2.FINDING_KIND_UNSPECIFIED),
         document_id=str(finding.document_id),
         other_document_id=str(finding.other_document_id),
-        summary=summary(finding, other.title),
+        summary=summary(finding, other.title, len(reports or ()), privileged),
         document_title=document.title,
         other_document_title=other.title,
         resolutions=[
@@ -387,7 +524,10 @@ def _finding_message(finding: Finding, document: DocInfo, other: DocInfo) -> cur
                 resolution=_RESOLUTION_ENUMS[resolution], description=description
             )
             for resolution, description in resolution_options(finding, document.title, other.title)
+            if privileged
         ],
+        reports=[_report_message(r) for r in reports or ()],
+        report_count=len(reports or ()),
     )
     message.created_at.FromDatetime(finding.created_at)
     return message

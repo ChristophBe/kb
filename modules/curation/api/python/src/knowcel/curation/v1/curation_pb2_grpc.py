@@ -63,6 +63,16 @@ class CurationServiceStub:
                 request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListLifecycleHistoryRequest.SerializeToString,
                 response_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListLifecycleHistoryResponse.FromString,
                 _registered_method=True)
+        self.ReportDocument = channel.unary_unary(
+                '/knowcel.curation.v1.CurationService/ReportDocument',
+                request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ReportDocumentRequest.SerializeToString,
+                response_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ReportDocumentResponse.FromString,
+                _registered_method=True)
+        self.ListReports = channel.unary_unary(
+                '/knowcel.curation.v1.CurationService/ListReports',
+                request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListReportsRequest.SerializeToString,
+                response_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListReportsResponse.FromString,
+                _registered_method=True)
         self.ResolveFinding = channel.unary_unary(
                 '/knowcel.curation.v1.CurationService/ResolveFinding',
                 request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ResolveFindingRequest.SerializeToString,
@@ -125,6 +135,26 @@ class CurationServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ReportDocument(self, request, context):
+        """ReportDocument reports a document the caller can read as wrong, outdated
+        or inappropriate. A user has one report per document: reporting again
+        replaces their earlier one. The reports of a document are counted under
+        one REPORTED finding, and open reports lower its score. NOT_FOUND when the
+        caller can't read the document.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListReports(self, request, context):
+        """ListReports returns the open reports of a document: all of them for the
+        document's owner, admins of teams it is shared with and platform admins,
+        otherwise only the caller's own.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ResolveFinding(self, request, context):
         """ResolveFinding closes an open finding with one of the options it lists and
         updates the scores it affects. NOT_FOUND when the finding doesn't exist or
@@ -162,6 +192,16 @@ def add_CurationServiceServicer_to_server(servicer, server):
                     servicer.ListLifecycleHistory,
                     request_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListLifecycleHistoryRequest.FromString,
                     response_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListLifecycleHistoryResponse.SerializeToString,
+            ),
+            'ReportDocument': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReportDocument,
+                    request_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ReportDocumentRequest.FromString,
+                    response_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ReportDocumentResponse.SerializeToString,
+            ),
+            'ListReports': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListReports,
+                    request_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListReportsRequest.FromString,
+                    response_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListReportsResponse.SerializeToString,
             ),
             'ResolveFinding': grpc.unary_unary_rpc_method_handler(
                     servicer.ResolveFinding,
@@ -308,6 +348,60 @@ class CurationService:
             '/knowcel.curation.v1.CurationService/ListLifecycleHistory',
             knowcel_dot_curation_dot_v1_dot_curation__pb2.ListLifecycleHistoryRequest.SerializeToString,
             knowcel_dot_curation_dot_v1_dot_curation__pb2.ListLifecycleHistoryResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReportDocument(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.curation.v1.CurationService/ReportDocument',
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.ReportDocumentRequest.SerializeToString,
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.ReportDocumentResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListReports(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.curation.v1.CurationService/ListReports',
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.ListReportsRequest.SerializeToString,
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.ListReportsResponse.FromString,
             options,
             channel_credentials,
             insecure,

@@ -16,6 +16,7 @@ DUPLICATE = "duplicate"
 SUPERSEDED = "superseded"
 CONFLICT = "conflict"
 REVIEW_DUE = "review_due"
+REPORTED = "reported"
 
 # Lifecycle states.
 DRAFT = "draft"
@@ -31,7 +32,15 @@ EXCLUDED = (DEPRECATED, ARCHIVED)
 KEEP = "keep"
 REPLACE = "replace"
 IGNORE = "ignore"
-RESOLUTIONS = (KEEP, REPLACE, IGNORE)
+DEPRECATE = "deprecate"
+RESOLUTIONS = (KEEP, REPLACE, IGNORE, DEPRECATE)
+
+# Reasons for reporting a document.
+WRONG = "wrong"
+OUTDATED = "outdated"
+INAPPROPRIATE = "inappropriate"
+OTHER = "other"
+REASONS = (WRONG, OUTDATED, INAPPROPRIATE, OTHER)
 
 
 class PeerError(Exception):
@@ -61,6 +70,17 @@ class Finding:
     created_at: datetime.datetime
     # keep, replace or ignore; None while the finding is open.
     resolution: str | None = None
+
+
+@dataclass(frozen=True)
+class Report:
+    """One user's open report of a document."""
+
+    document_id: uuid.UUID
+    reporter: str
+    reason: str
+    comment: str
+    created_at: datetime.datetime
 
 
 @dataclass(frozen=True)
@@ -118,6 +138,10 @@ class Weights:
     approved_boost: float = 1.0
     deprecated_factor: float = 1.0
     archived_factor: float = 1.0
+    # What open reports do to a score: it is multiplied by `report_penalty` for
+    # each user who reported the document, but not below `report_floor`.
+    report_penalty: float = 1.0
+    report_floor: float = 0.0
 
 
 def score_document(
@@ -127,10 +151,12 @@ def score_document(
     citations: int,
     weights: Weights,
     state: str | None = None,
+    reports: int = 0,
 ) -> float:
     """A score between 0 and 1: the weighted mean of recency (1 when just
     processed, halving every `half_life_days`) and usage (citations up to
-    `usage_saturation`), times `replacement_penalty` once per replacement, then
+    `usage_saturation`), times `replacement_penalty` once per replacement and
+    `report_penalty` once per reporting user (not below `report_floor`), then
     raised for an approved document and lowered for a deprecated or archived one."""
     age_days = max((now - processed_at).total_seconds(), 0) / 86400
     recency = 0.5 ** (age_days / weights.half_life_days)
@@ -139,6 +165,7 @@ def score_document(
         weights.recency + weights.usage
     )
     score = signals * weights.replacement_penalty**replacements
+    score *= max(weights.report_floor, weights.report_penalty**reports)
     if state == APPROVED:
         return min(score * weights.approved_boost, 1)
     if state == DEPRECATED:
@@ -170,7 +197,8 @@ class CurationStore(Protocol):
     async def get_finding(self, finding_id: uuid.UUID) -> Finding | None: ...
 
     async def resolve_finding(self, finding_id: uuid.UUID, resolution: str, user: str) -> bool:
-        """Closes an open finding; False when it doesn't exist or is closed already."""
+        """Closes an open finding, and the reports of a REPORTED one in the same
+        change; False when it doesn't exist or is closed already."""
         ...
 
     async def list_open_findings(
@@ -195,6 +223,28 @@ class CurationStore(Protocol):
         self, document_ids: Collection[uuid.UUID]
     ) -> dict[uuid.UUID, Lifecycle]:
         """The current lifecycle of those of the documents that have one."""
+        ...
+
+    async def save_report(
+        self, document_id: uuid.UUID, reporter: str, reason: str, comment: str
+    ) -> None:
+        """Records the user's report, replacing their earlier one (also a closed one)."""
+        ...
+
+    async def list_reports(
+        self, document_ids: Collection[uuid.UUID]
+    ) -> dict[uuid.UUID, list[Report]]:
+        """The open reports of those of the documents that have any, oldest first."""
+        ...
+
+    async def close_report_finding(self, document_id: uuid.UUID, user: str) -> None:
+        """Resolves the document's open REPORTED finding as deprecated and closes
+        its reports, as one change; nothing when it has none."""
+        ...
+
+    async def delete_resolved_finding(self, kind: str, document_id: uuid.UUID) -> None:
+        """Removes the document's finding of that kind when it is resolved, so a
+        new one can be made."""
         ...
 
     async def add_lifecycle_change(
@@ -252,9 +302,11 @@ class Scorer:
         scores go stale without it."""
         after = None
         while scores := await self._store.list_scores(after, batch):
-            lifecycles = await self._store.get_lifecycles({s.document_id for s in scores})
+            ids = {s.document_id for s in scores}
+            lifecycles = await self._store.get_lifecycles(ids)
+            reports = {i: len(r) for i, r in (await self._store.list_reports(ids)).items()}
             for score in scores:
-                await self._save(score.document_id, score.processed_at, lifecycles)
+                await self._save(score.document_id, score.processed_at, lifecycles, reports)
             after = scores[-1].document_id
 
     async def _current(self, document_id: uuid.UUID) -> Score | None:
@@ -266,10 +318,15 @@ class Scorer:
         document_id: uuid.UUID,
         processed_at: datetime.datetime,
         lifecycles: dict[uuid.UUID, Lifecycle] | None = None,
+        reports: dict[uuid.UUID, int] | None = None,
     ) -> None:
         replacements = await self._store.count_replacements(document_id)
         if lifecycles is None:
             lifecycles = await self._store.get_lifecycles([document_id])
+        if reports is None:
+            reports = {
+                i: len(r) for i, r in (await self._store.list_reports([document_id])).items()
+            }
         # The usage signal needs chat to report its citations; until it does,
         # usage is 0 (and weighs nothing unless KNOWCEL_CURATION_USAGE_WEIGHT is set).
         lifecycle = lifecycles.get(document_id)
@@ -280,6 +337,7 @@ class Scorer:
             0,
             self._weights,
             lifecycle.state if lifecycle else None,
+            reports.get(document_id, 0),
         )
         await self._store.save_score(document_id, processed_at, score)
         log.info("scored document %s: %.3f (%d replacements)", document_id, score, replacements)

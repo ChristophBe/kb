@@ -94,3 +94,23 @@ async def test_a_change_that_keeps_the_review_date_leaves_a_dismissed_reminder_a
     # Only the note and state change; the date stays.
     await service.set(document, Lifecycle("in_review", "alice", late), "looking", "bob")
     assert [f.resolution for f in store.findings] == ["keep"]
+
+
+async def test_deprecating_or_archiving_a_document_closes_its_reports() -> None:
+    for state in ("deprecated", "archived"):
+        store = FakeStore()
+        service = LifecycleService(store, Scorer(store, WEIGHTS))
+        document = uuid.uuid4()
+        await store.save_report(document, "bob", "wrong", "")
+        await store.add_finding("reported", document, document)
+        await service.set(document, Lifecycle(state, "alice"), "", "alice")
+        assert [f.resolution for f in store.findings] == ["deprecate"]
+        assert await store.list_reports([document]) == {}
+    # Another state leaves them open.
+    store = FakeStore()
+    service = LifecycleService(store, Scorer(store, WEIGHTS))
+    document = uuid.uuid4()
+    await store.save_report(document, "bob", "wrong", "")
+    await store.add_finding("reported", document, document)
+    await service.set(document, Lifecycle("approved", "alice"), "", "alice")
+    assert [f.resolution for f in store.findings] == [None]

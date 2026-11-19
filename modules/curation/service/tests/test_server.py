@@ -8,8 +8,9 @@ import pytest
 from google.protobuf.timestamp_pb2 import Timestamp
 from knowcel.curation.v1 import curation_pb2, curation_pb2_grpc
 from knowcel_curation.config import Settings
-from knowcel_curation.curation import DocInfo, Finding, Score, Scorer, Weights
+from knowcel_curation.curation import DocInfo, Finding, Lifecycle, Score, Scorer, Weights
 from knowcel_curation.lifecycle import LifecycleService
+from knowcel_curation.reports import ReportService
 from knowcel_curation.server import CurationServicer
 from knowcel_platform.config import Problems
 from knowcel_platform.grpc import Principal, PrincipalResolver, Team, UserInterceptor
@@ -20,7 +21,14 @@ from tests.fakes import NOW, FakeDocuments, FakeStore, doc
 SEEN, HIDDEN, UNSCORED, OTHER = (doc(t) for t in ("Seen", "Hidden", "Unscored", "Other"))
 USER = (("x-kb-user", "alice"),)
 WEIGHTS = Weights(
-    recency=1, usage=0, half_life_days=100, replacement_penalty=0.5, usage_saturation=10
+    recency=1,
+    usage=0,
+    half_life_days=100,
+    replacement_penalty=0.5,
+    usage_saturation=10,
+    deprecated_factor=0.1,
+    report_penalty=0.5,
+    report_floor=0.25,
 )
 
 
@@ -63,7 +71,9 @@ async def stub(
     store: FakeStore, documents: FakeDocuments
 ) -> AsyncIterator[curation_pb2_grpc.CurationServiceStub]:
     scorer = Scorer(store, WEIGHTS)
-    servicer = CurationServicer(store, documents, scorer, LifecycleService(store, scorer))
+    servicer = CurationServicer(
+        store, documents, scorer, LifecycleService(store, scorer), ReportService(store, scorer)
+    )
     server = grpc.aio.server(interceptors=[UserInterceptor(PrincipalResolver(resolve_principal))])
     curation_pb2_grpc.add_CurationServiceServicer_to_server(servicer, server)
     port = server.add_insecure_port("127.0.0.1:0")
@@ -312,12 +322,14 @@ def test_settings_are_checked() -> None:
         curation_conflict_threshold=0.9,
         curation_sample_chunks=0,
         curation_conflict_checks=-1,
+        curation_report_penalty=2,
+        curation_report_floor=-1,
         iam_addr="nope",
         curation_approved_boost=0.5,
         curation_deprecated_factor=2,
         curation_archived_factor=-1,
     ).check(bad)
-    assert len(bad.items) == 15
+    assert len(bad.items) == 17
 
 
 async def test_findings_come_in_pages_that_skip_unreadable_ones(
@@ -618,7 +630,9 @@ async def test_a_replacement_the_caller_cannot_read_or_that_was_kept_does_not_co
     ]
     documents = FakeDocuments(SEEN, kept, OTHER)
     scorer = Scorer(store, WEIGHTS)
-    servicer = CurationServicer(store, documents, scorer, LifecycleService(store, scorer))
+    servicer = CurationServicer(
+        store, documents, scorer, LifecycleService(store, scorer), ReportService(store, scorer)
+    )
     server = grpc.aio.server(interceptors=[UserInterceptor()])
     curation_pb2_grpc.add_CurationServiceServicer_to_server(servicer, server)
     port = server.add_insecure_port("127.0.0.1:0")
@@ -685,3 +699,260 @@ async def test_findings_can_be_limited_to_some_kinds(
         len((await stub.ListFindings(curation_pb2.ListFindingsRequest(), metadata=USER)).findings)
         == 3
     )
+
+
+def report(
+    stub: curation_pb2_grpc.CurationServiceStub, document: DocInfo, user: str, **fields: Any
+):
+    return stub.ReportDocument(
+        curation_pb2.ReportDocumentRequest(
+            document_id=str(document.id),
+            reason=fields.pop("reason", curation_pb2.REPORT_REASON_WRONG),
+            **fields,
+        ),
+        metadata=as_user(user),
+    )
+
+
+async def findings_of(stub: curation_pb2_grpc.CurationServiceStub, user: str):
+    response = await stub.ListFindings(curation_pb2.ListFindingsRequest(), metadata=as_user(user))
+    return [f for f in response.findings if f.kind == curation_pb2.FINDING_KIND_REPORTED]
+
+
+async def test_reports_of_a_document_share_one_finding_the_owner_sees_with_all_of_them(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    store.findings = []
+    await report(stub, OWNED, "bob", reason=curation_pb2.REPORT_REASON_OUTDATED, comment="Old")
+    await report(stub, OWNED, "carol", comment="Wrong figure")
+    assert len(store.findings) == 1
+    (finding,) = await findings_of(stub, "alice")
+    assert finding.summary == "Reported by 2 people"
+    assert finding.report_count == 2
+    assert {(r.reporter, r.comment) for r in finding.reports} == {
+        ("bob", "Old"),
+        ("carol", "Wrong figure"),
+    }
+    assert [o.resolution for o in finding.resolutions] == [
+        curation_pb2.RESOLUTION_IGNORE,
+        curation_pb2.RESOLUTION_DEPRECATE,
+    ]
+    assert (finding.document_id, finding.other_document_id) == (str(OWNED.id), str(OWNED.id))
+
+
+async def test_a_second_report_of_a_user_replaces_their_first(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    store.findings = []
+    await report(stub, OWNED, "bob", reason=curation_pb2.REPORT_REASON_WRONG, comment="a")
+    await report(stub, OWNED, "bob", reason=curation_pb2.REPORT_REASON_OTHER, comment=" b ")
+    (finding,) = await findings_of(stub, "alice")
+    assert finding.report_count == 1
+    (only,) = finding.reports
+    assert (only.reason, only.comment) == (curation_pb2.REPORT_REASON_OTHER, "b")
+    assert finding.summary == "Reported by one person"
+
+
+async def test_a_reporter_sees_only_their_own_report_and_nobody_else_sees_it(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    store.findings = []
+    await report(stub, OWNED, "bob", comment="mine")
+    await report(stub, OWNED, "carol", comment="theirs")
+    (bobs,) = await findings_of(stub, "bob")
+    assert bobs.summary == "You reported Owned"
+    assert [r.comment for r in bobs.reports] == ["mine"]
+    assert bobs.report_count == 1
+    assert not bobs.resolutions
+    assert await findings_of(stub, "dave") == []
+    # A team admin and a platform admin see them all.
+    assert await findings_of(stub, "root") != []
+    listed = await stub.ListReports(
+        curation_pb2.ListReportsRequest(document_id=str(OWNED.id)), metadata=as_user("bob")
+    )
+    assert [r.comment for r in listed.reports] == ["mine"]
+    everything = await stub.ListReports(
+        curation_pb2.ListReportsRequest(document_id=str(OWNED.id)), metadata=as_user("alice")
+    )
+    assert len(everything.reports) == 2
+
+
+async def test_team_admins_see_the_reports_of_a_document_shared_with_their_team(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    store.findings = []
+    await report(stub, SHARED, "bob", comment="x")
+    (finding,) = await findings_of(stub, "team-admin")
+    assert finding.report_count == 1
+    assert finding.resolutions
+    assert await findings_of(stub, "team-member") == []
+
+
+async def test_only_a_document_the_caller_can_read_can_be_reported_with_a_reason(
+    stub: curation_pb2_grpc.CurationServiceStub,
+) -> None:
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await report(stub, HIDDEN, "bob")
+    assert err.value.code() == grpc.StatusCode.NOT_FOUND
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.ReportDocument(
+            curation_pb2.ReportDocumentRequest(document_id=str(OWNED.id)), metadata=as_user("bob")
+        )
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await report(stub, OWNED, "bob", comment="x" * 1001)
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    # Spaces around a comment don't count.
+    await report(stub, OWNED, "bob", comment=f" {'x' * 1000} ")
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await report(stub, OWNED, "bob", comment="x" * 1001)
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.ReportDocument(
+            curation_pb2.ReportDocumentRequest(
+                document_id=str(OWNED.id), reason=curation_pb2.REPORT_REASON_WRONG
+            )
+        )
+    assert err.value.code() == grpc.StatusCode.UNAUTHENTICATED
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.ListReports(
+            curation_pb2.ListReportsRequest(document_id=str(HIDDEN.id)), metadata=as_user("bob")
+        )
+    assert err.value.code() == grpc.StatusCode.NOT_FOUND
+
+
+async def test_open_reports_lower_the_score_and_dismissing_them_restores_it(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    store.findings = []
+    await Scorer(store, WEIGHTS).on_processed(OWNED.id, datetime.datetime.now(datetime.UTC))
+    before = store.scores[OWNED.id].score
+    await report(stub, OWNED, "bob")
+    assert store.scores[OWNED.id].score == pytest.approx(before * 0.5)
+    await report(stub, OWNED, "carol")
+    # Two reporters take it to the floor of 0.25; more don't go further.
+    assert store.scores[OWNED.id].score == pytest.approx(before * 0.25)
+    await report(stub, OWNED, "dave")
+    assert store.scores[OWNED.id].score == pytest.approx(before * 0.25)
+    (finding,) = await findings_of(stub, "alice")
+    await stub.ResolveFinding(
+        curation_pb2.ResolveFindingRequest(
+            finding_id=finding.id, resolution=curation_pb2.RESOLUTION_IGNORE
+        ),
+        metadata=USER,
+    )
+    assert store.scores[OWNED.id].score == pytest.approx(before)
+    assert await findings_of(stub, "alice") == []
+    assert await findings_of(stub, "bob") == []
+
+
+async def test_a_new_report_after_a_dismissal_makes_a_new_finding(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    store.findings = []
+    await report(stub, OWNED, "bob")
+    (finding,) = await findings_of(stub, "alice")
+    await stub.ResolveFinding(
+        curation_pb2.ResolveFindingRequest(
+            finding_id=finding.id, resolution=curation_pb2.RESOLUTION_IGNORE
+        ),
+        metadata=USER,
+    )
+    await report(stub, OWNED, "bob", comment="again")
+    (again,) = await findings_of(stub, "alice")
+    assert again.id != finding.id
+    assert [r.comment for r in again.reports] == ["again"]
+
+
+async def test_deprecating_from_a_report_deprecates_the_document(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    store.findings = []
+    await Scorer(store, WEIGHTS).on_processed(OWNED.id, datetime.datetime.now(datetime.UTC))
+    await report(stub, OWNED, "bob")
+    (finding,) = await findings_of(stub, "alice")
+    await stub.ResolveFinding(
+        curation_pb2.ResolveFindingRequest(
+            finding_id=finding.id, resolution=curation_pb2.RESOLUTION_DEPRECATE
+        ),
+        metadata=USER,
+    )
+    (current,) = (await store.get_lifecycles([OWNED.id])).values()
+    assert current.state == "deprecated"
+    assert current.owner == "alice"
+    history = await store.list_lifecycle_history(OWNED.id)
+    assert (history[0].note, history[0].changed_by) == ("Deprecated after reports", "alice")
+    scores = await stub.GetDocumentScore(
+        curation_pb2.GetDocumentScoreRequest(document_id=str(OWNED.id)), metadata=USER
+    )
+    assert scores.score.excluded
+    assert await findings_of(stub, "alice") == []
+
+
+async def test_only_those_who_may_change_the_lifecycle_close_reports(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    store.findings = []
+    await report(stub, OWNED, "bob")
+    (finding,) = await findings_of(stub, "bob")
+    for resolution in (curation_pb2.RESOLUTION_IGNORE, curation_pb2.RESOLUTION_DEPRECATE):
+        with pytest.raises(grpc.aio.AioRpcError) as err:
+            await stub.ResolveFinding(
+                curation_pb2.ResolveFindingRequest(finding_id=finding.id, resolution=resolution),
+                metadata=as_user("bob"),
+            )
+        assert err.value.code() == grpc.StatusCode.PERMISSION_DENIED
+    assert not store.history
+    assert len(await findings_of(stub, "alice")) == 1
+    # A report doesn't take keep or replace, and deprecating fits nothing else.
+    for resolution in (curation_pb2.RESOLUTION_KEEP, curation_pb2.RESOLUTION_REPLACE):
+        with pytest.raises(grpc.aio.AioRpcError) as err:
+            await stub.ResolveFinding(
+                curation_pb2.ResolveFindingRequest(finding_id=finding.id, resolution=resolution),
+                metadata=USER,
+            )
+        assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    other = Finding(uuid.uuid4(), "duplicate", SEEN.id, OTHER.id, NOW)
+    store.findings.append(other)
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.ResolveFinding(
+            curation_pb2.ResolveFindingRequest(
+                finding_id=str(other.id), resolution=curation_pb2.RESOLUTION_DEPRECATE
+            ),
+            metadata=USER,
+        )
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+
+
+async def test_deprecating_from_a_report_keeps_the_owner_and_the_review_date(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    store.findings = []
+    review_by = NOW + datetime.timedelta(days=30)
+    await store.add_lifecycle_change(OWNED.id, Lifecycle("approved", "carol", review_by), "", "x")
+    await report(stub, OWNED, "bob")
+    (finding,) = await findings_of(stub, "alice")
+    await stub.ResolveFinding(
+        curation_pb2.ResolveFindingRequest(
+            finding_id=finding.id, resolution=curation_pb2.RESOLUTION_DEPRECATE
+        ),
+        metadata=USER,
+    )
+    (current,) = (await store.get_lifecycles([OWNED.id])).values()
+    assert (current.state, current.owner, current.review_by) == ("deprecated", "carol", review_by)
+
+
+async def test_only_one_of_two_who_deprecate_from_a_report_acts(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    store.findings = []
+    await report(stub, OWNED, "bob")
+    (finding,) = await findings_of(stub, "alice")
+    request = curation_pb2.ResolveFindingRequest(
+        finding_id=finding.id, resolution=curation_pb2.RESOLUTION_DEPRECATE
+    )
+    await stub.ResolveFinding(request, metadata=USER)
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.ResolveFinding(request, metadata=as_user("root"))
+    assert err.value.code() == grpc.StatusCode.FAILED_PRECONDITION
+    assert len(store.history) == 1

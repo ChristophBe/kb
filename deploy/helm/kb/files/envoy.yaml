@@ -61,6 +61,10 @@ static_resources:
                           route: { cluster: curation-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.curation.v1.CurationService/ListFindings" }
                           route: { cluster: curation-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.curation.v1.CurationService/SetLifecycle" }
+                          route: { cluster: curation-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
+                        - match: { path: "/knowcel.curation.v1.CurationService/ListLifecycleHistory" }
+                          route: { cluster: curation-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.curation.v1.CurationService/ResolveFinding" }
                           route: { cluster: curation-service, timeout: 0s, max_stream_duration: { grpc_timeout_header_max: 0s } }
                         - match: { path: "/knowcel.document.v1.DocumentService/GetDocument" }

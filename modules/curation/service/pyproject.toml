@@ -8,6 +8,7 @@ dependencies = [
     "asyncpg>=0.30",
     "knowcel-curation-api",
     "knowcel-document-api",
+    "knowcel-iam-api",
     "knowcel-ingestion-api",
     "knowcel-llm-api",
     "knowcel-platform",
@@ -20,6 +21,7 @@ knowcel-curation-service = "knowcel_curation.__main__:main"
 [tool.uv.sources]
 knowcel-curation-api = { workspace = true }
 knowcel-document-api = { workspace = true }
+knowcel-iam-api = { workspace = true }
 knowcel-ingestion-api = { workspace = true }
 knowcel-llm-api = { workspace = true }
 knowcel-platform = { workspace = true }

@@ -1,15 +1,18 @@
 import datetime
 import uuid
 from collections.abc import AsyncIterator
+from typing import Any
 
 import grpc
 import pytest
+from google.protobuf.timestamp_pb2 import Timestamp
 from knowcel.curation.v1 import curation_pb2, curation_pb2_grpc
 from knowcel_curation.config import Settings
-from knowcel_curation.curation import Finding, Score, Scorer, Weights
+from knowcel_curation.curation import DocInfo, Finding, Score, Scorer, Weights
+from knowcel_curation.lifecycle import LifecycleService
 from knowcel_curation.server import CurationServicer
 from knowcel_platform.config import Problems
-from knowcel_platform.grpc import UserInterceptor
+from knowcel_platform.grpc import Principal, PrincipalResolver, Team, UserInterceptor
 from sqlalchemy.exc import OperationalError
 
 from tests.fakes import NOW, FakeDocuments, FakeStore, doc
@@ -19,6 +22,22 @@ USER = (("x-kb-user", "alice"),)
 WEIGHTS = Weights(
     recency=1, usage=0, half_life_days=100, replacement_penalty=0.5, usage_saturation=10
 )
+
+
+TEAM = str(uuid.uuid4())
+OWNED = doc("Owned", owner="alice")
+SHARED = doc("Shared", owner="alice", teams=[TEAM])
+IAM_DOWN = False
+
+
+async def resolve_principal(user: str) -> Principal:
+    if IAM_DOWN:
+        raise ConnectionError("iam unavailable")
+    return {
+        "team-admin": Principal(user, teams=(Team(TEAM, admin=True),)),
+        "team-member": Principal(user, teams=(Team(TEAM, admin=False),)),
+        "root": Principal(user, platform_admin=True),
+    }.get(user, Principal(user))
 
 
 @pytest.fixture
@@ -36,17 +55,17 @@ def store() -> FakeStore:
 
 @pytest.fixture
 def documents() -> FakeDocuments:
-    return FakeDocuments(SEEN, UNSCORED, OTHER)
+    return FakeDocuments(SEEN, UNSCORED, OTHER, OWNED, SHARED)
 
 
 @pytest.fixture
 async def stub(
     store: FakeStore, documents: FakeDocuments
 ) -> AsyncIterator[curation_pb2_grpc.CurationServiceStub]:
-    server = grpc.aio.server(interceptors=[UserInterceptor()])
-    curation_pb2_grpc.add_CurationServiceServicer_to_server(
-        CurationServicer(store, documents, Scorer(store, WEIGHTS)), server
-    )
+    scorer = Scorer(store, WEIGHTS)
+    servicer = CurationServicer(store, documents, scorer, LifecycleService(store, scorer))
+    server = grpc.aio.server(interceptors=[UserInterceptor(PrincipalResolver(resolve_principal))])
+    curation_pb2_grpc.add_CurationServiceServicer_to_server(servicer, server)
     port = server.add_insecure_port("127.0.0.1:0")
     await server.start()
     async with grpc.aio.insecure_channel(f"127.0.0.1:{port}") as channel:
@@ -222,6 +241,14 @@ async def test_calls_need_a_user(stub: curation_pb2_grpc.CurationServiceStub) ->
                 finding_id=str(uuid.uuid4()), resolution=curation_pb2.RESOLUTION_KEEP
             )
         ),
+        stub.SetLifecycle(
+            curation_pb2.SetLifecycleRequest(
+                document_id=str(SEEN.id), state=curation_pb2.LIFECYCLE_STATE_DRAFT
+            )
+        ),
+        stub.ListLifecycleHistory(
+            curation_pb2.ListLifecycleHistoryRequest(document_id=str(SEEN.id))
+        ),
     ]
     for call in calls:
         with pytest.raises(grpc.aio.AioRpcError) as err:
@@ -285,8 +312,12 @@ def test_settings_are_checked() -> None:
         curation_conflict_threshold=0.9,
         curation_sample_chunks=0,
         curation_conflict_checks=-1,
+        iam_addr="nope",
+        curation_approved_boost=0.5,
+        curation_deprecated_factor=2,
+        curation_archived_factor=-1,
     ).check(bad)
-    assert len(bad.items) == 11
+    assert len(bad.items) == 15
 
 
 async def test_findings_come_in_pages_that_skip_unreadable_ones(
@@ -344,3 +375,213 @@ async def test_a_resolution_is_kept_when_scoring_fails(
     resolved = await store.get_finding(finding.id)
     assert resolved is not None
     assert resolved.resolution == "replace"
+
+
+def as_user(name: str) -> tuple[tuple[str, str], ...]:
+    return (("x-kb-user", name),)
+
+
+async def set_state(
+    stub: curation_pb2_grpc.CurationServiceStub,
+    document: DocInfo,
+    user: str,
+    state: Any = curation_pb2.LIFECYCLE_STATE_APPROVED,
+    **fields: Any,
+) -> None:
+    await stub.SetLifecycle(
+        curation_pb2.SetLifecycleRequest(document_id=str(document.id), state=state, **fields),
+        metadata=as_user(user),
+    )
+
+
+@pytest.mark.parametrize(
+    ("document", "user", "allowed"),
+    [
+        (OWNED, "alice", True),
+        (OWNED, "bob", False),
+        (OWNED, "team-admin", False),
+        (OWNED, "root", True),
+        (SHARED, "team-admin", True),
+        (SHARED, "team-member", False),
+        (SHARED, "bob", False),
+    ],
+)
+async def test_who_may_change_the_lifecycle(
+    stub: curation_pb2_grpc.CurationServiceStub,
+    store: FakeStore,
+    document: DocInfo,
+    user: str,
+    allowed: bool,
+) -> None:
+    if allowed:
+        await set_state(stub, document, user)
+        (change,) = await store.list_lifecycle_history(document.id)
+        assert (change.lifecycle.state, change.lifecycle.owner, change.changed_by) == (
+            "approved",
+            user,
+            user,
+        )
+    else:
+        with pytest.raises(grpc.aio.AioRpcError) as err:
+            await set_state(stub, document, user)
+        assert err.value.code() == grpc.StatusCode.PERMISSION_DENIED
+        assert not store.history
+
+
+async def test_a_document_the_caller_cannot_read_is_not_found(
+    stub: curation_pb2_grpc.CurationServiceStub,
+) -> None:
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await set_state(stub, HIDDEN, "root")
+    assert err.value.code() == grpc.StatusCode.NOT_FOUND
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.SetLifecycle(
+            curation_pb2.SetLifecycleRequest(
+                document_id="x", state=curation_pb2.LIFECYCLE_STATE_DRAFT
+            ),
+            metadata=USER,
+        )
+    assert err.value.code() == grpc.StatusCode.NOT_FOUND
+
+
+async def test_only_the_owner_can_change_it_while_iam_is_down(
+    stub: curation_pb2_grpc.CurationServiceStub, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("tests.test_server.IAM_DOWN", True)
+    await set_state(stub, SHARED, "alice")
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await set_state(stub, SHARED, "team-admin")
+    assert err.value.code() == grpc.StatusCode.UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "fields", [{"state": 0}, {"note": "x" * 1001}, {"owner": "x" * 201}], ids=str
+)
+async def test_a_change_needs_a_state_and_sensible_text(
+    stub: curation_pb2_grpc.CurationServiceStub, fields: dict[str, Any]
+) -> None:
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await set_state(stub, OWNED, "alice", **{"state": 1, **fields})
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+
+
+async def test_the_lifecycle_comes_with_the_score_and_deprecated_documents_are_excluded(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    review_by = Timestamp()
+    review_by.FromDatetime(NOW + datetime.timedelta(days=30))
+    await set_state(stub, SEEN, "alice", curation_pb2.LIFECYCLE_STATE_APPROVED, review_by=review_by)
+    await store.save_score(UNSCORED.id, NOW, 0.5)
+    await set_state(stub, UNSCORED, "root", curation_pb2.LIFECYCLE_STATE_DEPRECATED, note="old")
+    response = await stub.ScoreChunks(
+        curation_pb2.ScoreChunksRequest(document_ids=[str(SEEN.id), str(UNSCORED.id)]),
+        metadata=USER,
+    )
+    scores = {s.document_id: s for s in response.scores}
+    assert scores[str(SEEN.id)].lifecycle.state == curation_pb2.LIFECYCLE_STATE_APPROVED
+    assert scores[str(SEEN.id)].lifecycle.owner == "alice"
+    assert scores[str(SEEN.id)].lifecycle.review_by.ToDatetime(datetime.UTC) == (
+        NOW + datetime.timedelta(days=30)
+    )
+    assert not scores[str(SEEN.id)].excluded
+    assert scores[str(UNSCORED.id)].excluded
+    one = await stub.GetDocumentScore(
+        curation_pb2.GetDocumentScoreRequest(document_id=str(UNSCORED.id)), metadata=USER
+    )
+    assert one.score.excluded
+
+
+@pytest.mark.parametrize(
+    ("state", "excluded"),
+    [
+        (curation_pb2.LIFECYCLE_STATE_DRAFT, False),
+        (curation_pb2.LIFECYCLE_STATE_IN_REVIEW, False),
+        (curation_pb2.LIFECYCLE_STATE_APPROVED, False),
+        (curation_pb2.LIFECYCLE_STATE_DEPRECATED, True),
+        (curation_pb2.LIFECYCLE_STATE_ARCHIVED, True),
+    ],
+)
+async def test_only_deprecated_and_archived_documents_are_excluded(
+    stub: curation_pb2_grpc.CurationServiceStub, state: int, excluded: bool
+) -> None:
+    await set_state(stub, SEEN, "alice", state)
+    response = await stub.GetDocumentScore(
+        curation_pb2.GetDocumentScoreRequest(document_id=str(SEEN.id)), metadata=USER
+    )
+    assert response.score.excluded is excluded
+
+
+async def test_a_state_change_updates_the_score_at_once(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    await Scorer(store, WEIGHTS).on_processed(OWNED.id, datetime.datetime.now(datetime.UTC))
+    before = store.scores[OWNED.id].score
+    await set_state(stub, OWNED, "alice", curation_pb2.LIFECYCLE_STATE_DEPRECATED)
+    assert store.scores[OWNED.id].score < before
+
+
+async def test_the_history_lists_every_change_newest_first(
+    stub: curation_pb2_grpc.CurationServiceStub,
+) -> None:
+    await set_state(stub, OWNED, "alice", curation_pb2.LIFECYCLE_STATE_DRAFT, note="first")
+    await set_state(stub, OWNED, "root", curation_pb2.LIFECYCLE_STATE_APPROVED, note="checked")
+    response = await stub.ListLifecycleHistory(
+        curation_pb2.ListLifecycleHistoryRequest(document_id=str(OWNED.id)), metadata=USER
+    )
+    assert [(c.lifecycle.state, c.note, c.changed_by) for c in response.changes] == [
+        (curation_pb2.LIFECYCLE_STATE_APPROVED, "checked", "root"),
+        (curation_pb2.LIFECYCLE_STATE_DRAFT, "first", "alice"),
+    ]
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.ListLifecycleHistory(
+            curation_pb2.ListLifecycleHistoryRequest(document_id=str(HIDDEN.id)), metadata=USER
+        )
+    assert err.value.code() == grpc.StatusCode.NOT_FOUND
+
+
+async def test_a_review_reminder_is_listed_and_cannot_be_replaced(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    reminder = Finding(uuid.uuid4(), "review_due", OWNED.id, OWNED.id, NOW)
+    store.findings = [reminder]
+    listed = await stub.ListFindings(curation_pb2.ListFindingsRequest(), metadata=USER)
+    (finding,) = listed.findings
+    assert finding.kind == curation_pb2.FINDING_KIND_REVIEW_DUE
+    assert finding.summary == "Review due for Owned"
+    assert {o.resolution for o in finding.resolutions} == {
+        curation_pb2.RESOLUTION_KEEP,
+        curation_pb2.RESOLUTION_IGNORE,
+    }
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await stub.ResolveFinding(
+            curation_pb2.ResolveFindingRequest(
+                finding_id=str(reminder.id), resolution=curation_pb2.RESOLUTION_REPLACE
+            ),
+            metadata=USER,
+        )
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT
+    await stub.ResolveFinding(
+        curation_pb2.ResolveFindingRequest(
+            finding_id=str(reminder.id), resolution=curation_pb2.RESOLUTION_KEEP
+        ),
+        metadata=USER,
+    )
+
+
+async def test_a_change_without_an_owner_keeps_the_one_responsible(
+    stub: curation_pb2_grpc.CurationServiceStub, store: FakeStore
+) -> None:
+    await set_state(stub, SHARED, "alice", curation_pb2.LIFECYCLE_STATE_APPROVED, owner="carol")
+    await set_state(stub, SHARED, "team-admin", curation_pb2.LIFECYCLE_STATE_DEPRECATED)
+    (latest, first) = await store.list_lifecycle_history(SHARED.id)
+    assert (first.lifecycle.owner, latest.lifecycle.owner) == ("carol", "carol")
+    assert latest.changed_by == "team-admin"
+
+
+async def test_a_review_date_out_of_range_is_invalid(
+    stub: curation_pb2_grpc.CurationServiceStub,
+) -> None:
+    far = Timestamp(seconds=10**12)
+    with pytest.raises(grpc.aio.AioRpcError) as err:
+        await set_state(stub, OWNED, "alice", review_by=far)
+    assert err.value.code() == grpc.StatusCode.INVALID_ARGUMENT

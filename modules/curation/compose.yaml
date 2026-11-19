@@ -9,6 +9,8 @@ services:
       KNOWCEL_OTEL_ENDPOINT: ${KNOWCEL_OTEL_ENDPOINT:-}
       KNOWCEL_DATABASE_URL: postgresql+asyncpg://kb:kb@postgres:5432/kb
       KNOWCEL_NATS_URL: nats://nats:4222
+      # Soft dependency: no depends_on on iam-service; while it is down, only a document's owner can change its lifecycle.
+      KNOWCEL_IAM_ADDR: iam-service:9006
       # Soft dependency: no depends_on on document-service; while it is down, scores can't be read.
       KNOWCEL_DOCUMENT_ADDR: document-service:9001
       # Soft dependency: no depends_on on llm-service; while it is down, new documents are checked for findings later.

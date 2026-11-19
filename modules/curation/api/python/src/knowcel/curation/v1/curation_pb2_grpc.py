@@ -53,6 +53,16 @@ class CurationServiceStub:
                 request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListFindingsRequest.SerializeToString,
                 response_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListFindingsResponse.FromString,
                 _registered_method=True)
+        self.SetLifecycle = channel.unary_unary(
+                '/knowcel.curation.v1.CurationService/SetLifecycle',
+                request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.SetLifecycleRequest.SerializeToString,
+                response_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.SetLifecycleResponse.FromString,
+                _registered_method=True)
+        self.ListLifecycleHistory = channel.unary_unary(
+                '/knowcel.curation.v1.CurationService/ListLifecycleHistory',
+                request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListLifecycleHistoryRequest.SerializeToString,
+                response_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListLifecycleHistoryResponse.FromString,
+                _registered_method=True)
         self.ResolveFinding = channel.unary_unary(
                 '/knowcel.curation.v1.CurationService/ResolveFinding',
                 request_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ResolveFindingRequest.SerializeToString,
@@ -95,6 +105,26 @@ class CurationServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SetLifecycle(self, request, context):
+        """SetLifecycle sets the lifecycle state of a document, keeping every change
+        as history, and updates its score. Only the document's owner, an admin of
+        a team it is shared with, or a platform admin may; others get
+        PERMISSION_DENIED, and a document the caller can't read NOT_FOUND. While
+        the iam module is down only the owner can. A later review_by closes the
+        document's open REVIEW_DUE finding.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListLifecycleHistory(self, request, context):
+        """ListLifecycleHistory returns every lifecycle change of a document the
+        caller can read, newest first.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ResolveFinding(self, request, context):
         """ResolveFinding closes an open finding with one of the options it lists and
         updates the scores it affects. NOT_FOUND when the finding doesn't exist or
@@ -122,6 +152,16 @@ def add_CurationServiceServicer_to_server(servicer, server):
                     servicer.ListFindings,
                     request_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListFindingsRequest.FromString,
                     response_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListFindingsResponse.SerializeToString,
+            ),
+            'SetLifecycle': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetLifecycle,
+                    request_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.SetLifecycleRequest.FromString,
+                    response_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.SetLifecycleResponse.SerializeToString,
+            ),
+            'ListLifecycleHistory': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListLifecycleHistory,
+                    request_deserializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListLifecycleHistoryRequest.FromString,
+                    response_serializer=knowcel_dot_curation_dot_v1_dot_curation__pb2.ListLifecycleHistoryResponse.SerializeToString,
             ),
             'ResolveFinding': grpc.unary_unary_rpc_method_handler(
                     servicer.ResolveFinding,
@@ -214,6 +254,60 @@ class CurationService:
             '/knowcel.curation.v1.CurationService/ListFindings',
             knowcel_dot_curation_dot_v1_dot_curation__pb2.ListFindingsRequest.SerializeToString,
             knowcel_dot_curation_dot_v1_dot_curation__pb2.ListFindingsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetLifecycle(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.curation.v1.CurationService/SetLifecycle',
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.SetLifecycleRequest.SerializeToString,
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.SetLifecycleResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListLifecycleHistory(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/knowcel.curation.v1.CurationService/ListLifecycleHistory',
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.ListLifecycleHistoryRequest.SerializeToString,
+            knowcel_dot_curation_dot_v1_dot_curation__pb2.ListLifecycleHistoryResponse.FromString,
             options,
             channel_credentials,
             insecure,

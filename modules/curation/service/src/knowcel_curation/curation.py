@@ -6,7 +6,7 @@ import contextlib
 import datetime
 import logging
 import uuid
-from collections.abc import Collection
+from collections.abc import Awaitable, Callable, Collection, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -15,6 +15,17 @@ log = logging.getLogger("knowcel_curation")
 DUPLICATE = "duplicate"
 SUPERSEDED = "superseded"
 CONFLICT = "conflict"
+REVIEW_DUE = "review_due"
+
+# Lifecycle states.
+DRAFT = "draft"
+IN_REVIEW = "in_review"
+APPROVED = "approved"
+DEPRECATED = "deprecated"
+ARCHIVED = "archived"
+STATES = (DRAFT, IN_REVIEW, APPROVED, DEPRECATED, ARCHIVED)
+# States whose documents consumers leave out of answers.
+EXCLUDED = (DEPRECATED, ARCHIVED)
 
 # Resolutions of a finding.
 KEEP = "keep"
@@ -53,6 +64,22 @@ class Finding:
 
 
 @dataclass(frozen=True)
+class Lifecycle:
+    state: str
+    # The user responsible for the review.
+    owner: str
+    review_by: datetime.datetime | None = None
+
+
+@dataclass(frozen=True)
+class LifecycleChange:
+    lifecycle: Lifecycle
+    note: str
+    changed_by: str
+    changed_at: datetime.datetime
+
+
+@dataclass(frozen=True)
 class FindingCursor:
     """Where a page of findings ends: the next one is older, or as old with a greater id."""
 
@@ -69,6 +96,9 @@ class DocInfo:
     filename: str
     sha256: str
     created_at: datetime.datetime
+    owner_id: str = ""
+    # The teams the document is shared with, as far as the caller sees them.
+    team_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -83,6 +113,11 @@ class Weights:
     replacement_penalty: float
     # Citations at which the usage signal is at its maximum.
     usage_saturation: int
+    # What the lifecycle state does to a score: approved documents are scored
+    # up (never above 1), deprecated and archived ones down.
+    approved_boost: float = 1.0
+    deprecated_factor: float = 1.0
+    archived_factor: float = 1.0
 
 
 def score_document(
@@ -91,17 +126,26 @@ def score_document(
     replacements: int,
     citations: int,
     weights: Weights,
+    state: str | None = None,
 ) -> float:
     """A score between 0 and 1: the weighted mean of recency (1 when just
     processed, halving every `half_life_days`) and usage (citations up to
-    `usage_saturation`), times `replacement_penalty` once per replacement."""
+    `usage_saturation`), times `replacement_penalty` once per replacement, then
+    raised for an approved document and lowered for a deprecated or archived one."""
     age_days = max((now - processed_at).total_seconds(), 0) / 86400
     recency = 0.5 ** (age_days / weights.half_life_days)
     usage = min(citations / weights.usage_saturation, 1)
     signals = (weights.recency * recency + weights.usage * usage) / (
         weights.recency + weights.usage
     )
-    return signals * weights.replacement_penalty**replacements
+    score = signals * weights.replacement_penalty**replacements
+    if state == APPROVED:
+        return min(score * weights.approved_boost, 1)
+    if state == DEPRECATED:
+        return score * weights.deprecated_factor
+    if state == ARCHIVED:
+        return score * weights.archived_factor
+    return score
 
 
 class CurationStore(Protocol):
@@ -133,6 +177,29 @@ class CurationStore(Protocol):
         self, limit: int, after: FindingCursor | None = None
     ) -> list[Finding]:
         """Up to `limit` open findings, newest first, after the cursor."""
+        ...
+
+    async def get_lifecycles(
+        self, document_ids: Collection[uuid.UUID]
+    ) -> dict[uuid.UUID, Lifecycle]:
+        """The current lifecycle of those of the documents that have one."""
+        ...
+
+    async def add_lifecycle_change(
+        self, document_id: uuid.UUID, lifecycle: Lifecycle, note: str, user: str
+    ) -> None: ...
+
+    async def list_lifecycle_history(self, document_id: uuid.UUID) -> list[LifecycleChange]:
+        """Every change, newest first."""
+        ...
+
+    async def list_review_due(self, now: datetime.datetime, limit: int) -> list[uuid.UUID]:
+        """Documents whose current lifecycle is not archived and has a review
+        date before `now`, and that have no review-due finding yet."""
+        ...
+
+    async def delete_review_due(self, document_id: uuid.UUID) -> None:
+        """Removes the document's REVIEW_DUE finding, open or closed."""
         ...
 
 
@@ -167,32 +234,50 @@ class Scorer:
         scores go stale without it."""
         after = None
         while scores := await self._store.list_scores(after, batch):
+            lifecycles = await self._store.get_lifecycles({s.document_id for s in scores})
             for score in scores:
-                await self._save(score.document_id, score.processed_at)
+                await self._save(score.document_id, score.processed_at, lifecycles)
             after = scores[-1].document_id
 
     async def _current(self, document_id: uuid.UUID) -> Score | None:
         scores = await self._store.get_scores([document_id])
         return scores[0] if scores else None
 
-    async def _save(self, document_id: uuid.UUID, processed_at: datetime.datetime) -> None:
+    async def _save(
+        self,
+        document_id: uuid.UUID,
+        processed_at: datetime.datetime,
+        lifecycles: dict[uuid.UUID, Lifecycle] | None = None,
+    ) -> None:
         replacements = await self._store.count_replacements(document_id)
+        if lifecycles is None:
+            lifecycles = await self._store.get_lifecycles([document_id])
         # The usage signal needs chat to report its citations; until it does,
         # usage is 0 (and weighs nothing unless KNOWCEL_CURATION_USAGE_WEIGHT is set).
+        lifecycle = lifecycles.get(document_id)
         score = score_document(
-            processed_at, datetime.datetime.now(datetime.UTC), replacements, 0, self._weights
+            processed_at,
+            datetime.datetime.now(datetime.UTC),
+            replacements,
+            0,
+            self._weights,
+            lifecycle.state if lifecycle else None,
         )
         await self._store.save_score(document_id, processed_at, score)
         log.info("scored document %s: %.3f (%d replacements)", document_id, score, replacements)
 
 
-async def rescore_periodically(scorer: Scorer, interval: float, stop: asyncio.Event) -> None:
-    """Scores every document again every `interval` seconds until `stop` is set."""
+async def run_periodically(
+    jobs: Sequence[Callable[[], Awaitable[None]]], interval: float, stop: asyncio.Event
+) -> None:
+    """Runs the jobs every `interval` seconds until `stop` is set; a job that
+    fails is logged and tried again next time, and doesn't hold back the others."""
     while not stop.is_set():
         with contextlib.suppress(TimeoutError):
             await asyncio.wait_for(stop.wait(), interval)
             return
-        try:
-            await scorer.rescore_all()
-        except Exception:
-            log.exception("scoring all documents again failed, retrying in %.0f s", interval)
+        for job in jobs:
+            try:
+                await job()
+            except Exception:
+                log.exception("a periodic job failed, retrying in %.0f s", interval)

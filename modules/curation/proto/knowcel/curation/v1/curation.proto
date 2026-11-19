@@ -24,6 +24,16 @@ service CurationService {
   // see, newest first, a page at a time. UNAVAILABLE while the document
   // module is.
   rpc ListFindings(ListFindingsRequest) returns (ListFindingsResponse);
+  // SetLifecycle sets the lifecycle state of a document, keeping every change
+  // as history, and updates its score. Only the document's owner, an admin of
+  // a team it is shared with, or a platform admin may; others get
+  // PERMISSION_DENIED, and a document the caller can't read NOT_FOUND. While
+  // the iam module is down only the owner can. A later review_by closes the
+  // document's open REVIEW_DUE finding.
+  rpc SetLifecycle(SetLifecycleRequest) returns (SetLifecycleResponse);
+  // ListLifecycleHistory returns every lifecycle change of a document the
+  // caller can read, newest first.
+  rpc ListLifecycleHistory(ListLifecycleHistoryRequest) returns (ListLifecycleHistoryResponse);
   // ResolveFinding closes an open finding with one of the options it lists and
   // updates the scores it affects. NOT_FOUND when the finding doesn't exist or
   // the caller can't see both documents, FAILED_PRECONDITION when it is
@@ -37,6 +47,41 @@ message DocumentScore {
   // Between 0 and 1.
   double score = 2;
   google.protobuf.Timestamp updated_at = 3;
+  // The current lifecycle; unset for a document that was never given a state.
+  Lifecycle lifecycle = 4;
+  // True for DEPRECATED and ARCHIVED documents: consumers such as chat leave
+  // them out of answers.
+  bool excluded = 5;
+}
+
+enum LifecycleState {
+  LIFECYCLE_STATE_UNSPECIFIED = 0;
+  LIFECYCLE_STATE_DRAFT = 1;
+  LIFECYCLE_STATE_IN_REVIEW = 2;
+  // Checked and authoritative: scores higher.
+  LIFECYCLE_STATE_APPROVED = 3;
+  // Outdated but kept for reference: scores much lower and is excluded.
+  LIFECYCLE_STATE_DEPRECATED = 4;
+  // Kept for the record only: scores lowest and is excluded.
+  LIFECYCLE_STATE_ARCHIVED = 5;
+}
+
+// Lifecycle is where a document stands in review and approval.
+message Lifecycle {
+  LifecycleState state = 1;
+  // The user responsible for reviewing the document.
+  string owner = 2;
+  // When the document is next due for review; unset for none.
+  google.protobuf.Timestamp review_by = 3;
+}
+
+// LifecycleChange is one entry of a document's lifecycle history.
+message LifecycleChange {
+  Lifecycle lifecycle = 1;
+  string note = 2;
+  // The user who made the change.
+  string changed_by = 3;
+  google.protobuf.Timestamp changed_at = 4;
 }
 
 enum FindingKind {
@@ -47,6 +92,9 @@ enum FindingKind {
   FINDING_KIND_SUPERSEDED = 2;
   // Two documents contradict each other.
   FINDING_KIND_CONFLICT = 3;
+  // The document is past its review date. Its document_id and
+  // other_document_id are the same.
+  FINDING_KIND_REVIEW_DUE = 4;
 }
 
 // How a finding is closed. What each does is in the option's description.
@@ -97,6 +145,29 @@ message ScoreChunksRequest {
 
 message ScoreChunksResponse {
   repeated DocumentScore scores = 1;
+}
+
+message SetLifecycleRequest {
+  string document_id = 1;
+  // Required.
+  LifecycleState state = 2;
+  // The user responsible for the review; when empty, the current one, or the
+  // caller for a document's first change.
+  string owner = 3;
+  // When the document is next due for review; leave unset for none.
+  google.protobuf.Timestamp review_by = 4;
+  // Why, shown in the history; at most 1000 characters.
+  string note = 5;
+}
+
+message SetLifecycleResponse {}
+
+message ListLifecycleHistoryRequest {
+  string document_id = 1;
+}
+
+message ListLifecycleHistoryResponse {
+  repeated LifecycleChange changes = 1;
 }
 
 message ListFindingsRequest {

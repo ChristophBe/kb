@@ -16,6 +16,7 @@ from .curation import (
     IGNORE,
     KEEP,
     REPLACE,
+    REVIEW_DUE,
     SUPERSEDED,
     DocInfo,
     Finding,
@@ -213,12 +214,22 @@ def summary(finding: Finding, other_title: str) -> str:
         DUPLICATE: f"Duplicate of {other_title}",
         SUPERSEDED: f"Newer version of {other_title} exists",
         CONFLICT: f"Contradicts {other_title}",
+        REVIEW_DUE: f"Review due for {other_title}",
     }[finding.kind]
 
 
 def resolution_options(finding: Finding, title: str, other_title: str) -> list[tuple[str, str]]:
     """The ways to close a finding with what each does, from the point of view
     of the document it is about."""
+    if finding.kind == REVIEW_DUE:
+        return [
+            (
+                KEEP,
+                f"Keep {title} as it is and dismiss this reminder; set a new review date "
+                "to be reminded again.",
+            ),
+            (IGNORE, "Dismiss this reminder; nothing changes."),
+        ]
     if finding.kind == SUPERSEDED:
         keep = f"Keep {title} as current: it no longer ranks lower for having a newer version."
         replace = f"Confirm that {other_title} replaces {title}: {title} keeps ranking lower."

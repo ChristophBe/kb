@@ -19,10 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	CurationService_GetDocumentScore_FullMethodName = "/knowcel.curation.v1.CurationService/GetDocumentScore"
-	CurationService_ScoreChunks_FullMethodName      = "/knowcel.curation.v1.CurationService/ScoreChunks"
-	CurationService_ListFindings_FullMethodName     = "/knowcel.curation.v1.CurationService/ListFindings"
-	CurationService_ResolveFinding_FullMethodName   = "/knowcel.curation.v1.CurationService/ResolveFinding"
+	CurationService_GetDocumentScore_FullMethodName     = "/knowcel.curation.v1.CurationService/GetDocumentScore"
+	CurationService_ScoreChunks_FullMethodName          = "/knowcel.curation.v1.CurationService/ScoreChunks"
+	CurationService_ListFindings_FullMethodName         = "/knowcel.curation.v1.CurationService/ListFindings"
+	CurationService_SetLifecycle_FullMethodName         = "/knowcel.curation.v1.CurationService/SetLifecycle"
+	CurationService_ListLifecycleHistory_FullMethodName = "/knowcel.curation.v1.CurationService/ListLifecycleHistory"
+	CurationService_ResolveFinding_FullMethodName       = "/knowcel.curation.v1.CurationService/ResolveFinding"
 )
 
 // CurationServiceClient is the client API for CurationService service.
@@ -47,6 +49,16 @@ type CurationServiceClient interface {
 	// see, newest first, a page at a time. UNAVAILABLE while the document
 	// module is.
 	ListFindings(ctx context.Context, in *ListFindingsRequest, opts ...grpc.CallOption) (*ListFindingsResponse, error)
+	// SetLifecycle sets the lifecycle state of a document, keeping every change
+	// as history, and updates its score. Only the document's owner, an admin of
+	// a team it is shared with, or a platform admin may; others get
+	// PERMISSION_DENIED, and a document the caller can't read NOT_FOUND. While
+	// the iam module is down only the owner can. A later review_by closes the
+	// document's open REVIEW_DUE finding.
+	SetLifecycle(ctx context.Context, in *SetLifecycleRequest, opts ...grpc.CallOption) (*SetLifecycleResponse, error)
+	// ListLifecycleHistory returns every lifecycle change of a document the
+	// caller can read, newest first.
+	ListLifecycleHistory(ctx context.Context, in *ListLifecycleHistoryRequest, opts ...grpc.CallOption) (*ListLifecycleHistoryResponse, error)
 	// ResolveFinding closes an open finding with one of the options it lists and
 	// updates the scores it affects. NOT_FOUND when the finding doesn't exist or
 	// the caller can't see both documents, FAILED_PRECONDITION when it is
@@ -92,6 +104,26 @@ func (c *curationServiceClient) ListFindings(ctx context.Context, in *ListFindin
 	return out, nil
 }
 
+func (c *curationServiceClient) SetLifecycle(ctx context.Context, in *SetLifecycleRequest, opts ...grpc.CallOption) (*SetLifecycleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetLifecycleResponse)
+	err := c.cc.Invoke(ctx, CurationService_SetLifecycle_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *curationServiceClient) ListLifecycleHistory(ctx context.Context, in *ListLifecycleHistoryRequest, opts ...grpc.CallOption) (*ListLifecycleHistoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListLifecycleHistoryResponse)
+	err := c.cc.Invoke(ctx, CurationService_ListLifecycleHistory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *curationServiceClient) ResolveFinding(ctx context.Context, in *ResolveFindingRequest, opts ...grpc.CallOption) (*ResolveFindingResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ResolveFindingResponse)
@@ -124,6 +156,16 @@ type CurationServiceServer interface {
 	// see, newest first, a page at a time. UNAVAILABLE while the document
 	// module is.
 	ListFindings(context.Context, *ListFindingsRequest) (*ListFindingsResponse, error)
+	// SetLifecycle sets the lifecycle state of a document, keeping every change
+	// as history, and updates its score. Only the document's owner, an admin of
+	// a team it is shared with, or a platform admin may; others get
+	// PERMISSION_DENIED, and a document the caller can't read NOT_FOUND. While
+	// the iam module is down only the owner can. A later review_by closes the
+	// document's open REVIEW_DUE finding.
+	SetLifecycle(context.Context, *SetLifecycleRequest) (*SetLifecycleResponse, error)
+	// ListLifecycleHistory returns every lifecycle change of a document the
+	// caller can read, newest first.
+	ListLifecycleHistory(context.Context, *ListLifecycleHistoryRequest) (*ListLifecycleHistoryResponse, error)
 	// ResolveFinding closes an open finding with one of the options it lists and
 	// updates the scores it affects. NOT_FOUND when the finding doesn't exist or
 	// the caller can't see both documents, FAILED_PRECONDITION when it is
@@ -147,6 +189,12 @@ func (UnimplementedCurationServiceServer) ScoreChunks(context.Context, *ScoreChu
 }
 func (UnimplementedCurationServiceServer) ListFindings(context.Context, *ListFindingsRequest) (*ListFindingsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListFindings not implemented")
+}
+func (UnimplementedCurationServiceServer) SetLifecycle(context.Context, *SetLifecycleRequest) (*SetLifecycleResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetLifecycle not implemented")
+}
+func (UnimplementedCurationServiceServer) ListLifecycleHistory(context.Context, *ListLifecycleHistoryRequest) (*ListLifecycleHistoryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListLifecycleHistory not implemented")
 }
 func (UnimplementedCurationServiceServer) ResolveFinding(context.Context, *ResolveFindingRequest) (*ResolveFindingResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ResolveFinding not implemented")
@@ -226,6 +274,42 @@ func _CurationService_ListFindings_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CurationService_SetLifecycle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetLifecycleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CurationServiceServer).SetLifecycle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CurationService_SetLifecycle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CurationServiceServer).SetLifecycle(ctx, req.(*SetLifecycleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CurationService_ListLifecycleHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListLifecycleHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CurationServiceServer).ListLifecycleHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CurationService_ListLifecycleHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CurationServiceServer).ListLifecycleHistory(ctx, req.(*ListLifecycleHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CurationService_ResolveFinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ResolveFindingRequest)
 	if err := dec(in); err != nil {
@@ -262,6 +346,14 @@ var CurationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListFindings",
 			Handler:    _CurationService_ListFindings_Handler,
+		},
+		{
+			MethodName: "SetLifecycle",
+			Handler:    _CurationService_SetLifecycle_Handler,
+		},
+		{
+			MethodName: "ListLifecycleHistory",
+			Handler:    _CurationService_ListLifecycleHistory_Handler,
 		},
 		{
 			MethodName: "ResolveFinding",

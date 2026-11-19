@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file knowcel/curation/v1/curation.proto.
  */
 export const file_knowcel_curation_v1_curation: GenFile = /*@__PURE__*/
-  fileDesc("CiJrbm93Y2VsL2N1cmF0aW9uL3YxL2N1cmF0aW9uLnByb3RvEhNrbm93Y2VsLmN1cmF0aW9uLnYxImMKDURvY3VtZW50U2NvcmUSEwoLZG9jdW1lbnRfaWQYASABKAkSDQoFc2NvcmUYAiABKAESLgoKdXBkYXRlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiXAoQUmVzb2x1dGlvbk9wdGlvbhIzCgpyZXNvbHV0aW9uGAEgASgOMh8ua25vd2NlbC5jdXJhdGlvbi52MS5SZXNvbHV0aW9uEhMKC2Rlc2NyaXB0aW9uGAIgASgJIqgCCgdGaW5kaW5nEgoKAmlkGAEgASgJEi4KBGtpbmQYAiABKA4yIC5rbm93Y2VsLmN1cmF0aW9uLnYxLkZpbmRpbmdLaW5kEhMKC2RvY3VtZW50X2lkGAMgASgJEhkKEW90aGVyX2RvY3VtZW50X2lkGAQgASgJEi4KCmNyZWF0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEg8KB3N1bW1hcnkYBiABKAkSFgoOZG9jdW1lbnRfdGl0bGUYByABKAkSHAoUb3RoZXJfZG9jdW1lbnRfdGl0bGUYCCABKAkSOgoLcmVzb2x1dGlvbnMYCSADKAsyJS5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlc29sdXRpb25PcHRpb24iLgoXR2V0RG9jdW1lbnRTY29yZVJlcXVlc3QSEwoLZG9jdW1lbnRfaWQYASABKAkiTQoYR2V0RG9jdW1lbnRTY29yZVJlc3BvbnNlEjEKBXNjb3JlGAEgASgLMiIua25vd2NlbC5jdXJhdGlvbi52MS5Eb2N1bWVudFNjb3JlIioKElNjb3JlQ2h1bmtzUmVxdWVzdBIUCgxkb2N1bWVudF9pZHMYASADKAkiSQoTU2NvcmVDaHVua3NSZXNwb25zZRIyCgZzY29yZXMYASADKAsyIi5rbm93Y2VsLmN1cmF0aW9uLnYxLkRvY3VtZW50U2NvcmUiPAoTTGlzdEZpbmRpbmdzUmVxdWVzdBIRCglwYWdlX3NpemUYASABKAUSEgoKcGFnZV90b2tlbhgCIAEoCSJgChVSZXNvbHZlRmluZGluZ1JlcXVlc3QSEgoKZmluZGluZ19pZBgBIAEoCRIzCgpyZXNvbHV0aW9uGAIgASgOMh8ua25vd2NlbC5jdXJhdGlvbi52MS5SZXNvbHV0aW9uIhgKFlJlc29sdmVGaW5kaW5nUmVzcG9uc2UiXwoUTGlzdEZpbmRpbmdzUmVzcG9uc2USLgoIZmluZGluZ3MYASADKAsyHC5rbm93Y2VsLmN1cmF0aW9uLnYxLkZpbmRpbmcSFwoPbmV4dF9wYWdlX3Rva2VuGAIgASgJKn8KC0ZpbmRpbmdLaW5kEhwKGEZJTkRJTkdfS0lORF9VTlNQRUNJRklFRBAAEhoKFkZJTkRJTkdfS0lORF9EVVBMSUNBVEUQARIbChdGSU5ESU5HX0tJTkRfU1VQRVJTRURFRBACEhkKFUZJTkRJTkdfS0lORF9DT05GTElDVBADKmwKClJlc29sdXRpb24SGgoWUkVTT0xVVElPTl9VTlNQRUNJRklFRBAAEhMKD1JFU09MVVRJT05fS0VFUBABEhYKElJFU09MVVRJT05fUkVQTEFDRRACEhUKEVJFU09MVVRJT05fSUdOT1JFEAMytAMKD0N1cmF0aW9uU2VydmljZRJvChBHZXREb2N1bWVudFNjb3JlEiwua25vd2NlbC5jdXJhdGlvbi52MS5HZXREb2N1bWVudFNjb3JlUmVxdWVzdBotLmtub3djZWwuY3VyYXRpb24udjEuR2V0RG9jdW1lbnRTY29yZVJlc3BvbnNlEmAKC1Njb3JlQ2h1bmtzEicua25vd2NlbC5jdXJhdGlvbi52MS5TY29yZUNodW5rc1JlcXVlc3QaKC5rbm93Y2VsLmN1cmF0aW9uLnYxLlNjb3JlQ2h1bmtzUmVzcG9uc2USYwoMTGlzdEZpbmRpbmdzEigua25vd2NlbC5jdXJhdGlvbi52MS5MaXN0RmluZGluZ3NSZXF1ZXN0Gikua25vd2NlbC5jdXJhdGlvbi52MS5MaXN0RmluZGluZ3NSZXNwb25zZRJpCg5SZXNvbHZlRmluZGluZxIqLmtub3djZWwuY3VyYXRpb24udjEuUmVzb2x2ZUZpbmRpbmdSZXF1ZXN0Gisua25vd2NlbC5jdXJhdGlvbi52MS5SZXNvbHZlRmluZGluZ1Jlc3BvbnNlQlFaT2dpdGh1Yi5jb20vQ2hyaXN0b3BoQmUva25vd2NlbGl1bS9tb2R1bGVzL2N1cmF0aW9uL2FwaS9nby9jdXJhdGlvbnYxO2N1cmF0aW9udjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
+  fileDesc("CiJrbm93Y2VsL2N1cmF0aW9uL3YxL2N1cmF0aW9uLnByb3RvEhNrbm93Y2VsLmN1cmF0aW9uLnYxIqgBCg1Eb2N1bWVudFNjb3JlEhMKC2RvY3VtZW50X2lkGAEgASgJEg0KBXNjb3JlGAIgASgBEi4KCnVwZGF0ZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEjEKCWxpZmVjeWNsZRgEIAEoCzIeLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlEhAKCGV4Y2x1ZGVkGAUgASgIIn0KCUxpZmVjeWNsZRIyCgVzdGF0ZRgBIAEoDjIjLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlU3RhdGUSDQoFb3duZXIYAiABKAkSLQoJcmV2aWV3X2J5GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKWAQoPTGlmZWN5Y2xlQ2hhbmdlEjEKCWxpZmVjeWNsZRgBIAEoCzIeLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlEgwKBG5vdGUYAiABKAkSEgoKY2hhbmdlZF9ieRgDIAEoCRIuCgpjaGFuZ2VkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJcChBSZXNvbHV0aW9uT3B0aW9uEjMKCnJlc29sdXRpb24YASABKA4yHy5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlc29sdXRpb24SEwoLZGVzY3JpcHRpb24YAiABKAkiqAIKB0ZpbmRpbmcSCgoCaWQYASABKAkSLgoEa2luZBgCIAEoDjIgLmtub3djZWwuY3VyYXRpb24udjEuRmluZGluZ0tpbmQSEwoLZG9jdW1lbnRfaWQYAyABKAkSGQoRb3RoZXJfZG9jdW1lbnRfaWQYBCABKAkSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASDwoHc3VtbWFyeRgGIAEoCRIWCg5kb2N1bWVudF90aXRsZRgHIAEoCRIcChRvdGhlcl9kb2N1bWVudF90aXRsZRgIIAEoCRI6CgtyZXNvbHV0aW9ucxgJIAMoCzIlLmtub3djZWwuY3VyYXRpb24udjEuUmVzb2x1dGlvbk9wdGlvbiIuChdHZXREb2N1bWVudFNjb3JlUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCSJNChhHZXREb2N1bWVudFNjb3JlUmVzcG9uc2USMQoFc2NvcmUYASABKAsyIi5rbm93Y2VsLmN1cmF0aW9uLnYxLkRvY3VtZW50U2NvcmUiKgoSU2NvcmVDaHVua3NSZXF1ZXN0EhQKDGRvY3VtZW50X2lkcxgBIAMoCSJJChNTY29yZUNodW5rc1Jlc3BvbnNlEjIKBnNjb3JlcxgBIAMoCzIiLmtub3djZWwuY3VyYXRpb24udjEuRG9jdW1lbnRTY29yZSKqAQoTU2V0TGlmZWN5Y2xlUmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCRIyCgVzdGF0ZRgCIAEoDjIjLmtub3djZWwuY3VyYXRpb24udjEuTGlmZWN5Y2xlU3RhdGUSDQoFb3duZXIYAyABKAkSLQoJcmV2aWV3X2J5GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIMCgRub3RlGAUgASgJIhYKFFNldExpZmVjeWNsZVJlc3BvbnNlIjIKG0xpc3RMaWZlY3ljbGVIaXN0b3J5UmVxdWVzdBITCgtkb2N1bWVudF9pZBgBIAEoCSJVChxMaXN0TGlmZWN5Y2xlSGlzdG9yeVJlc3BvbnNlEjUKB2NoYW5nZXMYASADKAsyJC5rbm93Y2VsLmN1cmF0aW9uLnYxLkxpZmVjeWNsZUNoYW5nZSI8ChNMaXN0RmluZGluZ3NSZXF1ZXN0EhEKCXBhZ2Vfc2l6ZRgBIAEoBRISCgpwYWdlX3Rva2VuGAIgASgJImAKFVJlc29sdmVGaW5kaW5nUmVxdWVzdBISCgpmaW5kaW5nX2lkGAEgASgJEjMKCnJlc29sdXRpb24YAiABKA4yHy5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlc29sdXRpb24iGAoWUmVzb2x2ZUZpbmRpbmdSZXNwb25zZSJfChRMaXN0RmluZGluZ3NSZXNwb25zZRIuCghmaW5kaW5ncxgBIAMoCzIcLmtub3djZWwuY3VyYXRpb24udjEuRmluZGluZxIXCg9uZXh0X3BhZ2VfdG9rZW4YAiABKAkqxwEKDkxpZmVjeWNsZVN0YXRlEh8KG0xJRkVDWUNMRV9TVEFURV9VTlNQRUNJRklFRBAAEhkKFUxJRkVDWUNMRV9TVEFURV9EUkFGVBABEh0KGUxJRkVDWUNMRV9TVEFURV9JTl9SRVZJRVcQAhIcChhMSUZFQ1lDTEVfU1RBVEVfQVBQUk9WRUQQAxIeChpMSUZFQ1lDTEVfU1RBVEVfREVQUkVDQVRFRBAEEhwKGExJRkVDWUNMRV9TVEFURV9BUkNISVZFRBAFKpwBCgtGaW5kaW5nS2luZBIcChhGSU5ESU5HX0tJTkRfVU5TUEVDSUZJRUQQABIaChZGSU5ESU5HX0tJTkRfRFVQTElDQVRFEAESGwoXRklORElOR19LSU5EX1NVUEVSU0VERUQQAhIZChVGSU5ESU5HX0tJTkRfQ09ORkxJQ1QQAxIbChdGSU5ESU5HX0tJTkRfUkVWSUVXX0RVRRAEKmwKClJlc29sdXRpb24SGgoWUkVTT0xVVElPTl9VTlNQRUNJRklFRBAAEhMKD1JFU09MVVRJT05fS0VFUBABEhYKElJFU09MVVRJT05fUkVQTEFDRRACEhUKEVJFU09MVVRJT05fSUdOT1JFEAMylgUKD0N1cmF0aW9uU2VydmljZRJvChBHZXREb2N1bWVudFNjb3JlEiwua25vd2NlbC5jdXJhdGlvbi52MS5HZXREb2N1bWVudFNjb3JlUmVxdWVzdBotLmtub3djZWwuY3VyYXRpb24udjEuR2V0RG9jdW1lbnRTY29yZVJlc3BvbnNlEmAKC1Njb3JlQ2h1bmtzEicua25vd2NlbC5jdXJhdGlvbi52MS5TY29yZUNodW5rc1JlcXVlc3QaKC5rbm93Y2VsLmN1cmF0aW9uLnYxLlNjb3JlQ2h1bmtzUmVzcG9uc2USYwoMTGlzdEZpbmRpbmdzEigua25vd2NlbC5jdXJhdGlvbi52MS5MaXN0RmluZGluZ3NSZXF1ZXN0Gikua25vd2NlbC5jdXJhdGlvbi52MS5MaXN0RmluZGluZ3NSZXNwb25zZRJjCgxTZXRMaWZlY3ljbGUSKC5rbm93Y2VsLmN1cmF0aW9uLnYxLlNldExpZmVjeWNsZVJlcXVlc3QaKS5rbm93Y2VsLmN1cmF0aW9uLnYxLlNldExpZmVjeWNsZVJlc3BvbnNlEnsKFExpc3RMaWZlY3ljbGVIaXN0b3J5EjAua25vd2NlbC5jdXJhdGlvbi52MS5MaXN0TGlmZWN5Y2xlSGlzdG9yeVJlcXVlc3QaMS5rbm93Y2VsLmN1cmF0aW9uLnYxLkxpc3RMaWZlY3ljbGVIaXN0b3J5UmVzcG9uc2USaQoOUmVzb2x2ZUZpbmRpbmcSKi5rbm93Y2VsLmN1cmF0aW9uLnYxLlJlc29sdmVGaW5kaW5nUmVxdWVzdBorLmtub3djZWwuY3VyYXRpb24udjEuUmVzb2x2ZUZpbmRpbmdSZXNwb25zZUJRWk9naXRodWIuY29tL0NocmlzdG9waEJlL2tub3djZWxpdW0vbW9kdWxlcy9jdXJhdGlvbi9hcGkvZ28vY3VyYXRpb252MTtjdXJhdGlvbnYxYgZwcm90bzM", [file_google_protobuf_timestamp]);
 
 /**
  * DocumentScore ranks a document for retrieval: higher is more relevant.
@@ -36,6 +36,21 @@ export type DocumentScore = Message<"knowcel.curation.v1.DocumentScore"> & {
    * @generated from field: google.protobuf.Timestamp updated_at = 3;
    */
   updatedAt?: Timestamp | undefined;
+
+  /**
+   * The current lifecycle; unset for a document that was never given a state.
+   *
+   * @generated from field: knowcel.curation.v1.Lifecycle lifecycle = 4;
+   */
+  lifecycle?: Lifecycle | undefined;
+
+  /**
+   * True for DEPRECATED and ARCHIVED documents: consumers such as chat leave
+   * them out of answers.
+   *
+   * @generated from field: bool excluded = 5;
+   */
+  excluded: boolean;
 };
 
 /**
@@ -44,6 +59,75 @@ export type DocumentScore = Message<"knowcel.curation.v1.DocumentScore"> & {
  */
 export const DocumentScoreSchema: GenMessage<DocumentScore> = /*@__PURE__*/
   messageDesc(file_knowcel_curation_v1_curation, 0);
+
+/**
+ * Lifecycle is where a document stands in review and approval.
+ *
+ * @generated from message knowcel.curation.v1.Lifecycle
+ */
+export type Lifecycle = Message<"knowcel.curation.v1.Lifecycle"> & {
+  /**
+   * @generated from field: knowcel.curation.v1.LifecycleState state = 1;
+   */
+  state: LifecycleState;
+
+  /**
+   * The user responsible for reviewing the document.
+   *
+   * @generated from field: string owner = 2;
+   */
+  owner: string;
+
+  /**
+   * When the document is next due for review; unset for none.
+   *
+   * @generated from field: google.protobuf.Timestamp review_by = 3;
+   */
+  reviewBy?: Timestamp | undefined;
+};
+
+/**
+ * Describes the message knowcel.curation.v1.Lifecycle.
+ * Use `create(LifecycleSchema)` to create a new message.
+ */
+export const LifecycleSchema: GenMessage<Lifecycle> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 1);
+
+/**
+ * LifecycleChange is one entry of a document's lifecycle history.
+ *
+ * @generated from message knowcel.curation.v1.LifecycleChange
+ */
+export type LifecycleChange = Message<"knowcel.curation.v1.LifecycleChange"> & {
+  /**
+   * @generated from field: knowcel.curation.v1.Lifecycle lifecycle = 1;
+   */
+  lifecycle?: Lifecycle | undefined;
+
+  /**
+   * @generated from field: string note = 2;
+   */
+  note: string;
+
+  /**
+   * The user who made the change.
+   *
+   * @generated from field: string changed_by = 3;
+   */
+  changedBy: string;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp changed_at = 4;
+   */
+  changedAt?: Timestamp | undefined;
+};
+
+/**
+ * Describes the message knowcel.curation.v1.LifecycleChange.
+ * Use `create(LifecycleChangeSchema)` to create a new message.
+ */
+export const LifecycleChangeSchema: GenMessage<LifecycleChange> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 2);
 
 /**
  * One way to close a finding, worded for the person choosing.
@@ -67,7 +151,7 @@ export type ResolutionOption = Message<"knowcel.curation.v1.ResolutionOption"> &
  * Use `create(ResolutionOptionSchema)` to create a new message.
  */
 export const ResolutionOptionSchema: GenMessage<ResolutionOption> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 1);
+  messageDesc(file_knowcel_curation_v1_curation, 3);
 
 /**
  * Finding is an inconsistency between two documents.
@@ -133,7 +217,7 @@ export type Finding = Message<"knowcel.curation.v1.Finding"> & {
  * Use `create(FindingSchema)` to create a new message.
  */
 export const FindingSchema: GenMessage<Finding> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 2);
+  messageDesc(file_knowcel_curation_v1_curation, 4);
 
 /**
  * @generated from message knowcel.curation.v1.GetDocumentScoreRequest
@@ -150,7 +234,7 @@ export type GetDocumentScoreRequest = Message<"knowcel.curation.v1.GetDocumentSc
  * Use `create(GetDocumentScoreRequestSchema)` to create a new message.
  */
 export const GetDocumentScoreRequestSchema: GenMessage<GetDocumentScoreRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 3);
+  messageDesc(file_knowcel_curation_v1_curation, 5);
 
 /**
  * @generated from message knowcel.curation.v1.GetDocumentScoreResponse
@@ -167,7 +251,7 @@ export type GetDocumentScoreResponse = Message<"knowcel.curation.v1.GetDocumentS
  * Use `create(GetDocumentScoreResponseSchema)` to create a new message.
  */
 export const GetDocumentScoreResponseSchema: GenMessage<GetDocumentScoreResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 4);
+  messageDesc(file_knowcel_curation_v1_curation, 6);
 
 /**
  * @generated from message knowcel.curation.v1.ScoreChunksRequest
@@ -186,7 +270,7 @@ export type ScoreChunksRequest = Message<"knowcel.curation.v1.ScoreChunksRequest
  * Use `create(ScoreChunksRequestSchema)` to create a new message.
  */
 export const ScoreChunksRequestSchema: GenMessage<ScoreChunksRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 5);
+  messageDesc(file_knowcel_curation_v1_curation, 7);
 
 /**
  * @generated from message knowcel.curation.v1.ScoreChunksResponse
@@ -203,7 +287,100 @@ export type ScoreChunksResponse = Message<"knowcel.curation.v1.ScoreChunksRespon
  * Use `create(ScoreChunksResponseSchema)` to create a new message.
  */
 export const ScoreChunksResponseSchema: GenMessage<ScoreChunksResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 6);
+  messageDesc(file_knowcel_curation_v1_curation, 8);
+
+/**
+ * @generated from message knowcel.curation.v1.SetLifecycleRequest
+ */
+export type SetLifecycleRequest = Message<"knowcel.curation.v1.SetLifecycleRequest"> & {
+  /**
+   * @generated from field: string document_id = 1;
+   */
+  documentId: string;
+
+  /**
+   * Required.
+   *
+   * @generated from field: knowcel.curation.v1.LifecycleState state = 2;
+   */
+  state: LifecycleState;
+
+  /**
+   * The user responsible for the review; when empty, the current one, or the
+   * caller for a document's first change.
+   *
+   * @generated from field: string owner = 3;
+   */
+  owner: string;
+
+  /**
+   * When the document is next due for review; leave unset for none.
+   *
+   * @generated from field: google.protobuf.Timestamp review_by = 4;
+   */
+  reviewBy?: Timestamp | undefined;
+
+  /**
+   * Why, shown in the history; at most 1000 characters.
+   *
+   * @generated from field: string note = 5;
+   */
+  note: string;
+};
+
+/**
+ * Describes the message knowcel.curation.v1.SetLifecycleRequest.
+ * Use `create(SetLifecycleRequestSchema)` to create a new message.
+ */
+export const SetLifecycleRequestSchema: GenMessage<SetLifecycleRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 9);
+
+/**
+ * @generated from message knowcel.curation.v1.SetLifecycleResponse
+ */
+export type SetLifecycleResponse = Message<"knowcel.curation.v1.SetLifecycleResponse"> & {
+};
+
+/**
+ * Describes the message knowcel.curation.v1.SetLifecycleResponse.
+ * Use `create(SetLifecycleResponseSchema)` to create a new message.
+ */
+export const SetLifecycleResponseSchema: GenMessage<SetLifecycleResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 10);
+
+/**
+ * @generated from message knowcel.curation.v1.ListLifecycleHistoryRequest
+ */
+export type ListLifecycleHistoryRequest = Message<"knowcel.curation.v1.ListLifecycleHistoryRequest"> & {
+  /**
+   * @generated from field: string document_id = 1;
+   */
+  documentId: string;
+};
+
+/**
+ * Describes the message knowcel.curation.v1.ListLifecycleHistoryRequest.
+ * Use `create(ListLifecycleHistoryRequestSchema)` to create a new message.
+ */
+export const ListLifecycleHistoryRequestSchema: GenMessage<ListLifecycleHistoryRequest> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 11);
+
+/**
+ * @generated from message knowcel.curation.v1.ListLifecycleHistoryResponse
+ */
+export type ListLifecycleHistoryResponse = Message<"knowcel.curation.v1.ListLifecycleHistoryResponse"> & {
+  /**
+   * @generated from field: repeated knowcel.curation.v1.LifecycleChange changes = 1;
+   */
+  changes: LifecycleChange[];
+};
+
+/**
+ * Describes the message knowcel.curation.v1.ListLifecycleHistoryResponse.
+ * Use `create(ListLifecycleHistoryResponseSchema)` to create a new message.
+ */
+export const ListLifecycleHistoryResponseSchema: GenMessage<ListLifecycleHistoryResponse> = /*@__PURE__*/
+  messageDesc(file_knowcel_curation_v1_curation, 12);
 
 /**
  * @generated from message knowcel.curation.v1.ListFindingsRequest
@@ -229,7 +406,7 @@ export type ListFindingsRequest = Message<"knowcel.curation.v1.ListFindingsReque
  * Use `create(ListFindingsRequestSchema)` to create a new message.
  */
 export const ListFindingsRequestSchema: GenMessage<ListFindingsRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 7);
+  messageDesc(file_knowcel_curation_v1_curation, 13);
 
 /**
  * @generated from message knowcel.curation.v1.ResolveFindingRequest
@@ -251,7 +428,7 @@ export type ResolveFindingRequest = Message<"knowcel.curation.v1.ResolveFindingR
  * Use `create(ResolveFindingRequestSchema)` to create a new message.
  */
 export const ResolveFindingRequestSchema: GenMessage<ResolveFindingRequest> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 8);
+  messageDesc(file_knowcel_curation_v1_curation, 14);
 
 /**
  * @generated from message knowcel.curation.v1.ResolveFindingResponse
@@ -264,7 +441,7 @@ export type ResolveFindingResponse = Message<"knowcel.curation.v1.ResolveFinding
  * Use `create(ResolveFindingResponseSchema)` to create a new message.
  */
 export const ResolveFindingResponseSchema: GenMessage<ResolveFindingResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 9);
+  messageDesc(file_knowcel_curation_v1_curation, 15);
 
 /**
  * @generated from message knowcel.curation.v1.ListFindingsResponse
@@ -289,7 +466,54 @@ export type ListFindingsResponse = Message<"knowcel.curation.v1.ListFindingsResp
  * Use `create(ListFindingsResponseSchema)` to create a new message.
  */
 export const ListFindingsResponseSchema: GenMessage<ListFindingsResponse> = /*@__PURE__*/
-  messageDesc(file_knowcel_curation_v1_curation, 10);
+  messageDesc(file_knowcel_curation_v1_curation, 16);
+
+/**
+ * @generated from enum knowcel.curation.v1.LifecycleState
+ */
+export enum LifecycleState {
+  /**
+   * @generated from enum value: LIFECYCLE_STATE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: LIFECYCLE_STATE_DRAFT = 1;
+   */
+  DRAFT = 1,
+
+  /**
+   * @generated from enum value: LIFECYCLE_STATE_IN_REVIEW = 2;
+   */
+  IN_REVIEW = 2,
+
+  /**
+   * Checked and authoritative: scores higher.
+   *
+   * @generated from enum value: LIFECYCLE_STATE_APPROVED = 3;
+   */
+  APPROVED = 3,
+
+  /**
+   * Outdated but kept for reference: scores much lower and is excluded.
+   *
+   * @generated from enum value: LIFECYCLE_STATE_DEPRECATED = 4;
+   */
+  DEPRECATED = 4,
+
+  /**
+   * Kept for the record only: scores lowest and is excluded.
+   *
+   * @generated from enum value: LIFECYCLE_STATE_ARCHIVED = 5;
+   */
+  ARCHIVED = 5,
+}
+
+/**
+ * Describes the enum knowcel.curation.v1.LifecycleState.
+ */
+export const LifecycleStateSchema: GenEnum<LifecycleState> = /*@__PURE__*/
+  enumDesc(file_knowcel_curation_v1_curation, 0);
 
 /**
  * @generated from enum knowcel.curation.v1.FindingKind
@@ -320,13 +544,21 @@ export enum FindingKind {
    * @generated from enum value: FINDING_KIND_CONFLICT = 3;
    */
   CONFLICT = 3,
+
+  /**
+   * The document is past its review date. Its document_id and
+   * other_document_id are the same.
+   *
+   * @generated from enum value: FINDING_KIND_REVIEW_DUE = 4;
+   */
+  REVIEW_DUE = 4,
 }
 
 /**
  * Describes the enum knowcel.curation.v1.FindingKind.
  */
 export const FindingKindSchema: GenEnum<FindingKind> = /*@__PURE__*/
-  enumDesc(file_knowcel_curation_v1_curation, 0);
+  enumDesc(file_knowcel_curation_v1_curation, 1);
 
 /**
  * How a finding is closed. What each does is in the option's description.
@@ -365,7 +597,7 @@ export enum Resolution {
  * Describes the enum knowcel.curation.v1.Resolution.
  */
 export const ResolutionSchema: GenEnum<Resolution> = /*@__PURE__*/
-  enumDesc(file_knowcel_curation_v1_curation, 1);
+  enumDesc(file_knowcel_curation_v1_curation, 2);
 
 /**
  * CurationService keeps the knowledge base consistent: it scores documents by
@@ -412,6 +644,32 @@ export const CurationService: GenService<{
     methodKind: "unary";
     input: typeof ListFindingsRequestSchema;
     output: typeof ListFindingsResponseSchema;
+  },
+  /**
+   * SetLifecycle sets the lifecycle state of a document, keeping every change
+   * as history, and updates its score. Only the document's owner, an admin of
+   * a team it is shared with, or a platform admin may; others get
+   * PERMISSION_DENIED, and a document the caller can't read NOT_FOUND. While
+   * the iam module is down only the owner can. A later review_by closes the
+   * document's open REVIEW_DUE finding.
+   *
+   * @generated from rpc knowcel.curation.v1.CurationService.SetLifecycle
+   */
+  setLifecycle: {
+    methodKind: "unary";
+    input: typeof SetLifecycleRequestSchema;
+    output: typeof SetLifecycleResponseSchema;
+  },
+  /**
+   * ListLifecycleHistory returns every lifecycle change of a document the
+   * caller can read, newest first.
+   *
+   * @generated from rpc knowcel.curation.v1.CurationService.ListLifecycleHistory
+   */
+  listLifecycleHistory: {
+    methodKind: "unary";
+    input: typeof ListLifecycleHistoryRequestSchema;
+    output: typeof ListLifecycleHistoryResponseSchema;
   },
   /**
    * ResolveFinding closes an open finding with one of the options it lists and

@@ -10,24 +10,39 @@ from typing import Any
 
 import grpc
 from knowcel.curation.v1 import curation_pb2, curation_pb2_grpc
-from knowcel_platform.grpc import abort_invalid_argument, current_user, violation
+from knowcel_platform.grpc import (
+    abort_invalid_argument,
+    current_principal,
+    current_user,
+    violation,
+)
 from sqlalchemy.exc import SQLAlchemyError
 
 from .curation import (
+    APPROVED,
+    ARCHIVED,
+    DEPRECATED,
+    DRAFT,
+    EXCLUDED,
     IGNORE,
+    IN_REVIEW,
     KEEP,
     REPLACE,
+    REVIEW_DUE,
     CurationStore,
     DocInfo,
     Documents,
     Finding,
     FindingCursor,
+    Lifecycle,
+    LifecycleChange,
     PeerError,
     PeerUnavailableError,
     Score,
     Scorer,
 )
 from .findings import resolution_options, summary
+from .lifecycle import LifecycleService, may_change
 
 log = logging.getLogger("knowcel_curation")
 
@@ -48,24 +63,63 @@ _RESOLUTIONS = {
 }
 _RESOLUTION_ENUMS = {name: value for value, name in _RESOLUTIONS.items()}
 
+_STATES = {
+    curation_pb2.LIFECYCLE_STATE_DRAFT: DRAFT,
+    curation_pb2.LIFECYCLE_STATE_IN_REVIEW: IN_REVIEW,
+    curation_pb2.LIFECYCLE_STATE_APPROVED: APPROVED,
+    curation_pb2.LIFECYCLE_STATE_DEPRECATED: DEPRECATED,
+    curation_pb2.LIFECYCLE_STATE_ARCHIVED: ARCHIVED,
+}
+_STATE_ENUMS = {name: value for value, name in _STATES.items()}
+_MAX_NOTE = 1000
+_MAX_OWNER = 200
+
 _KINDS = {
+    "review_due": curation_pb2.FINDING_KIND_REVIEW_DUE,
     "duplicate": curation_pb2.FINDING_KIND_DUPLICATE,
     "superseded": curation_pb2.FINDING_KIND_SUPERSEDED,
     "conflict": curation_pb2.FINDING_KIND_CONFLICT,
 }
 
 
-def _score_message(score: Score) -> curation_pb2.DocumentScore:
+def _lifecycle_message(lifecycle: Lifecycle) -> curation_pb2.Lifecycle:
+    message = curation_pb2.Lifecycle(state=_STATE_ENUMS[lifecycle.state], owner=lifecycle.owner)
+    if lifecycle.review_by:
+        message.review_by.FromDatetime(lifecycle.review_by)
+    return message
+
+
+def _score_message(score: Score, lifecycle: Lifecycle | None) -> curation_pb2.DocumentScore:
     message = curation_pb2.DocumentScore(document_id=str(score.document_id), score=score.score)
     message.updated_at.FromDatetime(score.updated_at)
+    if lifecycle:
+        message.lifecycle.CopyFrom(_lifecycle_message(lifecycle))
+        message.excluded = lifecycle.state in EXCLUDED
+    return message
+
+
+def _change_message(change: LifecycleChange) -> curation_pb2.LifecycleChange:
+    message = curation_pb2.LifecycleChange(
+        lifecycle=_lifecycle_message(change.lifecycle),
+        note=change.note,
+        changed_by=change.changed_by,
+    )
+    message.changed_at.FromDatetime(change.changed_at)
     return message
 
 
 class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
-    def __init__(self, store: CurationStore, documents: Documents, scorer: Scorer) -> None:
+    def __init__(
+        self,
+        store: CurationStore,
+        documents: Documents,
+        scorer: Scorer,
+        lifecycle: LifecycleService,
+    ) -> None:
         self._store = store
         self._documents = documents
         self._scorer = scorer
+        self._lifecycle = lifecycle
 
     async def GetDocumentScore(
         self, request: curation_pb2.GetDocumentScoreRequest, context: _Context
@@ -78,7 +132,8 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
         scores = await self._visible_scores(context, {document_id})
         if not scores:
             await context.abort(grpc.StatusCode.NOT_FOUND, "document has no score")
-        return curation_pb2.GetDocumentScoreResponse(score=_score_message(scores[0]))
+        score, lifecycle = scores[0]
+        return curation_pb2.GetDocumentScoreResponse(score=_score_message(score, lifecycle))
 
     async def ScoreChunks(
         self, request: curation_pb2.ScoreChunksRequest, context: _Context
@@ -101,7 +156,9 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
                     context, violation(f"document_ids[{i}]", "Document id is not valid")
                 )
         scores = await self._visible_scores(context, ids)
-        return curation_pb2.ScoreChunksResponse(scores=[_score_message(s) for s in scores])
+        return curation_pb2.ScoreChunksResponse(
+            scores=[_score_message(score, lifecycle) for score, lifecycle in scores]
+        )
 
     async def ListFindings(
         self, request: curation_pb2.ListFindingsRequest, context: _Context
@@ -140,6 +197,71 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
                 response.next_page_token = _encode_cursor(after)
         return response
 
+    async def SetLifecycle(
+        self, request: curation_pb2.SetLifecycleRequest, context: _Context
+    ) -> curation_pb2.SetLifecycleResponse:
+        user = await self._require_user(context)
+        violations = []
+        state = _STATES.get(request.state)
+        if state is None:
+            violations.append(violation("state", "Choose a lifecycle state"))
+        if len(request.note) > _MAX_NOTE:
+            violations.append(violation("note", f"Note must be at most {_MAX_NOTE} characters"))
+        if len(request.owner) > _MAX_OWNER:
+            violations.append(violation("owner", f"Owner must be at most {_MAX_OWNER} characters"))
+        if state is None or violations:
+            await abort_invalid_argument(context, *violations)
+        document_id = await self._document_id(context, request.document_id)
+        review_by = None
+        if request.HasField("review_by"):
+            try:
+                review_by = request.review_by.ToDatetime(tzinfo=datetime.UTC)
+            except (ValueError, OverflowError):
+                await abort_invalid_argument(
+                    context, violation("review_by", "Review date is not a valid date")
+                )
+        async with self._failures(context, "setting the lifecycle"):
+            document = (await self._documents.readable({document_id})).get(document_id)
+            if document is None:
+                await context.abort(grpc.StatusCode.NOT_FOUND, "document not found")
+            principal = current_principal()
+            if not may_change(document, user, principal):
+                if principal is not None and principal.unavailable:
+                    await context.abort(
+                        grpc.StatusCode.UNAVAILABLE, "teams are unavailable right now"
+                    )
+                await context.abort(
+                    grpc.StatusCode.PERMISSION_DENIED,
+                    "only the owner, a team admin or a platform admin can change the lifecycle",
+                )
+            # Without an owner in the request, the one responsible stays so.
+            current = (await self._store.get_lifecycles([document_id])).get(document_id)
+            owner = request.owner or (current.owner if current else user)
+            await self._lifecycle.set(
+                document_id, Lifecycle(state, owner, review_by), request.note, user
+            )
+        return curation_pb2.SetLifecycleResponse()
+
+    async def ListLifecycleHistory(
+        self, request: curation_pb2.ListLifecycleHistoryRequest, context: _Context
+    ) -> curation_pb2.ListLifecycleHistoryResponse:
+        await self._require_user(context)
+        document_id = await self._document_id(context, request.document_id)
+        async with self._failures(context, "loading the lifecycle history"):
+            if document_id not in await self._documents.readable({document_id}):
+                await context.abort(grpc.StatusCode.NOT_FOUND, "document not found")
+            changes = await self._store.list_lifecycle_history(document_id)
+        return curation_pb2.ListLifecycleHistoryResponse(
+            changes=[_change_message(c) for c in changes]
+        )
+
+    @staticmethod
+    async def _document_id(context: _Context, raw: str) -> uuid.UUID:
+        try:
+            return uuid.UUID(raw)
+        except ValueError:
+            await context.abort(grpc.StatusCode.NOT_FOUND, "document not found")
+
     async def ResolveFinding(
         self, request: curation_pb2.ResolveFindingRequest, context: _Context
     ) -> curation_pb2.ResolveFindingResponse:
@@ -157,6 +279,10 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
             finding = await self._store.get_finding(finding_id)
             if finding is None:
                 await context.abort(grpc.StatusCode.NOT_FOUND, "finding not found")
+            if finding.kind == REVIEW_DUE and resolution == REPLACE:
+                await abort_invalid_argument(
+                    context, violation("resolution", "Replace doesn't apply to a review reminder")
+                )
             ids = {finding.document_id, finding.other_document_id}
             if len(await self._documents.readable(ids)) < len(ids):
                 await context.abort(grpc.StatusCode.NOT_FOUND, "finding not found")
@@ -173,15 +299,19 @@ class CurationServicer(curation_pb2_grpc.CurationServiceServicer):
             log.exception("scoring document %s again failed", finding.document_id)
         return curation_pb2.ResolveFindingResponse()
 
-    async def _visible_scores(self, context: _Context, ids: Collection[uuid.UUID]) -> list[Score]:
-        """The scores of those of `ids` that have one and that the caller can see."""
+    async def _visible_scores(
+        self, context: _Context, ids: Collection[uuid.UUID]
+    ) -> list[tuple[Score, Lifecycle | None]]:
+        """The scores, with the lifecycle, of those of `ids` that have a score
+        and that the caller can see."""
         if not ids:
             return []
         async with self._failures(context, "loading scores"):
             scores = await self._store.get_scores(ids)
             # Only scored documents are looked up in the document module.
             visible = await self._documents.readable({s.document_id for s in scores})
-        return [s for s in scores if s.document_id in visible]
+            lifecycles = await self._store.get_lifecycles(visible)
+        return [(s, lifecycles.get(s.document_id)) for s in scores if s.document_id in visible]
 
     @contextlib.asynccontextmanager
     async def _failures(self, context: _Context, what: str) -> AsyncIterator[None]:

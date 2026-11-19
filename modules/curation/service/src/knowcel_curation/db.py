@@ -14,19 +14,32 @@ from sqlalchemy import (
     DateTime,
     Double,
     MetaData,
+    RowMapping,
     Table,
     Text,
     Uuid,
     and_,
+    delete,
+    exists,
     func,
     or_,
     select,
     update,
 )
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.dialects.postgresql import distinct_on, insert
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from .curation import REPLACE, SUPERSEDED, Finding, FindingCursor, Score
+from .curation import (
+    ARCHIVED,
+    REPLACE,
+    REVIEW_DUE,
+    SUPERSEDED,
+    Finding,
+    FindingCursor,
+    Lifecycle,
+    LifecycleChange,
+    Score,
+)
 
 SCHEMA = "curation"
 MIGRATIONS_DIR = pathlib.Path(__file__).resolve().parents[3] / "migrations"
@@ -53,6 +66,19 @@ findings = Table(
     Column("resolution", Text),
     Column("resolved_at", DateTime(timezone=True)),
     Column("resolved_by", Text),
+)
+
+document_lifecycle = Table(
+    "document_lifecycle",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("document_id", Uuid, nullable=False),
+    Column("state", Text, nullable=False),
+    Column("owner", Text, nullable=False),
+    Column("review_by", DateTime(timezone=True)),
+    Column("note", Text, nullable=False),
+    Column("changed_by", Text, nullable=False),
+    Column("changed_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
 )
 
 _FINDING_COLUMNS = (
@@ -177,6 +203,82 @@ class SqlCurationStore:
         async with self._engine.connect() as conn:
             rows = (await conn.execute(query)).mappings().all()
         return [Finding(**r) for r in rows]
+
+    async def get_lifecycles(
+        self, document_ids: Collection[uuid.UUID]
+    ) -> dict[uuid.UUID, Lifecycle]:
+        query = (
+            select(document_lifecycle)
+            .where(document_lifecycle.c.document_id.in_(document_ids))
+            .ext(distinct_on(document_lifecycle.c.document_id))
+            .order_by(document_lifecycle.c.document_id, document_lifecycle.c.changed_at.desc())
+        )
+        async with self._engine.connect() as conn:
+            rows = (await conn.execute(query)).mappings().all()
+        return {r["document_id"]: _lifecycle(r) for r in rows}
+
+    async def add_lifecycle_change(
+        self, document_id: uuid.UUID, lifecycle: Lifecycle, note: str, user: str
+    ) -> None:
+        async with self._engine.begin() as conn:
+            await conn.execute(
+                insert(document_lifecycle).values(
+                    id=uuid.uuid4(),
+                    document_id=document_id,
+                    state=lifecycle.state,
+                    owner=lifecycle.owner,
+                    review_by=lifecycle.review_by,
+                    note=note,
+                    changed_by=user,
+                )
+            )
+
+    async def list_lifecycle_history(self, document_id: uuid.UUID) -> list[LifecycleChange]:
+        query = (
+            select(document_lifecycle)
+            .where(document_lifecycle.c.document_id == document_id)
+            .order_by(document_lifecycle.c.changed_at.desc(), document_lifecycle.c.id)
+        )
+        async with self._engine.connect() as conn:
+            rows = (await conn.execute(query)).mappings().all()
+        return [
+            LifecycleChange(_lifecycle(r), r["note"], r["changed_by"], r["changed_at"])
+            for r in rows
+        ]
+
+    async def list_review_due(self, now: datetime.datetime, limit: int) -> list[uuid.UUID]:
+        latest = (
+            select(document_lifecycle)
+            .ext(distinct_on(document_lifecycle.c.document_id))
+            .order_by(document_lifecycle.c.document_id, document_lifecycle.c.changed_at.desc())
+            .subquery()
+        )
+        query = (
+            select(latest.c.document_id)
+            .where(
+                latest.c.review_by < now,
+                latest.c.state != ARCHIVED,
+                # Those already reminded (or dismissed) are done until their date changes.
+                ~exists().where(
+                    findings.c.kind == REVIEW_DUE, findings.c.document_id == latest.c.document_id
+                ),
+            )
+            .limit(limit)
+        )
+        async with self._engine.connect() as conn:
+            return list((await conn.execute(query)).scalars())
+
+    async def delete_review_due(self, document_id: uuid.UUID) -> None:
+        async with self._engine.begin() as conn:
+            await conn.execute(
+                delete(findings).where(
+                    findings.c.document_id == document_id, findings.c.kind == REVIEW_DUE
+                )
+            )
+
+
+def _lifecycle(row: RowMapping) -> Lifecycle:
+    return Lifecycle(row["state"], row["owner"], row["review_by"])
 
 
 def _upgrade(database_url: str) -> None:

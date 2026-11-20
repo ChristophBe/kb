@@ -78,15 +78,33 @@ describe("Answer", () => {
     expect(screen.getByRole("link", { name: "Source 2: Notes.md, passage 1" })).toBeTruthy();
   });
 
-  it("links the margin notes to the source passage", () => {
-    renderAnswer("No markers.", sources);
-    const notes = within(screen.getByRole("list", { name: "Sources" }));
-    const link = notes.getByRole("link", { name: "Report.pdf, passage 4" });
-    expect(link.getAttribute("href")).toBe("/m/document/d1#chunk-3");
-    expect(notes.getByText("passage 4")).toBeTruthy();
+  it("lists the documents of an answer in a collapsed section", () => {
+    renderAnswer("No markers.", [...sources, citation("d1", "Report.pdf", 5)]);
+    const list = within(screen.getByRole("list", { name: "Sources" }));
+    const report = list.getByRole("button", { name: /Report\.pdf/ });
+    expect(report.textContent).toContain("2 passages");
+    expect(report.getAttribute("aria-expanded")).toBe("false");
+    expect(list.getByRole("button", { name: /Notes\.md/ }).textContent).toContain("1 passage");
+    expect(list.getAllByRole("button")).toHaveLength(2);
+    // Collapsed: the passages are not offered.
+    expect(list.queryByRole("link")).toBeNull();
   });
 
-  it("links manual sources to their section of the help page", () => {
+  it("shows the passages of an expanded document and links them", () => {
+    renderAnswer("No markers.", sources);
+    const list = within(screen.getByRole("list", { name: "Sources" }));
+    const report = list.getByRole("button", { name: /Report\.pdf/ });
+    fireEvent.click(report);
+    expect(report.getAttribute("aria-expanded")).toBe("true");
+    const link = list.getByRole("link", { name: "Report.pdf, passage 4" });
+    expect(link.getAttribute("href")).toBe("/m/document/d1#chunk-3");
+    expect(link.closest("li")?.textContent).toContain("a snippet");
+    expect(list.queryByRole("link", { name: "Notes.md, passage 1" })).toBeNull();
+    fireEvent.click(report);
+    expect(list.queryByRole("link")).toBeNull();
+  });
+
+  it("groups the user manual sections as one entry marked user manual", () => {
     const manual = create(CitationSchema, {
       documentTitle: "Chat: Stop an answer",
       snippet: "Select Stop.",
@@ -95,15 +113,55 @@ describe("Answer", () => {
     });
     renderAnswer("Select Stop [1], see also [2].", [manual, ...sources]);
 
+    const list = within(screen.getByRole("list", { name: "Sources" }));
+    const entry = list.getByRole("button", { name: /User manual/ });
+    expect(entry.textContent).toContain("1 section");
+    fireEvent.click(entry);
+    const note = list.getByRole("link", { name: "Chat: Stop an answer, user manual" });
+    expect(note.getAttribute("href")).toBe("/help/chat#stop-an-answer");
+    expect(list.getByText("user manual")).toBeTruthy();
     const marker = screen.getByRole("link", {
       name: "Source 1: Chat: Stop an answer, user manual",
     });
     expect(marker.getAttribute("href")).toBe("/help/chat#stop-an-answer");
-    const notes = within(screen.getByRole("list", { name: "Sources" }));
-    const note = notes.getByRole("link", { name: "Chat: Stop an answer, user manual" });
-    expect(note.getAttribute("href")).toBe("/help/chat#stop-an-answer");
-    expect(notes.getByText("user manual")).toBeTruthy();
-    expect(notes.getByRole("link", { name: "Report.pdf, passage 4" })).toBeTruthy();
+  });
+
+  it("lists an answer that cites only the user manual with that entry", () => {
+    const manual = create(CitationSchema, {
+      documentTitle: "Chat: Stop an answer",
+      manualPage: "chat",
+      manualSection: "stop-an-answer",
+    });
+    renderAnswer("Select Stop [1].", [manual]);
+    const list = within(screen.getByRole("list", { name: "Sources" }));
+    expect(list.getAllByRole("button")).toHaveLength(1);
+    expect(list.getByRole("button", { name: /User manual/ })).toBeTruthy();
+  });
+
+  it("expands the document of a selected marker", () => {
+    renderAnswer("Costs fell [2].", sources);
+    const list = within(screen.getByRole("list", { name: "Sources" }));
+    const notes = list.getByRole("button", { name: /Notes\.md/ });
+    expect(notes.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(screen.getByRole("link", { name: /^Source 2/ }));
+    expect(notes.getAttribute("aria-expanded")).toBe("true");
+    expect(list.getByRole("link", { name: "Notes.md, passage 1" })).toBeTruthy();
+    expect(list.getByRole("button", { name: /Report\.pdf/ }).getAttribute("aria-expanded")).toBe(
+      "false",
+    );
+  });
+
+  it("shows no sources section without sources or while the answer streams", () => {
+    const { rerender } = renderAnswer("No sources.");
+    expect(screen.queryByRole("list", { name: "Sources" })).toBeNull();
+    rerender(
+      <MemoryRouter>
+        <Answer content="Fact [1]." citations={sources} streaming />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole("list", { name: "Sources" })).toBeNull();
+    // The markers already link to their passage.
+    expect(screen.getByRole("link", { name: /^Source 1/ })).toBeTruthy();
   });
 
   it("leaves markers in code and without a source as text", () => {
@@ -120,6 +178,7 @@ describe("Answer", () => {
 
   it("highlights the note of a hovered or focused marker", () => {
     renderAnswer("Fact [1].", sources);
+    fireEvent.click(screen.getByRole("button", { name: /Report\.pdf/ }));
     const marker = screen.getByRole("link", { name: /^Source 1/ });
     const note = screen.getByRole("link", { name: "Report.pdf, passage 4" }).closest("li");
     expect(note?.className).not.toContain("border-accent");
@@ -175,6 +234,9 @@ describe("Answer", () => {
         </MemoryRouter>
       </SlotsProvider>,
     );
+    for (const name of [/Report\.pdf/, /Notes\.md/, /User manual/]) {
+      fireEvent.click(screen.getByRole("button", { name }));
+    }
     expect(await screen.findByRole("button", { name: "Rate d1/3/c1" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Rate d2/0/c1" })).toBeTruthy();
     // The user manual has no document to act on.

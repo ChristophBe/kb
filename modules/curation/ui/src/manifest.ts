@@ -14,6 +14,11 @@ export default defineManifest({
       order: 10,
     },
     {
+      slot: "document.detail.actions",
+      load: () => import("./reports/ReportAction.tsx"),
+      order: 20,
+    },
+    {
       slot: "document.detail.sections",
       load: () => import("./lifecycle/LifecycleHistory.tsx"),
     },

@@ -3,6 +3,7 @@ import {
   CurationService,
   FindingKind,
   LifecycleState,
+  ReportReason,
   Resolution,
 } from "@knowcel/curation-api/knowcel/curation/v1/curation_pb";
 import { renderModule } from "@knowcel/module-sdk/testing";
@@ -420,5 +421,125 @@ describe("Findings", () => {
     await act(async () => new Promise((resolve) => setTimeout(resolve, 100)));
     expect(listFindings).toHaveBeenCalledTimes(calls);
     expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
+  });
+
+  describe("reports", () => {
+    const reported = {
+      id: "f9",
+      kind: FindingKind.REPORTED,
+      documentId: "d3",
+      otherDocumentId: "d3",
+      summary: "Reported by 2 people",
+      documentTitle: "Handbook",
+      otherDocumentTitle: "Handbook",
+      createdAt: { seconds: 1763500000n, nanos: 0 },
+      reportCount: 2,
+      reports: [
+        {
+          reporter: "carol",
+          reason: ReportReason.OUTDATED,
+          comment: "Old figures",
+          createdAt: { seconds: 1763500000n, nanos: 0 },
+        },
+        {
+          reporter: "alice",
+          reason: ReportReason.WRONG,
+          comment: "",
+          createdAt: { seconds: 1763500000n, nanos: 0 },
+        },
+      ],
+      resolutions: [
+        { resolution: Resolution.IGNORE, description: "Dismiss the reports; nothing changes." },
+        {
+          resolution: Resolution.DEPRECATE,
+          description: "Deprecate Handbook: it ranks much lower and chat stops using it.",
+        },
+      ],
+    };
+
+    it("lists the reports with their reason, who and comment, and the ways to close them", async () => {
+      const { transport } = server([reported]);
+      const { container } = renderModule(curation, transport);
+      const card = await screen.findByRole("list", { name: "Findings" });
+      expect(within(card).getByText("Reported", { selector: "span" })).toBeTruthy();
+      expect(within(card).getByText("Reported by 2 people")).toBeTruthy();
+      const reports = within(card).getByRole("list", { name: "Reports" });
+      const items = within(reports).getAllByRole("listitem");
+      expect(items).toHaveLength(2);
+      expect(items[0]?.textContent).toContain("Outdated");
+      expect(items[0]?.textContent).toContain("Old figures");
+      expect(items[0]?.textContent).toContain("another user");
+      expect(items[1]?.textContent).toContain("Wrong");
+      expect(within(card).getByRole("button", { name: "Dismiss reports Handbook" })).toBeTruthy();
+      expect(
+        within(card).getByRole("button", { name: "Deprecate document Handbook" }),
+      ).toBeTruthy();
+      await expectNoAxeViolations(container);
+    });
+
+    it("dismisses the reports at once", async () => {
+      const { transport, resolveFinding } = server([reported]);
+      renderModule(curation, transport);
+      fireEvent.click(await screen.findByRole("button", { name: "Dismiss reports Handbook" }));
+      await waitFor(() =>
+        expect(resolveFinding).toHaveBeenCalledWith(
+          expect.objectContaining({ findingId: "f9", resolution: Resolution.IGNORE }),
+          expect.anything(),
+        ),
+      );
+      expect(await screen.findByText("No findings. Your documents look consistent.")).toBeTruthy();
+      expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Findings" }));
+    });
+
+    it("asks before deprecating, saying what it does to chat", async () => {
+      const { transport, resolveFinding } = server([reported]);
+      renderModule(curation, transport);
+      fireEvent.click(await screen.findByRole("button", { name: "Deprecate document Handbook" }));
+      const dialog = await screen.findByRole("dialog", { name: "Deprecate Handbook?" });
+      expect(within(dialog).getByText(/Chat stops using this document/)).toBeTruthy();
+      fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+      expect(resolveFinding).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole("button", { name: "Deprecate document Handbook" }));
+      fireEvent.click(
+        within(await screen.findByRole("dialog")).getByRole("button", {
+          name: "Deprecate document",
+        }),
+      );
+      await waitFor(() =>
+        expect(resolveFinding).toHaveBeenCalledWith(
+          expect.objectContaining({ resolution: Resolution.DEPRECATE }),
+          expect.anything(),
+        ),
+      );
+      await waitFor(() => expect(screen.queryByText("Reported by 2 people")).toBeNull());
+    });
+
+    it("refreshes what a document's page shows of its reports when they are closed", async () => {
+      const { transport } = server([reported]);
+      const { queryClient } = renderModule(curation, transport);
+      queryClient.setQueryData(["reports", "d3"], { reports: [] });
+      fireEvent.click(await screen.findByRole("button", { name: "Dismiss reports Handbook" }));
+      await waitFor(() =>
+        expect(queryClient.getQueryState(["reports", "d3"])?.isInvalidated).toBe(true),
+      );
+    });
+
+    it("shows a reporter their own report without ways to close it", async () => {
+      const own = {
+        ...reported,
+        summary: "You reported Handbook",
+        reportCount: 1,
+        reports: [reported.reports[1]],
+        resolutions: [],
+      };
+      const { transport } = server([own]);
+      renderModule(curation, transport);
+      const card = await screen.findByRole("list", { name: "Findings" });
+      expect(within(card).getByText("You reported Handbook")).toBeTruthy();
+      expect(within(card).getByRole("list", { name: "Reports" })).toBeTruthy();
+      expect(within(card).queryByRole("button")).toBeNull();
+    });
   });
 });
